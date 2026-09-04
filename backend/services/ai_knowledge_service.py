@@ -1,15 +1,13 @@
 import re
 import datetime
 import uuid
-import json
-from typing import Dict, Any, Optional, Tuple, List
+from typing import Dict, Any, Optional, List
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, or_
 
 from backend.models import (
     User, Student, Department, WeeklySession, WeeklyPublicResult, 
-    WeeklyVirtualResult, AdminAuditLog, SyncJob, LeetCodeProfileStats,
-    ReportEmailRecipient
+    WeeklyVirtualResult, LeetCodeProfileStats
 )
 from backend.backup_manager import list_backups_detail
 from backend.logger import logger
@@ -126,9 +124,9 @@ class AIKnowledgeEngine:
         req_id = f"ai_{uuid.uuid4().hex[:12]}"
         clean_q = query_text.strip().lower()
 
-        user_role = (user.role if user else "student").lower()
-        user_email = (user.email if user else "").lower()
-        user_name = user.username if user else "GUEST"
+        (user.role if user else "student").lower()
+        (user.email if user else "").lower()
+        user.username if user else "GUEST"
 
         # ── 1. SECURITY & CREDENTIAL PRIVACY PROTECTION ──
         if any(k in clean_q for k in ["smtp password", "jwt secret", "private key", "database password", "firebase secret", "api key"]):

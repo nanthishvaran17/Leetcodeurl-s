@@ -80,12 +80,15 @@ export function useContestWebSocket(options: string | UseContestWebSocketOptions
   const [latestUpdate, setLatestUpdate] = useState<StudentActivityUpdatePayload | null>(null);
   const [liveFeed, setLiveFeed] = useState<LiveActivityEvent[]>([]);
   const [snapshotData, setSnapshotData] = useState<any>(null);
+  const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<any>(null);
   const retryCountRef = useRef<number>(0);
   const lastVersionRef = useRef<number>(0);
   const processedEventsRef = useRef<Set<string>>(new Set());
+  // Track the session ID we have subscribed to (used for reconnect SUBSCRIBE)
+  const subscribedSessionRef = useRef<number | null>(null);
 
   const getWsUrl = useCallback(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -104,7 +107,13 @@ export function useContestWebSocket(options: string | UseContestWebSocketOptions
 
       ws.onopen = () => {
         setStatus('LIVE');
+        setLastSyncAt(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }));
         retryCountRef.current = 0;
+
+        // Send session subscription if we have one
+        if (subscribedSessionRef.current !== null) {
+          ws.send(JSON.stringify({ action: 'SUBSCRIBE', session_id: subscribedSessionRef.current }));
+        }
 
         if (lastVersionRef.current > 0) {
           ws.send(JSON.stringify({
@@ -166,6 +175,7 @@ export function useContestWebSocket(options: string | UseContestWebSocketOptions
             setInitialProgress(null);
           } else if (data.type === 'STUDENT_ACTIVITY_UPDATED') {
             setLatestUpdate(data);
+            setLastSyncAt(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }));
             
             const feedItem: LiveActivityEvent = {
               event_id: data.event_id,
@@ -183,6 +193,15 @@ export function useContestWebSocket(options: string | UseContestWebSocketOptions
               data.events.forEach((evt: StudentActivityUpdatePayload) => {
                 setLatestUpdate(evt);
               });
+            }
+          } else if (data.type === 'VIRTUAL_RESULT_UPDATED' || data.type === 'VIRTUAL_ATTEMPT_STARTED') {
+            // Forward virtual events to LiveEventRouter via DOM event bus
+            setLastSyncAt(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }));
+            window.dispatchEvent(new CustomEvent('ws_virtual_event', { detail: data }));
+          } else if (data.type === 'SUBSCRIBED') {
+            // Acknowledge subscription confirmation
+            if (import.meta.env.DEV) {
+              console.log('[WS_SUBSCRIBED] session_id=', data.session_id);
             }
           }
         } catch (err) {
@@ -210,6 +229,23 @@ export function useContestWebSocket(options: string | UseContestWebSocketOptions
     }
   }, [targetId, getWsUrl, onBatchUpdate, onSyncCompleted]);
 
+  // Public method to subscribe to a session's events at runtime
+  const subscribeSession = useCallback((sessionId: number) => {
+    subscribedSessionRef.current = sessionId;
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ action: 'SUBSCRIBE', session_id: sessionId }));
+    }
+  }, []);
+
+  const unsubscribeSession = useCallback((sessionId: number) => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ action: 'UNSUBSCRIBE', session_id: sessionId }));
+    }
+    if (subscribedSessionRef.current === sessionId) {
+      subscribedSessionRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     connect();
     return () => {
@@ -224,6 +260,10 @@ export function useContestWebSocket(options: string | UseContestWebSocketOptions
     initialProgress,
     latestUpdate,
     liveFeed,
-    snapshotData
+    snapshotData,
+    lastSyncAt,
+    subscribeSession,
+    unsubscribeSession,
+    wsRef
   };
 }

@@ -1,19 +1,14 @@
 import re
 import datetime
 import uuid
-import json
 import os
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Dict, Any, Optional, List
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func, or_, desc, asc
+from sqlalchemy import func, or_
 
 from backend.models import (
-    User, Student, Department, Section, WeeklySession, WeeklyPublicResult, 
-    WeeklyVirtualResult, AdminAuditLog, SyncJob, LeetCodeProfileStats,
-    ReportEmailRecipient, WeeklyStudentProgress, OfficialWeeklySnapshot
+    User, Student, Department, WeeklySession, WeeklyPublicResult, LeetCodeProfileStats
 )
-from backend.logger import logger
-from backend.backup_manager import list_backups_detail
 
 # In-memory pending action store for confirmation workflow
 PENDING_ACTIONS: Dict[str, Dict[str, Any]] = {}
@@ -104,7 +99,7 @@ class AIControlEngine:
         # Security & Action Audit Logging
         try:
             from backend.services.audit_service import log_admin_action
-            user_name = user.username if user else "ADMIN/SYSTEM"
+            user.username if user else "ADMIN/SYSTEM"
             log_admin_action(
                 db=db,
                 action="AI_CONTROL_CENTER_EXECUTION",
@@ -382,7 +377,7 @@ class AIControlEngine:
             dept = s.department.code if s.department else "CSE"
             solved = s.stats.total_solved if s.stats else 0
             rating = s.stats.contest_rating if (s.stats and s.stats.contest_rating) else "Unrated"
-            uname = f"@{s.username}" if s.username else "—"
+            f"@{s.username}" if s.username else "—"
             
             answer += f"{badge} **#{rank} {s.name}** (`{s.reg_no}`) — **{solved} Solved** | Rating: {rating} | {dept} • Yr {s.year_level}\n"
             table_rows.append({

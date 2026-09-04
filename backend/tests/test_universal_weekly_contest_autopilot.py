@@ -7,8 +7,7 @@ Comprehensive automated unit suite validating the complete autonomous weekly con
 import unittest
 import os
 from backend.database import SessionLocal
-from backend.services.sunday_autopilot import weekly_contest_autopilot, AutopilotState
-from backend.models import WeeklySession
+from backend.services.sunday_autopilot import weekly_contest_autopilot
 
 
 class TestUniversalWeeklyContestAutopilot(unittest.TestCase):

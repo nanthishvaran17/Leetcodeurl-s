@@ -1,5 +1,4 @@
 import hashlib
-import json
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Any
@@ -100,7 +99,7 @@ class ContestTruthEngine:
         virtual_solves = 0
 
         # Official contest cutoff times (08:00 AM - 09:30 AM IST)
-        now_ist = datetime.now(IST)
+        datetime.now(IST)
         official_end_time = datetime.strptime("09:30:00", "%H:%M:%S").time()
 
         for sub in submissions:

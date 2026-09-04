@@ -20,8 +20,8 @@ import { useAuth } from './context/AuthContext';
 import { useKeyboardContext } from './context/KeyboardContext';
 import { CommandPalette } from './components/CommandPalette';
 import { useGlobalKeyboardShortcuts } from './hooks/useGlobalKeyboardShortcuts';
+import { useCapacitorPush } from './hooks/useCapacitorPush';
 import { initPushNotifications } from './services/pushNotifications';
-
 // Lazy-loaded heavy page modules for 60%+ smaller initial bundle size & ultra-fast initial load
 const ComparePage = lazy(() => import('./pages/ComparePage').then(m => ({ default: m.ComparePage })));
 const DataQualityPage = lazy(() => import('./pages/DataQualityPage').then(m => ({ default: m.DataQualityPage })));
@@ -34,6 +34,7 @@ const WeeklyContestPage = lazy(() => import('./pages/WeeklyContestPage').then(m 
 const StudentDashboardView = lazy(() => import('./pages/StudentDashboardView').then(m => ({ default: m.StudentDashboardView })));
 const StaffDashboardView = lazy(() => import('./pages/StaffDashboardView').then(m => ({ default: m.StaffDashboardView })));
 const GrowthIntelligencePage = lazy(() => import('./pages/GrowthIntelligencePage').then(m => ({ default: m.GrowthIntelligencePage })));
+const MessagesPage = lazy(() => import('./pages/MessagesPage').then(m => ({ default: m.MessagesPage })));
 const SystemHealthPage = lazy(() => import('./pages/SystemHealthPage').then(m => ({ default: m.SystemHealthPage })));
 const CertificateVerificationPage = lazy(() => import('./pages/CertificateVerificationPage').then(m => ({ default: m.CertificateVerificationPage })));
 const AIControlCenterPage = lazy(() => import('./pages/AIControlCenterPage').then(m => ({ default: m.AIControlCenterPage })));
@@ -71,6 +72,10 @@ export const App: React.FC = () => {
   }
 
   const { user, isAuthenticated } = useAuth();
+  
+  // Initialize Native Android Capacitor Push (if applicable)
+  useCapacitorPush();
+
   const [activeTab, setActiveTab] = useState('landing');
   const [selectedStudent, setSelectedStudent] = useState<StudentData | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -95,6 +100,8 @@ export const App: React.FC = () => {
 
 
   useEffect(() => {
+    if (!isAuthenticated) return;
+    
     fetchSummary();
     const timer = setTimeout(() => {
       triggerCloudSync();
@@ -131,7 +138,9 @@ export const App: React.FC = () => {
     const initBackButton = async () => {
       try {
         await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
-          if (selectedStudent) {
+          if (isSidebarOpen) {
+            setIsSidebarOpen(false);
+          } else if (selectedStudent) {
             setSelectedStudent(null);
           } else if (showLoginModal) {
             setShowLoginModal(false);
@@ -155,7 +164,8 @@ export const App: React.FC = () => {
     return () => {
       CapacitorApp.removeAllListeners();
     };
-  }, [selectedStudent, showLoginModal, showAlertCenterModal, showImportModal, activeTab, isAuthenticated]);
+  }, [isSidebarOpen, selectedStudent, showLoginModal, showAlertCenterModal, showImportModal, activeTab, isAuthenticated]);
+
 
 
 
@@ -299,14 +309,14 @@ export const App: React.FC = () => {
   // ─── CENTRALIZED ROLE PERMISSION MATRIX ────────────────────────────────────
   // Single source of truth for all role-based tab access.
   // NEVER duplicate this logic across components.
-  const ALL_ACADEMIC_TABS = ['dashboard','landing','public','profile','students','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','staff-dashboard','student-dashboard'];
+  const ALL_ACADEMIC_TABS = ['dashboard','landing','public','profile','students','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','staff-dashboard','student-dashboard','messages'];
   
   const ROLE_PERMISSIONS: Record<string, string[]> = {
     // Super admin / admin: full system access
-    admin:            ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard'],
-    administrator:    ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard'],
-    super_admin:      ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard'],
-    'super admin':    ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard'],
+    admin:            ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages'],
+    administrator:    ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages'],
+    super_admin:      ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages'],
+    'super admin':    ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages'],
     // HOD: command center + all academic tools
     hod:              ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports'],
     'department hod': ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports'],
@@ -517,6 +527,12 @@ export const App: React.FC = () => {
                 isTabAllowed('system-health')
                   ? <SystemHealthPage onNavigateTab={setActiveTab} />
                   : renderAccessDenied('System Operations — Admin Only')
+              )}
+
+              {activeTab === 'messages' && (
+                isTabAllowed('messages')
+                  ? <MessagesPage />
+                  : renderAccessDenied('Messages')
               )}
 
               {activeTab === 'reports' && (

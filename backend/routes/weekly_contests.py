@@ -2,10 +2,10 @@ import asyncio
 import datetime
 import logging
 import re
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Response, Query, Request
 from sqlalchemy.orm import Session, joinedload
-from backend.database import get_db, SessionLocal
+from backend.database import get_db
 
 logger = logging.getLogger(__name__)
 from backend.models import (
@@ -15,7 +15,6 @@ from backend.models import (
 from backend.services.weekly_session_manager import (
     get_or_create_current_weekly_session,
     seed_institutional_historical_sessions,
-    trigger_start_snapshot_0800,
     trigger_final_snapshot_0930,
     sunday_live_engine,
     get_active_verification_windows
@@ -26,12 +25,6 @@ from backend.services.contest_discovery import (
     get_upcoming_sunday_date, get_most_recent_sunday_date,
     IST_TZ
 )
-from backend.services.attendance_classifier import get_attendance_status
-from backend.exporters.excel_exporter import export_excel_from_dataset
-from backend.exporters.pdf_exporter import export_pdf_from_dataset
-from backend.exporters.word_exporter import export_word_from_dataset
-from backend.exporters.csv_exporter import export_csv_from_dataset
-from backend.exporters.zip_exporter import export_zip_bundle_from_dataset
 
 from backend.security import require_security_access, get_current_user_optional
 
@@ -950,7 +943,6 @@ def get_contest_diagnostics(
     Mandatory Database Diagnostic Endpoint (Section 35 Spec)
     Returns complete breakdown table for Weekly Contests 510 through 515+.
     """
-    from backend.services.attendance_classifier import get_attendance_status
     
     sessions = db.query(WeeklySession).order_by(WeeklySession.id.asc()).all()
     diagnostics = []
@@ -1366,7 +1358,6 @@ def get_contest_question_analytics(
     }
 
 
-from fastapi import BackgroundTasks
 
 def _run_sync_in_background(session_id: int):
     # Separate DB session for background task
@@ -1698,6 +1689,260 @@ def virtual_recheck_contest(
     """
     from backend.services.contest_reconciliation_service import UniversalContestReconciliationEngine
     return UniversalContestReconciliationEngine.reconcile_contest(session_id, db, dry_run=dry_run, sync_mode="VIRTUAL_RECHECK")
+
+
+# =========================================================================
+# VIRTUAL CONTEST ATTEMPT LIFECYCLE ENDPOINTS
+# =========================================================================
+
+@router.post("/sessions/{session_id}/virtual-attempt/start")
+def start_or_resume_virtual_attempt(
+    session_id: int,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    IDEMPOTENT: Creates or resumes a virtual contest attempt for the authenticated user.
+
+    Rules:
+    - One attempt per student per session (enforced by UNIQUE constraint in DB).
+    - Calling this multiple times (double-click, page refresh, reconnect) always returns
+      the SAME existing attempt — never creates a second one.
+    - started_at and expires_at are NEVER overwritten on resume.
+    - Returns the stable attempt record with its lifecycle status.
+    """
+    import datetime as dt
+    from sqlalchemy.exc import IntegrityError
+    from backend.models import VirtualContestAttempt
+    from backend.routes.auth import get_current_user_from_request
+
+    current_user = get_current_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required to start a virtual attempt.")
+
+    session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail=f"Session {session_id} not found.")
+
+    if session.status not in ("FINALIZED", "COMPLETED", "LIVE", "SCHEDULED", "ACTIVE"):
+        raise HTTPException(status_code=400, detail=f"Session is in status '{session.status}' — virtual attempts not permitted.")
+
+    # Resolve student identity from authenticated user
+    student = None
+    if hasattr(current_user, 'student_id') and current_user.student_id:
+        student = db.query(Student).filter(Student.id == current_user.student_id).first()
+    if not student and hasattr(current_user, 'id'):
+        student = db.query(Student).filter(Student.id == current_user.id).first()
+
+    if not student:
+        # For admin/staff use: look up by user's own student record if exists
+        raise HTTPException(status_code=400, detail="Could not resolve student identity from authenticated user.")
+
+    # Check if an attempt already exists (most common path on resume)
+    existing = db.query(VirtualContestAttempt).filter(
+        VirtualContestAttempt.student_id == student.id,
+        VirtualContestAttempt.session_id == session_id
+    ).first()
+
+    if existing:
+        # RESUME — never modify started_at / expires_at
+        existing.last_activity_at = dt.datetime.utcnow()
+        existing.resume_count = (existing.resume_count or 0) + 1
+        try:
+            db.commit()
+            db.refresh(existing)
+        except Exception:
+            db.rollback()
+        return {
+            "action": "RESUMED",
+            "attempt_id": existing.id,
+            "student_id": existing.student_id,
+            "session_id": existing.session_id,
+            "contest_id": existing.contest_id,
+            "contest_name": existing.contest_name,
+            "status": existing.status,
+            "started_at": existing.started_at.isoformat() if existing.started_at else None,
+            "expires_at": existing.expires_at.isoformat() if existing.expires_at else None,
+            "last_activity_at": existing.last_activity_at.isoformat() if existing.last_activity_at else None,
+            "resume_count": existing.resume_count
+        }
+
+    # CREATE new attempt — only happens on very first call for this student+session
+    started = dt.datetime.utcnow()
+    # Virtual contest window = 90 minutes (standard LeetCode virtual duration)
+    expires = started + dt.timedelta(minutes=90)
+
+    new_attempt = VirtualContestAttempt(
+        student_id=student.id,
+        session_id=session_id,
+        contest_id=session.contest_id,
+        contest_name=session.contest_name,
+        reg_no=student.reg_no,
+        student_name=student.name,
+        leetcode_username=student.username or "",
+        status="ACTIVE",
+        started_at=started,
+        expires_at=expires,
+        last_activity_at=started,
+        resume_count=0,
+        source="STUDENT_INITIATED"
+    )
+
+    try:
+        db.add(new_attempt)
+        db.commit()
+        db.refresh(new_attempt)
+    except IntegrityError:
+        # Race condition: another request inserted first — retrieve the winner
+        db.rollback()
+        existing = db.query(VirtualContestAttempt).filter(
+            VirtualContestAttempt.student_id == student.id,
+            VirtualContestAttempt.session_id == session_id
+        ).first()
+        if existing:
+            return {
+                "action": "RESUMED",
+                "attempt_id": existing.id,
+                "student_id": existing.student_id,
+                "session_id": existing.session_id,
+                "contest_id": existing.contest_id,
+                "contest_name": existing.contest_name,
+                "status": existing.status,
+                "started_at": existing.started_at.isoformat() if existing.started_at else None,
+                "expires_at": existing.expires_at.isoformat() if existing.expires_at else None,
+                "last_activity_at": existing.last_activity_at.isoformat() if existing.last_activity_at else None,
+                "resume_count": existing.resume_count
+            }
+        raise HTTPException(status_code=500, detail="Failed to create virtual attempt due to concurrent conflict.")
+
+    # Broadcast VIRTUAL_ATTEMPT_STARTED event
+    try:
+        import time as _time
+        from backend.websocket_manager import manager as ws_manager
+        ws_manager.broadcast_sync({
+            "type": "VIRTUAL_ATTEMPT_STARTED",
+            "event_id": f"va-{new_attempt.id}-{int(_time.time()*1000)}",
+            "sequence": int(_time.time() * 1000),
+            "session_id": session_id,
+            "contest_id": session.contest_id,
+            "student_id": student.id,
+            "reg_no": student.reg_no,
+            "student_name": student.name,
+            "attempt_id": new_attempt.id,
+            "started_at": started.isoformat(),
+            "expires_at": expires.isoformat(),
+            "timestamp": started.isoformat()
+        })
+    except Exception as _ws_err:
+        logger.warning(f"[VIRTUAL_ATTEMPT] WS broadcast failed (non-fatal): {_ws_err}")
+
+    return {
+        "action": "STARTED",
+        "attempt_id": new_attempt.id,
+        "student_id": new_attempt.student_id,
+        "session_id": new_attempt.session_id,
+        "contest_id": new_attempt.contest_id,
+        "contest_name": new_attempt.contest_name,
+        "status": new_attempt.status,
+        "started_at": new_attempt.started_at.isoformat(),
+        "expires_at": new_attempt.expires_at.isoformat() if new_attempt.expires_at else None,
+        "last_activity_at": new_attempt.last_activity_at.isoformat() if new_attempt.last_activity_at else None,
+        "resume_count": 0
+    }
+
+
+@router.get("/sessions/{session_id}/virtual-attempt/status")
+def get_virtual_attempt_status(
+    session_id: int,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Returns the current virtual attempt state for the authenticated student.
+    Returns 404 if no attempt exists yet (pre-start).
+    """
+    from backend.models import VirtualContestAttempt
+    from backend.routes.auth import get_current_user_from_request
+
+    current_user = get_current_user_from_request(request, db)
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required.")
+
+    student = None
+    if hasattr(current_user, 'student_id') and current_user.student_id:
+        student = db.query(Student).filter(Student.id == current_user.student_id).first()
+    if not student and hasattr(current_user, 'id'):
+        student = db.query(Student).filter(Student.id == current_user.id).first()
+
+    if not student:
+        raise HTTPException(status_code=400, detail="Could not resolve student identity.")
+
+    attempt = db.query(VirtualContestAttempt).filter(
+        VirtualContestAttempt.student_id == student.id,
+        VirtualContestAttempt.session_id == session_id
+    ).first()
+
+    if not attempt:
+        return {"exists": False, "attempt": None}
+
+    return {
+        "exists": True,
+        "attempt": {
+            "attempt_id": attempt.id,
+            "student_id": attempt.student_id,
+            "session_id": attempt.session_id,
+            "contest_id": attempt.contest_id,
+            "contest_name": attempt.contest_name,
+            "status": attempt.status,
+            "started_at": attempt.started_at.isoformat() if attempt.started_at else None,
+            "expires_at": attempt.expires_at.isoformat() if attempt.expires_at else None,
+            "last_activity_at": attempt.last_activity_at.isoformat() if attempt.last_activity_at else None,
+            "completed_at": attempt.completed_at.isoformat() if attempt.completed_at else None,
+            "resume_count": attempt.resume_count,
+            "source": attempt.source
+        }
+    }
+
+
+@router.get("/sessions/{session_id}/virtual-attempts")
+def list_session_virtual_attempts(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(
+        resource_name="Virtual Contest Attempts",
+        required_roles=["admin", "super admin", "hod", "faculty", "staff"]
+    ))
+):
+    """
+    Admin/Staff: Lists all virtual attempt records for a given session.
+    Useful for audit, forensics, and reconciliation verification.
+    """
+    from backend.models import VirtualContestAttempt
+
+    attempts = db.query(VirtualContestAttempt).filter(
+        VirtualContestAttempt.session_id == session_id
+    ).order_by(VirtualContestAttempt.started_at.asc()).all()
+
+    return {
+        "session_id": session_id,
+        "total_attempts": len(attempts),
+        "attempts": [
+            {
+                "attempt_id": a.id,
+                "student_id": a.student_id,
+                "reg_no": a.reg_no,
+                "student_name": a.student_name,
+                "leetcode_username": a.leetcode_username,
+                "status": a.status,
+                "started_at": a.started_at.isoformat() if a.started_at else None,
+                "expires_at": a.expires_at.isoformat() if a.expires_at else None,
+                "completed_at": a.completed_at.isoformat() if a.completed_at else None,
+                "resume_count": a.resume_count,
+                "source": a.source
+            }
+            for a in attempts
+        ]
+    }
 
 
 # =========================================================================

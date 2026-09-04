@@ -14,13 +14,12 @@ Responsibilities:
 """
 
 import re
-import logging
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
 
-from backend.models import User, Student, Department, FacultyStudentAssignment
+from backend.models import User, Student
 from backend.logger import logger
 
 

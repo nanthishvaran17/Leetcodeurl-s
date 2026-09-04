@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from backend.database import Base
-from backend.models import Department, Student, LeetCodeProfileStats, StudentContestParticipation, StudentStatSnapshot
+from backend.models import Department, Student, LeetCodeProfileStats
 from backend.services.contest_service import record_contest_participation, get_student_contest_records, calculate_overall_mode
 from backend.services.live_sync_service import _process_single_student_sync
 

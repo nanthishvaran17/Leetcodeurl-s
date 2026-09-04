@@ -8,12 +8,11 @@ from typing import Dict, List, Optional, Set, Tuple, Any
 
 import httpx
 from sqlalchemy import func
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
 from backend.models import (
-    WeeklySession, Student, Department, Section,
-    OfficialPublicParticipant, PublicContestSyncAudit
+    WeeklySession, Student, OfficialPublicParticipant, PublicContestSyncAudit
 )
 from backend.services.authorization_service import get_authorized_student_ids
 

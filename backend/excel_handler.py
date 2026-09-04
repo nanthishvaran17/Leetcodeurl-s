@@ -10,18 +10,16 @@ except ImportError:
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
-from typing import List, Dict, Any, Tuple, Optional
+from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 
 from backend.models import (
-    Student, Department, Section, LeetCodeProfileStats,
-    WeeklyStudentProgress, WeeklySessionSnapshot, WeeklySession,
-    WeeklyPublicResult, ContestParticipation, HODSnapshot, AuditLog, EmailLog, User
+    Student, Department, LeetCodeProfileStats, LeetCodeAccount, WeeklyStudentProgress,
+    WeeklySessionSnapshot, WeeklySession, WeeklyPublicResult,
+    ContestParticipation, AuditLog, User
 )
 from backend.services.authorization_service import apply_role_based_student_filter
 from backend.leetcode_client import extract_leetcode_username
-from backend.config import settings
-from backend.logger import logger
 
 STUDENT_IMPORT_COLUMNS = [
     "REG NO",
@@ -40,10 +38,25 @@ def run_high_speed_excel_import(db: Session, file_bytes: bytes, job_id: str, tra
     col_mapping = {col: str(col).strip().upper() for col in df.columns}
     df = df.rename(columns=col_mapping)
 
-    required_cols = STUDENT_IMPORT_COLUMNS
+    primary_col = None
+    for candidate in ["PRIMARY LEETCODE LINK", "LEETCODE PROFILE LINK", "PRIMARY LEETCODE", "LEETCODE", "LEETCODE LINK", "PRIMARY ACCOUNT"]:
+        if candidate in df.columns:
+            primary_col = candidate
+            break
+
+    sec_col = None
+    for candidate in ["SECONDARY LEETCODE LINK", "SECONDARY LEETCODE PROFILE LINK", "SECONDARY LEETCODE", "SECONDARY ACCOUNT", "SECONDARY LINK", "SECONDARY LEETCODE HANDLE"]:
+        if candidate in df.columns:
+            sec_col = candidate
+            break
+
+    required_cols = ["REG NO", "NAME", "DEPT", "YEAR"]
     missing_req = [c for c in required_cols if c not in df.columns]
     if missing_req:
         raise ValueError(f"Missing required columns in Excel: {', '.join(missing_req)}")
+
+    if not primary_col:
+        raise ValueError("Missing LeetCode profile column. Please include 'PRIMARY LEETCODE LINK' or 'LEETCODE PROFILE LINK'.")
 
     # Standardize column values
     if "REG NO" in df.columns:
@@ -141,20 +154,42 @@ def run_high_speed_excel_import(db: Session, file_bytes: bytes, job_id: str, tra
             if not str(year_str).isalnum():
                 year_str = "I" # Fallback
 
-        url = str(row.get("LEETCODE PROFILE LINK", "")).strip() if pd.notna(row.get("LEETCODE PROFILE LINK")) else ""
+        url = str(row.get(primary_col, "")).strip() if primary_col and pd.notna(row.get(primary_col)) else ""
         username, std_url, url_status = extract_leetcode_username(url)
         if username:
             username = username.lower()
             std_url = f"https://leetcode.com/u/{username}/"
-            
-        sec_str = str(row.get("SECTION", "A")).strip().upper() if "SECTION" in df.columns and pd.notna(row.get("SECTION")) else "A"
+
+        sec_url = str(row.get(sec_col, "")).strip() if sec_col and pd.notna(row.get(sec_col)) else ""
+        sec_username, sec_std_url, _ = extract_leetcode_username(sec_url) if sec_url else (None, None, None)
+        if sec_username:
+            sec_username = sec_username.lower()
+
+        codeforces = str(row.get("CODEFORCES", row.get("CODEFORCES USERNAME", ""))).strip() if ("CODEFORCES" in df.columns and pd.notna(row.get("CODEFORCES"))) or ("CODEFORCES USERNAME" in df.columns and pd.notna(row.get("CODEFORCES USERNAME"))) else ""
+        hackerrank = str(row.get("HACKERRANK", row.get("HACKERRANK USERNAME", ""))).strip() if ("HACKERRANK" in df.columns and pd.notna(row.get("HACKERRANK"))) or ("HACKERRANK USERNAME" in df.columns and pd.notna(row.get("HACKERRANK USERNAME"))) else ""
+
         email = str(row.get("EMAIL", "")).strip() if "EMAIL" in df.columns and pd.notna(row.get("EMAIL")) else ""
 
         dept_obj = existing_depts.get(dept_str)
         dept_id = dept_obj.id if dept_obj else None
 
+        # --- Batch Extraction / Inference ---
+        batch_str = str(row.get("BATCH", "")).strip() if "BATCH" in df.columns and pd.notna(row.get("BATCH")) else None
+        if not batch_str:
+            # Fallback batch inference based on year_str assuming current year is 2026-2027
+            # Note: A real implementation would fetch the active AcademicYear from DB
+            if year_str == "IV": batch_str = "2023-2027"
+            elif year_str == "III": batch_str = "2024-2028"
+            elif year_str == "II": batch_str = "2025-2029"
+            elif year_str == "I": batch_str = "2026-2030"
+
+        # --- Email Generation ---
+        from backend.services.email_identity_service import check_and_generate_email
+        
         student = existing_map.get(reg_no)
         if not student:
+            email_res = check_and_generate_email(db, reg_no)
+            
             new_student = Student(
                 reg_no=reg_no,
                 name=name,
@@ -163,19 +198,50 @@ def run_high_speed_excel_import(db: Session, file_bytes: bytes, job_id: str, tra
                 email=email,
                 leetcode_url=std_url if std_url else url,
                 username=username,
-                is_active=True
+                codeforces_username=codeforces if codeforces else None,
+                hackerrank_username=hackerrank if hackerrank else None,
+                is_active=True,
+                batch=batch_str,
+                institutional_email=email_res.get("email"),
+                email_status=email_res.get("status", "pending")
             )
             new_students.append(new_student)
             tracker.update(processed_inc=1, success_inc=1)
+
+            # Register secondary LeetCode handle if provided
+            if sec_username:
+                db.flush()
+                acc = LeetCodeAccount(student_id=new_student.id, leetcode_username=sec_username)
+                db.add(acc)
         else:
             student.name = name
             if dept_id: student.department_id = dept_id
             if year_str: student.year_level = year_str
             if email: student.email = email
+            if batch_str: student.batch = batch_str
+            
+            # Re-verify email if it's pending or error
+            if student.email_status in ["pending", "error", "needs_verification"] or not student.institutional_email:
+                email_res = check_and_generate_email(db, reg_no, student.institutional_email)
+                student.institutional_email = email_res.get("email") or student.institutional_email
+                student.email_status = email_res.get("status", student.email_status)
+
             if url: 
                 student.leetcode_url = std_url if std_url else url
                 student.username = username
+            if codeforces: student.codeforces_username = codeforces
+            if hackerrank: student.hackerrank_username = hackerrank
             student.is_active = True
+            
+            # Register secondary LeetCode handle if provided
+            if sec_username:
+                existing_acc = db.query(LeetCodeAccount).filter(
+                    LeetCodeAccount.student_id == student.id,
+                    LeetCodeAccount.leetcode_username == sec_username
+                ).first()
+                if not existing_acc:
+                    db.add(LeetCodeAccount(student_id=student.id, leetcode_username=sec_username))
+
             updated_students_count += 1
             tracker.update(processed_inc=1, success_inc=1)
             
@@ -200,6 +266,41 @@ def run_high_speed_excel_import(db: Session, file_bytes: bytes, job_id: str, tra
         "new_student_ids": new_student_ids
     }
 
+
+def get_year_level_variants(year_lvl: str) -> List[str]:
+    clean = str(year_lvl).strip().upper()
+    if clean in ["IV", "4", "4TH", "4-TH"]:
+        return ["IV", "4", "4TH", "4th", "IV Year", "iv"]
+    elif clean in ["III", "3", "3RD", "3-RD"]:
+        return ["III", "3", "3RD", "3rd", "III Year", "iii"]
+    elif clean in ["II", "2", "2ND", "2-ND"]:
+        return ["II", "2", "2ND", "2nd", "II Year", "ii"]
+    elif clean in ["I", "1", "1ST", "1-ST"]:
+        return ["I", "1", "1ST", "1st", "I Year", "i"]
+    return [clean]
+
+def filter_students_by_dept_and_year(db: Session, dept: Department, year_lvl: str, current_user: Optional[User] = None):
+    from sqlalchemy import func, or_
+    year_vars = get_year_level_variants(year_lvl)
+
+    dept_code = dept.code or dept.name
+    matching_depts = db.query(Department).filter(
+        (Department.id == dept.id) |
+        (func.upper(Department.code) == dept_code.upper()) |
+        (func.upper(Department.name).like(f"%{dept_code.upper()}%"))
+    ).all()
+    dept_ids = list({d.id for d in matching_depts}) if matching_depts else [dept.id]
+
+    query = db.query(Student).filter(
+        Student.department_id.in_(dept_ids),
+        func.upper(Student.year_level).in_([v.upper() for v in year_vars]),
+        or_(Student.is_active == True, Student.is_active.is_(None))
+    )
+
+    if current_user:
+        query = apply_role_based_student_filter(query, current_user, db)
+
+    return query.all()
 
 def create_nandha_official_department_sheet(ws, dept: Department, db: Session):
     ws.sheet_view.showGridLines = True
@@ -305,7 +406,12 @@ def create_nandha_official_department_sheet(ws, dept: Department, db: Session):
         for c in range(1, 14):
             ws.cell(row=r, column=c).border = thin_border
 
-    batches = [("2025 - 2029", "II"), ("2024 - 2028", "III"), ("2023 - 2027", "IV")]
+    batches = [
+        ("2023 - 2027", "IV"),
+        ("2024 - 2028", "III"),
+        ("2025 - 2029", "II"),
+        ("2026 - 2030", "I")
+    ]
     current_row = 10
 
     from backend.models import WeeklySession, WeeklyPublicResult, ContestParticipation
@@ -349,12 +455,7 @@ def create_nandha_official_department_sheet(ws, dept: Department, db: Session):
         return q4, q3, q2, q1
 
     for batch_label, year_lvl in batches:
-        students = db.query(Student).filter(
-            Student.department_id == dept.id,
-            Student.year_level == year_lvl,
-            Student.is_active == True
-        ).all()
-        
+        students = filter_students_by_dept_and_year(db, dept, year_lvl)
         total_count = len(students)
         student_ids = {s.id for s in students}
 
@@ -679,16 +780,12 @@ def _create_analytics_summary_sheet(wb, db: Session):
     # Data rows per dept + year
     departments = db.query(Department).all()
     data_row = th_row + 3
-    year_batch_map = {"IV": "2023 – 2027", "III": "2024 – 2028", "II": "2025 – 2029"}
+    year_batch_map = {"IV": "2023 – 2027", "III": "2024 – 2028", "II": "2025 – 2029", "I": "2026 – 2030"}
     latest_session = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
 
     for dept in departments:
         for year_lvl, batch_label in year_batch_map.items():
-            students_dy = db.query(Student).filter(
-                Student.department_id == dept.id,
-                Student.year_level == year_lvl,
-                Student.is_active == True
-            ).all()
+            students_dy = filter_students_by_dept_and_year(db, dept, year_lvl)
 
             if not students_dy:
                 continue
@@ -749,17 +846,11 @@ def generate_8_sheet_excel_report(db: Session, current_user: Optional[User] = No
     _add_cover_sheet(wb, logo_path)
 
     departments = db.query(Department).all()
-    year_order = ["II", "III", "IV"]
+    year_order = ["IV", "III", "II", "I"]
 
     for dept in departments:
         for year_lvl in year_order:
-            query = db.query(Student).filter(
-                Student.department_id == dept.id,
-                Student.year_level == year_lvl,
-                Student.is_active == True
-            )
-            query = apply_role_based_student_filter(query, current_user, db)
-            students_dy = query.all()
+            students_dy = filter_students_by_dept_and_year(db, dept, year_lvl, current_user=current_user)
             if students_dy:
                 _create_dept_year_sheet(wb, dept, year_lvl, students_dy, db)
 

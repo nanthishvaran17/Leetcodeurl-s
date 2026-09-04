@@ -3,7 +3,7 @@ import io
 import datetime
 import hashlib
 import json
-from typing import Dict, Any, List, Optional
+from typing import Dict, List
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
@@ -133,11 +133,11 @@ def normalize_row_data(r: dict) -> dict:
     else: year = "III"
 
     return {
-        "reg_no": r.get("reg_no") or r.get("register_no") or "—",
-        "name": r.get("name") or r.get("student_name") or "—",
+        "reg_no": r.get("reg_no") or r.get("register_no") or "",
+        "name": r.get("name") or r.get("student_name") or "",
         "dept": dept,
         "year": year,
-        "username": r.get("username") or "—",
+        "username": r.get("username") or "",
         "status": status_str,
         "is_att": is_att,
         "is_virtual": is_virt,
@@ -149,8 +149,8 @@ def normalize_row_data(r: dict) -> dict:
         "solved": solved,
         "solved_str": f"{solved}/4",
         "score": score,
-        "rating": r.get("rating") or "N/A",
-        "rank": r.get("rank") or "—"
+        "rating": r.get("rating") if r.get("rating") is not None else "",
+        "rank": r.get("rank") if r.get("rank") is not None else ""
     }
 
 def export_excel_from_dataset(dataset: dict) -> bytes:
@@ -620,9 +620,10 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         ws13.row_dimensions[r13_cur].height = 20
         r13_cur += 1
 
-    # Auto-adjust column widths
+    # Auto-adjust column widths and freeze panes
     for ws_item in wb.worksheets:
-        ws_item.freeze_panes = "A6"
+        # Most data tables start headers at row 7, data at row 8. Freeze above row 8.
+        ws_item.freeze_panes = "A8"
         for col in ws_item.columns:
             col_letter = get_column_letter(col[0].column)
             max_len = 0

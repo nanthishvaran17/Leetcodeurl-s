@@ -1,6 +1,6 @@
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
-from backend.models import Student, LeetCodeProfileStats, WeeklyStudentProgress, WeeklySessionSnapshot
+from backend.models import Student, WeeklyStudentProgress, WeeklySessionSnapshot
 from backend.logger import logger
 
 def calculate_competition_ranks(scores: List[float]) -> List[Optional[int]]:

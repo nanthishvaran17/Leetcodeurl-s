@@ -33,7 +33,7 @@ export const initPushNotifications = async (): Promise<void> => {
       // Register Token / Topic with backend
       try {
         const prodUrl = import.meta.env.VITE_API_URL || 'https://leetcodeurl-s-3mig.onrender.com';
-        await axios.post(`${prodUrl}/api/notifications/register-token`, {
+        await axios.post(`${prodUrl}/api/bot-notifications/register-token`, {
           token: token.value,
           topic: 'all_app_users',
           platform: 'android'

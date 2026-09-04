@@ -1,11 +1,10 @@
 import datetime
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session, joinedload
-from typing import List, Optional
-from sqlalchemy import func
+from typing import Optional
 
 from backend.database import get_db
-from backend.models import Student, Department, Section, LeetCodeProfileStats, WeeklyStudentProgress, WeeklySessionSnapshot
+from backend.models import Student, Department, WeeklyStudentProgress
 from backend.schemas import StudentOut
 from backend.insights import get_student_insights
 from backend.gamification import calculate_section_battles
@@ -963,7 +962,7 @@ def get_performance_chart_data(
         query = query.filter(Student.year_level == year_level.upper())
         
     students = query.all()
-    total_count = len(students)
+    len(students)
     
     current_solved = sum((s.stats.total_solved or 0) if s.stats else 0 for s in students)
     current_active = sum(1 for s in students if (s.stats and s.stats.total_solved and s.stats.total_solved > 0))

@@ -1,13 +1,12 @@
 import datetime
 from zoneinfo import ZoneInfo
-from typing import Dict, Any, Optional, Tuple, List
+from typing import Dict, Any, Optional, List
 from sqlalchemy.orm import Session
 
 from backend.logger import logger
 from backend.models import (
     StudentContestParticipation, 
-    ContestParticipationRecord, 
-    AuditLogRecord,
+    AuditLogRecord, 
     ContestConfig,
     AttendanceSnapshot,
     PostContestActivityRecord

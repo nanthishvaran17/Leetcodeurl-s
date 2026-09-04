@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, Auth } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, Auth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 
@@ -27,6 +27,7 @@ if (isFirebaseConfigured()) {
   try {
     appInstance = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     authInstance = getAuth(appInstance);
+    setPersistence(authInstance, browserLocalPersistence).catch(() => {});
     dbInstance = getFirestore(appInstance);
     storageInstance = getStorage(appInstance);
   } catch (err) {
@@ -41,6 +42,7 @@ export const getOrInitAuth = (): Auth => {
   }
   appInstance = !getApps().length ? initializeApp(firebaseConfig) : getApp();
   authInstance = getAuth(appInstance);
+  setPersistence(authInstance, browserLocalPersistence).catch(() => {});
   return authInstance;
 };
 
@@ -55,6 +57,7 @@ export const getOrInitDb = (): Firestore => {
 
 export const auth = authInstance;
 export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
 export const db = dbInstance;
 export const storage = storageInstance;
 

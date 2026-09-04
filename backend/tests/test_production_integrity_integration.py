@@ -7,12 +7,10 @@ from sqlalchemy.orm import sessionmaker
 
 from backend.models import (
     Base, Student, LeetCodeAccount, StudentContestParticipation, 
-    IntegrityCase, AuditLogRecord, ContestConfig, AttendanceSnapshot,
-    CorrectionEvent, PostContestActivityRecord, NotificationEvent
+    AttendanceSnapshot, CorrectionEvent, PostContestActivityRecord, NotificationEvent
 )
 from backend.services.contest_window_engine import ContestWindowEngine, ContestActivityType, OfficialAttendanceState
 from backend.services.contest_integrity_service import ContestIntegrityService
-from backend.services.notification_outbox_worker import NotificationOutboxWorker
 
 IST = ZoneInfo("Asia/Kolkata")
 UTC = ZoneInfo("UTC")

@@ -79,9 +79,10 @@ export const FastStudentRow = memo(({
   return (
     <div 
       style={style} 
+      onClick={() => onView(student)}
       className="flex items-center hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10 transition-colors duration-150 group font-medium text-xs border-b border-slate-100 dark:border-navy-800/60 cursor-pointer w-[1450px] min-w-full"
     >
-      <div className="flex-none w-10 text-center px-3">
+      <div className="flex-none w-10 text-center px-3" onClick={(e) => e.stopPropagation()}>
         <input
           type="checkbox"
           checked={isSelected}
@@ -90,7 +91,7 @@ export const FastStudentRow = memo(({
         />
       </div>
 
-      <div className="flex-none w-24 px-3 font-bold">
+      <div className="flex-none w-24 px-3 font-bold" onClick={(e) => e.stopPropagation()}>
         {isSolver
           ? getRankBadge(effectiveCollegeRank)
           : syncState === 'pending'
@@ -167,12 +168,12 @@ export const FastStudentRow = memo(({
         {student.stats?.public_profile_ranking ? `#${student.stats.public_profile_ranking.toLocaleString()}` : '—'}
       </div>
 
-      <div className="flex-none w-32 px-3 text-center">
+      <div className="flex-none w-32 px-3 text-center" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-center gap-1 transition-opacity">
           <button onClick={() => onView(student)} className="p-1.5 rounded-xl text-brand-600 hover:bg-brand-50" title="View"><Eye className="w-4 h-4" /></button>
           <button onClick={() => onEdit(student)} className="p-1.5 rounded-xl text-amber-600 hover:bg-amber-50" title="Edit"><Edit3 className="w-4 h-4" /></button>
           <button onClick={() => onRefresh(student.id)} disabled={isSyncing} className={`p-1.5 rounded-xl ${isSyncing ? 'text-blue-500 animate-spin' : 'text-emerald-600 hover:bg-emerald-50'}`}><RefreshCw className="w-4 h-4" /></button>
-          <button onClick={(e) => onDelete(student, e)} className="p-1.5 rounded-xl text-rose-600 hover:bg-rose-50" title="Delete"><Trash2 className="w-4 h-4" /></button>
+          <button onClick={(e) => { e.stopPropagation(); onDelete(student, e); }} className="p-1.5 rounded-xl text-rose-600 hover:bg-rose-50" title="Delete"><Trash2 className="w-4 h-4" /></button>
         </div>
       </div>
     </div>

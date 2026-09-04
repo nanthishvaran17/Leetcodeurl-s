@@ -1,15 +1,12 @@
 import unittest
-import asyncio
-import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from backend.database import Base
-from backend.models import Student, LeetCodeProfileStats, SyncJob, SyncJobItem, Department
+from backend.models import Student, LeetCodeProfileStats, SyncJobItem, Department
 from backend.services.live_sync_service import (
     start_full_sync_job,
     _process_single_student_sync,
-    sync_single_student,
     get_system_freshness
 )
 

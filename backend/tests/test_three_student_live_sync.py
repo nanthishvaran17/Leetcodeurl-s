@@ -1,12 +1,10 @@
 import pytest
-import asyncio
 import os
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from backend.leetcode_fetcher import fetch_leetcode_profile
-from backend.services.firebase_rtdb_service import get_rtdb_reference
 
 @pytest.mark.asyncio
 async def test_three_student_live_leetcode_fetch():

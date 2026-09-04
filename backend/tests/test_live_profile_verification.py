@@ -1,13 +1,12 @@
 import os
 import sys
 import asyncio
-import datetime
 
 # Add project root to sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from backend.database import SessionLocal
-from backend.models import Student, LeetCodeProfileStats
+from backend.models import Student
 from backend.leetcode_fetcher import fetch_leetcode_profile, extract_leetcode_username
 from backend.sync_engine import sync_single_student_db, sync_single_student_by_id
 

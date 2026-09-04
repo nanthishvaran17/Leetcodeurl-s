@@ -3,7 +3,7 @@ Contest Bucket Classifier
 Strict, rule-compliant classification of student contest outcomes.
 Guarantees separation of None vs 0, Public vs Virtual, and verified states.
 """
-from typing import Any, Optional
+from typing import Any
 
 
 ALLOWED_OUTCOMES = (

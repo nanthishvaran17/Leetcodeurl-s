@@ -3,7 +3,6 @@ test_forensic_audit.py — Unit and integration tests for Institutional Forensic
 Uses standard unittest library for zero-dependency test execution.
 """
 
-import datetime
 import unittest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -100,7 +99,7 @@ class TestForensicAuditEngine(unittest.TestCase):
         self.session.commit()
 
         # Execute Phase 2 Matrix
-        results = execute_phase2_matrix(job_id, self.session)
+        execute_phase2_matrix(job_id, self.session)
 
         # 3 Students × 100 Contests = 300 total cells
         self.assertEqual(job.total_matrix_cells, 300)

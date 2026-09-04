@@ -5,7 +5,7 @@ difficulty progression, contest performance, solved count, and accuracy.
 """
 
 import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any
 from sqlalchemy.orm import Session
 from backend.models import Student, StudentLearningPath
 from backend.services.skill_mapping_engine import calculate_student_skill_map

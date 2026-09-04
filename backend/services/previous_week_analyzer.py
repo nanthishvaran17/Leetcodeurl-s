@@ -1,23 +1,19 @@
-import asyncio
 import datetime
-import logging
-import random
 import uuid
-from typing import Dict, List, Optional, Tuple, Any, Set
+from typing import Dict, List, Optional, Tuple, Any
 from datetime import timezone
 
 from sqlalchemy import func, or_
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
 from backend.models import (
-    WeeklySession, Student, Department, Section,
-    PublicContestSyncAudit, PreviousWeekParticipationRecord,
-    ForensicAuditRecord, OfficialPublicParticipant
+    WeeklySession, Student, PublicContestSyncAudit, PreviousWeekParticipationRecord,
+    ForensicAuditRecord
 )
 from backend.services.contest_discovery import (
     get_current_ist_datetime, get_immediately_previous_sunday_date,
-    discover_contest_metadata, IST_TZ
+    discover_contest_metadata
 )
 from backend.services.public_contest_engine import PublicContestEngine, get_single_flight_lock, _global_circuit_breaker
 from backend.services.authorization_service import get_authorized_student_ids
@@ -115,7 +111,7 @@ class PreviousWeekAnalyzer:
             return False, {"error": "WeeklySession record missing."}
 
         worker_id = f"worker_prev_{uuid.uuid4().hex[:8]}"
-        now_utc = datetime.datetime.now(timezone.utc)
+        datetime.datetime.now(timezone.utc)
 
         # Single-flight process-local lock
         lock_key = f"prev_week_sync_{contest_slug}"

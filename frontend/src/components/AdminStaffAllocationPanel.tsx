@@ -1273,7 +1273,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  <button
  type="submit"
  disabled={submitting}
- className="px-4 py-2 rounded-xl bg-sky-700 hover:bg-sky-800 text-white font-bold disabled:opacity-50 cursor-pointer"
+ className="px-4 py-2 rounded-xl bg-sky-700 hover:bg-sky-800 text-white font-bold disabled:opacity-50"
  >
  {submitting ? 'Creating...' : 'Create Account'}
  </button>

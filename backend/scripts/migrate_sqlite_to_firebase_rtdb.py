@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from backend.models import (
     Student, LeetCodeProfileStats, WeeklySession,
-    WeeklyPublicResult, WeeklyVirtualResult, SyncJob, AdminAuditLog
+    WeeklyPublicResult, SyncJob, AdminAuditLog
 )
 from backend.services.firebase_rtdb_service import get_rtdb_reference, RTDB_URL
 
@@ -68,9 +68,9 @@ def run_sqlite_to_firebase_rtdb_migration(sqlite_path: str = None):
     stats_by_student_id = {s.student_id: s for s in stats_list}
 
     sessions = db.query(WeeklySession).all()
-    public_results = db.query(WeeklyPublicResult).all()
+    db.query(WeeklyPublicResult).all()
     sync_jobs = db.query(SyncJob).all()
-    audit_logs = db.query(AdminAuditLog).all()
+    db.query(AdminAuditLog).all()
 
     students_dict = {}
     stats_dict = {}

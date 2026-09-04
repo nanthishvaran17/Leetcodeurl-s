@@ -22,7 +22,8 @@ import {
   AlertOctagon,
   Flame,
   Radio,
-  X
+  X,
+  MessageSquare
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { CollegeLogo } from './CollegeLogo';
@@ -62,6 +63,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       title: 'FACULTY & MENTOR PORTAL',
       items: [
         { id: 'dashboard', label: 'My Dashboard', icon: LayoutDashboard, badge: 'MENTOR', badgeColor: 'indigo' },
+        { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 'NEW', badgeColor: 'indigo' },
         { id: 'faculty-action-center', label: 'Faculty Action Center', icon: Zap, badge: 'LIVE', badgeColor: 'rose', pulse: true },
         { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
       ]
@@ -93,6 +95,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       title: 'EXECUTIVE INTELLIGENCE',
       items: [
         { id: 'dashboard', label: 'HOD Dashboard', icon: LayoutDashboard },
+        { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 'NEW', badgeColor: 'indigo' },
         { id: 'hod-command-center', label: 'HOD Command Center', icon: Cpu, badge: 'HOD', badgeColor: 'purple' },
         { id: 'faculty-action-center', label: 'Faculty Action Center', icon: Zap, badge: 'FACULTY', badgeColor: 'indigo' },
         { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
@@ -125,6 +128,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       title: 'EXECUTIVE INTELLIGENCE',
       items: [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 'NEW', badgeColor: 'indigo' },
         { id: 'hod-command-center', label: 'HOD Command Center', icon: Cpu, badge: 'HOD', badgeColor: 'purple' },
         { id: 'faculty-action-center', label: 'Faculty Action Center', icon: Zap, badge: 'STAFF', badgeColor: 'indigo' },
         { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
@@ -159,6 +163,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       title: 'MY PORTAL',
       items: [
         { id: 'dashboard', label: 'My Dashboard', icon: LayoutDashboard },
+        { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 'NEW', badgeColor: 'indigo' },
         { id: 'public', label: 'Public Leaderboard', icon: Globe },
       ]
     }

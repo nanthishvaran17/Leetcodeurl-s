@@ -10,12 +10,11 @@ Automated test suite verifying the authoritative Latest Successful Snapshot arch
 """
 
 import unittest
-import json
 from fastapi.testclient import TestClient
 from backend.main import app
 from backend.database import SessionLocal
 from backend.services.snapshot_manager import authoritative_snapshot_engine
-from backend.models import OfficialWeeklySnapshot, WeeklySession
+from backend.models import OfficialWeeklySnapshot
 
 
 class TestLatestSuccessfulSnapshotArchitecture(unittest.TestCase):
@@ -89,7 +88,7 @@ class TestLatestSuccessfulSnapshotArchitecture(unittest.TestCase):
 
     def test_05_historical_snapshot_retrieval(self):
         """Verify historical snapshots are retrievable without mutating current pointer"""
-        v_current = authoritative_snapshot_engine.get_latest_version_info(self.db)["data_version"]
+        authoritative_snapshot_engine.get_latest_version_info(self.db)["data_version"]
         
         # Query existing snapshot
         snap = self.db.query(OfficialWeeklySnapshot).first()

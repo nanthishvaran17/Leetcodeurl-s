@@ -156,6 +156,7 @@ export interface StudentRecord {
   leetcode_username: string;
   email: string;
   is_active: boolean;
+  allocation?: string;
   total_solved: number;
   weekly_change?: string;
   contest_standing?: string;
@@ -184,6 +185,7 @@ export interface StudentAddPayload {
   leetcode_username: string;
   email?: string;
   section_id?: number;
+  allocation?: string;
 }
 
 export interface StudentUpdatePayload {
@@ -193,6 +195,7 @@ export interface StudentUpdatePayload {
   leetcode_username?: string;
   email?: string;
   section_id?: number;
+  allocation?: string;
 }
 
 export interface DepartmentRecord {

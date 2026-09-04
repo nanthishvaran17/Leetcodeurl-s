@@ -6,7 +6,6 @@ from sqlalchemy.orm import sessionmaker
 
 from backend.main import app
 from backend.database import Base, get_db
-import backend.models
 from backend.models import Student, Department, LeetCodeProfileStats
 
 # Setup test in-memory SQLite database

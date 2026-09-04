@@ -1,6 +1,6 @@
 from typing import List, Dict, Any
 from sqlalchemy.orm import Session
-from backend.models import Section, Student, WeeklyStudentProgress, LeetCodeProfileStats
+from backend.models import Section, Student, WeeklyStudentProgress
 
 def calculate_section_battles(db: Session) -> List[Dict[str, Any]]:
     """

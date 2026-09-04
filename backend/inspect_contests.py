@@ -1,5 +1,5 @@
 from backend.database import SessionLocal
-from backend.models import WeeklySession, WeeklyPublicResult, WeeklyVirtualResult, Student
+from backend.models import WeeklySession
 from backend.routes.weekly_contests import get_session_matrix
 
 db = SessionLocal()

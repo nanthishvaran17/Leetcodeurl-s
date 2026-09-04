@@ -4,8 +4,7 @@ from sqlalchemy.orm import Session
 
 from backend.main import app
 from backend.database import SessionLocal, engine, Base
-from backend.models import User, Student, Department, WeeklySession, WeeklyPublicResult
-from backend.services.ai_knowledge_service import AIKnowledgeEngine
+from backend.models import User, Student, Department
 
 client = TestClient(app)
 

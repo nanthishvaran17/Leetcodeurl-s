@@ -5,7 +5,7 @@ import datetime
 from collections import defaultdict
 
 from backend.database import get_db
-from backend.models import Student, LeetCodeProfileStats, WeeklyStudentProgress
+from backend.models import Student
 from backend.security import require_security_access
 
 router = APIRouter(prefix="/api/audit", tags=["Audit"])
@@ -243,8 +243,8 @@ def get_student_pipeline_audit(
 # INSTITUTIONAL FORENSIC AUDIT ENDPOINTS (300 Students × 100 Contests)
 # ─────────────────────────────────────────────────────────────────────────────
 
-from backend.models import ForensicAuditJob, ForensicAuditRecord, ForensicStudentIngestStatus
-from backend.services.forensic_audit_service import run_forensic_audit_job, get_canonical_100_contests
+from backend.models import ForensicAuditJob, ForensicAuditRecord
+from backend.services.forensic_audit_service import run_forensic_audit_job
 import asyncio
 
 

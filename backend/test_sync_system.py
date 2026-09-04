@@ -1,15 +1,14 @@
 import os
 import sys
 import asyncio
-import datetime
 
 # Ensure project root is in sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from backend.database import SessionLocal, engine, Base
-from backend.models import Student, LeetCodeProfileStats
-from backend.leetcode_fetcher import fetch_leetcode_profile, fetch_leetcode_profile_sync, extract_leetcode_username
-from backend.sync_engine import run_batch_sync, sync_single_student_by_id, sync_single_student_db, sync_tracker
+from backend.database import SessionLocal
+from backend.models import Student
+from backend.leetcode_fetcher import fetch_leetcode_profile, extract_leetcode_username
+from backend.sync_engine import sync_single_student_db
 
 async def run_all_tests():
     print("=" * 60)

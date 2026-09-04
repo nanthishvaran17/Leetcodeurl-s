@@ -1,18 +1,15 @@
 import datetime
 import io
-import re
-from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from typing import List, Optional, Any
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import desc, func
 
 from backend.database import get_db
-from backend.models import Student, LeetCodeProfileStats, Department, Section, AuditLog
+from backend.models import Student, LeetCodeProfileStats, Department, AuditLog
 from backend.leetcode_client import fetch_leetcode_profile_sync, extract_leetcode_username
 from backend.logger import logger
-from backend.routes.auth import get_current_user
 
 router = APIRouter(prefix="/api/data-issues", tags=["Student Data Issues & Recovery"])
 
@@ -379,7 +376,7 @@ def repair_student_profile(
         raise HTTPException(status_code=400, detail=f"Verification failed: {err_detail}")
 
     old_user = str(student.username)
-    old_url = str(student.leetcode_url)
+    str(student.leetcode_url)
 
     # 2. Update Student record
     student.username = clean_user  # type: ignore[assignment]

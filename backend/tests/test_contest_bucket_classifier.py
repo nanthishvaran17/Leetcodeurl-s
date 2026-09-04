@@ -7,8 +7,7 @@ import unittest
 
 from backend.services.contest_bucket_classifier import (
     classify_public_contest_outcome,
-    classify_virtual_contest_outcome,
-    ALLOWED_OUTCOMES
+    classify_virtual_contest_outcome
 )
 
 

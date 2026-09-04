@@ -29,7 +29,9 @@
   background-repeat: no-repeat;
   position: relative;
   z-index: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .login-page-container::before {
@@ -86,7 +88,9 @@
   background-repeat: no-repeat;
   position: relative;
   z-index: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .login-page-container::before {
@@ -880,11 +884,14 @@
 /* Responsive Mobile Layout (Native App Feel) */
 @media (max-width: 768px) {
   .login-page-container {
-    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
-    background: transparent; /* Rely on body/html or the global container for bg */
+    padding: max(1rem, env(safe-area-inset-top, 16px)) 0.75rem max(2rem, env(safe-area-inset-bottom, 24px)) 0.75rem;
     align-items: center;
     justify-content: flex-start;
-    padding-top: max(2rem, env(safe-area-inset-top));
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    min-height: 100dvh;
+    height: auto;
   }
   
   .dark .login-page-container {

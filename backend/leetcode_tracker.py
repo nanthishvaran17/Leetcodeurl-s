@@ -1,29 +1,22 @@
 import asyncio
 import datetime
-import hashlib
 import io
-import logging
-import os
-import re
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
-from sqlalchemy import and_, func, or_
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from backend.database import get_db
 from backend.logger import logger
 from backend.models import (
-    ContestParticipation,
     Department,
-    LeetCodeProfileStats,
     Student,
     WeeklyPublicResult,
     WeeklySession,
-    WeeklyVirtualResult,
 )
 
 router = APIRouter(prefix="/tracker", tags=["LeetCode Sunday Automated Tracker & HOD Reports"])
@@ -675,7 +668,7 @@ def export_monday_hod_master_pdf(
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import A4, landscape
     from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-    from reportlab.platypus import HRFlowable, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(

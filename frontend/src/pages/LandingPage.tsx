@@ -790,7 +790,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   ? 'Refreshing...' 
                   : isFiltered 
                     ? `Refresh Filtered (${sortedList.length} Students)` 
-                    : 'Refresh All LeetCode Stats'
+                    : 'Refresh 0.25 Allocated Students'
               }
             </span>
           </button>

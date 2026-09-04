@@ -5,10 +5,10 @@ import asyncio
 import datetime
 import os
 
-from backend.database import get_db, SessionLocal
-from backend.models import Student, LeetCodeProfileStats, Department, Section, AuditLog, WeeklyStudentProgress, User
+from backend.database import get_db
+from backend.models import Student, LeetCodeProfileStats, AuditLog, WeeklyStudentProgress, User
 from backend.services.authorization_service import apply_role_based_student_filter, require_staff_student_access
-from backend.schemas import StudentOut, StudentCreate, StudentUpdate, ContestResultOut, StudentListOut
+from backend.schemas import StudentOut, StudentCreate, ContestResultOut, StudentListOut
 from backend.routes.auth import get_current_user
 from backend.security import require_security_access, get_current_user_optional
 from backend.leetcode_client import fetch_leetcode_profile, extract_leetcode_username
@@ -43,11 +43,10 @@ async def get_leaderboard_fast(
     def _compute():
         from backend.database import SessionLocal
         with SessionLocal() as db:
-            from sqlalchemy import text
             from backend.models import (
                 WeeklyPublicResult, WeeklyVirtualResult, WeeklySession,
                 LeetCodeContestRatingHistory, LeetCodeProfileStats,
-                LeetCodeProfile, LeetCodeActivity, WeeklyStudentProgress
+                WeeklyStudentProgress
             )
             import re
 
@@ -82,7 +81,7 @@ async def get_leaderboard_fast(
 
             target_session_id = target_session.id if target_session else None
             target_contest_name = target_session.contest_name if target_session else "Weekly Contest"
-            target_contest_date = str(target_session.session_date) if (target_session and target_session.session_date) else None
+            str(target_session.session_date) if (target_session and target_session.session_date) else None
             c_num = None
             if target_session and target_session.contest_name:
                 m = re.search(r'\d+', target_session.contest_name)
@@ -282,7 +281,6 @@ async def get_students(
     request_db: Session = Depends(get_db)
 ):
     from backend.security import get_current_user_optional
-    from backend.services.faculty_assignment_service import faculty_assignment_service
 
     current_user = get_current_user_optional(request, request_db)
     user_id = current_user.id if current_user else 0
@@ -665,8 +663,8 @@ def download_sample_student_excel():
     ws.title = "Students"
     ws.sheet_view.showGridLines = True
 
-    headers = ["REG NO", "NAME", "DEPT", "YEAR", "LEETCODE PROFILE LINK"]
-    col_widths = [18, 28, 14, 10, 45]
+    headers = ["REG NO", "NAME", "DEPT", "YEAR", "PRIMARY LEETCODE LINK", "SECONDARY LEETCODE LINK"]
+    col_widths = [18, 28, 14, 10, 45, 45]
 
     navy_fill = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
     font_header = Font(name="Times New Roman", size=11, bold=True, color="FFFFFF")
@@ -691,9 +689,9 @@ def download_sample_student_excel():
     ws.row_dimensions[1].height = 26
 
     sample_rows = [
-        ["732224CC001", "AJAY A", "CSE(CS)", "III", "https://leetcode.com/u/example_student/"],
-        ["732224CC002", "AMRUTHA M", "CSE(CS)", "III", "https://leetcode.com/u/example_student2/"],
-        ["732224CI001", "BHARATH K", "CSE(IOT)", "III", "https://leetcode.com/u/example_student3/"],
+        ["732224CC001", "AJAY A", "CSE(CS)", "III", "https://leetcode.com/u/ajay_primary/", "https://leetcode.com/u/ajay_sec/"],
+        ["732224CC002", "AMRUTHA M", "CSE(CS)", "III", "https://leetcode.com/u/amrutha_primary/", "https://leetcode.com/u/amrutha_sec/"],
+        ["732224CI001", "BHARATH K", "CSE(IOT)", "III", "https://leetcode.com/u/bharath_primary/", ""],
     ]
 
     for row_idx, r_data in enumerate(sample_rows, start=2):
@@ -705,7 +703,7 @@ def download_sample_student_excel():
             c.border = thin_border
 
     ws.freeze_panes = "A2"
-    ws.auto_filter.ref = f"A1:E{len(sample_rows)+1}"
+    ws.auto_filter.ref = f"A1:F{len(sample_rows)+1}"
 
     output = io.BytesIO()
     wb.save(output)
@@ -767,13 +765,22 @@ def create_student(
         username = username.lower()
         std_url = f"https://leetcode.com/u/{username}/"
 
+    from backend.services.email_identity_service import check_and_generate_email
+    
+    reg_no_upper = student_in.reg_no.upper()
+    email_result = check_and_generate_email(db, reg_no_upper)
+    institutional_email = email_result.get("email")
+    email_status = email_result.get("status", "error")
+
     student = Student(
-        reg_no=student_in.reg_no.upper(),
+        reg_no=reg_no_upper,
         name=student_in.name,
         department_id=student_in.department_id,
         year_level=student_in.year_level,
         section_id=student_in.section_id,
         email=student_in.email,
+        institutional_email=institutional_email,
+        email_status=email_status,
         leetcode_url=std_url if std_url else student_in.leetcode_url,
         username=username,
         codeforces_username=student_in.codeforces_username,
@@ -901,6 +908,7 @@ class SecondaryAccountSchema(BaseModel):
     profile_url: Optional[str] = None
 
 class StudentUpdateSchema(BaseModel):
+    reg_no: Optional[str] = None
     name: Optional[str] = None
     department_id: Optional[int] = None
     year_level: Optional[str] = None
@@ -912,6 +920,7 @@ class StudentUpdateSchema(BaseModel):
     is_active: Optional[bool] = True
     version: Optional[int] = None
     secondary_accounts: Optional[List[SecondaryAccountSchema]] = None
+    institutional_email: Optional[str] = None
 
 
 @router.patch("/{student_id}")
@@ -940,6 +949,16 @@ def update_student(
 
     old_username = student.username
     changes_made = {}
+
+    if payload.reg_no and payload.reg_no.strip():
+        new_reg_no = payload.reg_no.strip().upper()
+        if student.reg_no != new_reg_no:
+            existing = db.query(Student).filter(Student.reg_no == new_reg_no, Student.id != student_id).first()
+            if existing:
+                raise HTTPException(status_code=400, detail=f"Student with Register No '{new_reg_no}' already exists.")
+            changes_made['reg_no'] = new_reg_no
+            student.reg_no = new_reg_no
+            student.email_status = "needs_verification"
 
     if payload.name and payload.name.strip():
         if student.name != payload.name.strip():
@@ -973,6 +992,20 @@ def update_student(
         if student.email != new_email:
             changes_made['email'] = new_email or "Removed"
             student.email = new_email
+            
+    if payload.institutional_email is not None:
+        new_inst_email = payload.institutional_email.strip().lower() if payload.institutional_email else None
+        if student.institutional_email != new_inst_email:
+            changes_made['institutional_email'] = new_inst_email or "Removed"
+            student.institutional_email = new_inst_email
+            if new_inst_email:
+                student.email_status = "generated"
+            
+    if hasattr(payload, 'allocation') and payload.allocation is not None:
+        new_allocation = payload.allocation.strip() if payload.allocation.strip() else None
+        if student.allocation != new_allocation:
+            changes_made['allocation'] = new_allocation or "None"
+            student.allocation = new_allocation
 
     # ── LeetCode URL / username normalisation ─────────────────────────────────
     url_changed = False
@@ -1198,7 +1231,7 @@ def get_import_status(
         return import_tracker.to_dict()
     return {"status": "NOT_FOUND"}
 
-from backend.sync_engine import run_batch_sync, sync_single_student_by_id, sync_tracker
+from backend.sync_engine import sync_single_student_by_id, sync_tracker
 
 @router.get("/sync-status")
 @router.get("/admin/sync/status/{run_id}")
@@ -1459,3 +1492,89 @@ async def validate_leetcode_account(
             "canonical_url": None,
             "can_save": False,
         }
+
+@router.post("/{student_id}/generate-email")
+def trigger_generate_institutional_email(
+    student_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Email Generation", required_roles=["admin", "super admin", "hod"]))
+):
+    """
+    Manually triggers institutional email generation for a student.
+    Used for overriding/regeneration after a registration number edit.
+    """
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found.")
+        
+    if not student.reg_no:
+        raise HTTPException(status_code=400, detail="Student has no registration number.")
+        
+    from backend.services.email_identity_service import check_and_generate_email
+    
+    result = check_and_generate_email(db, student.reg_no, current_assigned=student.institutional_email)
+    
+    if result["status"] == "needs_verification":
+        raise HTTPException(status_code=409, detail=result["message"])
+    elif result["status"] == "error":
+        raise HTTPException(status_code=400, detail=result["message"])
+        
+    if result["email"]:
+        student.institutional_email = result["email"]
+        student.email_status = result["status"]
+        db.commit()
+        
+    return {
+        "success": True, 
+        "institutional_email": student.institutional_email,
+        "email_status": student.email_status,
+        "message": result["message"]
+    }
+
+
+@router.post("/bulk-generate-emails")
+def bulk_generate_emails(
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Generate Institutional Emails", required_roles=["admin", "super admin"]))
+):
+    from backend.services.email_identity_service import check_and_generate_email
+    
+    students_needing_emails = db.query(Student).filter(
+        (Student.institutional_email == None) | (Student.institutional_email == "")
+    ).all()
+    
+    generated_count = 0
+    error_count = 0
+    
+    for student in students_needing_emails:
+        if not student.reg_no:
+            continue
+            
+        result = check_and_generate_email(db, student.reg_no, current_assigned=student.institutional_email)
+        if result["status"] == "generated" and result["email"]:
+            student.institutional_email = result["email"]
+            student.email_status = "generated"
+            generated_count += 1
+        else:
+            error_count += 1
+            
+    if generated_count > 0:
+        db.commit()
+        
+    audit = AuditLog(
+        user_id=current_user.id,
+        user_name=current_user.username,
+        action="BULK_GENERATE_EMAILS",
+        details=f"Generated {generated_count} missing institutional emails. Errors: {error_count}"
+    )
+    db.add(audit)
+    db.commit()
+    
+    return {
+        "success": True, 
+        "generated_count": generated_count,
+        "error_count": error_count,
+        "message": f"Successfully generated {generated_count} institutional emails."
+    }
+

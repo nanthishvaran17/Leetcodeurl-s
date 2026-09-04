@@ -10,7 +10,7 @@ Guarantees:
 from __future__ import annotations
 
 import asyncio
-from typing import Dict, List, Optional, Set
+from typing import Dict, Set
 
 from backend.logger import logger
 from backend.services.leetcode_adapter import LeetCodeAdapter, UserContestResult

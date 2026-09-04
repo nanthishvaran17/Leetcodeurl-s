@@ -31,14 +31,18 @@ export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
       cred = await signInWithPopup(auth, googleProvider);
       console.log('[GOOGLE_POPUP_SUCCESS] Firebase Google popup authenticated successfully.');
     } catch (popupErr: any) {
-      if (popupErr.code === 'auth/popup-closed-by-user') {
+      console.error('[GOOGLE_POPUP_ERROR]', popupErr);
+      const errStr = String(popupErr?.message || popupErr?.code || '');
+      if (errStr.includes('missing initial state') || errStr.includes('sessionStorage') || popupErr.code === 'auth/web-storage-unsupported') {
+        throw new Error('Browser storage restriction detected. Please log in using your institutional Email/Password or allow third-party cookies in browser settings.');
+      } else if (popupErr.code === 'auth/popup-closed-by-user') {
         throw new Error('Google sign-in was cancelled.');
       } else if (popupErr.code === 'auth/popup-blocked') {
         throw new Error('Please allow popups for this site and try again.');
       } else if (popupErr.code === 'auth/account-exists-with-different-credential') {
         throw new Error('Please sign in using your existing authentication method for this account.');
       } else {
-        throw new Error('Unable to complete Google sign-in. Please try again.');
+        throw new Error(popupErr.message || 'Unable to complete Google sign-in. Please try again.');
       }
     }
 

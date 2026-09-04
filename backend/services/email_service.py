@@ -4,7 +4,6 @@ import os
 import io
 import zipfile
 import smtplib
-import asyncio
 import datetime
 import time
 import threading
@@ -61,7 +60,6 @@ class IPv4SMTP_SSL(smtplib.SMTP_SSL):
             raise err
         raise socket.error("getaddrinfo returned empty list for IPv4")
 
-from fastapi import HTTPException
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 from typing import List, Dict, Any, Optional, Tuple
@@ -191,15 +189,14 @@ def connect_and_login_smtp(smtp_host: str, smtp_port: int, smtp_user: str, smtp_
 from sqlalchemy.orm import Session
 
 from backend.config import settings
-from backend.services.email_assets import NEC_25_LOGO_BASE64
+from backend.services.email_templates import generate_professional_template
 from backend.database import SessionLocal
 from backend.models import (
     WeeklySession,
-    Student,
     ReportEmailRecipient,
     EmailDispatchLog
 )
-from backend.services.report_data_service import fetch_normalized_students, fetch_normalized_contests
+from backend.services.report_data_service import fetch_normalized_students
 from backend.excel_handler import generate_8_sheet_excel_report
 from backend.pdf_generator import generate_pdf_summary_report
 from backend.word_generator import generate_word_report as generate_word_summary_report
@@ -610,121 +607,45 @@ def build_otp_email_template(otp: str) -> Tuple[str, str, str]:
     Generates a premium, modern corporate-grade institutional HTML & plain-text email
     for NANDHA ENGINEERING COLLEGE (AUTONOMOUS) LeetCode Tracker Admin Verification.
     """
-    subject = "Nandha Engineering College — Admin Verification Code"
+    subject = "Nandha Engineering College — Admin Verification"
+    title = "Secure Administrator Verification"
+    
+    content = f"""
+    <div style="display: inline-block; padding: 4px 12px; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: 1.2px; color: #1d4ed8; text-transform: uppercase; margin-bottom: 24px;">
+        OFFICIAL ADMINISTRATOR PORTAL
+    </div>
+    
+    <p style="font-size: 14px; font-weight: 700; color: #1e293b; margin-top: 0; margin-bottom: 8px;">
+        Hello Administrator,
+    </p>
+    <p style="font-size: 14px; color: #475569; line-height: 1.6; margin-top: 0; margin-bottom: 8px;">
+        We received a request to verify administrator access to the Nandha Engineering College LeetCode Weekly Performance Tracker.
+    </p>
+    <p style="font-size: 14px; color: #475569; line-height: 1.6; margin-top: 0;">
+        Use the verification code below to continue.
+    </p>
 
-    html_body = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{subject}</title>
-</head>
-<body style="margin: 0; padding: 0; background-color: #f4f7fb; font-family: Arial, Helvetica, sans-serif; -webkit-font-smoothing: antialiased; color: #1e293b;">
-  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f4f7fb; padding: 40px 12px;">
-    <tr>
-      <td align="center">
-        <!-- Main Card -->
-        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; border-collapse: separate;">
-          
-          <!-- Header Branding -->
-          <tr>
-            <td style="padding: 36px 36px 24px 36px; text-align: left;">
-              <img src="data:image/jpeg;base64,{NEC_25_LOGO_BASE64}" alt="Nandha Engineering College" width="140" style="display:block; width:140px; max-width:140px; height:auto; margin:0 auto 16px; border:0; outline:none; text-decoration:none;">
-              <div style="font-size: 18px; font-weight: 800; color: #0f172a; letter-spacing: -0.3px; line-height: 1.2;">
-                NANDHA ENGINEERING COLLEGE
-              </div>
-              <div style="font-size: 11px; font-weight: 800; color: #2563eb; letter-spacing: 1.2px; text-transform: uppercase; margin-top: 3px;">
-                (AUTONOMOUS)
-              </div>
-              <div style="font-size: 13px; font-weight: 600; color: #475569; margin-top: 6px;">
-                LeetCode Weekly Performance Tracker
-              </div>
-              <div style="display: inline-block; padding: 4px 12px; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: 1.2px; color: #1d4ed8; text-transform: uppercase; margin-top: 14px;">
-                OFFICIAL ADMINISTRATOR PORTAL
-              </div>
-              <div style="border-top: 1px solid #e2e8f0; margin-top: 24px;"></div>
-            </td>
-          </tr>
+    <div style="font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #64748b; text-transform: uppercase; text-align: center; margin-top: 28px; margin-bottom: 12px;">
+        YOUR VERIFICATION CODE
+    </div>
+    <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 20px 16px; text-align: center;">
+        <div style="font-size: 34px; font-weight: 900; letter-spacing: 10px; color: #0f172a; font-family: Arial, Helvetica, sans-serif; line-height: 1.2;">
+            {otp}
+        </div>
+    </div>
+    <div style="font-size: 13px; font-weight: 700; color: #dc2626; text-align: center; margin-top: 12px;">
+        This verification code expires in 5 minutes.
+    </div>
+    <div style="font-size: 12px; color: #64748b; text-align: center; margin-top: 4px; margin-bottom: 28px;">
+        This code can only be used once.
+    </div>
 
-          <!-- Security Verification Body -->
-          <tr>
-            <td style="padding: 0 36px 28px 36px;">
-              <div style="font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 14px;">
-                Secure Administrator Verification
-              </div>
-              <div style="font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 8px;">
-                Hello Administrator,
-              </div>
-              <div style="font-size: 14px; color: #475569; line-height: 1.6; margin-bottom: 8px;">
-                We received a request to verify administrator access to the Nandha Engineering College LeetCode Weekly Performance Tracker.
-              </div>
-              <div style="font-size: 14px; color: #475569; line-height: 1.6;">
-                Use the verification code below to continue.
-              </div>
-            </td>
-          </tr>
+    <div class="security-notice">
+        <strong>Security notice:</strong> If you did not request this verification code, you can safely ignore this email. Never share your verification code with anyone.
+    </div>
+    """
 
-          <!-- OTP Card Section -->
-          <tr>
-            <td style="padding: 0 36px 28px 36px;">
-              <div style="font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #64748b; text-transform: uppercase; text-align: center; margin-bottom: 12px;">
-                YOUR VERIFICATION CODE
-              </div>
-              <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 20px 16px; text-align: center;">
-                <div style="font-size: 34px; font-weight: 900; letter-spacing: 10px; color: #0f172a; font-family: Arial, Helvetica, sans-serif; line-height: 1.2;">
-                  {otp}
-                </div>
-              </div>
-              <div style="font-size: 13px; font-weight: 700; color: #dc2626; text-align: center; margin-top: 12px;">
-                This verification code expires in 5 minutes.
-              </div>
-              <div style="font-size: 12px; color: #64748b; text-align: center; margin-top: 4px;">
-                This code can only be used once.
-              </div>
-            </td>
-          </tr>
-
-          <!-- Security Notice Section -->
-          <tr>
-            <td style="padding: 0 36px 36px 36px;">
-              <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 20px;">
-                <div style="font-size: 13px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">
-                  Security notice
-                </div>
-                <div style="font-size: 13px; color: #475569; line-height: 1.5; margin-bottom: 4px;">
-                  If you did not request this verification code, you can safely ignore this email.
-                </div>
-                <div style="font-size: 13px; color: #475569; line-height: 1.5;">
-                  Never share your verification code with anyone.
-                </div>
-              </div>
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="border-top: 1px solid #e2e8f0; padding: 28px 36px; text-align: left; background-color: #ffffff; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
-              <div style="font-size: 12px; font-weight: 800; color: #0f172a; margin-bottom: 3px;">
-                NANDHA ENGINEERING COLLEGE (AUTONOMOUS)
-              </div>
-              <div style="font-size: 12px; font-weight: 700; color: #2563eb; margin-bottom: 3px;">
-                LeetCode Weekly Performance Tracker
-              </div>
-              <div style="font-size: 11px; color: #64748b; margin-bottom: 14px;">
-                Official Administrator Authentication System
-              </div>
-              <div style="font-size: 11px; color: #94a3b8; line-height: 1.5;">
-                This is an automated security message.<br>Please do not reply directly to this email.
-              </div>
-            </td>
-          </tr>
-
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>"""
+    html_body = generate_professional_template(title, content)
 
     plain_text_body = f"""NANDHA ENGINEERING COLLEGE
 (AUTONOMOUS)
@@ -877,7 +798,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
         )
         return False, f"INVALID_RECIPIENT: {val_err}", None
 
-    t_start = time.time()
+    time.time()
     now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
     masked_target = mask_email_str(clean_rec)
     logger.info(f"[{now_iso}] [OTP] requestId={request_id or 'direct'} recipient={masked_target} stage=request_received")
@@ -922,7 +843,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
                 server.starttls(context=ctx)
                 server.ehlo()
                 server.login(smtp_user, smtp_pass)
-                refused = server.sendmail(from_email, [clean_rec], msg.as_string())
+                server.sendmail(from_email, [clean_rec], msg.as_string())
             finally:
                 try:
                     server.quit()
@@ -951,7 +872,6 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
             brevo_sender = "nanthishvaran0106@gmail.com"
         logger.info(f"[{now_iso}] [OTP] stage=brevo_api using Brevo HTTPS API (Port 443) with verified sender: {brevo_sender} (keys: {len(brevo_keys)})")
         
-        last_error = "BREVO_API_FAILED"
         for b_key in brevo_keys:
             try:
                 t_brevo_start = time.time()
@@ -970,7 +890,6 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
                     )
                     return True, STATUS_SMTP_ACCEPTED, msg_id_or_err
                 
-                last_error = msg_id_or_err
                 err_lower = (msg_id_or_err or "").lower()
                 if "402" in err_lower or "403" in err_lower or "429" in err_lower or "quota" in err_lower or "limit" in err_lower:
                     logger.warning(f"[{now_iso}] [OTP] Key {b_key[:5]}... exhausted. Trying next key.")
@@ -979,7 +898,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
                 
             except Exception as e:
                 logger.warning(f"[{now_iso}] [OTP] Brevo HTTP error with key {b_key[:5]}... : {e}")
-                last_error = str(e)
+                str(e)
                 continue
 
     # ================================================================
@@ -1005,7 +924,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
                 server.starttls(context=ctx)
                 server.ehlo()
                 server.login(smtp_user, smtp_pass)
-                refused = server.sendmail(from_email, [clean_rec], msg.as_string())
+                server.sendmail(from_email, [clean_rec], msg.as_string())
             finally:
                 try:
                     server.quit()
@@ -1436,7 +1355,6 @@ def send_manual_report_email(
     from backend.exporters.excel_exporter import export_excel_from_dataset
     from backend.exporters.pdf_exporter import export_pdf_from_dataset
     from backend.exporters.word_exporter import export_word_from_dataset
-    import openpyxl
 
     report_id_str = f"Session_{session_id}" if session_id else "official"
     dataset, filename_base = _get_dataset_for_id(report_id_str, db, dept=dept, year=year, attendance=attendance)
@@ -1485,59 +1403,74 @@ def send_manual_report_email(
         for fname, fbytes in attachments_bundle
     ])
 
-    body_html = f"""
-    <!DOCTYPE html>
-    <html>
-    <body style="font-family: Arial, Helvetica, sans-serif; color: #1e293b; line-height: 1.6; max-width: 650px; margin: 0 auto; padding: 20px; background-color: #f8fafc;">
-        <div style="background-color: #0f172a; color: #ffffff; padding: 24px 20px; text-align: center; border-radius: 12px 12px 0 0; border-bottom: 4px solid #3b82f6;">
-            <img src="https://files.catbox.moe/xomd50.png" alt="Nandha Engineering College" width="140" style="display:block; width:140px; max-width:140px; height:auto; margin:0 auto 16px; border:0; outline:none; text-decoration:none;">
-            <h2 style="margin: 0; font-size: 20px; letter-spacing: 0.5px;">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</h2>
-            <p style="margin: 6px 0 0 0; font-size: 13px; color: #38bdf8; font-weight: bold;">LeetCode Weekly Performance Tracker &nbsp; Official Institutional Report</p>
-        </div>
+    title = "LeetCode Weekly Performance Tracker"
+    
+    content = f"""
+    <p style="margin-top: 0;">Dear Sir/Madam,</p>
+    <p>Please find attached the official performance report for <strong>{contest_name}</strong>.</p>
+    
+    {custom_block}
 
-        <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-top: none; padding: 28px; border-radius: 0 0 12px 12px;">
-            <p style="margin-top: 0;">Dear Sir/Madam,</p>
-            <p>Please find attached the official performance report for <strong>{contest_name}</strong>.</p>
-            
-            {custom_block}
+    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 20px 0;">
+        <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">📊 Report Scope & Summary</h4>
+        <table class="data-table" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%;">
+            <tr>
+                <td>Contest Name</td>
+                <td>{contest_name}</td>
+            </tr>
+            <tr>
+                <td>Department</td>
+                <td>{dept_label}</td>
+            </tr>
+            <tr>
+                <td>Academic Year</td>
+                <td>{year_label}</td>
+            </tr>
+            <tr>
+                <td>Attendance Scope</td>
+                <td>{att_label}</td>
+            </tr>
+            <tr>
+                <td>Total Evaluated Students</td>
+                <td style="color: #0284c7; font-weight: bold;">{total_students_cnt} Students</td>
+            </tr>
+            <tr>
+                <td>Public Attended</td>
+                <td style="color: #16a34a; font-weight: bold;">{metrics.get('officialAttended', 0)}</td>
+            </tr>
+            <tr>
+                <td>Public Not Attended</td>
+                <td style="color: #dc2626; font-weight: bold;">{metrics.get('notAttended', 0)}</td>
+            </tr>
+            <tr>
+                <td>Virtual Attended</td>
+                <td style="color: #2563eb; font-weight: bold;">{metrics.get('virtualAttended', '—')}</td>
+            </tr>
+            <tr>
+                <td>Generated At</td>
+                <td>{gen_time_str}</td>
+            </tr>
+        </table>
+    </div>
 
-            <div style="background-color: #f1f5f9; border-radius: 8px; padding: 16px; margin: 20px 0;">
-                <h4 style="margin: 0 0 12px 0; color: #0f172a; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">📊 Report Scope & Summary</h4>
-                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-                    <tr><td style="padding: 6px 0; color: #64748b;">Contest Name:</td><td style="font-weight: bold; text-align: right; color: #0f172a;">{contest_name}</td></tr>
-                    <tr><td style="padding: 6px 0; color: #64748b;">Department:</td><td style="font-weight: bold; text-align: right; color: #0f172a;">{dept_label}</td></tr>
-                    <tr><td style="padding: 6px 0; color: #64748b;">Academic Year:</td><td style="font-weight: bold; text-align: right; color: #0f172a;">{year_label}</td></tr>
-                    <tr><td style="padding: 6px 0; color: #64748b;">Attendance Scope:</td><td style="font-weight: bold; text-align: right; color: #0f172a;">{att_label}</td></tr>
-                    <tr><td style="padding: 6px 0; color: #64748b;">Total Evaluated Students:</td><td style="font-weight: bold; text-align: right; color: #0284c7;">{total_students_cnt} Students</td></tr>
-                    <tr><td style="padding: 6px 0; color: #64748b;">Public Attended:</td><td style="font-weight: bold; text-align: right; color: #16a34a;">{metrics.get('officialAttended', 0)}</td></tr>
-                    <tr><td style="padding: 6px 0; color: #64748b;">Public Not Attended:</td><td style="font-weight: bold; text-align: right; color: #dc2626;">{metrics.get('notAttended', 0)}</td></tr>
-                    <tr><td style="padding: 6px 0; color: #64748b;">Virtual Attended:</td><td style="font-weight: bold; text-align: right; color: #2563eb;">{metrics.get('virtualAttended', '—')}</td></tr>
-                    <tr><td style="padding: 6px 0; color: #64748b;">Generated At:</td><td style="font-weight: bold; text-align: right; color: #64748b;">{gen_time_str}</td></tr>
-                </table>
-            </div>
-
-            <p style="font-size: 13px; color: #475569;">
-                📎 <strong>Attached Documents ({len(attachments_bundle)} files):</strong>
-                <ul style="margin: 6px 0 0 0; padding-left: 20px; font-size: 13px;">
-                    {attached_docs_html}
-                </ul>
-            </p>
-            
-            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-            <p style="font-size: 11px; color: #94a3b8; margin: 0; text-align: center;">Nandha Engineering College • Autonomous • Erode - 638 052</p>
-        </div>
-    </body>
-    </html>
+    <p style="font-size: 13px; color: #475569;">
+        📎 <strong>Attached Documents ({len(attachments_bundle)} files):</strong>
+        <ul style="margin: 6px 0 0 0; padding-left: 20px; font-size: 13px;">
+            {attached_docs_html}
+        </ul>
+    </p>
     """
 
-    smtp_host = os.environ.get("SMTP_HOST") or getattr(settings, "SMTP_HOST", "smtp.gmail.com")
-    smtp_port = int(os.environ.get("SMTP_PORT") or getattr(settings, "SMTP_PORT", 587))
+    body_html = generate_professional_template(title, content)
+
+    os.environ.get("SMTP_HOST") or getattr(settings, "SMTP_HOST", "smtp.gmail.com")
+    int(os.environ.get("SMTP_PORT") or getattr(settings, "SMTP_PORT", 587))
     smtp_user = (os.environ.get("SMTP_USERNAME") or getattr(settings, "SMTP_USERNAME", "")).strip()
-    smtp_pass = (os.environ.get("SMTP_PASSWORD") or getattr(settings, "SMTP_PASSWORD", "")).replace(" ", "")
-    from_email = (os.environ.get("REPORT_FROM_EMAIL") or smtp_user or "nanthishvaran17@gmail.com").strip()
-    resend_key = os.environ.get("RESEND_API_KEY", "").strip()
+    (os.environ.get("SMTP_PASSWORD") or getattr(settings, "SMTP_PASSWORD", "")).replace(" ", "")
+    (os.environ.get("REPORT_FROM_EMAIL") or smtp_user or "nanthishvaran17@gmail.com").strip()
+    os.environ.get("RESEND_API_KEY", "").strip()
     brevo_keys = get_all_brevo_keys()
-    brevo_key = brevo_keys[0] if brevo_keys else ""
+    brevo_keys[0] if brevo_keys else ""
 
     dispatched_count = 0
     errors = []

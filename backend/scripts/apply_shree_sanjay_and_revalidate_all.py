@@ -1,9 +1,5 @@
-import asyncio
-import httpx
 import hashlib
 import json
-from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List
 from backend.database import SessionLocal
 from backend.models import Student, WeeklyPublicResult, WeeklySession
 

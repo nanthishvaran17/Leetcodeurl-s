@@ -5,17 +5,15 @@ Validates all specifications, critical invariants, and reconciliation requiremen
 """
 
 import sys
-import os
 import datetime
 
 sys.path.insert(0, r"e:\Leetcode Web")
 
 from backend.database import SessionLocal
 from backend.models import (
-    Student, WeeklySession, WeeklyPublicResult, OfficialWeeklySnapshot,
-    LeetCodeContestRatingHistory
+    Student, WeeklySession
 )
-from backend.services.contest_discovery import discover_contest_metadata, calculate_contest_number
+from backend.services.contest_discovery import discover_contest_metadata
 from backend.routes.weekly_contests import get_normalized_contest_data
 from backend.exporters.excel_exporter import export_excel_from_dataset
 from backend.exporters.pdf_exporter import export_pdf_from_dataset

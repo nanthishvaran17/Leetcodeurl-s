@@ -7,7 +7,7 @@ import asyncio
 import random
 import bcrypt
 import jwt
-from typing import Optional, Any, cast
+from typing import Optional
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response, BackgroundTasks
 from fastapi.security import OAuth2PasswordBearer
@@ -16,8 +16,8 @@ from sqlalchemy import or_
 
 from backend.database import get_db
 from backend.config import settings
-from backend.models import User, Student, AdminSession, AuditLog, PasswordResetAuthorization
-from backend.schemas import UserLogin, Token, UserOut, UserCreate, SendOtpRequest, VerifyOtpRequest, VerifyDobRequest, ResetPasswordSubmitRequest
+from backend.models import User, Student, AdminSession
+from backend.schemas import UserLogin, SendOtpRequest, VerifyOtpRequest, VerifyDobRequest, ResetPasswordSubmitRequest
 from backend.services.otp_service import create_otp_transaction, verify_otp_transaction
 from backend.logger import logger
 
@@ -66,7 +66,7 @@ def create_access_token(data: dict, expires_delta: Optional[datetime.timedelta] 
     return encoded_jwt
 
 
-def create_server_admin_session(db: Session, user: User, request: Request, response: Response) -> str:
+def create_server_admin_session(db: Session, user: User, request: Request, response: Response):
     """
     Creates an opaque server-managed session in database and sets HttpOnly cookie on response.
     """
@@ -109,7 +109,7 @@ def create_server_admin_session(db: Session, user: User, request: Request, respo
         secure=False  # Set True in production HTTPS environments
     )
 
-    return raw_token
+    return raw_token, s_id
 
 
 def uuid_hex_short() -> str:
@@ -158,15 +158,15 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
     Extracts authenticated user from HttpOnly Cookie or Bearer Token.
     Validates active server session in DB.
     """
-    cookie_name = getattr(settings, "SESSION_COOKIE_NAME", "admin_session_token")
-    raw_token = request.cookies.get(cookie_name)
-
-    if not raw_token:
-        auth_header = request.headers.get("Authorization")
-        if auth_header and auth_header.startswith("Bearer "):
-            raw_token = auth_header.split(" ")[1].strip()
-
-    if not raw_token:
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        raw_token = auth_header.split(" ")[1].strip()
+    elif request.query_params.get("token"):
+        raw_token = request.query_params.get("token")
+    else:
+        # DO NOT fallback to cookie for standard API requests.
+        # This enforces the JWT + Refresh Token architecture.
+        # The cookie will ONLY be read by the /refresh endpoint.
         return None
 
     # EXTREME SPEED OPTIMIZATION: Auth Resolution Cache
@@ -644,8 +644,10 @@ def verify_otp(req: VerifyOtpRequest, request: Request, response: Response, db: 
         db.rollback()
 
     # 3. Create Server Session & Set HttpOnly Cookie (Graceful fallback)
+    session_id = None
+    refresh_token_value = None
     try:
-        create_server_admin_session(db, user, request, response)
+        refresh_token_value, session_id = create_server_admin_session(db, user, request, response)
     except Exception as e:
         logger.error(f"[SESSION_CREATION_FAILED] Could not create server session: {e}")
 
@@ -657,15 +659,20 @@ def verify_otp(req: VerifyOtpRequest, request: Request, response: Response, db: 
     })
 
     from backend.services.audit_service import log_admin_action
+    metadata = {"session_id": session_id} if session_id else {}
+    event_id = f"evt_login_{session_id}" if session_id else None
+    
     log_admin_action(
         db, action="ADMIN_OTP_LOGIN_SUCCESS", action_type="SECURITY",
         description=f"Admin {user.username} ({user.email}) logged in successfully via OTP",
-        current_user=user, target_type="User", target_id=str(user.id)
+        current_user=user, target_type="User", target_id=str(user.id),
+        metadata_json=metadata, event_id=event_id
     )
 
     return {
         "success": True,
         "access_token": access_token,
+        "refresh_token": refresh_token_value,
         "token_type": "bearer",
         "user": {
             "id": user.id,
@@ -754,18 +761,24 @@ def google_auth(payload: dict, request: Request, response: Response, db: Session
         db.rollback()
 
     # Step 3: Create Server Session & Set HttpOnly Cookie
+    session_id = None
+    refresh_token_value = None
     try:
-        create_server_admin_session(db, user, request, response)
+        refresh_token_value, session_id = create_server_admin_session(db, user, request, response)
         logger.info("[GOOGLE_SESSION_CREATED] AdminSession created and HttpOnly session cookie set successfully.")
     except Exception as _sess_err:
         logger.error(f"[GOOGLE_SESSION_FAILURE] AdminSession creation failed: {_sess_err}")
         raise HTTPException(status_code=500, detail="Authentication service is temporarily unavailable. Please try again.")
 
     from backend.services.audit_service import log_admin_action
+    metadata = {"session_id": session_id} if session_id else {}
+    event_id = f"evt_login_{session_id}" if session_id else None
+
     log_admin_action(
         db, action="GOOGLE_LOGIN_SUCCESS", action_type="SECURITY",
         description=f"Admin {user.username} ({user.email}) logged in successfully via Google Sign-In",
-        current_user=user, target_type="User", target_id=str(user.id)
+        current_user=user, target_type="User", target_id=str(user.id),
+        metadata_json=metadata, event_id=event_id
     )
 
     access_token = create_access_token(data={"sub": user.username, "role": user.role, "email": user.email, "user_id": user.id})
@@ -774,6 +787,7 @@ def google_auth(payload: dict, request: Request, response: Response, db: Session
         "authenticated": True,
         "success": True,
         "access_token": access_token,
+        "refresh_token": refresh_token_value,
         "token_type": "bearer",
         "user": {
             "id": user.id,
@@ -858,21 +872,26 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
         db.rollback()
 
     # Create Server Session & Set HttpOnly Cookie (Graceful fallback)
+    session_id = None
+    refresh_token_value = None
     try:
-        create_server_admin_session(db, user, request, response)
+        refresh_token_value, session_id = create_server_admin_session(db, user, request, response)
     except Exception as e:
         logger.error(f"[SESSION_CREATION_FAILED] Could not create server session: {e}")
 
     logger.info(f"[ADMIN_LOGIN_SUCCESS] Administrator {user.username} logged in successfully.")
 
     try:
-        if not old_last_login or (_utcnow() - old_last_login).total_seconds() > 5:
-            from backend.services.audit_service import log_admin_action
-            log_admin_action(
-                db, action="ADMIN_LOGIN", action_type="SECURITY",
-                description=f"Admin {user.username} ({user.email}) logged in successfully with role {user.role}",
-                current_user=user, target_type="User", target_id=str(user.id)
-            )
+        from backend.services.audit_service import log_admin_action
+        metadata = {"session_id": session_id} if session_id else {}
+        event_id = f"evt_login_{session_id}" if session_id else None
+        
+        log_admin_action(
+            db, action="ADMIN_LOGIN", action_type="SECURITY",
+            description=f"Admin {user.username} ({user.email}) logged in successfully with role {user.role}",
+            current_user=user, target_type="User", target_id=str(user.id),
+            metadata_json=metadata, event_id=event_id
+        )
     except Exception as e:
         logger.warning(f"[AUDIT_LOG_SKIP] Could not write audit log: {e}")
 
@@ -881,6 +900,7 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
     return {
         "success": True,
         "access_token": access_token,
+        "refresh_token": refresh_token_value,
         "token_type": "bearer",
         "user": {
             "id": user.id,
@@ -916,6 +936,56 @@ def get_auth_session(request: Request, db: Session = Depends(get_db)):
     }
 
 
+class RefreshTokenRequest(BaseModel):
+    refresh_token: Optional[str] = None
+
+@router.post("/refresh")
+def refresh_access_token(request: Request, req: Optional[RefreshTokenRequest] = None, db: Session = Depends(get_db)):
+    cookie_name = getattr(settings, "SESSION_COOKIE_NAME", "admin_session_token")
+    raw_token = request.cookies.get(cookie_name)
+    
+    if not raw_token and req and req.refresh_token:
+        raw_token = req.refresh_token
+        
+    if not raw_token:
+        raw_token = request.headers.get("x-refresh-token", "").strip()
+            
+    if not raw_token:
+        raise HTTPException(status_code=401, detail="SESSION_INVALID")
+        
+    t_hash = hashlib.sha256(raw_token.encode('utf-8')).hexdigest()
+    now = _utcnow()
+
+    sess_rec = db.query(AdminSession).filter(
+        AdminSession.token_hash == t_hash,
+        AdminSession.revoked_at == None,
+        AdminSession.expires_at > now
+    ).first()
+
+    if not sess_rec:
+        raise HTTPException(status_code=401, detail="SESSION_INVALID")
+        
+    # Update last_used_at to keep session alive
+    if not sess_rec.last_used_at or (now - sess_rec.last_used_at).total_seconds() > 60:
+        try:
+            setattr(sess_rec, "last_used_at", now)
+            db.commit()
+        except Exception:
+            db.rollback()
+            
+    user = db.query(User).filter(User.id == sess_rec.user_id, User.is_active == True).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="ACCOUNT_REVOKED")
+        
+    access_token = create_access_token(data={"sub": user.username, "role": user.role, "email": user.email, "user_id": user.id})
+
+    return {
+        "success": True,
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
+
+
 @router.post("/logout")
 def logout(request: Request, response: Response, db: Session = Depends(get_db)):
     validate_csrf_origin(request)
@@ -924,11 +994,18 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
 
     user = get_current_user_from_request(request, db)
 
+    session_id = None
+    session_duration = None
+    
     if raw_token:
         t_hash = hashlib.sha256(raw_token.encode('utf-8')).hexdigest()
-        db.query(AdminSession).filter(AdminSession.token_hash == t_hash).update(
-            {"revoked_at": _utcnow()}, synchronize_session=False
-        )
+        admin_session = db.query(AdminSession).filter(AdminSession.token_hash == t_hash).first()
+        if admin_session:
+            session_id = admin_session.session_id
+            if admin_session.created_at:
+                diff = _utcnow() - admin_session.created_at
+                session_duration = str(diff).split(".")[0]
+            admin_session.revoked_at = _utcnow()
         db.commit()
 
     # Clear HttpOnly Cookie with matching attributes
@@ -937,10 +1014,18 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
     if user:
         logger.info(f"[ADMIN_LOGOUT] User {user.username} ({user.email}) logged out successfully.")
         from backend.services.audit_service import log_admin_action
+        
+        metadata = {"session_id": session_id} if session_id else {}
+        if session_duration:
+            metadata["session_duration"] = session_duration
+            
+        event_id = f"evt_logout_{session_id}" if session_id else None
+        
         log_admin_action(
             db, action="ADMIN_LOGOUT", action_type="SECURITY",
             description=f"Admin {user.username} ({user.email}) logged out",
-            current_user=user, target_type="User", target_id=str(user.id)
+            current_user=user, target_type="User", target_id=str(user.id),
+            metadata_json=metadata, event_id=event_id
         )
 
     return {"success": True, "message": "Logged out successfully."}
@@ -1065,7 +1150,7 @@ async def forgot_password_request(req: ForgotPasswordRequest, request: Request, 
 @router.post("/forgot-password/verify")
 def forgot_password_verify(req: ForgotPasswordVerifyRequest, db: Session = Depends(get_db)):
     email_clean = (req.email or "").strip().lower()
-    inst_id_clean = (req.institutional_id or "").strip()
+    (req.institutional_id or "").strip()
     raw_otp = (req.otp or "").strip()
 
     from backend.models import PasswordResetOTP
@@ -1111,7 +1196,7 @@ def forgot_password_verify(req: ForgotPasswordVerifyRequest, db: Session = Depen
 @router.post("/forgot-password/reset")
 def forgot_password_reset(req: ResetPasswordSubmitRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     email_clean = (req.email or "").strip().lower()
-    inst_id_clean = (req.institutional_id or "").strip()
+    (req.institutional_id or "").strip()
     raw_otp = (req.otp or "").strip()
     
     # We must re-verify the OTP to ensure they didn't skip the verify step
@@ -1184,7 +1269,20 @@ def admin_reset_staff_password(req: AdminResetStaffPasswordRequest, background_t
 
     if staff_user.email:
         from backend.services.email_notifications import notify_password_changed
-        background_tasks.add_task(notify_password_changed, staff_email=staff_user.email, staff_name=staff_user.username, new_password=temp_pass)
+        background_tasks.add_task(notify_password_changed, staff_email=staff_user.email, staff_name=staff_user.full_name or staff_user.username, new_password=temp_pass)
+        try:
+            from backend.services.notification_service import NotificationService
+            NotificationService.create_direct_notification(
+                title="Security Alert: Temporary Password Issued",
+                message=f"Your staff account password was reset by an administrator. Temporary password: {temp_pass}",
+                recipient_user_ids=[staff_user.email, str(staff_user.id), staff_user.username],
+                notification_type="security",
+                priority="high",
+                action_route="/settings",
+                created_by="Administrator"
+            )
+        except Exception as _notif_err:
+            pass
 
     return {
         "status": "success",

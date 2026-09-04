@@ -153,7 +153,7 @@ def generate_comprehensive_excel(db) -> bytes:
         ws_summary.column_dimensions[col_letter].width = max(max_len + 4, 14)
 
     # 2. Add Student Roster Sheets
-    from backend.models import Student, Department
+    from backend.models import Student
     students = db.query(Student).filter(Student.is_active == 1).order_by(Student.department_id, Student.year_level, Student.reg_no).all()
 
     def add_roster_sheet(title, filtered_students):

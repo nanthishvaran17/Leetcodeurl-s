@@ -5,7 +5,7 @@ Provides endpoints for managing 1:20 faculty-to-student assignments, workload di
 and faculty-scoped student lists.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Query, Body, BackgroundTasks
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 import datetime
@@ -13,11 +13,9 @@ from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
 from backend.database import get_db
-from backend.models import User, Student, FacultyStudentAssignment, Department, LeetCodeProfileStats
-from backend.security import require_security_access, require_role
+from backend.models import User, Student, FacultyStudentAssignment
+from backend.security import require_role
 from backend.services.faculty_assignment_service import faculty_assignment_service, MAX_STUDENTS_PER_FACULTY
-from backend.schemas import StudentOut
-from backend.services.authorization_service import apply_role_based_student_filter
 from backend.logger import logger
 
 router = APIRouter(prefix="/faculty-assignments", tags=["Faculty Assignments"])
@@ -417,7 +415,7 @@ def get_my_mentoring_summary(
     current_user: User = Depends(require_role("Faculty", "faculty", "Staff", "staff", "HOD", "hod", "Admin", "Super Admin"))
 ):
     """Returns summary KPIs for the authenticated mentor's assigned student portfolio."""
-    from backend.models import StaffFollowUp, StaffAlert, StudentWeeklyTarget
+    from backend.models import StaffFollowUp, StaffAlert
 
     assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, current_user.id)
     if not assigned_ids:
@@ -633,7 +631,7 @@ def get_staff_follow_ups(
     current_user: User = Depends(require_role("Faculty", "faculty", "Staff", "staff", "HOD", "hod", "Admin", "Super Admin"))
 ):
     """Retrieves follow-up tasks for the staff member."""
-    from backend.models import StaffFollowUp, Student
+    from backend.models import StaffFollowUp
 
     query = db.query(StaffFollowUp).options(joinedload(StaffFollowUp.student)).filter(
         StaffFollowUp.staff_id == current_user.id

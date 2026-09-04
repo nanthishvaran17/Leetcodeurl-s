@@ -2,23 +2,16 @@ from __future__ import annotations
 
 import re
 import datetime
-import asyncio
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
-from backend.database import SessionLocal
 from backend.models import (
     Student, Department, LeetCodeProfileStats,
-    WeeklySession, WeeklyPublicResult, WeeklyVirtualResult,
-    AuditLog
+    WeeklySession, WeeklyPublicResult, WeeklyVirtualResult
 )
 from backend.services.token_bucket_limiter import (
-    TokenBucketRateLimiter,
-    LeetCodeSourceError,
-    SourceUnavailableError,
-    SourceMalformedResponseError,
-    SourceRateLimitExhaustedError
+    TokenBucketRateLimiter
 )
 from backend.cache import cache
 from backend.logger import logger

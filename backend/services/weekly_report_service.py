@@ -10,33 +10,26 @@ import hashlib
 from typing import Dict, Any, List, Optional, Tuple
 from collections import defaultdict
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
 from backend.models import (
-    Student, Department, Section, LeetCodeProfileStats,
-    StudentStatSnapshot, ContestParticipation, WeeklySession,
-    WeeklyPublicResult, WeeklyVirtualResult, StudentContestParticipation,
+    Student, Department, WeeklyPublicResult, WeeklyVirtualResult,
     WeeklyStudentSnapshot, WeeklyReportAudit
 )
 from backend.config.report_config import (
-    BATCH_YEAR_MAP,
     BATCH_CONFIG,
-    DEPARTMENT_COORDINATORS,
-    FINALIZED_STATUSES,
     derive_student_batch,
     get_coordinator_for_department,
+    normalize_year_roman,
 )
 from backend.services.reporting_period_service import reporting_period_service
 from backend.services.contest_discovery_service import contest_discovery_service
 from backend.services.weekly_session_resolver import (
     resolve_weekly_sessions,
-    extract_contest_number,
 )
 from backend.services.contest_bucket_classifier import (
     classify_public_contest_outcome,
     classify_virtual_contest_outcome,
 )
-from backend.services.report_data_service import get_problem_category
 from backend.logger import logger
 
 
@@ -226,14 +219,11 @@ def generate_weekly_performance_data(
     last_contest_ids = [c["contest_id"] for c in discovered_last_contests]
     curr_contest_ids = [c["contest_id"] for c in discovered_curr_contests]
 
-    last_contest_str = ", ".join(last_contest_ids) if last_contest_ids else (str(last_week_contest) if last_week_contest else "No contests discovered")
-    curr_contest_str = ", ".join(curr_contest_ids) if curr_contest_ids else (str(current_week_contest) if current_week_contest else "No contests discovered")
-
     # Step 2: Session Resolution
     session_res = resolve_weekly_sessions(
         db,
-        last_week=last_week_contest or (int(last_contest_ids[0]) if last_contest_ids and last_contest_ids[0].isdigit() else None),
-        current_week=current_week_contest or (int(curr_contest_ids[0]) if curr_contest_ids and curr_contest_ids[0].isdigit() else None)
+        last_week=last_week_contest or (int(last_contest_ids[0]) if last_contest_ids and str(last_contest_ids[0]).isdigit() else None),
+        current_week=current_week_contest or (int(curr_contest_ids[0]) if curr_contest_ids and str(curr_contest_ids[0]).isdigit() else None)
     )
 
     curr_ws = session_res.get("current_week_session")
@@ -242,6 +232,9 @@ def generate_weekly_performance_data(
     last_contest_num = session_res.get("last_week_contest") or (last_contest_ids[0] if last_contest_ids else "N/A")
     curr_session_id = getattr(curr_ws, "id", None)
     last_session_id = getattr(last_ws, "id", None)
+
+    last_contest_str = ", ".join(last_contest_ids) if last_contest_ids else (f"Weekly Contest {last_contest_num}" if last_contest_num and last_contest_num != "N/A" else (str(last_week_contest) if last_week_contest else "Weekly Contest (Current Period)"))
+    curr_contest_str = ", ".join(curr_contest_ids) if curr_contest_ids else (f"Weekly Contest {curr_contest_num}" if curr_contest_num and curr_contest_num != "N/A" else (str(current_week_contest) if current_week_contest else "Weekly Contest (Current Period)"))
 
     curr_date = period_info["current_week_start_str"]
     last_date = period_info["previous_week_start_str"]
@@ -345,8 +338,8 @@ def generate_weekly_performance_data(
             "department": dept_code,
             "dept": dept_code,
             "department_id": s.department_id,
-            "year": s.year_level or "III",
-            "year_level": s.year_level or "III",
+            "year": normalize_year_roman(s.year_level),
+            "year_level": normalize_year_roman(s.year_level),
             "batch": batch_label,
             "leetcode_url": s.leetcode_url,
             "username": s.username or (st.canonical_username if hasattr(st, "canonical_username") else None),
@@ -396,8 +389,8 @@ def generate_weekly_performance_data(
             "department": dept_code,
             "dept": dept_code,
             "department_id": s.department_id,
-            "year": s.year_level or "III",
-            "year_level": s.year_level or "III",
+            "year": normalize_year_roman(s.year_level),
+            "year_level": normalize_year_roman(s.year_level),
             "batch": batch_label,
             "leetcode_url": s.leetcode_url,
             "username": s.username,

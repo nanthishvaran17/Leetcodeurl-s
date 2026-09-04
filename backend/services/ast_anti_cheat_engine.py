@@ -11,9 +11,7 @@ Capabilities:
 
 import ast
 import re
-import math
-import hashlib
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional
 
 
 class ASTAntiCheatEngine:

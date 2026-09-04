@@ -16,22 +16,16 @@ Validates:
 
 import sys
 import os
-import asyncio
-import datetime
-from typing import Dict, Any, List
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from backend.database import SessionLocal
-from backend.models import User, Student, FacultyStudentAssignment, LeetCodeProfileStats, AuditLog
+from backend.models import User, Student, LeetCodeProfileStats, AuditLog
 from backend.routes.auth import create_access_token
 from backend.services.faculty_assignment_service import faculty_assignment_service
 from backend.services.authorization_service import (
-    get_authorized_student_ids,
-    apply_role_based_student_filter,
-    require_staff_student_access
+    apply_role_based_student_filter
 )
-from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from backend.main import app
 

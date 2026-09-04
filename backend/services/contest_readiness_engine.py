@@ -4,10 +4,9 @@ Calculates Contest Readiness %, speed, accuracy, Medium/Hard progress,
 Consistency score, active days (e.g. 27/30), streak metrics, and Digital Coding Profile.
 """
 
-import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any
 from sqlalchemy.orm import Session
-from backend.models import Student, LeetCodeProfileStats, WeeklyStudentProgress, StudentContestParticipation
+from backend.models import Student, WeeklyStudentProgress
 from backend.services.skill_mapping_engine import calculate_student_skill_map
 
 def calculate_contest_readiness(db: Session, student: Student) -> Dict[str, Any]:
@@ -29,10 +28,10 @@ def calculate_contest_readiness(db: Session, student: Student) -> Dict[str, Any]
         }
 
     total = stats.total_solved or 0
-    easy = stats.easy_solved or 0
+    stats.easy_solved or 0
     med = stats.medium_solved or 0
     hard = stats.hard_solved or 0
-    rating = stats.contest_rating or 1400.0
+    stats.contest_rating or 1400.0
 
     # 1. Component Metrics
     accuracy_score = round(min(98.0, 75.0 + min(20.0, total * 0.15)), 1)

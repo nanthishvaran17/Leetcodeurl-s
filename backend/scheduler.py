@@ -1,6 +1,5 @@
 import asyncio
 import datetime
-from zoneinfo import ZoneInfo
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.events import EVENT_JOB_EXECUTED, EVENT_JOB_ERROR, EVENT_JOB_MISSED
@@ -10,11 +9,9 @@ from backend.models import ScheduledJobExecution
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
-from backend.time_utils import IST, UTC
+from backend.time_utils import IST
 
-from backend.config import settings
 from backend.database import SessionLocal
-from backend.session_tracker import get_or_create_current_session, trigger_start_snapshot, trigger_end_snapshot
 try:
     from backend.excel_handler import generate_8_sheet_excel_report
     EXCEL_AVAILABLE = True
@@ -33,13 +30,6 @@ except Exception:
 from backend.services.live_sync_service import start_full_sync_job
 from backend.logger import logger
 
-from backend.services.weekly_session_manager import (
-    get_or_create_current_weekly_session,
-    trigger_start_snapshot_0800,
-    trigger_final_snapshot_0930,
-    run_live_polling_cycle,
-    resume_active_weekly_session
-)
 
 from backend.services.sunday_autopilot import sunday_autopilot
 
@@ -305,14 +295,12 @@ async def tracker_dual_sync_morning():
         db = SessionLocal()
         from backend.leetcode_tracker import execute_dual_sync_job
         # Call the tracker's batch sync logic directly
-        from fastapi import Query
         result = await execute_dual_sync_job.__wrapped__(job_type="morning", db=db) if hasattr(execute_dual_sync_job, "__wrapped__") else None
         if result is None:
             # Import the core function directly
             from backend.leetcode_tracker import (
                 fetch_leetcode_contest_and_submissions,
-                classify_student_contest_performance,
-                get_now_ist, format_ist
+                classify_student_contest_performance
             )
             from backend.models import Student, WeeklySession, WeeklyPublicResult
             students = db.query(Student).filter(

@@ -13,19 +13,15 @@ Features:
 import os
 import sys
 import argparse
-import datetime
 import json
 import sqlite3
-import hashlib
-from typing import Dict, List, Any
-from sqlalchemy import create_engine, MetaData, Table, text, inspect
-from sqlalchemy.orm import sessionmaker
+from typing import Dict
+from sqlalchemy import create_engine, MetaData, text, inspect
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, ROOT_DIR)
 
 from backend.models import Base
-from backend.config import settings
 
 SQLITE_PATH = os.path.join(ROOT_DIR, "data", "leetcode_tracker.db")
 

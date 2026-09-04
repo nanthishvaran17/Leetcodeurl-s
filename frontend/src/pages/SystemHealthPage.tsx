@@ -717,7 +717,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                   </div>
                   <button
                     onClick={() => {
-                      if (item.action === 'REVIEW_STUDENT_MASTER' && onNavigateTab) onNavigateTab('student-master');
+                      if (item.action === 'REVIEW_STUDENT_MASTER' && onNavigateTab) onNavigateTab('students');
                       else if (item.action === 'CREATE_SNAPSHOT') handleCreateSnapshot();
                       else if (item.action) handleExecuteAction(item.action);
                     }}

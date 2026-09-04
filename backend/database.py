@@ -31,7 +31,7 @@ elif db_url.startswith("sqlite:///./"):
         pass
     db_url = f"sqlite:///{db_path}"
 
-from sqlalchemy.pool import NullPool, QueuePool
+from sqlalchemy.pool import NullPool
 
 engine_kwargs = {}
 if "postgresql" in db_url or "postgres" in db_url:
@@ -237,6 +237,10 @@ def run_migrations():
                 scp_migrations = [
                     ("solved_problems", "ALTER TABLE student_contest_participations ADD COLUMN solved_problems TEXT"),
                     ("confidence",      "ALTER TABLE student_contest_participations ADD COLUMN confidence VARCHAR DEFAULT 'HIGH'"),
+                    ("official_attendance_state", "ALTER TABLE student_contest_participations ADD COLUMN official_attendance_state VARCHAR(30)"),
+                    ("is_frozen",       "ALTER TABLE student_contest_participations ADD COLUMN is_frozen BOOLEAN DEFAULT 0"),
+                    ("frozen_at",       "ALTER TABLE student_contest_participations ADD COLUMN frozen_at DATETIME"),
+                    ("post_contest_solves_count", "ALTER TABLE student_contest_participations ADD COLUMN post_contest_solves_count INTEGER DEFAULT 0"),
                 ]
                 for col_name, sql in scp_migrations:
                     if col_name not in scp_cols:
@@ -297,6 +301,22 @@ def run_migrations():
                     conn.execute(__import__('sqlalchemy').text("ALTER TABLE students ADD COLUMN whatsapp_verified BOOLEAN DEFAULT 0"))
                     conn.commit()
                     print("[DB Migration] Added students column: whatsapp_verified")
+                if "allocation" not in st_cols:
+                    conn.execute(__import__('sqlalchemy').text("ALTER TABLE students ADD COLUMN allocation VARCHAR(50)"))
+                    conn.commit()
+                    print("[DB Migration] Added students column: allocation")
+                if "batch" not in st_cols:
+                    conn.execute(__import__('sqlalchemy').text("ALTER TABLE students ADD COLUMN batch VARCHAR(50)"))
+                    conn.commit()
+                    print("[DB Migration] Added students column: batch")
+                if "institutional_email" not in st_cols:
+                    conn.execute(__import__('sqlalchemy').text("ALTER TABLE students ADD COLUMN institutional_email VARCHAR(150)"))
+                    conn.commit()
+                    print("[DB Migration] Added students column: institutional_email")
+                if "email_status" not in st_cols:
+                    conn.execute(__import__('sqlalchemy').text("ALTER TABLE students ADD COLUMN email_status VARCHAR(50) DEFAULT 'pending'"))
+                    conn.commit()
+                    print("[DB Migration] Added students column: email_status")
 
             # Ensure system default Admin account exists
             admin_check = conn.execute(

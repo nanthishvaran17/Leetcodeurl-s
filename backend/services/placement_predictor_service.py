@@ -18,11 +18,10 @@ industry hiring benchmarks:
    - Triggers automated 1:20 Faculty Intervention.
 """
 
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
-from backend.models import Student, Department, LeetCodeProfileStats, FacultyStudentAssignment
+from backend.models import Student, LeetCodeProfileStats
 
 
 class PlacementPredictorService:
@@ -49,7 +48,7 @@ class PlacementPredictorService:
             }
 
         total = stats.total_solved or 0
-        easy = stats.easy_solved or 0
+        stats.easy_solved or 0
         medium = stats.medium_solved or 0
         hard = stats.hard_solved or 0
         rating = stats.contest_rating or 0.0

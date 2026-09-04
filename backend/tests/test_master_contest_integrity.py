@@ -5,7 +5,7 @@ from unittest.mock import patch
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from backend.models import Base, Student, LeetCodeAccount, StudentContestParticipation, IntegrityCase, AuditLogRecord
+from backend.models import Base, Student, LeetCodeAccount, StudentContestParticipation, IntegrityCase
 from backend.services.contest_window_engine import ContestWindowEngine, ContestActivityType, OfficialAttendanceState
 from backend.services.contest_integrity_service import ContestIntegrityService
 

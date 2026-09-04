@@ -1,9 +1,8 @@
 import asyncio
 import httpx
-import time
 from datetime import datetime, timezone, timedelta
 from backend.database import SessionLocal
-from backend.models import Student, Department
+from backend.models import Student
 
 ist_tz = timezone(timedelta(hours=5, minutes=30))
 today_contest_start_ts = int(datetime(2026, 8, 23, 7, 30, 0, tzinfo=ist_tz).timestamp())
@@ -60,7 +59,7 @@ async def check_all():
                                 'username': uname,
                                 'subs': today_subs
                             })
-                except Exception as e:
+                except Exception:
                     pass
         
         tasks = [fetch(s) for s in students]

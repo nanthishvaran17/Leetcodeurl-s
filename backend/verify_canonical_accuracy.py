@@ -1,4 +1,3 @@
-import sys
 import openpyxl
 from backend.database import SessionLocal
 from backend.services.canonical_contest_engine import build_canonical_contest_dataset

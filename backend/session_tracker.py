@@ -1,6 +1,6 @@
 import datetime
 from sqlalchemy.orm import Session
-from backend.models import WeeklySession, WeeklySessionSnapshot, Student, LeetCodeProfileStats
+from backend.models import WeeklySession, WeeklySessionSnapshot, Student
 from backend.leetcode_client import fetch_leetcode_profile
 from backend.sync_engine import sync_single_student_db
 from backend.ranking import update_all_rankings_and_badges

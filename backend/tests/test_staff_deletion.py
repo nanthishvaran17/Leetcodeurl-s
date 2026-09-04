@@ -6,13 +6,12 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-import pytest
 from backend.database import SessionLocal
 from backend.models import (
-    User, Student, FacultyStudentAssignment, StudentAssignmentHistory,
-    FacultyActionAuditLog, FacultyIntervention, MentorNote,
-    AdminSession, StaffFollowUp, StaffAlert, PasswordResetOTP,
-    FacultyActionQueueItem, EmailCampaign
+    User, FacultyStudentAssignment, StudentAssignmentHistory, FacultyActionAuditLog,
+    FacultyIntervention, MentorNote, AdminSession,
+    StaffFollowUp, StaffAlert, PasswordResetOTP, FacultyActionQueueItem,
+    EmailCampaign
 )
 from backend.routes.admin import delete_staff_user
 

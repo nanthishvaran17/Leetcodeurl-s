@@ -39,19 +39,16 @@ import json
 import hashlib
 import datetime
 import zoneinfo
-from typing import Dict, Any, List, Optional, Tuple, Union, Set
+from typing import Dict, Any, List, Optional, Tuple, Union
 from sqlalchemy.orm import Session, joinedload
 
 from backend.models import (
     Student, WeeklySession, WeeklyPublicResult, WeeklyVirtualResult,
-    LeetCodeProfileStats, Department, AuditLog, OfficialWeeklySnapshot,
-    ContestVirtualEvidence, ContestPostPracticeEvidence, VirtualScanAudit,
-    StudentContestParticipation, ContestVirtualScreenshotEvidence
+    VirtualScanAudit
 )
 from backend.logger import logger
 from backend.services.contest_problem_accuracy_engine import (
-    ContestProblemAccuracyEngine, ContestProblemSet, ContestProblemDefinition,
-    INSTITUTIONAL_DEPARTMENTS, INSTITUTIONAL_ACADEMIC_YEARS
+    ContestProblemAccuracyEngine, ContestProblemSet
 )
 
 # ─── TIMEZONE DEFINITIONS ──────────────────────────────────────────────────────
@@ -988,6 +985,49 @@ class UniversalContestReconciliationEngine:
                 invalidate_canonical_cache(session_obj.id)
             except Exception:
                 pass
+
+            # Broadcast VIRTUAL_RESULT_UPDATED for each confirmed virtual participant
+            # This happens AFTER commit + cache invalidation so REST refetches get fresh data
+            try:
+                import time as _rec_time
+                from backend.websocket_manager import manager as ws_manager
+                _seq_base = int(_rec_time.time() * 1000)
+
+                for _idx, _v_entry in enumerate(verified_virtual_list):
+                    _student_id = _v_entry.get("student_id")
+                    if not _student_id:
+                        continue
+                    _seq = _seq_base + _idx  # monotonically increasing per batch
+
+                    _event = {
+                        "type": "VIRTUAL_RESULT_UPDATED",
+                        "event_id": f"recon-{session_obj.id}-{_student_id}-{_seq}",
+                        "sequence": _seq,
+                        "session_id": session_obj.id,
+                        "contest_id": contest_id,
+                        "student_id": _student_id,
+                        "reg_no": _v_entry.get("reg_no", ""),
+                        "student_name": _v_entry.get("name", ""),
+                        "version": _student_id,
+                        "metrics": {
+                            "solved_count": _v_entry.get("total_solved", 0),
+                            "q1": _v_entry.get("q1", 0),
+                            "q2": _v_entry.get("q2", 0),
+                            "q3": _v_entry.get("q3", 0),
+                            "q4": _v_entry.get("q4", 0),
+                        },
+                        "participation_status": "VIRTUAL",
+                        "timestamp": datetime.datetime.now(UTC_TZ).isoformat()
+                    }
+                    ws_manager.broadcast_virtual_result(session_obj.id, _event)
+
+                if verified_virtual_list:
+                    logger.info(
+                        f"[RECON_WS] Broadcast {len(verified_virtual_list)} VIRTUAL_RESULT_UPDATED "
+                        f"events for session {session_obj.id}"
+                    )
+            except Exception as _ws_err:
+                logger.warning(f"[RECON_WS] WS broadcast failed (non-fatal): {_ws_err}")
 
         return result_payload
 

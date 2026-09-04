@@ -7,9 +7,9 @@ from typing import List, Dict, Any, Union
 import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from fastapi import HTTPException, status
+from fastapi import HTTPException
 
-from backend.models import User, FacultyStudentAssignment, Student, Department
+from backend.models import User, FacultyStudentAssignment, Student
 from backend.logger import logger
 
 

@@ -1,11 +1,9 @@
 import datetime
 import hashlib
 import uuid
-import re
 from typing import Optional, List, Dict, Any
 from fastapi import Request, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-import jwt
 
 from backend.database import get_db
 from backend.config import settings

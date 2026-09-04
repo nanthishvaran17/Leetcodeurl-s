@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from backend.models import Base, Student, LeetCodeAccount, StudentContestParticipation, IntegrityCase
+from backend.models import Base, Student, LeetCodeAccount, StudentContestParticipation
 from backend.services.contest_integrity_service import ContestIntegrityService
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"

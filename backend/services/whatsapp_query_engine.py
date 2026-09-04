@@ -12,14 +12,13 @@ Security Mandates:
 3. Dual Language output: Clear English + Tamil formatted message templates.
 """
 
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, desc, or_
 
 from backend.models import (
     User, Student, Department, LeetCodeProfileStats,
-    WeeklySession, WeeklySessionSnapshot, StudentContestParticipation,
-    FacultyStudentAssignment
+    WeeklySession, WeeklySessionSnapshot
 )
 from backend.services.whatsapp_auth_service import WhatsAppIdentity
 

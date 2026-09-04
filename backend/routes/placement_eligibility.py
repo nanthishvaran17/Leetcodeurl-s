@@ -2,12 +2,12 @@
 placement_eligibility.py — API Endpoints for AI Predictive Placement Eligibility Engine
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional, Dict, Any
+from typing import Optional
 
 from backend.database import get_db
-from backend.models import User, Student, LeetCodeProfileStats
+from backend.models import User, Student
 from backend.security import require_role, get_current_user_optional
 from backend.services.placement_predictor_service import placement_predictor_service
 

@@ -9,8 +9,8 @@ import json
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from backend.database import SessionLocal, engine
-from backend.models import Student, Department, LeetCodeProfileStats, Section
+from backend.database import SessionLocal
+from backend.models import Student, Department, LeetCodeProfileStats
 from sqlalchemy import text
 from backend.cache import cache
 
@@ -66,7 +66,7 @@ def parse_and_import(raw_tsv_path: str):
         if parts[0].lower() == "rank" or parts[1].lower() == "reg_no":
             continue
 
-        rank_str = parts[0].strip()
+        parts[0].strip()
         reg_no = parts[1].strip().upper()
         name = parts[2].strip()
         dept_code_raw = parts[3].strip().upper()

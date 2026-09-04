@@ -9,7 +9,7 @@ Design & Guardrails:
 """
 
 import re
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Tuple
 from sqlalchemy.orm import Session
 
 from backend.services.whatsapp_auth_service import WhatsAppIdentity

@@ -1,12 +1,12 @@
 from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from backend.database import get_db
 from backend.models import User
 from backend.services.ai_control_engine import AIControlEngine
-from backend.security import get_current_user_optional, require_security_access
+from backend.security import get_current_user_optional
 
 router = APIRouter(prefix="/ai/control", tags=["AI Control Center"])
 

@@ -1,15 +1,13 @@
 import pytest
-import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from backend.database import Base
-from backend.models import Department, Student, LeetCodeProfileStats, StudentContestParticipation
+from backend.models import Department, Student, LeetCodeProfileStats
 from backend.services.contest_service import (
     record_contest_participation,
     get_student_contest_records,
-    build_student_contest_dto,
-    calculate_overall_mode
+    build_student_contest_dto
 )
 
 # Setup in-memory SQLite database for test suite

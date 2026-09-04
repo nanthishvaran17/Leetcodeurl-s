@@ -10,14 +10,12 @@ import datetime
 import hashlib
 import json
 import threading
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import text
 
 from backend.database import SessionLocal
 from backend.models import (
-    OfficialWeeklySnapshot, WeeklySession, Student,
-    LeetCodeProfileStats, Department
+    OfficialWeeklySnapshot, WeeklySession
 )
 from backend.logger import logger
 from backend.services.canonical_contest_engine import build_canonical_contest_dataset

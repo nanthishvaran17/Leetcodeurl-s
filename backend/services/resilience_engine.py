@@ -8,7 +8,7 @@ Enforces finite timeouts, exponential backoff, and circuit breaker patterns.
 import asyncio
 import time
 import threading
-from typing import Callable, Any, Dict, Optional
+from typing import Callable, Any, Dict
 from backend.logger import logger
 
 

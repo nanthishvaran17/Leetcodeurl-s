@@ -1,11 +1,8 @@
 import os
 import io
-import datetime
 import re
-from typing import Optional
 
 try:
-    import docx
     from docx import Document
     from docx.shared import Inches, Pt, RGBColor
     from docx.enum.text import WD_ALIGN_PARAGRAPH

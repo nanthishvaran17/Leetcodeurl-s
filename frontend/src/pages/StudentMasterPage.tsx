@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { 
   Users, Trash2, Edit2, ShieldAlert, BadgeInfo, CheckCircle, 
   X, Check, AlertCircle, Sparkles, Building2, LayoutList, Calendar,
-  Search, Plus, UploadCloud, RefreshCw, UserPlus, List, LayoutGrid, XCircle, Loader2, AlertTriangle, WifiOff, ChevronLeft, ChevronRight
+  Search, Plus, UploadCloud, RefreshCw, UserPlus, List, LayoutGrid, XCircle, Loader2, AlertTriangle, WifiOff, ChevronLeft, ChevronRight, Mail
 } from 'lucide-react';
 import { GlobalFilter } from '../components/GlobalFilter';
 import api from '../services/api';
@@ -439,22 +439,25 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                 <span>Cards</span>
               </button>
             </div>
+            
+            <div className="flex flex-wrap items-center gap-2 mt-4 lg:mt-0 justify-end">
 
-            <button
-              onClick={onOpenImport}
-              className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-white font-bold text-[11px] uppercase tracking-wider flex items-center space-x-1.5 shadow-sm transition-all cursor-pointer"
-            >
-              <UploadCloud className="w-3.5 h-3.5 text-brand-300" />
-              <span>Bulk Import</span>
-            </button>
+              <button
+                onClick={onOpenImport}
+                className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-white font-bold text-[11px] uppercase tracking-wider flex items-center space-x-1.5 shadow-sm transition-all cursor-pointer"
+              >
+                <UploadCloud className="w-3.5 h-3.5 text-brand-300" />
+                <span>Bulk Import</span>
+              </button>
 
-            <button
-              onClick={handleOpenAddModal}
-              className="px-3 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-400 text-white font-bold text-[11px] uppercase tracking-wider shadow-md shadow-brand-500/20 flex items-center space-x-1.5 transition-all cursor-pointer border border-brand-400/50"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Student</span>
-            </button>
+              <button
+                onClick={handleOpenAddModal}
+                className="px-3 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-400 text-white font-bold text-[11px] uppercase tracking-wider shadow-md shadow-brand-500/20 flex items-center space-x-1.5 transition-all cursor-pointer border border-brand-400/50"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Student</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

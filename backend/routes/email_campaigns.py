@@ -2,9 +2,9 @@
 email_campaigns.py — API Endpoints for Institutional Bulk Email Campaigns & Queue Tracking
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 from pydantic import BaseModel, Field
 
 from backend.database import get_db

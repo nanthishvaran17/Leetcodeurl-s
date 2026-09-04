@@ -13,7 +13,7 @@ import { studentLiveStore, useStudentStoreVersion } from '../../stores/studentLi
 interface EditStaffModalProps {
   staff: any;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (updatedStaff?: any) => void;
   departments: any[];
   staffList: any[];
   notify: any;
@@ -26,6 +26,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
 
   // Primary Form State
   const [formData, setFormData] = useState({
+    id: 0,
     full_name: '',
     username: '',
     email: '',
@@ -36,7 +37,8 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
     designation: '',
     date_of_birth: '',
     mentoring_role: '',
-    reporting_manager: 'none'
+    reporting_manager: 'none',
+    institutional_id: ''
   });
 
   const [isActive, setIsActive] = useState(true);
@@ -54,7 +56,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [tempPasswordResult, setTempPasswordResult] = useState<{ password: string; email: string } | null>(null);
 
-  // Role Dropdown Stacking State (Top-level hook)
+  // Role Dropdown Stacking State
   const [roleOpen, setRoleOpen] = useState(false);
   const roleRef = useRef<HTMLDivElement>(null);
 
@@ -68,42 +70,86 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
     return () => document.removeEventListener('mousedown', handler);
   }, [roleOpen]);
 
-  // Pre-populate Form Data from Backend Record
-  useEffect(() => {
-    if (staff) {
-      let formattedDOBDisplay = '';
-      if (staff.date_of_birth) {
-        try {
-          const d = new Date(staff.date_of_birth);
-          if (!isNaN(d.getTime())) {
-            const day = String(d.getDate()).padStart(2, '0');
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const year = d.getFullYear();
-            formattedDOBDisplay = `${day}/${month}/${year}`;
-          }
-        } catch {
-          formattedDOBDisplay = staff.date_of_birth;
+  // Helper to convert any raw DOB string (ISO, YYYY-MM-DD, DD/MM/YYYY) to DD/MM/YYYY
+  const parseDOBToDisplay = (rawDob: any): string => {
+    if (!rawDob) return '';
+    const str = String(rawDob).trim();
+    if (!str) return '';
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) {
+      return str;
+    }
+    if (str.includes('-')) {
+      const datePart = str.split('T')[0];
+      const parts = datePart.split('-');
+      if (parts.length === 3) {
+        const [y, m, d] = parts;
+        if (y.length === 4) {
+          return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
         }
       }
+    }
+    try {
+      const dateObj = new Date(str);
+      if (!isNaN(dateObj.getTime())) {
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const year = dateObj.getFullYear();
+        return `${day}/${month}/${year}`;
+      }
+    } catch {
+      // fallback
+    }
+    return str;
+  };
 
-      const initialData = {
-        full_name: staff.full_name || staff.username || '',
-        username: staff.username || '',
-        email: staff.email || '',
-        phone_number: staff.phone_number || '',
-        role: staff.role || 'Faculty Mentor',
-        department_id: staff.department_id ? String(staff.department_id) : '0',
-        academic_year: staff.academic_year || '',
-        designation: staff.designation || '',
-        date_of_birth: staff.date_of_birth || '',
-        mentoring_role: staff.mentoring_role || '',
-        reporting_manager: staff.reporting_manager ? String(staff.reporting_manager) : 'none'
-      };
+  // Canonical Normalization Layer for Staff Object -> Form Data
+  const normalizeStaffForForm = (staffObj: any) => {
+    if (!staffObj) return null;
 
-      setFormData(initialData);
-      setIsActive(staff.is_active ?? true);
-      setDobDisplay(formattedDOBDisplay);
-      setInitialSnapshot(JSON.stringify({ ...initialData, is_active: staff.is_active ?? true, dobDisplay: formattedDOBDisplay }));
+    let dobVal = staffObj.date_of_birth || '';
+    if (dobVal && dobVal.includes('T')) {
+      dobVal = dobVal.split('T')[0];
+    }
+    const formattedDOBDisplay = parseDOBToDisplay(dobVal);
+
+    return {
+      formData: {
+        id: staffObj.id || 0,
+        full_name: staffObj.full_name || staffObj.username || '',
+        username: staffObj.username || '',
+        email: staffObj.email || '',
+        phone_number: staffObj.phone_number || '',
+        role: staffObj.role || 'Faculty Mentor',
+        department_id: staffObj.department_id ? String(staffObj.department_id) : '0',
+        academic_year: staffObj.academic_year || '',
+        designation: staffObj.designation || '',
+        date_of_birth: dobVal,
+        mentoring_role: staffObj.mentoring_role || '',
+        reporting_manager: staffObj.reporting_manager ? String(staffObj.reporting_manager) : 'none',
+        institutional_id: staffObj.institutional_id || ''
+      },
+      isActive: staffObj.is_active ?? true,
+      dobDisplay: formattedDOBDisplay
+    };
+  };
+
+  // Rehydrate Form Data Whenever Staff Prop Changes or Modal Opens
+  useEffect(() => {
+    if (staff) {
+      const normalized = normalizeStaffForForm(staff);
+      if (normalized) {
+        setFormData(normalized.formData);
+        setIsActive(normalized.isActive);
+        setDobDisplay(normalized.dobDisplay);
+        setFormErrors({});
+        setSubmitError(null);
+        setTempPasswordResult(null);
+        setInitialSnapshot(JSON.stringify({
+          ...normalized.formData,
+          is_active: normalized.isActive,
+          dobDisplay: normalized.dobDisplay
+        }));
+      }
     }
   }, [staff]);
 
@@ -200,6 +246,13 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
       formatted = val.substring(0, 2) + '/' + val.substring(2, 4) + '/' + val.substring(4);
     }
     setDobDisplay(formatted);
+
+      if (formatted.length === 10) {
+        const [dd, mm, yyyy] = formatted.split('/');
+        setFormData(prev => ({ ...prev, date_of_birth: `${yyyy}-${mm}-${dd}` }));
+      } else {
+        setFormData(prev => ({ ...prev, date_of_birth: '' }));
+      }
   };
 
   // Date validator
@@ -243,7 +296,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
     }
   };
 
-  // Save Handler with Persistence & Verification
+  // Save Handler with Complete Persistence & Parent Synchronization
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError(null);
@@ -266,10 +319,12 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
       const rawDeptId = parseInt(formData.department_id, 10);
       const deptIdToSend = (rawDeptId > 0 && !isGlobalRole) ? rawDeptId : null;
 
-      let formattedDOB = undefined;
+      let formattedDOB: string | null | undefined = undefined;
       if (dobDisplay && dobDisplay.length === 10) {
         const [dd, mm, yyyy] = dobDisplay.split('/');
         formattedDOB = `${yyyy}-${mm}-${dd}`;
+      } else if (dobDisplay === '') {
+        formattedDOB = null;
       } else if (formData.date_of_birth) {
         formattedDOB = formData.date_of_birth;
       }
@@ -289,9 +344,19 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         reporting_manager_id: formData.reporting_manager === 'none' ? undefined : parseInt(formData.reporting_manager, 10)
       };
 
-      await api.put(`/admin/staff/${staff.id}`, payload);
+      const res = await api.put(`/admin/staff/${staff.id}`, payload);
       notify.success(`Staff account for '${formData.full_name || formData.username}' updated successfully!`, '', { category: 'ADMIN' });
-      onSuccess();
+      
+      const updatedStaffRecord = res.data?.staff ? {
+        ...staff,
+        ...res.data.staff
+      } : {
+        ...staff,
+        ...payload,
+        department_id: deptIdToSend
+      };
+
+      onSuccess(updatedStaffRecord);
     } catch (err: any) {
       console.error('Failed to update staff account:', err);
       const safeErrMsg = err.response?.data?.detail || 'Unable to save staff updates. Please try again.';
@@ -456,6 +521,9 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                       <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Date of Birth (DD/MM/YYYY)</label>
                       <input
                         type="text"
+                        name="staff_dob_ignore_autofill"
+                        id="staff_dob_ignore_autofill"
+                        autoComplete="off"
                         value={dobDisplay}
                         onChange={handleDOBChange}
                         placeholder="DD / MM / YYYY"

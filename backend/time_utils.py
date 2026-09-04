@@ -9,9 +9,9 @@ Guarantees:
 """
 from __future__ import annotations
 
-from datetime import datetime, time, date, timedelta
+from datetime import datetime, time, date
 from zoneinfo import ZoneInfo
-from typing import Optional, Union
+from typing import Optional
 
 UTC = ZoneInfo("UTC")
 IST = ZoneInfo("Asia/Kolkata")

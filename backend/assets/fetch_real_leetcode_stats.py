@@ -1,7 +1,6 @@
 import os
 import sys
 import asyncio
-import time
 
 # Add project root to sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -11,7 +10,6 @@ from backend.models import Student, LeetCodeProfileStats, WeeklyStudentProgress
 from backend.leetcode_fetcher import fetch_leetcode_profile, extract_leetcode_username
 from backend.ranking import update_all_rankings_and_badges
 from backend.assets.sync_firestore import sync_database_to_firestore
-from backend.logger import logger
 
 async def fetch_real_all_students():
     print("Starting REAL 100% accurate LeetCode profile data extraction for all 273 students...")

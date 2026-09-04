@@ -3,9 +3,8 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from backend.database import get_db
-from backend.models import Department, Section, Student
+from backend.models import Department, Section
 from backend.schemas import DepartmentOut, DepartmentCreate, SectionOut, SectionCreate
-from backend.routes.auth import get_current_user
 from backend.security import require_security_access
 
 from backend.constants import ALLOWED_PRODUCTION_DEPT_CODES

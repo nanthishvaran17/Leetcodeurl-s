@@ -11,6 +11,13 @@ export class LiveEventRouter {
   private queryClient: QueryClient;
   private invalidateTimeouts: Map<string, any> = new Map();
 
+  /**
+   * Sequence guard map: prevents stale VIRTUAL_RESULT_UPDATED events from
+   * overwriting fresher data in the contest matrix cache.
+   * Key: `virtual_${sessionId}_${studentId}` → last accepted sequence (epoch ms)
+   */
+  private lastVirtualSequence: Map<string, number> = new Map();
+
   constructor(queryClient: QueryClient) {
     this.queryClient = queryClient;
   }
@@ -31,6 +38,55 @@ export class LiveEventRouter {
     }, delay);
     
     this.invalidateTimeouts.set(keyStr, timeout);
+  }
+
+  /**
+   * Sequence guard for virtual events.
+   * Returns true if the incoming sequence is newer than the last accepted one for this scope.
+   * Automatically updates the map when accepting.
+   */
+  private isVirtualEventFresh(sessionId: number, studentId: number, sequence: number): boolean {
+    const key = `virtual_${sessionId}_${studentId}`;
+    const last = this.lastVirtualSequence.get(key) ?? 0;
+    if (sequence <= last) {
+      devLog(`[SEQ_DROP] Dropping stale virtual event seq=${sequence} for ${key} (last=${last})`);
+      return false;
+    }
+    this.lastVirtualSequence.set(key, sequence);
+    return true;
+  }
+
+  /**
+   * Surgically patch a single student's contest result row in the React Query
+   * contest matrix cache. Only the changed student's object reference changes —
+   * all other rows keep their references (structural sharing via RQ).
+   *
+   * Cache key convention: ['contests', 'matrix', sessionId]
+   * Shape expected: { items: any[], total: number, metrics: any, ... }
+   */
+  private patchContestMatrixRow(
+    sessionId: number,
+    studentId: number,
+    changes: Record<string, any>
+  ) {
+    const cacheKey = ['contests', 'matrix', sessionId];
+    this.queryClient.setQueryData(cacheKey, (prev: any) => {
+      if (!prev) return prev;
+      const items: any[] = prev.items || prev.rows || [];
+      if (!items.length) return prev;
+
+      const idStr = String(studentId);
+      let patched = false;
+      const nextItems = items.map((row: any) => {
+        if (String(row.student_id) !== idStr) return row;
+        patched = true;
+        devLog(`[MATRIX_PATCH] Patching contest matrix row student=${studentId} session=${sessionId}`, changes);
+        return { ...row, ...changes };
+      });
+
+      if (!patched) return prev; // student not found in current page — no mutation
+      return { ...prev, items: nextItems };
+    });
   }
 
   /**
@@ -323,6 +379,42 @@ export class LiveEventRouter {
         this.handleBatch([event]);
         break;
 
+      case 'VIRTUAL_RESULT_UPDATED': {
+        // Direct single-event delivery (not batched) from VIRTUAL_RESULT_UPDATED
+        const { session_id, student_id, metrics, sequence = 0, version } = event;
+        if (!session_id || !student_id) break;
+
+        if (!this.isVirtualEventFresh(session_id, student_id, sequence)) break;
+
+        // Surgically patch the contest matrix row — zero full re-fetch
+        this.patchContestMatrixRow(session_id, student_id, {
+          participation_status: 'VIRTUAL',
+          status: 'VIRTUAL',
+          q1: metrics?.q1 ?? 0,
+          q2: metrics?.q2 ?? 0,
+          q3: metrics?.q3 ?? 0,
+          q4: metrics?.q4 ?? 0,
+          total_solved: metrics?.solved_count ?? 0,
+          total_contest_solved: metrics?.solved_count ?? 0,
+          version,
+        });
+
+        // Debounced aggregate metrics refresh (triggers re-fetch of full metrics block)
+        this.debouncedInvalidate(['contests', 'matrix', session_id], 500);
+        devLog(`[VIRTUAL_RESULT_UPDATED] session=${session_id} student=${student_id} solved=${metrics?.solved_count}`);
+        break;
+      }
+
+      case 'VIRTUAL_ATTEMPT_STARTED': {
+        const { session_id } = event;
+        if (session_id) {
+          // Debounced invalidation so the virtual attempt count reflects in the UI
+          this.debouncedInvalidate(['contests', 'virtual-attempts', session_id], 300);
+        }
+        devLog('[VIRTUAL_ATTEMPT_STARTED]', event);
+        break;
+      }
+
       case 'IMPORT_COMPLETED':
         // A new import happened — we must refetch the full canonical list and reconcile
         devLog('IMPORT_COMPLETED: forcing canonical refetch');
@@ -355,7 +447,7 @@ export class LiveEventRouter {
     }
   }
 
-  public handleReconnect() {
+  public handleReconnect(subscribedSessionId?: number) {
     devLog('WebSocket reconnected. Performing targeted reconciliation...');
     // Invalidate everything that might have changed while offline.
     // The canonical student refetch triggers reconcile, keeping the live store fresh.
@@ -366,5 +458,10 @@ export class LiveEventRouter {
     this.debouncedInvalidate(['dashboard']);
     this.debouncedInvalidate(['contests']);
     this.debouncedInvalidate(['staff']);
+
+    // If we were watching a specific session, refresh its matrix
+    if (subscribedSessionId) {
+      this.debouncedInvalidate(['contests', 'matrix', subscribedSessionId], 200);
+    }
   }
 }

@@ -1,5 +1,4 @@
 import httpx
-from typing import Optional
 from backend.config import settings
 from backend.logger import logger
 

@@ -1,8 +1,7 @@
 import datetime
 import uuid
-import json
 from sqlalchemy.orm import Session
-from backend.models import Student, Department, Section, LeetCodeProfileStats, HODSnapshot
+from backend.models import Student, HODSnapshot
 
 def generate_hod_snapshot(db: Session, title: str = None) -> HODSnapshot:
     """
@@ -62,10 +61,8 @@ def generate_hod_snapshot(db: Session, title: str = None) -> HODSnapshot:
             total_solved_college += solved
             department_stats[dept_name]["total_solved"] += solved
             
-            c_type = st.recent_contest_name if st else None
+            st.recent_contest_name if st else None
             # Here we need to check contest_participations for accurate counts
-            official_count = 0
-            virtual_count = 0
             
             # Simple heuristic for snapshot based on stats (since we want a quick summary)
             # A more robust way is to query ContestParticipation

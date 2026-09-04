@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from backend.main import app
 from backend.database import SessionLocal, engine, Base
-from backend.models import Student, WeeklySession, WeeklyPublicResult, WeeklyVirtualResult
+from backend.models import WeeklySession, WeeklyPublicResult
 
 client = TestClient(app)
 

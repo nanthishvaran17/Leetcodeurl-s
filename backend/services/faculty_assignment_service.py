@@ -10,12 +10,12 @@ Enforces strict institutional capacity and ownership rules:
 
 import threading
 from typing import List, Dict, Any, Optional
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 import datetime
 from fastapi import BackgroundTasks
 
-from backend.models import User, Student, FacultyStudentAssignment, Department, LeetCodeProfileStats, StudentAssignmentHistory
+from backend.models import User, Student, FacultyStudentAssignment, StudentAssignmentHistory
 from backend.logger import logger
 
 RECOMMENDED_FACULTY_STUDENT_RATIO = 20

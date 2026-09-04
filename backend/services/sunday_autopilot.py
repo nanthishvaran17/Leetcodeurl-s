@@ -12,40 +12,29 @@ Authoritative, idempotent, crash-resilient, and rate-limit aware.
 """
 
 import os
-import sys
 import datetime
 import hashlib
-import json
-import asyncio
-import zoneinfo
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
 
-from backend.time_utils import IST, UTC, format_ist
 from backend.logger import logger
 from backend.database import SessionLocal
-from backend.config import settings
 from backend.models import (
-    WeeklySession, WeeklyPublicResult, WeeklyVirtualResult,
-    WeeklyContestErrorLog, OfficialWeeklySnapshot, Student, EmailDispatchLog,
-    User
+    WeeklySession, WeeklyContestErrorLog, Student
 )
 from backend.services.contest_discovery import (
     discover_contest_metadata, get_current_ist_datetime,
-    get_upcoming_sunday_date, get_most_recent_sunday_date,
-    calculate_contest_number, IST_TZ
+    get_upcoming_sunday_date, IST_TZ
 )
 from backend.services.contest_reconciliation_service import (
-    ContestMetadataResolver, UniversalContestReconciliationEngine,
-    ContestReconciliationService
+    UniversalContestReconciliationEngine
 )
 from backend.services.canonical_contest_engine import (
-    build_canonical_contest_dataset, invalidate_canonical_cache
+    build_canonical_contest_dataset
 )
 from backend.exporters.excel_exporter import export_excel_from_dataset
 from backend.exporters.pdf_exporter import export_pdf_from_dataset
 from backend.exporters.word_exporter import export_word_from_dataset
-from backend.exporters.zip_exporter import export_zip_bundle_from_dataset
 from backend.services.email_service import queue_weekly_report_dispatches
 
 REPORTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "reports")

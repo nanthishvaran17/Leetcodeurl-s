@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 from backend.database import get_db
 from backend.models import Student, WeeklyVirtualResult, ContestParticipation, WeeklyPublicResult

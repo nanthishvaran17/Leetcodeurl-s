@@ -17,8 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 import pytest
 from backend.database import SessionLocal
 from backend.models import (
-    User, Student, FacultyStudentAssignment,
-    StudentAssignmentHistory, LeetCodeProfileStats
+    User, Student, StudentAssignmentHistory
 )
 from backend.services.faculty_assignment_service import faculty_assignment_service
 from backend.services.authorization_service import get_authorized_student_ids, require_staff_student_access
@@ -142,7 +141,7 @@ class TestDisabledStaffAccess:
         db = SessionLocal()
         try:
             import datetime
-            ts = datetime.datetime.utcnow()
+            datetime.datetime.utcnow()
 
             faculty_assignment_service.disable_staff_account(db=db, staff_id=staff_c_id, disabled_by_id=None)
 

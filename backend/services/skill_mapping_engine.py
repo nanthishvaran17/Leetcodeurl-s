@@ -5,9 +5,9 @@ Arrays, Strings, Hashing, Linked List, Stack, Queue, Binary Search, Trees, BST, 
 """
 
 import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any
 from sqlalchemy.orm import Session
-from backend.models import Student, LeetCodeProfileStats, StudentSkillProfile
+from backend.models import Student, StudentSkillProfile
 
 CORE_DSA_TOPICS = [
     "Arrays", "Strings", "Hashing", "Linked List", "Stack", "Queue",

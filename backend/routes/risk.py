@@ -2,12 +2,12 @@ from sqlalchemy.orm import joinedload
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from typing import List, Optional, Dict, Any
+from typing import Optional
 from pydantic import BaseModel
 import datetime
 
 from backend.database import get_db
-from backend.models import Student, MentorNote, Department, Section, AuditLog
+from backend.models import Student, MentorNote, AuditLog
 from backend.insights import calculate_student_risk_profile
 from backend.routes.auth import get_current_user
 

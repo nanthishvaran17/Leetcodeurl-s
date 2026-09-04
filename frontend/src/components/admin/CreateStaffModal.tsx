@@ -160,7 +160,11 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
     if (val.length > 4) {
       formatted = val.substring(0, 2) + '/' + val.substring(2, 4) + '/' + val.substring(4);
     }
-    setFormData(prev => ({ ...prev, date_of_birth: formatted }));
+    if (formatted.length === 10) {
+      setFormData(prev => ({ ...prev, date_of_birth: formatted }));
+    } else {
+      setFormData(prev => ({ ...prev, date_of_birth: formatted }));
+    }
   };
 
   // Date validator
@@ -493,7 +497,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                 </div>
               )}
 
-              <form id="create-staff-form" onSubmit={handleCreate} className="space-y-6 max-w-3xl">
+              <form id="create-staff-form" onSubmit={handleCreate} className="space-y-6 max-w-3xl" autoComplete="off">
                 
                 {/* ── STEP 1: ROLE & ACADEMIC SCOPE ── */}
                 {activeStep === 1 && (
@@ -826,6 +830,9 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Date of Birth (Optional)</label>
                         <input
                           type="text"
+                          name="staff_dob_ignore_autofill"
+                          id="staff_dob_ignore_autofill"
+                          autoComplete="off"
                           value={formData.date_of_birth}
                           onChange={handleDOBChange}
                           placeholder="DD / MM / YYYY"
@@ -882,7 +889,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">
                           Employee ID Proof / Document (Optional)
                         </label>
-                        <label className="relative flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-slate-300 dark:border-navy-700 rounded-3xl cursor-pointer bg-white dark:bg-navy-950 hover:bg-slate-50 dark:hover:bg-navy-900 transition-all group overflow-hidden">
+                        <label className="relative flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-slate-300 dark:border-navy-700 rounded-3xl bg-white dark:bg-navy-950 hover:bg-slate-50 dark:hover:bg-navy-900 transition-all group overflow-hidden">
                           <div className="flex flex-col items-center justify-center text-center p-4">
                             <UploadCloud className="w-8 h-8 text-slate-400 group-hover:text-brand-500 transition-colors mb-2" />
                             {idProofFile ? (
@@ -969,7 +976,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
                       {/* Options Checkboxes */}
                       <div className="space-y-3">
-                        <label className="flex items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 cursor-pointer">
+                        <label className="flex items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800">
                           <input
                             type="checkbox"
                             checked={formData.send_email}
@@ -982,7 +989,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                           </div>
                         </label>
 
-                        <label className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 cursor-pointer">
+                        <label className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800">
                           <input
                             type="checkbox"
                             checked={formData.consent_checked}
@@ -1057,7 +1064,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                   form="create-staff-form"
                   type="submit"
                   disabled={isSubmitting || !formData.consent_checked}
-                  className="px-6 py-2.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 transition-all shadow-lg shadow-brand-500/25 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="px-6 py-2.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 transition-all shadow-lg shadow-brand-500/25 flex items-center gap-2 disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>

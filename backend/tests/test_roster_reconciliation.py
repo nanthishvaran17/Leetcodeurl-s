@@ -15,7 +15,6 @@ Covers all 20 test categories from the audit spec:
 - Current/Last week reconciliation
 """
 import pytest
-from unittest.mock import MagicMock, patch
 from collections import defaultdict
 
 # ─── Helpers ───────────────────────────────────────────────────────────────────

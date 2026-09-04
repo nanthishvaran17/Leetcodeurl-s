@@ -16,8 +16,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 from backend.database import SessionLocal
 from backend.models import (
-    User, Student, Department, Section,
-    FacultyStudentAssignment, StudentAssignmentHistory, LeetCodeProfileStats
+    User, Student, Department, FacultyStudentAssignment,
+    StudentAssignmentHistory, LeetCodeProfileStats
 )
 import datetime
 

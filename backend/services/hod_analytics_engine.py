@@ -9,16 +9,15 @@ Zero hardcoded values. Zero hallucination.
 import datetime
 from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import func, desc, and_, or_
+from sqlalchemy import and_
 
 from backend.models import (
-    Student, Department, Section, WeeklySession, WeeklyPublicResult,
-    LeetCodeProfileStats, StudentRiskProfile, FacultyStudentAssignment, User, StudentGoal
+    Student, Department, LeetCodeProfileStats, StudentRiskProfile, FacultyStudentAssignment,
+    User, StudentGoal
 )
 from backend.services.authorization_service import apply_role_based_student_filter
-from backend.logger import logger
 
-from backend.constants import ALLOWED_PRODUCTION_DEPT_CODES, is_production_department
+from backend.constants import is_production_department
 
 def _is_real_dept(dept_code: Optional[str]) -> bool:
     if not dept_code:

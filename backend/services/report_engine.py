@@ -1,9 +1,9 @@
 import datetime
 import uuid
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
-from backend.models import Student, Department, Section, HODSnapshot, ReportHistory
-from backend.services.report_models import ReportConfig, ReportDataset, DataQualitySummary
+from backend.models import Student, ReportHistory
+from backend.services.report_models import ReportConfig
 from backend.services.report_data_service import fetch_normalized_students, fetch_normalized_contests, get_problem_category
 from backend.services.report_validators import validate_data_quality
 from backend.services.contest_performance_service import build_contest_performance_report

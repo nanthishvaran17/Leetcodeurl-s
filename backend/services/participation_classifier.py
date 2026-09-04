@@ -10,14 +10,11 @@ Guarantees:
 """
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from backend.logger import logger
 from backend.services.leetcode_adapter import (
-    ContestMetadata,
     LeetCodeAdapter,
     UserContestHistoryEntry,
     UserContestResult,
@@ -259,7 +256,7 @@ class ParticipationClassifier:
         # 4. TIER C: EXPLICIT VIRTUAL EVIDENCE
         if v_is_virtual or c_is_virtual or (h_is_virtual and getattr(h_ev, "virtual_contest", False)):
             evidence_trace.append("✓ Strong VIRTUAL evidence: Explicit virtual flag detected.")
-            source_ev = v_ev or c_ev or h_ev
+            v_ev or c_ev or h_ev
             
             # Use data from the most relevant source
             metrics_src = v_ev if v_ev else (h_ev if h_ev else c_ev)

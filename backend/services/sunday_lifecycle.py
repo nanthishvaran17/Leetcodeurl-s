@@ -13,10 +13,8 @@ Guarantees:
 from __future__ import annotations
 
 import asyncio
-import logging
-from datetime import datetime, timedelta, time
-from typing import Any, Dict, List, Optional, Set
-from zoneinfo import ZoneInfo
+from datetime import timedelta
+from typing import Any, Dict, Optional
 
 from backend.logger import logger
 from backend.models import (
@@ -31,10 +29,7 @@ from backend.services.leetcode_adapter import ContestMetadata, LeetCodeAdapter, 
 from backend.services.participation_classifier import ClassificationResult, ParticipationClassifier
 from backend.time_utils import (
     IST,
-    UTC,
-    ensure_utc,
     format_ist,
-    get_ist_date,
     get_report_time_utc,
     get_snapshot_cutoff_utc,
     now_utc,

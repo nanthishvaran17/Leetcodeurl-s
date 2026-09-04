@@ -1,4 +1,3 @@
-import pytest
 from backend.contest_truth_engine import ContestTruthEngine
 
 def test_truth_engine_snapshot_id_generation():

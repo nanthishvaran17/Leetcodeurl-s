@@ -2,14 +2,12 @@ import datetime
 import pytest
 from sqlalchemy.orm import Session
 
-from backend.database import SessionLocal, engine, Base
+from backend.database import Base
 from backend.models import (
-    User, Student, Department, WeeklySession,
-    PreviousWeekParticipationRecord, PublicContestSyncAudit,
-    ForensicAuditRecord, OfficialPublicParticipant
+    User, Student, Department
 )
 from backend.services.contest_discovery import (
-    get_current_ist_datetime, get_immediately_previous_sunday_date, discover_contest_metadata
+    get_immediately_previous_sunday_date
 )
 from backend.services.previous_week_analyzer import PreviousWeekAnalyzer
 from backend.services.public_contest_engine import PublicContestEngine

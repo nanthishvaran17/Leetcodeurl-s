@@ -25,19 +25,13 @@ from backend.models import (
     LeetCodeContestRatingHistory,
     LeetCodeBadge,
     LeetCodeLanguageStats,
-    LeetCodeTopicStats,
     LeetCodeActivity,
-    LeetCodeSubmission,
     LeetCodeProfileStats,
-    SyncJob,
 )
 from backend.leetcode_fetcher import (
     extract_leetcode_username,
     fetch_profile_and_stats,
     fetch_contest_data,
-    fetch_topic_stats,
-    fetch_activity_calendar,
-    fetch_recent_submissions,
 )
 from backend.ranking import update_all_rankings_and_badges
 from backend.cache import cache
@@ -530,7 +524,6 @@ async def _sync_single_student_canonical_impl(
                 db_student.close()
 
 
-import os
 
 async def run_full_pipeline(
     job_id: Optional[str] = None,
@@ -611,7 +604,6 @@ async def run_full_pipeline(
         async with httpx.AsyncClient(timeout=timeout_cfg, limits=limits_cfg, follow_redirects=True, http2=False) as client:
             from backend.leetcode_fetcher import fetch_profile_and_stats_batched, fetch_contest_data_batched
             chunk_size = 40
-            tasks = []
             
             for i in range(0, len(students), chunk_size):
                 chunk = students[i:i + chunk_size]

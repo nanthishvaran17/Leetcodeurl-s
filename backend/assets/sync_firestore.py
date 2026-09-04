@@ -3,13 +3,13 @@ import sys
 import time
 import datetime
 import threading
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 # Add project root to sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from backend.database import SessionLocal
-from backend.models import Student, LeetCodeProfileStats, WeeklyStudentProgress, Department, Section
+from backend.models import Student, WeeklyStudentProgress
 from backend.services.firestore_service import get_firestore_db, circuit_breaker
 from backend.logger import logger
 
@@ -83,7 +83,6 @@ def sync_database_to_firestore(force_all: bool = False) -> Dict[str, Any]:
 
         # Collect changed student docs
         student_docs_to_write = []
-        stats_docs_to_write = []
 
         for s in students:
             stats = s.stats
@@ -224,11 +223,9 @@ def sync_database_to_firestore(force_all: bool = False) -> Dict[str, Any]:
                     batch.set(fs_db.collection("leetcodeStats").document(str(s_id)), st_doc, merge=True)
 
                 # Commit batch with retry & backoff
-                committed = False
                 for attempt in range(2):
                     try:
                         batch.commit()
-                        committed = True
                         successful_batches += 1
                         circuit_breaker.record_success()
                         # Update hashes for successfully committed students

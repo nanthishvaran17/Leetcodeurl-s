@@ -3,6 +3,26 @@ import { createPortal } from 'react-dom';
 import { ShieldAlert, Clock, Search, Filter, RefreshCw, CheckCircle2, AlertTriangle, UserCheck, X, Eye, Laptop, Terminal } from 'lucide-react';
 import api from '../services/api';
 
+const formatAuditDate = (dateString: string) => {
+  if (!dateString) return '—';
+  try {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return dateString;
+    return new Intl.DateTimeFormat('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+      timeZone: 'Asia/Kolkata',
+    }).format(d).replace(',', ' •') + ' IST';
+  } catch {
+    return dateString;
+  }
+};
+
 export const AuditLogPage: React.FC = () => {
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -24,7 +44,15 @@ export const AuditLogPage: React.FC = () => {
       if (searchTerm.trim()) url += `&search=${encodeURIComponent(searchTerm.trim())}`;
       
       const res = await api.get(url);
-      setLogs(res.data || []);
+      const sorted = (res.data || []).sort((a: any, b: any) => {
+        const da = new Date(a.created_at || 0).getTime();
+        const db = new Date(b.created_at || 0).getTime();
+        if (da !== db) return db - da; // Descending by timestamp
+        // Tie-breaker
+        if (a.id && b.id) return b.id - a.id; 
+        return 0;
+      });
+      setLogs(sorted);
     } catch (err) {
       console.error("Failed to fetch admin audit logs:", err);
     } finally {
@@ -99,7 +127,7 @@ export const AuditLogPage: React.FC = () => {
           </div>
           <button
             type="submit"
-            className="px-5 py-2 bg-brand-600 text-white text-xs font-bold rounded-2xl hover:bg-brand-700 transition-all cursor-pointer"
+            className="px-5 py-2 bg-brand-600 text-white text-xs font-bold rounded-2xl hover:bg-brand-700 transition-all"
           >
             Search
           </button>
@@ -151,7 +179,8 @@ export const AuditLogPage: React.FC = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+            {/* Desktop Table View */}
+            <table className="hidden md:table w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-gray-100/80 dark:bg-navy-900/80 text-gray-500 dark:text-gray-400 font-bold border-b border-gray-200 dark:border-gray-800 uppercase tracking-wider">
                   <th className="py-3 px-4">Audit ID</th>
@@ -193,7 +222,7 @@ export const AuditLogPage: React.FC = () => {
                       <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase font-mono ${
                         log.action === 'PAGE_NAVIGATE' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-300' :
                         log.action.includes('SYNC') ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300' :
-                        log.action.includes('LOGIN') ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300' :
+                        log.action.includes('LOGIN') || log.action.includes('LOGOUT') ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300' :
                         'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 border border-gray-300'
                       }`}>
                         {log.action}
@@ -221,13 +250,65 @@ export const AuditLogPage: React.FC = () => {
                       )}
                     </td>
 
-                    <td className="py-3 px-4 text-right font-mono text-gray-400 text-[11px]">
-                      {log.created_at || '—'}
+                    <td className="py-3 px-4 text-right font-mono text-gray-400 text-[11px] whitespace-nowrap">
+                      {formatAuditDate(log.created_at)}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+
+            {/* Mobile Cards View */}
+            <div className="md:hidden divide-y divide-gray-100 dark:divide-gray-800">
+              {logs.map((log) => (
+                <div key={`mob-${log.id}`} onClick={() => setSelectedLog(log)} className="p-4 hover:bg-brand-50/40 dark:hover:bg-brand-950/30 cursor-pointer space-y-3 transition-colors">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                      <div className="font-mono font-bold text-brand-600 dark:text-brand-400 flex items-center space-x-1.5">
+                        <Eye className="w-3.5 h-3.5 text-brand-500" />
+                        <span>{log.audit_id}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-gray-900 dark:text-white">{log.admin_name}</span>
+                        <span className="text-[11px] text-gray-400">{log.admin_email}</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                       <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase font-mono ${
+                        log.action === 'PAGE_NAVIGATE' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-300' :
+                        log.action.includes('SYNC') ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300' :
+                        log.action.includes('LOGIN') || log.action.includes('LOGOUT') ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300' :
+                        'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 border border-gray-300'
+                      }`}>
+                        {log.action}
+                      </span>
+                      {log.status === 'SUCCESS' ? (
+                        <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300">
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>SUCCESS</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300">
+                          <AlertTriangle className="w-3 h-3" />
+                          <span>{log.status}</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="font-semibold text-gray-900 dark:text-gray-100 text-xs break-words">
+                    {log.description || '—'}
+                  </div>
+                  <div className="flex justify-between items-center text-[10px]">
+                    <span className="px-2.5 py-0.5 rounded-full font-black bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-300">
+                      {log.admin_role}
+                    </span>
+                    <span className="font-mono text-gray-400">
+                      {formatAuditDate(log.created_at)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

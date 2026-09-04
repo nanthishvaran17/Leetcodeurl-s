@@ -15,7 +15,6 @@ import time
 import json
 import hashlib
 from typing import Dict, List, Any, Optional
-from sqlalchemy.orm import Session
 
 
 class ImmutableEventStore:

@@ -5,13 +5,12 @@ and Excel/PDF/DOCX consumption of identical canonical metadata.
 """
 import os
 import unittest
-import datetime
 import openpyxl
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from backend.database import Base
-from backend.models import Student, Department, LeetCodeProfileStats, WeeklySession, WeeklyPublicResult, WeeklyVirtualResult
+from backend.models import Student, Department, LeetCodeProfileStats, WeeklySession, WeeklyPublicResult
 from backend.services.report_data_service import get_problem_category
 from backend.services.weekly_report_service import generate_weekly_performance_data
 from backend.exporters.weekly_excel_generator import build_weekly_performance_excel

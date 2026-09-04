@@ -8,7 +8,6 @@ and DB query latency under concurrent load.
 import time
 import asyncio
 import os
-import sys
 import tracemalloc
 import httpx
 from typing import List, Dict, Any

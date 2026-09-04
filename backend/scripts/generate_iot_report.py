@@ -1,6 +1,5 @@
 import os
 from backend.database import SessionLocal
-from backend.services.canonical_contest_engine import build_canonical_contest_dataset
 from backend.exporters.excel_exporter import export_excel_from_dataset
 from backend.routes.reports import _get_dataset_for_id
 

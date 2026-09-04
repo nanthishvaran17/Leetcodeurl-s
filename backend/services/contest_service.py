@@ -2,7 +2,6 @@ import datetime
 from typing import Dict, Any, Optional, Tuple, List
 from sqlalchemy.orm import Session
 from backend.models import StudentContestParticipation, Student
-from backend.logger import logger
 
 def calculate_overall_mode(public_status: str, virtual_status: str) -> str:
     """

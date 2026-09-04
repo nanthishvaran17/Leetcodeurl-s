@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 import pytest
 from backend.database import SessionLocal
-from backend.models import User, Student, StudentAssignmentHistory
+from backend.models import StudentAssignmentHistory
 from backend.services.faculty_assignment_service import faculty_assignment_service
 
 
@@ -41,7 +41,7 @@ class TestLiveReassignment:
         staff_a_id = test_data["staff_a"]["id"]
         staff_b_id = test_data["staff_b"]["id"]
         staff_a_students = sorted(test_data["staff_a"]["student_ids"])
-        staff_b_students = sorted(test_data["staff_b"]["student_ids"])
+        sorted(test_data["staff_b"]["student_ids"])
 
         # Pick 3 students to reassign from A to B
         students_to_move = staff_a_students[:3]
@@ -102,7 +102,7 @@ class TestLiveReassignment:
         db = SessionLocal()
         try:
             import datetime
-            ts_before = datetime.datetime.utcnow()
+            datetime.datetime.utcnow()
 
             # Perform a reassignment
             faculty_assignment_service.assign_students_to_faculty(

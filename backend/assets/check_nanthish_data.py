@@ -4,7 +4,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from backend.database import SessionLocal
-from backend.models import Student, LeetCodeProfileStats, WeeklyStudentProgress
+from backend.models import Student, WeeklyStudentProgress
 
 def check_nanthish():
     db = SessionLocal()

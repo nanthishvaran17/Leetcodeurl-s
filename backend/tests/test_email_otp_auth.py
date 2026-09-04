@@ -1,17 +1,13 @@
 import pytest
-import datetime
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from backend.main import app
 from backend.database import SessionLocal, engine, Base
-from backend.models import User, Student, Department, EmailOTPRecord, AdminAuditLog
+from backend.models import User, Student, Department, AdminAuditLog
 from backend.services.otp_service import (
     generate_secure_otp,
-    hash_otp,
-    hash_email,
-    create_otp_transaction,
-    verify_otp_transaction
+    create_otp_transaction
 )
 
 client = TestClient(app)

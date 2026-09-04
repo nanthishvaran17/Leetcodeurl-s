@@ -14,16 +14,12 @@ Core Capabilities:
    - Faculty/HOD can review code diffs, verify IP/network clusters, and mark as DISMISSED or CONFIRMED.
 """
 
-import time
-import math
-import logging
 import datetime
 import threading
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
-from backend.models import Student, Department, LeetCodeProfileStats, WeeklyPublicResult, WeeklySession
+from backend.models import Student, LeetCodeProfileStats, WeeklyPublicResult
 from backend.logger import logger
 
 

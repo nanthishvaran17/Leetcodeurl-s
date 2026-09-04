@@ -2,12 +2,11 @@
 gamification.py — API Endpoints for Gamification & Digital Badges
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional, Dict, Any
 
 from backend.database import get_db
-from backend.models import User, Student
+from backend.models import Student
 from backend.services.gamification_service import gamification_service, BADGE_DEFINITIONS
 
 router = APIRouter(prefix="/gamification", tags=["Gamification & Badges"])

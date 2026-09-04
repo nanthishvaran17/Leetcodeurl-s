@@ -1,6 +1,5 @@
 import pytest
 import datetime
-import asyncio
 from zoneinfo import ZoneInfo
 from unittest.mock import patch
 from sqlalchemy import create_engine
@@ -8,9 +7,9 @@ from sqlalchemy.orm import sessionmaker
 
 from backend.models import (
     Base, Student, LeetCodeAccount, StudentContestParticipation, 
-    LiveContestEvent, ContestConfig, AttendanceSnapshot
+    LiveContestEvent, AttendanceSnapshot
 )
-from backend.services.live_contest_monitor_engine import LiveContestMonitorEngine, live_contest_monitor_engine
+from backend.services.live_contest_monitor_engine import LiveContestMonitorEngine
 from backend.services.contest_window_engine import ContestWindowEngine, OfficialAttendanceState
 
 IST = ZoneInfo("Asia/Kolkata")

@@ -3,7 +3,7 @@ import time
 import random
 import asyncio
 import inspect
-from typing import Optional, Callable, Any, Dict
+from typing import Optional, Callable, Any
 from backend.logger import logger
 
 # ==============================================================================
@@ -20,15 +20,12 @@ class LeetCodeSourceError(Exception):
 
 class SourceUnavailableError(LeetCodeSourceError):
     """Raised when upstream LeetCode API/network is unreachable, timing out, or returns 5xx."""
-    pass
 
 class SourceMalformedResponseError(LeetCodeSourceError):
     """Raised when upstream LeetCode returns invalid, truncated, or unparseable JSON/GraphQL payloads."""
-    pass
 
 class SourceRateLimitExhaustedError(LeetCodeSourceError):
     """Raised when HTTP 429 / throttle limits persist across all exponential backoff retry attempts."""
-    pass
 
 
 # ==============================================================================

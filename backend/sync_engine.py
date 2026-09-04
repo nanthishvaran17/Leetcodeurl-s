@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
 from backend.models import Student, LeetCodeProfileStats, StudentStatSnapshot
-from backend.leetcode_fetcher import fetch_leetcode_profile, extract_leetcode_username
+from backend.leetcode_fetcher import fetch_leetcode_profile
 from backend.ranking import update_all_rankings_and_badges
 from backend.logger import logger
 
@@ -562,7 +562,6 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 5, per_
 
                 max_retries = 3
                 base_delay = 2.0
-                success = False
 
                 for attempt in range(1, max_retries + 1):
                     w_db = SessionLocal()
@@ -583,7 +582,6 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 5, per_
                         updated_st = sync_single_student_db(st.id, stats, w_db)
 
                         if is_ok:
-                            success = True
                             log_msg = f"[INFO] Success - {st.username or st.reg_no} (Solved: {stats.get('total_solved')}, Time: {stats.get('fetch_duration')}s)"
                             logger.info(log_msg)
                             sync_tracker.record_completed(True, log_msg, is_mismatch=False)

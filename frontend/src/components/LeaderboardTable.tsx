@@ -47,6 +47,9 @@ export interface StudentData {
   name: string;
   version?: number;
   email?: string;
+  institutional_email?: string;
+  email_status?: string;
+  batch?: string;
   total_solved?: number | null;
   easy_solved?: number | null;
   medium_solved?: number | null;

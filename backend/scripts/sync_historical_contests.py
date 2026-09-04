@@ -1,5 +1,3 @@
-import os
-import sys
 import datetime
 import zoneinfo
 import logging
@@ -7,7 +5,6 @@ import logging
 from backend.database import SessionLocal
 from backend.models import WeeklySession
 from backend.services.sunday_autopilot import UniversalWeeklyContestAutopilot
-from backend.services.contest_discovery import calculate_contest_number
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")

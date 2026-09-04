@@ -14,6 +14,14 @@ export const GlobalWebSocketProvider: React.FC<{ children: React.ReactNode }> = 
   const [isConnected, setIsConnected] = useState(false);
   const queryClient = useQueryClient();
   const eventRouter = useMemo(() => new LiveEventRouter(queryClient), [queryClient]);
+
+  // Expose globally so WeeklyContestPage's ws_virtual_event listener can route
+  // virtual contest events through the established handleMessage pipeline.
+  // This avoids prop drilling and context changes while keeping the router singleton.
+  useEffect(() => {
+    (window as any).__liveEventRouter = eventRouter;
+    return () => { (window as any).__liveEventRouter = undefined; };
+  }, [eventRouter]);
   
   // Store callbacks by an arbitrary ID so multiple hooks can listen safely if needed.
   const callbacksRef = useRef<Map<string, (data: any) => void>>(new Map());

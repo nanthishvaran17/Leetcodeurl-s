@@ -6,7 +6,7 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
 
-from backend.database import SessionLocal, engine, Base
+from backend.database import SessionLocal
 from backend.models import User, FacultyStudentAssignment, StudentAssignmentHistory, StaffFollowUp, StaffAlert
 
 def clean_test_staff_users():

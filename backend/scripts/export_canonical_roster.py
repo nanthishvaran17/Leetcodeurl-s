@@ -2,8 +2,6 @@ import json
 import os
 from backend.database import SessionLocal
 from backend.routes.students import get_students
-from backend.routes.sessions import get_current_session_info
-from backend.models import Student, LeetCodeProfileStats
 
 def export_canonical_roster():
     db = SessionLocal()

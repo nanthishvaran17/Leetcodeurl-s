@@ -1,16 +1,13 @@
 from __future__ import annotations
 
-import os
 import hashlib
 import datetime
-import asyncio
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from backend.models import (
-    Student, WeeklySession, WeeklyPublicResult, WeeklyVirtualResult,
-    AuditLog
+    Student, WeeklySession, WeeklyPublicResult
 )
 from backend.services.token_bucket_limiter import TokenBucketRateLimiter
 from backend.cache import cache

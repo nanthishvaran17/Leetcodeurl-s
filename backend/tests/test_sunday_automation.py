@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 
 from backend.database import Base
 from backend.models import User, ReportRecipient, EmailDelivery, EmailAttachment, AdminAuditLog
-from backend.scheduler import get_scheduler_health, tz
+from backend.scheduler import get_scheduler_health
 
 TEST_SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 engine = create_engine(TEST_SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})

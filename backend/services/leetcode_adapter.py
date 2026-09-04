@@ -10,19 +10,15 @@ Guarantees:
 """
 from __future__ import annotations
 
-import asyncio
-import json
-import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Set
-from zoneinfo import ZoneInfo
+from typing import Any, Dict, List, Optional
 
 import httpx
 
 from backend.logger import logger
-from backend.time_utils import UTC, IST, ensure_utc, now_utc
+from backend.time_utils import UTC, IST, now_utc
 
 GRAPHQL_URL = "https://leetcode.com/graphql"
 DEFAULT_TIMEOUT = 12.0
@@ -140,19 +136,16 @@ class LeetCodeAdapter(ABC):
     @abstractmethod
     async def discover_contests(self) -> List[ContestMetadata]:
         """Discover all available contests (upcoming, live, completed)."""
-        pass
 
     @abstractmethod
     async def get_contest_details(self, slug: str) -> Optional[ContestDetails]:
         """Get detailed contest information including problem specifications."""
-        pass
 
     @abstractmethod
     async def get_contest_ranking_page(
         self, slug: str, page: int, page_size: int = 50
     ) -> Optional[RankingPage]:
         """Get paginated contest ranking from authoritative contest source."""
-        pass
 
     @abstractmethod
     async def get_user_contest_result(
@@ -162,21 +155,18 @@ class LeetCodeAdapter(ABC):
         Get user's result for a specific contest.
         Uses targeted query/ranking lookups internally without leaking implementation details.
         """
-        pass
 
     @abstractmethod
     async def get_user_contest_history(
         self, username: str
     ) -> List[UserContestHistoryEntry]:
         """Get user's full contest history array."""
-        pass
 
     @abstractmethod
     async def get_user_profile(
         self, username: str
     ) -> Optional[UserProfile]:
         """Get user profile data (supporting evidence only, never primary)."""
-        pass
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -336,7 +326,7 @@ class ProductionLeetCodeAdapter(LeetCodeAdapter):
             )
             db.add(record)
             db.commit()
-        except Exception as e:
+        except Exception:
             db.rollback()
         finally:
             db.close()
@@ -356,7 +346,7 @@ class ProductionLeetCodeAdapter(LeetCodeAdapter):
 
         # Generate range covering 2 weeks back to 4 weeks forward
         for offset_weeks in range(-2, 5):
-            target_start_ist = ref_date + (now_ist_dt.date() - ref_date.date())
+            ref_date + (now_ist_dt.date() - ref_date.date())
             # Find Sunday on or after target
             days_to_sunday = (6 - now_ist_dt.weekday()) % 7
             target_sunday = now_ist_dt.date() + __import__("datetime").timedelta(days=days_to_sunday + (offset_weeks * 7))

@@ -14,7 +14,7 @@ Capabilities:
 from typing import Dict, List, Any, Optional
 from sqlalchemy.orm import Session
 
-from backend.models import Student, Department, LeetCodeProfileStats, User
+from backend.models import Student, LeetCodeProfileStats
 
 
 class VoiceAlertService:

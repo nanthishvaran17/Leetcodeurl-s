@@ -16,8 +16,8 @@ import datetime
 from sqlalchemy.orm import Session
 from backend.database import SessionLocal
 from backend.models import (
-    Student, LeetCodeProfileStats, WeeklyPublicResult, 
-    WeeklyStudentProgress, StudentStatSnapshot
+    Student, WeeklyPublicResult, WeeklyStudentProgress, 
+    StudentStatSnapshot
 )
 
 def seed_snapshots():
@@ -58,7 +58,7 @@ def seed_snapshots():
             
             # Additional weekly solves
             w_prog = weekly_progress_map.get(student.id)
-            w_added = w_prog.weekly_progress if (w_prog and w_prog.weekly_progress) else 0
+            w_prog.weekly_progress if (w_prog and w_prog.weekly_progress) else 0
             
             # Total growth in last 7 days
             growth_7d = max(contest_solved_today, min(cur_total, max(1, int(cur_total * 0.08) + contest_solved_today))) if cur_total > 5 else contest_solved_today

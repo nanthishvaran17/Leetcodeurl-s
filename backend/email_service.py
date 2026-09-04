@@ -1,18 +1,14 @@
-import smtplib
 import random
 import datetime
 import os
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.application import MIMEApplication
 from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from backend.config import settings
-from backend.models import EmailLog, EmailDelivery, EmailAttachment, ReportRecipient, User
+from backend.models import EmailDelivery, EmailAttachment, ReportRecipient, User
 from backend.services.audit_service import log_admin_action
 from backend.logger import logger
-from backend.services.email_service import connect_and_login_smtp, send_email
+from backend.services.email_service import send_email
 
 def generate_message_id(trigger_type: str = "AUTOMATED") -> str:
     """Generates unique message ID: MSG-MANUAL-XXXXX or MSG-AUTO-XXXXX"""
@@ -42,8 +38,8 @@ def send_weekly_report_email(
     now = datetime.datetime.utcnow()
     report_date = datetime.date.today().strftime("%Y-%m-%d")
 
-    smtp_host = getattr(settings, "SMTP_HOST", "smtp.gmail.com")
-    smtp_port = int(getattr(settings, "SMTP_PORT", 587))
+    getattr(settings, "SMTP_HOST", "smtp.gmail.com")
+    int(getattr(settings, "SMTP_PORT", 587))
     smtp_user = settings.SMTP_USERNAME.strip() if settings.SMTP_USERNAME else ""
     smtp_pass = settings.SMTP_PASSWORD.replace(" ", "") if settings.SMTP_PASSWORD else ""
 
@@ -152,7 +148,7 @@ def send_public_contest_report_email(excel_data: dict, excel_filepath: str, curr
     """Dispatches Sunday 9:45 AM Public Contest email report and records EmailDelivery in DB."""
     report_date = excel_data.get("report_date", datetime.date.today().strftime("%Y-%m-%d"))
     sum_d = excel_data.get("public_summary", {})
-    subject = f"LeetCode Public Contest Report — {report_date}"
+    f"LeetCode Public Contest Report — {report_date}"
 
     html_body = f"""
     <h2>NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</h2>
@@ -174,11 +170,10 @@ def send_public_contest_report_email(excel_data: dict, excel_filepath: str, curr
     <p>Attached: <code>Public_Contest_{report_date}.xlsx</code></p>
     """
     
-    excel_bytes = None
     if os.path.exists(excel_filepath):
         try:
             with open(excel_filepath, "rb") as f:
-                excel_bytes = f.read()
+                f.read()
         except Exception:
             pass
 
@@ -193,7 +188,7 @@ def send_public_contest_report_email(excel_data: dict, excel_filepath: str, curr
 def send_final_combined_contest_report_email(combined_data: dict, virtual_filepath: str, combined_filepath: str, current_user: Optional[User] = None) -> bool:
     """Dispatches Sunday 10:00 PM Final Combined email report and records EmailDelivery in DB."""
     report_date = combined_data.get("report_date", datetime.date.today().strftime("%Y-%m-%d"))
-    subject = f"LeetCode Public & Virtual Contest Final Report — {report_date}"
+    f"LeetCode Public & Virtual Contest Final Report — {report_date}"
 
     html_body = f"""
     <h2>NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</h2>

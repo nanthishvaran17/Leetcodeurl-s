@@ -1,5 +1,5 @@
 import datetime
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional, Any, Dict, Union
 
 # Department Schemas
@@ -39,6 +39,7 @@ class StudentBase(BaseModel):
     leetcode_url: Optional[str] = None
     codeforces_username: Optional[str] = None
     hackerrank_username: Optional[str] = None
+    allocation: Optional[str] = None
     is_active: bool = True
 
 class StudentCreate(StudentBase):
@@ -53,6 +54,7 @@ class StudentUpdate(BaseModel):
     leetcode_url: Optional[str] = None
     codeforces_username: Optional[str] = None
     hackerrank_username: Optional[str] = None
+    allocation: Optional[str] = None
     is_active: Optional[bool] = None
 
 class LeetCodeStatsOut(BaseModel):

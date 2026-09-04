@@ -16,13 +16,11 @@ Key Features:
 import threading
 import time
 import datetime
-import logging
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
 from backend.database import SessionLocal
-from backend.models import User, Student, Department, FacultyStudentAssignment, EmailCampaign, EmailQueueItem
+from backend.models import User, Student, FacultyStudentAssignment, EmailCampaign, EmailQueueItem
 from backend.logger import logger
 
 

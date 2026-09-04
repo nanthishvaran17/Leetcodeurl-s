@@ -2,12 +2,10 @@ import datetime
 import asyncio
 import threading
 from typing import Dict, Any, List, Optional
-from sqlalchemy.orm import Session
 import uuid
 
 from backend.database import SessionLocal
 from backend.logger import logger
-from backend.models import Department, Student, LeetCodeProfileStats
 
 # In-memory progress tracker for quick polling & live WebSocket push
 class ExcelImportTracker:

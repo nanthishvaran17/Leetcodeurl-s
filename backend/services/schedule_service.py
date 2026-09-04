@@ -1,4 +1,3 @@
-import os
 import uuid
 import datetime
 import pytz
@@ -7,6 +6,7 @@ from sqlalchemy.orm import Session
 from apscheduler.triggers.cron import CronTrigger
 
 from backend.config import settings
+from backend.services.email_templates import generate_professional_template
 from backend.models import (
     ScheduledReportConfig,
     ReportExecutionHistory,
@@ -360,51 +360,47 @@ async def execute_scheduled_report_pipeline(
 
         subject = f"{'[SAFE TEST MODE] ' if is_test_run else ''}NANDHA Engineering College — Weekly LeetCode Public Performance Report | {config.hour:02d}:{config.minute:02d} AM IST"
         
-        body_html = f"""
-        <!DOCTYPE html>
-        <html>
-        <body style="font-family: Arial, sans-serif; color: #1e293b; line-height: 1.6; max-width: 680px; margin: 0 auto; padding: 20px; background-color: #f8fafc;">
-            <div style="background: linear-gradient(135deg, #0B192C 0%, #1E3E62 100%); color: #ffffff; padding: 24px; text-align: center; border-radius: 16px 16px 0 0;">
-                <h2 style="margin: 0; font-size: 20px; letter-spacing: 0.5px;">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</h2>
-                <p style="margin: 6px 0 0 0; font-size: 13px; color: #38bdf8; font-weight: bold;">LeetCode Weekly Performance Tracker — Official Public Digest</p>
-                {f'<span style="display:inline-block; margin-top: 10px; background-color: #d97706; color: #ffffff; padding: 4px 12px; border-radius: 9999px; font-size: 11px; font-weight: bold;">SAFE TEST MODE EXECUTION</span>' if is_test_run else ''}
-            </div>
+        title = "Weekly Contest Performance Report"
+        
+        test_badge = f'<div style="margin-bottom: 16px;"><span style="display:inline-block; background-color: #d97706; color: #ffffff; padding: 4px 12px; border-radius: 9999px; font-size: 11px; font-weight: bold;">SAFE TEST MODE EXECUTION</span></div>' if is_test_run else ''
 
-            <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-top: none; padding: 28px; border-radius: 0 0 16px 16px;">
-                <h3 style="color: #0f172a; margin-top: 0;">Weekly Contest Performance Report</h3>
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px;">
-                    <tr>
-                        <td style="padding: 8px 0; color: #64748b;"><strong>Contest Name:</strong></td>
-                        <td style="padding: 8px 0; color: #0f172a; text-align: right;"><strong>{contest_name}</strong></td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 8px 0; color: #64748b;"><strong>Contest Date:</strong></td>
-                        <td style="padding: 8px 0; color: #0f172a; text-align: right;">{now_ist.strftime('%A, %d %B %Y')}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 8px 0; color: #64748b;"><strong>Generation Time:</strong></td>
-                        <td style="padding: 8px 0; color: #0f172a; text-align: right;">{now_ist.strftime('%I:%M:%S %p IST')}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 8px 0; color: #64748b;"><strong>Active Students Evaluated:</strong></td>
-                        <td style="padding: 8px 0; color: #16a34a; font-weight: bold; text-align: right;">{student_count} Verified Profiles</td>
-                    </tr>
-                </table>
+        content = f"""
+        {test_badge}
+        <p style="margin-top: 0;">An official public digest for the weekly LeetCode performance tracking has been generated.</p>
+        
+        <table class="data-table" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%;">
+            <tr>
+                <td>Contest Name</td>
+                <td>{contest_name}</td>
+            </tr>
+            <tr>
+                <td>Contest Date</td>
+                <td>{now_ist.strftime('%A, %d %B %Y')}</td>
+            </tr>
+            <tr>
+                <td>Generation Time</td>
+                <td>{now_ist.strftime('%I:%M:%S %p IST')}</td>
+            </tr>
+            <tr>
+                <td>Active Students Evaluated</td>
+                <td style="color: #16a34a; font-weight: bold;">{student_count} Verified Profiles</td>
+            </tr>
+        </table>
 
-                <div style="background-color: #f1f5f9; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
-                    <p style="margin: 0; font-size: 13px; color: #334155;">
-                        📎 <strong>Attached Report:</strong> <code>{excel_filename}</code><br/>
-                        Contains comprehensive department performance matrices, score distributions, and contest validation sheets.
-                    </p>
-                </div>
-
-                <p style="font-size: 12px; color: #64748b; margin: 0;">
-                    This is an automated institutional communication generated by the <strong>Autonomous LeetCode Tracking Daemon</strong> (Asia/Kolkata).
-                </p>
-            </div>
-        </body>
-        </html>
+        <div style="background-color: #f8fafc; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 4px; margin: 24px 0;">
+            <p style="margin: 0; font-size: 14px; color: #334155;">
+                📎 <strong>Attached Report:</strong> <code>{excel_filename}</code><br/>
+                Contains comprehensive department performance matrices, score distributions, and contest validation sheets.
+            </p>
+        </div>
+        
+        <p style="font-size: 12px; color: #64748b; margin: 0;">
+            This is an automated institutional communication generated by the <strong>Autonomous LeetCode Tracking Daemon</strong> (Asia/Kolkata).
+        </p>
         """
+
+        body_html = generate_professional_template(title, content)
+
 
         # Dispatch via email service
         from backend.services.email_service import send_email

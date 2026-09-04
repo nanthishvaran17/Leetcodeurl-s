@@ -1,13 +1,11 @@
 import datetime
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
-from sqlalchemy.orm import Session, joinedload
-from typing import List, Optional
+from fastapi import APIRouter, Depends, BackgroundTasks
+from sqlalchemy.orm import Session
 
 from backend.database import get_db
-from backend.models import WeeklySession, WeeklySessionSnapshot, Student, LeetCodeProfileStats, Department, Section
+from backend.models import WeeklySessionSnapshot, Student, LeetCodeProfileStats, Department, Section
 from backend.schemas import WeeklySessionOut, DashboardSummary
-from backend.session_tracker import get_or_create_current_session, trigger_start_snapshot, trigger_end_snapshot
-from backend.config import settings
+from backend.session_tracker import get_or_create_current_session
 from backend.cache import cache
 
 router = APIRouter(prefix="/api/sessions", tags=["Sessions"])

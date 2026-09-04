@@ -1410,7 +1410,7 @@ export const CertificateManagementModal: React.FC<{
                             type="file"
                             accept="image/png,image/jpeg,image/webp"
                             onChange={handleFileChange}
-                            className="w-full p-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-navy-600 rounded-xl text-xs text-gray-700 dark:text-gray-300 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950 cursor-pointer"
+                            className="w-full p-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-navy-600 rounded-xl text-xs text-gray-700 dark:text-gray-300 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-black file:bg-emerald-500 file:text-slate-950"
                           />
 
                           <div className="flex items-center space-x-2">

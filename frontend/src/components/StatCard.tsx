@@ -10,6 +10,7 @@ interface StatCardProps {
   color?: 'blue' | 'green' | 'amber' | 'purple' | 'rose' | 'indigo';
   change?: string;
   loading?: boolean;
+  onClick?: () => void;
 }
 
 export const StatCard: React.FC<StatCardProps> = ({
@@ -19,7 +20,8 @@ export const StatCard: React.FC<StatCardProps> = ({
   icon: Icon,
   color = 'blue',
   change,
-  loading = false
+  loading = false,
+  onClick
 }) => {
   const colorStyles = {
     blue: 'from-blue-500/10 to-indigo-500/10 text-blue-600 dark:text-blue-400 border-blue-200/60 dark:border-blue-800/40 group-hover:bg-blue-500/20',
@@ -47,10 +49,11 @@ export const StatCard: React.FC<StatCardProps> = ({
 
   return (
     <motion.div
-      whileHover={{ y: -5, scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      whileHover={onClick ? { y: -5, scale: 1.02 } : {}}
+      whileTap={onClick ? { scale: 0.98 } : {}}
       transition={{ type: "spring", stiffness: 350, damping: 25 }}
-      className="glass-card p-5 sm:p-6 rounded-3xl border border-gray-200/80 dark:border-navy-800/80 card-ai-control group cursor-pointer relative overflow-hidden shadow-lg"
+      className={`glass-card p-5 sm:p-6 rounded-3xl border border-gray-200/80 dark:border-navy-800/80 card-ai-control group relative overflow-hidden shadow-lg ${onClick ? 'cursor-pointer' : ''}`}
     >
       <div className="flex items-center justify-between">
         <div>

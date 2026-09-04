@@ -16,12 +16,11 @@ Features:
 import datetime
 from typing import Dict, Any, List, Optional, Tuple
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, func, or_, and_
+from sqlalchemy import desc, or_
 
 from backend.models import (
-    Student, User, FacultyActionQueueItem, FacultyActionAuditLog,
-    FacultyIntervention, LeetCodeProfileStats, WeeklySession,
-    WeeklyPublicResult, Department, Section
+    Student, FacultyActionQueueItem, FacultyActionAuditLog, FacultyIntervention,
+    LeetCodeProfileStats, WeeklySession, WeeklyPublicResult
 )
 from backend.logger import logger
 

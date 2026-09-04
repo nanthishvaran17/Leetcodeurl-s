@@ -55,8 +55,8 @@ def export_csv_from_dataset(dataset: dict) -> bytes:
             ])
     else:
         writer.writerow([
-            "S.No", "Register No", "Student Name", "Department", "Year",
-            "LeetCode Profile Link", "Username", "Easy Solved", "Medium Solved",
+            "S.No", "Register No", "Student Name", "Department", "Batch", "Year",
+            "Institutional Email", "LeetCode Profile Link", "Username", "Easy Solved", "Medium Solved",
             "Hard Solved", "Total Solved", "Contest Rating", "Global Rank", "Status"
         ])
         for idx, s in enumerate(all_students, start=1):
@@ -65,15 +65,17 @@ def export_csv_from_dataset(dataset: dict) -> bytes:
                 s.get("reg_no", ""),
                 s.get("name", ""),
                 s.get("dept", ""),
+                s.get("batch", ""),
                 s.get("year", ""),
+                s.get("institutional_email", ""),
                 s.get("leetcode_url") or s.get("url") or "",
                 s.get("username", ""),
-                s.get("easy") if s.get("easy") is not None else "🔴",
-                s.get("medium") if s.get("medium") is not None else "🔴",
-                s.get("hard") if s.get("hard") is not None else "🔴",
-                s.get("total_solved") if s.get("total_solved") is not None else "🔴",
-                s.get("rating") if s.get("rating") is not None else "🔴",
-                s.get("global_rank") if s.get("global_rank") is not None else "🔴",
+                s.get("easy") if s.get("easy") is not None else "",
+                s.get("medium") if s.get("medium") is not None else "",
+                s.get("hard") if s.get("hard") is not None else "",
+                s.get("total_solved") if s.get("total_solved") is not None else "",
+                s.get("rating") if s.get("rating") is not None else "",
+                s.get("global_rank") if s.get("global_rank") is not None else "",
                 s.get("status", "UNVERIFIED")
             ])
 

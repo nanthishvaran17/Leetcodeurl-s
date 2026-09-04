@@ -1,5 +1,4 @@
 import pytest
-import asyncio
 from backend.services.participation_classifier import ParticipationClassifier, ParticipationType, ConfidenceLevel
 from backend.services.leetcode_adapter import UserContestResult, UserContestHistoryEntry
 

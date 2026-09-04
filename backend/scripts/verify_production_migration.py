@@ -14,10 +14,7 @@ Tests all 18+ Critical Migration Subsystems:
 """
 import os
 import sys
-import re
 import json
-import sqlite3
-import hashlib
 import unittest
 from fastapi.testclient import TestClient
 
@@ -25,8 +22,8 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 sys.path.insert(0, ROOT_DIR)
 
 from backend.main import app
-from backend.database import SessionLocal, engine
-from backend.models import User, Student, Department, FacultyStudentAssignment, WeeklySession, WeeklyPublicResult, AdminAuditLog
+from backend.database import SessionLocal
+from backend.models import User, Student, Department, FacultyStudentAssignment
 from backend.routes.auth import create_access_token, get_password_hash
 
 client = TestClient(app)

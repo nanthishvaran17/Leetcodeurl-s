@@ -4,7 +4,7 @@ from typing import Dict, Any, List, Optional, Tuple
 from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
-from backend.models import Student, LeetCodeProfileStats, SyncJob, SyncJobItem, WeeklySession, WeeklyPublicResult, StudentStatSnapshot, StudentContestSnapshot, GlobalSyncLock
+from backend.models import Student, LeetCodeProfileStats, SyncJob, SyncJobItem, WeeklySession, StudentStatSnapshot, StudentContestSnapshot, GlobalSyncLock
 from sqlalchemy import update
 from backend.leetcode_fetcher import fetch_leetcode_profile
 from backend.ranking import update_all_rankings_and_badges
@@ -223,10 +223,10 @@ async def broadcast_sync_event(event_data: Dict[str, Any]):
 
 
 def get_active_students(db: Session) -> List[Student]:
-    """Returns active student roster from database dynamically."""
-    logger.info("[SYNC] Loading active institutional student roster from database...")
-    students = db.query(Student).filter(Student.is_active == True).all()
-    logger.info(f"[SYNC] Loaded {len(students)} active students")
+    """Returns active student roster from database dynamically, restricted to 0.25 allocation."""
+    logger.info("[SYNC] Loading active institutional student roster from database (0.25 Allocation only)...")
+    students = db.query(Student).filter(Student.is_active == True, Student.allocation == "0.25").all()
+    logger.info(f"[SYNC] Loaded {len(students)} active students with 0.25 allocation")
     return students
 
 
@@ -909,7 +909,18 @@ def sync_single_student(student_id: int, db: Session, force_refresh: bool = True
         # Re-query student directly from authoritative database session
         student = db.query(Student).filter(Student.id == student_id).first()
         if not student:
-            return {"status": "error", "message": f"Student ID {student_id} not found"}
+            return {"status": "error", "message": f"Student ID {student_id} not found."}
+            
+        if student.allocation != "0.25":
+            logger.warning(f"[SINGLE_SYNC_BLOCKED] Student {student.reg_no} is not allocated (allocation={student.allocation}). Fetch blocked.")
+            return {
+                "status": "error",
+                "sync_status": "BLOCKED",
+                "message": "Student is not allocated under 0.25. Fetching is restricted.",
+                "student_id": student_id,
+                "name": student.name,
+                "reg_no": student.reg_no
+            }
 
         old_url = student.leetcode_url
         old_username = student.username

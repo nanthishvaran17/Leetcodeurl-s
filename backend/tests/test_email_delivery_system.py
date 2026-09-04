@@ -16,20 +16,18 @@ Tests:
   10. test_delivery_log_creation
 """
 import unittest
-import datetime
 from unittest.mock import patch, MagicMock
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from backend.models import (
     Base, WeeklySession, ReportEmailRecipient,
-    EmailDispatchLog, Student, LeetCodeProfileStats, Department
+    EmailDispatchLog, Department
 )
 from backend.services.email_service import (
     queue_weekly_report_dispatches,
     build_institutional_email_body,
-    send_manual_report_email,
-    generate_canonical_report_files
+    send_manual_report_email
 )
 
 # ── In-memory SQLite engine for isolated testing ──────────────────────────────

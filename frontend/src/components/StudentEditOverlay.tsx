@@ -108,6 +108,19 @@ function LcValidationChip({ state }: { state: LcValidationState }) {
   return null;
 }
 
+const generateEmailFromRegNo = (regNo: string) => {
+  const normalized = regNo.trim().toUpperCase();
+  if (!normalized) return '';
+  if (normalized.startsWith('7322') && normalized.length === 11) {
+    const yearStr = normalized.substring(4, 6);
+    const year = parseInt(yearStr, 10);
+    if (!isNaN(year) && year <= 24) {
+      return `${normalized.substring(4)}@nandhaengg.org`.toLowerCase();
+    }
+  }
+  return `${normalized}@nandhaengg.org`.toLowerCase();
+};
+
 export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   isOpen,
   student,
@@ -124,6 +137,9 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   const [username, setUsername] = useState('');
   const [leetcodeUrl, setLeetcodeUrl] = useState('');
   const [email, setEmail] = useState('');
+  const [institutionalEmail, setInstitutionalEmail] = useState('');
+  const [emailStatus, setEmailStatus] = useState('');
+  const [allocation, setAllocation] = useState('none');
 
   const [secondaryAccounts, setSecondaryAccounts] = useState<SecondaryAccountItem[]>([]);
 
@@ -166,6 +182,9 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       const initUser = student.username || student.canonical_username || '';
       const initUrl = student.leetcode_url || student.profile_url || '';
       const initEmail = student.email || '';
+      const initInstEmail = student.institutional_email || (initRegNo ? generateEmailFromRegNo(initRegNo) : '');
+      const initEmailStatus = student.email_status || 'pending';
+      const initAlloc = student.allocation || 'none';
 
       const initSecAccounts: SecondaryAccountItem[] = (student.leetcode_accounts || []).map((acc: any) => ({
         id: acc.id,
@@ -181,6 +200,9 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       setUsername(initUser);
       setLeetcodeUrl(initUrl);
       setEmail(initEmail);
+      setInstitutionalEmail(initInstEmail);
+      setEmailStatus(initEmailStatus);
+      setAllocation(initAlloc);
       setSecondaryAccounts(initSecAccounts);
 
       initialRef.current = {
@@ -192,6 +214,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         username: initUser,
         leetcodeUrl: initUrl,
         email: initEmail,
+        institutionalEmail: initInstEmail,
+        allocation: initAlloc,
         secondaryAccounts: JSON.stringify(initSecAccounts)
       };
       setErrorMessage(null);
@@ -211,11 +235,27 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       username !== init.username ||
       leetcodeUrl !== init.leetcodeUrl ||
       email !== init.email ||
+      institutionalEmail !== init.institutionalEmail ||
+      allocation !== init.allocation ||
       JSON.stringify(secondaryAccounts) !== init.secondaryAccounts;
-  }, [name, regNo, deptId, yearLevel, section, username, leetcodeUrl, email, secondaryAccounts]);
+  }, [name, regNo, deptId, yearLevel, section, username, leetcodeUrl, email, institutionalEmail, allocation, secondaryAccounts]);
 
   const handleAddSecondaryAccount = () => {
     setSecondaryAccounts(prev => [...prev, { username: '', url: '' }]);
+  };
+
+  const handleGenerateEmail = async () => {
+    if (!student || !student.id) return;
+    try {
+      const res = await api.post(`/students/${student.id}/generate-email`);
+      if (res.data.success) {
+        setInstitutionalEmail(res.data.institutional_email);
+        setEmailStatus(res.data.email_status);
+        notify.success('Email Generated', res.data.message || 'Institutional email generated successfully.', { category: 'STUDENT EDIT' });
+      }
+    } catch (err: any) {
+      notify.error('Generation Failed', err.response?.data?.detail || 'Failed to generate institutional email.', { category: 'STUDENT EDIT' });
+    }
   };
 
   const handleRemoveSecondaryAccount = (idx: number) => {
@@ -348,13 +388,15 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
 
       const payload = {
         name: name.trim(),
-        reg_no: regNo.trim(),
-        department_id: Number(deptId),
+        reg_no: regNo.trim().toUpperCase(),
+        department_id: deptId,
         year_level: yearLevel,
         section: section.trim(),
         username: username.trim() || undefined,
         leetcode_url: leetcodeUrl.trim() || undefined,
         email: email.trim() || undefined,
+        institutional_email: institutionalEmail.trim() || undefined,
+        allocation: allocation !== 'none' ? allocation : null,
         secondary_accounts: formattedSecondary,
         version: student.version
       };
@@ -433,13 +475,35 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-700 dark:text-gray-200">Register Number</label>
-                <input type="text" value={regNo} onChange={(e) => setRegNo(e.target.value)} className="w-full h-10 px-3.5 text-xs font-mono bg-white dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-gray-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-brand-500 transition-all shadow-sm" />
+                <label className="text-xs font-bold text-gray-700 dark:text-gray-200">Register Number <span className="text-rose-500">*</span></label>
+                <input type="text" value={regNo} onChange={(e) => {
+                  const val = e.target.value;
+                  setRegNo(val);
+                  if (val.trim()) {
+                    setInstitutionalEmail(generateEmailFromRegNo(val));
+                  } else {
+                    setInstitutionalEmail('');
+                  }
+                }} className="w-full h-10 px-3.5 text-xs font-mono bg-white dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-gray-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-brand-500 transition-all shadow-sm" />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-700 dark:text-gray-200">College Email</label>
+                <label className="text-xs font-bold text-gray-700 dark:text-gray-200">Personal Email</label>
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full h-10 px-3.5 text-xs bg-white dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-gray-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-brand-500 transition-all shadow-sm" />
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3.5">
+                <div className="space-y-1 relative">
+                  <label className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center justify-between">
+                    <span>Institutional Email <span className="text-rose-500">*</span></span>
+                    {emailStatus === 'generated' && <span className="text-[10px] text-emerald-500 flex items-center gap-1">✓ ASSIGNED</span>}
+                    {emailStatus === 'needs_verification' && <span className="text-[10px] text-amber-500 flex items-center gap-1">⚠ NEEDS VERIFICATION</span>}
+                    {emailStatus === 'error' && <span className="text-[10px] text-rose-500 flex items-center gap-1">⚠ ERROR</span>}
+                  </label>
+                  <div className="relative flex items-center gap-2">
+                    <input type="email" value={institutionalEmail} readOnly placeholder="Auto-generated from Register Number" className="w-full h-10 px-3.5 text-xs font-mono bg-gray-50 dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-2xl text-gray-700 dark:text-gray-300 font-bold outline-none shadow-sm cursor-not-allowed" />
+                  </div>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -475,6 +539,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                 icon={Calendar}
               />
             </div>
+            
           </div>
 
           {/* Primary LeetCode Account Section */}

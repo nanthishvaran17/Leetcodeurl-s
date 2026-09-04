@@ -248,8 +248,20 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 {student.reg_no}
               </p>
               <p className="text-xs text-gray-500 font-medium mt-1 leading-snug line-clamp-2">
-                {student.department?.name} • <span className="font-bold text-gray-700 dark:text-gray-300">{student.year_level} Year</span>
+                {student.year_level || student.year || ''} Year • Sec {student.section?.name || student.section || ''}
               </p>
+              
+              <div className="mt-2 flex justify-center">
+                {student.allocation === "0.25" ? (
+                  <span className="px-2 py-0.5 rounded-lg bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 text-[10px] font-black uppercase tracking-wider">
+                    0.25 Allocated
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 text-[10px] font-black uppercase tracking-wider">
+                    Not Allocated
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 

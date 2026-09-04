@@ -1,12 +1,9 @@
 import unittest
-import asyncio
-from sqlalchemy.orm import Session
 
-from backend.database import SessionLocal, engine, Base
+from backend.database import SessionLocal
 from backend.models import Student, LeetCodeProfileStats, Department
-from backend.leetcode_fetcher import extract_leetcode_username, fetch_leetcode_profile, clear_leetcode_cache
+from backend.leetcode_fetcher import extract_leetcode_username
 from backend.services.live_sync_service import sync_single_student, _active_single_fetches
-from backend.routes.students import StudentUpdateSchema
 
 class TestLeetCodeURLWorkflow(unittest.TestCase):
 

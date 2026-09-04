@@ -19,7 +19,7 @@ from zoneinfo import ZoneInfo
 from collections import defaultdict
 
 from backend.database import get_db
-from backend.models import Student, StudentStatSnapshot, Department, LeetCodeProfileStats, WeeklyPublicResult, User
+from backend.models import Student, StudentStatSnapshot, Department, User
 from backend.schemas import StudentStatSnapshotOut, ImproverOut
 from backend.security import get_current_user_optional
 from backend.services.authorization_service import apply_role_based_student_filter

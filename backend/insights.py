@@ -1,7 +1,6 @@
-from typing import Dict, Any, List
-import datetime
+from typing import Dict, Any
 from sqlalchemy.orm import Session
-from backend.models import Student, LeetCodeProfileStats, WeeklyStudentProgress, StudentStatSnapshot
+from backend.models import Student, WeeklyStudentProgress
 
 def calculate_student_risk_profile(db: Session, student: Student) -> Dict[str, Any]:
     """

@@ -11,12 +11,12 @@ import time
 import json
 import threading
 import statistics
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from backend.database import SessionLocal
-from backend.models import User, Student, FacultyStudentAssignment
+from backend.models import User, Student
 from backend.services.faculty_assignment_service import faculty_assignment_service
 
 

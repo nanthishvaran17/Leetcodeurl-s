@@ -9,7 +9,6 @@ update_academic_year_mapping.py — Updates student year_level based on user's e
 import os
 import sys
 import re
-import json
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 

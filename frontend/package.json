@@ -19,6 +19,7 @@
     "@types/react-window": "^1.8.8",
     "axios": "^1.6.8",
     "clsx": "^2.1.1",
+    "emoji-picker-react": "^4.19.4",
     "firebase": "^12.17.1",
     "framer-motion": "^13.1.1",
     "lucide-react": "^0.378.0",

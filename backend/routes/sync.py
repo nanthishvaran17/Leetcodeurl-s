@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 
 from backend.database import get_db
 from backend.models import SyncJob, SyncJobItem, Student, LeetCodeProfileStats
@@ -82,8 +82,7 @@ def get_current_sync_status(db: Session = Depends(get_db)):
     cfg = Settings()
 
     # Single-query aggregation: COUNT students + profile status buckets in one round-trip
-    from sqlalchemy import func, case, text
-    from sqlalchemy import Integer as SAInteger
+    from sqlalchemy import func
     agg = db.query(
         func.count(Student.id).label("tot"),
         func.count(LeetCodeProfileStats.id).filter(

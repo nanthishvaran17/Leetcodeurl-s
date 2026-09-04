@@ -2,11 +2,11 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from backend.database import Base
-from backend.models import Student, Department, Section, LeetCodeProfileStats, StudentRiskProfile, FacultyIntervention
+from backend.models import Student, Department, LeetCodeProfileStats
 from backend.services.student_risk_engine import calculate_student_risk_engine
 from backend.services.skill_mapping_engine import calculate_student_skill_map
 from backend.services.learning_path_generator import generate_personalized_learning_path
-from backend.services.contest_readiness_engine import calculate_contest_readiness, get_digital_coding_profile
+from backend.services.contest_readiness_engine import get_digital_coding_profile
 from backend.services.faculty_action_engine import get_what_needs_attention_items, create_faculty_intervention, calculate_intervention_effectiveness
 from backend.services.hod_analytics_engine import calculate_department_health_score, simulate_what_if_scenario
 from backend.services.ai_query_engine import answer_ai_department_query

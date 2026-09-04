@@ -1,7 +1,7 @@
-from typing import List, Dict, Any, Optional
+from typing import List, Any, Optional
 from sqlalchemy.orm import Session
-from backend.models import Student, Department, Section, ContestParticipation, LeetCodeProfileStats
-from backend.services.report_models import StudentRow, CategorySummary, ContestRow, ReportConfig
+from backend.models import Student, Department, Section, ContestParticipation
+from backend.services.report_models import StudentRow, ContestRow
 
 def get_problem_category(total_solved: Optional[int], is_verified: bool = True) -> str:
     """
@@ -65,16 +65,19 @@ def fetch_normalized_students(
         st = s.stats
         is_verified = bool(st and (st.sync_status in ("success", "OK", "verified", "stale") or st.status == "verified" or st.total_solved is not None))
 
-        easy = st.easy_solved if (is_verified and st) else None
-        medium = st.medium_solved if (is_verified and st) else None
-        hard = st.hard_solved if (is_verified and st) else None
-
-        if is_verified and st:
+        if st:
+            easy = st.easy_solved if st.easy_solved is not None else (0 if is_verified else None)
+            medium = st.medium_solved if st.medium_solved is not None else (0 if is_verified else None)
+            hard = st.hard_solved if st.hard_solved is not None else (0 if is_verified else None)
+            
             if easy is not None and medium is not None and hard is not None:
                 total_solved = easy + medium + hard
             else:
-                total_solved = st.total_solved
+                total_solved = st.total_solved if st.total_solved is not None else (0 if is_verified else None)
         else:
+            easy = None
+            medium = None
+            hard = None
             total_solved = None
 
         category = get_problem_category(total_solved, is_verified)
@@ -84,8 +87,11 @@ def fetch_normalized_students(
             reg_no=s.reg_no,
             name=s.name,
             dept=s.department.code if s.department else "",
+            department_name=s.department.name if s.department else "",
             year=s.year_level,
+            batch=s.batch if hasattr(s, 'batch') and s.batch else "",
             section=s.section.name if s.section else "",
+            institutional_email=s.institutional_email if hasattr(s, 'institutional_email') and s.institutional_email else "",
             leetcode_url=s.leetcode_url or "",
             username=s.username or "",
             easy=easy,

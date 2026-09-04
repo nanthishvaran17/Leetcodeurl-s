@@ -1,9 +1,6 @@
-import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
 
 from backend.main import app
-from backend.models import Student, SyncJob, AuditLog
 
 client = TestClient(app)
 

@@ -4,7 +4,7 @@ import base64
 import time
 import random
 import threading
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any
 
 from backend.logger import logger
 

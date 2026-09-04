@@ -6,12 +6,11 @@ Nandha LeetCode Intelligence — Final Staff RBAC + Assigned Scope 25/25 Product
 import sys
 import os
 import requests
-import datetime
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 from backend.database import SessionLocal
-from backend.models import User, Student, FacultyStudentAssignment, AuditLog, Department
+from backend.models import User, Student
 from backend.services.faculty_assignment_service import faculty_assignment_service
 from backend.routes.auth import create_access_token
 

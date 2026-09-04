@@ -52,10 +52,16 @@ class Student(Base):
     whatsapp_verified = Column(Boolean, default=False)
     date_of_birth = Column(String(20), nullable=True)
     
+    batch = Column(String(50), nullable=True, index=True)
+    institutional_email = Column(String(150), unique=True, index=True, nullable=True)
+    email_status = Column(String(50), default="pending") # pending, generated, needs_verification, error
+    
     leetcode_url = Column(String(255), nullable=True)
     username = Column(String(100), index=True, nullable=True)
     codeforces_username = Column(String(100), nullable=True)
     hackerrank_username = Column(String(100), nullable=True)
+    
+    allocation = Column(String(50), nullable=True, index=True) # 0.25, etc.
     
     is_active = Column(Boolean, default=True, index=True)
     version = Column(Integer, default=1, nullable=False)
@@ -279,6 +285,63 @@ class WeeklyVirtualResult(Base):
 
     session = relationship("WeeklySession", back_populates="virtual_results")
     student = relationship("Student")
+
+
+class VirtualContestAttempt(Base):
+    """
+    Persistent lifecycle record for each student's virtual contest attempt.
+
+    Guarantees idempotency via UNIQUE(student_id, session_id) — a student can
+    only have ONE attempt per session regardless of double-clicks, page refreshes,
+    WebSocket reconnects, or multi-device access.
+
+    Lifecycle:
+        ACTIVE    → attempt is in progress (started, not yet expired/completed)
+        COMPLETED → student finished or contest window closed with solved questions
+        EXPIRED   → window passed with zero activity
+        ABANDONED → admin-cancelled
+
+    start/resume: INSERT OR IGNORE on (student_id, session_id), then SELECT existing.
+    Never reset started_at / expires_at when resuming an existing ACTIVE attempt.
+    """
+    __tablename__ = "virtual_contest_attempts"
+    __table_args__ = (
+        UniqueConstraint("student_id", "session_id", name="uq_vca_student_session"),
+        Index("ix_vca_session_student", "session_id", "student_id"),
+        {"extend_existing": True}
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    session_id = Column(Integer, ForeignKey("weekly_sessions.id"), nullable=False, index=True)
+
+    # Denormalized for fast lookup without joins
+    contest_id = Column(String(100), nullable=True)
+    contest_name = Column(String(150), nullable=True)
+    reg_no = Column(String(50), nullable=True)
+    student_name = Column(String(150), nullable=True)
+    leetcode_username = Column(String(100), nullable=True)
+
+    # Lifecycle
+    status = Column(String(30), default="ACTIVE", nullable=False, index=True)
+    # ACTIVE | COMPLETED | EXPIRED | ABANDONED
+
+    started_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    expires_at = Column(DateTime, nullable=True)   # started_at + contest duration (90 min typical)
+    last_activity_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+
+    # Audit
+    resume_count = Column(Integer, default=0)      # how many times resumed (idempotency counter)
+    source = Column(String(50), default="RECONCILIATION_SCAN")
+    # RECONCILIATION_SCAN | STUDENT_INITIATED | ADMIN_CREATED
+
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    student = relationship("Student")
+    session = relationship("WeeklySession")
+
 
 class WeeklyContestLiveEvent(Base):
     __tablename__ = "weekly_contest_live_events"
@@ -2370,3 +2433,157 @@ class WeeklyReportAudit(Base):
     file_hash = Column(String(128), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
 
+
+class NotificationRecord(Base):
+    """
+    Central persistent Notification Record for Web + Android.
+    Supports idempotency (event_id), recipient scope, categories, and deep routes.
+    """
+    __tablename__ = "notification_records"
+    __table_args__ = (
+        Index("ix_notif_rec_recipient_read", "recipient_user_id", "is_read"),
+        Index("ix_notif_rec_created", "created_at"),
+        {"extend_existing": True},
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    notification_id = Column(String(100), unique=True, index=True, nullable=False)
+    event_id = Column(String(120), index=True, nullable=True)
+    event_type = Column(String(60), index=True, nullable=False, default="ANNOUNCEMENT")
+    category = Column(String(50), index=True, nullable=False, default="announcements")
+    
+    recipient_user_id = Column(String(150), index=True, nullable=False)
+    actor_user_id = Column(String(150), nullable=True)
+    
+    title = Column(String(255), nullable=False)
+    body = Column(Text, nullable=False)
+    
+    entity_type = Column(String(60), nullable=True, index=True)
+    entity_id = Column(String(100), nullable=True)
+    file_id = Column(String(100), nullable=True)
+    route = Column(String(255), nullable=True)
+    priority = Column(String(20), default="normal", nullable=False) # low, normal, high, critical
+    
+    is_read = Column(Boolean, default=False, index=True)
+    read_at = Column(DateTime, nullable=True)
+    expires_at = Column(DateTime, nullable=True)
+    delivery_status = Column(String(30), default="SENT") # PENDING, SENT, DELIVERED, FAILED
+    
+    metadata_json = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+
+
+class FCMDeviceToken(Base):
+    """
+    Stores FCM device registration tokens for multi-device push notification delivery.
+    """
+    __tablename__ = "fcm_device_tokens"
+    __table_args__ = (
+        Index("ix_fcm_tokens_user_active", "user_id", "is_active"),
+        {"extend_existing": True},
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(150), index=True, nullable=False)
+    device_token = Column(String(500), unique=True, index=True, nullable=False)
+    platform = Column(String(30), default="android", nullable=False) # android, ios, web
+    app_version = Column(String(30), nullable=True)
+    device_model = Column(String(100), nullable=True)
+    
+    is_active = Column(Boolean, default=True, index=True)
+    last_seen = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+
+class NotificationPreference(Base):
+    """
+    User notification settings & category opt-in/opt-out preferences.
+    """
+    __tablename__ = "notification_preferences"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(150), unique=True, index=True, nullable=False)
+    push_enabled = Column(Boolean, default=True, nullable=False)
+    email_enabled = Column(Boolean, default=True, nullable=False)
+    categories_json = Column(Text, nullable=True)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+
+class NotificationFile(Base):
+    """
+    Secure file metadata store for notification attachments, reports, and documents.
+    Enforces authorization check prior to preview or download.
+    """
+    __tablename__ = "notification_files"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    file_id = Column(String(100), unique=True, index=True, nullable=False)
+    filename = Column(String(255), nullable=False)
+    file_type = Column(String(50), nullable=False) # pdf, xlsx, docx, png, jpg, etc.
+    file_size = Column(Integer, nullable=True) # size in bytes
+    storage_path = Column(String(500), nullable=False)
+    uploaded_by = Column(String(150), nullable=False)
+    
+    entity_type = Column(String(60), nullable=True)
+    entity_id = Column(String(100), nullable=True)
+    access_scope = Column(String(100), default="ALL", nullable=False) # ALL, STUDENT, STAFF, CSE, CSE(CS), CSE(IoT), YEAR_3, ADMIN_ONLY, RECIPIENTS_ONLY
+    allowed_user_ids = Column(Text, nullable=True) # JSON list if specific users
+    
+    is_deleted = Column(Boolean, default=False)
+    expires_at = Column(DateTime, nullable=True)
+    uploaded_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+
+
+class Conversation(Base):
+    """
+    Tracks a 1-to-1 conversation between two users.
+    """
+    __tablename__ = "conversations"
+    __table_args__ = (
+        UniqueConstraint("participant_1_id", "participant_2_id", name="uix_conversation_participants"),
+        {"extend_existing": True},
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    conversation_id = Column(String(100), unique=True, index=True, nullable=False)
+    
+    # Store user IDs (email, reg_no, or STAFF_{id})
+    participant_1_id = Column(String(150), index=True, nullable=False)
+    participant_2_id = Column(String(150), index=True, nullable=False)
+    
+    last_message_preview = Column(String(255), nullable=True)
+    last_message_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    
+    unread_count_1 = Column(Integer, default=0)
+    unread_count_2 = Column(Integer, default=0)
+
+    messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
+
+
+class Message(Base):
+    """
+    Tracks individual messages within a conversation.
+    """
+    __tablename__ = "messages"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True, index=True)
+    message_id = Column(String(100), unique=True, index=True, nullable=False)
+    conversation_id = Column(String(100), ForeignKey("conversations.conversation_id"), index=True, nullable=False)
+    
+    sender_id = Column(String(150), index=True, nullable=False)
+    receiver_id = Column(String(150), index=True, nullable=False)
+    
+    content = Column(Text, nullable=False)
+    status = Column(String(30), default="SENT", index=True) # SENT, READ
+    
+    read_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    
+    attachment_file_id = Column(String(100), nullable=True) # Optional reference to NotificationFile
+
+    conversation = relationship("Conversation", back_populates="messages")

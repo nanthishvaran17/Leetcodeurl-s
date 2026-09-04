@@ -12,11 +12,10 @@ Defines and evaluates prestigious digital badges for student achievements:
 8. 🚀 Department Topper: Rank 1 in assigned Department.
 """
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
-from backend.models import Student, Department, LeetCodeProfileStats, WeeklyPublicResult
+from backend.models import Student, LeetCodeProfileStats
 
 
 BADGE_DEFINITIONS = [

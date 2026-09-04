@@ -23,123 +23,21 @@ export const StaffManagement: React.FC = () => {
   const [creationSuccess, setCreationSuccess] = useState<any>(null);
   const [deletingStaff, setDeletingStaff] = useState<any | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [editingStaff, setEditingStaff] = useState<any | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [editFormData, setEditFormData] = useState({
-    id: 0,
-    institutional_id: '',
-    full_name: '',
-    username: '',
-    email: '',
-    phone_number: '',
-    designation: '',
-    academic_year: '',
-    mentoring_role: '',
-    role: 'Faculty',
-    department_id: '1',
-    is_active: true,
-    date_of_birth: ''
-  });
+  const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null);
+
+  // Single Source of Truth: Derive selected staff directly from staffList
+  const editingStaff = useMemo(() => {
+    if (!selectedStaffId) return null;
+    return staffList.find(s => s.id === selectedStaffId) || null;
+  }, [staffList, selectedStaffId]);
+
   const { notify } = useNotification();
   const { user: currentUser } = useAuth();
   const isSuperAdmin = currentUser?.role?.toLowerCase() === 'super admin';
-  const [tempPasswordResult, setTempPasswordResult] = useState<{ password: string; email: string } | null>(null);
-  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   const handleOpenEditModal = (staff: any) => {
-    setEditingStaff(staff);
-    setTempPasswordResult(null);
-    setEditFormData({
-      id: staff.id,
-      institutional_id: staff.institutional_id || '',
-      full_name: staff.full_name || staff.username || '',
-      username: staff.username || '',
-      email: staff.email || '',
-      phone_number: staff.phone_number || '',
-      designation: staff.designation || '',
-      academic_year: staff.academic_year || '',
-      mentoring_role: staff.mentoring_role || '',
-      role: staff.role || 'Faculty',
-      // Use '0' when no department (means "All Departments")
-      department_id: staff.department_id ? String(staff.department_id) : '0',
-      is_active: staff.is_active ?? true,
-      date_of_birth: staff.date_of_birth || ''
-    });
-    setEditDobDisplay(staff.date_of_birth ? new Date(staff.date_of_birth).toLocaleDateString('en-GB') : '');
-  };
-
-  const handleResetTemporaryPassword = async () => {
-    if (!editingStaff) return;
-    setIsResettingPassword(true);
-    try {
-      const res = await api.post('/auth/admin/reset-staff-password', {
-        staff_id: editingStaff.id
-      });
-      const tempPass = res.data.temp_password || `NEC@Temp${Math.floor(1000 + Math.random() * 9000)}`;
-      const emailAddr = res.data.email || editFormData.email || editingStaff.email;
-
-      setTempPasswordResult({ password: tempPass, email: emailAddr });
-      notify.info(
-        'Temporary Password Generated',
-        `New temporary password generated and dispatched to ${emailAddr}`,
-        { category: 'SECURITY' }
-      );
-    } catch (err: any) {
-      const tempPass = `NEC@Temp${Math.floor(1000 + Math.random() * 9000)}`;
-      const emailAddr = editFormData.email || editingStaff.email;
-      setTempPasswordResult({ password: tempPass, email: emailAddr });
-      notify.info(
-        'Temporary Password Set',
-        `Temporary credentials set to ${tempPass} and emailed to ${emailAddr}`,
-        { category: 'SECURITY' }
-      );
-    } finally {
-      setIsResettingPassword(false);
-    }
-  };
-
-  const handleSaveEditStaff = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingStaff) return;
-    if (!editFormData.username.trim() || !editFormData.email.trim() || !editFormData.email.includes('@')) {
-      notify.error('Please provide a valid username and official email address.', '', { category: 'ADMIN' });
-      return;
-    }
-
-    setIsUpdating(true);
-    try {
-      let formattedDOB = editFormData.date_of_birth || undefined;
-      if (editDobDisplay && editDobDisplay.length === 10) {
-        const parts = editDobDisplay.split('/');
-        if (parts.length === 3) {
-          formattedDOB = `${parts[2]}-${parts[1]}-${parts[0]}`;
-        }
-      }
-
-      const payload: any = {
-        full_name: editFormData.full_name,
-        username: editFormData.username,
-        email: editFormData.email,
-        phone_number: editFormData.phone_number || undefined,
-        designation: editFormData.designation || undefined,
-        academic_year: editFormData.academic_year || undefined,
-        mentoring_role: editFormData.mentoring_role || undefined,
-        role: editFormData.role,
-        department_id: editFormData.department_id === '0' ? null : parseInt(editFormData.department_id, 10),
-        is_active: editFormData.is_active,
-        date_of_birth: formattedDOB
-      };
-
-      await api.put(`/admin/staff/${editFormData.id}`, payload);
-      notify.success(`Staff account '${editFormData.username}' updated successfully!`, '', { category: 'ADMIN' });
-      setEditingStaff(null);
-      await fetchStaff();
-      window.dispatchEvent(new CustomEvent('nec_staff_updated'));
-    } catch (err: any) {
-      console.error('Failed to update staff account:', err);
-      notify.error(err.response?.data?.detail || 'Failed to update staff account.', '', { category: 'ADMIN' });
-    } finally {
-      setIsUpdating(false);
+    if (staff && staff.id) {
+      setSelectedStaffId(staff.id);
     }
   };
 
@@ -221,24 +119,7 @@ export const StaffManagement: React.FC = () => {
     }
   };
 
-  const [editDobDisplay, setEditDobDisplay] = useState('');
 
-  const handleEditDobInput = (val: string) => {
-    const sanitized = val.replace(/[^\d/]/g, '');
-    let formatted = sanitized;
-    if (sanitized.length > 2 && sanitized[2] !== '/') formatted = sanitized.slice(0, 2) + '/' + sanitized.slice(2);
-    if (formatted.length > 5 && formatted[5] !== '/') formatted = formatted.slice(0, 5) + '/' + formatted.slice(5);
-    setEditDobDisplay(formatted);
-
-    if (formatted.length === 10) {
-      const [d, m, y] = formatted.split('/');
-      if (d && m && y && y.length === 4) {
-        setEditFormData(prev => ({ ...prev, date_of_birth: `${y}-${m}-${d}` }));
-      }
-    } else {
-      setEditFormData(prev => ({ ...prev, date_of_birth: '' }));
-    }
-  };
 
   const [errorState, setErrorState] = useState<{ type: 'API_ERROR' | 'FORBIDDEN' | 'NETWORK_ERROR'; message: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -753,150 +634,12 @@ export const StaffManagement: React.FC = () => {
       {editingStaff && (
         <EditStaffModal
           staff={editingStaff}
-          onClose={() => setEditingStaff(null)}
-          onSuccess={async () => {
-            setEditingStaff(null);
-            await fetchStaff();
-            window.dispatchEvent(new CustomEvent('nec_staff_updated'));
-          }}
-          departments={departments}
-          staffList={staffList}
-          notify={notify}
-        />
-      )}
-      {/* Custom Cancel Confirmation Dialog */}
-      {createPortal(
-        <>
-          {showCancelConfirm && (
-            <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
-              <div className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-gray-200 dark:border-navy-700 p-6 text-center space-y-5">
-                <div className="w-14 h-14 bg-rose-100 dark:bg-rose-500/20 text-rose-500 rounded-2xl flex items-center justify-center mx-auto">
-                  <UserX className="w-7 h-7" />
-                </div>
-                <div>
-                  <h3 className="text-base font-black text-gray-900 dark:text-white mb-1">Discard Changes?</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">You have unsaved changes in this form. Are you sure you want to discard them? This cannot be undone.</p>
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowCancelConfirm(false)}
-                    className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800 transition-all cursor-pointer"
-                  >
-                    Keep Editing
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setShowCancelConfirm(false); setShowModal(false); resetForm(); }}
-                    className="flex-1 px-4 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold transition-all cursor-pointer shadow-lg shadow-rose-500/30"
-                  >
-                    Yes, Discard
-                  </button>
-                </div>
-              </div>
-            </GlobalModalBackdrop>
-          )}
-
-          {/* Centered Create Staff Account Confirmation Modal */}
-          {showConfirmCreate && (
-            <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
-              <div className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-indigo-200/50 dark:border-indigo-900/40 p-6 text-center space-y-5">
-                <div className="w-16 h-16 bg-brand-100 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-brand-500/20">
-                  <UserPlus className="w-8 h-8" />
-                </div>
-
-                <div className="space-y-1.5">
-                  <h3 className="text-xl font-black text-gray-900 dark:text-white">
-                    Create Institutional Account?
-                  </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                    Please confirm the details before creating this staff account.
-                  </p>
-                </div>
-
-                <div className="p-4 bg-gray-50 dark:bg-navy-800/60 rounded-2xl border border-gray-200/80 dark:border-navy-700/80 text-left space-y-2 text-xs">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500 font-medium">Username:</span>
-                    <span className="font-bold text-gray-900 dark:text-white">{formData.username}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500 font-medium">Official Email:</span>
-                    <span className="font-mono text-gray-800 dark:text-gray-200">{formData.email}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500 font-medium">Assigned Role:</span>
-                    <span className="font-black px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                      {formData.role}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500 font-medium">Department:</span>
-                    <span className="font-semibold text-gray-700 dark:text-gray-300 truncate max-w-[200px]">
-                      {departments.find(d => String(d.id) === String(formData.department_id))?.code || 'CSE(CS)'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center pt-1.5 border-t border-gray-200 dark:border-navy-700 text-[11px] text-gray-500">
-                    <span>Default Password:</span>
-                    <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                      {formData.password?.trim() ? 'Custom Provided' : 'Staff@123456!'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex gap-3 pt-2">
-                  <button
-                    type="button"
-                    disabled={submitting}
-                    onClick={() => setShowConfirmCreate(false)}
-                    className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-navy-700 transition-colors cursor-pointer"
-                  >
-                    Cancel / Edit
-                  </button>
-                  <button
-                    type="button"
-                    disabled={submitting}
-                    onClick={confirmAndSubmitStaff}
-                    className="flex-1 px-4 py-2.5 rounded-xl font-black text-xs bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white shadow-lg shadow-indigo-500/30 flex items-center justify-center space-x-1.5 transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    {submitting ? (
-                      <>
-                        <RefreshCcw className="w-3.5 h-3.5 animate-spin" />
-                        <span>Creating...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Check className="w-3.5 h-3.5" />
-                        <span>Yes, Create Account</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </GlobalModalBackdrop>
-          )}
-        </>,
-        document.body
-      )}
-      {showModal && (
-        <CreateStaffModal
-          onClose={handleCloseModal}
-          onSuccess={() => {
-            setShowModal(false);
-            fetchStaff();
-            window.dispatchEvent(new CustomEvent('nec_staff_updated'));
-          }}
-          departments={departments}
-          staffList={staffList}
-          notify={notify}
-        />
-      )}
-      {/* Edit Staff Member Modal */}
-      {editingStaff && (
-        <EditStaffModal
-          staff={editingStaff}
-          onClose={() => setEditingStaff(null)}
-          onSuccess={async () => {
-            setEditingStaff(null);
+          onClose={() => setSelectedStaffId(null)}
+          onSuccess={async (updatedStaff?: any) => {
+            if (updatedStaff && updatedStaff.id) {
+              setStaffList(prev => prev.map(s => s.id === updatedStaff.id ? { ...s, ...updatedStaff } : s));
+            }
+            setSelectedStaffId(null);
             await fetchStaff();
             window.dispatchEvent(new CustomEvent('nec_staff_updated'));
           }}

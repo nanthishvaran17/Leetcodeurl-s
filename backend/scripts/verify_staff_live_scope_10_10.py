@@ -32,22 +32,16 @@ Validates:
 
 import sys
 import os
-import asyncio
-import datetime
-from typing import Dict, Any, List
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from backend.database import SessionLocal
-from backend.models import User, Student, FacultyStudentAssignment, LeetCodeProfileStats, AuditLog, Department
+from backend.models import User, Student, AuditLog
 from backend.routes.auth import create_access_token
 from backend.services.faculty_assignment_service import faculty_assignment_service
 from backend.services.authorization_service import (
-    get_authorized_student_ids,
-    apply_role_based_student_filter,
-    require_staff_student_access
+    apply_role_based_student_filter
 )
-from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from backend.main import app
 
@@ -156,7 +150,7 @@ def run_test_suite():
 
         # 14: Weekly Contest Scope
         res_wc = client.get("/api/weekly-contests/attendance", headers=staff_headers)
-        wc_count = len(res_wc.json()) if isinstance(res_wc.json(), list) else 30
+        len(res_wc.json()) if isinstance(res_wc.json(), list) else 30
         record("14", "Weekly Contest Scope", "Assigned Scoped (30 max)", f"{sum_assigned} Students in Active Portfolio", "PASS" if sum_assigned == 30 else "FAIL")
 
         # 15: Analytics Scope

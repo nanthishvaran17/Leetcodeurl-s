@@ -49,7 +49,7 @@ def run_inprocess_benchmark():
         latencies.sort()
         count = len(latencies)
         p50 = latencies[int(count * 0.50)]
-        p90 = latencies[int(count * 0.90)]
+        latencies[int(count * 0.90)]
         p95 = latencies[int(count * 0.95)]
         p99 = latencies[int(count * 0.99)]
         rps = count / max(total_time, 0.001)

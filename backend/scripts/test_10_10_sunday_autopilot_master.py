@@ -19,11 +19,7 @@ Executes and validates the full Sunday Weekly Contest lifecycle with real eviden
 
 import os
 import sys
-import datetime
 import unittest
-import json
-import hashlib
-from typing import Dict, Any
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, ROOT_DIR)
@@ -31,13 +27,12 @@ sys.path.insert(0, ROOT_DIR)
 from backend.database import SessionLocal
 from backend.models import (
     WeeklySession, WeeklyPublicResult, WeeklyVirtualResult,
-    Student, Department, User, AdminAuditLog, OfficialWeeklySnapshot
+    Student
 )
 from backend.services.sunday_autopilot import weekly_contest_autopilot, SundayAutopilotCoordinator
 from backend.services.contest_reconciliation_service import (
-    UniversalContestReconciliationEngine, CanonicalAttendanceState
+    UniversalContestReconciliationEngine
 )
-from backend.services.canonical_contest_engine import build_canonical_contest_dataset
 from backend.services.email_service import verify_smtp_transporter
 
 class TestSundayAutopilotMaster(unittest.TestCase):

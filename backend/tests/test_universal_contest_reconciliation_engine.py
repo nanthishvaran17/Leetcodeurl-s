@@ -6,15 +6,7 @@ priority rules, mathematical invariants, and roster reconciliations.
 """
 
 import unittest
-import datetime
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
-from backend.database import Base
-from backend.models import (
-    Student, Department, AcademicYear, WeeklySession,
-    WeeklyPublicResult, WeeklyVirtualResult
-)
 from backend.services.contest_reconciliation_service import (
     ContestMetadataResolver, match_contest_problem,
     UniversalContestReconciliationEngine, ContestReconciliationService,

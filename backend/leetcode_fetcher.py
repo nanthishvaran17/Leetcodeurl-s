@@ -661,7 +661,6 @@ def _make_headers(username: str) -> dict:
     }
 
 
-import os
 import random
 
 _LEETCODE_MAX_CONCURRENCY = settings.LEETCODE_MAX_CONCURRENCY

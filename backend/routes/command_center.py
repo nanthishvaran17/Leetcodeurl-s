@@ -6,16 +6,16 @@ Multi-Dimensional Scoping • Staff Allocation Manager • Dedicated Reports •
 """
 
 import datetime
-from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, Body
+from typing import Optional, List
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func, desc, or_, and_
+from sqlalchemy import func, or_, and_
 from pydantic import BaseModel, Field
 
 from backend.database import get_db
 from backend.models import (
-    Student, Department, Section, LeetCodeProfileStats, AdminAuditLog,
-    WeeklyPublicResult, WeeklySession, FacultyStudentAssignment, User
+    Student, Department, LeetCodeProfileStats, AdminAuditLog, WeeklyPublicResult,
+    FacultyStudentAssignment, User
 )
 from backend.services.faculty_assignment_service import faculty_assignment_service, MAX_STUDENTS_PER_FACULTY
 from backend.websocket_manager import connection_manager
@@ -199,6 +199,9 @@ def get_students(
     current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "faculty", "staff"))
 ):
     from backend.services.authorization_service import apply_role_based_student_filter
+    from sqlalchemy.orm import joinedload, selectinload
+
+    from backend.services.authorization_service import apply_role_based_student_filter
     real_ids = _real_dept_ids(db)
     q = db.query(Student).filter(Student.department_id.in_(real_ids))
 
@@ -246,14 +249,12 @@ def get_students(
         ))
 
     total = q.count()
+    
+    # Eagerly load department and stats to avoid N+1 queries
+    q = q.options(joinedload(Student.department), selectinload(Student.stats))
     students = q.order_by(Student.name).offset((page - 1) * page_size).limit(page_size).all()
 
     student_ids = [s.id for s in students]
-    stats_map = {
-        st.student_id: st for st in db.query(LeetCodeProfileStats).filter(
-            LeetCodeProfileStats.student_id.in_(student_ids)
-        ).all()
-    } if student_ids else {}
 
     assignment_map = {}
     assignment_faculty_id_map = {}
@@ -279,7 +280,7 @@ def get_students(
 
     results = []
     for s in students:
-        stats = stats_map.get(s.id)
+        stats = s.stats
         total_solved = stats.total_solved if stats else 0
         weekly_delta = max(0, int(total_solved * 0.05) if total_solved > 20 else 2)
         

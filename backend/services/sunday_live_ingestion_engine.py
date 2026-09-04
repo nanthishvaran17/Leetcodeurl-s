@@ -11,20 +11,14 @@ Pipeline Guarantee:
 AUTHORITATIVE EVIDENCE → SYNC ENGINE → IDENTITY VALIDATION → DATABASE COMMIT → REALTIME WS → FRONTEND
 """
 
-import asyncio
 import datetime
-import logging
-import re
-import uuid
-from typing import Dict, Any, List, Optional, Tuple, Set
+from typing import Dict, Any, Optional, Tuple
 
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import func, or_
 
 from backend.models import (
-    Student, WeeklySession, WeeklyPublicResult, PreviousWeekParticipationRecord,
-    Department, AcademicYear
+    Student, WeeklySession, WeeklyPublicResult, PreviousWeekParticipationRecord
 )
 from backend.services.contest_discovery import (
     get_current_ist_datetime, get_upcoming_sunday_date,

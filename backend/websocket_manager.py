@@ -1,5 +1,5 @@
 from typing import List, Dict, Any, Optional
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket
 from backend.logger import logger
 import json
 import time
@@ -16,7 +16,19 @@ class ConnectionManager:
         self._message_queue = []
         self._batch_task: Optional[asyncio.Task] = None
         self._batch_interval = 0.5  # 500ms
-        
+
+        # Contest-scoped subscriptions: session_id → set of WebSocket connections
+        # Allows targeted delivery of VIRTUAL_RESULT_UPDATED events to only the
+        # clients watching that specific session.
+        self._subscriptions: Dict[int, set] = {}  # session_id -> Set[WebSocket]
+
+        # Per-WebSocket user context (populated on authenticated connect)
+        self._ws_user: Dict[WebSocket, Dict[str, Any]] = {}  # ws -> {user_id, role}
+
+        # Sequence tracking: prevents stale events from overwriting fresher state.
+        # Key: "virtual_{session_id}_{student_id}" → last_seen_sequence (epoch ms)
+        self._event_sequences: Dict[str, int] = {}
+
         self.redis_url = os.environ.get("REDIS_URL")
         self.redis_client = None
         self.redis_pubsub = None
@@ -45,22 +57,93 @@ class ConnectionManager:
             logger.error(f"Redis listener failed: {e}")
 
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket, token: Optional[str] = None):
+        """Accept a WebSocket connection. Optionally validate a JWT token for RBAC."""
         await websocket.accept()
         self.active_connections.append(websocket)
-        logger.info(f"WebSocket client connected. Total clients: {len(self.active_connections)}")
-        
+
+        # Attempt token authentication — graceful fallback to anonymous on failure
+        user_ctx: Dict[str, Any] = {"user_id": None, "role": "anonymous", "authenticated": False}
+        if token:
+            try:
+                user_ctx = self._decode_ws_token(token)
+            except Exception as _auth_err:
+                logger.warning(f"[WS_AUTH] Token validation failed (continuing as anonymous): {_auth_err}")
+        self._ws_user[websocket] = user_ctx
+
+        logger.info(
+            f"WebSocket connected. user={user_ctx.get('user_id')} role={user_ctx.get('role')} "
+            f"total={len(self.active_connections)}"
+        )
+
         if self.redis_url and not self.redis_client:
             await self._init_redis()
-        
+
         # Start background batch flush if not running
         if self._batch_task is None or self._batch_task.done():
             self._batch_task = asyncio.create_task(self._flush_loop())
+
+    def _decode_ws_token(self, token: str) -> Dict[str, Any]:
+        """Validate a JWT token and return user context dict. Raises on invalid token."""
+        try:
+            from backend.routes.auth import decode_access_token
+            payload = decode_access_token(token)
+            return {
+                "user_id": payload.get("sub"),
+                "role": payload.get("role", "anonymous"),
+                "department_id": payload.get("department_id"),
+                "authenticated": True
+            }
+        except ImportError:
+            # Fallback: try jose/jwt directly
+            import os
+            try:
+                from jose import jwt as jose_jwt
+                SECRET = os.environ.get("SECRET_KEY", "")
+                payload = jose_jwt.decode(token, SECRET, algorithms=["HS256"])
+                return {
+                    "user_id": payload.get("sub"),
+                    "role": payload.get("role", "anonymous"),
+                    "authenticated": True
+                }
+            except Exception:
+                raise
+
+    def subscribe_session(self, websocket: WebSocket, session_id: int):
+        """Subscribe a WebSocket to a specific contest session's events."""
+        if session_id not in self._subscriptions:
+            self._subscriptions[session_id] = set()
+        self._subscriptions[session_id].add(websocket)
+        logger.info(f"[WS_SUB] ws subscribed to session={session_id}")
+
+    def unsubscribe_session(self, websocket: WebSocket, session_id: int):
+        """Unsubscribe a WebSocket from a contest session's events."""
+        if session_id in self._subscriptions:
+            self._subscriptions[session_id].discard(websocket)
+
+    def unsubscribe_all(self, websocket: WebSocket):
+        """Remove a WebSocket from all session subscriptions (on disconnect)."""
+        for subs in self._subscriptions.values():
+            subs.discard(websocket)
+        self._ws_user.pop(websocket, None)
+
+    def is_sequence_fresh(self, scope_key: str, incoming_sequence: int) -> bool:
+        """
+        Returns True if the incoming event is newer than the last seen for this scope.
+        Scope key format: 'virtual_{session_id}_{student_id}'
+        Thread-safe only under asyncio single-thread assumption.
+        """
+        last = self._event_sequences.get(scope_key, 0)
+        if incoming_sequence <= last:
+            return False
+        self._event_sequences[scope_key] = incoming_sequence
+        return True
 
     def disconnect(self, websocket: WebSocket):
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
             logger.info(f"WebSocket client disconnected. Remaining clients: {len(self.active_connections)}")
+        self.unsubscribe_all(websocket)
 
     async def _flush_loop(self):
         """Background loop that flushes queued messages in batches."""
@@ -212,6 +295,47 @@ class ConnectionManager:
             "server_timestamp": int(time.time() * 1000)
         }
         self._message_queue.append(payload)
+
+    def broadcast_virtual_result(self, session_id: int, event_payload: dict):
+        """
+        Delivers a VIRTUAL_RESULT_UPDATED or VIRTUAL_ATTEMPT_STARTED event ONLY to
+        WebSocket clients subscribed to the given session_id.
+
+        Falls back to broadcast_sync (all clients) if no session subscriptions exist,
+        preserving backward compatibility.
+
+        Enforces sequence guard: stale events (lower sequence than previously seen)
+        are silently dropped.
+        """
+        sequence = event_payload.get("sequence", 0)
+        student_id = event_payload.get("student_id")
+        scope_key = f"virtual_{session_id}_{student_id}"
+
+        # Sequence guard — drop stale events
+        if sequence and student_id and not self.is_sequence_fresh(scope_key, sequence):
+            logger.debug(f"[WS_SEQ_DROP] Dropping stale event seq={sequence} for {scope_key}")
+            return
+
+        subscribers = self._subscriptions.get(session_id)
+        if subscribers:
+            payload_str = json.dumps(event_payload)
+            disconnected = []
+            for ws in list(subscribers):
+                try:
+                    # Schedule delivery without blocking the caller
+                    loop = asyncio.get_event_loop()
+                    if loop.is_running():
+                        asyncio.create_task(ws.send_text(payload_str))
+                    else:
+                        loop.run_until_complete(ws.send_text(payload_str))
+                except Exception as _e:
+                    logger.warning(f"[WS_VIRT] Failed to send to subscriber: {_e}")
+                    disconnected.append(ws)
+            for dead_ws in disconnected:
+                self.disconnect(dead_ws)
+        else:
+            # No session-specific subscribers → fall back to global broadcast
+            self.broadcast_sync(event_payload)
 
 
 manager = ConnectionManager()

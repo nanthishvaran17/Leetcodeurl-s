@@ -6,7 +6,6 @@ import os
 import sys
 sys.path.insert(0, os.getcwd())
 import re
-from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
 from backend.models import Student, Department, LeetCodeProfileStats, LeetCodeProfile, LeetCodeProblemStats

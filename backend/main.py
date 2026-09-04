@@ -2,6 +2,7 @@ import os
 import json
 import asyncio
 from contextlib import asynccontextmanager
+from typing import Optional
 from fastapi import FastAPI, Response, Depends, WebSocket, WebSocketDisconnect
 from fastapi.responses import ORJSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,8 +12,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from backend.config import settings
-from backend.database import engine, Base, get_db, SessionLocal
-from backend.seed import seed_database
+from backend.database import engine, get_db, SessionLocal
 try:
     from backend.scheduler import start_scheduler
     SCHEDULER_AVAILABLE = True
@@ -28,7 +28,7 @@ from backend.routes import (
     audit, public, sync, history, risk, goals, system_health, weekly_contests,
     scheduled_reports, certificates, data_issues, faculty_assignments, institutional_dashboards,
     email_campaigns, bot_notifications, anti_cheat, placement_eligibility, gamification, accreditation,
-    whatsapp_webhook, deep_tech_intelligence, url_import, contest_integrity
+    deep_tech_intelligence, url_import, contest_integrity, notifications, messaging
 )
 from backend.routes import admin, email_reports, ai_assistant, leetcode, ai_control_center, intelligence
 from backend.routes import command_center, scheduler
@@ -64,7 +64,7 @@ async def _deferred_startup_tasks():
 
     def _run_blocking_db_init():
         from backend.database import SessionLocal
-        from backend.models import Student, User, LeetCodeProfileStats, SyncJob
+        from backend.models import User, SyncJob
         from backend.routes.auth import get_password_hash, verify_password
 
         with SessionLocal() as db_init:
@@ -348,6 +348,10 @@ app.add_middleware(
 
 # auth: prefix="/api/auth" (self-prefixed) — mount once
 app.include_router(auth.router)
+# notifications: prefix="/api/notifications" (self-prefixed) — mount once
+app.include_router(notifications.router)
+# messaging: prefix="/api/messaging"
+app.include_router(messaging.router)
 # admin: prefix="/api/admin" (self-prefixed) — mount once
 app.include_router(admin.router)
 # students: prefix="/api/students" (self-prefixed) — mount once
@@ -463,23 +467,41 @@ except Exception as e:
     logger.warning(f"Could not mount static reports directory: {e}")
 
 @app.websocket("/ws/leaderboard")
-async def websocket_leaderboard_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
+async def websocket_leaderboard_endpoint(websocket: WebSocket, token: Optional[str] = None):
+    """General leaderboard WebSocket. Accepts optional JWT token for RBAC."""
+    await manager.connect(websocket, token=token)
     try:
         while True:
             data = await websocket.receive_text()
             if data == "ping":
                 await websocket.send_text("pong")
+            else:
+                # Handle SUBSCRIBE / UNSUBSCRIBE for contest-scoped events
+                try:
+                    msg = json.loads(data)
+                    if msg.get("action") == "SUBSCRIBE" and msg.get("session_id"):
+                        manager.subscribe_session(websocket, int(msg["session_id"]))
+                        await websocket.send_text(json.dumps({"type": "SUBSCRIBED", "session_id": msg["session_id"]}))
+                    elif msg.get("action") == "UNSUBSCRIBE" and msg.get("session_id"):
+                        manager.unsubscribe_session(websocket, int(msg["session_id"]))
+                        await websocket.send_text(json.dumps({"type": "UNSUBSCRIBED", "session_id": msg["session_id"]}))
+                except (json.JSONDecodeError, ValueError):
+                    pass  # Non-JSON messages (e.g. plain strings) — ignore
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
 @app.websocket("/ws/contest/{contest_id}")
-async def websocket_contest_endpoint(websocket: WebSocket, contest_id: str):
+async def websocket_contest_endpoint(websocket: WebSocket, contest_id: str, token: Optional[str] = None):
     """
     Persistent WebSocket Endpoint for True Live Contest Monitoring.
-    Supports initial snapshot push, GET_SNAPSHOT, and GET_MISSED_EVENTS version recovery.
+    Supports:
+    - Optional JWT token authentication (query param: ?token=<jwt>)
+    - Session subscription: send {"action": "SUBSCRIBE", "session_id": N}
+    - Session unsubscribe: send {"action": "UNSUBSCRIBE", "session_id": N}
+    - Initial snapshot push on connect
+    - GET_SNAPSHOT, GET_MISSED_EVENTS version recovery
     """
-    await manager.connect(websocket)
+    await manager.connect(websocket, token=token)
     db = SessionLocal()
     try:
         from backend.services.live_contest_monitor_engine import live_contest_monitor_engine
@@ -495,6 +517,18 @@ async def websocket_contest_endpoint(websocket: WebSocket, contest_id: str):
             try:
                 msg = json.loads(raw_msg)
                 msg_type = msg.get("type")
+                action = msg.get("action")
+
+                # Session subscription protocol
+                if action == "SUBSCRIBE" and msg.get("session_id"):
+                    manager.subscribe_session(websocket, int(msg["session_id"]))
+                    await websocket.send_text(json.dumps({"type": "SUBSCRIBED", "session_id": msg["session_id"]}))
+                    continue
+                elif action == "UNSUBSCRIBE" and msg.get("session_id"):
+                    manager.unsubscribe_session(websocket, int(msg["session_id"]))
+                    await websocket.send_text(json.dumps({"type": "UNSUBSCRIBED", "session_id": msg["session_id"]}))
+                    continue
+
                 if msg_type == "GET_SNAPSHOT":
                     snap = live_contest_monitor_engine.get_live_snapshot(db, contest_id)
                     await websocket.send_text(json.dumps(snap))

@@ -10,20 +10,18 @@ Endpoints:
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func, desc, asc
-from typing import Dict, Any, Optional, List
+from sqlalchemy import func, desc
+from typing import Optional
 import datetime
 
 from backend.database import get_db
 from backend.models import (
-    User, Student, Department, Section, LeetCodeProfileStats,
-    WeeklySession, WeeklyPublicResult, WeeklyStudentProgress,
+    User, Student, Department, LeetCodeProfileStats, WeeklySession,
     FacultyStudentAssignment, ContestParticipation
 )
 from backend.security import require_role, get_current_user_optional
-from backend.services.faculty_assignment_service import faculty_assignment_service, MAX_STUDENTS_PER_FACULTY
+from backend.services.faculty_assignment_service import faculty_assignment_service
 from backend.cache import cache
-from backend.logger import logger
 
 router = APIRouter(prefix="/institutional", tags=["Institutional Dashboards"])
 

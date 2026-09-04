@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 from backend.models import (
     Student, LeetCodeProfileStats, WeeklySession,
-    WeeklyPublicResult, WeeklyVirtualResult, SyncJob, AdminAuditLog
+    SyncJob, AdminAuditLog
 )
 from backend.services.firestore_service import get_firestore_db
 
@@ -62,10 +62,10 @@ def run_sqlite_to_firestore_migration(sqlite_path: str = None):
 
     sessions = db.query(WeeklySession).all()
     sync_jobs = db.query(SyncJob).all()
-    audit_logs = db.query(AdminAuditLog).all()
+    db.query(AdminAuditLog).all()
 
-    students_batch = fs_db.batch()
-    stats_batch = fs_db.batch()
+    fs_db.batch()
+    fs_db.batch()
 
     verified_cnt = 0
     pending_cnt = 0
@@ -75,7 +75,7 @@ def run_sqlite_to_firestore_migration(sqlite_path: str = None):
     stats_coll = fs_db.collection("leetcode_stats")
     sessions_coll = fs_db.collection("weekly_sessions")
     sync_jobs_coll = fs_db.collection("sync_jobs")
-    audit_logs_coll = fs_db.collection("audit_logs")
+    fs_db.collection("audit_logs")
 
     # Batch write optimization for Cloud Firestore
     batch = fs_db.batch()

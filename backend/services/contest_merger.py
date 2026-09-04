@@ -1,11 +1,9 @@
 import asyncio
 import datetime
-import time
 from typing import Dict, Any, Tuple
 from sqlalchemy.orm import Session
-from backend.models import WeeklyPublicResult, WeeklyContestErrorLog, Student, LeetCodeProfileStats
+from backend.models import WeeklyPublicResult, WeeklyContestErrorLog, Student
 from backend.leetcode_client import fetch_leetcode_profile
-from backend.logger import logger
 
 def merge_contest_fetch_results(existing: WeeklyPublicResult, new_data: Dict[str, Any]) -> Tuple[WeeklyPublicResult, bool]:
     """

@@ -1,14 +1,12 @@
 import os
-import io
 import re
-import uuid
 import hashlib
 import base64
 import datetime
 import urllib.parse
-from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form, Request, Response
-from fastapi.responses import FileResponse, JSONResponse
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, Form, Response
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
@@ -243,7 +241,7 @@ def resolve_certificate_record(
         db.add(cert)
         db.commit()
         db.refresh(cert)
-    except Exception as e:
+    except Exception:
         db.rollback()
         cert = db.query(CertificateRecord).filter(CertificateRecord.verification_id == target_v_id).first()
 

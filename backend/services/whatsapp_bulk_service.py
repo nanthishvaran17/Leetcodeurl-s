@@ -6,7 +6,6 @@ Sends personalized contest performance summaries and institutional digests via M
 import os
 import httpx
 import logging
-from typing import Dict, Any, Optional
 
 logger = logging.getLogger("whatsapp_bulk")
 

@@ -1,6 +1,6 @@
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func, case, and_, or_, desc, asc, nullslast
-from typing import Optional, Dict, Any, List
+from sqlalchemy.orm import Session
+from sqlalchemy import func, case, and_, desc, asc, nullslast
+from typing import Optional, Dict, Any
 
 from backend.models import Student, WeeklyPublicResult, WeeklyVirtualResult, Department, User
 from backend.services.canonical_contest_engine import normalize_participation_status

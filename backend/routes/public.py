@@ -1,10 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import Optional
 
 from backend.database import get_db
-from backend.models import Student, CertificateRecord, WeeklyStudentProgress
-from backend.schemas import StudentOut
+from backend.models import Student
 
 router = APIRouter(prefix="/api/public", tags=["Public Endpoints"])
 

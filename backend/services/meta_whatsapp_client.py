@@ -13,7 +13,6 @@ import os
 import time
 import hmac
 import hashlib
-import logging
 import datetime
 import threading
 from typing import Dict, Any, Optional, List

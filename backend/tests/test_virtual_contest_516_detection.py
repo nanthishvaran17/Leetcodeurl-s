@@ -3,7 +3,7 @@ from backend.services.contest_reconciliation_service import (
     Contest516ReconciliationService, match_contest_problem, CONTEST_516_PROBLEMS
 )
 from backend.database import SessionLocal
-from backend.models import Student, Department
+from backend.models import Department
 
 
 class MockStudent:

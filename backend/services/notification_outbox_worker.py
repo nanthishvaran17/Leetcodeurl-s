@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any
 from sqlalchemy.orm import Session
 from backend.logger import logger
 from backend.models import NotificationEvent, AuditLogRecord

@@ -10,11 +10,11 @@ from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 
 from backend.models import (
-    Student, Department, WeeklySession, WeeklyPublicResult, 
-    WeeklyVirtualResult, ContestParticipation, ReportHistory
+    Student, WeeklySession, WeeklyPublicResult, WeeklyVirtualResult, 
+    ContestParticipation, ReportHistory
 )
 from backend.services.report_models import ReportConfig
-from backend.services.weekly_session_resolver import resolve_weekly_sessions, extract_contest_number
+from backend.services.weekly_session_resolver import resolve_weekly_sessions
 from backend.services.contest_classifier import ContestStatus
 from backend.services.contest_problem_accuracy_engine import ContestProblemAccuracyEngine
 from backend.logger import logger

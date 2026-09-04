@@ -1,6 +1,5 @@
 import pytest
 import httpx
-import datetime
 from backend.services.contest_classifier import (
     get_contest_status,
     ContestStatus,

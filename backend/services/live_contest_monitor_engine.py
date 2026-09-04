@@ -5,7 +5,7 @@ from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 
 from backend.logger import logger
-from backend.models import Student, LeetCodeAccount, StudentContestParticipation, LiveContestEvent, ContestConfig
+from backend.models import Student, LeetCodeAccount, StudentContestParticipation, LiveContestEvent
 from backend.database import SessionLocal
 
 IST = ZoneInfo("Asia/Kolkata")

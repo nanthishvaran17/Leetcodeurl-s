@@ -11,6 +11,7 @@ from backend.services.email_service import (
     send_manual_report_email,
     _trigger_email_queue_worker
 )
+from backend.services.email_templates import generate_professional_template
 
 router = APIRouter(prefix="/api/email", tags=["Automated Report Email Delivery"])
 
@@ -75,24 +76,24 @@ def send_provider_test_email(payload: TestEmailSchema):
     provider_name = "Brevo Official API (Port 443 HTTPS)" if provider_info["provider"] == "BREVO_API" else "Gmail SMTP"
 
     subject = f"Nandha Engineering College — Email Provider Test ({provider_info['provider']})"
-    body_html = f"""
-    <!DOCTYPE html>
-    <html>
-    <body style="font-family: Arial, sans-serif; color: #1e293b; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background-color: #0f172a; color: #ffffff; padding: 16px 20px; text-align: center; border-radius: 12px 12px 0 0;">
-            <h3 style="margin: 0;">NANDHA ENGINEERING COLLEGE</h3>
-            <p style="margin: 4px 0 0 0; font-size: 12px; color: #38bdf8;">LeetCode System — Email Delivery Verification</p>
-        </div>
-        <div style="border: 1px solid #e2e8f0; border-top: none; padding: 24px; border-radius: 0 0 12px 12px;">
-            <p>This is a verified test dispatch from the <strong>Nandha Engineering College LeetCode system</strong>.</p>
-            <p style="color: #16a34a; font-weight: bold;">🟢 Active Provider: {provider_name} verified successfully!</p>
-            <p style="font-size: 12px; color: #64748b;">Timeout: {provider_info['timeout_seconds']}s • Max Retries: {provider_info['max_retries']}</p>
-            <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
-            <p style="font-size: 11px; color: #94a3b8; margin: 0;">Nandha Engineering College • LeetCode Institutional Tracking Platform</p>
-        </div>
-    </body>
-    </html>
+    title = "Email Delivery Verification"
+    content = f"""
+    <p style="margin-top: 0;">This is a verified test dispatch from the <strong>Nandha Engineering College LeetCode system</strong>.</p>
+    <p style="color: #16a34a; font-weight: bold;">🟢 Active Provider: {provider_name} verified successfully!</p>
+    
+    <table class="data-table" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%;">
+        <tr>
+            <td>Timeout</td>
+            <td>{provider_info['timeout_seconds']}s</td>
+        </tr>
+        <tr>
+            <td>Max Retries</td>
+            <td>{provider_info['max_retries']}</td>
+        </tr>
+    </table>
     """
+
+    body_html = generate_professional_template(title, content)
 
     success, err_msg = send_email(payload.recipient, subject, body_html)
 

@@ -1,5 +1,4 @@
 import datetime
-import random
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
@@ -10,7 +9,6 @@ from backend.models import AdminAuditLog, EmailDelivery, EmailAttachment, Report
 from backend.routes.auth import get_current_user, get_current_user_from_request
 from backend.services.audit_service import log_admin_action
 from backend.logger import logger
-from backend.websocket_manager import connection_manager
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Operations & Audit"])
 
@@ -44,7 +42,7 @@ def get_data_health_check(db: Session = Depends(get_db)):
     GET /api/admin/data-health
     Dynamic, authoritative database health and synchronization integrity verification.
     """
-    from backend.models import Student, LeetCodeProfileStats
+    from backend.models import Student
     students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
     total_students = len(students)
 
@@ -536,7 +534,6 @@ def send_admin_test_report_email(
         )
     except Exception as e:
         logger.warning(f"Test email dispatch note: {e}")
-        success = True
 
     log_admin_action(
         db, action="SEND_TEST_REPORT_EMAIL", action_type="EMAIL",
@@ -741,6 +738,22 @@ def create_staff_user(
             raw_password=raw_pwd
         )
 
+    try:
+        from backend.services.notification_service import NotificationService
+        recipients = [staff_user.email, current_user.email, "ADMIN", "STAFF"]
+        NotificationService.create_direct_notification(
+            title="Staff Account Created",
+            message=f"New staff account for '{staff_user.username}' ({staff_user.role}) was created successfully.",
+            recipient_user_ids=[r for r in recipients if r],
+            notification_type="system",
+            priority="normal",
+            action_route="settings",
+            created_by=f"{current_user.username} ({current_user.role})"
+        )
+    except Exception as _notif_err:
+        pass
+
+
     return {
         "success": True,
         "message": f"Staff account for '{staff_user.username}' created successfully.",
@@ -842,15 +855,17 @@ def update_staff_user(
     if payload.section_id is not None and staff_user.section_id != payload.section_id:
         staff_user.section_id = payload.section_id
 
-    if payload.mentoring_role is not None:
-        staff_user.mentoring_role = payload.mentoring_role
-        changes_made["mentoring_role"] = payload.mentoring_role
+    update_data = payload.dict(exclude_unset=True)
 
-    if payload.academic_year is not None:
+    if "mentoring_role" in update_data:
+        staff_user.mentoring_role = payload.mentoring_role.strip() if payload.mentoring_role else None
+        changes_made["mentoring_role"] = staff_user.mentoring_role
+
+    if "academic_year" in update_data:
         staff_user.academic_year = payload.academic_year.strip() if payload.academic_year else None
         changes_made["academic_year"] = staff_user.academic_year
 
-    if payload.date_of_birth is not None:
+    if "date_of_birth" in update_data:
         staff_user.date_of_birth = payload.date_of_birth.strip() if payload.date_of_birth else None
         changes_made["date_of_birth"] = staff_user.date_of_birth
 
@@ -862,8 +877,7 @@ def update_staff_user(
     db.refresh(staff_user)
 
     from backend.cache import cache
-    cache.invalidate_tag(f"user_auth_{staff_id}")
-    cache.invalidate_tag("students")
+    cache.clear()
 
     log_admin_action(
         db, action="UPDATE_STAFF_ACCOUNT", action_type="USER_MANAGEMENT",
@@ -871,13 +885,62 @@ def update_staff_user(
         current_user=current_user, target_type="User", target_id=str(staff_user.id)
     )
 
-    if changes_made and staff_user.email:
+    if staff_user.email:
         from backend.services.email_notifications import notify_staff_updated
+        from backend.services.notification_service import NotificationService
+
+        display_dob = staff_user.date_of_birth or "N/A"
+        if staff_user.date_of_birth and "-" in staff_user.date_of_birth:
+            parts = staff_user.date_of_birth.split("-")
+            if len(parts) == 3 and len(parts[0]) == 4:
+                display_dob = f"{parts[2]}/{parts[1]}/{parts[0]}"
+
+        profile_summary = {
+            "Full Legal Name": staff_user.full_name or staff_user.username,
+            "Official Email": staff_user.email,
+            "Assigned Role": staff_user.role,
+            "Date of Birth": display_dob,
+            "Designation": staff_user.designation or "N/A",
+            "Phone Number": staff_user.phone_number or "N/A",
+            "Account Status": "Active" if staff_user.is_active else "Suspended"
+        }
+
+        label_map = {
+            "full_name": "Full Legal Name",
+            "username": "Username",
+            "email": "Official Email",
+            "phone_number": "Phone Number",
+            "designation": "Designation",
+            "role": "Assigned Role",
+            "department": "Department",
+            "academic_year": "Academic Scope",
+            "mentoring_role": "Mentoring Role",
+            "date_of_birth": "Date of Birth",
+            "status": "Account Status"
+        }
+
+        if changes_made:
+            for k, v in changes_made.items():
+                label = label_map.get(k, k.replace('_', ' ').title())
+                val_str = str(v) if v is not None else "N/A"
+                if k == "date_of_birth" and "-" in val_str:
+                    parts = val_str.split("-")
+                    if len(parts) == 3 and len(parts[0]) == 4:
+                        val_str = f"{parts[2]}/{parts[1]}/{parts[0]}"
+                profile_summary[label] = val_str
+
         background_tasks.add_task(
             notify_staff_updated,
             staff_email=staff_user.email,
-            staff_name=staff_user.username,
-            changes=changes_made
+            staff_name=staff_user.full_name or staff_user.username,
+            changes=profile_summary
+        )
+
+        NotificationService.create_direct_notification(
+            title="Profile Details Updated",
+            message=f"Your institutional staff profile was updated. Assigned Role: {staff_user.role}, DOB: {display_dob}",
+            recipient_user_ids=[str(staff_user.id), staff_user.email, staff_user.username],
+            notification_type="ACCOUNT_UPDATE"
         )
 
     return {
@@ -1048,6 +1111,9 @@ def delete_staff_user(
     db.delete(staff_user)
     db.commit()
 
+    from backend.cache import cache
+    cache.clear()
+
     log_admin_action(
         db, action="DELETE_STAFF_ACCOUNT", action_type="USER_MANAGEMENT",
         description=f"Deleted staff account {username} (ID: {staff_id})",
@@ -1122,7 +1188,7 @@ def get_all_staff_users(
         }
         for s in staff_list
     ]
-    cache.set(cache_key, result, ttl_seconds=15)
+    cache.set(cache_key, result, ttl_seconds=15, tags=["staff_list", "admin"])
     return result
 
 
@@ -1188,7 +1254,6 @@ def toggle_staff_status(
     Admin: Toggles staff active/disabled status.
     If disabled, unassigns students and moves them to unassigned queue.
     """
-    from backend.services.faculty_assignment_service import faculty_assignment_service
 
     staff = db.query(User).filter(User.id == staff_id).first()
     if not staff:

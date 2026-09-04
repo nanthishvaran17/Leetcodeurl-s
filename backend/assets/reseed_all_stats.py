@@ -26,7 +26,7 @@ def reseed_all_student_stats(sync_firestore: bool = True):
         now = datetime.datetime.utcnow()
 
         for idx, s in enumerate(students, start=1):
-            reg = s.reg_no
+            s.reg_no
 
             # Generic realistic distribution based on enrollment index & solver profile
             base_tot = 110 + ((idx * 37 + 50) % 480)

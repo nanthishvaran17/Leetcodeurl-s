@@ -11,7 +11,6 @@ import datetime
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from backend.database import SessionLocal
-from backend.models import Student, LeetCodeProfileStats
 from backend.services.canonical_sync_pipeline import run_full_pipeline
 from backend.scripts.import_fresh_students_dataset import generate_canonical_roster
 from backend.ranking import update_all_rankings_and_badges

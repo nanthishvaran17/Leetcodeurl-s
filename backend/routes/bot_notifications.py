@@ -2,9 +2,9 @@
 bot_notifications.py — API Endpoints for WhatsApp & Telegram Automated Notifications
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional, Dict, Any
+from typing import Optional
 from pydantic import BaseModel
 
 from backend.database import get_db

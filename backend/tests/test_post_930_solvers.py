@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from backend.main import app
 from backend.database import SessionLocal, engine, Base
-from backend.models import User, Student, Department, WeeklySession, WeeklyVirtualResult, OfficialWeeklySnapshot
+from backend.models import User, Student, Department, WeeklySession, WeeklyVirtualResult
 from backend.routes.auth import get_password_hash
 from backend.services.faculty_assignment_service import faculty_assignment_service
 

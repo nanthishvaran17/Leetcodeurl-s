@@ -8,6 +8,7 @@ import { NotificationProvider } from './context/NotificationContext'
 import { NotificationCenter } from './components/NotificationCenter'
 import { GlobalDataProvider } from './context/GlobalDataContext'
 import { FilterProvider } from './context/FilterContext'
+import { GlobalNotificationProvider } from './context/GlobalNotificationContext'
 import { GlobalWebSocketProvider } from './context/GlobalWebSocketProvider'
 import { KeyboardShortcutsProvider } from './context/KeyboardContext'
 import './index.css'
@@ -30,12 +31,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <GlobalDataProvider>
               <FilterProvider>
                 <NotificationProvider>
-                  <KeyboardShortcutsProvider>
-                    <ErrorBoundary>
-                      <App />
-                      <NotificationCenter />
-                    </ErrorBoundary>
-                  </KeyboardShortcutsProvider>
+                  <GlobalNotificationProvider>
+                    <KeyboardShortcutsProvider>
+                      <ErrorBoundary>
+                        <App />
+                        <NotificationCenter />
+                      </ErrorBoundary>
+                    </KeyboardShortcutsProvider>
+                  </GlobalNotificationProvider>
                 </NotificationProvider>
               </FilterProvider>
             </GlobalDataProvider>

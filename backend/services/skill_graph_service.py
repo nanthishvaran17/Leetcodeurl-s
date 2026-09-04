@@ -15,10 +15,10 @@ Capabilities:
    - Recommends curated LeetCode problem paths (Easy -> Medium -> Hard) targeted directly at the student's weakest domain.
 """
 
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any
 from sqlalchemy.orm import Session
 
-from backend.models import Student, LeetCodeProfileStats
+from backend.models import Student
 
 
 class SkillGraphService:

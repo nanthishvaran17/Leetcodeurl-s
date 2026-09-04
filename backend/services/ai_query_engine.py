@@ -4,9 +4,8 @@ Processes natural-language queries from Faculty and HOD using verified database 
 Zero hallucination guarantee — every insight is backed by verified DB records.
 """
 
-from typing import Dict, Any, List
+from typing import Dict, Any
 from sqlalchemy.orm import Session
-from backend.models import Student, Department, Section, WeeklySession, StudentRiskProfile
 from backend.services.hod_analytics_engine import calculate_department_health_score, get_institutional_benchmarks
 from backend.services.faculty_action_engine import get_faculty_actions_list, get_faculty_kpis
 

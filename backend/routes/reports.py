@@ -7,10 +7,8 @@ from sqlalchemy.orm import Session
 from typing import Optional, Dict, Any
 from pydantic import BaseModel
 
-from backend.config import settings
 from backend.database import get_db
-from backend.models import Student, CertificateRecord, EmailLog, ContestParticipation
-from backend.schemas import StudentOut
+from backend.models import Student, CertificateRecord, EmailLog
 from backend.services.authorization_service import apply_role_based_student_filter
 from backend.excel_handler import (
     generate_8_sheet_excel_report,
@@ -191,29 +189,41 @@ def download_csv_report(
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow([
-        "S.No", "Register No", "Student Name", "Department", "Year",
-        "LeetCode Profile Link", "Username", "Easy Solved", "Medium Solved",
-        "Hard Solved", "Total Solved", "Contest Rating", "Global Rank", "Validation Status"
+        "S.No", "Register No", "Student Name", "Department", "Batch", "Year",
+        "Institutional Email", "LeetCode Profile Link", "Username", 
+        "Easy Solved", "Medium Solved", "Hard Solved", "Total Solved", 
+        "Contest Rating", "Global Rank", "Validation Status"
     ])
     
     sorted_students = sorted(students, key=lambda s: (s.stats.total_solved or 0) if s.stats else 0, reverse=True)
     for idx, s in enumerate(sorted_students, start=1):
         st = s.stats
-        is_verified = st and st.validation_status == "verified"
+        is_verified = bool(st and (st.sync_status in ("success", "OK", "verified", "stale") or st.status == "verified" or st.total_solved is not None))
+        
+        easy = st.easy_solved if st and st.easy_solved is not None else (0 if st else None)
+        medium = st.medium_solved if st and st.medium_solved is not None else (0 if st else None)
+        hard = st.hard_solved if st and st.hard_solved is not None else (0 if st else None)
+        total_solved = st.total_solved if st and st.total_solved is not None else (0 if st else None)
+        
+        batch = getattr(s, 'batch', "")
+        inst_email = getattr(s, 'institutional_email', "")
+        
         writer.writerow([
             idx,
             s.reg_no,
             s.name,
             s.department.code if s.department else "",
+            batch,
             s.year_level,
+            inst_email,
             s.leetcode_url or "",
             s.username or "",
-            (st.easy_solved   if is_verified else "🔴") if st else "🔴",
-            (st.medium_solved if is_verified else "🔴") if st else "🔴",
-            (st.hard_solved   if is_verified else "🔴") if st else "🔴",
-            (st.total_solved  if is_verified else "🔴") if st else "🔴",
-            round(st.contest_rating, 1) if (is_verified and st and st.contest_rating) else "🔴",
-            st.contest_global_ranking if (is_verified and st and st.contest_global_ranking) else "🔴",
+            easy if easy is not None else "",
+            medium if medium is not None else "",
+            hard if hard is not None else "",
+            total_solved if total_solved is not None else "",
+            round(st.contest_rating, 1) if (st and st.contest_rating is not None) else "",
+            st.contest_global_ranking if (st and st.contest_global_ranking is not None) else "",
             "VERIFIED" if is_verified else "UNVERIFIED"
         ])
         
@@ -223,6 +233,19 @@ def download_csv_report(
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=LeetCode_Student_Performance_Report.csv"}
     )
+
+@router.get("/{report_id}/preview")
+def get_report_preview(
+    report_id: str, 
+    dept: str = "ALL", 
+    year: str = "ALL", 
+    attendance: str = "ALL", 
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="View Report Preview", dept_scoped=True))
+):
+    """Fetches the full JSON dataset snapshot for a specific report ID or session ID."""
+    dataset, _ = _get_dataset_for_id(report_id, db, dept=dept, year=year, attendance=attendance)
+    return dataset
 
 
 @router.get("/{session_id}/{format}")
@@ -360,21 +383,7 @@ def get_report_history(
         "totalStudents": r.dataset.get("metrics", {}).get("totalStudents", 0)
     } for r in reports]
 
-@router.get("/{report_id}/preview")
-def get_report_preview(
-    report_id: str, 
-    dept: str = "ALL", 
-    year: str = "ALL", 
-    attendance: str = "ALL", 
-    db: Session = Depends(get_db),
-    current_user = Depends(require_security_access(resource_name="View Report Preview", dept_scoped=True))
-):
-    """Fetches the full JSON dataset snapshot for a specific report ID or session ID."""
-    dataset, _ = _get_dataset_for_id(report_id, db, dept=dept, year=year, attendance=attendance)
-    return dataset
-
-from backend.models import OfficialWeeklySnapshot, WeeklySession
-from backend.routes.weekly_contests import matches_dept, matches_year
+from backend.models import WeeklySession
 import re
 
 def get_contest_filename_base(contest_name: str, session_date: str = None, dept: str = "ALL", year: str = "ALL", attendance: str = "ALL") -> str:
@@ -584,7 +593,7 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
                 v_q1 = r.get("q1")
                 v_q2 = r.get("q2")
                 v_q3 = r.get("q3")
-                v_q4 = r.get("q4")
+                r.get("q4")
                 solved_val = r.get("total_solved")
                 rank_val = r.get("rank")
                 rating_val = r.get("rating")
@@ -1082,31 +1091,41 @@ def download_weekly_performance_19_sheet_excel(
     """
     import os
     import tempfile
+    import uuid
+    import re
     from backend.services.weekly_report_service import generate_weekly_performance_data
     from backend.exporters.weekly_excel_generator import build_weekly_performance_excel
 
     date_str = report_date or datetime.date.today().strftime("%d-%m-%Y")
+    safe_date_str = re.sub(r'[^\w\-]', '_', date_str)
+
     data = generate_weekly_performance_data(
-        db,
+        db, 
         last_week_contest=last_week_contest,
         current_week_contest=current_week_contest,
-        report_date=date_str,
+        report_date=date_str, 
         save_snapshot=False
     )
 
     temp_dir = tempfile.gettempdir()
-    file_path = os.path.join(temp_dir, f"LeetCode_Weekly_Report_{date_str}.xlsx")
+    unique_id = uuid.uuid4().hex
+    file_path = os.path.join(temp_dir, f"LeetCode_Weekly_Report_{unique_id}.xlsx")
+    
     build_weekly_performance_excel(data, file_path)
 
     with open(file_path, "rb") as f:
         file_bytes = f.read()
+        
+    try:
+        os.remove(file_path)
+    except Exception:
+        pass
 
     return Response(
         content=file_bytes,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename=LeetCode_Weekly_Report_{date_str}.xlsx"}
+        headers={"Content-Disposition": f"attachment; filename=LeetCode_Weekly_Report_{safe_date_str}.xlsx"}
     )
-
 
 @router.get("/college-weekly-format")
 @router.get("/export-college-format")

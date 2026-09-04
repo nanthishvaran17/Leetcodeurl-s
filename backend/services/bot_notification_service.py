@@ -15,18 +15,13 @@ Features:
 """
 
 import os
-import time
-import json
-import logging
-import asyncio
 import datetime
 import threading
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from backend.database import SessionLocal
-from backend.models import User, Student, Department, LeetCodeProfileStats, FacultyStudentAssignment
+from backend.models import User, Student, LeetCodeProfileStats, FacultyStudentAssignment
 from backend.logger import logger
 
 

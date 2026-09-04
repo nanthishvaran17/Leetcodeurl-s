@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Download, FileText, FileSpreadsheet, RefreshCw, X, AlertTriangle, Trophy, Layers, Award, CheckCircle2, UserCheck, Users, HelpCircle, Flame, Filter } from 'lucide-react';
 import api from '../services/api';
+import { FullScreenLoadingOverlay } from './ui/FullScreenLoadingOverlay';
 
 interface ReportPreviewProps {
   reportId: string;
@@ -13,19 +15,24 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
   const { notify } = useNotification();
   const [report, setReport] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
+  const fetchReport = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await api.get(`/reports/${reportId}/preview`);
+      setReport(res.data);
+    } catch (err) {
+      console.error(err);
+      setError("Unable to fetch the verified report dataset.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchReport = async () => {
-      try {
-        const res = await api.get(`/reports/${reportId}/preview`);
-        setReport(res.data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchReport();
   }, [reportId]);
 
@@ -119,14 +126,14 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
     }
   };
 
-  if (loading) {
+  if (loading || error) {
     return (
-      <div className="modal-overlay-responsive animate-modal-backdrop">
-        <div className="bg-white dark:bg-navy-900 p-8 rounded-3xl flex flex-col items-center space-y-4 shadow-lg border border-gray-200 dark:border-gray-800">
-          <RefreshCw className="w-8 h-8 animate-spin text-brand-500" />
-          <p className="font-bold text-gray-700 dark:text-gray-300">Fetching verified report dataset...</p>
-        </div>
-      </div>
+      <FullScreenLoadingOverlay 
+        message="Fetching verified report dataset..." 
+        error={error || undefined}
+        onRetry={error ? fetchReport : undefined}
+        onCancel={error ? onClose : undefined}
+      />
     );
   }
 
@@ -157,33 +164,33 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
     return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20">UNKNOWN</span>;
   };
 
-  return (
+  return createPortal(
     <div
-      className="modal-overlay-responsive animate-modal-backdrop"
+      className="modal-overlay-responsive animate-modal-backdrop print:bg-white print:p-0 print:absolute print:inset-0 print:z-auto"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="modal-container-responsive max-w-6xl bg-white dark:bg-navy-900 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-800 animate-modal-content">
+      <div className="modal-container-responsive max-w-6xl bg-white dark:bg-navy-900 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-800 animate-modal-content print:rounded-none print:shadow-none print:border-none print:max-w-full print:w-full">
         
         {/* ── 1. HEADER BANNER ── */}
-        <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-950 text-white flex items-center justify-between shrink-0">
+        <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-950 text-white flex items-center justify-between shrink-0 print:bg-white print:text-black print:border-b-2 print:border-black">
           <div className="flex items-center space-x-3 min-w-0">
-            <div className="shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-black text-white text-base shadow-lg shadow-blue-500/30">
+            <div className="shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-black text-white text-base shadow-lg shadow-blue-500/30 print:hidden">
               <FileSpreadsheet className="w-5 h-5 text-white" />
             </div>
             <div className="min-w-0">
-              <h2 className="font-black text-base sm:text-lg text-white flex items-center space-x-2 truncate">
-                <span className="truncate">{report.title || (isContestReport ? `${report.contestName || 'Contest'} Performance Report` : 'Report Preview')}</span>
-                <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-extrabold shrink-0">
+              <h2 className="font-black text-base sm:text-lg text-white print:text-black flex items-center space-x-2 truncate print:whitespace-normal">
+                <span className="truncate print:whitespace-normal">{report.title || (isContestReport ? `${report.contestName || 'Contest'} Performance Report` : 'Report Preview')}</span>
+                <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-extrabold shrink-0 print:hidden">
                   READY
                 </span>
               </h2>
-              <p className="text-xs text-blue-200/80 font-medium mt-0.5 truncate">
+              <p className="text-xs text-blue-200/80 print:text-gray-700 font-medium mt-0.5 truncate print:whitespace-normal">
                 {isContestReport && report.contestName && (
-                  <span className="font-bold text-amber-300 mr-2">
+                  <span className="font-bold text-amber-300 print:text-black mr-2">
                     {report.contestName} ({report.contestDate || report.sessionDate || 'Sunday Session'})
                   </span>
                 )}
-                Report ID: <span className="font-mono text-blue-200">{report.reportId || report.report_id}</span>
+                Report ID: <span className="font-mono text-blue-200 print:text-gray-600">{report.reportId || report.report_id}</span>
               </p>
             </div>
           </div>
@@ -192,7 +199,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
             type="button"
             onClick={onClose}
             aria-label="Close report preview"
-            className="shrink-0 ml-2 px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition-all font-bold text-xs flex items-center space-x-1.5 cursor-pointer shadow-sm"
+            className="shrink-0 ml-2 px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition-all font-bold text-xs flex items-center space-x-1.5 cursor-pointer shadow-sm print:hidden"
           >
             <X className="w-4 h-4" />
             <span>Close</span>
@@ -228,7 +235,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
         </div>
 
         {/* ── 3. SCROLLABLE REPORT CONTENT ── */}
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0 space-y-6">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0 space-y-6 print:overflow-visible print:h-auto print:p-0 print:space-y-4 print:mt-4">
 
           {/* ═══════════ CONTEST PERFORMANCE SPECIALIZED VIEW ═══════════ */}
           {isContestReport ? (
@@ -430,33 +437,33 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                   )}
                 </div>
 
-                <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-x-auto shadow-sm max-h-[480px] overflow-y-auto">
-                  <table className="w-full text-left text-xs min-w-[850px]">
-                    <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10">
+                <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-x-auto shadow-sm max-h-[480px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
+                  <table className="w-full text-left text-xs min-w-[850px] print:min-w-0 print:w-full">
+                    <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 print:bg-gray-200 print:text-black">
                       <tr>
-                        <th className="px-3.5 py-3 text-center w-12">S.No</th>
-                        <th className="px-3.5 py-3">Register No</th>
-                        <th className="px-3.5 py-3">Student Name</th>
-                        <th className="px-3.5 py-3 text-center">Dept</th>
-                        <th className="px-3.5 py-3 text-center">Year</th>
-                        <th className="px-4 py-3 text-center">Status</th>
-                        <th className="px-3 py-3 text-center w-10">Q1</th>
-                        <th className="px-3 py-3 text-center w-10">Q2</th>
-                        <th className="px-3 py-3 text-center w-10">Q3</th>
-                        <th className="px-3 py-3 text-center w-10">Q4</th>
-                        <th className="px-4 py-3 text-center">Contest Solved</th>
+                        <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black">S.No</th>
+                        <th className="px-3.5 py-3 sticky left-0 bg-navy-950 print:bg-gray-200 print:border-b print:border-black z-20">Register No</th>
+                        <th className="px-3.5 py-3 print:border-b print:border-black">Student Name</th>
+                        <th className="px-3.5 py-3 text-center print:border-b print:border-black">Dept</th>
+                        <th className="px-3.5 py-3 text-center print:border-b print:border-black">Year</th>
+                        <th className="px-4 py-3 text-center print:border-b print:border-black">Status</th>
+                        <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q1</th>
+                        <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q2</th>
+                        <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q3</th>
+                        <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q4</th>
+                        <th className="px-4 py-3 text-center print:border-b print:border-black">Contest Solved</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-sans">
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-sans print:divide-black">
                       {displayedStudents.map((s: any, idx: number) => {
                         const isPart = s.status === 'PUBLIC_ATTENDED' || s.status === 'VIRTUAL_ATTENDED' || s.status === 'PUBLIC' || s.status === 'VIRTUAL';
                         const cSolved = s.contest_solved !== undefined && s.contest_solved !== null ? s.contest_solved : (isPart && s.total_solved !== undefined && s.total_solved !== null ? s.total_solved : null);
 
                         return (
-                          <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors">
-                            <td className="px-3.5 py-2.5 text-center text-gray-400 font-mono text-[11px]">{idx + 1}</td>
-                            <td className="px-3.5 py-2.5 font-bold text-gray-900 dark:text-white font-mono">{s.reg_no}</td>
-                            <td className="px-3.5 py-2.5 font-semibold text-gray-800 dark:text-gray-200">{s.name || s.student_name}</td>
+                          <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors group">
+                            <td className="px-3.5 py-2.5 text-center text-gray-400 font-mono text-[11px] print:text-black">{idx + 1}</td>
+                            <td className="px-3.5 py-2.5 font-bold text-gray-900 dark:text-white font-mono sticky left-0 bg-white dark:bg-navy-900 group-hover:bg-gray-50 dark:group-hover:bg-navy-800 print:bg-transparent print:text-black z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] print:shadow-none">{s.reg_no}</td>
+                            <td className="px-3.5 py-2.5 font-semibold text-gray-800 dark:text-gray-200 print:text-black">{s.name || s.student_name}</td>
                             <td className="px-3.5 py-2.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{s.dept}</td>
                             <td className="px-3.5 py-2.5 text-center font-medium text-gray-600 dark:text-gray-400">{s.year}</td>
                             <td className="px-4 py-2.5 text-center">
@@ -591,28 +598,28 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                   <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider">
                     Full Student Performance Roster ({allRows.length} Students)
                   </h3>
-                  <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-x-auto shadow-sm max-h-[450px] overflow-y-auto">
-                    <table className="w-full text-left text-xs min-w-[800px]">
-                      <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10">
+                  <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-x-auto shadow-sm max-h-[450px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
+                    <table className="w-full text-left text-xs min-w-[800px] print:min-w-0 print:w-full">
+                      <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 print:bg-gray-200 print:text-black">
                         <tr>
-                          <th className="px-4 py-3 text-center">S.No</th>
-                          <th className="px-4 py-3">Reg No</th>
-                          <th className="px-4 py-3">Student Name</th>
-                          <th className="px-4 py-3 text-center">Dept</th>
-                          <th className="px-4 py-3 text-center">Year</th>
-                          <th className="px-4 py-3 text-right">Easy</th>
-                          <th className="px-4 py-3 text-right">Medium</th>
-                          <th className="px-4 py-3 text-right">Hard</th>
-                          <th className="px-4 py-3 text-right">Total Solved</th>
-                          <th className="px-4 py-3 text-center">Status</th>
+                          <th className="px-4 py-3 text-center print:border-b print:border-black">S.No</th>
+                          <th className="px-4 py-3 sticky left-0 bg-navy-950 print:bg-gray-200 print:border-b print:border-black z-20">Reg No</th>
+                          <th className="px-4 py-3 print:border-b print:border-black">Student Name</th>
+                          <th className="px-4 py-3 text-center print:border-b print:border-black">Dept</th>
+                          <th className="px-4 py-3 text-center print:border-b print:border-black">Year</th>
+                          <th className="px-4 py-3 text-right print:border-b print:border-black">Easy</th>
+                          <th className="px-4 py-3 text-right print:border-b print:border-black">Medium</th>
+                          <th className="px-4 py-3 text-right print:border-b print:border-black">Hard</th>
+                          <th className="px-4 py-3 text-right print:border-b print:border-black">Total Solved</th>
+                          <th className="px-4 py-3 text-center print:border-b print:border-black">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                      <tbody className="divide-y divide-gray-100 dark:divide-gray-800 print:divide-black">
                         {allRows.map((s: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors">
-                            <td className="px-4 py-2.5 text-center text-gray-400 font-mono">{idx + 1}</td>
-                            <td className="px-4 py-2.5 font-bold text-gray-900 dark:text-white">{s.reg_no}</td>
-                            <td className="px-4 py-2.5 font-semibold text-gray-800 dark:text-gray-200">{s.name}</td>
+                          <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors group">
+                            <td className="px-4 py-2.5 text-center text-gray-400 font-mono print:text-black">{idx + 1}</td>
+                            <td className="px-4 py-2.5 font-bold text-gray-900 dark:text-white sticky left-0 bg-white dark:bg-navy-900 group-hover:bg-gray-50 dark:group-hover:bg-navy-800 print:bg-transparent print:text-black z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] print:shadow-none">{s.reg_no}</td>
+                            <td className="px-4 py-2.5 font-semibold text-gray-800 dark:text-gray-200 print:text-black">{s.name}</td>
                             <td className="px-4 py-2.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{s.dept}</td>
                             <td className="px-4 py-2.5 text-center">{s.year}</td>
                             <td className="px-4 py-2.5 text-right text-emerald-600 dark:text-emerald-400 font-semibold">{s.easy ?? "—"}</td>
@@ -638,11 +645,15 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
         </div>
 
         {/* ── 4. FOOTER / EXPORT ACTIONS ── */}
-        <div className="p-4 sm:p-5 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="p-4 sm:p-5 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-3 shrink-0 print:hidden">
           <div className="text-xs text-gray-500 font-semibold flex items-center space-x-2">
             <span>Official Institutional Report Dataset</span>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 flex-wrap gap-2">
+            <button onClick={() => window.print()} className="flex items-center space-x-1.5 px-3.5 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105">
+              <FileText className="w-4 h-4" />
+              <span>Print UI</span>
+            </button>
             <button onClick={() => downloadFile('excel')} className="flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105">
               <FileSpreadsheet className="w-4 h-4" />
               <span>Excel</span>
@@ -667,7 +678,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

@@ -6,14 +6,12 @@ Generates realistic institutional dataset across 12 departments for management l
 import os
 import sys
 import random
-import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from backend.database import SessionLocal
 from backend.models import (
-    Student, Department, Section, LeetCodeProfileStats,
-    WeeklySession, WeeklyPublicResult, WeeklyVirtualResult
+    Student, Department
 )
 from backend.ranking import update_all_rankings_and_badges
 from backend.scripts.import_fresh_students_dataset import generate_canonical_roster
@@ -57,8 +55,6 @@ def seed_demo_students(target_count: int = 3500) -> int:
             dept_map[code] = d.id
 
         created_count = 0
-        students_to_add = []
-        stats_to_add = []
 
         for code, name, count in DEPARTMENTS_CONFIG:
             for idx in range(1, count + 1):

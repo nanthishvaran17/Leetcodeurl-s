@@ -8,7 +8,7 @@ import { getDataFreshness } from '../services/api';
 import { SyncStatusModal } from './SyncStatusModal';
 import { LiveIndicator } from './LiveIndicator';
 import { NotificationPanel } from './NotificationPanel';
-import { useNotifications } from '../hooks/useNotifications';
+import { useGlobalNotifications } from '../context/GlobalNotificationContext';
 
 interface NavbarProps {
   currentSessionStatus?: string;
@@ -34,7 +34,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState<boolean>(false);
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
-  const { unreadCount } = useNotifications();
+  const { unreadCount } = useGlobalNotifications();
 
   useEffect(() => {
     loadFreshness();
@@ -139,18 +139,32 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="relative">
                   <button
                     type="button"
-                    onClick={() => setShowNotifications(!showNotifications)}
-                    className="relative p-1.5 sm:p-2 flex-shrink-0 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-navy-800 transition-all duration-200 cursor-pointer active:scale-90"
-                    title="Notifications"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowNotifications(!showNotifications);
+                    }}
+                    className="relative p-1.5 sm:p-2 flex-shrink-0 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-navy-800 transition-all duration-200 cursor-pointer active:scale-90 min-w-[40px] min-h-[40px] flex items-center justify-center"
+                    title={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
+                    aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
                   >
                     <Bell className="w-4 h-4 sm:w-4 sm:h-4" />
                     {unreadCount > 0 && (
-                      <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-navy-900"></span>
+                      <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-rose-600 text-white text-[10px] font-black rounded-full border-2 border-white dark:border-navy-900 flex items-center justify-center shadow-md animate-pulse">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
                     )}
                   </button>
-                  <NotificationPanel isOpen={showNotifications} onClose={() => setShowNotifications(false)} />
+                  <NotificationPanel
+                    isOpen={showNotifications}
+                    onClose={() => setShowNotifications(false)}
+                    onNavigateTab={(tab) => {
+                      setActiveTab(tab);
+                      setShowNotifications(false);
+                    }}
+                  />
                 </div>
               )}
+
 
               {/* Theme Toggle */}
               <button

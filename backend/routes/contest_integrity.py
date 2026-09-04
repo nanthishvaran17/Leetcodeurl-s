@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import Optional
 from pydantic import BaseModel
 import datetime
 import uuid
@@ -10,7 +10,6 @@ from backend.models import IntegrityCase, Student, User, AttendanceSnapshot, Cor
 from backend.security import get_current_user_optional
 from backend.services.contest_integrity_service import ContestIntegrityService
 from backend.services.integrity_audit_service import IntegrityAuditService
-from backend.services.notification_outbox_worker import NotificationOutboxWorker
 
 router = APIRouter(prefix="/admin/integrity", tags=["Contest Integrity"])
 

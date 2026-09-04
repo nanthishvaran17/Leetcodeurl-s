@@ -111,23 +111,18 @@
 /* Viewport-Centered Auto-Fit Responsive Modal System (GPU Hardware Accelerated) */
 .modal-overlay-responsive {
   position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  height: 100dvh !important;
+  inset: 0 !important;
   z-index: 999999 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   padding: 1.75rem 1rem !important;
   background-color: rgba(5, 7, 14, 0.75) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
   overflow: hidden !important;
   box-sizing: border-box !important;
   will-change: opacity;
-  transform: translateZ(0);
 }
 
 .modal-container-responsive {

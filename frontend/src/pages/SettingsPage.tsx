@@ -706,7 +706,7 @@ export const SettingsPage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 pt-1 text-xs">
-              <label className="flex items-center space-x-2 p-2.5 rounded-xl border bg-gray-50/50 dark:bg-navy-900/50 border-gray-200 dark:border-navy-700 cursor-pointer">
+              <label className="flex items-center space-x-2 p-2.5 rounded-xl border bg-gray-50/50 dark:bg-navy-900/50 border-gray-200 dark:border-navy-700">
                 <input
                   type="checkbox"
                   checked={settings.ENABLE_AUTO_SUNDAY_SESSION === 'true'}
@@ -716,7 +716,7 @@ export const SettingsPage: React.FC = () => {
                 <span className="font-bold text-gray-800 dark:text-gray-200">Automatic Sunday Session</span>
               </label>
 
-              <label className="flex items-center space-x-2 p-2.5 rounded-xl border bg-gray-50/50 dark:bg-navy-900/50 border-gray-200 dark:border-navy-700 cursor-pointer">
+              <label className="flex items-center space-x-2 p-2.5 rounded-xl border bg-gray-50/50 dark:bg-navy-900/50 border-gray-200 dark:border-navy-700">
                 <input
                   type="checkbox"
                   checked={settings.AUTO_START_SNAPSHOT === 'true'}
@@ -726,7 +726,7 @@ export const SettingsPage: React.FC = () => {
                 <span className="font-bold text-gray-800 dark:text-gray-200">Starting Snapshot (08:00 AM)</span>
               </label>
 
-              <label className="flex items-center space-x-2 p-2.5 rounded-xl border bg-gray-50/50 dark:bg-navy-900/50 border-gray-200 dark:border-navy-700 cursor-pointer">
+              <label className="flex items-center space-x-2 p-2.5 rounded-xl border bg-gray-50/50 dark:bg-navy-900/50 border-gray-200 dark:border-navy-700">
                 <input
                   type="checkbox"
                   checked={settings.AUTO_FINALIZATION_SNAPSHOT === 'true'}
@@ -736,7 +736,7 @@ export const SettingsPage: React.FC = () => {
                 <span className="font-bold text-gray-800 dark:text-gray-200">Finalization + Final Snapshot (09:30 AM)</span>
               </label>
 
-              <label className="flex items-center space-x-2 p-2.5 rounded-xl border bg-gray-50/50 dark:bg-navy-900/50 border-gray-200 dark:border-navy-700 cursor-pointer">
+              <label className="flex items-center space-x-2 p-2.5 rounded-xl border bg-gray-50/50 dark:bg-navy-900/50 border-gray-200 dark:border-navy-700">
                 <input
                   type="checkbox"
                   checked={settings.LOCK_FINALIZED_SESSIONS === 'true'}
@@ -782,7 +782,7 @@ export const SettingsPage: React.FC = () => {
               </div>
 
               <div className="md:col-span-2 flex items-center space-x-4 pt-3">
-                <label className="flex items-center space-x-2 cursor-pointer">
+                <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
                     checked={settings.AUTO_CONTEST_SYNC === 'true'}
@@ -792,7 +792,7 @@ export const SettingsPage: React.FC = () => {
                   <span className="font-bold text-gray-800 dark:text-gray-200">Automatic Contest Sync</span>
                 </label>
 
-                <label className="flex items-center space-x-2 cursor-pointer">
+                <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
                     checked={settings.HISTORICAL_ARCHIVE_SYNC === 'true'}

@@ -6,7 +6,6 @@ from sqlalchemy.orm import sessionmaker
 
 from backend.main import app
 from backend.database import Base, get_db
-import backend.models
 from backend.models import User, WeeklySession, AdminAuditLog, Department
 
 from backend.routes.auth import create_access_token, get_password_hash

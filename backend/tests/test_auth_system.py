@@ -1,6 +1,5 @@
 import sys
 import os
-import datetime
 import pytest
 from fastapi.testclient import TestClient
 
@@ -9,13 +8,12 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../.
 
 from backend.main import app
 from backend.config import settings
-from backend.database import get_db, SessionLocal
-from backend.models import User, EmailOTPRecord, AdminSession
+from backend.database import SessionLocal
+from backend.models import User
 from backend.services.otp_service import (
-    generate_secure_otp, hash_otp, hash_email, hash_ip,
-    create_otp_transaction, verify_otp_transaction
+    generate_secure_otp, hash_otp, create_otp_transaction, verify_otp_transaction
 )
-from backend.routes.auth import get_password_hash, verify_password
+from backend.routes.auth import get_password_hash
 
 client = TestClient(app)
 

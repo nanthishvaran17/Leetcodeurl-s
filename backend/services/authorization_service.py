@@ -10,7 +10,6 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from backend.models import User, Student
 from backend.services.faculty_assignment_service import faculty_assignment_service
-from backend.logger import logger
 
 def get_authorized_student_ids(db: Session, user: Optional[User]) -> Optional[List[int]]:
     """

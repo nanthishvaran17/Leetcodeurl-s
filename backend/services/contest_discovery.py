@@ -1,6 +1,6 @@
 import datetime
 import zoneinfo
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 
 IST_TZ = zoneinfo.ZoneInfo("Asia/Kolkata")
 

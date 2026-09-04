@@ -165,7 +165,7 @@ async def backfill_historical(
     Returns a structured result summary.
     """
     from backend.database import SessionLocal
-    from backend.models import Student, WeeklySession, WeeklyPublicResult, Department
+    from backend.models import Student, WeeklySession, WeeklyPublicResult
 
     db = SessionLocal()
     try:
@@ -264,7 +264,7 @@ async def backfill_historical(
                 if entry:
                     status = _classify_entry(entry)
                     solved = entry.get("problemsSolved", 0)
-                    finish_sec = entry.get("finishTimeInSeconds", 0)
+                    entry.get("finishTimeInSeconds", 0)
                     rating = entry.get("rating")
                     rank = entry.get("ranking")
                     q1, q2, q3, q4 = _q_matrix(solved)
@@ -272,7 +272,6 @@ async def backfill_historical(
                 else:
                     status = "ABSENT"
                     solved = 0
-                    finish_sec = 0
                     rating = None
                     rank = None
                     q1 = q2 = q3 = q4 = 0

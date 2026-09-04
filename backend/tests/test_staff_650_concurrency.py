@@ -17,14 +17,12 @@ import json
 import time
 import threading
 import statistics
-import random
 from typing import List, Dict, Any
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from backend.database import SessionLocal
 from backend.models import User, Student, Department, FacultyStudentAssignment, LeetCodeProfileStats, StudentAssignmentHistory
 from backend.services.faculty_assignment_service import faculty_assignment_service
-from backend.services.authorization_service import get_authorized_student_ids
 import datetime
 
 TEST_PREFIX = "TEST_CONC_"

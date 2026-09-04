@@ -11,8 +11,7 @@ from backend.models import (
     WeeklyContestLiveEvent
 )
 from backend.services.contest_discovery import discover_contest_metadata, get_current_ist_datetime, get_most_recent_sunday_date, IST_TZ
-from backend.services.contest_merger import retry_failed_student_fetches, merge_contest_fetch_results
-from backend.leetcode_client import fetch_leetcode_profile
+from backend.services.contest_merger import retry_failed_student_fetches
 from backend.logger import logger
 
 def get_or_create_current_weekly_session(db: Session) -> WeeklySession:
@@ -752,16 +751,12 @@ def sync_single_historical_session(db: Session, session_id: int):
     import datetime
     import json
     import re
-    import ssl
-    import urllib.request
     import httpx
-    from sqlalchemy.orm import Session
     from backend.logger import logger
     from backend.models import (
         Student, WeeklySession, WeeklyPublicResult, WeeklyVirtualResult,
-        WeeklyContestErrorLog, OfficialWeeklySnapshot, LeetCodeContestRatingHistory
+        OfficialWeeklySnapshot, LeetCodeContestRatingHistory
     )
-    from backend.services.contest_discovery import discover_contest_metadata
 
     session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
     if not session:
@@ -1054,7 +1049,7 @@ def sync_single_historical_session(db: Session, session_id: int):
         cls_type = r["classification"]
         counts[cls_type] = counts.get(cls_type, 0) + 1
 
-        is_att = r["attended"]
+        r["attended"]
         solved = r["problems_solved"]
         q1, q2, q3, q4 = r["q1"], r["q2"], r["q3"], r["q4"]
         score = r["contest_score"]

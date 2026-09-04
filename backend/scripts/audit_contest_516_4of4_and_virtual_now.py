@@ -14,7 +14,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 from backend.database import SessionLocal
 from backend.models import Student, WeeklySession, WeeklyPublicResult, WeeklyVirtualResult
-from backend.services.contest_discovery import discover_contest_metadata
 
 def audit_now():
     db = SessionLocal()

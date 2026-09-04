@@ -1,15 +1,12 @@
 import io
-import datetime
 from typing import Dict, Any, List, Optional
-from zoneinfo import ZoneInfo
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
 
 from sqlalchemy.orm import Session
 from backend.models import Student, Department, Contest, ContestParticipationRecord, LeetCodeProfileStats, LeetCodeProfile
-from backend.time_utils import IST, now_ist, format_ist
-from backend.logger import logger
+from backend.time_utils import IST, now_ist
 
 class CollegeReportGenerator:
     """

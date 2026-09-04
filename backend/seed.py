@@ -1,9 +1,8 @@
-import datetime
 import bcrypt
 from sqlalchemy.orm import Session
 from backend.config import settings
 from backend.database import engine, Base, SessionLocal
-from backend.models import Department, Section, Student, User, AcademicYear, LeetCodeProfileStats, WeeklySession, WeeklySessionSnapshot, WeeklyStudentProgress
+from backend.models import Department, Section, Student, User, AcademicYear, LeetCodeProfileStats, WeeklyStudentProgress
 from backend.leetcode_client import extract_leetcode_username
 
 def get_password_hash(password: str) -> str:

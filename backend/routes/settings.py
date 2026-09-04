@@ -7,7 +7,6 @@ import os
 import datetime
 
 from backend.database import get_db
-from backend.config import settings
 from backend.models import AdminSettingsModel, AuditLog, AdminAuditLog, WeeklySession, SyncJob, Student
 from backend.routes.auth import get_current_user
 from backend.security import require_security_access
@@ -632,8 +631,7 @@ def get_data_lineage(db: Session = Depends(get_db)):
     """
     Live count verification across the lifecycle to prove Single Source of Truth (SSOT).
     """
-    from backend.models import Student, WeeklyPublicResult
-    from backend.cache import cache
+    from backend.models import Student
 
     # 1. Source Roster / Institutional Directory
     source_count = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count()
@@ -675,11 +673,10 @@ def get_operations_center_overview(db: Session = Depends(get_db)):
     Aggregates real-time health, trust score, data freshness, attention alerts,
     integrity matrix, report parity, and audit logs.
     """
-    from backend.models import Student, WeeklySession, WeeklyPublicResult, SyncJob, AdminAuditLog, EmailDispatchLog
+    from backend.models import Student, WeeklySession, WeeklyPublicResult, AdminAuditLog
     from backend.backup_manager import list_backups_detail
     from backend.services.schedule_service import get_schedule_status
     from backend.cache import cache
-    import json
     import time
     from datetime import datetime, timedelta
 
@@ -1060,11 +1057,11 @@ def get_data_lineage_and_parity(db: Session = Depends(get_db)):
     Computes authentic end-to-end data lineage and verifies parity across all pipeline stages:
     Source Roster -> Ingestion Profiles -> SQLite Database -> API Serializer -> Reports Engine -> UI Table.
     """
-    from backend.models import Student, LeetCodeProfileStats, WeeklySession, WeeklyPublicResult
+    from backend.models import Student, LeetCodeProfileStats, WeeklySession
     from backend.routes.weekly_contests import get_normalized_contest_data
 
     total_students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count()
-    ingested_profiles = db.query(LeetCodeProfileStats).count()
+    db.query(LeetCodeProfileStats).count()
     
     latest_sess = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
     sess_id = latest_sess.id if latest_sess else 1

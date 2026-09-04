@@ -388,7 +388,7 @@ const StaffAllocationModal: React.FC<{
                 {unassignedStudents.map(s => {
                   const isChecked = selectedUnassigned.includes(s.id);
                   return (
-                    <label key={s.id} className={`p-2 rounded-lg border flex items-center gap-2 cursor-pointer transition ${isChecked ? 'bg-brand-50 border-brand-300 font-bold' : 'border-slate-100 bg-slate-50'}`}>
+                    <label key={s.id} className={`p-2 rounded-lg border flex items-center gap-2 transition ${isChecked ? 'bg-brand-50 border-brand-300 font-bold' : 'border-slate-100 bg-slate-50'}`}>
                       <input
                         type="checkbox"
                         checked={isChecked}

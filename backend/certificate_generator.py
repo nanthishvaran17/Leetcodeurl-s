@@ -2,26 +2,24 @@ import io
 import os
 import re
 import uuid
-import hashlib
 import datetime
 import qrcode
 import html
 import base64
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Dict, Any, Optional
 from reportlab.lib.pagesizes import landscape, A4
 from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import (
-    BaseDocTemplate, PageTemplate, Frame, NextPageTemplate, PageBreak,
-    SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, HRFlowable
+    BaseDocTemplate, PageTemplate, Frame, Paragraph, Spacer,
+    Image, Table, TableStyle, HRFlowable
 )
-from reportlab.lib.units import inch, mm
+from reportlab.lib.units import inch
 from sqlalchemy.orm import Session
 
 from backend.config import settings
 from backend.models import (
-    Student, CertificateRecord, AuthorizedSignature,
-    WeeklySession, WeeklyPublicResult, WeeklyVirtualResult
+    Student, CertificateRecord, AuthorizedSignature
 )
 from backend.logger import logger
 

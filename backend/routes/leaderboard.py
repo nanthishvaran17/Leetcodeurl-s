@@ -4,7 +4,7 @@ from typing import List, Optional, Union
 from sqlalchemy import func, desc, nullslast
 
 from backend.database import get_db
-from backend.models import Student, WeeklyStudentProgress, Department, Section, LeetCodeProfileStats
+from backend.models import Student, WeeklyStudentProgress, LeetCodeProfileStats
 from backend.schemas import StudentOut, LeaderboardPaginatedOut
 from backend.cache import cache
 from backend.security import get_current_user_optional

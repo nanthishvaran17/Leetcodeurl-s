@@ -281,8 +281,36 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     syncState: wsSyncState, 
     initialProgress: wsProgress, 
     latestUpdate: wsLatestUpdate, 
-    liveFeed: wsLiveFeed 
+    liveFeed: wsLiveFeed,
+    lastSyncAt: wsLastSyncAt,
+    subscribeSession: wsSubscribeSession,
+    unsubscribeSession: wsUnsubscribeSession
   } = useContestWebSocket(activeContestIdStr);
+
+  // Send SUBSCRIBE when user switches contest sessions, UNSUBSCRIBE on cleanup
+  useEffect(() => {
+    if (!selectedSessionId) return;
+    wsSubscribeSession(selectedSessionId);
+    return () => {
+      wsUnsubscribeSession(selectedSessionId);
+    };
+  }, [selectedSessionId, wsSubscribeSession, wsUnsubscribeSession]);
+
+  // Listen for virtual events forwarded via the DOM event bus from useContestWebSocket
+  // This allows LiveEventRouter to patch the contest matrix without a full re-render
+  useEffect(() => {
+    const handleVirtualEvent = (e: Event) => {
+      const data = (e as CustomEvent).detail;
+      if (!data || !data.type) return;
+      // LiveEventRouter is imported in main.tsx and accessible via queryClient
+      // We dispatch it to the existing handleMessage pipeline
+      if (typeof (window as any).__liveEventRouter?.handleMessage === 'function') {
+        (window as any).__liveEventRouter.handleMessage(data);
+      }
+    };
+    window.addEventListener('ws_virtual_event', handleVirtualEvent);
+    return () => window.removeEventListener('ws_virtual_event', handleVirtualEvent);
+  }, []);
 
   // Incremental row update on WebSocket STUDENT_ACTIVITY_UPDATED event
   useEffect(() => {
@@ -1098,6 +1126,13 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <Radio className={`w-3.5 h-3.5 ${wsStatus === 'LIVE' ? 'text-emerald-400 animate-pulse' : 'text-amber-400'}`} />
                 <span>{wsStatus === 'LIVE' ? 'LIVE' : wsStatus === 'RECONNECTING' ? 'RECONNECTING...' : 'OFFLINE'}</span>
               </span>
+
+              {wsLastSyncAt && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 text-slate-400 text-xs font-mono border border-white/10">
+                  <Clock className="w-3 h-3 text-slate-500" />
+                  <span>Synced {wsLastSyncAt}</span>
+                </span>
+              )}
 
               {wsSyncState === 'INITIAL_SYNC' && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-xs font-mono font-bold animate-pulse">
@@ -2762,7 +2797,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       <th className="px-4 py-3 text-center w-12">
                         <input 
                           type="checkbox" 
-                          className="w-4 h-4 rounded border-gray-600 bg-navy-900 focus:ring-brand-500 checked:bg-brand-500 cursor-pointer"
+                          className="w-4 h-4 rounded border-gray-600 bg-navy-900 focus:ring-brand-500 checked:bg-brand-500"
                           checked={selectedRowIds.size > 0 && selectedRowIds.size === paginatedMatrixRows.length}
                           onChange={(e) => {
                             if (e.target.checked) {
@@ -2876,7 +2911,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                             <td className="px-4 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
                               <input 
                                 type="checkbox" 
-                                className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-navy-900 focus:ring-brand-500 checked:bg-brand-500 cursor-pointer"
+                                className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-navy-900 focus:ring-brand-500 checked:bg-brand-500"
                                 checked={selectedRowIds.has(r.reg_no)}
                                 onChange={(e) => {
                                   const newSet = new Set(selectedRowIds);
@@ -3472,7 +3507,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       return (
                         <label
                           key={r.id}
-                          className="flex items-center space-x-2.5 text-xs p-1.5 rounded-lg hover:bg-white dark:hover:bg-navy-900 cursor-pointer transition-colors"
+                          className="flex items-center space-x-2.5 text-xs p-1.5 rounded-lg hover:bg-white dark:hover:bg-navy-900 transition-colors"
                         >
                           <input
                             type="checkbox"

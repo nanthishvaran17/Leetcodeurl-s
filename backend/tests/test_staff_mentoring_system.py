@@ -12,9 +12,9 @@ from sqlalchemy.orm import Session
 
 from backend.main import app
 from backend.database import SessionLocal, engine, Base
-from backend.models import User, Student, FacultyStudentAssignment, Department, Section
+from backend.models import User, Student, Department
 from backend.routes.auth import get_password_hash
-from backend.services.faculty_assignment_service import faculty_assignment_service, MAX_STUDENTS_PER_FACULTY
+from backend.services.faculty_assignment_service import faculty_assignment_service
 
 client = TestClient(app)
 

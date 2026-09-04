@@ -5,7 +5,7 @@ import datetime
 import os
 import uuid
 
-from backend.database import get_db, SessionLocal
+from backend.database import get_db
 from backend.models import Student, LeetCodeProfileStats, AuditLog, WeeklySession, WeeklyPublicResult, OfficialWeeklySnapshot, EmailDispatchLog, SyncJob
 from backend.sync_engine import sync_tracker
 from backend.security import require_security_access
@@ -57,14 +57,13 @@ def get_database_health_endpoint(db: Session = Depends(get_db)):
         db_url_str = str(db.bind.url) if db.bind else ""
         db_type = "postgresql" if ("postgres" in db_url_str or "postgresql" in db_url_str) else "sqlite"
 
-        fs_student_count = None
         try:
             from backend.services.firestore_service import get_firestore_db
             fs_db = get_firestore_db()
             if fs_db:
                 students_docs = list(fs_db.collection("students").stream())
                 if students_docs:
-                    fs_student_count = len(students_docs)
+                    len(students_docs)
                     db_type = "cloud_firestore"
         except Exception:
             pass
@@ -113,7 +112,6 @@ def get_system_health(db: Session = Depends(get_db)):
     request_id = f"health_req_{now_utc.strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
 
     components = {}
-    has_errors = False
     has_warnings = False
 
     # 1. Database Check
@@ -127,7 +125,6 @@ def get_system_health(db: Session = Depends(get_db)):
         db_ok = True
     except Exception as e:
         db_ok = False
-        has_errors = True
         db_error = sanitize_error_message(str(e))
 
     components["database"] = {
@@ -253,7 +250,7 @@ def get_system_health(db: Session = Depends(get_db)):
     }
 
     # Query database for sync state & student statistics
-    from backend.time_utils import format_ist, ensure_utc, now_utc as get_now_utc
+    from backend.time_utils import format_ist, ensure_utc
     from backend.config import Settings
     cfg = Settings()
 
@@ -383,7 +380,7 @@ def get_admin_control_center_data(db: Session = Depends(get_db)):
     Returns unhardcoded, authoritative production metrics for the Admin System Control Center.
     Calculates live telemetry across all 8 sub-centers.
     """
-    start_time = datetime.datetime.now()
+    datetime.datetime.now()
     now_utc = datetime.datetime.now(datetime.timezone.utc)
     now_ist_str = (now_utc + datetime.timedelta(hours=5, minutes=30)).strftime("%d %b %Y %H:%M IST")
 
@@ -404,7 +401,7 @@ def get_admin_control_center_data(db: Session = Depends(get_db)):
         from backend.services.firestore_service import get_firestore_db
         fs_db = get_firestore_db()
         if fs_db:
-            docs = list(fs_db.collection("students").limit(1).stream())
+            list(fs_db.collection("students").limit(1).stream())
             firestore_connected = True
     except Exception:
         firestore_connected = False

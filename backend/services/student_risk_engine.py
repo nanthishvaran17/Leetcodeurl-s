@@ -5,9 +5,9 @@ Analyzes 10 core performance & engagement signals and provides Explainable AI ou
 """
 
 import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any
 from sqlalchemy.orm import Session
-from backend.models import Student, LeetCodeProfileStats, WeeklyStudentProgress, StudentStatSnapshot, StudentRiskProfile, StudentContestParticipation
+from backend.models import Student, WeeklyStudentProgress, StudentRiskProfile, StudentContestParticipation
 
 def calculate_student_risk_engine(db: Session, student: Student) -> Dict[str, Any]:
     """
@@ -51,10 +51,10 @@ def calculate_student_risk_engine(db: Session, student: Student) -> Dict[str, An
         }
 
     total_solved = stats.total_solved or 0
-    easy_solved = stats.easy_solved or 0
+    stats.easy_solved or 0
     medium_solved = stats.medium_solved or 0
     hard_solved = stats.hard_solved or 0
-    rating = stats.contest_rating or 0.0
+    stats.contest_rating or 0.0
 
     # Fetch recent 4-week weekly progress records
     progress_records = db.query(WeeklyStudentProgress).filter(

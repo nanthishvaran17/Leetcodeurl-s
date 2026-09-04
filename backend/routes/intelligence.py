@@ -5,27 +5,18 @@ Student Coding Profile, DSA Map, Learning Paths, HOD Command Center, What-If Sim
 Natural Language AI Query, and Alert Center.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 from pydantic import BaseModel
 import datetime
 
 from backend.database import get_db
-from backend.models import Student, User, FacultyActionQueueItem, SystemAlert
+from backend.models import Student, User, SystemAlert
 from backend.security import require_role
-from backend.services.student_risk_engine import calculate_student_risk_engine, update_or_create_risk_profile
-from backend.services.skill_mapping_engine import calculate_student_skill_map, update_or_create_skill_profile
-from backend.services.learning_path_generator import generate_personalized_learning_path, update_or_create_learning_path
-from backend.services.contest_readiness_engine import calculate_contest_readiness, calculate_coding_consistency, get_digital_coding_profile
-from backend.services.faculty_action_engine import (
-    get_faculty_actions_list,
-    get_faculty_kpis,
-    detect_and_sync_faculty_signals,
-    update_faculty_action_details,
-    escalate_faculty_action,
-    get_action_timeline
-)
+from backend.services.student_risk_engine import calculate_student_risk_engine
+from backend.services.learning_path_generator import generate_personalized_learning_path
+from backend.services.contest_readiness_engine import get_digital_coding_profile
 from backend.services.hod_analytics_engine import (
     calculate_department_health_score, get_institutional_benchmarks,
     get_hod_what_is_happening_summary, simulate_what_if_scenario

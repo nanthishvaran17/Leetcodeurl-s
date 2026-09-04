@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, EmailStr
+from typing import List, Optional
+from pydantic import BaseModel
 
 from backend.database import get_db
 from backend.services.schedule_service import (
@@ -11,8 +11,6 @@ from backend.services.schedule_service import (
     execute_scheduled_report_pipeline,
     get_execution_history
 )
-from backend.routes.auth import get_current_user
-from backend.models import User
 from backend.logger import logger
 
 router = APIRouter(prefix="/api/system/schedule", tags=["Scheduled Report Automation"])

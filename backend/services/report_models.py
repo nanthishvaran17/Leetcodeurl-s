@@ -1,4 +1,3 @@
-import datetime
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
 
@@ -15,8 +14,11 @@ class StudentRow(BaseModel):
     reg_no: str
     name: str
     dept: str
+    department_name: str = ""
     year: str
+    batch: str = ""
     section: str = ""
+    institutional_email: str = ""
     leetcode_url: str = ""
     username: str = ""
     easy: Optional[int] = 0

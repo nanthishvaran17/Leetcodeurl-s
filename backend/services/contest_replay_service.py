@@ -12,11 +12,10 @@ Capabilities:
    - Automatically maps struggle problems (e.g. Q3 DP, Q4 Segment Trees) to recommended training topics for Faculty Mentoring.
 """
 
-import datetime
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
 
-from backend.models import WeeklySession, WeeklyPublicResult, Student, Department
+from backend.models import WeeklySession, WeeklyPublicResult
 
 
 class ContestReplayService:

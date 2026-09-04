@@ -407,7 +407,7 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
                   <button
                     type="submit"
                     disabled={submittingNote || !newNote.trim()}
-                    className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs font-bold flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-md shadow-brand-600/20"
+                    className="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs font-bold flex items-center justify-center space-x-2 transition-all shadow-md shadow-brand-600/20"
                   >
                     <Send className="w-3.5 h-3.5" />
                     <span>Save Note</span>
@@ -510,7 +510,7 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
                 <button
                   type="submit"
                   disabled={submittingFollowUp || !followUpTitle.trim()}
-                  className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer shadow-md shadow-brand-600/20"
+                  className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-xs font-bold flex items-center space-x-2 transition-all shadow-md shadow-brand-600/20"
                 >
                   <PlusCircle className="w-3.5 h-3.5" />
                   <span>Schedule Task</span>

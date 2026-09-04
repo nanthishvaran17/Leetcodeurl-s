@@ -30,7 +30,6 @@ from backend.models import (
     ForensicStudentIngestStatus,
     ForensicAuditRecord,
 )
-from backend.services.contest_discovery import calculate_contest_number
 
 # Authoritative anchor from contest_discovery.py line 28
 REF_DATE = datetime.date(2026, 8, 9)

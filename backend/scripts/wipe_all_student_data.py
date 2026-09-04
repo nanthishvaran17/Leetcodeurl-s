@@ -9,7 +9,7 @@ import json
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from backend.database import SessionLocal, engine
+from backend.database import SessionLocal
 from sqlalchemy import text
 from backend.cache import cache
 

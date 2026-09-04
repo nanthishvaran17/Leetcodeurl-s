@@ -5,13 +5,11 @@ for I Year and II Year CSE(CS) and CSE(IOT) students as per the official Excel r
 
 import os
 import sys
-import re
-import json
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from backend.database import SessionLocal
-from backend.models import Student, LeetCodeProfileStats, Department
+from backend.models import Student, LeetCodeProfileStats
 from backend.scripts.import_fresh_students_dataset import generate_canonical_roster
 from backend.cache import cache
 

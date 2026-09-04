@@ -3,9 +3,8 @@ import httpx
 import json
 import hashlib
 from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List
 from backend.database import SessionLocal
-from backend.models import Student, WeeklyPublicResult, WeeklySession, Department
+from backend.models import Student, WeeklyPublicResult, WeeklySession
 
 ist_tz = timezone(timedelta(hours=5, minutes=30))
 CONTEST_START_TS = 1787452200  # 08:00:00 AM IST, 23-Aug-2026
@@ -59,15 +58,14 @@ async def run_full_forensic_reconciliation():
 
     sem = asyncio.Semaphore(60)
     reconciled_records = []
-    candidate_reconciliation_table = []
     
     now_dt = datetime.now()
 
     async with httpx.AsyncClient(headers=HEADERS, timeout=12, limits=httpx.Limits(max_connections=120, max_keepalive_connections=60)) as client:
         async def inspect_student(s):
             uname = s.username
-            dept_code = s.department.code if s.department else "CSE"
-            year_val = s.year_level or "III"
+            s.department.code if s.department else "CSE"
+            s.year_level or "III"
             
             if not uname or len(uname.strip()) < 2:
                 return {
@@ -186,7 +184,7 @@ async def run_full_forensic_reconciliation():
                                 "decision": "NOT_A_CONTEST_SOLVER",
                                 "subs_today": []
                             }
-                    except Exception as e:
+                    except Exception:
                         await asyncio.sleep(0.5)
 
             return {

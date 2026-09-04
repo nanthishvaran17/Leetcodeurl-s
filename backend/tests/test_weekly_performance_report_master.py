@@ -1,18 +1,16 @@
 import pytest
 import datetime
-import json
-import hashlib
 from zoneinfo import ZoneInfo
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from backend.models import (
-    Base, Student, LeetCodeProfileStats, Department, Section,
-    WeeklyStudentSnapshot, WeeklyReportAudit, ContestConfig, WeeklySession, StudentContestParticipation
+    Base, Student, LeetCodeProfileStats, Department, WeeklyStudentSnapshot,
+    ContestConfig
 )
-from backend.services.reporting_period_service import ReportingPeriodService, reporting_period_service
-from backend.services.contest_discovery_service import ContestDiscoveryService, contest_discovery_service
-from backend.services.weekly_report_service import generate_weekly_performance_data, _get_profile_category_name, _aggregate_cohort_metrics
+from backend.services.reporting_period_service import reporting_period_service
+from backend.services.contest_discovery_service import contest_discovery_service
+from backend.services.weekly_report_service import generate_weekly_performance_data, _get_profile_category_name
 from backend.pdf_generator import build_weekly_performance_pdf
 from backend.exporters.excel_exporter import export_excel_from_dataset
 

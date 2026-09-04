@@ -15,6 +15,16 @@ const getApiBaseUrl = () => {
 
 const API_BASE = getApiBaseUrl();
 
+export const getApiUrl = (path: string) => {
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${API_BASE}${cleanPath}`;
+};
+
+export const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return { Authorization: `Bearer ${token}` };
+};
+
 const api = axios.create({
   baseURL: API_BASE,
   timeout: 45000,
@@ -101,23 +111,93 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
-// Resilient Response Interceptor: Automatic Retry for Render Cold Starts & Network Glitches
+// ------------------------------------------------------------------
+// AUTHENTICATION & SILENT REFRESH ARCHITECTURE
+// ------------------------------------------------------------------
+let isRefreshing = false;
+let failedQueue: Array<{ resolve: (token: string) => void, reject: (error: any) => void }> = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token as string);
+    }
+  });
+  failedQueue = [];
+};
+
+export const globalLogout = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  clearApiCache();
+  
+  // Prevent infinite reload loops if we're already on login or landing
+  if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
+    window.location.href = '/login';
+  } else if (window.location.pathname === '/login') {
+    // We are already on login, but we want to ensure any stuck auth state is cleared
+    // without triggering a full page reload loop
+    window.dispatchEvent(new Event('auth_logout'));
+  }
+};
+
+// Resilient Response Interceptor: Automatic Retry & Silent Token Refresh
 api.interceptors.response.use(
   (response) => {
     return response;
   },
   async (error) => {
     const config = error.config;
-    if (!config || (config._retryCount && config._retryCount >= 2)) {
+    if (!config) {
       return Promise.reject(error);
     }
 
-    // Identify cold-start or gateway timeout conditions
+    // --- 1. HANDLE AUTHENTICATION FAILURES (401) ---
+    if (error.response && error.response.status === 401 && !config.url?.includes('/auth/login') && !config.url?.includes('/auth/refresh') && !config.url?.includes('/auth/session')) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          config.headers['Authorization'] = 'Bearer ' + token;
+          return api(config);
+        }).catch(err => Promise.reject(err));
+      }
+
+      config._retry = true;
+      isRefreshing = true;
+
+      return new Promise((resolve, reject) => {
+        // Attempt silent refresh using HttpOnly cookie (or custom mobile header if provided)
+        api.post('/auth/refresh')
+          .then(({ data }) => {
+            const newToken = data.access_token;
+            localStorage.setItem('token', newToken);
+            config.headers['Authorization'] = 'Bearer ' + newToken;
+            processQueue(null, newToken);
+            resolve(api(config));
+          })
+          .catch(err => {
+            processQueue(err, null);
+            console.warn("[AUTH] Refresh token expired or invalid. Triggering explicit logout.");
+            globalLogout();
+            reject(err);
+          })
+          .finally(() => {
+            isRefreshing = false;
+          });
+      });
+    }
+
+    // --- 2. HANDLE NETWORK COLD STARTS / GATEWAY ERRORS ---
+    if (config._retryCount && config._retryCount >= 2) {
+      return Promise.reject(error);
+    }
+
     const isTimeout = error.code === 'ECONNABORTED' || (error.message && error.message.includes('timeout'));
     const isGatewayError = error.response && [502, 503, 504].includes(error.response.status);
     const isNetworkError = !error.response && Boolean(error.request);
-    
-    // Do NOT retry intentionally canceled/aborted requests
     const isCanceled = axios.isCancel(error) || error.name === 'CanceledError' || error.code === 'ERR_CANCELED';
 
     if (!isCanceled && (isTimeout || isGatewayError || isNetworkError)) {

@@ -3,12 +3,11 @@ import os
 import hashlib
 import datetime
 import qrcode
-from typing import Dict, Any, Optional
+from typing import Optional
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RLImage, Table, TableStyle, HRFlowable
-from reportlab.lib.units import inch, mm
 from sqlalchemy.orm import Session
 
 from backend.models import Student, WeeklySession, WeeklyPublicResult, WeeklyVirtualResult
@@ -81,7 +80,7 @@ def generate_forensic_audit_pdf(db: Session, student_id: int, session_id: int, t
         trace_id = f"CERT-{trace_id.upper()}"
 
     # Pre-calculate sha_hash
-    p_status_tmp = contest_result.participation_status if contest_result else ("VIRTUAL_ATTENDED" if virtual_result else "NOT_ATTENDED")
+    contest_result.participation_status if contest_result else ("VIRTUAL_ATTENDED" if virtual_result else "NOT_ATTENDED")
     tot_solved_tmp = contest_result.total_contest_solved if contest_result else (virtual_result.total_contest_solved if virtual_result else 0)
     sha_hash = hashlib.sha256(f"{trace_id}:{student.reg_no}:{session_id}:{tot_solved_tmp}".encode()).hexdigest()
 
@@ -209,7 +208,6 @@ def generate_forensic_audit_pdf(db: Session, student_id: int, session_id: int, t
     story = []
 
     # 1. Header with Logo & College Info
-    header_data = []
     logo_img = None
     if os.path.exists(COLLEGE_LOGO_PATH):
         try:

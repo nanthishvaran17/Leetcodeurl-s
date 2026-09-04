@@ -1,12 +1,12 @@
 import os
 import io
 import datetime
-from typing import Dict, Any, List, Optional
-from reportlab.lib.pagesizes import A4, landscape
+from typing import Dict, List
+from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak, KeepTogether, HRFlowable
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak, HRFlowable
 )
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
@@ -27,51 +27,53 @@ def _to_float(val, default=0.0) -> float:
     except (ValueError, TypeError):
         return default
 
-class NumberedCanvas(canvas.Canvas):
-    """
-    Two-pass canvas to dynamically compute and print 'Page X of Y' in footer,
-    along with institutional security tags and generation timestamp.
-    """
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._saved_page_states = []
+def make_numbered_canvas(header_info: Dict[str, str]):
+    class CustomNumberedCanvas(canvas.Canvas):
+        """
+        Two-pass canvas to dynamically compute and print 'Page X of Y' in footer,
+        along with institutional security tags and generation timestamp.
+        """
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self._saved_page_states = []
 
-    def showPage(self):
-        self._saved_page_states.append(dict(self.__dict__))
-        self._startPage()
+        def showPage(self):
+            self._saved_page_states.append(dict(self.__dict__))
+            self._startPage()
 
-    def save(self):
-        num_pages = len(self._saved_page_states)
-        for state in self._saved_page_states:
-            self.__dict__.update(state)
-            self.draw_page_decorations(num_pages)
-            super().showPage()
-        super().save()
+        def save(self):
+            num_pages = len(self._saved_page_states)
+            for state in self._saved_page_states:
+                self.__dict__.update(state)
+                self.draw_page_decorations(num_pages)
+                super().showPage()
+            super().save()
 
-    def draw_page_decorations(self, page_count: int):
-        self.saveState()
-        self.setFont("Times-Roman", 7.5)
-        self.setFillColor(colors.HexColor("#64748B"))
-        
-        # Header Top Border Line on pages > 1
-        if self._pageNumber > 1:
+        def draw_page_decorations(self, page_count: int):
+            self.saveState()
+            self.setFont("Times-Roman", 7.5)
+            self.setFillColor(colors.HexColor("#64748B"))
+            
+            # Header Top Border Line on pages > 1
+            if self._pageNumber > 1:
+                self.setStrokeColor(colors.HexColor("#CBD5E1"))
+                self.setLineWidth(0.5)
+                self.line(36, A4[1] - 30, A4[0] - 36, A4[1] - 30)
+                self.drawString(36, A4[1] - 25, f"NANDHA ENGINEERING COLLEGE (AUTONOMOUS) • {header_info.get('dept', '')}")
+                self.drawRightString(A4[0] - 36, A4[1] - 25, f"{header_info.get('contest_name', '')} • OFFICIAL RECORD")
+
+            # Footer Bottom Border Line
             self.setStrokeColor(colors.HexColor("#CBD5E1"))
             self.setLineWidth(0.5)
-            self.line(36, A4[1] - 30, A4[0] - 36, A4[1] - 30)
-            self.drawString(36, A4[1] - 25, "NANDHA ENGINEERING COLLEGE (AUTONOMOUS) • LEETCODE WEEKLY REPORT")
-            self.drawRightString(A4[0] - 36, A4[1] - 25, "OFFICIAL INSTITUTIONAL RECORD")
-
-        # Footer Bottom Border Line
-        self.setStrokeColor(colors.HexColor("#CBD5E1"))
-        self.setLineWidth(0.5)
-        self.line(36, 32, A4[0] - 36, 32)
-        
-        # Footer text
-        left_footer = f"Nandha Engineering College, Erode – 638 052 | Confidential • Internal Academic Record"
-        page_str = f"Page {self._pageNumber} of {page_count}"
-        self.drawString(36, 20, left_footer)
-        self.drawRightString(A4[0] - 36, 20, page_str)
-        self.restoreState()
+            self.line(36, 32, A4[0] - 36, 32)
+            
+            # Footer text
+            left_footer = f"Nandha Engineering College, Erode – 638 052 | Confidential • Internal Academic Record"
+            page_str = f"Page {self._pageNumber} of {page_count}"
+            self.drawString(36, 20, left_footer)
+            self.drawRightString(A4[0] - 36, 20, page_str)
+            self.restoreState()
+    return CustomNumberedCanvas
 
 
 def export_pdf_from_dataset(dataset: dict) -> bytes:
@@ -151,7 +153,8 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
         fontSize=7.5,
         leading=9,
         textColor=colors.white,
-        alignment=1
+        alignment=1,
+        wordWrap='CJK'
     )
     td_style = ParagraphStyle(
         'TD',
@@ -160,7 +163,8 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
         fontSize=7.5,
         leading=9,
         textColor=colors.HexColor('#1E293B'),
-        alignment=1
+        alignment=1,
+        wordWrap='CJK'
     )
     td_left = ParagraphStyle(
         'TDLeft',
@@ -169,7 +173,8 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
         fontSize=7.5,
         leading=9,
         textColor=colors.HexColor('#1E293B'),
-        alignment=0
+        alignment=0,
+        wordWrap='CJK'
     )
     td_bold = ParagraphStyle(
         'TDBold',
@@ -178,7 +183,8 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
         fontSize=7.5,
         leading=9,
         textColor=colors.HexColor('#0F172A'),
-        alignment=1
+        alignment=1,
+        wordWrap='CJK'
     )
 
     rows = dataset.get("rows", [])
@@ -342,7 +348,6 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
     # PAGE 2: DEPARTMENT-WISE SUMMARY
     # ══════════════════════════════════════════════════════════════════════════
     story.append(PageBreak())
-    story.extend(build_header_flowables())
     story.append(Spacer(1, 5))
     story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#1B365D'), spaceAfter=8))
 
@@ -416,7 +421,6 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
     # PAGE 3: YEAR-WISE / BATCH MATRIX & PROBLEM DISTRIBUTION
     # ══════════════════════════════════════════════════════════════════════════
     story.append(PageBreak())
-    story.extend(build_header_flowables())
     story.append(Spacer(1, 5))
     story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#1B365D'), spaceAfter=8))
 
@@ -472,7 +476,6 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
     # PAGE 4: TOP PERFORMERS & FACULTY ACTION INTERVENTION
     # ══════════════════════════════════════════════════════════════════════════
     story.append(PageBreak())
-    story.extend(build_header_flowables())
     story.append(Spacer(1, 5))
     story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#1B365D'), spaceAfter=8))
 
@@ -492,12 +495,12 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
     for r_idx, s in enumerate(sorted_top, 1):
         top_table_data.append([
             Paragraph(str(r_idx), td_bold),
-            Paragraph(s.get("reg_no") or "-", td_style),
-            Paragraph(f"<b>{s.get('name') or '-'}</b>", td_left),
-            Paragraph(s.get("dept") or s.get("department_short") or "-", td_style),
-            Paragraph(s.get("year") or s.get("year_level") or "-", td_style),
+            Paragraph(s.get("reg_no") or "", td_style),
+            Paragraph(f"<b>{s.get('name') or ''}</b>", td_left),
+            Paragraph(s.get("dept") or s.get("department_short") or "", td_style),
+            Paragraph(s.get("year") or s.get("year_level") or "", td_style),
             Paragraph(f"<font color='#059669'><b>{_to_int(s.get('total_solved'))}</b></font>", td_bold),
-            Paragraph(f"{_to_float(s.get('contest_rating')):.1f}" if _to_float(s.get('contest_rating')) > 0 else "—", td_style)
+            Paragraph(f"{_to_float(s.get('contest_rating')):.1f}" if _to_float(s.get('contest_rating')) > 0 else "", td_style)
         ])
 
     t_top = Table(top_table_data, colWidths=[0.5*inch, 1.2*inch, 2.3*inch, 1.1*inch, 0.6*inch, 0.9*inch, 0.7*inch])
@@ -518,7 +521,6 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
     # PAGE 5+: CONTEST PUBLIC ATTENDED ROSTER
     # ══════════════════════════════════════════════════════════════════════════
     story.append(PageBreak())
-    story.extend(build_header_flowables())
     story.append(Spacer(1, 5))
     story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#1B365D'), spaceAfter=8))
 
@@ -578,10 +580,10 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
 
             roster_table_data.append([
                 Paragraph(str(idx), td_style),
-                Paragraph(s.get("reg_no") or "—", td_style),
-                Paragraph(s.get("name") or "—", td_left),
-                Paragraph(s.get("dept") or s.get("department_short") or "—", td_style),
-                Paragraph(s.get("year") or s.get("year_level") or "—", td_style),
+                Paragraph(s.get("reg_no") or "", td_style),
+                Paragraph(s.get("name") or "", td_left),
+                Paragraph(s.get("dept") or s.get("department_short") or "", td_style),
+                Paragraph(s.get("year") or s.get("year_level") or "", td_style),
                 Paragraph(f"<font color='#059669'>{q1}</font>", td_bold),
                 Paragraph(f"<font color='#059669'>{q2}</font>", td_bold),
                 Paragraph(f"<font color='#059669'>{q3}</font>", td_bold),
@@ -589,7 +591,7 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
                 Paragraph(f"<b>{_to_int(s.get('contest_score') or s.get('score'))}</b>", td_bold)
             ])
 
-        t_roster = Table(roster_table_data, colWidths=[0.4*inch, 1.1*inch, 2.3*inch, 0.8*inch, 0.5*inch, 0.45*inch, 0.45*inch, 0.45*inch, 0.45*inch, 0.5*inch], repeatRows=2)
+        t_roster = Table(roster_table_data, colWidths=[0.35*inch, 1.15*inch, 2.3*inch, 0.8*inch, 0.5*inch, 0.45*inch, 0.45*inch, 0.45*inch, 0.45*inch, 0.5*inch], repeatRows=2)
         t_roster.setStyle(TableStyle([
             ('SPAN', (0, 0), (9, 0)),
             ('BACKGROUND', (0, 0), (9, 0), colors.HexColor('#1B365D')),
@@ -603,5 +605,9 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
         ]))
         story.append(t_roster)
 
-    doc.build(story, canvasmaker=NumberedCanvas)
+    canvas_maker = make_numbered_canvas({
+        "dept": dept_header_text.upper(),
+        "contest_name": f"LEETCODE PERFORMANCE — {contest_name.upper()}"
+    })
+    doc.build(story, canvasmaker=canvas_maker)
     return buffer.getvalue()

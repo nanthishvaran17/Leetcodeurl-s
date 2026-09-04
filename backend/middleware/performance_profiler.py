@@ -7,13 +7,11 @@ and cache efficiency without blocking the request pipeline.
 
 import time
 import os
-import sys
 import tracemalloc
 from collections import deque
-from typing import Dict, Any, List
+from typing import Dict, Any
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import Response
 
 try:
     import psutil

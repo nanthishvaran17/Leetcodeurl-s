@@ -2,9 +2,9 @@
 accreditation.py — API Endpoints for NAAC & NBA Accreditation Studio
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, status
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional, Dict, Any
+from typing import Optional
 
 from backend.database import get_db
 from backend.models import User

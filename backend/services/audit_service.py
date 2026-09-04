@@ -22,13 +22,19 @@ def log_admin_action(
     status: str = "SUCCESS",
     metadata_json: Optional[Dict[str, Any]] = None,
     ip_address: Optional[str] = None,
-    user_agent: Optional[str] = None
+    user_agent: Optional[str] = None,
+    event_id: Optional[str] = None
 ) -> AdminAuditLog:
     """
     Persists an admin activity audit log entry into AdminAuditLog table.
     Captures complete user identity (id, name, email, role).
     """
     audit_id = generate_audit_id()
+    if event_id:
+        existing = db.query(AdminAuditLog).filter(AdminAuditLog.audit_id == event_id).first()
+        if existing:
+            return existing
+        audit_id = event_id
     
     admin_id = current_user.id if current_user else None
     admin_name = current_user.username if current_user else "SYSTEM"
@@ -52,7 +58,7 @@ def log_admin_action(
         meta.setdefault("ip_address", ip_address)
     if user_agent:
         meta.setdefault("user_agent", user_agent)
-    meta.setdefault("timestamp_utc", datetime.datetime.utcnow().isoformat() + "Z")
+    meta.setdefault("timestamp_utc", datetime.datetime.now(datetime.timezone.utc).isoformat())
 
     audit_entry = AdminAuditLog(
         audit_id=audit_id,
@@ -69,7 +75,7 @@ def log_admin_action(
         user_agent=user_agent,
         status=status,
         metadata_json=meta,
-        created_at=datetime.datetime.utcnow()
+        created_at=datetime.datetime.now(datetime.timezone.utc)
     )
 
     try:

@@ -12,7 +12,6 @@ Features:
 
 import time
 import uuid
-import logging
 import threading
 from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session

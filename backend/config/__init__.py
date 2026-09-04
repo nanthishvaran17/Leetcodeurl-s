@@ -1,7 +1,7 @@
 import os
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import List, Optional
+from typing import Optional
 
 class Settings(BaseSettings):
     APP_NAME: str = "College LeetCode Weekly Tracker"
@@ -91,11 +91,3 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-from .report_config import (
-    BATCH_YEAR_MAP,
-    BATCH_CONFIG,
-    DEPARTMENT_COORDINATORS,
-    FINALIZED_STATUSES,
-    derive_student_batch,
-    get_coordinator_for_department,
-)

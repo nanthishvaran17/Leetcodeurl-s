@@ -1,10 +1,9 @@
 import datetime
-import hashlib
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 from backend.models import (
     WeeklySession, WeeklyPublicResult, WeeklyVirtualResult,
-    WeeklyContestErrorLog, Student, Department, User
+    Student, User
 )
 from backend.logger import logger
 
