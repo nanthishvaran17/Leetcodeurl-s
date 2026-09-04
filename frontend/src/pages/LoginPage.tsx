@@ -871,7 +871,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
           </div>
         </div>
       </div>
-      <div className="login-copyright hide-on-mobile" style={{ marginTop: '20px', width: '100%', textAlign: 'center', fontSize: '13px', fontWeight: '500', color: '#64748b' }}>
+      <div className="login-copyright" style={{ marginTop: '16px', marginBottom: '16px', width: '100%', textAlign: 'center', fontSize: '12px', fontWeight: '500', color: 'var(--text-muted, #64748b)', padding: '0 16px' }}>
         &copy; {new Date().getFullYear()} Nandha Engineering College. All rights reserved.
       </div>
     </div>

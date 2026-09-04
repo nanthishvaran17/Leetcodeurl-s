@@ -72,27 +72,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
     );
   }
 
-  // ── Capacitor Native: informational message instead of broken popup ──────────
-  if (isNativeMobile()) {
-    return (
-      <div className={`w-full p-4 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 ${className}`}>
-        <div className="flex items-start space-x-3">
-          <Smartphone className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
-          <div>
-            <p className="text-xs font-bold text-blue-800 dark:text-blue-200 mb-1">
-              Google Sign-In not available on mobile
-            </p>
-            <p className="text-xs text-blue-600 dark:text-blue-400 leading-relaxed">
-              Please use <span className="font-bold">Email &amp; Password</span> or{' '}
-              <span className="font-bold">OTP login</span> to sign in on the mobile app.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Web: standard Google popup button ────────────────────────────────────────
+  // Render active Google Sign-In button on all platforms (web & mobile)
   return (
     <div className="space-y-3 w-full">
       {errorMsg && (

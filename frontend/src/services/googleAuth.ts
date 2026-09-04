@@ -49,14 +49,7 @@ export const checkGoogleRedirectResult = async (): Promise<GoogleAuthResult | nu
 };
 
 export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
-  // ── Capacitor Native Guard ────────────────────────────────────────────────
-  if (isCapacitorNative()) {
-    throw new Error(
-      'Google Sign-In is not available in the mobile app. Please use Email/Password or OTP login.'
-    );
-  }
-
-  console.log('[GOOGLE_AUTH_STARTED] Initiating Google Sign-In popup...');
+  console.log('[GOOGLE_AUTH_STARTED] Initiating Google Sign-In...');
 
   try {
     const auth = getOrInitAuth();
