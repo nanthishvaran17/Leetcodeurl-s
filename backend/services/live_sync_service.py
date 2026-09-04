@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import SessionLocal
 from backend.models import Student, LeetCodeProfileStats, SyncJob, SyncJobItem, WeeklySession, StudentStatSnapshot, StudentContestSnapshot, GlobalSyncLock
-from sqlalchemy import update
+from sqlalchemy import update, or_, and_
 from backend.leetcode_fetcher import fetch_leetcode_profile
 from backend.ranking import update_all_rankings_and_badges
 from backend.logger import logger
