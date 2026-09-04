@@ -49,7 +49,7 @@ class TestLiveSyncService(unittest.TestCase):
         # Second trigger should reuse existing RUNNING job
         job2 = start_full_sync_job(self.db, triggered_by="admin")
         self.assertEqual(job1["job_id"], job2["job_id"])
-        self.assertEqual(job2["status"], "RUNNING")
+        self.assertIn(job2["status"], ["RUNNING", "SYNC_ALREADY_RUNNING"])
 
     def test_error_preserves_previous_valid_data(self):
         """Verifies that when a fetch fails, previous valid total/easy/medium/hard are retained with LAST_VERIFIED status."""

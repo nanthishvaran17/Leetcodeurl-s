@@ -585,7 +585,11 @@ async def run_full_pipeline(
         logger.info(f"[CANONICAL_PIPELINE] Starting {sync_mode} (Job: {effective_job_id})")
         logger.info(f"[CANONICAL_PIPELINE] Total active records: {len(student_records)} | Unique students: {total_students} | Duplicates skipped: {duplicates_skipped}")
 
-        if progress_callback and hasattr(progress_callback, "start"):
+        if progress_callback is None:
+            from backend.services.live_sync_service import sync_tracker
+            progress_callback = sync_tracker
+
+        if hasattr(progress_callback, "start"):
             progress_callback.start(effective_job_id, total_students)
 
         from backend.config import settings

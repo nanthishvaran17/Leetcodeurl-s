@@ -102,10 +102,24 @@ def run_high_speed_excel_import(db: Session, file_bytes: bytes, job_id: str, tra
         if d.name:
             existing_depts[d.name.upper()] = d
 
-    # 2. Bulk Fetch Existing Students
-    all_reg_nos = df["REG NO"].tolist()
-    existing_students = db.query(Student).filter(Student.reg_no.in_(all_reg_nos)).all()
-    existing_map = {s.reg_no: s for s in existing_students}
+    # 2. Bulk Fetch Existing Students & Normalize Registration Numbers
+    def _norm_reg(r: str) -> str:
+        if not r: return ""
+        r = str(r).strip().upper()
+        if r.startswith("7322"):
+            return r[4:]
+        return r
+
+    all_students_db = db.query(Student).all()
+    existing_map = {}
+    for s in all_students_db:
+        if s.reg_no:
+            existing_map[s.reg_no.strip().upper()] = s
+            n_reg = _norm_reg(s.reg_no)
+            if n_reg:
+                existing_map[n_reg] = s
+        if s.username:
+            existing_map[s.username.strip().lower()] = s
     
     new_students = []
     updated_students_count = 0
@@ -186,7 +200,7 @@ def run_high_speed_excel_import(db: Session, file_bytes: bytes, job_id: str, tra
         # --- Email Generation ---
         from backend.services.email_identity_service import check_and_generate_email
         
-        student = existing_map.get(reg_no)
+        student = existing_map.get(reg_no) or existing_map.get(_norm_reg(reg_no)) or (existing_map.get(username.lower()) if username else None)
         if not student:
             email_res = check_and_generate_email(db, reg_no)
             
