@@ -10,6 +10,7 @@ interface ReportPreviewProps {
 }
 
 import { useNotification } from '../context/NotificationContext';
+import { triggerDownload } from '../utils/mobileDownload';
 
 export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose }) => {
   const { notify } = useNotification();
@@ -88,11 +89,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
     try {
       const url = `/reports/${reportId}/${format}`;
       const res = await api.get(url, { responseType: 'blob' });
-      const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement('a');
-      link.href = blobUrl;
       const ext = format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : format === 'zip' ? 'zip' : format;
-      
+
       const contentDisposition = res.headers['content-disposition'];
       let filename = `${report?.reportType || 'REPORT'}_${reportId}.${ext}`;
       if (contentDisposition) {
@@ -102,10 +100,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
         }
       }
 
-      link.setAttribute('download', filename);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      const rawContentType = res.headers['content-type'];
+      const contentType = rawContentType ? String(rawContentType) : undefined;
+      await triggerDownload(res.data, filename, contentType);
       notify.success('Report Downloaded', `${filename} generated successfully.`, { category: 'REPORT PREVIEW' });
     } catch (err: any) {
       console.error(`Failed to download ${format} report:`, err);

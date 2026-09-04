@@ -14,6 +14,7 @@ import { CommandPalette } from './components/CommandPalette';
 import { useGlobalKeyboardShortcuts } from './hooks/useGlobalKeyboardShortcuts';
 import { useCapacitorPush } from './hooks/useCapacitorPush';
 import { initPushNotifications } from './services/pushNotifications';
+import { InstallAppPrompt } from './components/InstallAppPrompt';
 // Critical-path pages (always needed within 1 navigation) — keep synchronous
 const LandingPage = lazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
 const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
@@ -654,6 +655,9 @@ export const App: React.FC = () => {
         </div>,
         document.body
       )}
+
+      {/* PWA App Install Banner */}
+      <InstallAppPrompt />
 
     </div>
   );

@@ -3,28 +3,58 @@
 
 <head>
   <meta charset="UTF-8" />
-  
+
   <!-- Favicon Configuration -->
   <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="any" />
   <link rel="icon" type="image/png" href="/favicon.png" sizes="512x512" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="manifest" href="/site.webmanifest" />
 
-  <!-- Theme Colors -->
+  <!-- Theme Colors (system-adaptive) -->
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f8fafc" />
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f172a" />
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  
+
+  <!-- Viewport — viewport-fit=cover is required for notch/cutout & safe-area-inset-* on Android/iOS -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+
+  <!-- Apple / iOS PWA / Safari -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="NEC LeetCode" />
+  <link rel="apple-touch-startup-image" href="/pwa-512x512.png" />
+
+  <!-- Android / Chrome PWA -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="application-name" content="NEC LeetCode" />
+
+  <!-- Microsoft Tile (Edge / Windows) -->
+  <meta name="msapplication-TileColor" content="#0f172a" />
+  <meta name="msapplication-TileImage" content="/pwa-192x192.png" />
+  <meta name="msapplication-navbutton-color" content="#0f172a" />
+
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  
-  <!-- Page Title Metadata -->
+
+  <!-- SEO / Page Metadata -->
   <title>Nandha LeetCode Intelligence</title>
   <meta name="title" content="Nandha LeetCode Intelligence" />
-  <meta name="description" content="NEC 25 Years of Excellence - Nandha Engineering College LeetCode Tracker & Intelligence System." />
+  <meta name="description" content="NEC 25 Years of Excellence — LeetCode Tracker & Intelligence Platform for Nandha Engineering College, Erode. Track student performance, leaderboards, contests, and reports." />
+  <meta name="keywords" content="Nandha Engineering College, LeetCode, tracker, intelligence, student performance, coding, competitive programming, NEC" />
+  <meta name="robots" content="index, follow" />
+
+  <!-- Open Graph / Social -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Nandha LeetCode Intelligence" />
+  <meta property="og:description" content="NEC 25 Years of Excellence — LeetCode Intelligence Platform for Nandha Engineering College." />
+  <meta property="og:image" content="/pwa-512x512.png" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Nandha LeetCode Intelligence" />
+  <meta name="twitter:description" content="LeetCode Intelligence Platform — Nandha Engineering College." />
+  <meta name="twitter:image" content="/pwa-512x512.png" />
 </head>
 
 <body

@@ -1,14 +1,61 @@
 {
+  "id": "/",
   "name": "Nandha LeetCode Intelligence",
   "short_name": "NEC LeetCode",
-  "icons": [
-    {
-      "src": "/favicon.png",
-      "sizes": "192x192 512x512",
-      "type": "image/png"
-    }
-  ],
+  "description": "NEC 25 Years of Excellence — LeetCode Tracker & Intelligence System for Nandha Engineering College, Erode.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
   "theme_color": "#0f172a",
   "background_color": "#0f172a",
-  "display": "standalone"
+  "categories": ["education", "productivity"],
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Nandha LeetCode Intelligence Dashboard"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/?tab=dashboard&source=shortcut",
+      "description": "View live leaderboard & stats"
+    },
+    {
+      "name": "Reports",
+      "url": "/?tab=reports&source=shortcut",
+      "description": "Download Excel & PDF reports"
+    }
+  ]
 }

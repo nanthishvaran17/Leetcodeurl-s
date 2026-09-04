@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Sparkles, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers, Inbox, Trash2, Award, Clock, Building2, GraduationCap, ChevronDown, Check, Target } from 'lucide-react';
+import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Sparkles, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers, Inbox, Trash2, Award, Clock, Building2, GraduationCap, ChevronDown, Check, Target, Loader2 } from 'lucide-react';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import api from '../services/api';
 import { ReportPreview } from '../components/ReportPreview';
@@ -8,10 +8,11 @@ import { CertificateManagementModal } from '../components/CertificateManagementM
 import { ConfirmDeleteModal, DeleteItemInfo } from '../components/ConfirmDeleteModal';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
+import { downloadFromUrl } from '../utils/mobileDownload';
 
 export const ReportsPage: React.FC = () => {
   const { notify } = useNotification();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [activeTab, setActiveTab] = useState<'reports' | 'email' | 'manual_email' | 'auto_email'>('reports');
   const [showCertModal, setShowCertModal] = useState<boolean>(false);
   const [emailLogs, setEmailLogs] = useState<any[]>([]);
@@ -25,6 +26,8 @@ export const ReportsPage: React.FC = () => {
   const [selectedDept, setSelectedDept] = useState<string>('ALL');
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
   const [selectedOutputScope, setSelectedOutputScope] = useState<string>('COLLEGE');
+  // Track which download is currently in progress (filename → boolean)
+  const [downloadingFiles, setDownloadingFiles] = useState<Record<string, boolean>>({});
 
   const [rptYearOpen, setRptYearOpen] = useState<boolean>(false);
   const [rptScopeOpen, setRptScopeOpen] = useState<boolean>(false);
@@ -113,35 +116,32 @@ export const ReportsPage: React.FC = () => {
     }
   };
   const downloadReportFile = async (endpoint: string, filename: string) => {
-    setToastMessage("Generating report dataset from database...");
-    try {
-      const res = await api.get(endpoint, { responseType: 'blob' });
-      const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.setAttribute('download', filename);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(blobUrl);
-      setToastMessage(`${filename} downloaded successfully.`);
+    // Mark this file as downloading
+    setDownloadingFiles(prev => ({ ...prev, [filename]: true }));
+    setToastMessage(`Generating ${filename}...`);
+
+    // Build the full URL (same base as axios)
+    const baseUrl = (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '')
+      .replace(/\/+$/, '');
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const fullUrl = `${baseUrl}/api${cleanEndpoint}`;
+
+    const result = await downloadFromUrl(
+      fullUrl,
+      filename,
+      () => token || localStorage.getItem('token')
+    );
+
+    setDownloadingFiles(prev => ({ ...prev, [filename]: false }));
+
+    if (result.ok) {
+      setToastMessage(`✓ ${filename} downloaded successfully.`);
       setTimeout(() => setToastMessage(null), 4000);
-    } catch (err: any) {
-      console.error('Download error:', err);
-      let statusCode = err.response?.status;
-      let errMsg = 'Failed to generate report.';
+    } else {
+      const statusCode = result.status;
+      const errMsg = result.error || 'Failed to generate report.';
 
-      if (err.response?.data instanceof Blob) {
-        try {
-          const text = await err.response.data.text();
-          const parsed = JSON.parse(text);
-          if (parsed.detail) errMsg = parsed.detail;
-        } catch (_e) { }
-      } else if (err.response?.data?.detail) {
-        errMsg = err.response.data.detail;
-      }
-
-      setToastMessage(`${errMsg}`);
+      setToastMessage(errMsg);
       setTimeout(() => setToastMessage(null), 5000);
 
       if (statusCode === 401) {
@@ -152,6 +152,8 @@ export const ReportsPage: React.FC = () => {
         notify.error('Not Found', 'Report resource not found.', { category: 'REPORTS' });
       } else if (statusCode === 422) {
         notify.error('Invalid Parameters', 'Invalid report parameters.', { category: 'REPORTS' });
+      } else {
+        notify.error('Download Failed', errMsg, { category: 'REPORTS' });
       }
     }
   };
