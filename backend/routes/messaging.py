@@ -32,22 +32,22 @@ class TypingRequest(BaseModel):
     receiver_id: str
     is_typing: bool
 
-def _auto_migrate_and_retry(db: Session, fn, *args, **kwargs):
+def _auto_migrate_and_retry(_db: Session, _fn, *args, **kwargs):
     try:
-        return fn(*args, **kwargs)
+        return _fn(*args, **kwargs)
     except ValueError:
         raise
     except Exception as e:
         err_str = str(e).lower()
         if "undefinedcolumn" in err_str or "does not exist" in err_str or "no such column" in err_str or "column" in err_str:
             logger.warning(f"[MESSAGING] DB schema out of sync ({e}). Running auto-migration and retrying...")
-            db.rollback()
+            _db.rollback()
             try:
                 from backend.migrate_db import run_db_migrations
                 run_db_migrations()
             except Exception as mig_err:
                 logger.error(f"[MESSAGING] Auto-migration error: {mig_err}")
-            return fn(*args, **kwargs)
+            return _fn(*args, **kwargs)
         raise
 
 @router.get("/available-recipients")
