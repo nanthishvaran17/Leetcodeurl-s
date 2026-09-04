@@ -233,6 +233,22 @@ def generate_weekly_performance_data(
     curr_session_id = getattr(curr_ws, "id", None)
     last_session_id = getattr(last_ws, "id", None)
 
+    # Fallback resolution for last_session_id if not found by primary resolver
+    if last_session_id is None and curr_session_id is not None:
+        prev_sess = db.query(WeeklySession).filter(WeeklySession.id < curr_session_id).order_by(WeeklySession.id.desc()).first()
+        if prev_sess:
+            last_ws = prev_sess
+            last_session_id = prev_sess.id
+            if last_contest_num in ("N/A", None):
+                last_contest_num = extract_contest_number(prev_sess) or (curr_contest_num - 1 if isinstance(curr_contest_num, int) else "N/A")
+
+    if last_session_id is None:
+        prev_res_row = db.query(WeeklyPublicResult.session_id).filter(
+            WeeklyPublicResult.session_id != curr_session_id
+        ).order_by(WeeklyPublicResult.session_id.desc()).first()
+        if prev_res_row:
+            last_session_id = prev_res_row[0]
+
     last_contest_str = ", ".join(last_contest_ids) if last_contest_ids else (f"Weekly Contest {last_contest_num}" if last_contest_num and last_contest_num != "N/A" else (str(last_week_contest) if last_week_contest else "Weekly Contest (Current Period)"))
     curr_contest_str = ", ".join(curr_contest_ids) if curr_contest_ids else (f"Weekly Contest {curr_contest_num}" if curr_contest_num and curr_contest_num != "N/A" else (str(current_week_contest) if current_week_contest else "Weekly Contest (Current Period)"))
 
@@ -324,6 +340,16 @@ def generate_weekly_performance_data(
         last_vir_outcome = classify_virtual_contest_outcome(last_vir_obj)
 
         hist_snap = last_snapshots_by_pid.get(pid)
+        if last_pub_outcome in ("NOT_ATTENDED", "DATA_ERROR", "PENDING", None) and hist_snap and hist_snap.contest_data:
+            try:
+                cdata = json.loads(hist_snap.contest_data)
+                if isinstance(cdata, dict) and cdata.get("public"):
+                    last_pub_outcome = cdata.get("public")
+                if isinstance(cdata, dict) and cdata.get("virtual"):
+                    last_vir_outcome = cdata.get("virtual")
+            except Exception:
+                pass
+
         last_tot = hist_snap.primary_solved_count if hist_snap else tot
         last_category_name = hist_snap.solved_bucket if hist_snap else category_name
 

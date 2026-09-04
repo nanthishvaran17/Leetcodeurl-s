@@ -23,9 +23,9 @@ BATCH_YEAR_MAP = {
 }
 
 BATCH_CONFIG = [
-    {"key": "2025_2029", "label": "2025 - 2029", "year": "II"},
-    {"key": "2024_2028", "label": "2024 - 2028", "year": "III"},
     {"key": "2023_2027", "label": "2023 - 2027", "year": "IV"},
+    {"key": "2024_2028", "label": "2024 - 2028", "year": "III"},
+    {"key": "2025_2029", "label": "2025 - 2029", "year": "II"},
 ]
 
 DEPARTMENT_COORDINATORS = {

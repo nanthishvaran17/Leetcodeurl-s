@@ -134,14 +134,31 @@ def resolve_weekly_sessions(
     # Sort descending by contest number
     valid_sessions.sort(key=lambda item: item[0], reverse=True)
 
+    all_valid_sessions = []
+    for s in all_db_sessions:
+        c_num = extract_contest_number(s)
+        if c_num is not None:
+            all_valid_sessions.append((c_num, s))
+    all_valid_sessions.sort(key=lambda item: item[0], reverse=True)
+
     if len(valid_sessions) >= 2:
         curr_num, curr_sess = valid_sessions[0]
         last_num, last_sess = valid_sessions[1]
         mode = "db_auto"
+    elif len(all_valid_sessions) >= 2:
+        curr_num, curr_sess = all_valid_sessions[0]
+        last_num, last_sess = all_valid_sessions[1]
+        mode = "db_auto_all"
     elif len(valid_sessions) == 1:
         curr_num, curr_sess = valid_sessions[0]
-        last_num, last_sess = None, None
-        mode = "db_auto"
+        last_num = curr_num - 1
+        last_sess = _find_session_by_contest_num(last_num)
+        mode = "db_auto_single"
+    elif len(all_valid_sessions) == 1:
+        curr_num, curr_sess = all_valid_sessions[0]
+        last_num = curr_num - 1
+        last_sess = _find_session_by_contest_num(last_num)
+        mode = "db_auto_single"
     else:
         # Fallback to calculated Sunday LeetCode contest numbers
         import datetime
