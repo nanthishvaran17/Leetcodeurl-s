@@ -28,62 +28,8 @@ def _init_firebase_admin():
     if not (FIREBASE_ADMIN_AVAILABLE and firebase_admin):
         return
     try:
-        if not firebase_admin._apps:
-            default_proj_id = (
-                os.environ.get("FIREBASE_PROJECT_ID") or 
-                os.environ.get("GOOGLE_CLOUD_PROJECT") or 
-                "leetcode-intelligence"
-            )
-
-            # 1. Environment variable (JSON string)
-            env_json = (
-                os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON") or 
-                os.environ.get("FIREBASE_CREDENTIALS_JSON") or 
-                os.environ.get("FIREBASE_CREDENTIALS")
-            )
-            if env_json and env_json.strip():
-                try:
-                    cred_dict = json.loads(env_json.strip())
-                    p_id = cred_dict.get("project_id") or default_proj_id
-                    cred = credentials.Certificate(cred_dict)
-                    firebase_admin.initialize_app(cred, {'projectId': p_id})
-                    logger.info(f"[FIREBASE] Admin SDK initialized from environment JSON (projectId={p_id}).")
-                    return
-                except Exception as _e_json:
-                    logger.warning(f"[FIREBASE] Failed parsing env JSON: {_e_json}")
-
-            # 2. Disk file checks
-            root_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-            possible_paths = [
-                os.path.join(root_dir, 'serviceAccountKey.json'),
-                os.path.join(root_dir, 'firebase-service-account.json'),
-                os.path.join(os.path.dirname(os.path.dirname(__file__)), 'serviceAccountKey.json'),
-                os.path.join(os.path.dirname(__file__), 'serviceAccountKey.json'),
-            ]
-            for p in possible_paths:
-                if os.path.exists(p):
-                    try:
-                        p_id = default_proj_id
-                        try:
-                            with open(p, 'r') as _f:
-                                _data = json.load(_f)
-                                p_id = _data.get("project_id") or default_proj_id
-                        except Exception:
-                            pass
-                        cred = credentials.Certificate(p)
-                        firebase_admin.initialize_app(cred, {'projectId': p_id})
-                        logger.info(f"[FIREBASE] Admin SDK initialized from {os.path.basename(p)} (projectId={p_id}).")
-                        return
-                    except Exception as _file_err:
-                        logger.warning(f"[FIREBASE] Certificate error with {p}: {_file_err}")
-
-            # 3. Application Default Credentials
-            try:
-                cred = credentials.ApplicationDefault()
-                firebase_admin.initialize_app(cred, {'projectId': default_proj_id})
-                logger.info(f"[FIREBASE] Admin SDK initialized using ApplicationDefault (projectId={default_proj_id}).")
-            except Exception as _adc_err:
-                logger.warning(f"[FIREBASE] Push notifications notice: serviceAccountKey.json missing or invalid ({_adc_err}).")
+        from backend.services.firebase_init import get_firebase_app
+        get_firebase_app()
     except Exception as e:
         logger.error(f"[FIREBASE] Error initializing Firebase Admin: {e}")
 
@@ -375,6 +321,8 @@ class NotificationService:
                 })
 
             db.commit()
+            logger.info(f"[NOTIFICATION] created notification_id={eff_event_id}")
+            logger.info(f"[NOTIFICATION] persisted notification_id={eff_event_id}")
             logger.info(f"[NOTIF-DEBUG] DB_SAVED created_count={len(notif_records)} event_id={eff_event_id}")
 
             # 1.5 Real-Time WebSocket Delivery
@@ -406,6 +354,7 @@ class NotificationService:
                             "is_read": False
                         }
                     }
+                    logger.info(f"[NOTIF_WS] target_user={item['recipientUserId']} active_connection=true send_success notification_id={eff_event_id}")
                     logger.info(f"[NOTIF-DEBUG] WEBSOCKET_DISPATCH_TRIGGERED recipient={item['recipientUserId']} notif_id={item['id']}")
                     if (recipient_scope or "").upper() in ("ALL", "GLOBAL"):
                         manager.broadcast_sync(ws_payload)

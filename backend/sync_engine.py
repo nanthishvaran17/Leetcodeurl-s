@@ -87,21 +87,11 @@ class SyncProgressTracker:
         if self._fs_client is not None:
             return self._fs_client
         try:
-            import firebase_admin
-            from firebase_admin import credentials, firestore as fs_module
-            import os
-            if not firebase_admin._apps:
-                sa_path = os.path.join(
-                    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-                    "serviceAccountKey.json"
-                )
-                if os.path.exists(sa_path):
-                    cred = credentials.Certificate(sa_path)
-                    firebase_admin.initialize_app(cred)
-                elif os.environ.get("GOOGLE_APPLICATION_CREDENTIALS"):
-                    firebase_admin.initialize_app(credentials.ApplicationDefault())
-                else:
-                    return None
+            from backend.services.firebase_init import get_firebase_app
+            app = get_firebase_app()
+            if not app:
+                return None
+            from firebase_admin import firestore as fs_module
             self._fs_client = fs_module.client()
         except Exception:
             self._fs_client = None

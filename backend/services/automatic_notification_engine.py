@@ -58,21 +58,23 @@ class AutomaticNotificationEngine:
 
         # 1. Fetch all active Faculty users
         faculty_users = db.query(User).filter(
-            User.is_active == True,
+            or_(User.is_active == True, User.is_active.is_(None)),
             or_(
-                func.lower(User.role) == "faculty",
-                func.lower(User.role) == "staff",
-                func.lower(User.role) == "instructor",
-                func.lower(User.role) == "mentor"
+                User.role.ilike("%faculty%"),
+                User.role.ilike("%staff%"),
+                User.role.ilike("%instructor%"),
+                User.role.ilike("%mentor%"),
+                User.role.ilike("%hod%")
             )
         ).all()
 
+        logger.info(f"[DAILY_FACULTY_INTELLIGENCE] faculty_count={len(faculty_users)}")
         dispatched_count = 0
         skipped_count = 0
 
         for faculty in faculty_users:
             try:
-                # 2. Dynamically find assigned active students
+                # 2. Dynamically find assigned active students strictly (no fallback)
                 assigned_students = db.query(Student).join(
                     FacultyStudentAssignment, Student.id == FacultyStudentAssignment.student_id
                 ).filter(
@@ -81,40 +83,30 @@ class AutomaticNotificationEngine:
                     or_(Student.is_active == True, Student.is_active.is_(None))
                 ).all()
 
-                # Fallback to active department students if no individual assignments exist
-                if len(assigned_students) == 0 and faculty.department_id:
-                    assigned_students = db.query(Student).filter(
-                        Student.department_id == faculty.department_id,
-                        or_(Student.is_active == True, Student.is_active.is_(None))
-                    ).all()
-
                 total_assigned = len(assigned_students)
-                if total_assigned == 0:
-                    logger.info(f"[DAILY_FACULTY_INTELLIGENCE] faculty_id={faculty.id} role={faculty.role} assigned_students=0 loaded=0 excluded=0 reason='No active assigned or department students'")
-                    skipped_count += 1
-                    continue
-
-                # Calculate loaded vs excluded counts safely
                 loaded_students = [s for s in assigned_students if s.username]
                 excluded_count = total_assigned - len(loaded_students)
 
                 logger.info(
-                    f"[DAILY_FACULTY_INTELLIGENCE] faculty_id={faculty.id} role={faculty.role} "
-                    f"assigned_students={total_assigned} loaded={len(loaded_students)} excluded={excluded_count} "
-                    f"reason='Profiles missing username/data' if excluded_count > 0 else 'None'"
+                    f"[FACULTY_ROSTER] faculty_id={faculty.id} "
+                    f"assigned_students={total_assigned} eligible_students={len(loaded_students)} "
+                    f"excluded_students={excluded_count} exclusion_reason={'Profiles missing username/data' if excluded_count > 0 else 'None'}"
                 )
+                logger.info(f"[DAILY_FACULTY_INTELLIGENCE] faculty_id={faculty.id} students={total_assigned}")
+
+                if total_assigned == 0:
+                    skipped_count += 1
+                    continue
 
                 student_ids = [s.id for s in assigned_students]
 
-                # 3. Calculate dynamic performance metrics
-                # Active students: stats updated or active within last 24h
+                # 3. Calculate dynamic performance metrics from actual LeetCode DB data
                 cutoff_24h = datetime.datetime.utcnow() - datetime.timedelta(hours=24)
                 active_count = db.query(LeetCodeProfileStats).filter(
                     LeetCodeProfileStats.student_id.in_(student_ids),
                     LeetCodeProfileStats.last_updated >= cutoff_24h
                 ).count()
 
-                # Students requiring attention (no activity in 3+ days or zero solved)
                 cutoff_3d = datetime.datetime.utcnow() - datetime.timedelta(days=3)
                 attention_count = db.query(LeetCodeProfileStats).filter(
                     LeetCodeProfileStats.student_id.in_(student_ids),
@@ -125,8 +117,6 @@ class AutomaticNotificationEngine:
                     )
                 ).count()
 
-                # Net new problems solved today
-                # Sum solved across assigned stats
                 new_problems = db.query(
                     func.coalesce(func.sum(LeetCodeProfileStats.easy_solved + LeetCodeProfileStats.medium_solved + LeetCodeProfileStats.hard_solved), 0)
                 ).filter(
@@ -134,7 +124,6 @@ class AutomaticNotificationEngine:
                     LeetCodeProfileStats.last_updated >= cutoff_24h
                 ).scalar() or 0
 
-                # Milestones reached today
                 new_milestones = 0
                 for s in assigned_students:
                     if s.stats and s.stats.total_solved:
@@ -142,6 +131,8 @@ class AutomaticNotificationEngine:
                             if s.stats.total_solved >= m and s.stats.last_updated and s.stats.last_updated >= cutoff_24h:
                                 new_milestones += 1
                                 break
+
+                logger.info(f"[DAILY_FACULTY_INTELLIGENCE] intelligence_calculated faculty_id={faculty.id}")
 
                 # 4. Format short, professional faculty message
                 title = "Daily LeetCode Performance Summary"
@@ -155,7 +146,7 @@ class AutomaticNotificationEngine:
                     f"View detailed student performance."
                 )
 
-                idempotency_key = f"daily_faculty_summary_{faculty.id}_{today_str}"
+                idempotency_key = f"faculty_daily_intelligence:{faculty.id}:{today_str}"
 
                 res = NotificationService.emit_event(
                     event_type="DAILY_FACULTY_SUMMARY",
@@ -168,7 +159,7 @@ class AutomaticNotificationEngine:
                     event_id=idempotency_key
                 )
 
-                logger.info(f"[DAILY_FACULTY_INTELLIGENCE] notification_created event_id={idempotency_key} recipient_id={faculty.id}")
+                logger.info(f"[DAILY_FACULTY_INTELLIGENCE] notification_created faculty_id={faculty.id}")
 
                 if res.get("success"):
                     dispatched_count += 1
@@ -176,7 +167,7 @@ class AutomaticNotificationEngine:
             except Exception as f_err:
                 logger.error(f"[AUTO_NOTIF] Error processing Faculty {faculty.email}: {f_err}", exc_info=True)
 
-        logger.info(f"[AUTO_NOTIF] Daily 10:00 AM IST Faculty Digest Complete: dispatched={dispatched_count}, skipped={skipped_count}.")
+        logger.info(f"[DAILY_FACULTY_INTELLIGENCE] job_completed date={today_str} dispatched={dispatched_count} skipped={skipped_count}")
         return {"dispatched": dispatched_count, "skipped": skipped_count, "date": today_str}
 
     @staticmethod

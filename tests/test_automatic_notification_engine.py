@@ -72,7 +72,7 @@ def test_daily_faculty_performance_dynamic_calculation(db_session):
 
 
 def test_daily_faculty_performance_department_fallback(db_session):
-    """Verifies that faculty without explicit assignments fall back to department active students."""
+    """Verifies that faculty without explicit assignments return 0 assigned students and are skipped (no unassigned department fallback)."""
     dept = Department(name="Mechanical Eng", code="MECH")
     db_session.add(dept)
     db_session.commit()
@@ -98,7 +98,7 @@ def test_daily_faculty_performance_department_fallback(db_session):
     db_session.commit()
 
     res = AutomaticNotificationEngine.run_daily_faculty_performance_job(db_session)
-    assert res["dispatched"] == 1, f"Expected 1 dispatched with department fallback, got {res}"
+    assert res["skipped"] == 1 and res["dispatched"] == 0, f"Expected 0 dispatched and 1 skipped for unassigned faculty, got {res}"
 
 
 

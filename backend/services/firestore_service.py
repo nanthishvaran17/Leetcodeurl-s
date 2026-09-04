@@ -102,34 +102,11 @@ def initialize_firestore():
         env_sa_key = os.environ.get("FIREBASE_SERVICE_ACCOUNT_KEY")
         google_creds = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
 
-        has_creds = os.path.exists(sa_path) or bool(env_sa_key) or (bool(google_creds) and os.path.exists(google_creds))
-        if not has_creds:
+        from backend.services.firebase_init import get_firebase_app
+        app = get_firebase_app()
+        if not app:
             return None
-
-        import firebase_admin
-        from firebase_admin import credentials, firestore
-
-        if not firebase_admin._apps:
-            cred = None
-            if os.path.exists(sa_path):
-                cred = credentials.Certificate(sa_path)
-            elif env_sa_key:
-                try:
-                    if env_sa_key.strip().startswith("{"):
-                        sa_dict = json.loads(env_sa_key)
-                    else:
-                        sa_dict = json.loads(base64.b64decode(env_sa_key).decode('utf-8'))
-                    cred = credentials.Certificate(sa_dict)
-                except Exception:
-                    cred = None
-            elif google_creds and os.path.exists(google_creds):
-                cred = credentials.Certificate(google_creds)
-
-            if cred:
-                firebase_admin.initialize_app(cred, {'projectId': 'leetcode-student-data'})
-            else:
-                return None
-
+        from firebase_admin import firestore
         return firestore.client()
 
     except Exception as e:
