@@ -442,6 +442,9 @@ class NotificationService:
                     and_(FCMDeviceToken.user_id.in_(list(target_uids)), FCMDeviceToken.is_active == True)
                 ).all()
 
+                if active_tokens:
+                    logger.info(f"[FCM] send_started notification_id={eff_event_id} target_tokens={len(active_tokens)}")
+
                 stale_tokens = []
                 for t_obj in active_tokens:
                     try:
@@ -492,7 +495,9 @@ class NotificationService:
                         )
                         messaging.send(fcm_msg)
                         fcm_dispatched += 1
+                        logger.info(f"[FCM] send_success notification_id={eff_event_id}")
                     except Exception as fcm_err:
+                        logger.warning(f"[FCM] send_failed notification_id={eff_event_id} error={type(fcm_err).__name__}")
                         err_str = str(fcm_err).upper()
                         if "UNREGISTERED" in err_str or "INVALID_ARGUMENT" in err_str or "NOT_FOUND" in err_str:
                             stale_tokens.append(t_obj)

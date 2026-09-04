@@ -208,12 +208,13 @@ async def daily_faculty_performance_job():
     Calculates real-time performance metrics for all assigned active students per Faculty
     and dispatches short, professional daily summaries.
     """
-    logger.info("[SCHEDULER] 10:00 AM IST: Executing Daily Faculty Performance Job...")
+    today_str = datetime.datetime.now(tz=IST).strftime("%Y-%m-%d")
+    logger.info(f"[DAILY_FACULTY_INTELLIGENCE] job_started date={today_str}")
     db = SessionLocal()
     try:
         from backend.services.automatic_notification_engine import AutomaticNotificationEngine
         res = AutomaticNotificationEngine.run_daily_faculty_performance_job(db)
-        logger.info(f"[SCHEDULER] Daily Faculty Performance Job complete: {res}")
+        logger.info(f"[DAILY_FACULTY_INTELLIGENCE] job_completed date={today_str} dispatched={res.get('dispatched', 0)} skipped={res.get('skipped', 0)}")
     except Exception as e:
         logger.error(f"[SCHEDULER] Error in daily_faculty_performance_job: {e}", exc_info=True)
         try:
@@ -576,6 +577,7 @@ def start_scheduler():
         replace_existing=True,
         max_instances=1, coalesce=True, misfire_grace_time=3600
     )
+    logger.info("[DAILY_FACULTY_INTELLIGENCE] job_registered time=10:00 Asia/Kolkata")
 
     # Job: Daily 10:05 AM IST HOD Department Performance Digest
     scheduler.add_job(

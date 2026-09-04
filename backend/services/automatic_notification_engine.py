@@ -90,9 +90,19 @@ class AutomaticNotificationEngine:
 
                 total_assigned = len(assigned_students)
                 if total_assigned == 0:
-                    logger.info(f"[AUTO_NOTIF] Skipping Faculty {faculty.email}: 0 active assigned students.")
+                    logger.info(f"[DAILY_FACULTY_INTELLIGENCE] faculty_id={faculty.id} role={faculty.role} assigned_students=0 loaded=0 excluded=0 reason='No active assigned or department students'")
                     skipped_count += 1
                     continue
+
+                # Calculate loaded vs excluded counts safely
+                loaded_students = [s for s in assigned_students if s.username]
+                excluded_count = total_assigned - len(loaded_students)
+
+                logger.info(
+                    f"[DAILY_FACULTY_INTELLIGENCE] faculty_id={faculty.id} role={faculty.role} "
+                    f"assigned_students={total_assigned} loaded={len(loaded_students)} excluded={excluded_count} "
+                    f"reason='Profiles missing username/data' if excluded_count > 0 else 'None'"
+                )
 
                 student_ids = [s.id for s in assigned_students]
 
@@ -157,6 +167,8 @@ class AutomaticNotificationEngine:
                     route="/faculty-actions",
                     event_id=idempotency_key
                 )
+
+                logger.info(f"[DAILY_FACULTY_INTELLIGENCE] notification_created event_id={idempotency_key} recipient_id={faculty.id}")
 
                 if res.get("success"):
                     dispatched_count += 1
