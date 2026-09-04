@@ -747,7 +747,7 @@ def create_staff_user(
             recipient_user_ids=[r for r in recipients if r],
             notification_type="system",
             priority="normal",
-            action_route="settings",
+            action_route="/settings",
             created_by=f"{current_user.username} ({current_user.role})"
         )
     except Exception as _notif_err:

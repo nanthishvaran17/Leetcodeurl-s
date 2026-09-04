@@ -1590,7 +1590,12 @@ def dispatch_notification_email(
     if not to_email or "@" not in to_email:
         return False
 
-    target_link = f"https://leetcodeurl-s-roan.vercel.app{action_route}" if action_route else "https://leetcodeurl-s-roan.vercel.app/dashboard"
+    base_url = getattr(settings, "FRONTEND_ORIGIN", "https://leetcodeurl-s-roan.vercel.app").rstrip("/")
+    if action_route:
+        route = action_route if action_route.startswith("/") else f"/{action_route}"
+        target_link = f"{base_url}{route}"
+    else:
+        target_link = f"{base_url}/dashboard"
     html_content = f"""
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
       <h2 style="color: #2563eb; margin-top: 0;">{subject}</h2>
