@@ -243,17 +243,21 @@ def get_messaging_profile_endpoint(
         ).first()
         
         if staff:
+            avatar = getattr(staff, 'avatar_url', None) or getattr(staff, 'profile_image_url', None)
             return {
                 "success": True, 
                 "profile": {
                     "id": user_id,
                     "name": staff.full_name or staff.username,
                     "role": staff.role.upper(),
+                    "designation": staff.designation or staff.role,
+                    "institutional_id": staff.institutional_id or "",
                     "department": staff.department.name if staff.department else "Administration",
                     "email": staff.email,
                     "phone": staff.phone_number if hasattr(staff, 'phone_number') else getattr(staff, 'phone', None),
+                    "avatar_url": avatar,
                     "type": "STAFF",
-                    "status": "Active",
+                    "status": "Active" if staff.is_active else "Inactive",
                     "verified": True
                 }
             }
@@ -264,20 +268,36 @@ def get_messaging_profile_endpoint(
         ).first()
         
         if student:
+            stats_data = {}
+            if student.stats:
+                stats_data = {
+                    "total_solved": getattr(student.stats, 'total_solved', 0) or 0,
+                    "easy_solved": getattr(student.stats, 'easy_solved', 0) or 0,
+                    "medium_solved": getattr(student.stats, 'medium_solved', 0) or 0,
+                    "hard_solved": getattr(student.stats, 'hard_solved', 0) or 0,
+                    "contest_rating": getattr(student.stats, 'contest_rating', 0) or 0,
+                    "global_rank": getattr(student.stats, 'global_rank', 0) or 0,
+                }
+            avatar = getattr(student, 'avatar_url', None)
             return {
                 "success": True,
                 "profile": {
                     "id": user_id,
                     "name": student.name,
+                    "reg_no": student.reg_no,
                     "role": "STUDENT",
                     "department": student.department.code if student.department else "",
                     "year": student.year_level,
-                    "email": student.email,
-                    "phone": getattr(student, 'phone', getattr(student, 'contact_number', None)),
+                    "section": student.section.name if student.section else "",
+                    "email": student.email or student.institutional_email,
+                    "phone": student.phone_number or getattr(student, 'phone', None),
+                    "avatar_url": avatar,
                     "type": "STUDENT",
-                    "status": "Active",
+                    "status": "Active" if student.is_active else "Inactive",
                     "verified": True,
-                    "leetcode_url": student.leetcode_url
+                    "leetcode_url": student.leetcode_url,
+                    "leetcode_username": student.username,
+                    "stats": stats_data
                 }
             }
             
