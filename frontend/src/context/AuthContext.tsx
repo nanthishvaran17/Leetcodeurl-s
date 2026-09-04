@@ -50,11 +50,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState<boolean>(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // Check HttpOnly Cookie Backend Session on initial load
+  // Check HttpOnly Cookie Backend Session and Google Redirect Result on initial load
   useEffect(() => {
     let isMounted = true;
     const checkBackendSession = async () => {
       try {
+        // 1. Check for returning Google signInWithRedirect authentication
+        const { checkGoogleRedirectResult } = await import('../services/googleAuth');
+        const redirectRes = await checkGoogleRedirectResult();
+        if (redirectRes && redirectRes.user && isMounted) {
+          login('', redirectRes.user);
+          setLoading(false);
+          return;
+        }
+
+        // 2. Check HttpOnly session
         const res = await api.get('/auth/session');
         if (res.data && res.data.authenticated && res.data.user && isMounted) {
           const u = res.data.user;

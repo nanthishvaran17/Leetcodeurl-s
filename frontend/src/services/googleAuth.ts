@@ -1,4 +1,4 @@
-﻿import { signInWithPopup, UserCredential } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, getRedirectResult, UserCredential } from 'firebase/auth';
 import { getOrInitAuth, googleProvider } from './firebase';
 import api from './api';
 
@@ -27,14 +27,29 @@ export interface GoogleAuthResult {
   };
 }
 
+/**
+ * Checks if the user is returning from a Google signInWithRedirect flow.
+ */
+export const checkGoogleRedirectResult = async (): Promise<GoogleAuthResult | null> => {
+  try {
+    const auth = getOrInitAuth();
+    const cred = await getRedirectResult(auth);
+    if (cred && cred.user && cred.user.email) {
+      console.log('[GOOGLE_REDIRECT_SUCCESS] Redirect result retrieved from Firebase Auth.');
+      const idToken = await cred.user.getIdToken(true);
+      const response = await api.post('/auth/google', { id_token: idToken }, { timeout: 35000 });
+      if (response.data && response.data.authenticated) {
+        return response.data;
+      }
+    }
+  } catch (err: any) {
+    console.warn('[GOOGLE_REDIRECT_CHECK_ERR]', err);
+  }
+  return null;
+};
+
 export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
   // ── Capacitor Native Guard ────────────────────────────────────────────────
-  // Firebase signInWithPopup launches a browser popup window and relies on
-  // sessionStorage for the OAuth state handshake.  Inside the Android/iOS
-  // Capacitor WebView, cross-origin sessionStorage is blocked, which causes:
-  //   "Unable to process request due to missing initial state."
-  // Until a native @capacitor/google-auth plugin is configured, direct mobile
-  // users to Email/Password or OTP login — both of which work natively.
   if (isCapacitorNative()) {
     throw new Error(
       'Google Sign-In is not available in the mobile app. Please use Email/Password or OTP login.'
@@ -68,8 +83,10 @@ export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
         );
       } else if (popupErr.code === 'auth/popup-closed-by-user') {
         throw new Error('Google sign-in was cancelled.');
-      } else if (popupErr.code === 'auth/popup-blocked') {
-        throw new Error('Please allow popups for this site and try again.');
+      } else if (popupErr.code === 'auth/popup-blocked' || errStr.includes('popup-blocked') || errStr.includes('popup')) {
+        console.warn('[GOOGLE_POPUP_BLOCKED] Popup blocked by browser. Falling back to signInWithRedirect...');
+        await signInWithRedirect(auth, googleProvider);
+        throw new Error('Redirecting to Google Sign-In...');
       } else if (popupErr.code === 'auth/account-exists-with-different-credential') {
         throw new Error('Please sign in using your existing authentication method for this account.');
       } else {
