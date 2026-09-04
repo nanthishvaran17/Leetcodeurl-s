@@ -127,15 +127,16 @@ export const App: React.FC = () => {
 
 
   useEffect(() => {
-    if (!isAuthenticated) return;
-    
     fetchSummary();
-    const timer = setTimeout(() => {
-      triggerCloudSync();
-    }, 4000);
-
     const handleRefresh = () => fetchSummary();
     window.addEventListener('refresh_dashboard_summary', handleRefresh);
+
+    let timer: any = null;
+    if (isAuthenticated) {
+      timer = setTimeout(() => {
+        triggerCloudSync();
+      }, 4000);
+    }
 
     const handleHashChange = () => {
       const hash = window.location.hash;
@@ -145,11 +146,10 @@ export const App: React.FC = () => {
       }
     };
     window.addEventListener('hashchange', handleHashChange);
-    // Call once on mount to handle initial load with hash
     handleHashChange();
 
     return () => {
-      clearTimeout(timer);
+      if (timer) clearTimeout(timer);
       window.removeEventListener('refresh_dashboard_summary', handleRefresh);
       window.removeEventListener('hashchange', handleHashChange);
     };

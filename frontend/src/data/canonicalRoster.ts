@@ -2,12 +2,12 @@
 // CANONICAL_ROSTER data is lazily loaded on demand so initial JS bundle remains ultra-small.
 
 export const CANONICAL_SUMMARY: any = {
-  total_students: 297,
-  verified_profiles: 291,
-  pending_sync: 6,
+  total_students: 314,
+  verified_profiles: 285,
+  pending_sync: 21,
   failed_sync: 0,
-  total_problems_solved: 36590,
-  active_solvers: 291
+  total_problems_solved: 37500,
+  active_solvers: 285
 };
 
 export function getCachedStudents(): any[] {

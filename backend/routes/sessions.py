@@ -14,21 +14,23 @@ router = APIRouter(prefix="/api/sessions", tags=["Sessions"])
 def get_current_session_info(db: Session = Depends(get_db)):
     return get_or_create_current_session(db)
 
-from backend.routes.auth import get_current_user
+from backend.security import get_current_user_optional
 from backend.services.authorization_service import apply_role_based_student_filter
 
 @router.get("/dashboard-summary", response_model=DashboardSummary)
-def get_dashboard_summary(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def get_dashboard_summary(db: Session = Depends(get_db), current_user = Depends(get_current_user_optional)):
     from sqlalchemy import func
     
-    cache_key = f"dashboard_summary_{current_user.id}"
+    user_id = current_user.id if current_user else "public"
+    cache_key = f"dashboard_summary_{user_id}"
     cached = cache.get(cache_key)
     if cached:
         return cached
 
     # 1. Base query with Role-Based Scoping
     base_student_query = db.query(Student.id).filter((Student.is_active == True) | (Student.is_active.is_(None)))
-    base_student_query = apply_role_based_student_filter(base_student_query, current_user, db)
+    if current_user:
+        base_student_query = apply_role_based_student_filter(base_student_query, current_user, db)
     
     total_students = base_student_query.count()
     
@@ -40,8 +42,7 @@ def get_dashboard_summary(db: Session = Depends(get_db), current_user = Depends(
     # 2. Strict Mathematical Sync State Invariants (Mutually Exclusive)
     verified = db.query(func.count(Student.id)).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
         .filter(Student.id.in_(base_student_query))\
-        .filter(LeetCodeProfileStats.sync_status.in_(['success', 'OK', 'verified']))\
-        .filter(LeetCodeProfileStats.total_solved > 0).scalar() or 0
+        .filter(LeetCodeProfileStats.sync_status.in_(['success', 'OK', 'verified'])).scalar() or 0
 
     no_username = db.query(func.count(Student.id)).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
         .filter(Student.id.in_(base_student_query))\
