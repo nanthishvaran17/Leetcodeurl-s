@@ -54,6 +54,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
+import { triggerDownload } from '../utils/mobileDownload';
 
 export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void }> = ({ onNavigateTab }) => {
   const { notify } = useNotification();
@@ -385,14 +386,8 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       const res = await api.get(`/settings/forensic-pdf?search=${encodeURIComponent(studentQuery)}&session_id=${sessionId}`, {
         responseType: 'blob'
       });
-      const blobUrl = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.setAttribute('download', `NEC_Forensic_Contest_Audit_${forensicResult.student.reg_no}_Session_${sessionId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(blobUrl);
+      const filename = `NEC_Forensic_Contest_Audit_${forensicResult.student.reg_no}_Session_${sessionId}.pdf`;
+      await triggerDownload(res.data, filename, 'application/pdf');
       notify.success('Forensic PDF Downloaded', 'Official forensic contest verification report saved.', { category: 'FORENSIC AUDIT' });
     } catch (err: any) {
       console.error('PDF download error:', err);

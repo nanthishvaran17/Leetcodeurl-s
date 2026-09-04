@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { fetchCertificateFromFirestoreWeb } from '../services/firebaseSync';
+import { triggerDownload } from '../utils/mobileDownload';
 
 interface CertificateVerificationData {
   status: 'VERIFIED' | 'REVOKED' | 'NOT_VERIFIED';
@@ -180,20 +181,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
         }
       }
 
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.style.display = 'none';
-      link.href = blobUrl;
-      link.setAttribute('download', filename);
-      document.body.appendChild(link);
-      link.click();
-
-      setTimeout(() => {
-        if (document.body.contains(link)) {
-          document.body.removeChild(link);
-        }
-        window.URL.revokeObjectURL(blobUrl);
-      }, 3000);
+      await triggerDownload(blob, filename, 'application/pdf');
     } catch (err: any) {
       console.error("Certificate PDF Download error:", err);
       let errorMsg = "Unable to download certificate PDF. Please verify your connection or try again.";

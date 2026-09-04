@@ -15,6 +15,7 @@ import api, { triggerSingleStudentSync } from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { useGlobalData } from '../context/GlobalDataContext';
+import { triggerDownload } from '../utils/mobileDownload';
 import { 
   useSummaryQuery, 
   useDepartmentsQuery, 
@@ -179,14 +180,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       // Use the latest session ID from the dashboard summary, fall back to fetching latest session
       const sessionId = summary?.latest_session_id || summary?.current_session_id || 'latest';
       const res = await api.get(`/reports/${sessionId}/pdf`, { responseType: 'blob' });
-      const blobUrl = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.setAttribute('download', `NEC_Weekly_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(blobUrl);
+      const filename = `NEC_Weekly_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
+      await triggerDownload(res.data, filename, 'application/pdf');
       notify.success('Report Ready', 'Weekly Contest PDF report downloaded successfully.', { category: 'REPORTS' });
     } catch (err: any) {
       console.error("Report generation failed", err);
@@ -211,14 +206,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     try {
       const sessionId = summary?.latest_session_id || summary?.current_session_id || 'latest';
       const res = await api.get(`/reports/${sessionId}/excel`, { responseType: 'blob' });
-      const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.setAttribute('download', `NEC_Master_Report_${new Date().toISOString().slice(0, 10)}.xlsx`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(blobUrl);
+      const filename = `NEC_Master_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      await triggerDownload(res.data, filename);
       notify.success('Excel Export Complete', 'Weekly Contest workbook downloaded.', { category: 'REPORTS' });
     } catch (err: any) {
       console.error("Excel export failed", err);

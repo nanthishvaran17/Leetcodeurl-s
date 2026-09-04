@@ -13,6 +13,8 @@
  */
 
 import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
 /** Map of common file extensions → MIME types */
 const MIME_MAP: Record<string, string> = {
@@ -51,32 +53,26 @@ export const triggerDownload = async (
   // ── Capacitor Native (Android / iOS) ─────────────────────────────────────
   if (Capacitor.isNativePlatform()) {
     try {
-      const cap = (window as any).Capacitor;
-      const Filesystem = cap?.Plugins?.Filesystem;
-      const Share = cap?.Plugins?.Share;
+      const base64 = await blobToBase64(typedBlob);
+      const safeFilename = filename.replace(/[^a-zA-Z0-9._\-()]/g, '_');
 
-      if (Filesystem && Share) {
-        const base64 = await blobToBase64(typedBlob);
-        const safeFilename = filename.replace(/[^a-zA-Z0-9._\-()]/g, '_');
+      await Filesystem.writeFile({
+        path: safeFilename,
+        data: base64,
+        directory: Directory.Cache,
+      });
 
-        await Filesystem.writeFile({
-          path: safeFilename,
-          data: base64,
-          directory: 'CACHE',
-        });
+      const { uri } = await Filesystem.getUri({
+        directory: Directory.Cache,
+        path: safeFilename,
+      });
 
-        const { uri } = await Filesystem.getUri({
-          directory: 'CACHE',
-          path: safeFilename,
-        });
-
-        await Share.share({
-          title: filename,
-          url: uri,
-          dialogTitle: `Save ${filename}`,
-        });
-        return;
-      }
+      await Share.share({
+        title: filename,
+        url: uri,
+        dialogTitle: `Save ${filename}`,
+      });
+      return;
     } catch (err) {
       console.warn('[MobileDownload] Capacitor download failed, falling back to blob URL:', err);
       // Fall through to blob URL method

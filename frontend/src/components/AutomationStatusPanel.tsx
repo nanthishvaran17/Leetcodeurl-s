@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, ShieldCheck, Mail, Database, Clock, RefreshCw, Calendar, Cpu, Layers } from 'lucide-react';
 import api, { getDataFreshness } from '../services/api';
+import { triggerDownload } from '../utils/mobileDownload';
 
 interface AutomationStatusPanelProps {
   onTriggerSync?: () => void;
@@ -173,14 +174,8 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
           onClick={async () => {
             try {
               const res = await api.get('/reports/21/excel', { responseType: 'blob' });
-              const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
-              const link = document.createElement('a');
-              link.href = blobUrl;
-              link.setAttribute('download', `Nandha_LeetCode_College_Summary_${new Date().toISOString().slice(0, 10)}.xlsx`);
-              document.body.appendChild(link);
-              link.click();
-              link.remove();
-              window.URL.revokeObjectURL(blobUrl);
+              const filename = `Nandha_LeetCode_College_Summary_${new Date().toISOString().slice(0, 10)}.xlsx`;
+              await triggerDownload(res.data, filename);
             } catch (e) {
               console.error('Report export error:', e);
             }

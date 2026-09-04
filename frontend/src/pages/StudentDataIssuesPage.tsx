@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
+import { triggerDownload } from '../utils/mobileDownload';
 
 interface StudentIssue {
   id: number;
@@ -500,14 +501,8 @@ export const StudentDataIssuesPage: React.FC = () => {
       const blob = new Blob([response.data], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `Student_Data_Issues_${new Date().toISOString().slice(0, 10)}.xlsx`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => window.URL.revokeObjectURL(url), 2000);
+      const filename = `Student_Data_Issues_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      await triggerDownload(blob, filename);
       notify.success('Excel Downloaded', `Exported ${students.length} records to Excel.`, { category: 'EXPORT CENTER' });
     } catch (err) {
       notify.error('Export Error', 'Failed to stream Excel report.', { category: 'EXPORT CENTER' });
@@ -532,14 +527,8 @@ export const StudentDataIssuesPage: React.FC = () => {
       });
 
       const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `Student_Data_Issues_${new Date().toISOString().slice(0, 10)}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => window.URL.revokeObjectURL(url), 2000);
+      const filename = `Student_Data_Issues_${new Date().toISOString().slice(0, 10)}.csv`;
+      await triggerDownload(blob, filename, 'text/csv;charset=utf-8;');
       notify.success('CSV Downloaded', `Exported ${students.length} records to CSV.`, { category: 'EXPORT CENTER' });
     } catch (err) {
       notify.error('Export Error', 'Failed to stream CSV report.', { category: 'EXPORT CENTER' });

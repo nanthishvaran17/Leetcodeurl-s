@@ -11,6 +11,7 @@ import { SecurityActivitySection } from '../components/SecurityActivitySection';
 import { useNotification } from '../context/NotificationContext';
 import { StaffManagement } from '../components/admin/StaffManagement';
 import { AdminStaffAllocationPanel } from '../components/AdminStaffAllocationPanel';
+import { triggerDownload } from '../utils/mobileDownload';
 
 export const SettingsPage: React.FC = () => {
   const { notify, confirmAction } = useNotification();
@@ -383,22 +384,17 @@ export const SettingsPage: React.FC = () => {
     ]);
     const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `admin_audit_logs_${new Date().toISOString().substring(0, 10)}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+    const filename = `admin_audit_logs_${new Date().toISOString().substring(0, 10)}.csv`;
+    triggerDownload(blob, filename, 'text/csv;charset=utf-8;');
     notify.success('CSV Exported', 'Audit logs exported to CSV file.', { category: 'AUDIT LOGS' });
   };
 
   // Export Settings Config JSON
   const handleExportConfigJson = () => {
-    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(settings, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `system_config_${new Date().toISOString().substring(0, 10)}.json`);
-    downloadAnchor.click();
+    const jsonStr = JSON.stringify(settings, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const filename = `system_config_${new Date().toISOString().substring(0, 10)}.json`;
+    triggerDownload(blob, filename, 'application/json');
     notify.success('Config Exported', 'System configuration saved as JSON.', { category: 'ADMIN SETTINGS' });
   };
 

@@ -13,6 +13,7 @@ interface StudentProfilePageProps {
 }
 
 import { useNotification } from '../context/NotificationContext';
+import { triggerDownload } from '../utils/mobileDownload';
 
 export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student, onBack }) => {
   const { notify } = useNotification();
@@ -80,16 +81,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           filename = matches[1].replace(/['"]/g, '').trim();
         }
       }
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => {
-        window.URL.revokeObjectURL(blobUrl);
-      }, 2000);
+      await triggerDownload(blob, filename, 'application/pdf');
       notify.success('Certificate Downloaded', `Certificate ${filename} generated.`, { category: 'CERTIFICATE ENGINE' });
     } catch (err: any) {
       console.error("Certificate error:", err);
@@ -129,16 +121,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           filename = matches[1].replace(/['"]/g, '').trim();
         }
       }
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => {
-        window.URL.revokeObjectURL(blobUrl);
-      }, 2000);
+      await triggerDownload(blob, filename, 'application/pdf');
       notify.success('Forensic Report Downloaded', `Audit report ${filename} saved.`, { category: 'FORENSIC AUDIT' });
     } catch (err: any) {
       console.error("Forensic report error:", err);

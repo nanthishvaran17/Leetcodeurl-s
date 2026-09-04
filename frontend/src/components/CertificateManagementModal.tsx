@@ -39,6 +39,7 @@ import { GlobalModalBackdrop } from './GlobalModalBackdrop';
 import api from '../services/api';
 import { syncCertificateToFirestoreWeb } from '../services/firebaseSync';
 import { useNotification } from '../context/NotificationContext';
+import { triggerDownload } from '../utils/mobileDownload';
 
 interface CertificateRecord {
   id: number;
@@ -348,14 +349,7 @@ export const CertificateManagementModal: React.FC<{
         }
       }
 
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 2000);
+      await triggerDownload(blob, filename, 'application/pdf');
       notify.success('PDF Downloaded', `Official Credential ${filename} saved.`, { category: 'CREDENTIAL SYSTEM' });
     } catch (err: any) {
       console.error("Download error:", err);
@@ -385,14 +379,7 @@ export const CertificateManagementModal: React.FC<{
         }
       }
 
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 2000);
+      await triggerDownload(blob, filename, 'application/pdf');
       notify.success('Audit Report Saved', `Forensic Audit Report ${filename} saved.`, { category: 'FORENSIC AUDIT' });
     } catch (err: any) {
       console.error("Forensic Download error:", err);

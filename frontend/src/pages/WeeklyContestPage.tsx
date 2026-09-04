@@ -13,6 +13,7 @@ import { StudentEditOverlay } from '../components/StudentEditOverlay';
 import { PreviousWeekContestPanel } from '../components/PreviousWeekContestPanel';
 import { useAuth } from '../context/AuthContext';
 import { useContestWebSocket, ContestWSEvent } from '../hooks/useContestWebSocket';
+import { triggerDownload } from '../utils/mobileDownload';
 
 // Animated Count-Up component for headline stat numbers
 const AnimatedNumber: React.FC<{ value: number; suffix?: string; duration?: number }> = ({ value, suffix = '', duration = 600 }) => {
@@ -925,7 +926,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     let filename = `NEC_Weekly_Contest_${contestNum}_PUBLIC`;
     filename += `.${ext}`;
 
-    api.get(url, { responseType: 'blob' }).then(res => {
+    api.get(url, { responseType: 'blob' }).then(async res => {
       // Parse disposition filename if available
       const disposition = res.headers['content-disposition'];
       let serverFilename = filename;
@@ -934,13 +935,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         if (match && match[1]) serverFilename = match[1];
       }
 
-      const blobUrl = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.setAttribute('download', serverFilename);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      await triggerDownload(res.data, serverFilename);
     }).catch(async (err) => {
       console.error('Download failed:', err);
       let errMsg = 'Failed to generate Excel report. Please verify that students match the active filters.';

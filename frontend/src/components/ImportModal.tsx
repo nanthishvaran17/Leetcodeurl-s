@@ -4,6 +4,7 @@ import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import { useGlobalData } from '../context/GlobalDataContext';
+import { triggerDownload } from '../utils/mobileDownload';
 
 interface ImportModalProps {
   isOpen: boolean;
@@ -173,14 +174,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
       const response = await api.get('/students/sample-excel', {
         responseType: 'blob'
       });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', 'Student_Import_Sample.xlsx');
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      await triggerDownload(new Blob([response.data]), 'Student_Import_Sample.xlsx');
       notify.success('Sample Template Saved', 'Student_Import_Sample.xlsx downloaded.', { category: 'EXCEL IMPORT' });
     } catch (err: any) {
       notify.error('Download Error', 'Unable to download sample Excel template.', { category: 'EXCEL IMPORT' });
