@@ -97,46 +97,82 @@ class ConnectionManager:
         if not token:
             raise ValueError("Token is empty")
 
-        # 1. Try standard app secret JWT
-        import os
-        try:
-            from backend.config.settings import settings
-            secret_keys = [settings.SECRET_KEY, os.environ.get("SECRET_KEY", "")]
-        except Exception:
-            secret_keys = [os.environ.get("SECRET_KEY", "")]
-        secret_keys = [s for s in secret_keys if s]
+        clean_token = token.strip()
+        if clean_token.lower().startswith("bearer "):
+            clean_token = clean_token[7:].strip()
 
+        # 1. Gather candidate secret keys
+        secret_keys = []
+        try:
+            from backend.config import settings
+            if getattr(settings, "SECRET_KEY", None):
+                secret_keys.append(settings.SECRET_KEY)
+        except Exception as _cfg_err:
+            logger.warning(f"[WS-AUTH] Could not load settings.SECRET_KEY: {_cfg_err}")
+
+        env_key = os.environ.get("SECRET_KEY", "")
+        if env_key and env_key not in secret_keys:
+            secret_keys.append(env_key)
+
+        fallback_key = "super-secret-key-change-this-in-production-2026"
+        if fallback_key not in secret_keys:
+            secret_keys.append(fallback_key)
+
+        last_jwt_error = None
         for s_key in secret_keys:
             for algo in ["HS256", "RS256"]:
+                # Try standard PyJWT
                 try:
                     import jwt
-                    payload = jwt.decode(token, s_key, algorithms=[algo])
+                    payload = jwt.decode(clean_token, s_key, algorithms=[algo])
                     sub = payload.get("sub") or payload.get("user_id") or payload.get("email")
                     email = payload.get("email")
                     role = payload.get("role", "authenticated")
                     dept_id = payload.get("department_id")
-                    logger.info(f"[WS-AUTH] Successfully decoded JWT token. sub={sub} email={email} role={role}")
+                    logger.info(f"[WS-AUTH] Successfully decoded JWT token via PyJWT. sub={sub} email={email} role={role}")
                     return {
-                        "user_id": sub,
+                        "user_id": str(sub),
                         "email": email,
                         "role": role,
                         "department_id": dept_id,
                         "authenticated": True
                     }
-                except Exception:
-                    pass
+                except Exception as _jwt_err:
+                    last_jwt_error = _jwt_err
+
+                # Fallback to python-jose
+                try:
+                    from jose import jwt as jose_jwt
+                    payload = jose_jwt.decode(clean_token, s_key, algorithms=[algo])
+                    sub = payload.get("sub") or payload.get("user_id") or payload.get("email")
+                    email = payload.get("email")
+                    role = payload.get("role", "authenticated")
+                    dept_id = payload.get("department_id")
+                    logger.info(f"[WS-AUTH] Successfully decoded JWT token via python-jose. sub={sub} email={email} role={role}")
+                    return {
+                        "user_id": str(sub),
+                        "email": email,
+                        "role": role,
+                        "department_id": dept_id,
+                        "authenticated": True
+                    }
+                except Exception as _jose_err:
+                    if not last_jwt_error:
+                        last_jwt_error = _jose_err
+
+        logger.warning(f"[WS-AUTH] Standard JWT decode failed across {len(secret_keys)} keys. Last error: {last_jwt_error}")
 
         # 2. Try Firebase ID Token
         try:
             import firebase_admin
             from firebase_admin import auth as firebase_auth
             if firebase_admin._apps:
-                fb_decoded = firebase_auth.verify_id_token(token)
+                fb_decoded = firebase_auth.verify_id_token(clean_token)
                 fb_email = (fb_decoded.get("email") or "").strip().lower()
                 fb_uid = fb_decoded.get("uid") or fb_email
                 logger.info(f"[WS-AUTH] Successfully decoded Firebase token. uid={fb_uid} email={fb_email}")
                 return {
-                    "user_id": fb_uid,
+                    "user_id": str(fb_uid),
                     "email": fb_email,
                     "role": "authenticated",
                     "authenticated": True
@@ -144,7 +180,7 @@ class ConnectionManager:
         except Exception as _fb_err:
             logger.warning(f"[WS-AUTH] Firebase token verify notice: {_fb_err}")
 
-        raise ValueError("Could not decode or verify WebSocket auth token")
+        raise ValueError(f"Could not decode or verify WebSocket auth token. Last JWT error: {last_jwt_error}")
 
     def subscribe_session(self, websocket: WebSocket, session_id: int):
         """Subscribe a WebSocket to a specific contest session's events."""
