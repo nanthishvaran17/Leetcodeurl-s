@@ -322,15 +322,8 @@ if getattr(settings, "CORS_ALLOWED_ORIGINS", None):
         o_clean = o.strip()
         if o_clean and o_clean not in origins:
             origins.append(o_clean)
-# Render.com (via Cloudflare) automatically applies GZip/Brotli compression at the proxy edge.
-# We do not want to burn FastAPI CPU cycles double-compressing or interfering with the proxy.
-if not os.getenv('RENDER'):
-    app.add_middleware(GZipMiddleware, minimum_size=1000)
-    try:
-        from brotli_asgi import BrotliMiddleware
-        app.add_middleware(BrotliMiddleware, minimum_size=1000)
-    except ImportError:
-        pass
+# Enable fast, lightweight GZip compression on responses > 500 bytes across all environments
+app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
 
 app.add_middleware(
     CORSMiddleware,
@@ -341,6 +334,76 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["Content-Disposition", "Content-Length", "Content-Type"],
 )
+
+# =====================================================================
+# ULTRA-FAST SUB-MILLISECOND IN-MEMORY API RESPONSE CACHE
+# =====================================================================
+_API_MEMORY_CACHE: dict = {}
+_CACHE_TTL_MAP: dict = {
+    "/api/public/stats": 120,
+    "/api/sessions/dashboard-summary": 60,
+    "/api/analytics/department-comparison": 120,
+    "/api/analytics/data-quality": 120,
+    "/api/students/leaderboard-fast": 60,
+    "/api/weekly-contests/active-contest": 30,
+}
+
+def purge_api_memory_cache():
+    """Purges in-memory API response cache on data mutation (POST/PUT/DELETE)."""
+    _API_MEMORY_CACHE.clear()
+
+@app.middleware("http")
+async def ultra_fast_memory_cache_middleware(request, call_next):
+    method = request.method
+    path = request.url.path
+
+    # Invalidate cache on mutations
+    if method in ("POST", "PUT", "DELETE", "PATCH"):
+        purge_api_memory_cache()
+        return await call_next(request)
+
+    # Serve cached responses in < 1ms for high-frequency GET queries
+    if method == "GET" and path in _CACHE_TTL_MAP:
+        import time
+        now = time.time()
+        cached_item = _API_MEMORY_CACHE.get(path)
+        if cached_item and now < cached_item["expires_at"]:
+            from fastapi.responses import Response as FastResponse
+            return FastResponse(
+                content=cached_item["body"],
+                status_code=cached_item["status"],
+                headers={
+                    "Content-Type": cached_item["content_type"],
+                    "X-Cache": "HIT-FASTAPI-RAM",
+                    "Cache-Control": f"public, max-age={_CACHE_TTL_MAP[path]}"
+                }
+            )
+
+    response = await call_next(request)
+
+    # Store in memory cache if matching fast endpoints
+    if method == "GET" and path in _CACHE_TTL_MAP and response.status_code == 200:
+        import time
+        try:
+            body = [chunk async for chunk in response.body_iterator]
+            full_body = b"".join(body)
+            content_type = response.headers.get("content-type", "application/json")
+            _API_MEMORY_CACHE[path] = {
+                "body": full_body,
+                "status": response.status_code,
+                "content_type": content_type,
+                "expires_at": time.time() + _CACHE_TTL_MAP[path]
+            }
+            from fastapi.responses import Response as FastResponse
+            return FastResponse(
+                content=full_body,
+                status_code=response.status_code,
+                headers=dict(response.headers)
+            )
+        except Exception:
+            pass
+
+    return response
 
 @app.middleware("http")
 async def add_performance_cache_headers(request, call_next):
