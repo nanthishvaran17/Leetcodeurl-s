@@ -214,7 +214,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
       if (!formData.phone_number.trim()) errors.phone_number = 'Phone number is required';
       if (formData.date_of_birth && !isValidDate(formData.date_of_birth)) errors.date_of_birth = 'Invalid calendar date (DD/MM/YYYY)';
     } else if (step === 5) {
-      if (!formData.consent_checked) errors.consent = 'You must accept compliance & authorization terms';
+      if (!formData.consent_checked) errors.consent = 'Please acknowledge the Institutional Compliance & Authorization statement.';
     }
 
     setFormErrors(errors);
@@ -254,7 +254,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
     }
     if (!allReqsMet) errors.password = 'Password does not meet requirements';
     if (formData.password && !passwordsMatch) errors.confirm_password = 'Passwords do not match';
-    if (!formData.consent_checked) errors.consent = 'Authorization consent required';
+    if (!formData.consent_checked) errors.consent = 'Please acknowledge the Institutional Compliance & Authorization statement.';
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
@@ -976,12 +976,12 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
                       {/* Options Checkboxes */}
                       <div className="space-y-3">
-                        <label className="flex items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800">
+                        <label className="flex items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-navy-850 transition-colors min-h-[48px]">
                           <input
                             type="checkbox"
                             checked={formData.send_email}
                             onChange={e => setFormData({...formData, send_email: e.target.checked})}
-                            className="w-4 h-4 text-brand-600 rounded"
+                            className="w-5 h-5 min-w-[20px] min-h-[20px] accent-brand-600 rounded cursor-pointer shrink-0"
                           />
                           <div>
                             <span className="text-xs font-bold text-slate-900 dark:text-white block">Send Welcome Credentials Email</span>
@@ -989,21 +989,59 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                           </div>
                         </label>
 
-                        <label className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800">
+                        <label className={`flex items-start gap-3 p-4 rounded-2xl border transition-all cursor-pointer min-h-[56px] ${
+                          formErrors.consent 
+                            ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-300 dark:border-rose-800/60 ring-2 ring-rose-500/20'
+                            : formData.consent_checked
+                            ? 'bg-brand-50/40 dark:bg-brand-950/20 border-brand-200 dark:border-brand-800/60'
+                            : 'bg-slate-50 dark:bg-navy-950 border-slate-200 dark:border-navy-800'
+                        }`}>
                           <input
                             type="checkbox"
                             checked={formData.consent_checked}
-                            onChange={e => setFormData({...formData, consent_checked: e.target.checked})}
-                            className="w-4 h-4 text-brand-600 rounded mt-0.5"
+                            onChange={e => {
+                              setFormData({...formData, consent_checked: e.target.checked});
+                              if (formErrors.consent) setFormErrors({...formErrors, consent: ''});
+                            }}
+                            className="w-5 h-5 min-w-[20px] min-h-[20px] accent-brand-600 rounded mt-0.5 cursor-pointer shrink-0"
                           />
-                          <div>
-                            <span className="text-xs font-bold text-slate-900 dark:text-white block">Institutional Compliance & Authorization Acknowledgment *</span>
-                            <span className="text-[10px] text-slate-500 leading-relaxed block mt-1">
+                          <div className="flex-1 min-w-0">
+                            <span className="text-xs font-extrabold text-slate-900 dark:text-white block">
+                              Institutional Compliance & Authorization Acknowledgment *
+                            </span>
+                            <span className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed block mt-1">
                               I verify that this staff member is authorized to access student academic records for Nandha Engineering College and agree to strictly enforce institutional data privacy regulations.
                             </span>
-                            {formErrors.consent && <p className="text-[10px] text-rose-500 font-bold mt-1">{formErrors.consent}</p>}
+                            {formErrors.consent && (
+                              <p className="text-xs text-rose-600 dark:text-rose-400 font-bold mt-2 flex items-center gap-1.5 animate-shake">
+                                <AlertCircle size={14} className="shrink-0 text-rose-500" />
+                                <span>{formErrors.consent}</span>
+                              </p>
+                            )}
                           </div>
                         </label>
+
+                        {/* Inline Content Body Primary Action Button */}
+                        <div className="pt-2">
+                          <button
+                            form="create-staff-form"
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="w-full py-3.5 px-6 rounded-2xl text-xs sm:text-sm font-black text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 transition-all shadow-lg shadow-brand-500/25 flex items-center justify-center gap-2 cursor-pointer active:scale-98 min-h-[48px]"
+                          >
+                            {isSubmitting ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Creating Account...
+                              </>
+                            ) : (
+                              <>
+                                <ShieldCheck className="w-4 h-4" />
+                                Create Institutional Account
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
 
                     </div>
@@ -1017,68 +1055,70 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
         {/* FOOTER ACTIONS */}
         {!createdStaffSummary && (
-          <div className="px-6 py-4 bg-slate-50/90 dark:bg-navy-950/80 border-t border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0 z-20">
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-mono font-bold text-slate-500 dark:text-slate-400">
+          <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-slate-50/95 dark:bg-navy-950/95 border-t border-slate-200 dark:border-navy-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 z-20 pb-[calc(0.85rem+env(safe-area-inset-bottom,0px))]">
+            <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
+              <span className="text-xs font-mono font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
                 Step {activeStep} of 5
               </span>
-              <div className="w-24 sm:w-36 h-2 rounded-full bg-slate-200 dark:bg-navy-800 overflow-hidden">
+              <div className="flex-1 sm:w-36 h-2 rounded-full bg-slate-200 dark:bg-navy-800 overflow-hidden">
                 <div className="h-full bg-brand-600 transition-all duration-300" style={{ width: `${progressPercent}%` }} />
               </div>
-              <span className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400">
+              <span className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400 whitespace-nowrap">
                 {progressPercent}%
               </span>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={onClose}
                 disabled={isSubmitting}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-navy-800 transition-all cursor-pointer"
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-navy-800 transition-all cursor-pointer min-h-[44px] flex items-center justify-center"
               >
                 Cancel
               </button>
 
-              {activeStep > 1 && (
-                <button
-                  type="button"
-                  onClick={handlePrevStep}
-                  disabled={isSubmitting}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-navy-800 border border-slate-200 dark:border-navy-700 hover:bg-slate-50 transition-all flex items-center gap-1 cursor-pointer"
-                >
-                  <ChevronLeft className="w-4 h-4" /> Back
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {activeStep > 1 && (
+                  <button
+                    type="button"
+                    onClick={handlePrevStep}
+                    disabled={isSubmitting}
+                    className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-navy-800 border border-slate-200 dark:border-navy-700 hover:bg-slate-50 transition-all flex items-center gap-1 cursor-pointer min-h-[44px]"
+                  >
+                    <ChevronLeft className="w-4 h-4" /> Back
+                  </button>
+                )}
 
-              {activeStep < 5 ? (
-                <button
-                  type="button"
-                  onClick={handleNextStep}
-                  className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 transition-all shadow-md shadow-brand-500/20 flex items-center gap-1.5 cursor-pointer"
-                >
-                  Continue <ChevronRight className="w-4 h-4" />
-                </button>
-              ) : (
-                <button
-                  form="create-staff-form"
-                  type="submit"
-                  disabled={isSubmitting || !formData.consent_checked}
-                  className="px-6 py-2.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 transition-all shadow-lg shadow-brand-500/25 flex items-center gap-2 disabled:opacity-50"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Creating Account...
-                    </>
-                  ) : (
-                    <>
-                      <ShieldCheck className="w-4 h-4" />
-                      Create Institutional Account
-                    </>
-                  )}
-                </button>
-              )}
+                {activeStep < 5 ? (
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 transition-all shadow-md shadow-brand-500/20 flex items-center gap-1.5 cursor-pointer min-h-[44px]"
+                  >
+                    Continue <ChevronRight className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    form="create-staff-form"
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-5 py-2.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 transition-all shadow-lg shadow-brand-500/25 flex items-center gap-2 cursor-pointer min-h-[44px]"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <ShieldCheck className="w-4 h-4" />
+                        Create Account
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
