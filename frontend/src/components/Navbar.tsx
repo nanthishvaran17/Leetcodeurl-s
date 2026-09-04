@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { Sun, Moon, User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, Zap, AlertOctagon, Bell, Palette, Check } from 'lucide-react';
+import { Sun, Moon, User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, Zap, AlertOctagon, Bell, Palette, Check, RefreshCw } from 'lucide-react';
 import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
 import { SyncStatusModal } from './SyncStatusModal';
@@ -124,6 +124,20 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
               
               <LiveIndicator />
+
+              {/* Update App Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  sessionStorage.clear();
+                  window.location.href = window.location.pathname + '?v=' + Date.now();
+                }}
+                className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-brand-400 text-xs font-bold transition-all border border-brand-500/20 cursor-pointer active:scale-95"
+                title="Check & Refresh to Latest App Build"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-brand-500" />
+                <span className="hidden sm:inline">Update App</span>
+              </button>
 
               {/* Sync Status Button */}
               <button
