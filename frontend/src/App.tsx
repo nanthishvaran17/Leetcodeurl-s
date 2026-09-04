@@ -16,6 +16,7 @@ import { useGlobalKeyboardShortcuts } from './hooks/useGlobalKeyboardShortcuts';
 import { useCapacitorPush } from './hooks/useCapacitorPush';
 import { initPushNotifications } from './services/pushNotifications';
 import { InstallAppPrompt } from './components/InstallAppPrompt';
+import { AppUpdateNotifier } from './components/AppUpdateNotifier';
 // Safe lazy import wrapper with automatic chunk reload on Vercel deployment update
 function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ default: T }>) {
   return lazy(() =>
@@ -697,6 +698,9 @@ export const App: React.FC = () => {
 
       {/* PWA App Install Banner */}
       <InstallAppPrompt />
+
+      {/* App Update Notification Banner for Active Users */}
+      <AppUpdateNotifier />
 
     </div>
   );

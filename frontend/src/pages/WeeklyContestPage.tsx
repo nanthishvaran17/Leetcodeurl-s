@@ -1218,16 +1218,14 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     return Math.max(1, Math.ceil(totalRows / (previewPageSize || 50)));
   }, [totalRows, previewPageSize]);
 
-  if (loading) {
-    const loadingSession = sessionsList.find(s => s.sessionId === selectedSessionId);
-    const loadingName = loadingSession?.contestName || 'Institutional Weekly Contest Engine';
-    return (
-      <div className="p-12 flex flex-col items-center justify-center space-y-4">
-        <RefreshCw className="w-8 h-8 animate-spin text-brand-500" />
-        <p className="font-bold text-slate-700 dark:text-slate-300">Loading {loadingName}...</p>
-      </div>
-    );
-  }
+  // Stable memoized callback so ContestMatrixRow's memo comparator can skip re-renders
+  const handleRowCheckbox = useCallback((regNo: string, checked: boolean) => {
+    setSelectedRowIds(prev => {
+      const s = new Set(prev);
+      checked ? s.add(regNo) : s.delete(regNo);
+      return s;
+    });
+  }, []);
 
   const displaySessions = sessionsList;
   const activeSessionObj = displaySessions.find(s => Number(s.sessionId) === Number(selectedSessionId)) || currentSession;
@@ -1269,14 +1267,16 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const isScheduled = activeSessionObj?.status === 'SCHEDULED';
   const isFinalizing = activeSessionObj?.status === 'FINALIZING';
 
-  // Stable memoized callback so ContestMatrixRow's memo comparator can skip re-renders
-  const handleRowCheckbox = useCallback((regNo: string, checked: boolean) => {
-    setSelectedRowIds(prev => {
-      const s = new Set(prev);
-      checked ? s.add(regNo) : s.delete(regNo);
-      return s;
-    });
-  }, []);
+  if (loading) {
+    const loadingSession = sessionsList.find(s => s.sessionId === selectedSessionId);
+    const loadingName = loadingSession?.contestName || 'Institutional Weekly Contest Engine';
+    return (
+      <div className="p-12 flex flex-col items-center justify-center space-y-4">
+        <RefreshCw className="w-8 h-8 animate-spin text-brand-500" />
+        <p className="font-bold text-slate-700 dark:text-slate-300">Loading {loadingName}...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5 sm:space-y-6 pt-1 sm:pt-0 animate-fade-in pb-12">
