@@ -403,7 +403,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   ];
 
   return (
-    <div className="space-y-8 py-6">
+    <div className="space-y-6 sm:space-y-8 pt-1 sm:pt-6 pb-6">
 
       {/* Hero Section */}
       <motion.div

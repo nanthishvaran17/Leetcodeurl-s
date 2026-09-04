@@ -1074,7 +1074,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const isFinalizing = activeSessionObj?.status === 'FINALIZING';
 
   return (
-    <div className="space-y-6 animate-fade-in pb-12">
+    <div className="space-y-5 sm:space-y-6 pt-1 sm:pt-0 animate-fade-in pb-12">
 
       {/* ── 1. SLEEK INSTITUTIONAL HERO HEADER ── */}
       <div className={`relative overflow-hidden rounded-3xl text-white p-6 sm:p-8 shadow-2xl border transition-all duration-500 ${isLive

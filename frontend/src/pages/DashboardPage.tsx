@@ -265,7 +265,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const isWorkerRunning = summary?.sync?.is_running ?? false;
 
   return (
-    <div className="space-y-6 py-2 animate-page-enter w-full">
+    <div className="space-y-5 sm:space-y-6 pt-1 sm:pt-2 pb-2 animate-page-enter w-full">
       
       {/* 1. INSTITUTIONAL PERFORMANCE OVERVIEW */}
       <div className="stagger-1 relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-lg border border-brand-500/30">
