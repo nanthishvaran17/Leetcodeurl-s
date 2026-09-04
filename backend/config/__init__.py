@@ -58,6 +58,9 @@ class Settings(BaseSettings):
     SMTP_USERNAME: str = os.environ.get("SMTP_USERNAME", "nanthishvaran17@gmail.com")
     SMTP_PASSWORD: str = os.environ.get("SMTP_PASSWORD", "oscublnwtvuwuwlx")  # App Password (spaces removed)
     BREVO_API_KEY: str = os.environ.get("BREVO_API_KEY", "").strip() or (lambda: __import__("json").loads(__import__("base64").b64decode("eyJhcGlfa2V5IjoieGtleXNpYi0wYmM2MTkwNzM0M2Y3MDA5NjVkNDRmMjljODE4ZDdhMDliYjU4YjM2ODU1Yjg5MWEwMTBlM2VmYWZiMDE5NDZlLXA1Nk1kSHA5T0VwM0E3NFQifQ==").decode()).get("api_key", ""))()
+    BREVO_API_KEY_2: str = os.environ.get("BREVO_API_KEY_2", "").strip()
+    BREVO_API_KEY_3: str = os.environ.get("BREVO_API_KEY_3", "").strip()
+    BREVO_API_KEY_4: str = os.environ.get("BREVO_API_KEY_4", "").strip()
     BREVO_SENDER_EMAIL: str = os.environ.get("BREVO_SENDER_EMAIL", "nanthishvaran0106@gmail.com").strip()
     RESEND_API_KEY: str = os.environ.get("RESEND_API_KEY", "").strip()
 

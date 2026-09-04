@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect, useMemo } from 'react';
+
 
 export type NotificationType = 'success' | 'error' | 'warning' | 'info' | 'ai' | 'loading';
 
@@ -162,7 +163,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     };
   }, [addToast]);
 
-  const notify = {
+  // Memoize notify object — its callbacks are already useCallback-stable,
+  // so this object only changes if one of the callbacks changes (rarely/never).
+  const notify = useMemo(() => ({
     success: (title: string, description?: string, options?: Omit<ToastOptions, 'title' | 'description'>) =>
       addToast('success', title, description, options),
     error: (title: string, description?: string, options?: Omit<ToastOptions, 'title' | 'description'>) =>
@@ -177,18 +180,18 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       addToast('loading', title, description, options),
     dismiss: dismissToast,
     update: updateToast,
-  };
+  }), [addToast, dismissToast, updateToast]);
+
+  const ctxValue = useMemo(() => ({
+    toasts,
+    notify,
+    confirmAction,
+    confirmDialogState,
+    dismissConfirm,
+  }), [toasts, notify, confirmAction, confirmDialogState, dismissConfirm]);
 
   return (
-    <NotificationContext.Provider
-      value={{
-        toasts,
-        notify,
-        confirmAction,
-        confirmDialogState,
-        dismissConfirm,
-      }}
-    >
+    <NotificationContext.Provider value={ctxValue}>
       {children}
     </NotificationContext.Provider>
   );

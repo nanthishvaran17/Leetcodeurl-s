@@ -89,16 +89,45 @@ class ContestProblemAccuracyEngine:
 
     @classmethod
     def get_contest_number_from_name_or_id(cls, contest_identifier: Any) -> Optional[int]:
-        """Extracts integer contest number from text, id, or object."""
-        if not contest_identifier:
+        """Extracts integer contest number from text, id, or WeeklySession model object."""
+        if contest_identifier is None:
             return None
-        text = str(contest_identifier)
-        m = re.search(r'(?:weekly[- ]contest[- ]?|contest[- ]?)(\d+)', text, re.IGNORECASE)
+
+        # 1. If object has contest_name / contest_id attributes
+        if hasattr(contest_identifier, "contest_name") and getattr(contest_identifier, "contest_name"):
+            res = cls.get_contest_number_from_name_or_id(getattr(contest_identifier, "contest_name"))
+            if res:
+                return res
+        if hasattr(contest_identifier, "contest_id") and getattr(contest_identifier, "contest_id"):
+            res = cls.get_contest_number_from_name_or_id(getattr(contest_identifier, "contest_id"))
+            if res:
+                return res
+
+        # 2. If dictionary
+        if isinstance(contest_identifier, dict):
+            for k in ("contest_number", "contest_name", "contest_id", "name", "title"):
+                if contest_identifier.get(k):
+                    res = cls.get_contest_number_from_name_or_id(contest_identifier[k])
+                    if res:
+                        return res
+
+        # 3. If integer
+        if isinstance(contest_identifier, int):
+            return contest_identifier
+
+        # 4. If string
+        text = str(contest_identifier).strip()
+        m = re.search(r'(?:weekly[- _]contest[- _]?|biweekly[- _]contest[- _]?|contest[- _]?)(\d+)', text, re.IGNORECASE)
         if m:
             return int(m.group(1))
-        m_num = re.search(r'\b(\d{1,4})\b', text)
+
+        if text.isdigit():
+            return int(text)
+
+        m_num = re.search(r'\b(\d{3,4})\b', text)
         if m_num:
             return int(m_num.group(1))
+
         return None
 
     @classmethod

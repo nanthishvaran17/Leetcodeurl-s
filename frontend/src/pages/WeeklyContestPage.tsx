@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react';
 import {
   Trophy, Calendar, RefreshCw, AlertTriangle, Download, FileSpreadsheet,
   FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Zap, Filter, Trash2, Mail, Send, Sparkles, X, Edit3, UserCheck, UserX, Eye, Users, TrendingUp, Award, ChevronDown, ChevronUp,
@@ -89,6 +89,208 @@ const Sparkline: React.FC<{ data: number[]; color?: string }> = ({ data, color =
     </svg>
   );
 };
+
+// ── Isolated Live Countdown Clock (renders every 1s WITHOUT re-rendering the whole page) ──
+const LiveCountdownClock = memo(({ endSec, label, className }: { endSec: number; label: string; className?: string }) => {
+  const [sec, setSec] = useState(endSec);
+  useEffect(() => { setSec(endSec); }, [endSec]);
+  useEffect(() => {
+    const t = setInterval(() => setSec(s => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  const fmt = (n: number) => String(n).padStart(2, '0');
+  return <span className={className}>{fmt(h)}:{fmt(m)}:{fmt(s)}</span>;
+});
+
+// ── Isolated Next-Update Ticker (ticks down without page re-render) ──
+const NextUpdateTicker = memo(({ initialSec }: { initialSec: number }) => {
+  const [sec, setSec] = useState(initialSec);
+  useEffect(() => { setSec(initialSec); }, [initialSec]);
+  useEffect(() => {
+    const t = setInterval(() => setSec(s => (s <= 1 ? 20 : s - 1)), 1000);
+    return () => clearInterval(t);
+  }, []);
+  return <span>{sec}s</span>;
+});
+
+// ── Isolated Countdown Segments (Days/Hours/Mins/Secs before contest starts) ──
+const ContestCountdown = memo(({ initialSec }: { initialSec: number }) => {
+  const [sec, setSec] = useState(initialSec);
+  useEffect(() => { setSec(initialSec); }, [initialSec]);
+  useEffect(() => {
+    const t = setInterval(() => setSec(s => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const days = String(Math.floor(sec / 86400)).padStart(2, '0');
+  const hours = String(Math.floor((sec % 86400) / 3600)).padStart(2, '0');
+  const minutes = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+  const seconds = String(sec % 60).padStart(2, '0');
+  return (
+    <div className="flex items-center gap-2 sm:gap-3">
+      <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
+        <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{days}</span>
+        <span className="text-[9px] uppercase font-bold text-gray-400 block">Days</span>
+      </div>
+      <span className="text-2xl font-mono font-black text-amber-500">:</span>
+      <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
+        <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{hours}</span>
+        <span className="text-[9px] uppercase font-bold text-gray-400 block">Hours</span>
+      </div>
+      <span className="text-2xl font-mono font-black text-amber-500">:</span>
+      <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
+        <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{minutes}</span>
+        <span className="text-[9px] uppercase font-bold text-gray-400 block">Minutes</span>
+      </div>
+      <span className="text-2xl font-mono font-black text-amber-500">:</span>
+      <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
+        <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{seconds}</span>
+        <span className="text-[9px] uppercase font-bold text-gray-400 block">Seconds</span>
+      </div>
+    </div>
+  );
+});
+
+// ── Memoized Contest Matrix Row (only re-renders when THIS student's data changes) ──
+interface RowProps {
+  r: any;
+  actualIdx: number;
+  isSelected: boolean;
+  onEdit: (r: any) => void;
+  onDelete: (r: any) => void;
+  onSelect: (r: any) => void;
+  onCheckbox: (regNo: string, checked: boolean) => void;
+}
+const ContestMatrixRow = memo(({ r, actualIdx, isSelected, onEdit, onDelete, onSelect, onCheckbox }: RowProps) => {
+  const isPublicAttended = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'ATTENDED' || r.status === 'PUBLIC' || r.participation_status === 'PUBLIC';
+  const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL';
+  const isAttended = isPublicAttended || isVirtualAttended;
+  const isNotAttended = r.participation_status === 'PUBLIC_NOT_ATTENDED' || r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT_ATTENDED' || r.status === 'NOT ATTENDED';
+  const isNotVerified = r.participation_status === 'NOT_VERIFIED' || r.status === 'NOT_VERIFIED' || r.participation_status === 'PENDING';
+  const isNotVerifiedFinal = r.participation_status === 'NOT_VERIFIED_FINAL' || r.status === 'NOT_VERIFIED_FINAL';
+  const isError = r.participation_status === 'DATA_ERROR' || r.participation_status === 'SOURCE_ERROR' || r.participation_status === 'CONFLICT' || r.status === 'USERNAME_NOT_FOUND' || r.status === 'FETCH_ERROR';
+
+  const statusBadge = isPublicAttended
+    ? { cls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 ring-1 ring-emerald-400/30', label: 'PUBLIC ' }
+    : isVirtualAttended
+      ? { cls: 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 ring-1 ring-purple-400/40', label: 'VIRTUAL ' }
+      : isNotAttended
+        ? { cls: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300', label: 'NOT ATTENDED' }
+        : isNotVerifiedFinal
+          ? { cls: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-400/30', label: 'NOT VERIFIED (FINAL)' }
+          : isNotVerified
+            ? { cls: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-400/30', label: 'NOT VERIFIED ' }
+            : isError
+              ? { cls: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300', label: 'DATA ERROR' }
+              : { cls: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300', label: 'PENDING' };
+
+  const confBadgeCls = r.confidence === 'HIGH'
+    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+    : r.confidence === 'MEDIUM'
+      ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30'
+      : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30';
+
+  const renderQ = (val: any) => {
+    if (!isAttended || val === '—' || val === null || val === undefined) return <span className="text-gray-300 dark:text-gray-600 font-normal">—</span>;
+    return (val === 1 || val === '1')
+      ? <span className="inline-block w-5 h-5 leading-5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-black text-center">1</span>
+      : <span className="inline-block w-5 h-5 leading-5 rounded bg-rose-500/10 text-rose-400 dark:text-rose-500 font-bold text-center">0</span>;
+  };
+
+  return (
+    <tr
+      className={`hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors ${!isAttended ? 'opacity-60' : ''} ${isSelected ? 'bg-brand-50/50 dark:bg-brand-900/20' : ''}`}
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).tagName.toLowerCase() === 'input') return;
+        onSelect(r);
+      }}
+      role="button"
+    >
+      <td className="px-4 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
+        <input
+          type="checkbox"
+          className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-navy-900 focus:ring-brand-500 checked:bg-brand-500"
+          checked={isSelected}
+          onChange={(e) => onCheckbox(r.reg_no, e.target.checked)}
+        />
+      </td>
+      <td className="px-4 py-2.5 text-center text-gray-400 font-mono">{actualIdx + 1}</td>
+      <td className="px-4 py-2.5 font-bold text-gray-900 dark:text-white font-mono text-[11px]">{r.reg_no}</td>
+      <td className="px-4 py-2.5 font-semibold text-gray-800 dark:text-gray-200">{r.name}</td>
+      <td className="px-4 py-2.5 text-center font-bold">
+        <span className={`px-2 py-0.5 rounded-md text-[10px] ${r.dept === 'CSE(CS)' || r.dept === 'Cyber Security' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300' : 'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300'}`}>
+          {r.dept}
+        </span>
+      </td>
+      <td className="px-4 py-2.5 text-center text-gray-600 dark:text-gray-400 font-bold">{r.year}</td>
+      <td className="px-4 py-2.5 text-center">
+        <div className="flex flex-col items-center gap-0.5">
+          <span className={`px-2 py-0.5 text-[9px] font-extrabold rounded-full whitespace-nowrap ${statusBadge.cls}`}>
+            {statusBadge.label}
+          </span>
+          {r.confidence && (
+            <span className={`px-1.5 py-0.5 text-[8px] font-mono font-black rounded border ${confBadgeCls}`}>
+              {r.confidence}
+            </span>
+          )}
+        </div>
+      </td>
+      <td className="px-4 py-2.5 text-center">{renderQ(r.q1)}</td>
+      <td className="px-4 py-2.5 text-center">{renderQ(r.q2)}</td>
+      <td className="px-4 py-2.5 text-center">{renderQ(r.q3)}</td>
+      <td className="px-4 py-2.5 text-center">{renderQ(r.q4)}</td>
+      <td className="px-4 py-2.5 text-right font-black">
+        {isVirtualAttended ? (
+          <span className="text-purple-600 dark:text-purple-400 font-mono font-black">{r.total_solved ?? 0}/4 (Virtual)</span>
+        ) : isPublicAttended ? (
+          <span className="text-brand-600 dark:text-brand-400 font-mono">{r.total_solved ?? '—'}/4</span>
+        ) : (
+          <span className="text-gray-300 dark:text-gray-600">—</span>
+        )}
+      </td>
+      <td className="px-4 py-2.5 text-right font-mono text-gray-600 dark:text-gray-400">
+        {isVirtualAttended ? <span className="text-gray-400 italic text-[10px]">Virtual</span> : (isPublicAttended ? (r.rank || '—') : '—')}
+      </td>
+      <td className="px-4 py-2.5 text-right font-mono font-bold text-amber-600 dark:text-amber-400">
+        {isVirtualAttended ? <span className="text-gray-400 italic text-[10px]">—</span> : (isPublicAttended ? (r.rating && !isNaN(Number(r.rating)) && Number(r.rating) > 0 ? Number(r.rating).toFixed(1) : '—') : '—')}
+      </td>
+      <td className="px-4 py-2.5 text-center whitespace-nowrap">
+        <div className="flex items-center justify-center space-x-1.5">
+          <button
+            onClick={() => onEdit(r)}
+            className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900 text-indigo-600 dark:text-indigo-400 transition-colors cursor-pointer"
+            title={`Edit ${r.name}`}
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => onDelete(r)}
+            className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-400 transition-colors cursor-pointer"
+            title={`Deactivate ${r.name}`}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+}, (prev, next) => {
+  // Only re-render if the student's own data changed OR selection changed
+  return prev.isSelected === next.isSelected &&
+    prev.actualIdx === next.actualIdx &&
+    prev.r.participation_status === next.r.participation_status &&
+    prev.r.q1 === next.r.q1 &&
+    prev.r.q2 === next.r.q2 &&
+    prev.r.q3 === next.r.q3 &&
+    prev.r.q4 === next.r.q4 &&
+    prev.r.total_solved === next.r.total_solved &&
+    prev.r.rank === next.r.rank &&
+    prev.r.rating === next.r.rating &&
+    prev.r.confidence === next.r.confidence;
+});
+
 interface WeeklyContestPageProps {
   onSelectStudent?: (student: any) => void;
 }
@@ -123,6 +325,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
   // Live Contest Engine Real-Time State
   const [liveTelemetry, setLiveTelemetry] = useState<any>(null);
+  // NOTE: countdownSec / timeRemainingSec / nextUpdateTicker are now managed by isolated memo
+  // components (ContestCountdown, LiveCountdownClock, NextUpdateTicker) to prevent 1-second
+  // re-renders from cascading through the entire 3800-line component tree.
   const [countdownSec, setCountdownSec] = useState<number>(0);
   const [timeRemainingSec, setTimeRemainingSec] = useState<number>(0);
   const [nextUpdateTicker, setNextUpdateTicker] = useState<number>(20);
@@ -345,15 +550,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   }, [wsLatestUpdate]);
 
 
-  // 1-second Countdown & Time Remaining Ticker
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdownSec(prev => Math.max(0, prev - 1));
-      setTimeRemainingSec(prev => Math.max(0, prev - 1));
-      setNextUpdateTicker(prev => (prev <= 1 ? 20 : prev - 1));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+  // NOTE: The 1-second tick is now handled inside the isolated ContestCountdown /
+  // LiveCountdownClock / NextUpdateTicker memo components so the main page does NOT
+  // re-render every second. We still keep countdownSec/timeRemainingSec in state
+  // so they can be seeded from the API, but the interval below is intentionally removed.
 
   // Admin Control Handler with immediate state refresh & invariant support
   const handleAdminAction = async (action: string) => {
@@ -827,7 +1027,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     }
   };
 
-  const handleOpenEditStudent = (r: any) => {
+  const handleOpenEditStudent = useCallback((r: any) => {
     setEditingStudent(r);
     setEditName(r.name || '');
     setEditDeptCode(r.dept || 'CSE(CS)');
@@ -836,7 +1036,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     setEditUsername(r.username || '');
     setEditLeetCodeUrl(r.leetcode_url || (r.username ? `https://leetcode.com/u/${r.username}/` : ''));
     setEditEmail(r.email || '');
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSaveStudentEdit = async () => {
     if (!editingStudent) return;
@@ -1068,10 +1269,19 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   };
 
   const cd = formatCountdown(countdownSec);
-  const liveTimerFormatted = formatTimeRemaining(timeRemainingSec);
+  // liveTimerFormatted removed — now rendered by isolated <LiveCountdownClock> memo component
   const isLive = activeSessionObj?.status === 'LIVE';
   const isScheduled = activeSessionObj?.status === 'SCHEDULED';
   const isFinalizing = activeSessionObj?.status === 'FINALIZING';
+
+  // Stable memoized callback so ContestMatrixRow's memo comparator can skip re-renders
+  const handleRowCheckbox = useCallback((regNo: string, checked: boolean) => {
+    setSelectedRowIds(prev => {
+      const s = new Set(prev);
+      checked ? s.add(regNo) : s.delete(regNo);
+      return s;
+    });
+  }, []);
 
   return (
     <div className="space-y-5 sm:space-y-6 pt-1 sm:pt-0 animate-fade-in pb-12">
@@ -1178,7 +1388,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               <span>NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</span>
               <span className="text-gray-500">•</span>
               <span className="text-indigo-300">
-                {isLive ? `Last Updated: ${liveTelemetry?.lastUpdatedIst || '08:42:17 AM IST'} (Next in ${nextUpdateTicker}s)` : 'Filter students by Department, Academic Year, Name & Status'}
+                {isLive ? <>Last Updated: {liveTelemetry?.lastUpdatedIst || '08:42:17 AM IST'} (Next in <NextUpdateTicker initialSec={nextUpdateTicker} />)</> : 'Filter students by Department, Academic Year, Name & Status'}
               </span>
               {!isLive && activeSessionObj?.status && (
                 <>
@@ -1323,28 +1533,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               <p className="text-xs text-gray-400 mt-1">Automatic live activation starts Sunday at 08:00 AM IST without manual refresh.</p>
             </div>
 
-            {/* Dynamic Countdown Clock */}
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
-                <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{cd.days}</span>
-                <span className="text-[9px] uppercase font-bold text-gray-400 block">Days</span>
-              </div>
-              <span className="text-2xl font-mono font-black text-amber-500">:</span>
-              <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
-                <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{cd.hours}</span>
-                <span className="text-[9px] uppercase font-bold text-gray-400 block">Hours</span>
-              </div>
-              <span className="text-2xl font-mono font-black text-amber-500">:</span>
-              <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
-                <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{cd.minutes}</span>
-                <span className="text-[9px] uppercase font-bold text-gray-400 block">Minutes</span>
-              </div>
-              <span className="text-2xl font-mono font-black text-amber-500">:</span>
-              <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
-                <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{cd.seconds}</span>
-                <span className="text-[9px] uppercase font-bold text-gray-400 block">Seconds</span>
-              </div>
-            </div>
+            {/* Dynamic Countdown Clock — isolated memo, won't re-render the page */}
+            <ContestCountdown initialSec={countdownSec} />
           </div>
         </div>
       )}
@@ -1360,7 +1550,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </div>
               <div>
                 <p className="text-xs font-black uppercase text-rose-300 tracking-wider">CONTEST TIME REMAINING</p>
-                <p className="text-2xl font-mono font-black text-white">{liveTimerFormatted}</p>
+                <p className="text-2xl font-mono font-black text-white">
+                  <LiveCountdownClock endSec={timeRemainingSec} label="Time remaining" />
+                </p>
               </div>
             </div>
 
@@ -1371,7 +1563,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </div>
               <div className="text-right">
                 <p className="text-[10px] font-bold text-gray-400 uppercase">Next Sync In</p>
-                <p className="text-sm font-mono font-black text-emerald-400">{nextUpdateTicker}s</p>
+                <p className="text-sm font-mono font-black text-emerald-400">
+                  <NextUpdateTicker initialSec={nextUpdateTicker} />
+                </p>
               </div>
             </div>
           </div>
@@ -2860,129 +3054,17 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     ) : (
                       paginatedMatrixRows.map((r, idx) => {
                         const actualIdx = (currentPage - 1) * pageSize + idx;
-                        const isPublicAttended = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'ATTENDED' || r.status === 'PUBLIC' || r.participation_status === 'PUBLIC';
-                        const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL';
-                        const isAttended = isPublicAttended || isVirtualAttended;
-                        const isNotAttended = r.participation_status === 'PUBLIC_NOT_ATTENDED' || r.participation_status === 'NOT_ATTENDED' || r.status === 'NOT_ATTENDED' || r.status === 'NOT ATTENDED';
-                        const isNotVerified = r.participation_status === 'NOT_VERIFIED' || r.status === 'NOT_VERIFIED' || r.participation_status === 'PENDING';
-                        const isNotVerifiedFinal = r.participation_status === 'NOT_VERIFIED_FINAL' || r.status === 'NOT_VERIFIED_FINAL';
-                        const isError = r.participation_status === 'DATA_ERROR' || r.participation_status === 'SOURCE_ERROR' || r.participation_status === 'CONFLICT' || r.status === 'USERNAME_NOT_FOUND' || r.status === 'FETCH_ERROR';
-
-                        const statusBadge = isPublicAttended
-                          ? { cls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 ring-1 ring-emerald-400/30', label: 'PUBLIC ' }
-                          : isVirtualAttended
-                            ? { cls: 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 ring-1 ring-purple-400/40', label: 'VIRTUAL ' }
-                            : isNotAttended
-                              ? { cls: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300', label: 'NOT ATTENDED' }
-                              : isNotVerifiedFinal
-                                ? { cls: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-400/30', label: 'NOT VERIFIED (FINAL)' }
-                                : isNotVerified
-                                  ? { cls: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-400/30', label: 'NOT VERIFIED ' }
-                                  : isError
-                                    ? { cls: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300', label: 'DATA ERROR' }
-                                    : { cls: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300', label: 'PENDING' };
-
-                        const renderQ = (val: any) => {
-                          if (!isAttended || val === '—' || val === null || val === undefined) return <span className="text-gray-300 dark:text-gray-600 font-normal">—</span>;
-                          return (val === 1 || val === '1')
-                            ? <span className="inline-block w-5 h-5 leading-5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-black text-center">1</span>
-                            : <span className="inline-block w-5 h-5 leading-5 rounded bg-rose-500/10 text-rose-400 dark:text-rose-500 font-bold text-center">0</span>;
-                        };
-
-                        const confBadgeCls = r.confidence === 'HIGH'
-                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                          : r.confidence === 'MEDIUM'
-                            ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30'
-                            : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30';
-
                         return (
-                          <tr
-                            key={actualIdx}
-                            className={`hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors ${!isAttended ? 'opacity-60' : ''} ${selectedRowIds.has(r.reg_no) ? 'bg-brand-50/50 dark:bg-brand-900/20' : ''}`}
-                            onClick={(e) => {
-                              // Don't trigger if clicking on action buttons or the checkbox itself
-                              if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).tagName.toLowerCase() === 'input') {
-                                return;
-                              }
-                              setViewingProfileStudent(r);
-                            }}
-                            role="button"
-                          >
-                            <td className="px-4 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
-                              <input 
-                                type="checkbox" 
-                                className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-navy-900 focus:ring-brand-500 checked:bg-brand-500"
-                                checked={selectedRowIds.has(r.reg_no)}
-                                onChange={(e) => {
-                                  const newSet = new Set(selectedRowIds);
-                                  if (e.target.checked) {
-                                    newSet.add(r.reg_no);
-                                  } else {
-                                    newSet.delete(r.reg_no);
-                                  }
-                                  setSelectedRowIds(newSet);
-                                }}
-                              />
-                            </td>
-                            <td className="px-4 py-2.5 text-center text-gray-400 font-mono">{actualIdx + 1}</td>
-                            <td className="px-4 py-2.5 font-bold text-gray-900 dark:text-white font-mono text-[11px]">{r.reg_no}</td>
-                            <td className="px-4 py-2.5 font-semibold text-gray-800 dark:text-gray-200">{r.name}</td>
-                            <td className="px-4 py-2.5 text-center font-bold">
-                              <span className={`px-2 py-0.5 rounded-md text-[10px] ${r.dept === 'CSE(CS)' || r.dept === 'Cyber Security' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300' : 'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300'}`}>
-                                {r.dept}
-                              </span>
-                            </td>
-                            <td className="px-4 py-2.5 text-center text-gray-600 dark:text-gray-400 font-bold">{r.year}</td>
-                            <td className="px-4 py-2.5 text-center">
-                              <div className="flex flex-col items-center gap-0.5">
-                                <span className={`px-2 py-0.5 text-[9px] font-extrabold rounded-full whitespace-nowrap ${statusBadge.cls}`}>
-                                  {statusBadge.label}
-                                </span>
-                                {r.confidence && (
-                                  <span className={`px-1.5 py-0.5 text-[8px] font-mono font-black rounded border ${confBadgeCls}`}>
-                                    {r.confidence}
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="px-4 py-2.5 text-center">{renderQ(r.q1)}</td>
-                            <td className="px-4 py-2.5 text-center">{renderQ(r.q2)}</td>
-                            <td className="px-4 py-2.5 text-center">{renderQ(r.q3)}</td>
-                            <td className="px-4 py-2.5 text-center">{renderQ(r.q4)}</td>
-                            <td className="px-4 py-2.5 text-right font-black">
-                              {isVirtualAttended ? (
-                                <span className="text-purple-600 dark:text-purple-400 font-mono font-black">{r.total_solved ?? 0}/4 (Virtual)</span>
-                              ) : isPublicAttended ? (
-                                <span className="text-brand-600 dark:text-brand-400 font-mono">{r.total_solved ?? '—'}/4</span>
-                              ) : (
-                                <span className="text-gray-300 dark:text-gray-600">—</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-2.5 text-right font-mono text-gray-600 dark:text-gray-400">
-                              {isVirtualAttended ? <span className="text-gray-400 italic text-[10px]">Virtual</span> : (isPublicAttended ? (r.rank || '—') : '—')}
-                            </td>
-                            <td className="px-4 py-2.5 text-right font-mono font-bold text-amber-600 dark:text-amber-400">
-                              {isVirtualAttended ? <span className="text-gray-400 italic text-[10px]">—</span> : (isPublicAttended ? (r.rating && !isNaN(Number(r.rating)) && Number(r.rating) > 0 ? Number(r.rating).toFixed(1) : '—') : '—')}
-                            </td>
-                            <td className="px-4 py-2.5 text-center whitespace-nowrap">
-                              <div className="flex items-center justify-center space-x-1.5">
-                                <button
-                                  onClick={() => handleOpenEditStudent(r)}
-                                  className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900 text-indigo-600 dark:text-indigo-400 transition-colors cursor-pointer"
-                                  title={`Edit ${r.name}`}
-                                >
-                                  <Edit3 className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={() => setDeletingStudent(r)}
-                                  className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-400 transition-colors cursor-pointer"
-                                  title={`Deactivate ${r.name}`}
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
+                          <ContestMatrixRow
+                            key={r.reg_no || r.student_id || actualIdx}
+                            r={r}
+                            actualIdx={actualIdx}
+                            isSelected={selectedRowIds.has(r.reg_no)}
+                            onEdit={handleOpenEditStudent}
+                            onDelete={setDeletingStudent}
+                            onSelect={setViewingProfileStudent}
+                            onCheckbox={handleRowCheckbox}
+                          />
                         );
                       })
                     )}

@@ -50,12 +50,16 @@ interface GlobalNotificationContextType {
 const GlobalNotificationContext = createContext<GlobalNotificationContextType | undefined>(undefined);
 
 export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [allNotifications, setAllNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
+  // Keep selectedCategory in a ref so snapshot callbacks can read latest value
+  // WITHOUT being listed as a dependency (prevents tearing down Firestore listener on category change)
+  const selectedCategoryRef = React.useRef(selectedCategory);
+  selectedCategoryRef.current = selectedCategory;
   
   const { user, isAuthenticated, token } = useAuth();
 
@@ -118,8 +122,8 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
   const fetchFromBackendAPI = useCallback(async () => {
     if (!token) return;
     try {
-      const catParam = selectedCategory !== 'all' ? `?category=${selectedCategory}` : '';
-      const res = await fetch(`${API_BASE_URL}/api/notifications${catParam}`, {
+      // Always fetch all — category filtering applied via useMemo
+      const res = await fetch(`${API_BASE_URL}/api/notifications`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -133,18 +137,20 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
           recipientUserId: user?.email || 'user'
         }));
 
-        setNotifications(items);
+        setAllNotifications(items);
         setUnreadCount(data.unreadCount || items.filter((n: Notification) => !n.isRead).length);
         setIsLoading(false);
       }
     } catch (err) {
       console.warn("[GlobalNotificationContext] REST API sync notice:", err);
     }
-  }, [token, selectedCategory, user]);
+  // token and user are stable — selectedCategory intentionally NOT in deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, user?.email]);
 
   useEffect(() => {
     if (!isAuthenticated || !user) {
-      setNotifications([]);
+      setAllNotifications([]);
       setUnreadCount(0);
       setIsLoading(false);
       setError(null);
@@ -217,11 +223,8 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
               return timeB - timeA;
             });
 
-            const filtered = selectedCategory === 'all' 
-              ? fetched 
-              : fetched.filter(n => (n.category || n.type || '').toLowerCase() === selectedCategory.toLowerCase());
-
-            setNotifications(filtered);
+            // Store ALL notifications — category filtering is done in useMemo below
+            setAllNotifications(fetched);
             setUnreadCount(fetched.filter(n => !n.isRead).length);
             setIsLoading(false);
             setError(null);
@@ -240,7 +243,10 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
     } else {
       fetchFromBackendAPI();
     }
-  }, [user, isAuthenticated, selectedCategory, fetchFromBackendAPI]);
+  // selectedCategory intentionally NOT in deps — we use selectedCategoryRef instead
+  // to avoid tearing down the Firestore listener on every category switch
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, isAuthenticated, fetchFromBackendAPI]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -248,8 +254,8 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
     }
   }, [isAuthenticated, fetchPreferences]);
 
-  const markAsRead = async (notificationId: string) => {
-    setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, isRead: true } : n));
+  const markAsRead = useCallback(async (notificationId: string) => {
+    setAllNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, isRead: true } : n));
     setUnreadCount(prev => Math.max(0, prev - 1));
 
     if (db) {
@@ -271,13 +277,13 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
         console.warn("REST API mark read notice:", err);
       }
     }
-  };
+  }, [token]);
 
-  const markAllAsRead = async () => {
-    const unreadNotifs = notifications.filter(n => !n.isRead);
+  const markAllAsRead = useCallback(async () => {
+    const unreadNotifs = allNotifications.filter(n => !n.isRead);
     if (unreadNotifs.length === 0) return;
 
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    setAllNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     setUnreadCount(0);
 
     if (db) {
@@ -303,12 +309,12 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
         console.warn("REST API mark all read notice:", err);
       }
     }
-  };
+  }, [allNotifications, token]);
 
-  const deleteNotification = async (notificationId: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== notificationId));
+  const deleteNotification = useCallback(async (notificationId: string) => {
+    setAllNotifications(prev => prev.filter(n => n.id !== notificationId));
     setUnreadCount(prev => {
-      const item = notifications.find(n => n.id === notificationId);
+      const item = allNotifications.find(n => n.id === notificationId);
       return item && !item.isRead ? Math.max(0, prev - 1) : prev;
     });
 
@@ -331,26 +337,36 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
         console.warn("REST API delete notice:", err);
       }
     }
-  };
+  }, [allNotifications, token]);
+
+  // Apply category filter in a pure memo — no subscription restart needed
+  const notifications = React.useMemo(() =>
+    selectedCategory === 'all'
+      ? allNotifications
+      : allNotifications.filter(n => (n.category || n.type || '').toLowerCase() === selectedCategory.toLowerCase()),
+    [allNotifications, selectedCategory]
+  );
+
+  // Memoize the context value so stable-reference consumers don't re-render
+  const ctxValue = React.useMemo(() => ({
+    notifications,
+    unreadCount,
+    isLoading,
+    error,
+    selectedCategory,
+    setSelectedCategory,
+    preferences,
+    updatePreferences,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    registerFCMDeviceToken,
+    refreshNotifications: fetchFromBackendAPI
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [notifications, unreadCount, isLoading, error, selectedCategory, preferences, markAsRead, markAllAsRead, deleteNotification, registerFCMDeviceToken, fetchFromBackendAPI]);
 
   return (
-    <GlobalNotificationContext.Provider
-      value={{
-        notifications,
-        unreadCount,
-        isLoading,
-        error,
-        selectedCategory,
-        setSelectedCategory,
-        preferences,
-        updatePreferences,
-        markAsRead,
-        markAllAsRead,
-        deleteNotification,
-        registerFCMDeviceToken,
-        refreshNotifications: fetchFromBackendAPI
-      }}
-    >
+    <GlobalNotificationContext.Provider value={ctxValue}>
       {children}
     </GlobalNotificationContext.Provider>
   );

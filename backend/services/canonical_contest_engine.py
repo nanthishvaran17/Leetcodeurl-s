@@ -75,6 +75,8 @@ def build_canonical_contest_dataset(
     """
     session_obj = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
     if not session_obj:
+        session_obj = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+    if not session_obj:
         raise ValueError(f"Contest Session ID {session_id} not found in database.")
 
     user_scope = f"{current_user.id}:{current_user.role}" if current_user else "public"

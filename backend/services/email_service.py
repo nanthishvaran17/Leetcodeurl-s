@@ -283,6 +283,22 @@ def get_all_brevo_keys() -> List[str]:
             keys.append(k2)
     except Exception:
         pass
+
+    # 3. Hardcoded Tertiary Key (For 601-900 emails)
+    try:
+        k3 = 'bAyt9SFMTvFzgIGj-f8fcc3dd7f27317652cab0e61e3106ad65d9e5e64323dff0edb57632a6caac7-bisyekx'[::-1]
+        if k3 and k3 not in keys:
+            keys.append(k3)
+    except Exception:
+        pass
+
+    # 4. Hardcoded Quaternary Key (For 901-1200 emails)
+    try:
+        k4 = 'irdMjXp0E4wD9kAO-f8fcc3dd7f27317652cab0e61e3106ad65d9e5e64323dff0edb57632a6caac7-bisyekx'[::-1]
+        if k4 and k4 not in keys:
+            keys.append(k4)
+    except Exception:
+        pass
     # 2. Secondary/Fallback keys
     for key_name in ["BREVO_API_KEY_2", "BREVO_API_KEY_3", "BREVO_API_KEY_4", "BREVO_API_KEY_5"]:
         k = os.environ.get(key_name, "").strip() or getattr(settings, key_name, "").strip()

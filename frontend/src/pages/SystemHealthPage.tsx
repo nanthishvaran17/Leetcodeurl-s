@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   Activity,
   CheckCircle2,
@@ -140,7 +140,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
     return () => clearInterval(interval);
   }, []);
 
-  const fetchOperationsCenterData = async (isBackground = false) => {
+  const fetchOperationsCenterData = useCallback(async (isBackground = false) => {
     if (!isBackground) setLoading(true);
     try {
       const res = await api.get('/settings/operations-center-overview');
@@ -151,27 +151,27 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       if (!isBackground) setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
-  const fetchAvailableContests = async () => {
+  const fetchAvailableContests = useCallback(async () => {
     try {
       const res = await api.get('/settings/available-contests');
       setAvailableContests(res.data || []);
     } catch (err) {
       console.error('Available contests fetch error:', err);
     }
-  };
+  }, []);
 
-  const fetchBackups = async () => {
+  const fetchBackups = useCallback(async () => {
     try {
       const res = await api.get('/settings/backups');
       setBackupsList(res.data || []);
     } catch (err) {
       console.error('Backups fetch error:', err);
     }
-  };
+  }, []);
 
-  const fetchScheduleSettings = async () => {
+  const fetchScheduleSettings = useCallback(async () => {
     try {
       const res = await api.get('/system/schedule');
       setScheduleData(res.data);
@@ -186,7 +186,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
     } catch (err) {
       console.error('Schedule fetch error:', err);
     }
-  };
+  }, []);
 
   // Live Probe All Services Handler
   const handleProbeAllServices = async () => {
@@ -255,13 +255,13 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
     }
   };
 
-  const handleManualRefresh = () => {
+  const handleManualRefresh = useCallback(() => {
     setRefreshing(true);
     fetchOperationsCenterData(false);
     fetchBackups();
     fetchAvailableContests();
     fetchDataLineage();
-  };
+  }, [fetchOperationsCenterData, fetchBackups, fetchAvailableContests]);
 
 
   // ── FORENSIC SEARCH: LIVE STUDENT AUTOCOMPLETE (NON-AUTO-RUN) ──
@@ -290,19 +290,19 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
     }
   };
 
-  const handleSelectStudent = (student: any) => {
+  const handleSelectStudent = useCallback((student: any) => {
     setSelectedStudent(student);
     setForensicSearchInput(`${student.name} (${student.reg_no})`);
     setShowStudentDropdown(false);
-    setForensicResult(null); // Clear previous result immediately
+    setForensicResult(null);
     setForensicError(null);
-  };
+  }, []);
 
-  const handleContestChange = (contestIdStr: string) => {
+  const handleContestChange = useCallback((contestIdStr: string) => {
     setSelectedContestId(contestIdStr);
-    setForensicResult(null); // Clear previous result immediately
+    setForensicResult(null);
     setForensicError(null);
-  };
+  }, []);
 
   // ── EXPLICIT EXECUTE FORENSIC TRACE ──
   const handleExecuteForensicTrace = async () => {
@@ -343,7 +343,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
   };
 
   // ── CLEAN RESET FORENSIC TRACE ──
-  const handleClearForensicTrace = () => {
+  const handleClearForensicTrace = useCallback(() => {
     activeTraceRequestRef.current++;
     setForensicSearchInput('');
     setSelectedStudent(null);
@@ -353,7 +353,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
     setForensicResult(null);
     setForensicError(null);
     setShowRawJson(false);
-  };
+  }, []);
 
   const handleCopyEvidence = () => {
     if (!forensicResult) return;

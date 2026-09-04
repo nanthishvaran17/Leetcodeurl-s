@@ -1,18 +1,9 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { App as CapacitorApp } from '@capacitor/app';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
-import { LandingPage } from './pages/LandingPage';
-import { LoginPage } from './pages/LoginPage';
-import { DashboardPage } from './pages/DashboardPage';
-import { StudentMasterPage } from './pages/StudentMasterPage';
-import { StudentProfilePage } from './pages/StudentProfilePage';
-import { AlertCenterModal } from './components/AlertCenterModal';
-import { ImportModal } from './components/ImportModal';
-import { AccessRestrictedView } from './components/AccessRestrictedView';
-import { AIAssistantWidget } from './components/AIAssistantWidget';
 import { StudentData } from './components/LeaderboardTable';
 import api, { logActivity } from './services/api';
 import { getCachedSummary, saveCachedSummary } from './data/canonicalRoster';
@@ -22,7 +13,17 @@ import { CommandPalette } from './components/CommandPalette';
 import { useGlobalKeyboardShortcuts } from './hooks/useGlobalKeyboardShortcuts';
 import { useCapacitorPush } from './hooks/useCapacitorPush';
 import { initPushNotifications } from './services/pushNotifications';
-// Lazy-loaded heavy page modules for 60%+ smaller initial bundle size & ultra-fast initial load
+// Critical-path pages (always needed within 1 navigation) — keep synchronous
+const LandingPage = lazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
+const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const DashboardPage = lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
+const StudentMasterPage = lazy(() => import('./pages/StudentMasterPage').then(m => ({ default: m.StudentMasterPage })));
+const StudentProfilePage = lazy(() => import('./pages/StudentProfilePage').then(m => ({ default: m.StudentProfilePage })));
+// Heavy modals — lazy, only mounted on demand
+const AlertCenterModal = lazy(() => import('./components/AlertCenterModal').then(m => ({ default: m.AlertCenterModal })));
+const ImportModal = lazy(() => import('./components/ImportModal').then(m => ({ default: m.ImportModal })));
+const AIAssistantWidget = lazy(() => import('./components/AIAssistantWidget').then(m => ({ default: m.AIAssistantWidget })));
+// Already-lazy-loaded heavy page modules for 60%+ smaller initial bundle size & ultra-fast initial load
 const ComparePage = lazy(() => import('./pages/ComparePage').then(m => ({ default: m.ComparePage })));
 const DataQualityPage = lazy(() => import('./pages/DataQualityPage').then(m => ({ default: m.DataQualityPage })));
 const ReportsPage = lazy(() => import('./pages/ReportsPage').then(m => ({ default: m.ReportsPage })));
@@ -193,7 +194,7 @@ export const App: React.FC = () => {
     }
   };
 
-  const TAB_DESCRIPTIONS: Record<string, string> = {
+  const TAB_DESCRIPTIONS = useRef<Record<string, string>>({
     landing: 'Visited Landing Page & College Leaderboard',
     dashboard: 'Visited Executive Dashboard & Performance Matrix',
     public: 'Visited Public Leaderboard',
@@ -208,10 +209,10 @@ export const App: React.FC = () => {
     'student-data-issues': 'Visited Student Data Issues & Reconciliation',
     certificates: 'Opened Certificate Verification Engine',
     settings: 'Visited Institutional System Settings'
-  };
+  });
 
-  const handleTabChange = (tab: string) => {
-    const pageDesc = TAB_DESCRIPTIONS[tab] || `Visited ${tab.toUpperCase()} page`;
+  const handleTabChange = useCallback((tab: string) => {
+    const pageDesc = TAB_DESCRIPTIONS.current[tab] || `Visited ${tab.toUpperCase()} page`;
     logActivity('PAGE_NAVIGATE', pageDesc, { page: tab, role: user?.role });
     if (tab === 'alert-center') {
       setShowAlertCenterModal(true);
@@ -236,12 +237,12 @@ export const App: React.FC = () => {
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
     });
-  };
+  }, [isAuthenticated, user?.role]);
 
-  const handleSelectStudent = (student: StudentData) => {
+  const handleSelectStudent = useCallback((student: StudentData) => {
     if (!student) return;
     setSelectedStudent(student);
-  };
+  }, []);
 
   // Lock body scroll securely preserving exact viewport scroll position when selectedStudent modal is open
   useEffect(() => {
@@ -309,9 +310,9 @@ export const App: React.FC = () => {
   // ─── CENTRALIZED ROLE PERMISSION MATRIX ────────────────────────────────────
   // Single source of truth for all role-based tab access.
   // NEVER duplicate this logic across components.
-  const ALL_ACADEMIC_TABS = ['dashboard','landing','public','profile','students','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','staff-dashboard','student-dashboard','messages'];
+  const ALL_ACADEMIC_TABS = useMemo(() => ['dashboard','landing','public','profile','students','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','staff-dashboard','student-dashboard','messages'], []);
   
-  const ROLE_PERMISSIONS: Record<string, string[]> = {
+  const ROLE_PERMISSIONS = useMemo<Record<string, string[]>>(() => ({
     // Super admin / admin: full system access
     admin:            ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages'],
     administrator:    ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages'],
@@ -331,65 +332,66 @@ export const App: React.FC = () => {
     professor:        ALL_ACADEMIC_TABS,
     // Student: minimal access
     student:          ['dashboard','landing','public','profile'],
-  };
+  }), [ALL_ACADEMIC_TABS]);
 
-  const isTabAllowed = (tab: string): boolean => {
+  const roleClean = useMemo(() => (user?.role || '').trim().toLowerCase(), [user?.role]);
+
+  const isTabAllowed = useCallback((tab: string): boolean => {
     if (!isAuthenticated) return ['landing', 'public', 'profile'].includes(tab);
-    const roleClean = (user?.role || '').trim().toLowerCase();
     const allowed = ROLE_PERMISSIONS[roleClean] || ALL_ACADEMIC_TABS;
     return allowed.includes(tab);
-  };
+  }, [isAuthenticated, roleClean, ROLE_PERMISSIONS, ALL_ACADEMIC_TABS]);
 
   // Legacy compatibility — used by a few other components
-  const isTabAuthorized = (allowedRoles: string[]): boolean => {
+  const isTabAuthorized = useCallback((allowedRoles: string[]): boolean => {
     if (!isAuthenticated) return false;
-    const roleClean = (user?.role || '').trim().toLowerCase();
     if (['admin', 'administrator', 'super admin', 'super_admin'].includes(roleClean)) return true;
     return allowedRoles.some(r => r.toLowerCase() === roleClean);
-  };
+  }, [isAuthenticated, roleClean]);
 
-  const isFacultyRole = (): boolean => {
-    const r = (user?.role || '').trim().toLowerCase();
-    return ['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(r);
-  };
+  const isFacultyRole = useCallback((): boolean => {
+    return ['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(roleClean);
+  }, [roleClean]);
 
-  const renderAccessDenied = (resourceTitle: string) => (
-    <AccessDeniedPage
-      restrictedResource={resourceTitle}
-      onGoBack={() => handleTabChange(isFacultyRole() ? 'dashboard' : (isAuthenticated ? 'dashboard' : 'landing'))}
-    />
-  );
+  const renderAccessDenied = useCallback((resourceTitle: string) => (
+    <Suspense fallback={null}>
+      <AccessDeniedPage
+        restrictedResource={resourceTitle}
+        onGoBack={() => handleTabChange(isFacultyRole() ? 'dashboard' : (isAuthenticated ? 'dashboard' : 'landing'))}
+      />
+    </Suspense>
+  ), [isFacultyRole, isAuthenticated, handleTabChange]);
 
   // Full-screen login for unauthenticated users
   if (!isAuthenticated) {
     return (
-      <LoginPage
-        onSuccess={() => {
-          // Role-aware redirect after login.
-          // IMPORTANT: user state from useAuth() is async — it hasn't updated yet here.
-          // Read role directly from localStorage where AuthContext writes it synchronously.
-          let roleClean = '';
-          try {
-            const stored = localStorage.getItem('user');
-            if (stored) {
-              const parsed = JSON.parse(stored);
-              roleClean = (parsed?.role || '').trim().toLowerCase();
-            }
-          } catch (_e) {}
-          // Fallback to context if localStorage not yet written
-          if (!roleClean) roleClean = (user?.role || '').trim().toLowerCase();
+      <Suspense fallback={<PageSkeleton />}>
+        <LoginPage
+          onSuccess={() => {
+            // Role-aware redirect after login.
+            // IMPORTANT: user state from useAuth() is async — it hasn't updated yet here.
+            // Read role directly from localStorage where AuthContext writes it synchronously.
+            let localRoleClean = '';
+            try {
+              const stored = localStorage.getItem('user');
+              if (stored) {
+                const parsed = JSON.parse(stored);
+                localRoleClean = (parsed?.role || '').trim().toLowerCase();
+              }
+            } catch (_e) {}
+            // Fallback to context if localStorage not yet written
+            if (!localRoleClean) localRoleClean = (user?.role || '').trim().toLowerCase();
 
-          if (roleClean === 'faculty' || roleClean === 'staff' || roleClean === 'professor') {
-            setActiveTab('faculty-action-center');
-          } else if (roleClean === 'hod') {
-            setActiveTab('hod-command-center');
-          } else if (roleClean === 'student') {
-            setActiveTab('dashboard');
-          } else {
-            setActiveTab('dashboard');
-          }
-        }}
-      />
+            if (localRoleClean === 'faculty' || localRoleClean === 'staff' || localRoleClean === 'professor') {
+              setActiveTab('faculty-action-center');
+            } else if (localRoleClean === 'hod') {
+              setActiveTab('hod-command-center');
+            } else {
+              setActiveTab('dashboard');
+            }
+          }}
+        />
+      </Suspense>
     );
   }
 
@@ -571,34 +573,46 @@ export const App: React.FC = () => {
 
       {/* Login Modal (used for re-authentication when already inside the app) */}
       {showLoginModal && (
-        <LoginPage
-          onClose={() => setShowLoginModal(false)}
-          onSuccess={() => { setShowLoginModal(false); setActiveTab('dashboard'); }}
-        />
+        <Suspense fallback={null}>
+          <LoginPage
+            onClose={() => setShowLoginModal(false)}
+            onSuccess={() => { setShowLoginModal(false); setActiveTab('dashboard'); }}
+          />
+        </Suspense>
       )}
 
 
-      {/* Import Modal */}
-      <ImportModal
-        isOpen={showImportModal}
-        onClose={() => setShowImportModal(false)}
-        onSuccess={() => { 
-          localStorage.removeItem('nec_leetcode_students_cache');
-          fetchSummary(); 
-          setActiveTab('students');
-          // No reload required, LiveEventRouter handles live cache updates
-        }}
-      />
+      {/* Import Modal — only mount when open to avoid bundle weight on initial render */}
+      {showImportModal && (
+        <Suspense fallback={null}>
+          <ImportModal
+            isOpen={showImportModal}
+            onClose={() => setShowImportModal(false)}
+            onSuccess={() => { 
+              localStorage.removeItem('nec_leetcode_students_cache');
+              fetchSummary(); 
+              setActiveTab('students');
+              // No reload required, LiveEventRouter handles live cache updates
+            }}
+          />
+        </Suspense>
+      )}
 
-      {/* Automated Alert Center Modal */}
-      <AlertCenterModal
-        isOpen={showAlertCenterModal}
-        onClose={() => setShowAlertCenterModal(false)}
-        onNavigate={handleTabChange}
-      />
+      {/* Automated Alert Center Modal — only mount when open */}
+      {showAlertCenterModal && (
+        <Suspense fallback={null}>
+          <AlertCenterModal
+            isOpen={showAlertCenterModal}
+            onClose={() => setShowAlertCenterModal(false)}
+            onNavigate={handleTabChange}
+          />
+        </Suspense>
+      )}
 
       {/* Floating Global NEC Unified AI Widget */}
-      <AIAssistantWidget onNavigateTab={handleTabChange} />
+      <Suspense fallback={null}>
+        <AIAssistantWidget onNavigateTab={handleTabChange} />
+      </Suspense>
 
       {/* Viewport-Centered Student Profile Modal */}
       {selectedStudent && typeof document !== 'undefined' && createPortal(
@@ -613,10 +627,12 @@ export const App: React.FC = () => {
             className="modal-container-responsive bg-white dark:bg-navy-900 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-800 animate-modal-content max-w-4xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <StudentProfilePage
-              student={selectedStudent}
-              onBack={() => setSelectedStudent(null)}
-            />
+            <Suspense fallback={null}>
+              <StudentProfilePage
+                student={selectedStudent}
+                onBack={() => setSelectedStudent(null)}
+              />
+            </Suspense>
           </div>
         </div>,
         document.body

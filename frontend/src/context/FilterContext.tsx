@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useMemo, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useMemo, useCallback, ReactNode } from 'react';
 import { studentLiveStore, useStudentListIds, useStudentStoreVersion } from '../stores/studentLiveStore';
 import { StudentEntity } from '../types/student';
 import { matchesNameSearch, matchesAcademicYear, matchesDepartment } from '../utils/filterUtils';
@@ -28,21 +28,21 @@ export const FilterProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [attendanceStatus, setAttendanceStatus] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setDepartment('ALL');
     setAcademicYear('ALL');
     setAttendanceStatus('ALL');
     setSearchQuery('');
-  };
+  }, []);
 
-  const clearOneFilter = (key: keyof FilterState) => {
+  const clearOneFilter = useCallback((key: keyof FilterState) => {
     switch (key) {
       case 'department': setDepartment('ALL'); break;
       case 'academicYear': setAcademicYear('ALL'); break;
       case 'attendanceStatus': setAttendanceStatus('ALL'); break;
       case 'searchQuery': setSearchQuery(''); break;
     }
-  };
+  }, []);
 
   const isFilteringActive = 
     department !== 'ALL' || 
@@ -50,16 +50,19 @@ export const FilterProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     attendanceStatus !== 'ALL' || 
     searchQuery.trim() !== '';
 
+  // Memoize context value so consumers only re-render when their specific slice changes
+  const ctxValue = useMemo(() => ({
+    department, setDepartment,
+    academicYear, setAcademicYear,
+    attendanceStatus, setAttendanceStatus,
+    searchQuery, setSearchQuery,
+    resetFilters,
+    clearOneFilter,
+    isFilteringActive
+  }), [department, academicYear, attendanceStatus, searchQuery, resetFilters, clearOneFilter, isFilteringActive]);
+
   return (
-    <FilterContext.Provider value={{
-      department, setDepartment,
-      academicYear, setAcademicYear,
-      attendanceStatus, setAttendanceStatus,
-      searchQuery, setSearchQuery,
-      resetFilters,
-      clearOneFilter,
-      isFilteringActive
-    }}>
+    <FilterContext.Provider value={ctxValue}>
       {children}
     </FilterContext.Provider>
   );

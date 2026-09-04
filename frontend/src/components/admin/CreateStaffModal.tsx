@@ -321,8 +321,8 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
   const progressPercent = Math.round((activeStep / 5) * 100);
 
   return (
-    <GlobalModalBackdrop isOpen={true} onClose={onClose} className="flex items-center justify-center p-3 sm:p-6 bg-navy-950/70 backdrop-blur-md overflow-y-auto">
-      <div className="bg-white dark:bg-navy-900 rounded-[2rem] w-full max-w-[1050px] shadow-2xl flex flex-col h-[92vh] max-h-[850px] overflow-hidden border border-slate-200/80 dark:border-navy-700/80 animate-fade-in-up">
+    <GlobalModalBackdrop isOpen={true} onClose={onClose} zIndex={100000} className="flex items-end sm:items-center justify-center p-0 sm:p-6 bg-navy-950/70 backdrop-blur-md overflow-hidden">
+      <div className="bg-white dark:bg-navy-900 rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-[1050px] shadow-2xl flex flex-col h-[95dvh] sm:h-[92vh] sm:max-h-[850px] overflow-hidden border-t sm:border border-slate-200/80 dark:border-navy-700/80 animate-fade-in-up">
         
         {/* HEADER */}
         <div className="px-6 py-4 bg-slate-50/90 dark:bg-navy-950/80 border-b border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0 z-20">
@@ -485,7 +485,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
             </div>
 
             {/* RIGHT FORM CONTENT PANEL */}
-            <div className="flex-1 overflow-y-auto p-6 sm:p-8 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-6 sm:p-8 pb-12 custom-scrollbar">
               
               {submitError && (
                 <div className="mb-6 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 flex items-start gap-3 text-rose-800 dark:text-rose-300 animate-fade-in">
@@ -996,15 +996,24 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                             ? 'bg-brand-50/40 dark:bg-brand-950/20 border-brand-200 dark:border-brand-800/60'
                             : 'bg-slate-50 dark:bg-navy-950 border-slate-200 dark:border-navy-800'
                         }`}>
-                          <input
-                            type="checkbox"
-                            checked={formData.consent_checked}
-                            onChange={e => {
-                              setFormData({...formData, consent_checked: e.target.checked});
-                              if (formErrors.consent) setFormErrors({...formErrors, consent: ''});
-                            }}
-                            className="w-5 h-5 min-w-[20px] min-h-[20px] accent-brand-600 rounded mt-0.5 cursor-pointer shrink-0"
-                          />
+                          <div className="relative flex items-center justify-center shrink-0 mt-0.5">
+                            <input
+                              type="checkbox"
+                              checked={formData.consent_checked}
+                              onChange={e => {
+                                setFormData({...formData, consent_checked: e.target.checked});
+                                if (formErrors.consent) setFormErrors({...formErrors, consent: ''});
+                              }}
+                              className="peer absolute w-full h-full opacity-0 cursor-pointer z-10"
+                            />
+                            <div className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-colors ${
+                              formData.consent_checked
+                                ? 'bg-brand-600 border-brand-600'
+                                : 'bg-white dark:bg-navy-900 border-slate-300 dark:border-navy-600 peer-hover:border-brand-400'
+                            }`}>
+                              {formData.consent_checked && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
+                            </div>
+                          </div>
                           <div className="flex-1 min-w-0">
                             <span className="text-xs font-extrabold text-slate-900 dark:text-white block">
                               Institutional Compliance & Authorization Acknowledgment *
@@ -1068,7 +1077,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
               </span>
             </div>
 
-            <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+            <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto mt-2 sm:mt-0">
               <button
                 type="button"
                 onClick={onClose}
