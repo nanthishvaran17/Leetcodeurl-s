@@ -125,9 +125,9 @@ def get_messaging_profile_endpoint(
         from backend.models import User, Student
         from sqlalchemy import or_
         
-        # Try Staff first
+        uid_num = int(user_id.replace("STAFF_", "")) if (user_id.isdigit() or ("STAFF_" in user_id and user_id.replace("STAFF_", "").isdigit())) else -1
         staff = db.query(User).filter(
-            or_(User.email == user_id, User.username == user_id, User.id == (int(user_id.replace("STAFF_", "")) if "STAFF_" in user_id and user_id.replace("STAFF_", "").isdigit() else -1))
+            or_(User.email == user_id, User.username == user_id, User.id == uid_num)
         ).first()
         
         if staff:

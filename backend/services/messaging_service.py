@@ -33,8 +33,9 @@ class MessagingService:
     def _get_user_display(db: Session, user_id: str) -> dict:
         """Returns minimal display info for a user ID."""
         # Try Staff
+        uid_num = int(user_id.replace("STAFF_", "")) if (user_id.isdigit() or ("STAFF_" in user_id and user_id.replace("STAFF_", "").isdigit())) else -1
         u = db.query(User).filter(
-            or_(User.email == user_id, User.username == user_id, User.id == (int(user_id.replace("STAFF_", "")) if "STAFF_" in user_id and user_id.replace("STAFF_", "").isdigit() else -1))
+            or_(User.email == user_id, User.username == user_id, User.id == uid_num)
         ).first()
         if u:
             dept = u.department.name if u.department else "Admin"
