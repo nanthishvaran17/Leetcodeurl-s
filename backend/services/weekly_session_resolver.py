@@ -124,6 +124,17 @@ def resolve_weekly_sessions(
     if not finalized_sessions and all_db_sessions:
         finalized_sessions = all_db_sessions
 
+    if not all_db_sessions:
+        return {
+            "last_week_session": None,
+            "current_week_session": None,
+            "last_week_contest": None,
+            "current_week_contest": None,
+            "resolution_mode": "insufficient",
+            "last_week_date": None,
+            "current_week_date": None,
+        }
+
     # Map session -> contest number
     valid_sessions = []
     for s in finalized_sessions:
@@ -148,28 +159,23 @@ def resolve_weekly_sessions(
     elif len(all_valid_sessions) >= 2:
         curr_num, curr_sess = all_valid_sessions[0]
         last_num, last_sess = all_valid_sessions[1]
-        mode = "db_auto_all"
+        mode = "db_auto"
     elif len(valid_sessions) == 1:
         curr_num, curr_sess = valid_sessions[0]
-        last_num = curr_num - 1
-        last_sess = _find_session_by_contest_num(last_num)
-        mode = "db_auto_single"
+        last_sess = _find_session_by_contest_num(curr_num - 1)
+        last_num = extract_contest_number(last_sess) if last_sess else None
+        mode = "db_auto"
     elif len(all_valid_sessions) == 1:
         curr_num, curr_sess = all_valid_sessions[0]
-        last_num = curr_num - 1
-        last_sess = _find_session_by_contest_num(last_num)
-        mode = "db_auto_single"
+        last_sess = _find_session_by_contest_num(curr_num - 1)
+        last_num = extract_contest_number(last_sess) if last_sess else None
+        mode = "db_auto"
     else:
-        # Fallback to calculated Sunday LeetCode contest numbers
-        import datetime
-        today = datetime.date.today()
-        base_date = datetime.date(2024, 5, 19) # Weekly Contest 398
-        elapsed_weeks = max(0, (today - base_date).days // 7)
-        curr_num = 398 + elapsed_weeks
-        last_num = curr_num - 1
         curr_sess = None
         last_sess = None
-        mode = "calculated_fallback"
+        curr_num = None
+        last_num = None
+        mode = "insufficient"
 
     last_date = getattr(last_sess, "session_date", None) if last_sess else None
     curr_date = getattr(curr_sess, "session_date", None) if curr_sess else None
