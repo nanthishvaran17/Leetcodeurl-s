@@ -53,12 +53,12 @@ export const ConversationList: React.FC<Props> = ({
   return (
     <div className="flex flex-col h-full bg-[#f8fafc] dark:bg-[#0d1117] border-r border-gray-200 dark:border-gray-800/60 overflow-hidden">
       {/* Header */}
-      <div className="p-4 md:p-5 border-b border-gray-100 dark:border-gray-800/60 bg-white dark:bg-[#0d1117] sticky top-0 z-10 shrink-0">
-        <div className="flex items-center justify-between mb-4">
+      <div className="p-3.5 sm:p-4 md:p-5 border-b border-gray-100 dark:border-gray-800/60 bg-white dark:bg-[#0d1117] sticky top-0 z-10 shrink-0">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
           <h2 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white tracking-tight">Inbox</h2>
           <button
             onClick={onNewMessage}
-            className="p-2 md:px-3 md:py-2 bg-brand-50 hover:bg-brand-100 dark:bg-brand-900/20 dark:hover:bg-brand-900/40 text-brand-600 dark:text-brand-400 rounded-xl transition-colors text-sm font-bold flex items-center gap-2"
+            className="p-2 md:px-3 md:py-2 bg-brand-50 hover:bg-brand-100 dark:bg-brand-900/20 dark:hover:bg-brand-900/40 text-brand-600 dark:text-brand-400 rounded-xl transition-colors text-sm font-bold flex items-center gap-2 cursor-pointer active:scale-95 min-w-[36px] min-h-[36px] justify-center"
             title="New Message"
           >
             <PenSquare className="w-4 h-4 md:hidden" />
@@ -67,20 +67,20 @@ export const ConversationList: React.FC<Props> = ({
           </button>
         </div>
         
-        <div className="relative group">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-brand-500 transition-colors" />
+        <div className="relative group w-full">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-brand-500 transition-colors pointer-events-none" />
           <input
             type="text"
             placeholder="Search messages..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-[#151b23] border border-gray-200/50 dark:border-gray-800 rounded-xl text-[13px] text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all font-medium"
+            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-[#151b23] border border-gray-200/50 dark:border-gray-800 rounded-xl text-[13px] text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all font-medium box-border"
           />
         </div>
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto bg-white dark:bg-[#0d1117]">
+      <div className="flex-1 overflow-y-auto bg-white dark:bg-[#0d1117] flex flex-col">
         {isLoading ? (
           <div className="p-4 space-y-3">
              {[1, 2, 3, 4, 5].map(i => (
@@ -94,12 +94,12 @@ export const ConversationList: React.FC<Props> = ({
              ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full p-8 text-center text-gray-500 dark:text-gray-400">
-            <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800/50 rounded-2xl flex items-center justify-center mb-4">
-               <Inbox className="w-8 h-8 text-gray-400" />
+          <div className="flex-1 flex flex-col items-center justify-center min-h-[260px] p-6 text-center text-gray-500 dark:text-gray-400 my-auto">
+            <div className="w-14 h-14 bg-gray-50 dark:bg-gray-800/50 rounded-2xl flex items-center justify-center mb-3 shadow-sm">
+               <Inbox className="w-7 h-7 text-gray-400" />
             </div>
-            <p className="text-[15px] font-bold text-gray-700 dark:text-gray-300">Nothing here</p>
-            <p className="text-[13px] mt-1 opacity-80">No conversations found.</p>
+            <p className="text-[14px] font-bold text-gray-700 dark:text-gray-300">Nothing here</p>
+            <p className="text-[12px] mt-1 opacity-80">No conversations found.</p>
           </div>
         ) : (
           <ul className="p-2 space-y-0.5">

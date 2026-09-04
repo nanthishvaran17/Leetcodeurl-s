@@ -128,7 +128,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
-            className="fixed sm:absolute right-0 top-16 sm:top-12 mt-2 w-full sm:w-96 max-w-[100vw] sm:max-w-sm bg-white dark:bg-navy-900 sm:rounded-2xl shadow-2xl border-y sm:border border-slate-200 dark:border-navy-800 z-[100050] overflow-hidden flex flex-col h-[calc(100vh-64px)] sm:h-auto sm:max-h-[580px]"
+            className="fixed sm:absolute right-0 top-16 sm:top-12 mt-0 sm:mt-2 w-full sm:w-96 max-w-[100vw] sm:max-w-sm bg-white dark:bg-navy-900 sm:rounded-2xl shadow-2xl border-y sm:border border-slate-200 dark:border-navy-800 z-[100050] overflow-hidden flex flex-col h-[calc(100dvh-64px)] sm:h-auto sm:max-h-[580px] pb-[env(safe-area-inset-bottom,8px)]"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-navy-800 bg-slate-50/80 dark:bg-navy-950/80 shrink-0">
@@ -153,13 +153,13 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
             </div>
 
             {/* Category Filter Pills */}
-            <div className="flex items-center gap-1.5 px-3 py-2 border-b border-slate-100 dark:border-navy-800 overflow-x-auto scrollbar-none shrink-0 bg-white dark:bg-navy-900">
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-navy-800 overflow-x-auto scrollbar-none shrink-0 bg-white dark:bg-navy-900 touch-pan-x">
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
                   type="button"
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all shrink-0 cursor-pointer whitespace-nowrap ${
+                  className={`text-[11px] font-bold h-7 px-3 rounded-lg transition-all shrink-0 cursor-pointer whitespace-nowrap flex items-center justify-center ${
                     selectedCategory === cat.id
                       ? 'bg-brand-500 text-white shadow-sm'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-navy-800 dark:text-slate-300 dark:hover:bg-navy-700'
@@ -171,7 +171,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
             </div>
 
             {/* Body List */}
-            <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-navy-700">
+            <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-navy-700 flex flex-col">
               {isLoading ? (
                 <div className="p-4 space-y-3">
                   {[1, 2, 3].map((i) => (
@@ -185,7 +185,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
                   ))}
                 </div>
               ) : error ? (
-                <div className="flex flex-col items-center justify-center py-10 px-4 text-center space-y-3">
+                <div className="flex-1 flex flex-col items-center justify-center py-10 px-4 text-center space-y-3 my-auto">
                   <div className="w-12 h-12 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center">
                     <AlertCircle size={22} />
                   </div>
@@ -195,8 +195,8 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
                   </div>
                 </div>
               ) : notifications.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-                  <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-navy-800 flex items-center justify-center mb-3 text-slate-400 dark:text-slate-500">
+                <div className="flex-1 flex flex-col items-center justify-center py-12 px-4 text-center my-auto min-h-[220px]">
+                  <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-navy-800 flex items-center justify-center mb-3 text-slate-400 dark:text-slate-500 shadow-sm">
                     <Bell size={24} />
                   </div>
                   <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">No notifications</h4>

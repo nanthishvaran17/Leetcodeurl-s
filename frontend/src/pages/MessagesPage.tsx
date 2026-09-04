@@ -146,7 +146,7 @@ export const MessagesPage: React.FC = () => {
   const activeConv = conversations.find(c => c.conversationId === activeConversationId) || null;
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] md:h-[calc(100vh-5rem)] bg-white dark:bg-[#0d1117] rounded-2xl overflow-hidden shadow-lg shadow-black/5 dark:shadow-none border border-gray-200 dark:border-gray-800/60">
+    <div className="flex h-[calc(100dvh-72px)] md:h-[calc(100vh-5rem)] bg-white dark:bg-[#0d1117] sm:rounded-2xl overflow-hidden shadow-lg shadow-black/5 dark:shadow-none border border-gray-200 dark:border-gray-800/60 pb-[env(safe-area-inset-bottom,0px)]">
       
       {/* ZONE 1: Smart Inbox (Hidden on mobile if chat is active) */}
       <div className={`w-full md:w-[320px] lg:w-[380px] shrink-0 ${activeConversationId ? 'hidden md:block' : 'block'}`}>
