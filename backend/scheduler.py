@@ -258,20 +258,38 @@ async def daily_principal_executive_job():
     finally:
         db.close()
 
-@with_global_lock('sunday_2200_virtual_contest_job', timeout_minutes=120)
-async def sunday_2200_virtual_contest_job():
+@with_global_lock('sunday_2150_virtual_recheck_job', timeout_minutes=120)
+async def sunday_2150_virtual_recheck_job():
     """
-    Scheduled for Sunday 10:00 PM IST: End-of-Day Virtual contest fetch, combined report generation & final email.
+    Scheduled for Sunday 09:50 PM IST: Full re-verification sweep of all 301 students for both live & virtual practice submissions before final lock.
     """
-    logger.info("[SCHEDULER] Sunday 10:00 PM IST: Autopilot Phase 7 Virtual Contest Sync & Reconciliation...")
+    logger.info("[SCHEDULER] Sunday 09:50 PM IST: Executing Pre-Final 9:50 PM Full Verification Sweep...")
     db = SessionLocal()
     try:
         res = sunday_autopilot.phase_7_virtual_sync_2200(db)
-        logger.info(f"[SCHEDULER] Sunday 10:00 PM Virtual Contest Completed: {res}")
+        logger.info(f"[SCHEDULER] Sunday 09:50 PM Full Verification Sweep completed: {res}")
+    except Exception as e:
+        logger.error(f"[SCHEDULER] Error in sunday_2150_virtual_recheck_job: {e}", exc_info=True)
+    finally:
+        db.close()
+
+
+@with_global_lock('sunday_2200_virtual_contest_job', timeout_minutes=120)
+async def sunday_2200_virtual_contest_job():
+    """
+    Scheduled for Sunday 10:00 PM IST: End-of-Day Virtual contest finalization, combined report generation, email & rollover to Next Contest.
+    """
+    logger.info("[SCHEDULER] Sunday 10:00 PM IST: Autopilot Phase 7 & 8 Virtual Contest Final Lock & Next Contest Rollover...")
+    db = SessionLocal()
+    try:
+        res7 = sunday_autopilot.phase_7_virtual_sync_2200(db)
+        res8 = sunday_autopilot.phase_8_prepare_next_contest(db)
+        logger.info(f"[SCHEDULER] Sunday 10:00 PM Virtual Finalization & Next Contest Rollover Completed: {res7}, Next: {res8}")
     except Exception as e:
         logger.error(f"[SCHEDULER] Error in sunday_2200_virtual_contest_job: {e}", exc_info=True)
     finally:
         db.close()
+
 
 
 async def daily_auto_refresh_job():
@@ -522,12 +540,22 @@ def start_scheduler():
         replace_existing=True
     )
 
-    # 7. Sunday 10:00 PM (22:00) IST — Virtual Contest Reconciliation & EOD Summary
+    # 7a. Sunday 09:50 PM (21:50) IST — Pre-Final 9:50 PM Full Verification Sweep (Live + Virtual)
+    scheduler.add_job(
+        sunday_2150_virtual_recheck_job,
+        CronTrigger(day_of_week='sun', hour=21, minute=50, timezone=tz),
+        id='sunday_virtual_recheck_2150',
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=3600
+    )
+
+    # 7b. Sunday 10:00 PM (22:00) IST — Virtual Contest Reconciliation, EOD Summary & Next Contest Rollover
     scheduler.add_job(
         sunday_2200_virtual_contest_job,
         CronTrigger(day_of_week='sun', hour=22, minute=0, timezone=tz),
         id='sunday_virtual_contest_2200',
-        replace_existing=True
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=3600
     )
 
     # Startup recovery check in background
