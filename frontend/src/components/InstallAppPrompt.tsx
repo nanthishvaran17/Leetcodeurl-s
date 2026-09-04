@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Download, Smartphone, X, Check, Share, PlusSquare } from 'lucide-react';
+import { getApiUrl } from '../services/api';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -138,13 +139,13 @@ export const InstallAppPrompt: React.FC = () => {
         ) : (
           <div className="mt-3.5 flex flex-wrap items-center justify-end gap-2">
             <a
-              href="/nandha_leetcode_app.apk"
-              download="Nandha_LeetCode_Intelligence.apk"
+              href={getApiUrl('/download/apk')}
+              download="Nandha_LeetCode_Intelligence_v2_latest.apk"
               className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-semibold text-xs border border-slate-700 transition-all flex items-center space-x-1"
               title="Download direct Android APK package"
             >
               <Download className="w-3 h-3 text-emerald-400" />
-              <span>Download APK</span>
+              <span>Download Direct APK</span>
             </a>
             {deferredPrompt && (
               <button

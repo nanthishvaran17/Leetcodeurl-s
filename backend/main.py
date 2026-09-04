@@ -569,6 +569,21 @@ def get_live_contest_snapshot_api(contest_id: str, db: Session = Depends(get_db)
     from backend.services.live_contest_monitor_engine import live_contest_monitor_engine
     return live_contest_monitor_engine.get_live_snapshot(db, contest_id)
 
+from fastapi.responses import FileResponse, HTTPException
+
+@app.get("/api/download/apk")
+@app.get("/download/apk")
+def download_android_apk_endpoint():
+    """Serves the official Nandha LeetCode Intelligence Android APK package."""
+    apk_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Nandha_LeetCode_Intelligence_v2_latest.apk"))
+    if not os.path.exists(apk_path):
+        raise HTTPException(status_code=404, detail="Android APK package is currently updating on the server. Please try again in a few moments.")
+    return FileResponse(
+        path=apk_path,
+        media_type="application/vnd.android.package-archive",
+        filename="Nandha_LeetCode_Intelligence_v2_latest.apk"
+    )
+
 
 # Production Static Build Mount (Serves Frontend SPA bundle on single port)
 FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
@@ -576,4 +591,5 @@ if os.path.exists(FRONTEND_DIST):
     app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")
 
 logger.info("LeetCode Performance Tracker API is fully ready & live sync engine active.")
+
 # reload trigger

@@ -32,6 +32,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { CollegeLogo } from './CollegeLogo';
+import { getApiUrl } from '../services/api';
 
 interface SidebarProps {
   activeTab: string;
@@ -360,8 +361,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       {/* ── Bottom Institution Footer Card & Mobile App Download ── */}
       <div className="pt-3 mt-2 border-t border-slate-100 dark:border-navy-800 shrink-0 relative z-10 space-y-2">
         <a
-          href="/nandha_leetcode_app.apk"
-          download="Nandha_LeetCode_Intelligence.apk"
+          href={getApiUrl('/download/apk')}
+          download="Nandha_LeetCode_Intelligence_v2_latest.apk"
           className="flex items-center justify-between p-2.5 rounded-xl bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-brand-400 border border-brand-500/30 transition-all font-bold text-xs shadow-sm group"
         >
           <div className="flex items-center space-x-2">
