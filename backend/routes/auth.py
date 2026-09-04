@@ -138,6 +138,10 @@ def validate_csrf_origin(request: Request):
     if clean_origin.startswith("http://localhost") or clean_origin.startswith("http://127.0.0.1"):
         return  # Allowed for development
 
+    # Capacitor mobile app origins (Android: capacitor://localhost or https://localhost)
+    if clean_origin in ("capacitor://localhost", "https://localhost", "http://localhost"):
+        return  # Allowed for Capacitor native app
+
     # Verify if the origin matches any of the allowed origins exactly
     is_allowed = any(allowed == clean_origin for allowed in allowed_origins)
 
@@ -733,26 +737,38 @@ def google_auth(payload: dict, request: Request, response: Response, db: Session
         logger.warning(f"[GOOGLE_ADMIN_REJECTED] Email {verified_email} is not marked as verified by Google.")
         raise HTTPException(status_code=400, detail="Your Google account email must be verified.")
 
-    # Step 2: Authorize Admin Account — DATABASE FIRST, EXACT 2-ADMIN ALLOWLIST
+    # Step 2: Look up user in database by verified Google email
     user = db.query(User).filter(User.email.ilike(verified_email)).first()
 
     if not user:
-        logger.warning(f"[GOOGLE_ADMIN_REJECTED] Google account '{verified_email}' not found in user database.")
-        raise HTTPException(status_code=403, detail="Access denied: Unauthorized Google account. Please use your authorized administrator account.")
+        logger.warning(f"[GOOGLE_AUTH_REJECTED] Google account '{verified_email}' not found in user database.")
+        raise HTTPException(
+            status_code=403,
+            detail="Your Google account is not registered for this application. Please contact your administrator."
+        )
 
-    if (user.role or "").strip().upper() not in ("ADMIN", "SUPER ADMIN", "SUPER_ADMIN"):
-        logger.warning(f"[GOOGLE_ADMIN_REJECTED] Google account {verified_email} has non-admin role: {user.role}")
-        raise HTTPException(status_code=403, detail="Access denied: Administrator privileges required.")
+    # All valid institutional roles are permitted
+    VALID_ROLES = {
+        "ADMIN", "SUPER ADMIN", "SUPER_ADMIN",
+        "FACULTY", "STAFF", "INSTRUCTOR", "MENTOR",
+        "HOD", "PRINCIPAL"
+    }
+    user_role_upper = (user.role or "").strip().upper()
+    if user_role_upper not in VALID_ROLES:
+        logger.warning(f"[GOOGLE_AUTH_REJECTED] Google account {verified_email} has invalid/missing role: '{user.role}'")
+        raise HTTPException(
+            status_code=403,
+            detail="Your account does not have a valid role assigned. Please contact your administrator."
+        )
 
     if not user.is_active:
-        logger.warning(f"[GOOGLE_ADMIN_REJECTED] Admin account {verified_email} is currently deactivated.")
-        raise HTTPException(status_code=403, detail="Access denied: Administrator account is currently disabled.")
+        logger.warning(f"[GOOGLE_AUTH_REJECTED] Account {verified_email} is currently deactivated.")
+        raise HTTPException(
+            status_code=403,
+            detail="Your account is currently inactive. Please contact your administrator."
+        )
 
-    if (user.email or "").strip().lower() not in EXACT_TWO_ADMIN_EMAILS:
-        logger.warning(f"[GOOGLE_ADMIN_REJECTED] Admin account email '{verified_email}' not in 2-admin allowlist.")
-        raise HTTPException(status_code=403, detail="Access denied: Unauthorized administrator account.")
-
-    logger.info(f"[GOOGLE_ADMIN_AUTHORIZED] Administrator {user.username} ({user.email}) authorized with role {user.role}.")
+    logger.info(f"[GOOGLE_AUTH_AUTHORIZED] User {user.username} ({user.email}) authorized via Google with role '{user.role}'.")
 
     try:
         setattr(user, "last_login", _utcnow())
@@ -776,7 +792,7 @@ def google_auth(payload: dict, request: Request, response: Response, db: Session
 
     log_admin_action(
         db, action="GOOGLE_LOGIN_SUCCESS", action_type="SECURITY",
-        description=f"Admin {user.username} ({user.email}) logged in successfully via Google Sign-In",
+        description=f"User {user.username} ({user.email}) logged in successfully via Google Sign-In (role: {user.role})",
         current_user=user, target_type="User", target_id=str(user.id),
         metadata_json=metadata, event_id=event_id
     )

@@ -778,6 +778,18 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
         delta_hard = max(0, (st.hard_solved or 0) - previous_hard)
         delta_rating = round((st.contest_rating or 0.0) - previous_rating, 1)
 
+        # Check and emit student milestone notifications
+        try:
+            from backend.services.automatic_notification_engine import AutomaticNotificationEngine
+            AutomaticNotificationEngine.check_and_emit_student_milestones(
+                db=db,
+                student_id=student.id,
+                old_solved=old_total or 0,
+                new_solved=st.total_solved or 0
+            )
+        except Exception as m_err:
+            logger.warning(f"[MILESTONE_ENGINE] Milestone check notice for student {student.id}: {m_err}")
+
         # Create a NEW immutable historical snapshot record for every successful fetch
         snapshot = StudentStatSnapshot(
             student_id=student.id,

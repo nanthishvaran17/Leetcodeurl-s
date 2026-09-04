@@ -1,12 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import {
-  signInWithPopup,
-  signOut as firebaseSignOut,
-  onAuthStateChanged,
-  User as FirebaseUser
-} from 'firebase/auth';
-import { auth, googleProvider, getOrInitAuth } from '../firebase';
+import { signOut as firebaseSignOut } from 'firebase/auth';
+import { auth, getOrInitAuth } from '../firebase';
 import api from '../services/api';
+
 
 export interface AuthUser {
   uid: string;
@@ -87,113 +83,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // Sync Google Auth state changes
-  useEffect(() => {
-    if (!auth) {
-      return;
-    }
 
-    const unsubscribe = onAuthStateChanged(auth, async (fbUser: FirebaseUser | null) => {
-      if (fbUser) {
-        try {
-          const idToken = await fbUser.getIdToken();
-          setToken(idToken);
-          localStorage.setItem('token', idToken);
+  // NOTE: We intentionally do NOT use onAuthStateChanged to assign application
+  // roles. Firebase auth state is for the Firebase layer only. Application roles
+  // and sessions are managed exclusively by the backend via /api/auth/google.
+  // This prevents the frontend-only role-assignment security vulnerability.
 
-          const { doc, getDoc, setDoc, updateDoc, serverTimestamp } = await import('firebase/firestore');
-          const { getOrInitDbAsync } = await import('../firebase');
-          const activeDb = await getOrInitDbAsync();
 
-          const userDocRef = doc(activeDb, 'users', fbUser.uid);
-          const userDocSnap = await getDoc(userDocRef);
-
-          let userData: AuthUser;
-
-          const emailLower = (fbUser.email || '').toLowerCase().trim();
-          const isAdminAccount = 
-            emailLower === 'nanthishvaran17@gmail.com' || 
-            emailLower === 'nanthishvaran117@gmail.com' || 
-            emailLower === 'nanthishvaran0106@gmail.com' || 
-            emailLower === 'msanthoshkumar@nandhaengg.org' || 
-            emailLower === 'santhoshkumar@nandhaengg.org' || 
-            fbUser.uid === 'SATDrDpJAcP07WdyyHbPjCb6u5F3';
-
-          if (userDocSnap.exists()) {
-            const data = userDocSnap.data();
-            const effectiveRole = isAdminAccount ? 'admin' : (data.role || 'student');
-
-            userData = {
-              uid: fbUser.uid,
-              name: data.name || fbUser.displayName || 'Nanthishvaran',
-              email: fbUser.email || data.email || '',
-              photoURL: fbUser.photoURL || data.photoURL || '',
-              role: effectiveRole,
-              registerNo: data.registerNo || null,
-              department: data.department || null,
-              year: data.year || null,
-              section: data.section || null,
-              leetcodeUsername: data.leetcodeUsername || null,
-              isProfileLinked: data.isProfileLinked !== undefined ? data.isProfileLinked : false,
-            };
-
-            await updateDoc(userDocRef, {
-              role: effectiveRole,
-              lastLoginAt: serverTimestamp()
-            }).catch(() => {});
-          } else {
-            let matchedStudent: any = null;
-            if (fbUser.email) {
-              try {
-                const res = await api.get('/students/by-email', { params: { email: fbUser.email } });
-                matchedStudent = res.data;
-              } catch (_err) {}
-            }
-
-            userData = {
-              uid: fbUser.uid,
-              name: fbUser.displayName || (isAdminAccount ? 'Administrator' : 'Student User'),
-              email: fbUser.email || '',
-              photoURL: fbUser.photoURL || '',
-              role: isAdminAccount ? 'admin' : 'student',
-              registerNo: matchedStudent ? matchedStudent.reg_no : null,
-              department: matchedStudent ? matchedStudent.department?.code : null,
-              year: matchedStudent ? matchedStudent.year_level : null,
-              section: matchedStudent ? matchedStudent.section?.name : null,
-              leetcodeUsername: matchedStudent ? matchedStudent.username : null,
-              isProfileLinked: !!matchedStudent,
-            };
-
-            await setDoc(userDocRef, {
-              ...userData,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp(),
-              lastLoginAt: serverTimestamp(),
-              isActive: true
-            });
-          }
-
-          setUser(userData);
-          localStorage.setItem('user', JSON.stringify(userData));
-        } catch (err: any) {
-          console.error("Firestore user sync error:", err);
-          const emailLower = (fbUser.email || '').toLowerCase().trim();
-          const isAdminAccount = emailLower === 'nanthishvaran17@gmail.com' || emailLower === 'msanthoshkumar@nandhaengg.org';
-          const fallbackUser: AuthUser = {
-            uid: fbUser.uid,
-            name: fbUser.displayName || 'User',
-            email: fbUser.email || '',
-            photoURL: fbUser.photoURL || '',
-            role: isAdminAccount ? 'admin' : 'student',
-            isProfileLinked: false
-          };
-          setUser(fallbackUser);
-          localStorage.setItem('user', JSON.stringify(fallbackUser));
-        }
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
 
 
   const login = (newToken: string, newUser: any) => {
@@ -219,27 +115,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthError(null);
     setLoading(true);
     try {
-      const activeAuth = auth || getOrInitAuth();
-      await signInWithPopup(activeAuth, googleProvider);
-    } catch (error: any) {
-      console.error("Google sign in error:", error);
-      let errorMsg = "Failed to sign in with Google.";
-      if (error.code === 'auth/invalid-api-key' || error.message?.includes('invalid-api-key')) {
-        errorMsg = "Firebase API Key is missing in frontend/.env. Please paste your VITE_FIREBASE_API_KEY from Firebase Console.";
-      } else if (error.code === 'auth/popup-blocked') {
-        errorMsg = "Sign in popup was blocked by your browser. Please allow popups for this website.";
-      } else if (error.code === 'auth/popup-closed-by-user') {
-        errorMsg = "Google Sign-In popup was closed before completing authentication.";
-      } else if (error.code === 'auth/network-request-failed') {
-        errorMsg = "Network error. Please check your internet connection.";
-      } else if (error.message) {
-        errorMsg = error.message;
+      const { authenticateWithGoogle } = await import('../services/googleAuth');
+      const res = await authenticateWithGoogle();
+      if (res && res.user) {
+        login('', res.user);
       }
-      setAuthError(errorMsg);
+    } catch (error: any) {
+      setAuthError(error.message || 'Failed to sign in with Google.');
     } finally {
       setLoading(false);
     }
   };
+
 
   const sendOtp = async (emailToUse: string) => {
     setAuthError(null);

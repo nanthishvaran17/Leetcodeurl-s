@@ -185,15 +185,75 @@ async def sunday_0935_report_job():
 @with_global_lock('sunday_0940_email_job', timeout_minutes=15)
 async def sunday_0940_email_job():
     """
-    Scheduled for Sunday 9:40 AM IST: Idempotent Email Dispatch to HODs & Management.
+    Scheduled for Sunday 9:40 AM IST: Idempotent Email Dispatch & Role-Based Notification Summaries (Faculty, HOD, Principal).
     """
-    logger.info("[SCHEDULER] Sunday 09:40 AM IST: Autopilot Phase 6 Email Dispatch...")
+    logger.info("[SCHEDULER] Sunday 09:40 AM IST: Autopilot Phase 6 Email & Notification Dispatch...")
     db = SessionLocal()
     try:
         res = sunday_autopilot.phase_6_email_dispatch_0940(db)
         logger.info(f"[SCHEDULER] Sunday 09:40 AM Email Dispatch Completed: {res}")
+        
+        from backend.services.automatic_notification_engine import AutomaticNotificationEngine
+        n_res = AutomaticNotificationEngine.emit_sunday_contest_role_summaries(db)
+        logger.info(f"[SCHEDULER] Sunday 09:40 AM Role Notification Summaries Dispatched: {n_res}")
     except Exception as e:
         logger.error(f"[SCHEDULER] Error in sunday_0940_email_job: {e}", exc_info=True)
+    finally:
+        db.close()
+
+@with_global_lock('daily_faculty_performance_job', timeout_minutes=15)
+async def daily_faculty_performance_job():
+    """
+    Scheduled daily at 10:00 AM IST (Asia/Kolkata):
+    Calculates real-time performance metrics for all assigned active students per Faculty
+    and dispatches short, professional daily summaries.
+    """
+    logger.info("[SCHEDULER] 10:00 AM IST: Executing Daily Faculty Performance Job...")
+    db = SessionLocal()
+    try:
+        from backend.services.automatic_notification_engine import AutomaticNotificationEngine
+        res = AutomaticNotificationEngine.run_daily_faculty_performance_job(db)
+        logger.info(f"[SCHEDULER] Daily Faculty Performance Job complete: {res}")
+    except Exception as e:
+        logger.error(f"[SCHEDULER] Error in daily_faculty_performance_job: {e}", exc_info=True)
+        try:
+            from backend.services.automatic_notification_engine import AutomaticNotificationEngine
+            AutomaticNotificationEngine.emit_admin_system_alert(
+                db=db,
+                alert_title="Daily Faculty Performance Job Failed",
+                alert_message="The automated 10:00 AM IST Faculty notification job encountered an unhandled exception.",
+                error_details=str(e)
+            )
+        except Exception:
+            pass
+    finally:
+        db.close()
+
+@with_global_lock('daily_hod_performance_job', timeout_minutes=15)
+async def daily_hod_performance_job():
+    """Scheduled daily at 10:05 AM IST: Department HOD summary digest."""
+    logger.info("[SCHEDULER] 10:05 AM IST: Executing Daily HOD Performance Job...")
+    db = SessionLocal()
+    try:
+        from backend.services.automatic_notification_engine import AutomaticNotificationEngine
+        res = AutomaticNotificationEngine.run_daily_hod_performance_job(db)
+        logger.info(f"[SCHEDULER] Daily HOD Performance Job complete: {res}")
+    except Exception as e:
+        logger.error(f"[SCHEDULER] Error in daily_hod_performance_job: {e}")
+    finally:
+        db.close()
+
+@with_global_lock('daily_principal_executive_job', timeout_minutes=15)
+async def daily_principal_executive_job():
+    """Scheduled daily at 10:10 AM IST: Principal Executive summary digest."""
+    logger.info("[SCHEDULER] 10:10 AM IST: Executing Daily Principal Executive Job...")
+    db = SessionLocal()
+    try:
+        from backend.services.automatic_notification_engine import AutomaticNotificationEngine
+        res = AutomaticNotificationEngine.run_daily_principal_executive_job(db)
+        logger.info(f"[SCHEDULER] Daily Principal Executive Job complete: {res}")
+    except Exception as e:
+        logger.error(f"[SCHEDULER] Error in daily_principal_executive_job: {e}")
     finally:
         db.close()
 
@@ -505,6 +565,34 @@ def start_scheduler():
         CronTrigger(hour=2, minute=0, timezone=IST),
         id='rating_updater',
         replace_existing=True
+    )
+
+    # ── DAILY AUTOMATIC NOTIFICATION ENGINE JOBS (Asia/Kolkata IST) ──
+    # Job: Daily 10:00 AM IST Faculty Performance Analysis & Digest
+    scheduler.add_job(
+        daily_faculty_performance_job,
+        CronTrigger(hour=10, minute=0, timezone=IST),
+        id='daily_faculty_performance_1000',
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=3600
+    )
+
+    # Job: Daily 10:05 AM IST HOD Department Performance Digest
+    scheduler.add_job(
+        daily_hod_performance_job,
+        CronTrigger(hour=10, minute=5, timezone=IST),
+        id='daily_hod_performance_1005',
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=3600
+    )
+
+    # Job: Daily 10:10 AM IST Principal Executive Digest
+    scheduler.add_job(
+        daily_principal_executive_job,
+        CronTrigger(hour=10, minute=10, timezone=IST),
+        id='daily_principal_executive_1010',
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=3600
     )
 
     # ── DUAL-SYNC TRACKER JOB 1: Sunday 10:00 AM IST — Official Contest Batch Scrape ──

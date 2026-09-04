@@ -431,6 +431,51 @@ def send_test_push_notification_endpoint(
     }
 
 
+@router.post("/trigger-daily-faculty-digest")
+def trigger_daily_faculty_digest_endpoint(
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Manually triggers the daily 10:00 AM IST Faculty Performance Analysis process."""
+    user_role = str(getattr(current_user, "role", "")).upper()
+    if "ADMIN" not in user_role and "FACULTY" not in user_role and "STAFF" not in user_role:
+        raise HTTPException(status_code=403, detail="Faculty or Admin privileges required.")
+
+    from backend.services.automatic_notification_engine import AutomaticNotificationEngine
+    res = AutomaticNotificationEngine.run_daily_faculty_performance_job(db)
+    return {"success": True, "result": res}
+
+
+@router.post("/trigger-daily-hod-digest")
+def trigger_daily_hod_digest_endpoint(
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Manually triggers the daily 10:05 AM IST HOD Department Digest process."""
+    user_role = str(getattr(current_user, "role", "")).upper()
+    if "ADMIN" not in user_role and "HOD" not in user_role:
+        raise HTTPException(status_code=403, detail="HOD or Admin privileges required.")
+
+    from backend.services.automatic_notification_engine import AutomaticNotificationEngine
+    res = AutomaticNotificationEngine.run_daily_hod_performance_job(db)
+    return {"success": True, "result": res}
+
+
+@router.post("/trigger-daily-principal-digest")
+def trigger_daily_principal_digest_endpoint(
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Manually triggers the daily 10:10 AM IST Principal Executive Digest process."""
+    user_role = str(getattr(current_user, "role", "")).upper()
+    if "ADMIN" not in user_role and "PRINCIPAL" not in user_role:
+        raise HTTPException(status_code=403, detail="Principal or Admin privileges required.")
+
+    from backend.services.automatic_notification_engine import AutomaticNotificationEngine
+    res = AutomaticNotificationEngine.run_daily_principal_executive_job(db)
+    return {"success": True, "result": res}
+
+
 # ── 5. SECURE FILE ACCESS & PREVIEW / DOWNLOAD ───────────────────────────
 
 @router.get("/files/{file_id}")
