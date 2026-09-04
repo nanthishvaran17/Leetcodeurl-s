@@ -32,16 +32,11 @@ def get_authorized_student_ids(db: Session, user: Optional[User]) -> Optional[Li
         students = db.query(Student.id).filter(Student.department_id == user.department_id).all()
         return [s[0] for s in students]
         
-    # 3. Staff / Faculty / Mentors -> Assigned Scope (or Dept Fallback)
+    # 3. Staff / Faculty / Mentors -> Assigned Scope Only
     if role_clean in ("staff", "faculty", "professor", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"):
         assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, user.id)
-        if assigned_ids:
-            return assigned_ids
-        if user.department_id:
-            students = db.query(Student.id).filter(Student.department_id == user.department_id).all()
-            return [s[0] for s in students]
-        return None  # Fallback to all students if no department lock
-        
+        return assigned_ids
+
     # 4. Student -> Self Scope
     if role_clean == "student":
         student = None
@@ -81,10 +76,8 @@ def apply_role_based_student_filter(query, user: Optional[User], db: Session):
         assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, user.id)
         if assigned_ids:
             return query.filter(Student.id.in_(assigned_ids))
-        # Fallback if no specific students assigned yet: view department students or all students
-        if user.department_id and user.department_id != 0:
-            return query.filter(Student.department_id == user.department_id)
-        return query
+        # If no specific students assigned yet, strictly limit to empty set (0 students)
+        return query.filter(Student.id == -1)
 
     if role_clean == "student":
         conds = []
@@ -125,11 +118,7 @@ def require_staff_student_access(db: Session, user: Optional[User], student_id: 
         
     if role_clean in ("staff", "faculty", "professor", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"):
         assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, user.id)
-        if assigned_ids and student_id not in assigned_ids:
-            if user.department_id and user.department_id != 0:
-                student = db.query(Student.department_id).filter(Student.id == student_id).first()
-                if student and student[0] == user.department_id:
-                    return
+        if student_id not in assigned_ids:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, 
                 detail="Access restricted: This student is not assigned to your mentorship allocation."
