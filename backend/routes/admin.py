@@ -889,11 +889,13 @@ def update_staff_user(
         from backend.services.email_notifications import notify_staff_updated
         from backend.services.notification_service import NotificationService
 
-        display_dob = staff_user.date_of_birth or "N/A"
-        if staff_user.date_of_birth and "-" in staff_user.date_of_birth:
-            parts = staff_user.date_of_birth.split("-")
-            if len(parts) == 3 and len(parts[0]) == 4:
-                display_dob = f"{parts[2]}/{parts[1]}/{parts[0]}"
+        display_dob = str(staff_user.date_of_birth) if staff_user.date_of_birth else "N/A"
+        if staff_user.date_of_birth:
+            dob_str = str(staff_user.date_of_birth)
+            if "-" in dob_str:
+                parts = dob_str.split("-")
+                if len(parts) == 3 and len(parts[0]) == 4:
+                    display_dob = f"{parts[2]}/{parts[1]}/{parts[0]}"
 
         profile_summary = {
             "Full Legal Name": staff_user.full_name or staff_user.username,
