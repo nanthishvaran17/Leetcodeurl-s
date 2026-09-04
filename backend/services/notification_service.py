@@ -24,21 +24,56 @@ except ImportError:
     firestore = None
     FIREBASE_ADMIN_AVAILABLE = False
 
-# Initialize Firebase Admin if available and not already initialized
-if FIREBASE_ADMIN_AVAILABLE and firebase_admin:
+def _init_firebase_admin():
+    if not (FIREBASE_ADMIN_AVAILABLE and firebase_admin):
+        return
     try:
         if not firebase_admin._apps:
-            cred_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'serviceAccountKey.json')
-            if not os.path.exists(cred_path):
-                cred_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'serviceAccountKey.json')
-            if os.path.exists(cred_path):
-                cred = credentials.Certificate(cred_path)
+            # 1. Environment variable (JSON string)
+            env_json = (
+                os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON") or 
+                os.environ.get("FIREBASE_CREDENTIALS_JSON") or 
+                os.environ.get("FIREBASE_CREDENTIALS")
+            )
+            if env_json and env_json.strip():
+                try:
+                    cred_dict = json.loads(env_json.strip())
+                    cred = credentials.Certificate(cred_dict)
+                    firebase_admin.initialize_app(cred)
+                    logger.info("[FIREBASE] Admin SDK initialized from environment JSON.")
+                    return
+                except Exception as _e_json:
+                    logger.warning(f"[FIREBASE] Failed parsing env JSON: {_e_json}")
+
+            # 2. Disk file checks
+            root_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            possible_paths = [
+                os.path.join(root_dir, 'serviceAccountKey.json'),
+                os.path.join(root_dir, 'firebase-service-account.json'),
+                os.path.join(os.path.dirname(os.path.dirname(__file__)), 'serviceAccountKey.json'),
+                os.path.join(os.path.dirname(__file__), 'serviceAccountKey.json'),
+            ]
+            for p in possible_paths:
+                if os.path.exists(p):
+                    try:
+                        cred = credentials.Certificate(p)
+                        firebase_admin.initialize_app(cred)
+                        logger.info(f"[FIREBASE] Admin SDK initialized from {os.path.basename(p)}.")
+                        return
+                    except Exception as _file_err:
+                        logger.warning(f"[FIREBASE] Certificate error with {p}: {_file_err}")
+
+            # 3. Application Default Credentials
+            try:
+                cred = credentials.ApplicationDefault()
                 firebase_admin.initialize_app(cred)
-                logger.info("[FIREBASE] Admin initialized successfully.")
-            else:
-                logger.warning("[FIREBASE] serviceAccountKey.json not found. Push notifications notice.")
+                logger.info("[FIREBASE] Admin SDK initialized using ApplicationDefault.")
+            except Exception as _adc_err:
+                logger.warning(f"[FIREBASE] Push notifications notice: serviceAccountKey.json missing or invalid ({_adc_err}).")
     except Exception as e:
         logger.error(f"[FIREBASE] Error initializing Firebase Admin: {e}")
+
+_init_firebase_admin()
 
 
 EVENT_CATEGORY_MAP = {
@@ -152,6 +187,9 @@ class NotificationService:
                 s = db.query(Student).filter(or_(*student_filters)).first()
                 if s:
                     recipients.append({"user_id": s.email or s.reg_no, "email": s.email, "user_type": "STUDENT"})
+                    
+                if not recipients:
+                    recipients.append({"user_id": clean_target, "email": clean_target, "user_type": "USER"})
                     
         elif scope in ("ROLE", "STAFF"):
             target_role = (recipient_target or "").strip()
@@ -309,7 +347,7 @@ class NotificationService:
                     "priority": eff_priority,
                     "recipientUserId": uid,
                     "recipientType": r["user_type"],
-                    "createdAt": firestore.SERVER_TIMESTAMP if FIREBASE_ADMIN_AVAILABLE and firestore else now_utc.isoformat(),
+                    "createdAt": firestore.SERVER_TIMESTAMP if (FIREBASE_ADMIN_AVAILABLE and firestore and firebase_admin and firebase_admin._apps) else now_utc.isoformat(),
                     "isRead": False,
                     "actionRoute": eff_route,
                     "createdBy": actor_user_id or "System",
@@ -321,7 +359,7 @@ class NotificationService:
             db.commit()
 
             # 2. Firestore Real-time Sync
-            if FIREBASE_ADMIN_AVAILABLE and firestore:
+            if FIREBASE_ADMIN_AVAILABLE and firestore and firebase_admin and firebase_admin._apps:
                 try:
                     db_fs = firestore.client()
                     batch = db_fs.batch()
@@ -334,14 +372,18 @@ class NotificationService:
 
             # 3. FCM Multi-Device Push Dispatch & Token Cleanup
             fcm_dispatched = 0
-            if FIREBASE_ADMIN_AVAILABLE and messaging:
+            if FIREBASE_ADMIN_AVAILABLE and messaging and firebase_admin and firebase_admin._apps:
                 is_high_priority = eff_priority in ("high", "critical")
                 raw_route = str(eff_route or "/dashboard")
                 fcm_link = raw_route if raw_route.startswith("http") else f"https://leetcodeurl-s-3mig.onrender.com{raw_route}"
                 
-                target_uids = [r["user_id"] for r in recipients]
+                target_uids = set(r["user_id"] for r in recipients if r.get("user_id"))
+                for r in recipients:
+                    if r.get("email"):
+                        target_uids.add(r["email"])
+
                 active_tokens = db.query(FCMDeviceToken).filter(
-                    and_(FCMDeviceToken.user_id.in_(target_uids), FCMDeviceToken.is_active == True)
+                    and_(FCMDeviceToken.user_id.in_(list(target_uids)), FCMDeviceToken.is_active == True)
                 ).all()
 
                 stale_tokens = []
