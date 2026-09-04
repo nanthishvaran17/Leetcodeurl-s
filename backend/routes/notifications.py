@@ -395,6 +395,42 @@ def broadcast_app_update_notification_endpoint(
     return result
 
 
+class TestPushRequest(BaseModel):
+    title: Optional[str] = "Contest Reminder 🔔"
+    message: Optional[str] = "Sunday LeetCode Contest starts in 30 minutes! Tap to view leaderboard."
+    route: Optional[str] = "/weekly-contest"
+    priority: Optional[str] = "high"
+
+
+@router.post("/test-push")
+def send_test_push_notification_endpoint(
+    req: TestPushRequest,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Triggers an immediate real system push notification to all active devices registered to current user."""
+    user_id = current_user.email if hasattr(current_user, "email") and current_user.email else (
+        current_user.reg_no if hasattr(current_user, "reg_no") else str(current_user.id)
+    )
+
+    result = NotificationService.emit_event(
+        event_type="CONTEST_REMINDER",
+        title=req.title or "Contest Reminder 🔔",
+        body=req.message or "Sunday LeetCode Contest starts in 30 minutes!",
+        actor_user_id="System Engine",
+        recipient_scope="INDIVIDUAL",
+        recipient_target=user_id,
+        entity_type="contest",
+        route=req.route or "/weekly-contest",
+        priority=req.priority or "high"
+    )
+    return {
+        "success": True,
+        "message": f"Real system push dispatched to user {user_id}",
+        "details": result
+    }
+
+
 # ── 5. SECURE FILE ACCESS & PREVIEW / DOWNLOAD ───────────────────────────
 
 @router.get("/files/{file_id}")

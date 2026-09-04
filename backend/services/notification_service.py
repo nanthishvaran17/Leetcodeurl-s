@@ -343,21 +343,49 @@ class NotificationService:
                 stale_tokens = []
                 for t_obj in active_tokens:
                     try:
+                        is_high_priority = eff_priority in ("high", "critical")
                         fcm_msg = messaging.Message(
                             notification=messaging.Notification(title=title, body=body),
                             token=t_obj.device_token,
                             data={
-                                "notificationId": t_obj.device_token[:8],
+                                "notificationId": eff_event_id,
                                 "type": str(event_type),
                                 "category": str(category),
-                                "actionRoute": str(route or "/dashboard"),
+                                "actionRoute": str(eff_route or "/dashboard"),
                                 "entityType": str(entity_type or ""),
                                 "entityId": str(entity_id or ""),
-                                "fileId": str(file_id or "")
+                                "fileId": str(file_id or ""),
+                                "priority": str(eff_priority)
                             },
+                            android=messaging.AndroidConfig(
+                                priority="high" if is_high_priority else "normal",
+                                notification=messaging.AndroidNotification(
+                                    title=title,
+                                    body=body,
+                                    icon="stock_ticker_update",
+                                    color="#3b82f6",
+                                    sound="default",
+                                    default_sound=True,
+                                    default_vibrate_timings=True,
+                                    channel_id="leetcode_intelligence_channel",
+                                    visibility="public",
+                                    notification_count=1
+                                )
+                            ),
                             webpush=messaging.WebpushConfig(
+                                headers={
+                                    "Urgency": "high" if is_high_priority else "normal"
+                                },
+                                notification=messaging.WebpushNotification(
+                                    title=title,
+                                    body=body,
+                                    icon="/logo.png",
+                                    badge="/logo.png",
+                                    tag=eff_event_id,
+                                    require_interaction=is_high_priority
+                                ),
                                 fcm_options=messaging.WebpushFCMOptions(
-                                    link=str(route or "/dashboard")
+                                    link=str(eff_route or "/dashboard")
                                 )
                             )
                         )
@@ -382,13 +410,38 @@ class NotificationService:
                             notification=messaging.Notification(title=title, body=body),
                             topic="all_app_users",
                             data={
+                                "notificationId": eff_event_id,
                                 "type": str(event_type),
                                 "category": str(category),
-                                "actionRoute": str(route or "/dashboard")
+                                "actionRoute": str(eff_route or "/dashboard"),
+                                "priority": str(eff_priority)
                             },
+                            android=messaging.AndroidConfig(
+                                priority="high" if is_high_priority else "normal",
+                                notification=messaging.AndroidNotification(
+                                    title=title,
+                                    body=body,
+                                    sound="default",
+                                    default_sound=True,
+                                    default_vibrate_timings=True,
+                                    channel_id="leetcode_intelligence_channel",
+                                    visibility="public"
+                                )
+                            ),
                             webpush=messaging.WebpushConfig(
+                                headers={
+                                    "Urgency": "high" if is_high_priority else "normal"
+                                },
+                                notification=messaging.WebpushNotification(
+                                    title=title,
+                                    body=body,
+                                    icon="/logo.png",
+                                    badge="/logo.png",
+                                    tag=eff_event_id,
+                                    require_interaction=is_high_priority
+                                ),
                                 fcm_options=messaging.WebpushFCMOptions(
-                                    link=str(route or "/dashboard")
+                                    link=str(eff_route or "/dashboard")
                                 )
                             )
                         )
