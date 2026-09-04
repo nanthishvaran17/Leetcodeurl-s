@@ -216,24 +216,35 @@ export const ChatWindow: React.FC<Props> = ({
 
   const handleSendSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputText.trim() && !selectedFile) return;
+    const textToSend = inputText.trim();
+    const fileToSend = selectedFile;
+    const replyMsg = replyingToMessage;
+    const isEdit = !!editingMessage;
+    const editMsgId = editingMessage?.messageId;
+
+    if (!textToSend && !fileToSend) return;
     if (isSending) return;
 
     if (onReportTyping) onReportTyping(false);
+
+    // Clear input box IMMEDIATELY for instant UI feedback
+    setInputText('');
+    setSelectedFile(null);
+    setReplyingToMessage(null);
+    setEditingMessage(null);
+    setShowEmojiPicker(false);
     
     setIsSending(true);
     try {
-      if (editingMessage) {
+      if (isEdit && editMsgId) {
         // Edit mode
-        await onEditMessage(editingMessage.messageId, inputText.trim());
-        setEditingMessage(null);
-        setInputText('');
+        await onEditMessage(editMsgId, textToSend);
       } else {
         // Normal send or Reply mode
         let attachmentFileId = undefined;
-        if (selectedFile) {
+        if (fileToSend) {
           const formData = new FormData();
-          formData.append('file', selectedFile);
+          formData.append('file', fileToSend);
           const res = await axios.post(getApiUrl('/messaging/upload'), formData, {
             headers: {
               ...getAuthHeaders(),
@@ -246,17 +257,14 @@ export const ChatWindow: React.FC<Props> = ({
         }
 
         await onSend(
-          inputText.trim(),
+          textToSend,
           attachmentFileId,
-          replyingToMessage ? replyingToMessage.messageId : undefined
+          replyMsg ? replyMsg.messageId : undefined
         );
-
-        setInputText('');
-        setSelectedFile(null);
-        setReplyingToMessage(null);
-        setShowEmojiPicker(false);
       }
     } catch (err: any) {
+      // If error occurs, notify user and restore text so message isn't lost
+      setInputText(textToSend);
       notify.error('Send Error', err?.response?.data?.detail || 'Failed to send message.');
     } finally {
       setIsSending(false);

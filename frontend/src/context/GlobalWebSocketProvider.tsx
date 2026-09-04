@@ -101,18 +101,28 @@ export const GlobalWebSocketProvider: React.FC<{ children: React.ReactNode }> = 
 
       worker.postMessage({ type: 'CONNECT', payload: { wsUrl } });
 
+      const handleResume = () => {
+        if (document.visibilityState === 'visible' && workerRef.current) {
+          workerRef.current.postMessage({ type: 'CONNECT', payload: { wsUrl } });
+        }
+      };
+
+      document.addEventListener('visibilitychange', handleResume);
+      window.addEventListener('focus', handleResume);
+
+      return () => {
+        isMounted = false;
+        document.removeEventListener('visibilitychange', handleResume);
+        window.removeEventListener('focus', handleResume);
+        if (worker) {
+          worker.postMessage({ type: 'DISCONNECT' });
+          worker.terminate();
+        }
+        setIsConnected(false);
+      };
     } catch (err) {
       console.warn('Worker WS init exception:', err);
     }
-
-    return () => {
-      isMounted = false;
-      if (worker) {
-        worker.postMessage({ type: 'DISCONNECT' });
-        worker.terminate();
-      }
-      setIsConnected(false);
-    };
   }, [eventRouter, token]);
 
   return (

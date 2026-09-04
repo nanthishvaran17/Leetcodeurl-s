@@ -86,14 +86,36 @@ export const MessagesPage: React.FC = () => {
 
   useEffect(() => {
     if (isConnected) {
+      fetchConversations();
       if (activeConversationId) {
+        fetchMessages(activeConversationId);
         viewConversation(activeConversationId);
       } else {
         leaveConversation();
       }
     }
     return () => leaveConversation();
-  }, [activeConversationId, viewConversation, leaveConversation, isConnected]);
+  }, [activeConversationId, viewConversation, leaveConversation, isConnected, fetchConversations, fetchMessages]);
+
+  // Handle visibility change / app resume sync
+  useEffect(() => {
+    const handleSyncOnResume = () => {
+      if (document.visibilityState === 'visible') {
+        fetchConversations();
+        if (activeConversationId) {
+          fetchMessages(activeConversationId);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleSyncOnResume);
+    window.addEventListener('focus', handleSyncOnResume);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleSyncOnResume);
+      window.removeEventListener('focus', handleSyncOnResume);
+    };
+  }, [fetchConversations, fetchMessages, activeConversationId]);
 
   // Handle incoming NEW_MESSAGE
   useEffect(() => {
