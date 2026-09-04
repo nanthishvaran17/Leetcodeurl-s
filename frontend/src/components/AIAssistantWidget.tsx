@@ -398,7 +398,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[99999] font-sans pointer-events-auto">
+    <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] right-6 z-[99999] font-sans pointer-events-auto">
       <AnimatePresence>
         {/* Floating Toggle Button */}
         {!isOpen && (

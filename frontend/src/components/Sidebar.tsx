@@ -199,7 +199,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-            className="relative w-4/5 max-w-xs xl:max-w-[325px] h-full shadow-lg bg-white dark:bg-navy-900 p-4 sm:p-5 flex flex-col justify-between overflow-hidden z-10 border-r border-gray-200 dark:border-navy-800"
+            className="relative w-4/5 max-w-xs xl:max-w-[325px] h-full shadow-lg bg-white dark:bg-navy-900 pt-[max(1rem,env(safe-area-inset-top,1rem))] pb-[max(1rem,env(safe-area-inset-bottom,1rem))] px-4 sm:px-5 flex flex-col justify-between overflow-hidden z-10 border-r border-gray-200 dark:border-navy-800"
           >
             {/* ── Ambient Radial Mesh Glows ── */}
 
@@ -226,7 +226,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1.5 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-navy-800 cursor-pointer"
+                className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-navy-800 cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
+                title="Close Navigation Menu"
               >
                 <X className="w-5 h-5" />
               </button>
