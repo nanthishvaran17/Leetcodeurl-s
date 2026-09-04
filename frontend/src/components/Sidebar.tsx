@@ -23,6 +23,7 @@ import {
   Sparkles,
   Compass,
   AlertOctagon,
+  Download,
   Flame,
   Radio,
   X,
@@ -356,8 +357,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
         )}
       </div>
 
-      {/* ── Bottom Institution Footer Card ── */}
-      <div className="pt-3 mt-2 border-t border-slate-100 dark:border-navy-800 shrink-0 relative z-10">
+      {/* ── Bottom Institution Footer Card & Mobile App Download ── */}
+      <div className="pt-3 mt-2 border-t border-slate-100 dark:border-navy-800 shrink-0 relative z-10 space-y-2">
+        <a
+          href="/nandha_leetcode_app.apk"
+          download="Nandha_LeetCode_Intelligence.apk"
+          className="flex items-center justify-between p-2.5 rounded-xl bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-brand-400 border border-brand-500/30 transition-all font-bold text-xs shadow-sm group"
+        >
+          <div className="flex items-center space-x-2">
+            <Download className="w-4 h-4 text-brand-500 group-hover:scale-110 transition-transform" />
+            <span>Download Android App (.apk)</span>
+          </div>
+          <span className="text-[9px] px-1.5 py-0.5 rounded bg-brand-500 text-white font-black">v2.0</span>
+        </a>
+
         <div className="p-3.5 rounded-2xl bg-slate-900 dark:bg-navy-950 text-white border border-emerald-500/20 shadow-lg text-xs space-y-2 relative overflow-hidden group cursor-default">
           <div className="absolute top-0 right-0 -mt-4 -mr-4 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
           <div className="flex items-center space-x-2 relative z-10">
