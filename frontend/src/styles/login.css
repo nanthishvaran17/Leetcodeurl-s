@@ -908,12 +908,13 @@
     height: 100dvh;
     max-height: 100dvh;
     min-height: 100dvh;
-    padding: max(6px, env(safe-area-inset-top, 6px)) 0.5rem max(6px, env(safe-area-inset-bottom, 6px)) 0.5rem !important;
+    padding: max(8px, env(safe-area-inset-top, 8px)) 12px max(8px, env(safe-area-inset-bottom, 8px)) 12px !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: space-between !important;
+    justify-content: center !important; /* Centered snug layout */
     align-items: center !important;
-    overflow: hidden !important; /* Single screen fit — NO vertical or horizontal scroll in normal state */
+    gap: clamp(0.35rem, 1.2vh, 0.65rem) !important;
+    overflow-y: auto !important;
     background-color: #0b1329 !important;
     background-image: radial-gradient(circle at 50% 0%, rgba(30, 58, 138, 0.35), transparent 70%),
                       linear-gradient(to bottom, #090d16, #0b1329) !important;
@@ -924,10 +925,10 @@
   .mobile-header {
     position: relative;
     width: 100%;
-    max-width: 440px;
+    max-width: 420px;
     border-radius: 16px;
     overflow: hidden;
-    margin-bottom: clamp(0.25rem, 1vh, 0.5rem);
+    margin-bottom: 0;
     box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.15);
     flex-shrink: 0;
     z-index: 10;
@@ -967,7 +968,7 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding: clamp(0.35rem, 1.2vh, 0.65rem) 0.65rem;
+    padding: clamp(0.4rem, 1.2vh, 0.6rem) 0.75rem;
   }
 
   .mobile-badge-row {
@@ -975,7 +976,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.4rem;
-    margin-bottom: 0.2rem;
+    margin-bottom: 0.15rem;
   }
 
   .mobile-brand-mark {
@@ -998,37 +999,36 @@
 
   .mobile-name {
     font-family: 'Outfit', sans-serif;
-    font-size: clamp(1rem, 2.8vh, 1.2rem);
+    font-size: clamp(1rem, 2.5vh, 1.15rem);
     font-weight: 900;
     color: #ffffff;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95);
-    margin: 0 0 0.15rem 0;
+    margin: 0 0 0.1rem 0;
     line-height: 1.15;
   }
 
   .mobile-sub {
-    font-size: 0.62rem;
+    font-size: 0.64rem;
     color: #f8fafc;
     font-weight: 600;
     line-height: 1.2;
-    max-width: 290px;
+    max-width: 300px;
     background: rgba(15, 23, 42, 0.75);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
-    padding: 0.18rem 0.55rem;
-    border-radius: 8px;
+    padding: 0.15rem 0.5rem;
+    border-radius: 6px;
     border: 1px solid rgba(255, 255, 255, 0.16);
   }
 
-  /* Single-Screen Login Frame */
+  /* Single-Screen Content-Driven Login Frame */
   .login-frame {
-    flex: 1 !important;
+    flex: 0 1 auto !important; /* Content-driven height, no stretching! */
     width: 100% !important;
-    max-width: 440px !important;
+    max-width: 420px !important;
     min-height: 0 !important;
-    max-height: 100% !important;
     border-radius: 20px !important;
-    box-shadow: 0 12px 32px -6px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15) inset !important;
+    box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.15) inset !important;
     border: none !important;
     background: #ffffff !important;
     display: flex !important;
@@ -1039,7 +1039,7 @@
   }
 
   .dark .login-frame {
-    background: rgba(15, 23, 42, 0.88) !important;
+    background: rgba(15, 23, 42, 0.92) !important;
     backdrop-filter: blur(16px) !important;
     -webkit-backdrop-filter: blur(16px) !important;
   }
@@ -1049,11 +1049,11 @@
   }
 
   .panel-right {
-    flex: 1 !important;
-    padding: clamp(0.65rem, 1.8vh, 1.1rem) clamp(0.75rem, 3vw, 1.15rem) !important;
+    flex: 0 1 auto !important;
+    padding: clamp(0.85rem, 2vh, 1.25rem) clamp(0.85rem, 3.5vw, 1.25rem) 0.85rem clamp(0.85rem, 3.5vw, 1.25rem) !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: space-between !important;
+    justify-content: flex-start !important; /* Natural top-to-bottom content rhythm */
     position: relative !important;
     overflow-y: auto !important;
     box-sizing: border-box !important;
@@ -1064,7 +1064,7 @@
     background: transparent !important;
   }
 
-  /* Absolute Theme Toggle — takes 0px flow height */
+  /* Absolute Theme Toggle */
   .top-bar {
     position: absolute !important;
     top: 10px !important;
@@ -1087,19 +1087,19 @@
   /* Form Header */
   .form-head {
     text-align: center !important;
-    margin-bottom: clamp(0.3rem, 1vh, 0.6rem) !important;
-    padding-right: 28px !important; /* avoid overlapping theme toggle */
+    margin-bottom: clamp(0.5rem, 1.2vh, 0.85rem) !important;
+    padding-right: 28px !important;
   }
 
   .form-head h2 {
-    font-size: clamp(1.1rem, 2.6vh, 1.3rem) !important;
+    font-size: clamp(1.1rem, 2.6vh, 1.25rem) !important;
     font-weight: 800 !important;
-    margin: 0 0 0.15rem 0 !important;
+    margin: 0 0 0.2rem 0 !important;
     line-height: 1.2 !important;
   }
 
   .form-head p {
-    font-size: clamp(0.72rem, 1.6vh, 0.8rem) !important;
+    font-size: clamp(0.72rem, 1.6vh, 0.78rem) !important;
     line-height: 1.25 !important;
     color: var(--text-muted) !important;
     margin: 0 !important;
@@ -1107,7 +1107,7 @@
 
   /* Segmented Control Tabs */
   .tabs {
-    margin-bottom: clamp(0.35rem, 1vh, 0.6rem) !important;
+    margin-bottom: clamp(0.5rem, 1.2vh, 0.85rem) !important;
     background: rgba(241, 245, 249, 0.9) !important;
     border-radius: 12px !important;
     padding: 3px !important;
@@ -1119,30 +1119,30 @@
 
   .tabs button {
     border-radius: 9px !important;
-    padding: clamp(0.35rem, 0.9vh, 0.5rem) !important;
+    padding: 0.45rem 0.5rem !important;
     font-size: 0.82rem !important;
     font-weight: 700 !important;
   }
 
   /* Form Fields */
   .field {
-    margin-bottom: clamp(0.35rem, 1vh, 0.6rem) !important;
+    margin-bottom: clamp(0.5rem, 1.2vh, 0.75rem) !important;
   }
 
   .field label {
-    font-size: 0.78rem !important;
+    font-size: 0.76rem !important;
     font-weight: 600 !important;
-    margin-bottom: 0.2rem !important;
+    margin-bottom: 0.25rem !important;
   }
 
   .field input[type="text"],
   .field input[type="email"],
   .field input[type="password"],
   .field input[type="date"] {
-    padding: clamp(0.45rem, 1vh, 0.6rem) 0.75rem clamp(0.45rem, 1vh, 0.6rem) 2.2rem !important;
-    font-size: 0.88rem !important;
+    padding: 0.55rem 0.75rem 0.55rem 2.25rem !important;
+    font-size: 0.86rem !important;
     border-radius: 10px !important;
-    height: clamp(36px, 4.8vh, 42px) !important;
+    height: clamp(38px, 4.5vh, 42px) !important;
     box-sizing: border-box !important;
   }
 
@@ -1158,28 +1158,28 @@
 
   /* Row Between (Remember me / Forgot password) */
   .row-between {
-    margin-bottom: clamp(0.35rem, 1vh, 0.6rem) !important;
-    font-size: 0.78rem !important;
+    margin-bottom: clamp(0.5rem, 1.2vh, 0.75rem) !important;
+    font-size: 0.76rem !important;
   }
 
   .row-between .remember,
   .row-between .forgot {
-    font-size: 0.78rem !important;
+    font-size: 0.76rem !important;
   }
 
   /* Submit Button */
   .submit-btn {
-    min-height: clamp(38px, 5.2vh, 44px) !important;
+    min-height: clamp(38px, 4.8vh, 42px) !important;
     padding: 0.55rem 0.85rem !important;
-    font-size: 0.88rem !important;
+    font-size: 0.86rem !important;
     font-weight: 700 !important;
     border-radius: 10px !important;
-    margin-bottom: clamp(0.25rem, 0.7vh, 0.45rem) !important;
+    margin-bottom: clamp(0.4rem, 1vh, 0.6rem) !important;
   }
 
   /* Divider */
   .divider {
-    margin: clamp(0.25rem, 0.6vh, 0.4vh) 0 !important;
+    margin: clamp(0.35rem, 0.8vh, 0.55rem) 0 !important;
   }
 
   .divider span {
@@ -1189,7 +1189,7 @@
 
   /* Google Button */
   .google-btn {
-    min-height: clamp(36px, 4.8vh, 40px) !important;
+    min-height: clamp(36px, 4.5vh, 40px) !important;
     padding: 0.45rem 0.75rem !important;
     font-size: 0.84rem !important;
     border-radius: 10px !important;
@@ -1197,7 +1197,8 @@
 
   /* Footer Links & Stamp */
   .footer-links {
-    margin-top: clamp(0.25rem, 0.6vh, 0.45rem) !important;
+    margin-top: clamp(0.4rem, 1vh, 0.65rem) !important;
+    margin-bottom: clamp(0.3rem, 0.8vh, 0.5rem) !important;
     text-align: center !important;
   }
 
@@ -1206,9 +1207,15 @@
   }
 
   .stamp {
-    margin-top: clamp(0.2rem, 0.5vh, 0.35rem) !important;
+    margin-top: clamp(0.3rem, 0.8vh, 0.5rem) !important;
+    padding-top: clamp(0.35rem, 0.8vh, 0.5rem) !important;
+    border-top: 1px dashed rgba(226, 232, 240, 0.8) !important;
     font-size: 0.68rem !important;
     gap: 0.35rem !important;
+  }
+
+  .dark .stamp {
+    border-top-color: rgba(51, 65, 85, 0.8) !important;
   }
 }
 
