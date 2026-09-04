@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { resolveNotificationDestination } from '../utils/notificationNavigation';
-import { Bell, Check, Trash2, CheckCircle2, AlertTriangle, AlertCircle, Calendar, FileText, Download, Eye, X, Settings, ChevronRight } from 'lucide-react';
+import { Bell, Check, Trash2, CheckCircle2, AlertTriangle, AlertCircle, Calendar, FileText, Download, Eye, X, Settings, ChevronRight, ArrowLeft } from 'lucide-react';
 import { useGlobalNotifications, Notification } from '../context/GlobalNotificationContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -71,7 +71,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
+      if (window.innerWidth >= 640 && panelRef.current && !panelRef.current.contains(event.target as Node)) {
         onClose();
       }
     };
@@ -124,18 +124,27 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
         {isOpen && (
           <motion.div
             ref={panelRef}
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            initial={{ opacity: 0, y: -10, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            exit={{ opacity: 0, y: -10, scale: 0.98 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
-            className="fixed sm:absolute right-0 top-16 sm:top-12 mt-0 sm:mt-2 w-full sm:w-96 max-w-[100vw] sm:max-w-sm bg-white dark:bg-navy-900 sm:rounded-2xl shadow-2xl border-y sm:border border-slate-200 dark:border-navy-800 z-[100050] overflow-hidden flex flex-col h-[calc(100dvh-64px)] sm:h-auto sm:max-h-[580px] pb-[env(safe-area-inset-bottom,8px)]"
+            className="fixed inset-0 sm:inset-auto sm:absolute sm:right-0 sm:top-12 sm:mt-2 w-full sm:w-96 max-w-[100vw] sm:max-w-sm bg-white dark:bg-navy-900 sm:rounded-2xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-800 z-[100050] overflow-hidden flex flex-col h-dvh sm:h-auto sm:max-h-[580px] pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,12px)]"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-navy-800 bg-slate-50/80 dark:bg-navy-950/80 shrink-0">
-              <div className="flex items-center gap-2">
-                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">Notifications</h3>
+            <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-b border-slate-100 dark:border-navy-800 bg-slate-50/90 dark:bg-navy-950/90 shrink-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="p-2 -ml-1 text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-navy-800 rounded-xl transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0"
+                  title="Back to previous screen"
+                  aria-label="Back"
+                >
+                  <ArrowLeft size={20} />
+                </button>
+                <h3 className="font-black text-base sm:text-sm text-slate-900 dark:text-white truncate">Notifications</h3>
                 {unreadCount > 0 && (
-                  <span className="bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 text-[10px] font-black px-2 py-0.5 rounded-full">
+                  <span className="bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 text-[10px] font-black px-2 py-0.5 rounded-full shrink-0">
                     {unreadCount} new
                   </span>
                 )}
@@ -144,10 +153,10 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
                 <button
                   type="button"
                   onClick={markAllAsRead}
-                  className="text-xs text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 font-bold flex items-center gap-1 transition-colors cursor-pointer min-h-[36px] px-2 rounded-lg hover:bg-brand-50 dark:hover:bg-navy-800"
+                  className="text-xs text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 font-bold flex items-center gap-1 transition-colors cursor-pointer min-h-[44px] px-2.5 rounded-xl hover:bg-brand-50 dark:hover:bg-navy-800 shrink-0"
                 >
-                  <Check size={14} />
-                  Mark all read
+                  <Check size={15} />
+                  <span className="hidden xs:inline">Mark all read</span>
                 </button>
               )}
             </div>
@@ -159,9 +168,9 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
                   key={cat.id}
                   type="button"
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`text-[11px] font-bold h-7 px-3 rounded-lg transition-all shrink-0 cursor-pointer whitespace-nowrap flex items-center justify-center ${
+                  className={`text-[11px] font-extrabold h-8 px-3.5 rounded-xl transition-all shrink-0 cursor-pointer whitespace-nowrap flex items-center justify-center ${
                     selectedCategory === cat.id
-                      ? 'bg-brand-500 text-white shadow-sm'
+                      ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-navy-800 dark:text-slate-300 dark:hover:bg-navy-700'
                   }`}
                 >
@@ -195,12 +204,12 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
                   </div>
                 </div>
               ) : notifications.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center py-12 px-4 text-center my-auto min-h-[220px]">
-                  <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-navy-800 flex items-center justify-center mb-3 text-slate-400 dark:text-slate-500 shadow-sm">
-                    <Bell size={24} />
+                <div className="flex-1 flex flex-col items-center justify-center py-10 px-6 text-center my-auto min-h-[260px] animate-fade-in">
+                  <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-navy-800/80 border border-slate-200/60 dark:border-navy-700/60 flex items-center justify-center mb-4 text-slate-400 dark:text-slate-500 shadow-sm">
+                    <Bell size={28} />
                   </div>
-                  <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">No notifications</h4>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-[220px]">
+                  <h4 className="text-sm font-extrabold text-slate-800 dark:text-slate-200 mb-1.5">No notifications</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-[240px] leading-relaxed">
                     Notifications for your selected category will appear here.
                   </p>
                 </div>
