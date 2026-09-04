@@ -274,26 +274,79 @@ async def sunday_2150_virtual_recheck_job():
         db.close()
 
 
+@with_global_lock('sunday_2155_auto_recovery_job', timeout_minutes=120)
+async def sunday_2155_auto_recovery_job():
+    """
+    Scheduled for Sunday 09:55 PM IST: Auto Recovery with exponential backoff and re-verification of transiently failed student records.
+    """
+    logger.info("[SCHEDULER] Sunday 09:55 PM IST: Executing 09:55 PM Auto Recovery & Re-Verification...")
+    db = SessionLocal()
+    try:
+        res = sunday_autopilot.phase_7b_auto_recovery(db=db)
+        logger.info(f"[SCHEDULER] Sunday 09:55 PM Auto Recovery completed: {res}")
+        return res
+    except Exception as e:
+        logger.error(f"[SCHEDULER] Error in sunday_2155_auto_recovery_job: {e}", exc_info=True)
+    finally:
+        db.close()
+
+
+@with_global_lock('sunday_2157_lock_gate_job', timeout_minutes=120)
+async def sunday_2157_lock_gate_job():
+    """
+    Scheduled for Sunday 09:57 PM IST: Authoritative Final Lock Readiness Gate Evaluation.
+    Evaluates 301/301 verification, 0 missing, 0 duplicates, 0 pending. If any fail, transitions state to LOCK_BLOCKED.
+    """
+    logger.info("[SCHEDULER] Sunday 09:57 PM IST: Executing 09:57 PM Authoritative Final Lock Readiness Gate Check...")
+    db = SessionLocal()
+    try:
+        gate_res = sunday_autopilot.evaluate_final_lock_readiness_gate(db=db)
+        logger.info(f"[SCHEDULER] Sunday 09:57 PM Lock Gate Result: {gate_res}")
+        return gate_res
+    except Exception as e:
+        logger.error(f"[SCHEDULER] Error in sunday_2157_lock_gate_job: {e}", exc_info=True)
+    finally:
+        db.close()
+
+
 @with_global_lock('sunday_2200_virtual_contest_job', timeout_minutes=120)
 async def sunday_2200_virtual_contest_job():
     """
-    Scheduled for Sunday 10:00 PM IST: End-of-Day Virtual contest finalization, combined report generation, email & rollover to Next Contest.
-    Evaluates 09:57 PM Final Lock Readiness Gate. If gate fails, state shifts to LOCK_BLOCKED.
+    Scheduled for Sunday 10:00 PM IST: Final Lock Guarded Execution.
+    Verifies 09:57 PM ALLOW_LOCK gate passed. If passed, transitions state to FINALIZED and freezes immutable snapshot.
+    If gate failed, remains LOCK_BLOCKED and refuses to finalize.
     """
-    logger.info("[SCHEDULER] Sunday 10:00 PM IST: Evaluating Final Lock Gate & Executing Rollover...")
+    logger.info("[SCHEDULER] Sunday 10:00 PM IST: Executing Finalization Safety Check...")
     db = SessionLocal()
     try:
         gate_res = sunday_autopilot.evaluate_final_lock_readiness_gate(db=db)
         if not gate_res.get("allow_lock", False):
-            logger.error(f"[SCHEDULER_LOCK_BLOCKED] Final Lock Gate blocked: {gate_res}")
-            return gate_res
+            logger.error(f"[SCHEDULER_LOCK_BLOCKED] 10:00 PM Finalization Guard blocked: Lock Gate failed. Details: {gate_res}")
+            return {"success": False, "status": "LOCK_BLOCKED", "reason": "10:00 PM Finalization Guard blocked by Lock Gate failure.", "gate": gate_res}
         
-        res7 = sunday_autopilot.phase_7_virtual_sync_2200(db)
-        res8 = sunday_autopilot.phase_8_prepare_next_contest(db)
-        logger.info(f"[SCHEDULER] Sunday 10:00 PM Virtual Finalization & Next Contest Rollover Completed: {res7}, Next: {res8}")
-        return {"success": True, "gate": gate_res, "finalization": res7, "rollover": res8}
+        res_fin = sunday_autopilot.phase_4_finalization_and_reconciliation(db=db)
+        logger.info(f"[SCHEDULER] Sunday 10:00 PM Virtual Finalization Completed: {res_fin}")
+        return {"success": True, "gate": gate_res, "finalization": res_fin}
     except Exception as e:
         logger.error(f"[SCHEDULER] Error in sunday_2200_virtual_contest_job: {e}", exc_info=True)
+    finally:
+        db.close()
+
+
+@with_global_lock('sunday_2205_rollover_job', timeout_minutes=120)
+async def sunday_2205_rollover_job():
+    """
+    Scheduled for Sunday 10:05 PM IST: Automatic Rollover to Weekly Contest 518.
+    Verifies Contest 517 is FINALIZED before activating Contest 518. If Contest 517 is LOCK_BLOCKED, rollover is strictly blocked.
+    """
+    logger.info("[SCHEDULER] Sunday 10:05 PM IST: Executing Contest 518 Rollover Safety Check & Preparation...")
+    db = SessionLocal()
+    try:
+        res = sunday_autopilot.phase_8_prepare_next_contest(db=db)
+        logger.info(f"[SCHEDULER] Sunday 10:05 PM Rollover Completed: {res}")
+        return res
+    except Exception as e:
+        logger.error(f"[SCHEDULER] Error in sunday_2205_rollover_job: {e}", exc_info=True)
     finally:
         db.close()
 
@@ -556,11 +609,38 @@ def start_scheduler():
         max_instances=1, coalesce=True, misfire_grace_time=3600
     )
 
-    # 7b. Sunday 10:00 PM (22:00) IST — Virtual Contest Reconciliation, EOD Summary & Next Contest Rollover
+    # 7b. Sunday 09:55 PM (21:55) IST — Auto Recovery & Re-Verification Sweep
+    scheduler.add_job(
+        sunday_2155_auto_recovery_job,
+        CronTrigger(day_of_week='sun', hour=21, minute=55, timezone=tz),
+        id='sunday_auto_recovery_2155',
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=3600
+    )
+
+    # 7c. Sunday 09:57 PM (21:57) IST — Authoritative Final Lock Readiness Gate Evaluation
+    scheduler.add_job(
+        sunday_2157_lock_gate_job,
+        CronTrigger(day_of_week='sun', hour=21, minute=57, timezone=tz),
+        id='sunday_lock_gate_2157',
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=3600
+    )
+
+    # 8a. Sunday 10:00 PM (22:00) IST — Final Lock Guarded Execution & Immutable Snapshot Freezing
     scheduler.add_job(
         sunday_2200_virtual_contest_job,
         CronTrigger(day_of_week='sun', hour=22, minute=0, timezone=tz),
         id='sunday_virtual_contest_2200',
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=3600
+    )
+
+    # 8b. Sunday 10:05 PM (22:05) IST — Rollover Safety Check & Preparation for Contest 518
+    scheduler.add_job(
+        sunday_2205_rollover_job,
+        CronTrigger(day_of_week='sun', hour=22, minute=5, timezone=tz),
+        id='sunday_rollover_2205',
         replace_existing=True,
         max_instances=1, coalesce=True, misfire_grace_time=3600
     )
