@@ -128,7 +128,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.98 }}
             transition={{ duration: 0.18, ease: "easeOut" }}
-            className="fixed inset-0 sm:inset-auto sm:absolute sm:right-0 sm:top-12 sm:mt-2 w-full sm:w-96 max-w-[100vw] sm:max-w-sm bg-white dark:bg-navy-900 sm:rounded-2xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-800 z-[100050] overflow-hidden flex flex-col h-dvh sm:h-auto sm:max-h-[580px] pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,12px)]"
+            className="fixed inset-0 sm:inset-auto sm:absolute sm:right-0 sm:top-12 sm:mt-2 w-full sm:w-96 max-w-[100vw] sm:max-w-sm bg-white dark:bg-navy-950 sm:rounded-2xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-800 z-[100050] overflow-hidden flex flex-col h-dvh sm:h-auto sm:max-h-[580px] pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,12px)]"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-b border-slate-100 dark:border-navy-800 bg-slate-50/90 dark:bg-navy-950/90 shrink-0">
@@ -162,7 +162,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
             </div>
 
             {/* Category Filter Pills */}
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-navy-800 overflow-x-auto scrollbar-none shrink-0 bg-white dark:bg-navy-900 touch-pan-x">
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-navy-800 overflow-x-auto scrollbar-none shrink-0 bg-white dark:bg-navy-950 touch-pan-x">
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
@@ -298,7 +298,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-navy-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-navy-800 space-y-4"
+              className="bg-white dark:bg-navy-950 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-navy-800 space-y-4"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-extrabold">

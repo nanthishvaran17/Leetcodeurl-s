@@ -505,7 +505,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
 
  {/* ─── 1. STAFF WORKLOAD MATRIX PANEL ─── */}
- <div className="bg-white dark:bg-navy-900 p-6 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-xl space-y-6">
+ <div className="bg-white dark:bg-navy-950 p-6 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-xl space-y-6">
  <div className="flex items-center justify-between flex-wrap gap-4">
  <div>
  <h3 className="text-base font-black text-slate-800 dark:text-slate-100 flex items-center space-x-2">
@@ -528,11 +528,11 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  value={staffSearchQuery}
  onChange={(e) => setStaffSearchQuery(e.target.value)}
  placeholder="Search staff name or email..."
- className="w-full pl-9 pr-4 py-1.5 rounded-xl border border-slate-200 dark:border-navy-600 bg-white dark:bg-navy-900 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-sky-500"
+ className="w-full pl-9 pr-4 py-1.5 rounded-xl border border-slate-200 dark:border-navy-600 bg-white dark:bg-navy-950 text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-sky-500"
  />
  </div>
 
- <div className="flex items-center space-x-1.5 bg-white dark:bg-navy-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-600">
+ <div className="flex items-center space-x-1.5 bg-white dark:bg-navy-950 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-600">
  <Filter className="w-3.5 h-3.5 text-sky-600" />
  <select
  value={staffWorkloadFilter}
@@ -677,7 +677,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
 
  {/* ─── 2. ASSIGN / UNASSIGN TAB PANEL ─── */}
- <div className="bg-white dark:bg-navy-900 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-xl overflow-hidden">
+ <div className="bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-xl overflow-hidden">
 
   {/* Tab Header */}
   <div className="flex items-stretch border-b border-slate-200 dark:border-navy-700">
@@ -745,7 +745,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
        value={searchQuery}
        onChange={(e) => setSearchQuery(e.target.value)}
        placeholder="Search reg no, name, username..."
-       className="w-full pl-10 pr-4 h-10 rounded-xl border border-slate-200 dark:border-navy-600 bg-white dark:bg-navy-900 text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-sky-500 transition-all"
+       className="w-full pl-10 pr-4 h-10 rounded-xl border border-slate-200 dark:border-navy-600 bg-white dark:bg-navy-950 text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-sky-500 transition-all"
       />
      </div>
      <div className="w-full md:w-[200px]">
@@ -859,7 +859,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
          value={unassignSearchQuery}
          onChange={(e) => setUnassignSearchQuery(e.target.value)}
          placeholder="Search assigned student..."
-         className="w-full pl-10 pr-4 h-11 rounded-xl border border-slate-200 dark:border-navy-600 bg-white dark:bg-navy-900 text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-rose-500 transition-all"
+         className="w-full pl-10 pr-4 h-11 rounded-xl border border-slate-200 dark:border-navy-600 bg-white dark:bg-navy-950 text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-rose-500 transition-all"
         />
        </div>
        <button
@@ -958,7 +958,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  {/* ─── 3. VIEW STAFF ASSIGNED ROSTER & COMPLETION MODAL ─── */}
  {viewRosterModal.isOpen && (
  <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
- <div className="bg-white dark:bg-navy-900 w-full max-w-3xl p-6 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+ <div className="bg-white dark:bg-navy-950 w-full max-w-3xl p-6 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
  
  <div className="flex items-center justify-between border-b border-slate-200 dark:border-navy-800 pb-3">
  <div>
@@ -1079,7 +1079,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  {/* ─── 4. REUSABLE PREMIUM CONFIRMATION MODAL ─── */}
  {confirmModal.isOpen && (
  <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
- <div className="bg-white dark:bg-navy-900 w-full max-w-md p-6 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-2xl space-y-5">
+ <div className="bg-white dark:bg-navy-950 w-full max-w-md p-6 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-2xl space-y-5">
  <div className="flex items-center justify-between border-b border-slate-200 dark:border-navy-800 pb-3">
  <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center space-x-2">
  {confirmModal.type === 'delete_staff' ? (
@@ -1199,7 +1199,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  {/* ─── 5. CREATE STAFF MODAL ─── */}
  {showCreateModal && (
  <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
- <div className="bg-white dark:bg-navy-900 w-full max-w-md p-6 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
+ <div className="bg-white dark:bg-navy-950 w-full max-w-md p-6 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
  <div className="flex items-center justify-between border-b border-slate-200 dark:border-navy-800 pb-3">
  <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center space-x-2">
  <UserPlus className="w-5 h-5 text-sky-600" />
@@ -1295,7 +1295,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  {/* ─── 6. UNASSIGN STUDENT WARNING MODAL ─── */}
  {studentToUnassign && (
  <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
-  <div className="bg-white dark:bg-navy-900 w-full max-w-md p-6 rounded-3xl border border-rose-200 dark:border-rose-900/50 shadow-2xl space-y-5 text-center relative">
+  <div className="bg-white dark:bg-navy-950 w-full max-w-md p-6 rounded-3xl border border-rose-200 dark:border-rose-900/50 shadow-2xl space-y-5 text-center relative">
    <div className="w-16 h-16 bg-rose-100 dark:bg-rose-900/30 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-2">
     <AlertTriangle className="w-8 h-8" />
    </div>

@@ -100,10 +100,10 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
             <h1 className="text-3xl md:text-4xl font-black tracking-tight">
               LeetCode Performance <span className="text-brand-400">Leaderboard</span>
             </h1>
-            <p className="text-sm text-gray-300 font-semibold">
+            <p className="text-sm text-slate-300 font-semibold">
               Real-time institutional performance rankings — Academic Departments (Cyber Security &amp; IoT)
             </p>
-            <div className="flex items-center space-x-2 text-[11px] text-gray-400 font-mono">
+            <div className="flex items-center space-x-2 text-[11px] text-slate-400 font-mono">
               <Shield className="w-3.5 h-3.5 text-emerald-400" />
               <span>Read-only public view • Suitable for college displays, LinkedIn & placement showcases</span>
             </div>
@@ -113,17 +113,17 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
             <div className="p-4 rounded-2xl bg-white/10 backdrop-blur border border-white/15 text-center min-w-[90px]">
               <Users className="w-5 h-5 text-brand-400 mx-auto mb-1" />
               <div className="text-2xl font-black text-white">{students.length}</div>
-              <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Students</div>
+              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Students</div>
             </div>
             <div className="p-4 rounded-2xl bg-white/10 backdrop-blur border border-white/15 text-center min-w-[90px]">
               <Zap className="w-5 h-5 text-amber-400 mx-auto mb-1" />
               <div className="text-2xl font-black text-emerald-400">{totalSolved.toLocaleString()}</div>
-              <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Total Solved</div>
+              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Solved</div>
             </div>
             <div className="p-4 rounded-2xl bg-white/10 backdrop-blur border border-white/15 text-center min-w-[90px]">
               <TrendingUp className="w-5 h-5 text-indigo-400 mx-auto mb-1" />
               <div className="text-2xl font-black text-indigo-400">{avgSolved}</div>
-              <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Avg / Student</div>
+              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Avg / Student</div>
             </div>
           </div>
         </div>
@@ -132,7 +132,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
       {/* ─── TOP 3 PODIUM ─── */}
       {top3.length >= 3 && (
         <div className="glass-card p-6 rounded-3xl border border-amber-500/20 bg-gradient-to-b from-amber-500/5 to-transparent shadow-xl">
-          <h2 className="text-center font-black text-base text-gray-900 dark:text-white flex items-center justify-center space-x-2 mb-6">
+          <h2 className="text-center font-black text-base text-slate-900 dark:text-white flex items-center justify-center space-x-2 mb-6">
             <Trophy className="w-5 h-5 text-amber-500 fill-amber-500" />
             <span>INSTITUTION TOP 3 RANKERS</span>
             <Trophy className="w-5 h-5 text-amber-500 fill-amber-500" />
@@ -159,9 +159,9 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
                   {/* Info */}
                   <div className="text-center space-y-0.5">
                     <div className={`text-xs font-black ${cfg.textColor}`}>{cfg.label}</div>
-                    <div className="text-sm font-extrabold text-gray-900 dark:text-white truncate max-w-[120px]">{s.name}</div>
-                    <div className="text-[10px] text-gray-500 font-mono">{s.reg_no}</div>
-                    <div className="text-[11px] text-gray-400 font-medium">{s.department?.code} • {s.year_level} Yr</div>
+                    <div className="text-sm font-extrabold text-slate-900 dark:text-white truncate max-w-[120px]">{s.name}</div>
+                    <div className="text-[10px] text-slate-500 font-mono">{s.reg_no}</div>
+                    <div className="text-[11px] text-slate-400 font-medium">{s.department?.code} • {s.year_level} Yr</div>
                     <div className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black text-xs border border-emerald-500/20 mt-1">
                       {s.stats?.total_solved || 0} Solved
                     </div>
@@ -191,7 +191,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
       )}
 
       {/* ─── FILTER & SEARCH BAR ─── */}
-      <div className="glass-card p-5 rounded-3xl border border-gray-200 dark:border-navy-700 shadow-xl space-y-4">
+      <div className="glass-card p-5 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-xl space-y-4">
         <div className="flex flex-wrap items-center gap-3">
           {/* Search */}
           <div className="relative flex-1 min-w-[200px]">
@@ -201,12 +201,12 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
               placeholder="Search by name, reg no, or username..."
               value={filters.searchQuery}
               onChange={e => filters.setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-10 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border-gray-200 dark:border-navy-700 focus:ring-2 focus:ring-brand-500 outline-none transition-all"
+              className="w-full pl-10 pr-10 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-950 text-slate-900 dark:text-white border-slate-200 dark:border-navy-700 focus:ring-2 focus:ring-brand-500 outline-none transition-all"
             />
             {filters.searchQuery && (
               <button
                 onClick={() => filters.setSearchQuery('')}
-                className="absolute right-2 top-2 p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-navy-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                className="absolute right-2 top-2 p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
                 title="Clear search"
               >
                 <XCircle className="w-4 h-4" />
@@ -239,7 +239,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
           />
 
           {/* Sort By */}
-          <div className="flex items-center space-x-1 bg-gray-100 dark:bg-navy-900 p-1 rounded-2xl border border-gray-200 dark:border-navy-700">
+          <div className="flex items-center space-x-1 bg-slate-100 dark:bg-navy-950 p-1 rounded-2xl border border-slate-200 dark:border-navy-700">
             {(['rank', 'easy', 'medium', 'hard'] as const).map(s => (
               <button
                 key={s}
@@ -248,7 +248,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
                 className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
                   sortBy === s
                     ? 'bg-brand-600 text-white shadow-md'
-                    : 'text-gray-500 hover:text-brand-600'
+                    : 'text-slate-500 hover:text-brand-600'
                 }`}
               >
                 {s === 'rank' ? 'Overall Rank' : `Most ${s.charAt(0).toUpperCase() + s.slice(1)}`}
@@ -257,7 +257,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-xs text-gray-400 font-bold">
+        <div className="flex items-center justify-between text-xs text-slate-400 font-bold">
           <span>Showing {filtered.length} of {students.length} students</span>
         </div>
       </div>
@@ -267,9 +267,9 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
 
       {/* ─── SERVER PAGINATION ─── */}
       {total > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-3xl glass-card border border-gray-200 dark:border-navy-700 shadow-xl">
-          <div className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-            Showing <span className="text-gray-900 dark:text-white font-black">{Math.min((page - 1) * limit + 1, total)}</span> to <span className="text-gray-900 dark:text-white font-black">{Math.min(page * limit, total)}</span> of <span className="text-gray-900 dark:text-white font-black">{total}</span> students
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-3xl glass-card border border-slate-200 dark:border-navy-700 shadow-xl">
+          <div className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+            Showing <span className="text-slate-900 dark:text-white font-black">{Math.min((page - 1) * limit + 1, total)}</span> to <span className="text-slate-900 dark:text-white font-black">{Math.min(page * limit, total)}</span> of <span className="text-slate-900 dark:text-white font-black">{total}</span> students
           </div>
           
           <div className="flex items-center gap-3">
@@ -288,21 +288,21 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
               ]}
             />
 
-            <div className="flex items-center gap-1 bg-gray-100 dark:bg-navy-900 p-1.5 rounded-xl border border-gray-200 dark:border-navy-700">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-950 p-1.5 rounded-xl border border-slate-200 dark:border-navy-700">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="p-2 rounded-lg hover:bg-white dark:hover:bg-navy-800 text-gray-600 dark:text-gray-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                className="p-2 rounded-lg hover:bg-white dark:hover:bg-navy-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <div className="px-3 text-sm font-black text-gray-700 dark:text-gray-200 min-w-[3rem] text-center">
+              <div className="px-3 text-sm font-black text-slate-700 dark:text-slate-200 min-w-[3rem] text-center">
                 {page} / {totalPages}
               </div>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="p-2 rounded-lg hover:bg-white dark:hover:bg-navy-800 text-gray-600 dark:text-gray-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+                className="p-2 rounded-lg hover:bg-white dark:hover:bg-navy-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>

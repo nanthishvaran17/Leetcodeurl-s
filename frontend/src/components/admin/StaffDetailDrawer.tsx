@@ -19,12 +19,12 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({ staff, stu
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-none animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-lg h-full bg-white dark:bg-navy-900 border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-y-auto flex flex-col">
+      <div className="w-full max-w-lg h-full bg-white dark:bg-navy-950 border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-y-auto flex flex-col">
         {/* Header Profile Section */}
         <div className="bg-brand-50 dark:bg-navy-800 p-6 border-b border-slate-200 dark:border-navy-700">
           <div className="flex justify-between items-start mb-4">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-white dark:bg-navy-900 text-brand-600 dark:text-brand-300 font-extrabold flex items-center justify-center text-2xl shadow-sm border border-slate-100 dark:border-navy-700">
+              <div className="w-16 h-16 rounded-2xl bg-white dark:bg-navy-950 text-brand-600 dark:text-brand-300 font-extrabold flex items-center justify-center text-2xl shadow-sm border border-slate-100 dark:border-navy-700">
                 {staff.username ? staff.username.charAt(0).toUpperCase() : 'S'}
               </div>
               <div>
@@ -49,7 +49,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({ staff, stu
                 </div>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 bg-white dark:bg-navy-900 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 shadow-sm transition">
+            <button onClick={onClose} className="p-2 bg-white dark:bg-navy-950 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 shadow-sm transition">
               <X size={18} />
             </button>
           </div>
@@ -100,7 +100,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({ staff, stu
             </h4>
             <div className="grid grid-cols-2 gap-3">
               <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 dark:border-navy-800">
-                <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-500 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-full bg-brand-50 dark:bg-brand-900/20 text-brand-500 flex items-center justify-center shrink-0">
                   <Activity size={18} />
                 </div>
                 <div>
@@ -132,7 +132,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({ staff, stu
                 Assigned Students ({assignedStudents.length})
               </div>
             </h4>
-            <div className="rounded-xl border border-slate-100 dark:border-navy-800 overflow-hidden bg-slate-50/50 dark:bg-navy-900/50">
+            <div className="rounded-xl border border-slate-100 dark:border-navy-800 overflow-hidden bg-slate-50/50 dark:bg-navy-950/50">
               {assignedStudents.length === 0 ? (
                 <div className="p-6 text-center text-slate-400 text-xs font-mono">No students assigned to this mentor.</div>
               ) : (
@@ -173,7 +173,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({ staff, stu
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-900 flex justify-end gap-3">
+        <div className="p-4 border-t border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 flex justify-end gap-3">
           <button 
             onClick={onManageAllocation}
             className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition shadow-sm"

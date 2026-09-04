@@ -60,15 +60,15 @@ export const ConversationInfoPanel: React.FC<ConversationInfoPanelProps> = ({ us
   if (!userId) return null;
 
   return (
-    <div className="w-full h-full flex flex-col bg-white dark:bg-[#0d1117] border-l border-gray-200 dark:border-gray-800/60 overflow-y-auto">
+    <div className="w-full h-full flex flex-col bg-white dark:bg-navy-950 border-l border-slate-200 dark:border-slate-800/60 overflow-y-auto">
       {/* Header */}
-      <div className="flex-none flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800/60 sticky top-0 bg-white/95 dark:bg-[#0d1117]/95 backdrop-blur-sm z-10">
-        <h2 className="text-sm font-bold text-gray-800 dark:text-gray-200 tracking-wide">
+      <div className="flex-none flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800/60 sticky top-0 bg-white/95 dark:bg-navy-950/95 backdrop-blur-sm z-10">
+        <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 tracking-wide">
           Institutional Profile
         </h2>
         <button 
           onClick={onClose}
-          className="p-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition-colors"
+          className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors"
           title="Close profile"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -79,7 +79,7 @@ export const ConversationInfoPanel: React.FC<ConversationInfoPanelProps> = ({ us
         {loading ? (
           <div className="flex flex-col items-center justify-center space-y-4 py-12">
             <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
-            <p className="text-sm font-medium text-gray-500">Loading secure profile...</p>
+            <p className="text-sm font-medium text-slate-500">Loading secure profile...</p>
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center space-y-3 py-12 text-center">
@@ -106,18 +106,18 @@ export const ConversationInfoPanel: React.FC<ConversationInfoPanelProps> = ({ us
                 <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-brand-600 via-indigo-600 to-navy-800 text-white font-black text-4xl flex items-center justify-center shadow-xl shadow-brand-500/20">
                   {profile.name.substring(0, 2).toUpperCase()}
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 border-4 border-white dark:border-[#0d1117] rounded-full shadow-sm" title="Online" />
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 border-4 border-white dark:border-navy-950 rounded-full shadow-sm" title="Online" />
               </div>
 
               {/* Identity */}
               <div className="space-y-1">
-                <h3 className="text-lg font-black text-gray-900 dark:text-white tracking-tight">
+                <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
                   {profile.name}
                 </h3>
                 <p className="text-sm font-bold text-brand-600 dark:text-brand-400">
                   {profile.role}
                 </p>
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
                   Nandha Engineering College
                 </p>
               </div>
@@ -130,7 +130,7 @@ export const ConversationInfoPanel: React.FC<ConversationInfoPanelProps> = ({ us
                     Verified
                   </span>
                 )}
-                <span className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 text-[10px] font-bold tracking-wider uppercase border border-blue-200 dark:border-blue-800/50">
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-400 text-[10px] font-bold tracking-wider uppercase border border-brand-200 dark:border-brand-800/50">
                   <User className="w-3 h-3" />
                   {profile.status}
                 </span>
@@ -144,10 +144,10 @@ export const ConversationInfoPanel: React.FC<ConversationInfoPanelProps> = ({ us
               transition={{ delay: 0.1 }}
               className="space-y-3"
             >
-              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Department</h4>
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800/60">
-                <Building2 className="w-5 h-5 text-gray-400" />
-                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Department</h4>
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/60">
+                <Building2 className="w-5 h-5 text-slate-400" />
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
                   {profile.department}
                 </span>
               </div>
@@ -160,35 +160,35 @@ export const ConversationInfoPanel: React.FC<ConversationInfoPanelProps> = ({ us
               transition={{ delay: 0.2 }}
               className="space-y-3"
             >
-              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Contact Information</h4>
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Contact Information</h4>
               <div className="space-y-2">
                 {profile.email && (
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800/60 group hover:bg-brand-50 dark:hover:bg-brand-900/10 transition-colors">
-                    <Mail className="w-5 h-5 text-gray-400 group-hover:text-brand-500 transition-colors" />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/60 group hover:bg-brand-50 dark:hover:bg-brand-900/10 transition-colors">
+                    <Mail className="w-5 h-5 text-slate-400 group-hover:text-brand-500 transition-colors" />
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
                       {profile.email}
                     </span>
                   </div>
                 )}
                 {profile.phone ? (
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800/60 group hover:bg-brand-50 dark:hover:bg-brand-900/10 transition-colors">
-                    <Phone className="w-5 h-5 text-gray-400 group-hover:text-brand-500 transition-colors" />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/60 group hover:bg-brand-50 dark:hover:bg-brand-900/10 transition-colors">
+                    <Phone className="w-5 h-5 text-slate-400 group-hover:text-brand-500 transition-colors" />
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       {profile.phone}
                     </span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800/60">
-                    <Phone className="w-5 h-5 text-gray-300 dark:text-gray-600" />
-                    <span className="text-sm font-medium text-gray-400 dark:text-gray-500 italic">
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/60">
+                    <Phone className="w-5 h-5 text-slate-300 dark:text-slate-600" />
+                    <span className="text-sm font-medium text-slate-400 dark:text-slate-500 italic">
                       Phone not provided
                     </span>
                   </div>
                 )}
                 {profile.leetcode_url && (
-                  <a href={profile.leetcode_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800/60 group hover:bg-[#ffa116]/10 hover:border-[#ffa116]/30 transition-colors cursor-pointer">
-                    <ExternalLink className="w-5 h-5 text-gray-400 group-hover:text-[#ffa116] transition-colors" />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-[#ffa116] transition-colors">
+                  <a href={profile.leetcode_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/60 group hover:bg-[#ffa116]/10 hover:border-[#ffa116]/30 transition-colors cursor-pointer">
+                    <ExternalLink className="w-5 h-5 text-slate-400 group-hover:text-[#ffa116] transition-colors" />
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-[#ffa116] transition-colors">
                       LeetCode Profile
                     </span>
                   </a>
@@ -203,22 +203,22 @@ export const ConversationInfoPanel: React.FC<ConversationInfoPanelProps> = ({ us
               transition={{ delay: 0.3 }}
               className="space-y-3"
             >
-              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center justify-between">
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
                 <span>Shared Content</span>
                 <span className="text-brand-500 font-medium">({messageCount} messages)</span>
               </h4>
               <div className="grid grid-cols-3 gap-2">
-                <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800/60">
-                  <ImageIcon className="w-5 h-5 text-gray-400" />
-                  <span className="text-xs font-bold text-gray-600 dark:text-gray-400">0</span>
+                <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/60">
+                  <ImageIcon className="w-5 h-5 text-slate-400" />
+                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400">0</span>
                 </div>
-                <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800/60">
-                  <FileText className="w-5 h-5 text-gray-400" />
-                  <span className="text-xs font-bold text-gray-600 dark:text-gray-400">0</span>
+                <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/60">
+                  <FileText className="w-5 h-5 text-slate-400" />
+                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400">0</span>
                 </div>
-                <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800/60">
-                  <Link2 className="w-5 h-5 text-gray-400" />
-                  <span className="text-xs font-bold text-gray-600 dark:text-gray-400">0</span>
+                <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/60">
+                  <Link2 className="w-5 h-5 text-slate-400" />
+                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400">0</span>
                 </div>
               </div>
             </motion.div>

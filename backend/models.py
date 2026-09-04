@@ -82,6 +82,9 @@ class Student(Base):
 
 class LeetCodeProfileStats(Base):
     __tablename__ = "leetcode_profile_stats"
+    __table_args__ = (
+        Index("ix_stats_solved_rating", "total_solved", "contest_rating"),
+    )
     
     id = Column(Integer, primary_key=True, index=True)
     student_id = Column(Integer, ForeignKey("students.id"), unique=True, nullable=False)
@@ -496,6 +499,7 @@ class FacultyStudentAssignment(Base):
     __tablename__ = "faculty_student_assignments"
     __table_args__ = (
         UniqueConstraint("student_id", name="uix_faculty_student_assignment"),
+        Index("ix_fsa_faculty_active", "faculty_id", "is_active"),
     )
 
     id = Column(Integer, primary_key=True, index=True)

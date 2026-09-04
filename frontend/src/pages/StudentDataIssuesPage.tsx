@@ -131,10 +131,10 @@ const CustomSelect: React.FC<{
         onClick={() => setOpen(!open)}
         className={`flex items-center justify-between gap-3 min-w-[200px] w-full px-4 py-2.5 rounded-xl border transition-all cursor-pointer font-bold text-sm ${
           open 
-            ? 'border-brand-500 bg-white dark:bg-navy-900 ring-4 ring-brand-500/10 shadow-sm' 
+            ? 'border-brand-500 bg-white dark:bg-navy-950 ring-4 ring-brand-500/10 shadow-sm' 
             : (value && value !== 'all')
               ? 'border-brand-500/30 bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-300' 
-              : 'border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-200 hover:border-slate-300'
+              : 'border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-700 dark:text-slate-200 hover:border-slate-300'
         }`}
       >
         <div className="flex items-center gap-2">
@@ -152,7 +152,7 @@ const CustomSelect: React.FC<{
       </button>
 
       {open && (
-        <div className="absolute z-50 top-[110%] left-0 w-full min-w-[280px] p-1.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up">
+        <div className="absolute z-50 top-[110%] left-0 w-full min-w-[280px] p-1.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up">
           <button
             onClick={() => { onChange('all'); setOpen(false); }}
             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
@@ -606,7 +606,7 @@ export const StudentDataIssuesPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-20 animate-fade-in text-gray-900 dark:text-slate-100 font-sans">
+    <div className="space-y-6 pb-20 animate-fade-in text-slate-900 dark:text-slate-100 font-sans">
 
       {/* ── 1. TOP HERO BANNER (MATCHING INSTITUTIONAL GRADIENT) ── */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-xl border border-brand-500/30">
@@ -628,7 +628,7 @@ export const StudentDataIssuesPage: React.FC = () => {
               Student Data Issues & <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-teal-300 to-indigo-300">Recovery Center</span>
             </h1>
 
-            <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide">
+            <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide">
               Identify exact problems, verify canonical LeetCode URLs, filter by Department & Academic Year, repair usernames live, and download administrative reports.
             </p>
           </div>
@@ -657,14 +657,14 @@ export const StudentDataIssuesPage: React.FC = () => {
       </div>
 
       {/* ── 2. MULTI-DIMENSIONAL SMART FILTERING WORKSPACE — FIRST ── */}
-      <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-3 border-b border-gray-100 dark:border-gray-800 pb-3">
+      <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
           <div>
-            <h3 className="text-sm font-black text-gray-900 dark:text-white flex items-center space-x-2">
+            <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center space-x-2">
               <Filter className="w-4 h-4 text-indigo-600 dark:text-brand-400" />
               <span>Multi-Dimensional Issue Filtration Matrix</span>
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
               Isolate students by Department + Academic Year + Specific LeetCode Problem Severity.
             </p>
           </div>
@@ -677,7 +677,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                 setSelectedIssue('all');
                 setSearchQuery('');
               }}
-              className="px-3.5 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-navy-950 dark:hover:bg-navy-800 text-gray-700 dark:text-gray-300 text-xs font-bold border border-gray-200 dark:border-gray-800 transition-all cursor-pointer flex items-center space-x-1.5"
+              className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 text-xs font-bold border border-slate-200 dark:border-slate-800 transition-all cursor-pointer flex items-center space-x-1.5"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Reset Filters</span>
@@ -689,7 +689,7 @@ export const StudentDataIssuesPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Department Selector */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase flex items-center space-x-1">
+            <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center space-x-1">
               <Building2 className="w-3.5 h-3.5 text-indigo-600 dark:text-brand-400" />
               <span>Department Filter</span>
             </label>
@@ -707,7 +707,7 @@ export const StudentDataIssuesPage: React.FC = () => {
 
           {/* Academic Year Selector */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase flex items-center space-x-1">
+            <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center space-x-1">
               <GraduationCap className="w-3.5 h-3.5 text-indigo-600 dark:text-brand-400" />
               <span>Academic Year</span>
             </label>
@@ -727,7 +727,7 @@ export const StudentDataIssuesPage: React.FC = () => {
 
           {/* Issue Category Selector */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase flex items-center space-x-1">
+            <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center space-x-1">
               <Sliders className="w-3.5 h-3.5 text-amber-500" />
               <span>Issue Category</span>
             </label>
@@ -753,18 +753,18 @@ export const StudentDataIssuesPage: React.FC = () => {
 
           {/* Search Input */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase flex items-center space-x-1">
+            <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase flex items-center space-x-1">
               <Search className="w-3.5 h-3.5 text-indigo-600 dark:text-brand-400" />
               <span>Search Query</span>
             </label>
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-3.5 top-2.5 text-gray-400" />
+              <Search className="w-3.5 h-3.5 absolute left-3.5 top-2.5 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search Name, Reg No (732224CC044)..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3.5 py-2 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl text-xs text-gray-900 dark:text-white placeholder-gray-400 font-bold focus:ring-2 focus:ring-brand-500"
+                className="w-full pl-9 pr-3.5 py-2 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-gray-400 font-bold focus:ring-2 focus:ring-brand-500"
               />
             </div>
           </div>
@@ -772,9 +772,9 @@ export const StudentDataIssuesPage: React.FC = () => {
       </div>
 
       {/* ── 3. ADMINISTRATIVE QUICK VIEWS & SAVED PRESETS BAR ── */}
-      <div className="p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-3">
+      <div className="p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-black text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center space-x-1.5">
+          <span className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center space-x-1.5">
             <Bookmark className="w-4 h-4 text-amber-500" />
             <span>Administrative Quick Views &amp; Saved Presets</span>
           </span>
@@ -794,14 +794,14 @@ export const StudentDataIssuesPage: React.FC = () => {
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border cursor-pointer flex items-center space-x-1.5 ${
                 selectedDept === view.dept && selectedYear === view.year && selectedIssue === view.issue && searchQuery === view.search
                   ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40 shadow-sm font-black'
-                  : 'bg-gray-50 hover:bg-gray-100 dark:bg-navy-950 dark:hover:bg-navy-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800'
+                  : 'bg-slate-50 hover:bg-slate-100 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800'
               }`}
             >
               <span>{view.name}</span>
               {view.id.startsWith('custom_') && (
                 <span
                   onClick={(e) => handleDeleteSavedView(view.id, e)}
-                  className="text-gray-400 hover:text-rose-500 ml-1"
+                  className="text-slate-400 hover:text-rose-500 ml-1"
                   title="Delete preset"
                 >
                  
@@ -815,16 +815,16 @@ export const StudentDataIssuesPage: React.FC = () => {
       {/* ── 4. DEPARTMENT & ACADEMIC YEAR BREAKDOWN MATRICES ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Department Breakdown */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-3">
+        <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider flex items-center space-x-1.5">
+            <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-1.5">
               <Building2 className="w-4 h-4 text-indigo-600 dark:text-amber-400" />
               <span>Department Issue Breakdown</span>
             </h4>
-            <span className="text-[11px] text-gray-400 font-bold">Click row to filter</span>
+            <span className="text-[11px] text-slate-400 font-bold">Click row to filter</span>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gray-800">
+          <div className="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="bg-navy-950 text-white uppercase font-black text-[10px]">
@@ -836,14 +836,14 @@ export const StudentDataIssuesPage: React.FC = () => {
                   <th className="py-2.5 px-2 text-center text-emerald-400">Healthy</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-bold text-gray-800 dark:text-gray-200">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-bold text-slate-800 dark:text-slate-200">
                 {deptBreakdown.map((row, idx) => (
                   <tr
                     key={idx}
                     onClick={() => setSelectedDept(row.department)}
-                    className="hover:bg-gray-50 dark:hover:bg-navy-800/60 transition-colors cursor-pointer"
+                    className="hover:bg-slate-50 dark:hover:bg-navy-800/60 transition-colors cursor-pointer"
                   >
-                    <td className="py-2.5 px-3 font-extrabold text-gray-900 dark:text-white">{row.department}</td>
+                    <td className="py-2.5 px-3 font-extrabold text-slate-900 dark:text-white">{row.department}</td>
                     <td className="py-2.5 px-2 text-center font-mono">{row.total}</td>
                     <td className="py-2.5 px-2 text-center font-mono text-rose-600 dark:text-rose-400">{row.sync_failed}</td>
                     <td className="py-2.5 px-2 text-center font-mono text-purple-600 dark:text-purple-400">{row.missing_username}</td>
@@ -857,16 +857,16 @@ export const StudentDataIssuesPage: React.FC = () => {
         </div>
 
         {/* Academic Year Breakdown */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-3">
+        <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider flex items-center space-x-1.5">
+            <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-1.5">
               <GraduationCap className="w-4 h-4 text-indigo-600 dark:text-amber-400" />
               <span>Academic Year Issue Breakdown</span>
             </h4>
-            <span className="text-[11px] text-gray-400 font-bold">Click row to filter</span>
+            <span className="text-[11px] text-slate-400 font-bold">Click row to filter</span>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gray-800">
+          <div className="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="bg-navy-950 text-white uppercase font-black text-[10px]">
@@ -878,7 +878,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                   <th className="py-2.5 px-2 text-center text-emerald-400">Healthy</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-bold text-gray-800 dark:text-gray-200">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-bold text-slate-800 dark:text-slate-200">
                 {yearBreakdown.map((row, idx) => (
                   <tr
                     key={idx}
@@ -886,9 +886,9 @@ export const StudentDataIssuesPage: React.FC = () => {
                       const yCode = row.year.replace('Year', '').trim();
                       setSelectedYear(yCode);
                     }}
-                    className="hover:bg-gray-50 dark:hover:bg-navy-800/60 transition-colors cursor-pointer"
+                    className="hover:bg-slate-50 dark:hover:bg-navy-800/60 transition-colors cursor-pointer"
                   >
-                    <td className="py-2.5 px-3 font-extrabold text-gray-900 dark:text-white">{row.year}</td>
+                    <td className="py-2.5 px-3 font-extrabold text-slate-900 dark:text-white">{row.year}</td>
                     <td className="py-2.5 px-2 text-center font-mono">{row.total}</td>
                     <td className="py-2.5 px-2 text-center font-mono text-rose-600 dark:text-rose-400">{row.sync_failed}</td>
                     <td className="py-2.5 px-2 text-center font-mono text-purple-600 dark:text-purple-400">{row.missing_username}</td>
@@ -948,12 +948,12 @@ export const StudentDataIssuesPage: React.FC = () => {
       )}
 
       {/* ── 6. STUDENT ISSUE TABLE (ENTERPRISE GRADE) ── */}
-      <div className="rounded-3xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-900 shadow-sm overflow-hidden space-y-0">
+      <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 shadow-sm overflow-hidden space-y-0">
         
         {/* Table Header & Download Controls */}
-        <div className="px-6 py-4 bg-gray-50 dark:bg-navy-950 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between flex-wrap gap-4">
+        <div className="px-6 py-4 bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center space-x-3">
-            <span className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
+            <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
               <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
               <span>Matched Students Requiring Attention ({students.length})</span>
             </span>
@@ -972,9 +972,9 @@ export const StudentDataIssuesPage: React.FC = () => {
             <button
               onClick={handleDownloadCsv}
               disabled={isExporting || students.length === 0}
-              className="px-3.5 py-1.5 bg-gray-200 hover:bg-gray-300 dark:bg-navy-800 dark:hover:bg-navy-700 text-gray-800 dark:text-gray-200 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5"
+              className="px-3.5 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5"
             >
-              <FileText className="w-3.5 h-3.5 text-gray-500" />
+              <FileText className="w-3.5 h-3.5 text-slate-500" />
               <span>Export CSV</span>
             </button>
           </div>
@@ -983,14 +983,14 @@ export const StudentDataIssuesPage: React.FC = () => {
         {/* The Table */}
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="p-16 text-center text-xs text-gray-500 font-bold space-y-3">
+            <div className="p-16 text-center text-xs text-slate-500 font-bold space-y-3">
               <RefreshCw className="w-6 h-6 animate-spin text-amber-500 mx-auto" />
               <p>Analyzing and classifying student data issues from database...</p>
             </div>
           ) : students.length === 0 ? (
-            <div className="p-16 text-center text-xs text-gray-500 font-medium space-y-2">
+            <div className="p-16 text-center text-xs text-slate-500 font-medium space-y-2">
               <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
-              <p className="text-base font-bold text-gray-900 dark:text-white">No issues found matching the active filters.</p>
+              <p className="text-base font-bold text-slate-900 dark:text-white">No issues found matching the active filters.</p>
               <p>All records within this selection meet verification and synchronization standards.</p>
             </div>
           ) : (
@@ -1002,7 +1002,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                       type="checkbox"
                       checked={selectedStudentIds.length === students.length && students.length > 0}
                       onChange={handleToggleSelectAll}
-                      className="rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                      className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
                     />
                   </th>
                   <th className="py-3.5 px-4">Student & Register No</th>
@@ -1014,7 +1014,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                   <th className="py-3.5 px-4 text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-medium text-gray-800 dark:text-gray-200">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-medium text-slate-800 dark:text-slate-200">
                 {students.map((student) => {
                   const isSelected = selectedStudentIds.includes(student.id);
                   const isVerifyingThis = verifyingRowId === student.id;
@@ -1022,7 +1022,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                   return (
                     <tr
                       key={student.id}
-                      className={`hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors ${
+                      className={`hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors ${
                         isSelected ? 'bg-indigo-50/60 dark:bg-indigo-950/30' : ''
                       }`}
                     >
@@ -1032,20 +1032,20 @@ export const StudentDataIssuesPage: React.FC = () => {
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => handleToggleSelectRow(student.id)}
-                          className="rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                          className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
                         />
                       </td>
 
                       {/* Student Name + Register Number */}
                       <td className="py-3.5 px-4">
-                        <div className="font-extrabold text-gray-900 dark:text-white text-sm">{student.name}</div>
+                        <div className="font-extrabold text-slate-900 dark:text-white text-sm">{student.name}</div>
                         <div className="font-mono text-xs text-indigo-600 dark:text-amber-400 font-bold mt-0.5">{student.reg_no}</div>
                       </td>
 
                       {/* Department & Year */}
                       <td className="py-3.5 px-3">
-                        <span className="font-bold text-gray-900 dark:text-slate-200 block">{student.department_short}</span>
-                        <span className="text-[10px] text-gray-500 dark:text-slate-400 font-mono">{student.year_level}</span>
+                        <span className="font-bold text-slate-900 dark:text-slate-200 block">{student.department_short}</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">{student.year_level}</span>
                       </td>
 
                       {/* LeetCode Username & URL Verification Status */}
@@ -1073,14 +1073,14 @@ export const StudentDataIssuesPage: React.FC = () => {
 
                             <button
                               onClick={() => handleCopyUrl(student)}
-                              className="p-1 hover:bg-gray-100 dark:hover:bg-slate-800 rounded text-gray-400 hover:text-gray-700 dark:hover:text-white cursor-pointer"
+                              className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
                               title="Copy URL"
                             >
                               {copiedId === student.id ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                             </button>
                           </div>
                         ) : (
-                          <span className="text-[9.5px] text-gray-400 font-mono block">— No URL —</span>
+                          <span className="text-[9.5px] text-slate-400 font-mono block">— No URL —</span>
                         )}
                       </td>
 
@@ -1101,14 +1101,14 @@ export const StudentDataIssuesPage: React.FC = () => {
 
                       {/* Exact Problem / Reason */}
                       <td className="py-3.5 px-4 max-w-xs">
-                        <p className="text-xs text-gray-800 dark:text-slate-300 font-bold leading-snug">{student.error_description}</p>
+                        <p className="text-xs text-slate-800 dark:text-slate-300 font-bold leading-snug">{student.error_description}</p>
                         <p className="text-[10px] text-amber-600 dark:text-amber-300 mt-1 font-semibold">
                           Action: {student.recommended_action}
                         </p>
                       </td>
 
                       {/* Last Sync */}
-                      <td className="py-3.5 px-3 font-mono text-[11px] text-gray-500 dark:text-slate-400">
+                      <td className="py-3.5 px-3 font-mono text-[11px] text-slate-500 dark:text-slate-400">
                         {student.last_sync}
                       </td>
 
@@ -1122,7 +1122,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                               href={student.leetcode_url}
                               target="_blank"
                               rel="noreferrer"
-                              className="p-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-sky-600 dark:text-sky-400 border border-gray-200 dark:border-slate-700 cursor-pointer shadow-sm"
+                              className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-sky-600 dark:text-sky-400 border border-slate-200 dark:border-slate-700 cursor-pointer shadow-sm"
                               title="Open verified LeetCode profile"
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
@@ -1134,7 +1134,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                             <button
                               onClick={() => handleVerifySingleUrl(student)}
                               disabled={isVerifyingThis}
-                              className="p-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-emerald-600 dark:text-emerald-400 border border-gray-200 dark:border-slate-700 cursor-pointer shadow-sm"
+                              className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-emerald-600 dark:text-emerald-400 border border-slate-200 dark:border-slate-700 cursor-pointer shadow-sm"
                               title="Verify URL live with LeetCode"
                             >
                               <ShieldCheck className={`w-3.5 h-3.5 ${isVerifyingThis ? 'animate-spin' : ''}`} />

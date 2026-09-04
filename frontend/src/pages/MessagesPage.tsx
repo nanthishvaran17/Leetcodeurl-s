@@ -4,9 +4,12 @@ import { ChatWindow, Message } from '../components/messaging/ChatWindow';
 import { RecipientSelector } from '../components/messaging/RecipientSelector';
 import { ConversationInfoPanel } from '../components/messaging/ConversationInfoPanel';
 import { getApiUrl, getAuthHeaders } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { useMessagingWebSocket } from '../hooks/useMessagingWebSocket';
 import axios from 'axios';
 
 export const MessagesPage: React.FC = () => {
+  const { token } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -61,28 +64,68 @@ export const MessagesPage: React.FC = () => {
     }
   };
 
-  // Initial load and polling
+  // WebSocket Integration
+  const { isConnected, latestMessage, viewConversation, leaveConversation } = useMessagingWebSocket(token);
+
+  useEffect(() => {
+    if (isConnected) {
+      if (activeConversationId) {
+        viewConversation(activeConversationId);
+      } else {
+        leaveConversation();
+      }
+    }
+    return () => leaveConversation();
+  }, [activeConversationId, viewConversation, leaveConversation, isConnected]);
+
+  useEffect(() => {
+    if (latestMessage) {
+      const msg = latestMessage;
+      
+      // Update conversations list summary
+      setConversations(prev => {
+        let updated = false;
+        const mapped = prev.map(c => {
+          if (c.conversationId === msg.conversationId) {
+            updated = true;
+            return {
+              ...c,
+              lastMessagePreview: msg.content,
+              lastMessageAt: msg.createdAt,
+              // Only increment unread if we aren't actively viewing it
+              unreadCount: activeConversationId === msg.conversationId && msg.senderId !== currentUserStr 
+                ? c.unreadCount 
+                : (msg.senderId !== currentUserStr ? c.unreadCount + 1 : c.unreadCount)
+            };
+          }
+          return c;
+        });
+        
+        return updated 
+          ? mapped.sort((a, b) => new Date(b.lastMessageAt || 0).getTime() - new Date(a.lastMessageAt || 0).getTime())
+          : prev; // Ideally we'd fetch the new conversation if it wasn't in the list
+      });
+
+      // Update active chat if viewing this conversation
+      if (activeConversationId === msg.conversationId) {
+        setMessages(prev => {
+          // Deduplicate
+          if (prev.some(p => p.messageId === msg.messageId)) return prev;
+          return [...prev, msg];
+        });
+        
+        // If we are viewing it and it's from someone else, we just read it
+        if (msg.senderId !== currentUserStr) {
+          axios.put(getApiUrl(`/messaging/conversations/${msg.conversationId}/read`), {}, { headers: getAuthHeaders() }).catch(() => {});
+        }
+      }
+    }
+  }, [latestMessage, activeConversationId, currentUserStr]);
+
+  // Initial load
   useEffect(() => {
     fetchConversations();
-    
-    pollingRef.current = window.setInterval(() => {
-      fetchConversations();
-      if (activeConversationId) {
-        axios.get(getApiUrl(`/messaging/conversations/${activeConversationId}/messages`), {
-          headers: getAuthHeaders()
-        }).then(res => {
-          if (res.data?.success) {
-            setMessages(res.data.messages);
-          }
-        }).catch(() => {});
-      }
-    }, 10000);
-    
-    return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current);
-    };
-  }, [activeConversationId]);
-
+  }, []);
   const handleSelectConversation = async (id: string) => {
     setActiveConversationId(id);
     setIsMessagesLoading(true);
@@ -146,7 +189,7 @@ export const MessagesPage: React.FC = () => {
   const activeConv = conversations.find(c => c.conversationId === activeConversationId) || null;
 
   return (
-    <div className="flex h-[calc(100dvh-56px)] sm:h-[calc(100dvh-68px)] md:h-[calc(100vh-5rem)] bg-white dark:bg-[#0d1117] sm:rounded-2xl overflow-hidden shadow-lg shadow-black/5 dark:shadow-none border border-gray-200 dark:border-gray-800/60 pb-[env(safe-area-inset-bottom,0px)]">
+    <div className="flex h-[calc(100dvh-56px)] sm:h-[calc(100dvh-68px)] md:h-[calc(100vh-5rem)] bg-white dark:bg-navy-950 sm:rounded-2xl overflow-hidden shadow-lg shadow-black/5 dark:shadow-none border border-slate-200 dark:border-slate-800/60 pb-[env(safe-area-inset-bottom,0px)]">
       
       {/* ZONE 1: Smart Inbox (Hidden on mobile if chat is active) */}
       <div className={`w-full md:w-[320px] lg:w-[380px] shrink-0 ${activeConversationId ? 'hidden md:block' : 'block'}`}>
@@ -161,7 +204,7 @@ export const MessagesPage: React.FC = () => {
       </div>
 
       {/* ZONE 2: Main Chat Area */}
-      <div className={`flex-1 min-w-0 flex flex-col bg-white dark:bg-[#0d1117] ${!activeConversationId ? 'hidden md:flex' : 'flex'}`}>
+      <div className={`flex-1 min-w-0 flex flex-col bg-white dark:bg-navy-950 ${!activeConversationId ? 'hidden md:flex' : 'flex'}`}>
         <ChatWindow 
           conversation={activeConv}
           messages={messages}
@@ -178,7 +221,7 @@ export const MessagesPage: React.FC = () => {
 
       {/* ZONE 3: Institutional Profile Panel */}
       {showInfoPanel && activeConv && (
-        <div className="hidden lg:block w-[340px] shrink-0 border-l border-gray-200 dark:border-gray-800/60">
+        <div className="hidden lg:block w-[340px] shrink-0 border-l border-slate-200 dark:border-slate-800/60">
           <ConversationInfoPanel 
             userId={activeConv.otherUser.id} 
             onClose={() => setShowInfoPanel(false)}

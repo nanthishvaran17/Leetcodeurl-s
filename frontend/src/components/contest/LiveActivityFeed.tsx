@@ -41,7 +41,7 @@ const eventIcons: Record<string, React.ReactNode> = {
   RANK_JUMP: <TrendingUp className="w-3.5 h-3.5 text-amber-400 shrink-0" />,
   CONTEST_RESULT_UPDATED: <CheckCircle2 className="w-3.5 h-3.5 text-brand-400 shrink-0" />,
   SYNC_ERROR: <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />,
-  default: <Activity className="w-3.5 h-3.5 text-gray-400 shrink-0" />,
+  default: <Activity className="w-3.5 h-3.5 text-slate-400 shrink-0" />,
 };
 
 export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({ events, maxHeight = '380px' }) => {
@@ -56,10 +56,10 @@ export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({ events, maxH
 
   if (!events || events.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-10 text-center text-gray-500 space-y-2">
-        <Activity className="w-8 h-8 text-gray-600 animate-pulse" />
+      <div className="flex flex-col items-center justify-center py-10 text-center text-slate-500 space-y-2">
+        <Activity className="w-8 h-8 text-slate-600 animate-pulse" />
         <p className="text-xs font-bold">Waiting for live events...</p>
-        <p className="text-[11px] text-gray-600">Events will appear here when the contest is LIVE and students begin solving.</p>
+        <p className="text-[11px] text-slate-600">Events will appear here when the contest is LIVE and students begin solving.</p>
       </div>
     );
   }
@@ -85,7 +85,7 @@ export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({ events, maxH
             <div className="mt-0.5">{icon}</div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-mono text-gray-500 shrink-0 flex items-center gap-1">
+                <span className="text-[11px] font-mono text-slate-500 shrink-0 flex items-center gap-1">
                   <Clock className="w-3 h-3" />
                   {evt.timestamp || '—'}
                 </span>
@@ -101,13 +101,13 @@ export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({ events, maxH
               <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
                 <span className="text-xs font-black text-white">{evt.studentName || 'Unknown Student'}</span>
                 {(evt.dept || evt.year) && (
-                  <span className="text-[10px] text-gray-400 font-mono">
+                  <span className="text-[10px] text-slate-400 font-mono">
                     {[evt.dept, evt.year && `${evt.year} Year`].filter(Boolean).join(' • ')}
                   </span>
                 )}
               </div>
               {evt.detail && (
-                <p className="text-[11px] text-gray-300 mt-0.5 font-medium">{evt.detail}</p>
+                <p className="text-[11px] text-slate-300 mt-0.5 font-medium">{evt.detail}</p>
               )}
             </div>
             {isNew && (

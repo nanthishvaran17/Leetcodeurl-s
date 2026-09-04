@@ -76,7 +76,7 @@ const ROLE_COLORS: Record<string, string> = {
   HOD: 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-900/30 dark:text-indigo-300',
   DEPARTMENT_COORDINATOR: 'bg-teal-100 text-teal-700 border-teal-300 dark:bg-teal-900/30 dark:text-teal-300',
   ADMIN: 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300',
-  MANUAL: 'bg-gray-100 text-gray-700 border-gray-300 dark:bg-gray-800 dark:text-gray-300',
+  MANUAL: 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300',
 };
 
 const STATUS_BADGES: Record<string, { icon: React.ReactNode; bg: string; text: string; border: string; label: string }> = {
@@ -96,9 +96,9 @@ const STATUS_BADGES: Record<string, { icon: React.ReactNode; bg: string; text: s
   },
   SENDING: {
     icon: <Loader2 className="w-3.5 h-3.5 animate-spin" />,
-    bg: 'bg-blue-50 dark:bg-blue-950/40',
-    text: 'text-blue-700 dark:text-blue-300',
-    border: 'border-blue-200 dark:border-blue-800',
+    bg: 'bg-brand-50 dark:bg-brand-950/40',
+    text: 'text-brand-700 dark:text-brand-300',
+    border: 'border-brand-200 dark:border-brand-800',
     label: 'Sending'
   },
   RETRYING: {
@@ -710,7 +710,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 space-y-4">
         <Loader2 className="w-10 h-10 text-brand-500 animate-spin" />
-        <p className="text-sm font-bold text-gray-500 dark:text-gray-400">
+        <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
           Loading Email Operations Center telemetry...
         </p>
       </div>
@@ -722,16 +722,16 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       
       {/* 1. PROVIDER STATUS BAR (Admins Only) */}
       {!isStaff && (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 shadow-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 dark:text-emerald-400">
               <CheckCircle2 className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm font-black text-gray-900 dark:text-white flex items-center gap-2">
-                Brevo Official API <span className="text-gray-300 dark:text-gray-600">•</span> HTTPS Port 443
+              <h2 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                Brevo Official API <span className="text-slate-300 dark:text-slate-600">•</span> HTTPS Port 443
               </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 Active Provider: {providerInfo?.active_provider || 'brevo'}
               </p>
             </div>
@@ -740,30 +740,30 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           <div className="flex items-center gap-6">
             <div className="hidden md:flex items-center gap-6 text-xs">
               <div className="flex flex-col">
-                <span className="text-gray-400 font-medium uppercase tracking-wider text-[10px]">Timeout</span>
-                <span className="font-bold text-gray-700 dark:text-gray-200">90s</span>
+                <span className="text-slate-400 font-medium uppercase tracking-wider text-[10px]">Timeout</span>
+                <span className="font-bold text-slate-700 dark:text-slate-200">90s</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-gray-400 font-medium uppercase tracking-wider text-[10px]">Retry Policy</span>
-                <span className="font-bold text-gray-700 dark:text-gray-200">3 Exponential</span>
+                <span className="text-slate-400 font-medium uppercase tracking-wider text-[10px]">Retry Policy</span>
+                <span className="font-bold text-slate-700 dark:text-slate-200">3 Exponential</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-gray-400 font-medium uppercase tracking-wider text-[10px]">Last Success</span>
-                <span className="font-bold text-gray-700 dark:text-gray-200">{metrics.lastSuccessTime ? formatTimestampIST(metrics.lastSuccessTime) : 'None'}</span>
+                <span className="text-slate-400 font-medium uppercase tracking-wider text-[10px]">Last Success</span>
+                <span className="font-bold text-slate-700 dark:text-slate-200">{metrics.lastSuccessTime ? formatTimestampIST(metrics.lastSuccessTime) : 'None'}</span>
               </div>
             </div>
             
-            <div className="h-8 w-px bg-gray-200 dark:bg-gray-800 hidden sm:block" />
+            <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
             
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
-                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Refreshed</div>
-                <div className="text-xs font-bold text-gray-700 dark:text-gray-300">{lastRefreshedAt || 'Just now'}</div>
+                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Refreshed</div>
+                <div className="text-xs font-bold text-slate-700 dark:text-slate-300">{lastRefreshedAt || 'Just now'}</div>
               </div>
               <button
                 onClick={() => fetchAllData(false)}
                 disabled={refreshing}
-                className="p-2 rounded-xl bg-gray-50 dark:bg-navy-800 text-gray-500 hover:text-brand-500 dark:hover:text-brand-400 border border-gray-200 dark:border-navy-700 transition-colors disabled:opacity-50 cursor-pointer"
+                className="p-2 rounded-xl bg-slate-50 dark:bg-navy-800 text-slate-500 hover:text-brand-500 dark:hover:text-brand-400 border border-slate-200 dark:border-navy-700 transition-colors disabled:opacity-50 cursor-pointer"
                 title="Refresh Telemetry"
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
@@ -775,7 +775,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
       {/* Staff Mentoring Safe Delivery Banner */}
       {isStaff && (
-        <div className="p-5 sm:p-6 rounded-3xl bg-slate-900 dark:bg-navy-900 border border-slate-700/50 dark:border-navy-700 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 shadow-xl relative overflow-hidden group">
+        <div className="p-5 sm:p-6 rounded-3xl bg-slate-900 dark:bg-navy-950 border border-slate-700/50 dark:border-navy-700 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 shadow-xl relative overflow-hidden group">
           
           <div className="flex items-center space-x-4 relative z-10">
             <div className="p-3.5 rounded-2xl bg-slate-800/80 dark:bg-navy-800/80 text-emerald-400 border border-slate-700 dark:border-navy-700 shadow-inner">
@@ -805,10 +805,10 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             <span className="text-[10px] font-black uppercase tracking-wider">Delivered</span>
             <CheckCircle2 className="w-4 h-4" />
           </div>
-          <div className="text-2xl font-black text-gray-900 dark:text-white">
+          <div className="text-2xl font-black text-slate-900 dark:text-white">
             {metrics.deliveredCount.toLocaleString()}
           </div>
-          <p className="text-[10px] text-gray-400 font-bold mt-1">Confirmed Dispatches</p>
+          <p className="text-[10px] text-slate-400 font-bold mt-1">Confirmed Dispatches</p>
         </div>
 
         {/* Pending / Queued */}
@@ -817,10 +817,10 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             <span className="text-[10px] font-black uppercase tracking-wider">Pending / Queued</span>
             <Clock className="w-4 h-4" />
           </div>
-          <div className="text-2xl font-black text-gray-900 dark:text-white">
+          <div className="text-2xl font-black text-slate-900 dark:text-white">
             {metrics.pendingCount.toLocaleString()}
           </div>
-          <p className="text-[10px] text-gray-400 font-bold mt-1">Queued Jobs</p>
+          <p className="text-[10px] text-slate-400 font-bold mt-1">Queued Jobs</p>
         </div>
 
         {/* Failed Deliveries */}
@@ -829,10 +829,10 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             <span className="text-[10px] font-black uppercase tracking-wider">Failed</span>
             <XCircle className="w-4 h-4" />
           </div>
-          <div className="text-2xl font-black text-gray-900 dark:text-white">
+          <div className="text-2xl font-black text-slate-900 dark:text-white">
             {metrics.failedCount.toLocaleString()}
           </div>
-          <p className="text-[10px] text-gray-400 font-bold mt-1">Failed Attempts</p>
+          <p className="text-[10px] text-slate-400 font-bold mt-1">Failed Attempts</p>
         </div>
 
         {/* Active Recipients */}
@@ -841,10 +841,10 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             <span className="text-[10px] font-black uppercase tracking-wider">Active Recipients</span>
             <Users className="w-4 h-4" />
           </div>
-          <div className="text-2xl font-black text-gray-900 dark:text-white">
+          <div className="text-2xl font-black text-slate-900 dark:text-white">
             {metrics.activeRecipientsCount}
           </div>
-          <p className="text-[10px] text-gray-400 font-bold mt-1">Configured Emails</p>
+          <p className="text-[10px] text-slate-400 font-bold mt-1">Configured Emails</p>
         </div>
 
         {/* Success Rate */}
@@ -853,10 +853,10 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             <span className="text-[10px] font-black uppercase tracking-wider">Success Rate</span>
             <ShieldCheck className="w-4 h-4" />
           </div>
-          <div className="text-2xl font-black text-gray-900 dark:text-white">
+          <div className="text-2xl font-black text-slate-900 dark:text-white">
             {metrics.successRate}%
           </div>
-          <p className="text-[10px] text-gray-400 font-bold mt-1">Delivered / Attempts</p>
+          <p className="text-[10px] text-slate-400 font-bold mt-1">Delivered / Attempts</p>
         </div>
 
         {/* Automation Status */}
@@ -876,18 +876,18 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               </span>
             )}
           </div>
-          <p className="text-[10px] text-gray-400 font-bold mt-1.5">Sunday 09:45 AM IST</p>
+          <p className="text-[10px] text-slate-400 font-bold mt-1.5">Sunday 09:45 AM IST</p>
         </div>
       </div>
 
       {/* 3. SECTION TAB NAVIGATION */}
-      <div className="flex items-center space-x-2 bg-gray-100 dark:bg-navy-900 p-1.5 rounded-2xl border border-gray-200 dark:border-gray-800 flex-wrap gap-1">
+      <div className="flex items-center space-x-2 bg-slate-100 dark:bg-navy-950 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 flex-wrap gap-1">
         <button
           onClick={() => setActiveSection('manual')}
           className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeSection === 'manual'
               ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           <Zap className="w-4 h-4 text-amber-300" />
@@ -899,7 +899,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeSection === 'automated'
               ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md font-black'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           <Calendar className="w-4 h-4" />
@@ -911,7 +911,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeSection === 'recipients'
               ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-md'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           <Users className="w-4 h-4" />
@@ -923,7 +923,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeSection === 'history'
               ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           <FileText className="w-4 h-4" />
@@ -934,8 +934,8 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           onClick={() => setShowDiagnostics(!showDiagnostics)}
           className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ml-auto ${
             showDiagnostics
-              ? 'bg-gray-800 text-white'
-              : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              ? 'bg-slate-800 text-white'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           <Settings className="w-4 h-4 text-indigo-400" />
@@ -946,7 +946,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       {/* 4. DIAGNOSTICS & TEST TOOLS COLLAPSIBLE PANEL */}
       {showDiagnostics && (
         <div className="glass-card p-6 rounded-3xl border border-indigo-500/30 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-transparent space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
             <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 font-black text-sm">
               <Settings className="w-4 h-4" />
               <span>Provider Diagnostics &amp; Sandbox Test Tools</span>
@@ -958,11 +958,11 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Quick Test Email Card */}
-            <div className="p-4 bg-white dark:bg-navy-900 rounded-2xl border border-gray-200 dark:border-gray-800 space-y-3">
-              <h4 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider">
+            <div className="p-4 bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+              <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
                 Send Quick Test Email
               </h4>
-              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Verify Brevo API connectivity and transactional email dispatch to a specific test address.
               </p>
 
@@ -972,7 +972,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                   value={testRecipient}
                   onChange={(e) => setTestRecipient(e.target.value)}
                   placeholder="Enter test recipient email..."
-                  className="flex-1 px-3 py-2 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl text-xs font-medium text-gray-900 dark:text-white"
+                  className="flex-1 px-3 py-2 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl text-xs font-medium text-slate-900 dark:text-white"
                 />
                 <button
                   onClick={() => handleRunDiagnosticsTest(false)}
@@ -986,11 +986,11 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             </div>
 
             {/* Send Full Test Report Card */}
-            <div className="p-4 bg-white dark:bg-navy-900 rounded-2xl border border-gray-200 dark:border-gray-800 space-y-3">
-              <h4 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider">
+            <div className="p-4 bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+              <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
                 Send Complete Test Report Package
               </h4>
-              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Generates full multi-sheet Excel + PDF + DOCX report and dispatches to test recipient in safe mode.
               </p>
 
@@ -1023,22 +1023,22 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       {/* 5. MANUAL INSTANT DISPATCH PANEL */}
       {activeSection === 'manual' && (
         <div className="glass-card p-6 sm:p-8 rounded-3xl border border-brand-500/30 shadow-xl space-y-6">
-          <div className="flex items-start justify-between flex-wrap gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
+          <div className="flex items-start justify-between flex-wrap gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div className="space-y-1">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-xs font-black">
                 <Zap className="w-3.5 h-3.5 text-amber-400" />
                 <span>MANUAL DISPATCH WORKFLOW</span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
                 Manual Instant Dispatch
               </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-bold max-w-2xl">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-bold max-w-2xl">
                 Send a report immediately to selected recipients. This action runs once and does not modify the recurring Sunday schedule.
               </p>
             </div>
 
-            <div className="px-3.5 py-2 rounded-2xl bg-gray-50 dark:bg-navy-900 border border-gray-200 dark:border-navy-700 text-right">
-              <span className="text-[10px] font-black uppercase text-gray-400 block">Delivery Mode</span>
+            <div className="px-3.5 py-2 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-right">
+              <span className="text-[10px] font-black uppercase text-slate-400 block">Delivery Mode</span>
               <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Immediate One-Time
               </span>
@@ -1049,27 +1049,27 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             {/* Left Column: Report Selection & Attachments */}
             <div className="space-y-5 lg:col-span-1">
               <div className="relative z-30">
-                <label className="block text-xs font-black uppercase text-gray-500 dark:text-gray-400 mb-2">
+                <label className="block text-xs font-black uppercase text-slate-500 dark:text-slate-400 mb-2">
                   Select Institutional Report
                 </label>
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => { setIsReportTypeOpen(!isReportTypeOpen); setIsSessionOpen(false); }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${isReportTypeOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-sm' : 'border-gray-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${isReportTypeOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-sm' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
                   >
                     <FileText className="w-4 h-4 text-brand-500 shrink-0" />
-                    <span className="text-xs font-bold text-gray-900 dark:text-white truncate flex-1">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
                       {{
                         'WEEKLY_CONTEST': 'Weekly Contest Executive Report (Excel + PDF + Word)',
                         'EXECUTIVE_SUMMARY': 'Executive Performance Summary',
                         'DEPARTMENT_MATRIX': 'Department Contest Performance Matrix'
                       }[selectedReportType] || selectedReportType}
                     </span>
-                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0 ${isReportTypeOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ${isReportTypeOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {isReportTypeOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-2 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-2 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
                       {[
                         { value: 'WEEKLY_CONTEST', label: 'Weekly Contest Executive Report (Excel + PDF + Word)', color: 'text-brand-500' },
                         { value: 'EXECUTIVE_SUMMARY', label: 'Executive Performance Summary', color: 'text-indigo-500' },
@@ -1078,10 +1078,10 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                         <button key={opt.value} type="button"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => { setSelectedReportType(opt.value); setIsReportTypeOpen(false); }}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors ${selectedReportType === opt.value ? 'bg-brand-50 dark:bg-brand-900/40' : 'hover:bg-gray-50 dark:hover:bg-navy-800'}`}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors ${selectedReportType === opt.value ? 'bg-brand-50 dark:bg-brand-900/40' : 'hover:bg-slate-50 dark:hover:bg-navy-800'}`}
                         >
                           <FileText className={`w-4 h-4 shrink-0 ${opt.color}`} />
-                          <span className={`text-xs truncate flex-1 ${selectedReportType === opt.value ? 'font-black text-brand-700 dark:text-brand-300' : 'font-bold text-gray-700 dark:text-gray-300'}`}>{opt.label}</span>
+                          <span className={`text-xs truncate flex-1 ${selectedReportType === opt.value ? 'font-black text-brand-700 dark:text-brand-300' : 'font-bold text-slate-700 dark:text-slate-300'}`}>{opt.label}</span>
                           {selectedReportType === opt.value && <Check className="w-4 h-4 text-brand-500 shrink-0" />}
                         </button>
                       ))}
@@ -1091,32 +1091,32 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               </div>
 
               <div className="relative z-20">
-                <label className="block text-xs font-black uppercase text-gray-500 dark:text-gray-400 mb-2">
+                <label className="block text-xs font-black uppercase text-slate-500 dark:text-slate-400 mb-2">
                   Target Weekly Contest Session
                 </label>
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => { setIsSessionOpen(!isSessionOpen); setIsReportTypeOpen(false); }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${isSessionOpen ? 'border-blue-500 ring-2 ring-blue-500/20 shadow-sm' : 'border-gray-200 dark:border-navy-700 hover:border-blue-400 dark:hover:border-blue-500'}`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${isSessionOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-sm' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
                   >
-                    <Calendar className="w-4 h-4 text-blue-500 shrink-0" />
-                    <span className="text-xs font-bold text-gray-900 dark:text-white truncate flex-1">
+                    <Calendar className="w-4 h-4 text-brand-500 shrink-0" />
+                    <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
                       {sessions.find(s => s.sessionId === selectedSessionId) 
                         ? `${sessions.find(s => s.sessionId === selectedSessionId)?.sessionDate} — ${sessions.find(s => s.sessionId === selectedSessionId)?.contestName} (FINALIZED)`
                         : 'Select a session'}
                     </span>
-                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0 ${isSessionOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ${isSessionOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {isSessionOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-2 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-2 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
                       {sessions.map(s => (
                         <button key={s.sessionId} type="button"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => { setSelectedSessionId(s.sessionId); setIsSessionOpen(false); }}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors ${selectedSessionId === s.sessionId ? 'bg-blue-500 text-white' : 'hover:bg-gray-50 dark:hover:bg-navy-800'}`}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors ${selectedSessionId === s.sessionId ? 'bg-brand-500 text-white' : 'hover:bg-slate-50 dark:hover:bg-navy-800'}`}
                         >
-                          <span className={`text-xs truncate flex-1 ${selectedSessionId === s.sessionId ? 'font-bold' : 'font-semibold text-gray-700 dark:text-gray-300'}`}>
+                          <span className={`text-xs truncate flex-1 ${selectedSessionId === s.sessionId ? 'font-bold' : 'font-semibold text-slate-700 dark:text-slate-300'}`}>
                             {s.sessionDate} — {s.contestName} (FINALIZED)
                           </span>
                         </button>
@@ -1127,38 +1127,38 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               </div>
 
               {/* Dynamic Attachment Cards */}
-              <div className="p-4 bg-gray-50 dark:bg-navy-950/60 rounded-2xl border border-gray-200 dark:border-navy-800 space-y-2.5">
-                <span className="text-[11px] font-black uppercase tracking-wider text-gray-400 block">
+              <div className="p-4 bg-slate-50 dark:bg-navy-950/60 rounded-2xl border border-slate-200 dark:border-navy-800 space-y-2.5">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block">
                   Generated Attachments (Dynamic Bundle)
                 </span>
 
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between p-2.5 bg-white dark:bg-navy-900 rounded-xl border border-gray-200 dark:border-gray-800 text-xs font-bold">
+                  <div className="flex items-center justify-between p-2.5 bg-white dark:bg-navy-950 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold">
                     <span className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
                       <FileSpreadsheet className="w-4 h-4" /> Performance_Report.xlsx
                     </span>
-                    <span className="text-[10px] text-gray-400">Excel Multi-Sheet</span>
+                    <span className="text-[10px] text-slate-400">Excel Multi-Sheet</span>
                   </div>
 
-                  <div className="flex items-center justify-between p-2.5 bg-white dark:bg-navy-900 rounded-xl border border-gray-200 dark:border-gray-800 text-xs font-bold">
+                  <div className="flex items-center justify-between p-2.5 bg-white dark:bg-navy-950 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold">
                     <span className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
                       <FileText className="w-4 h-4" /> Executive_Summary.pdf
                     </span>
-                    <span className="text-[10px] text-gray-400">Printable PDF</span>
+                    <span className="text-[10px] text-slate-400">Printable PDF</span>
                   </div>
 
-                  <div className="flex items-center justify-between p-2.5 bg-white dark:bg-navy-900 rounded-xl border border-gray-200 dark:border-gray-800 text-xs font-bold">
-                    <span className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                  <div className="flex items-center justify-between p-2.5 bg-white dark:bg-navy-950 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold">
+                    <span className="flex items-center gap-2 text-brand-600 dark:text-brand-400">
                       <FileText className="w-4 h-4" /> Institutional_Summary.docx
                     </span>
-                    <span className="text-[10px] text-gray-400">Word DOCX</span>
+                    <span className="text-[10px] text-slate-400">Word DOCX</span>
                   </div>
                 </div>
               </div>
 
               {/* Custom Optional Message */}
               <div>
-                <label className="block text-xs font-black uppercase text-gray-500 dark:text-gray-400 mb-1.5">
+                <label className="block text-xs font-black uppercase text-slate-500 dark:text-slate-400 mb-1.5">
                   Custom Administrator Note (Optional)
                 </label>
                 <textarea
@@ -1166,7 +1166,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                   onChange={(e) => setCustomMessage(e.target.value)}
                   placeholder="Add an optional note to include in the email body..."
                   rows={3}
-                  className="w-full p-3 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-xs font-medium text-gray-900 dark:text-white"
+                  className="w-full p-3 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-2xl text-xs font-medium text-slate-900 dark:text-white"
                 />
               </div>
             </div>
@@ -1175,7 +1175,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             <div className="space-y-4 lg:col-span-2">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
-                  <label className="text-xs font-black uppercase text-gray-500 dark:text-gray-400 block">
+                  <label className="text-xs font-black uppercase text-slate-500 dark:text-slate-400 block">
                     Select Target Recipients
                   </label>
                   <span className="text-xs font-bold text-brand-600 dark:text-brand-400">
@@ -1190,10 +1190,10 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                   >
                     Select All Active
                   </button>
-                  <span className="text-gray-300">|</span>
+                  <span className="text-slate-300">|</span>
                   <button
                     onClick={clearAllRecipients}
-                    className="text-[11px] font-bold text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer"
+                    className="text-[11px] font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                   >
                     Clear Selection
                   </button>
@@ -1211,18 +1211,18 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                       className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
                         isSelected
                           ? 'bg-brand-500/10 border-brand-500/40 shadow-sm'
-                          : 'bg-white dark:bg-navy-900 border-gray-200 dark:border-navy-700 hover:border-brand-500/30'
+                          : 'bg-white dark:bg-navy-950 border-slate-200 dark:border-navy-700 hover:border-brand-500/30'
                       }`}
                     >
                       <div className="flex items-center space-x-3 min-w-0">
                         <div className="text-brand-600 dark:text-brand-400">
-                          {isSelected ? <CheckSquare className="w-5 h-5 text-brand-500" /> : <Square className="w-5 h-5 text-gray-400" />}
+                          {isSelected ? <CheckSquare className="w-5 h-5 text-brand-500" /> : <Square className="w-5 h-5 text-slate-400" />}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-xs font-black text-gray-900 dark:text-white truncate">
+                          <p className="text-xs font-black text-slate-900 dark:text-white truncate">
                             {r.name}
                           </p>
-                          <p className="text-[11px] text-gray-400 truncate">
+                          <p className="text-[11px] text-slate-400 truncate">
                             {r.email}
                           </p>
                         </div>
@@ -1237,8 +1237,8 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               </div>
 
               {/* Action Buttons Bar */}
-              <div className="pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between flex-wrap gap-4">
-                <div className="text-xs text-gray-400 font-medium flex items-center gap-1.5">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between flex-wrap gap-4">
+                <div className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
                   <Info className="w-4 h-4 text-brand-400" />
                   <span>Immediate dispatch via Brevo v3 API (HTTPS Port 443)</span>
                 </div>
@@ -1264,16 +1264,16 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       {/* 6. AUTOMATED WEEKLY DISPATCH CONTROL CENTER */}
       {activeSection === 'automated' && (
         <div className="glass-card p-6 sm:p-8 rounded-3xl border border-amber-500/30 shadow-xl space-y-6">
-          <div className="flex items-start justify-between flex-wrap gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
+          <div className="flex items-start justify-between flex-wrap gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div className="space-y-1">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-black">
                 <Calendar className="w-3.5 h-3.5" />
                 <span>AUTOMATED CRON ENGINE</span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
                 Automated Weekly Dispatch Control Center
               </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-bold max-w-2xl">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-bold max-w-2xl">
                 Automatically generate and deliver the institutional executive report every Sunday according to the configured schedule.
               </p>
             </div>
@@ -1295,26 +1295,26 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           {/* Cards Layout */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Schedule Configuration Overview */}
-            <div className="p-5 bg-white dark:bg-navy-900 rounded-3xl border border-gray-200 dark:border-gray-800 space-y-3">
-              <h3 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+            <div className="p-5 bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-3">
+              <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-brand-500" /> Schedule Profile
               </h3>
 
               <div className="space-y-2 text-xs">
-                <div className="flex justify-between py-1 border-b border-gray-100 dark:border-gray-800">
-                  <span className="text-gray-400">Frequency:</span>
-                  <span className="font-black text-gray-900 dark:text-white">Weekly</span>
+                <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                  <span className="text-slate-400">Frequency:</span>
+                  <span className="font-black text-slate-900 dark:text-white">Weekly</span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-gray-100 dark:border-gray-800">
-                  <span className="text-gray-400">Trigger Day:</span>
-                  <span className="font-black text-gray-900 dark:text-white">Sunday</span>
+                <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                  <span className="text-slate-400">Trigger Day:</span>
+                  <span className="font-black text-slate-900 dark:text-white">Sunday</span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-gray-100 dark:border-gray-800">
-                  <span className="text-gray-400">Trigger Time:</span>
+                <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                  <span className="text-slate-400">Trigger Time:</span>
                   <span className="font-black text-brand-600 dark:text-brand-400 font-mono">08:00 AM / 09:45 AM</span>
                 </div>
                 <div className="flex justify-between py-1">
-                  <span className="text-gray-400">Timezone:</span>
+                  <span className="text-slate-400">Timezone:</span>
                   <span className="font-black text-emerald-600 dark:text-emerald-400">IST — Asia/Kolkata</span>
                 </div>
               </div>
@@ -1327,16 +1327,16 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               </h3>
 
               <div>
-                <p className="text-lg font-black text-gray-900 dark:text-white">
+                <p className="text-lg font-black text-slate-900 dark:text-white">
                   {scheduleConfig?.schedule?.next_run || 'Sunday, 08:00 AM IST'}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-bold mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1">
                   Strict Asia/Kolkata Execution Window
                 </p>
               </div>
 
               <div className="pt-2 flex items-center justify-between text-xs border-t border-brand-500/20">
-                <span className="text-gray-400">Status:</span>
+                <span className="text-slate-400">Status:</span>
                 <span className="font-black text-emerald-600 dark:text-emerald-400">
                   Scheduled
                 </span>
@@ -1344,27 +1344,27 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             </div>
 
             {/* Last Execution Run Summary */}
-            <div className="p-5 bg-white dark:bg-navy-900 rounded-3xl border border-gray-200 dark:border-gray-800 space-y-3">
-              <h3 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+            <div className="p-5 bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-3">
+              <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
                 <RotateCcw className="w-4 h-4 text-purple-500" /> Last Execution Summary
               </h3>
 
               <div className="space-y-2 text-xs">
-                <div className="flex justify-between py-1 border-b border-gray-100 dark:border-gray-800">
-                  <span className="text-gray-400">Last Execution:</span>
-                  <span className="font-bold text-gray-900 dark:text-white">
+                <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                  <span className="text-slate-400">Last Execution:</span>
+                  <span className="font-bold text-slate-900 dark:text-white">
                     {scheduleConfig?.schedule?.last_run || 'Pending'}
                   </span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-gray-100 dark:border-gray-800">
-                  <span className="text-gray-400">Status:</span>
+                <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
+                  <span className="text-slate-400">Status:</span>
                   <span className="font-black text-emerald-600 dark:text-emerald-400">
                     {scheduleConfig?.schedule?.last_status || 'SUCCESS'}
                   </span>
                 </div>
                 <div className="flex justify-between py-1">
-                  <span className="text-gray-400">Last Report:</span>
-                  <span className="font-mono text-[11px] text-gray-700 dark:text-gray-300 truncate max-w-[140px]">
+                  <span className="text-slate-400">Last Report:</span>
+                  <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300 truncate max-w-[140px]">
                     {scheduleConfig?.schedule?.last_report || 'Weekly_Report.xlsx'}
                   </span>
                 </div>
@@ -1373,7 +1373,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           </div>
 
           {/* Automation Control Buttons Bar */}
-          <div className="p-5 bg-gray-50 dark:bg-navy-950 rounded-3xl border border-gray-200 dark:border-navy-800 flex items-center justify-between flex-wrap gap-4">
+          <div className="p-5 bg-slate-50 dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-navy-800 flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
               <button
                 onClick={handleRunScheduledJobNow}
@@ -1399,7 +1399,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
             <button
               onClick={() => setShowScheduleModal(true)}
-              className="px-5 py-3 bg-gray-200 dark:bg-navy-800 hover:bg-gray-300 dark:hover:bg-navy-700 text-gray-900 dark:text-white rounded-2xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer"
+              className="px-5 py-3 bg-slate-200 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-900 dark:text-white rounded-2xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer"
             >
               <Settings className="w-4 h-4" />
               <span>Schedule Settings</span>
@@ -1411,12 +1411,12 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       {/* 7. REPORT RECIPIENTS MANAGEMENT PANEL */}
       {activeSection === 'recipients' && (
         <div className="glass-card p-6 sm:p-8 rounded-3xl border border-teal-500/30 shadow-xl space-y-6">
-          <div className="flex items-center justify-between flex-wrap gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
+          <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
-              <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
                 Report Recipients Management
               </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-bold">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">
                 Configure authorized management, HOD, and coordinator contact emails for institutional report dispatches.
               </p>
             </div>
@@ -1436,16 +1436,16 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                 key={r.id}
                 className={`p-5 rounded-3xl border transition-all space-y-3 ${
                   r.is_active
-                    ? 'bg-white dark:bg-navy-900 border-gray-200 dark:border-navy-700 shadow-md'
-                    : 'bg-gray-50 dark:bg-navy-950/60 border-gray-200 dark:border-navy-800 opacity-60'
+                    ? 'bg-white dark:bg-navy-950 border-slate-200 dark:border-navy-700 shadow-md'
+                    : 'bg-slate-50 dark:bg-navy-950/60 border-slate-200 dark:border-navy-800 opacity-60'
                 }`}
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-sm font-black text-gray-900 dark:text-white">
+                    <h3 className="text-sm font-black text-slate-900 dark:text-white">
                       {r.name}
                     </h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                       {r.email}
                     </p>
                   </div>
@@ -1454,14 +1454,14 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800 text-xs">
-                  <span className="text-gray-400">Department: <strong>{r.department || 'ALL'}</strong></span>
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+                  <span className="text-slate-400">Department: <strong>{r.department || 'ALL'}</strong></span>
                   <button
                     onClick={() => handleToggleRecipientActive(r.id, r.is_active)}
                     className={`px-2.5 py-1 rounded-full text-[10px] font-black cursor-pointer ${
                       r.is_active
                         ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
-                        : 'bg-gray-200 dark:bg-navy-800 text-gray-500'
+                        : 'bg-slate-200 dark:bg-navy-800 text-slate-500'
                     }`}
                   >
                     {r.is_active ? 'Active' : 'Inactive'}
@@ -1471,7 +1471,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                 <div className="flex items-center justify-end gap-2 pt-1">
                   <button
                     onClick={() => handleDeleteRecipient(r.id)}
-                    className="p-1.5 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                    className="p-1.5 text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
                     title="Remove Recipient"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -1486,19 +1486,19 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       {/* 8. DELIVERY HISTORY & LOG DRAWER */}
       {activeSection === 'history' && (
         <div className="glass-card p-6 sm:p-8 rounded-3xl border border-purple-500/30 shadow-xl space-y-6">
-          <div className="flex items-center justify-between flex-wrap gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
+          <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
-              <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
                 Delivery Audit Logs &amp; Traceability
               </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-bold">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">
                 Real-time delivery audit logs, retry execution, message IDs, and provider response diagnostics.
               </p>
             </div>
 
             <button
               onClick={() => fetchAllData(true)}
-              className="px-4 py-2 bg-gray-100 dark:bg-navy-800 hover:bg-gray-200 dark:hover:bg-navy-700 text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2 bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
               <span>Refresh Logs</span>
@@ -1508,25 +1508,25 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           {/* Filters Bar */}
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex-1 min-w-[200px] relative">
-              <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={logSearchQuery}
                 onChange={(e) => setLogSearchQuery(e.target.value)}
                 placeholder="Search recipient, subject, or message ID..."
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-2xl text-xs font-medium text-gray-900 dark:text-white"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-2xl text-xs font-medium text-slate-900 dark:text-white"
               />
             </div>
 
             <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-400" />
+              <Filter className="w-4 h-4 text-slate-400" />
               <div className="relative z-20">
                 <button
                   type="button"
                   onClick={() => { setIsLogFilterStatusOpen(!isLogFilterStatusOpen); setIsLogFilterTypeOpen(false); }}
-                  className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${isLogFilterStatusOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-sm' : 'border-gray-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                  className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${isLogFilterStatusOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-sm' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
                 >
-                  <span className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
                     {{
                       'ALL': 'All Statuses',
                       'SENT': 'Delivered',
@@ -1535,10 +1535,10 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                       'RETRYING': 'Retrying'
                     }[logFilterStatus] || logFilterStatus}
                   </span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0 ${isLogFilterStatusOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${isLogFilterStatusOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {isLogFilterStatusOpen && (
-                  <div className="absolute z-[200] top-full left-0 mt-2 w-48 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                  <div className="absolute z-[200] top-full left-0 mt-2 w-48 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
                     {[
                       { value: 'ALL', label: 'All Statuses' },
                       { value: 'SENT', label: 'Delivered' },
@@ -1549,7 +1549,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                       <button key={opt.value} type="button"
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => { setLogFilterStatus(opt.value); setIsLogFilterStatusOpen(false); }}
-                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-colors ${logFilterStatus === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-gray-50 dark:hover:bg-navy-800 text-gray-700 dark:text-gray-300 font-bold'}`}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-colors ${logFilterStatus === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-slate-50 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold'}`}
                       >
                         <span className="text-xs truncate">{opt.label}</span>
                         {logFilterStatus === opt.value && <Check className="w-4 h-4 text-brand-500 shrink-0" />}
@@ -1563,9 +1563,9 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                 <button
                   type="button"
                   onClick={() => { setIsLogFilterTypeOpen(!isLogFilterTypeOpen); setIsLogFilterStatusOpen(false); }}
-                  className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${isLogFilterTypeOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-sm' : 'border-gray-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                  className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${isLogFilterTypeOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-sm' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
                 >
-                  <span className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
                     {{
                       'ALL': 'All Types',
                       'MANUAL': 'Manual',
@@ -1573,10 +1573,10 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                       'TEST': 'Test'
                     }[logFilterDispatchType] || logFilterDispatchType}
                   </span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0 ${isLogFilterTypeOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${isLogFilterTypeOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {isLogFilterTypeOpen && (
-                  <div className="absolute z-[200] top-full left-0 mt-2 w-48 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                  <div className="absolute z-[200] top-full left-0 mt-2 w-48 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
                     {[
                       { value: 'ALL', label: 'All Types' },
                       { value: 'MANUAL', label: 'Manual' },
@@ -1586,7 +1586,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                       <button key={opt.value} type="button"
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => { setLogFilterDispatchType(opt.value); setIsLogFilterTypeOpen(false); }}
-                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-colors ${logFilterDispatchType === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-gray-50 dark:hover:bg-navy-800 text-gray-700 dark:text-gray-300 font-bold'}`}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-colors ${logFilterDispatchType === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-slate-50 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold'}`}
                       >
                         <span className="text-xs truncate">{opt.label}</span>
                         {logFilterDispatchType === opt.value && <Check className="w-4 h-4 text-brand-500 shrink-0" />}
@@ -1599,10 +1599,10 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
           </div>
 
           {/* Delivery Logs Table */}
-          <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-navy-800">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-800">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-gray-50 dark:bg-navy-950 text-gray-500 dark:text-gray-400 uppercase font-black tracking-wider text-[10px] border-b border-gray-200 dark:border-navy-800">
+                <tr className="bg-slate-50 dark:bg-navy-950 text-slate-500 dark:text-slate-400 uppercase font-black tracking-wider text-[10px] border-b border-slate-200 dark:border-navy-800">
                   <th className="py-3.5 px-4">Status</th>
                   <th className="py-3.5 px-4">Recipient</th>
                   <th className="py-3.5 px-4">Report / Subject</th>
@@ -1615,7 +1615,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               <tbody className="divide-y divide-gray-100 dark:divide-navy-800">
                 {filteredLogs.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-gray-400 font-bold">
+                    <td colSpan={7} className="py-8 text-center text-slate-400 font-bold">
                       No delivery logs match your filter criteria.
                     </td>
                   </tr>
@@ -1624,38 +1624,38 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                     const statusCfg = STATUS_BADGES[log.status] || STATUS_BADGES.QUEUED;
                     const isFailed = log.status === 'FAILED';
                     return (
-                      <tr key={log.id} className="hover:bg-gray-50/80 dark:hover:bg-navy-900/60 transition-colors">
+                      <tr key={log.id} className="hover:bg-slate-50/80 dark:hover:bg-navy-900/60 transition-colors">
                         <td className="py-3 px-4">
                           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black border ${statusCfg.bg} ${statusCfg.text} ${statusCfg.border}`}>
                             {statusCfg.icon}
                             <span>{statusCfg.label}</span>
                           </span>
                         </td>
-                        <td className="py-3 px-4 font-bold text-gray-900 dark:text-white">
+                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">
                           {log.recipient}
                         </td>
-                        <td className="py-3 px-4 text-gray-600 dark:text-gray-300 truncate max-w-[240px]" title={log.subject}>
+                        <td className="py-3 px-4 text-slate-600 dark:text-slate-300 truncate max-w-[240px]" title={log.subject}>
                           {log.subject}
                         </td>
                         <td className="py-3 px-4">
                           <span className={`px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase ${
                             log.dispatch_type === 'MANUAL' ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20' :
                             log.dispatch_type === 'TEST' ? 'bg-purple-500/10 text-purple-600 border border-purple-500/20' :
-                            'bg-blue-500/10 text-blue-600 border border-blue-500/20'
+                            'bg-brand-500/10 text-brand-600 border border-brand-500/20'
                           }`}>
                             {log.dispatch_type || 'AUTOMATED'}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-gray-500 font-medium whitespace-nowrap">
+                        <td className="py-3 px-4 text-slate-500 font-medium whitespace-nowrap">
                           {formatTimestampIST(log.sent_at || log.created_at)}
                         </td>
-                        <td className="py-3 px-4 text-gray-400 font-mono text-[11px]">
+                        <td className="py-3 px-4 text-slate-400 font-mono text-[11px]">
                           Brevo v3
                         </td>
                         <td className="py-3 px-4 text-right space-x-2">
                           <button
                             onClick={() => setSelectedLogDetail(log)}
-                            className="px-2.5 py-1 bg-gray-100 dark:bg-navy-800 hover:bg-gray-200 dark:hover:bg-navy-700 text-gray-700 dark:text-gray-200 rounded-xl text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
+                            className="px-2.5 py-1 bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 rounded-xl text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
                           >
                             <Eye className="w-3 h-3" /> View
                           </button>
@@ -1684,59 +1684,59 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       {/* 9. DELIVERY DETAIL DRAWER / MODAL */}
       {selectedLogDetail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl max-w-lg w-full p-6 shadow-lg space-y-5 relative">
+          <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-3xl max-w-lg w-full p-6 shadow-lg space-y-5 relative">
             <button
               onClick={() => setSelectedLogDetail(null)}
-              className="absolute top-5 right-5 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white rounded-full transition-colors cursor-pointer"
+              className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-full transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center space-x-3 border-b border-gray-100 dark:border-gray-800 pb-4">
+            <div className="flex items-center space-x-3 border-b border-slate-100 dark:border-slate-800 pb-4">
               <div className="p-3 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
                 <Mail className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-lg font-black text-gray-900 dark:text-white">
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">
                   Delivery Diagnostics Detail
                 </h3>
-                <p className="text-xs text-gray-400 font-mono">
+                <p className="text-xs text-slate-400 font-mono">
                   Message ID: {selectedLogDetail.email_id}
                 </p>
               </div>
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="flex justify-between py-1.5 border-b border-gray-100 dark:border-gray-800">
-                <span className="text-gray-400 font-bold">Delivery Status:</span>
+              <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
+                <span className="text-slate-400 font-bold">Delivery Status:</span>
                 <span className={`font-black ${selectedLogDetail.status === 'SENT' ? 'text-emerald-600' : 'text-red-500'}`}>
                   {selectedLogDetail.status === 'SENT' ? 'DELIVERED' : 'FAILED'}
                 </span>
               </div>
 
-              <div className="flex justify-between py-1.5 border-b border-gray-100 dark:border-gray-800">
-                <span className="text-gray-400 font-bold">Recipient:</span>
-                <span className="font-bold text-gray-900 dark:text-white">{selectedLogDetail.recipient}</span>
+              <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
+                <span className="text-slate-400 font-bold">Recipient:</span>
+                <span className="font-bold text-slate-900 dark:text-white">{selectedLogDetail.recipient}</span>
               </div>
 
-              <div className="flex justify-between py-1.5 border-b border-gray-100 dark:border-gray-800">
-                <span className="text-gray-400 font-bold">Dispatch Type:</span>
+              <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
+                <span className="text-slate-400 font-bold">Dispatch Type:</span>
                 <span className="font-black text-brand-600 dark:text-brand-400">{selectedLogDetail.dispatch_type || 'AUTOMATED'}</span>
               </div>
 
-              <div className="flex justify-between py-1.5 border-b border-gray-100 dark:border-gray-800">
-                <span className="text-gray-400 font-bold">Provider &amp; Transport:</span>
-                <span className="font-mono text-gray-900 dark:text-white">Brevo v3 API (HTTPS Port 443)</span>
+              <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
+                <span className="text-slate-400 font-bold">Provider &amp; Transport:</span>
+                <span className="font-mono text-slate-900 dark:text-white">Brevo v3 API (HTTPS Port 443)</span>
               </div>
 
-              <div className="flex justify-between py-1.5 border-b border-gray-100 dark:border-gray-800">
-                <span className="text-gray-400 font-bold">Sent Timestamp:</span>
-                <span className="font-bold text-gray-900 dark:text-white">{formatTimestampIST(selectedLogDetail.sent_at || selectedLogDetail.created_at)}</span>
+              <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
+                <span className="text-slate-400 font-bold">Sent Timestamp:</span>
+                <span className="font-bold text-slate-900 dark:text-white">{formatTimestampIST(selectedLogDetail.sent_at || selectedLogDetail.created_at)}</span>
               </div>
 
-              <div className="flex justify-between py-1.5 border-b border-gray-100 dark:border-gray-800">
-                <span className="text-gray-400 font-bold">Attachments:</span>
-                <span className="font-bold text-gray-900 dark:text-white">{selectedLogDetail.attachment_count} files ({((selectedLogDetail.total_attachment_bytes || 0) / 1024).toFixed(1)} KB)</span>
+              <div className="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
+                <span className="text-slate-400 font-bold">Attachments:</span>
+                <span className="font-bold text-slate-900 dark:text-white">{selectedLogDetail.attachment_count} files ({((selectedLogDetail.total_attachment_bytes || 0) / 1024).toFixed(1)} KB)</span>
               </div>
 
               {selectedLogDetail.error_message && (
@@ -1747,10 +1747,10 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               )}
             </div>
 
-            <div className="pt-3 flex justify-end gap-2 border-t border-gray-100 dark:border-gray-800">
+            <div className="pt-3 flex justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
               <button
                 onClick={() => setSelectedLogDetail(null)}
-                className="px-5 py-2.5 bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-200 rounded-2xl text-xs font-black hover:bg-gray-200 transition-all cursor-pointer"
+                className="px-5 py-2.5 bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-black hover:bg-slate-200 transition-all cursor-pointer"
               >
                 Close
               </button>
@@ -1762,13 +1762,13 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       {/* 10. CONFIRMATION & DUPLICATE MODALS */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-lg space-y-4">
+          <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-lg space-y-4">
             <div className="flex items-center space-x-3 text-brand-600 dark:text-brand-400">
               <Zap className="w-6 h-6 text-amber-400" />
-              <h3 className="text-lg font-black text-gray-900 dark:text-white">Confirm Manual Dispatch</h3>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">Confirm Manual Dispatch</h3>
             </div>
 
-            <div className="text-xs text-gray-600 dark:text-gray-300 space-y-2 leading-relaxed">
+            <div className="text-xs text-slate-600 dark:text-slate-300 space-y-2 leading-relaxed">
               <p>You are about to send the manual report immediately to <strong>{selectedRecipientEmails.size} selected recipient(s)</strong>.</p>
               <p className="p-3 bg-amber-50 dark:bg-amber-950/40 rounded-2xl border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300">
                 Note: This is a manual one-time action and will <strong>NOT</strong> modify or replace the recurring Sunday automation schedule.
@@ -1778,7 +1778,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => setShowConfirmModal(false)}
-                className="px-5 py-2.5 bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold hover:bg-gray-200 cursor-pointer"
+                className="px-5 py-2.5 bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 rounded-2xl text-xs font-bold hover:bg-slate-200 cursor-pointer"
               >
                 Cancel
               </button>
@@ -1796,19 +1796,19 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
       {showDuplicateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-lg space-y-4">
+          <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-lg space-y-4">
             <div className="flex items-center space-x-3 text-amber-600 dark:text-amber-400">
               <AlertTriangle className="w-6 h-6" />
-              <h3 className="text-lg font-black text-gray-900 dark:text-white">Duplicate Delivery Detected</h3>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">Duplicate Delivery Detected</h3>
             </div>
 
-            <div className="text-xs text-gray-600 dark:text-gray-300 space-y-2 leading-relaxed">
+            <div className="text-xs text-slate-600 dark:text-slate-300 space-y-2 leading-relaxed">
               <p>This report has already been successfully delivered to target recipients:</p>
-              <div className="max-h-32 overflow-y-auto space-y-1 p-2.5 bg-gray-50 dark:bg-navy-950 rounded-xl border border-gray-200 dark:border-navy-800 text-[11px] font-mono">
+              <div className="max-h-32 overflow-y-auto space-y-1 p-2.5 bg-slate-50 dark:bg-navy-950 rounded-xl border border-slate-200 dark:border-navy-800 text-[11px] font-mono">
                 {duplicateList.map((d, i) => (
                   <div key={i} className="flex justify-between">
                     <span>{d.recipient}</span>
-                    <span className="text-gray-400">{formatTimestampIST(d.sent_at)}</span>
+                    <span className="text-slate-400">{formatTimestampIST(d.sent_at)}</span>
                   </div>
                 ))}
               </div>
@@ -1820,7 +1820,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => setShowDuplicateModal(false)}
-                className="px-5 py-2.5 bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold hover:bg-gray-200 cursor-pointer"
+                className="px-5 py-2.5 bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 rounded-2xl text-xs font-bold hover:bg-slate-200 cursor-pointer"
               >
                 Cancel
               </button>
@@ -1839,15 +1839,15 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       {/* 11. SCHEDULE SETTINGS MODAL */}
       {showScheduleModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-lg space-y-5">
-            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-              <h3 className="text-base font-black text-gray-900 dark:text-white flex items-center gap-2">
+          <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-lg space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <Settings className="w-5 h-5 text-brand-500" />
                 <span>Automated Schedule Settings</span>
               </h3>
               <button
                 onClick={() => setShowScheduleModal(false)}
-                className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1855,7 +1855,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
             <div className="space-y-4 text-xs">
               <div>
-                <label className="block font-black uppercase text-gray-500 mb-1">Automation Status</label>
+                <label className="block font-black uppercase text-slate-500 mb-1">Automation Status</label>
                 <button
                   type="button"
                   onClick={() => setScheduleEnabled(!scheduleEnabled)}
@@ -1870,24 +1870,24 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               </div>
 
               <div>
-                <label className="block font-black uppercase text-gray-500 mb-1">Trigger Day</label>
+                <label className="block font-black uppercase text-slate-500 mb-1">Trigger Day</label>
                 <div className="relative z-40">
                   <button
                     type="button"
                     onClick={() => { setIsScheduleDayOpen(!isScheduleDayOpen); setIsScheduleHourOpen(false); setIsScheduleMinuteOpen(false); }}
-                    className={`flex items-center justify-between w-full p-2.5 bg-white dark:bg-navy-950 border rounded-xl text-left transition-all focus:outline-none ${isScheduleDayOpen ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-gray-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                    className={`flex items-center justify-between w-full p-2.5 bg-white dark:bg-navy-950 border rounded-xl text-left transition-all focus:outline-none ${isScheduleDayOpen ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
                   >
-                    <span className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
                       {{
                         'sunday': 'Sunday (Official Weekly Window)',
                         'monday': 'Monday',
                         'saturday': 'Saturday'
                       }[scheduleDay] || scheduleDay}
                     </span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0 ${isScheduleDayOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${isScheduleDayOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {isScheduleDayOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
                       {[
                         { value: 'sunday', label: 'Sunday (Official Weekly Window)' },
                         { value: 'monday', label: 'Monday' },
@@ -1896,7 +1896,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                         <button key={opt.value} type="button"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => { setScheduleDay(opt.value); setIsScheduleDayOpen(false); }}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${scheduleDay === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-gray-50 dark:hover:bg-navy-800 text-gray-700 dark:text-gray-300 font-bold'}`}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${scheduleDay === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-slate-50 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold'}`}
                         >
                           <span className="text-xs truncate">{opt.label}</span>
                           {scheduleDay === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
@@ -1909,24 +1909,24 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-black uppercase text-gray-500 mb-1">Hour (IST)</label>
+                  <label className="block font-black uppercase text-slate-500 mb-1">Hour (IST)</label>
                   <div className="relative z-30">
                     <button
                       type="button"
                       onClick={() => { setIsScheduleHourOpen(!isScheduleHourOpen); setIsScheduleDayOpen(false); setIsScheduleMinuteOpen(false); }}
-                      className={`flex items-center justify-between w-full p-2.5 bg-white dark:bg-navy-950 border rounded-xl text-left transition-all focus:outline-none ${isScheduleHourOpen ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-gray-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                      className={`flex items-center justify-between w-full p-2.5 bg-white dark:bg-navy-950 border rounded-xl text-left transition-all focus:outline-none ${isScheduleHourOpen ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
                     >
-                      <span className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
                         {{
                           8: '08:00 AM IST',
                           9: '09:00 AM IST',
                           10: '10:00 AM IST'
                         }[scheduleHour] || scheduleHour}
                       </span>
-                      <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0 ${isScheduleHourOpen ? 'rotate-180' : ''}`} />
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${isScheduleHourOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isScheduleHourOpen && (
-                      <div className="absolute z-[200] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                      <div className="absolute z-[200] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
                         {[
                           { value: 8, label: '08:00 AM IST' },
                           { value: 9, label: '09:00 AM IST' },
@@ -1935,7 +1935,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                           <button key={opt.value} type="button"
                             onMouseDown={(e) => e.preventDefault()}
                             onClick={() => { setScheduleHour(opt.value); setIsScheduleHourOpen(false); }}
-                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${scheduleHour === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-gray-50 dark:hover:bg-navy-800 text-gray-700 dark:text-gray-300 font-bold'}`}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${scheduleHour === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-slate-50 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold'}`}
                           >
                             <span className="text-xs truncate">{opt.label}</span>
                             {scheduleHour === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
@@ -1947,14 +1947,14 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                 </div>
 
                 <div>
-                  <label className="block font-black uppercase text-gray-500 mb-1">Minute (IST)</label>
+                  <label className="block font-black uppercase text-slate-500 mb-1">Minute (IST)</label>
                   <div className="relative z-30">
                     <button
                       type="button"
                       onClick={() => { setIsScheduleMinuteOpen(!isScheduleMinuteOpen); setIsScheduleHourOpen(false); setIsScheduleDayOpen(false); }}
-                      className={`flex items-center justify-between w-full p-2.5 bg-white dark:bg-navy-950 border rounded-xl text-left transition-all focus:outline-none ${isScheduleMinuteOpen ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-gray-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                      className={`flex items-center justify-between w-full p-2.5 bg-white dark:bg-navy-950 border rounded-xl text-left transition-all focus:outline-none ${isScheduleMinuteOpen ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
                     >
-                      <span className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
                         {{
                           0: ':00 AM',
                           15: ':15 AM',
@@ -1962,10 +1962,10 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                           45: ':45 AM'
                         }[scheduleMinute] || scheduleMinute}
                       </span>
-                      <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0 ${isScheduleMinuteOpen ? 'rotate-180' : ''}`} />
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${isScheduleMinuteOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isScheduleMinuteOpen && (
-                      <div className="absolute z-[200] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                      <div className="absolute z-[200] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
                         {[
                           { value: 0, label: ':00 AM' },
                           { value: 15, label: ':15 AM' },
@@ -1975,7 +1975,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                           <button key={opt.value} type="button"
                             onMouseDown={(e) => e.preventDefault()}
                             onClick={() => { setScheduleMinute(opt.value); setIsScheduleMinuteOpen(false); }}
-                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${scheduleMinute === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-gray-50 dark:hover:bg-navy-800 text-gray-700 dark:text-gray-300 font-bold'}`}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${scheduleMinute === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-slate-50 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold'}`}
                           >
                             <span className="text-xs truncate">{opt.label}</span>
                             {scheduleMinute === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
@@ -1987,15 +1987,15 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                 </div>
               </div>
 
-              <div className="p-3 bg-gray-50 dark:bg-navy-950 rounded-xl border border-gray-200 dark:border-navy-800 text-gray-500">
+              <div className="p-3 bg-slate-50 dark:bg-navy-950 rounded-xl border border-slate-200 dark:border-navy-800 text-slate-500">
                 Timezone strictly enforced: <strong>Asia/Kolkata (IST)</strong>
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-2 border-t border-gray-100 dark:border-gray-800">
+            <div className="flex justify-end gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
               <button
                 onClick={() => setShowScheduleModal(false)}
-                className="px-5 py-2.5 bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold cursor-pointer"
+                className="px-5 py-2.5 bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 rounded-2xl text-xs font-bold cursor-pointer"
               >
                 Cancel
               </button>
@@ -2015,50 +2015,50 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       {/* 12. ADD RECIPIENT MODAL */}
       {showAddRecipientModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-lg space-y-4">
-            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-              <h3 className="text-base font-black text-gray-900 dark:text-white flex items-center gap-2">
+          <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-3xl max-w-md w-full p-6 shadow-lg space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <Plus className="w-5 h-5 text-teal-500" />
                 <span>Add Report Recipient</span>
               </h3>
-              <button onClick={() => setShowAddRecipientModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+              <button onClick={() => setShowAddRecipientModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-3 text-xs">
               <div>
-                <label className="block font-black uppercase text-gray-500 mb-1">Full Name</label>
+                <label className="block font-black uppercase text-slate-500 mb-1">Full Name</label>
                 <input
                   type="text"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="e.g. Dr. S. Karthik"
-                  className="w-full p-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl font-bold"
+                  className="w-full p-2.5 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl font-bold"
                 />
               </div>
 
               <div>
-                <label className="block font-black uppercase text-gray-500 mb-1">Email Address</label>
+                <label className="block font-black uppercase text-slate-500 mb-1">Email Address</label>
                 <input
                   type="email"
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
                   placeholder="e.g. hod.cse@nandhaengg.org"
-                  className="w-full p-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-700 rounded-xl font-bold"
+                  className="w-full p-2.5 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl font-bold"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-black uppercase text-gray-500 mb-1">Role</label>
+                  <label className="block font-black uppercase text-slate-500 mb-1">Role</label>
                   <div className="relative z-40">
                     <button
                       type="button"
                       onClick={() => { setIsNewRoleOpen(!isNewRoleOpen); setIsNewDeptOpen(false); }}
-                      className={`flex items-center justify-between w-full p-2.5 bg-white dark:bg-navy-950 border rounded-xl text-left transition-all focus:outline-none ${isNewRoleOpen ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-gray-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                      className={`flex items-center justify-between w-full p-2.5 bg-white dark:bg-navy-950 border rounded-xl text-left transition-all focus:outline-none ${isNewRoleOpen ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
                     >
-                      <span className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
                         {{
                           'HOD': 'HOD',
                           'MANAGEMENT': 'MANAGEMENT',
@@ -2066,10 +2066,10 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                           'ADMIN': 'ADMIN'
                         }[newRole] || newRole}
                       </span>
-                      <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0 ${isNewRoleOpen ? 'rotate-180' : ''}`} />
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${isNewRoleOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isNewRoleOpen && (
-                      <div className="absolute z-[200] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                      <div className="absolute z-[200] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
                         {[
                           { value: 'HOD', label: 'HOD' },
                           { value: 'MANAGEMENT', label: 'MANAGEMENT' },
@@ -2079,7 +2079,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                           <button key={opt.value} type="button"
                             onMouseDown={(e) => e.preventDefault()}
                             onClick={() => { setNewRole(opt.value); setIsNewRoleOpen(false); }}
-                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${newRole === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-gray-50 dark:hover:bg-navy-800 text-gray-700 dark:text-gray-300 font-bold'}`}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${newRole === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-slate-50 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold'}`}
                           >
                             <span className="text-xs truncate">{opt.label}</span>
                             {newRole === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
@@ -2091,24 +2091,24 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                 </div>
 
                 <div>
-                  <label className="block font-black uppercase text-gray-500 mb-1">Department</label>
+                  <label className="block font-black uppercase text-slate-500 mb-1">Department</label>
                   <div className="relative z-30">
                     <button
                       type="button"
                       onClick={() => { setIsNewDeptOpen(!isNewDeptOpen); setIsNewRoleOpen(false); }}
-                      className={`flex items-center justify-between w-full p-2.5 bg-white dark:bg-navy-950 border rounded-xl text-left transition-all focus:outline-none ${isNewDeptOpen ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-gray-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                      className={`flex items-center justify-between w-full p-2.5 bg-white dark:bg-navy-950 border rounded-xl text-left transition-all focus:outline-none ${isNewDeptOpen ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
                     >
-                      <span className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
                         {{
                           'ALL': 'ALL (College-wide)',
                           'CSE(CS)': 'CSE(CS)',
                           'CSE(IoT)': 'CSE(IoT)'
                         }[newDept] || newDept}
                       </span>
-                      <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0 ${isNewDeptOpen ? 'rotate-180' : ''}`} />
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${isNewDeptOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isNewDeptOpen && (
-                      <div className="absolute z-[200] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                      <div className="absolute z-[200] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
                         {[
                           { value: 'ALL', label: 'ALL (College-wide)' },
                           { value: 'CSE(CS)', label: 'CSE(CS)' },
@@ -2117,7 +2117,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                           <button key={opt.value} type="button"
                             onMouseDown={(e) => e.preventDefault()}
                             onClick={() => { setNewDept(opt.value); setIsNewDeptOpen(false); }}
-                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${newDept === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-gray-50 dark:hover:bg-navy-800 text-gray-700 dark:text-gray-300 font-bold'}`}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${newDept === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-slate-50 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold'}`}
                           >
                             <span className="text-xs truncate">{opt.label}</span>
                             {newDept === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
@@ -2130,10 +2130,10 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-2 border-t border-gray-100 dark:border-gray-800">
+            <div className="flex justify-end gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
               <button
                 onClick={() => setShowAddRecipientModal(false)}
-                className="px-5 py-2.5 bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 rounded-2xl text-xs font-bold cursor-pointer"
+                className="px-5 py-2.5 bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 rounded-2xl text-xs font-bold cursor-pointer"
               >
                 Cancel
               </button>

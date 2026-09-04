@@ -82,12 +82,12 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
   const verifiedAgo   = formatVerifiedAgo(lastVerifiedAt);
 
   const getRankBadgeStyle = (r?: number) => {
-    if (!isSolver || !r) return 'bg-gray-100 dark:bg-navy-950 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-800';
+    if (!isSolver || !r) return 'bg-slate-100 dark:bg-navy-950 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-800';
     if (r === 1) return 'bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-slate-950 font-black shadow-md shadow-amber-500/30 border-amber-300';
-    if (r === 2) return 'bg-gradient-to-r from-slate-200 via-gray-100 to-slate-400 text-slate-900 font-extrabold shadow-sm shadow-slate-400/20 border-slate-300';
+    if (r === 2) return 'bg-gradient-to-r from-slate-200 via-slate-100 to-slate-400 text-slate-900 font-extrabold shadow-sm shadow-slate-400/20 border-slate-300';
     if (r === 3) return 'bg-gradient-to-r from-amber-700 via-amber-600 to-amber-800 text-amber-100 font-extrabold shadow-sm shadow-amber-700/20 border-amber-600';
     if (r <= 10)  return 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-extrabold shadow-sm shadow-emerald-500/20 border-emerald-400';
-    return 'bg-gray-100 dark:bg-navy-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800';
+    return 'bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800';
   };
 
   // ── Sync Status Badge (bottom of front card) ────────────────────────────────
@@ -98,18 +98,18 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
       </span>
     );
     if (state === 'invalid_profile') return (
-      <span className="flex items-center space-x-1 text-xs font-bold text-gray-400 dark:text-gray-500">
+      <span className="flex items-center space-x-1 text-xs font-bold text-slate-400 dark:text-slate-500">
         <span>Profile unavailable</span>
       </span>
     );
     if (state === 'syncing') return (
-      <span className="flex items-center space-x-1 text-xs font-bold text-blue-500 dark:text-blue-400">
+      <span className="flex items-center space-x-1 text-xs font-bold text-brand-500 dark:text-brand-400">
         <Loader className="w-3.5 h-3.5 animate-spin" />
         <span>Syncing...</span>
       </span>
     );
     if (state === 'pending') return (
-      <span className="flex items-center space-x-1 text-xs font-bold text-gray-400 dark:text-gray-500">
+      <span className="flex items-center space-x-1 text-xs font-bold text-slate-400 dark:text-slate-500">
         <Clock className="w-3.5 h-3.5" />
         <span>Awaiting sync</span>
       </span>
@@ -149,18 +149,18 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
       </div>
     );
     if (state === 'invalid_profile') return (
-      <div className="flex items-center space-x-1.5 font-bold text-gray-400 bg-gray-50 dark:bg-gray-900 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-800">
+      <div className="flex items-center space-x-1.5 font-bold text-slate-400 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
         <span className="text-sm">Profile unavailable</span>
       </div>
     );
     if (state === 'syncing') return (
-      <div className="flex items-center space-x-1.5 font-bold text-blue-500 bg-blue-50 dark:bg-blue-950/40 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-800/60">
+      <div className="flex items-center space-x-1.5 font-bold text-brand-500 bg-brand-50 dark:bg-brand-950/40 px-3 py-1.5 rounded-xl border border-brand-200 dark:border-brand-800/60">
         <Loader className="w-4 h-4 animate-spin" />
         <span className="text-sm">Syncing...</span>
       </div>
     );
     if (state === 'pending') return (
-      <div className="flex items-center space-x-1.5 font-bold text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-900 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-800">
+      <div className="flex items-center space-x-1.5 font-bold text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
         <Loader className="w-4 h-4 animate-spin" />
         <span className="text-sm">Awaiting sync</span>
       </div>
@@ -202,7 +202,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
         }`}
       >
         {/* FRONT SIDE */}
-        <div className="absolute inset-0 w-full h-full min-h-[360px] glass-card p-5 sm:p-6 rounded-3xl border border-gray-200/90 dark:border-gray-800 shadow-xl hover:shadow-lg dark:hover:border-brand-500/40 backface-hidden flex flex-col justify-between transition-all duration-300 bg-white/95 dark:bg-navy-900/90">
+        <div className="absolute inset-0 w-full h-full min-h-[360px] glass-card p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xl hover:shadow-lg dark:hover:border-brand-500/40 backface-hidden flex flex-col justify-between transition-all duration-300 bg-white/95 dark:bg-navy-950/90">
           
           {/* Card Top: Rank & Department Pill */}
           <div className="flex items-center justify-between gap-2">
@@ -241,13 +241,13 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
               </div>
             </div>
             <div className="min-w-0 px-1">
-              <h3 className="font-extrabold text-base text-gray-900 dark:text-white truncate max-w-full tracking-tight" title={student.name}>
+              <h3 className="font-extrabold text-base text-slate-900 dark:text-white truncate max-w-full tracking-tight" title={student.name}>
                 {student.name}
               </h3>
               <p className="text-sm text-brand-600 dark:text-brand-400 font-mono font-bold mt-1 tracking-wider truncate">
                 {student.reg_no}
               </p>
-              <p className="text-xs text-gray-500 font-medium mt-1 leading-snug line-clamp-2">
+              <p className="text-xs text-slate-500 font-medium mt-1 leading-snug line-clamp-2">
                 {student.year_level || student.year || ''} Year • Sec {student.section?.name || student.section || ''}
               </p>
               
@@ -257,7 +257,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                     0.25 Allocated
                   </span>
                 ) : (
-                  <span className="px-2 py-0.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 text-[10px] font-black uppercase tracking-wider">
+                  <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 text-[10px] font-black uppercase tracking-wider">
                     Not Allocated
                   </span>
                 )}
@@ -266,7 +266,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
           </div>
 
           {/* Card Bottom: Quick Stats & Sync Badge */}
-          <div className="pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between gap-2 mt-auto">
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 mt-auto">
             <FrontStatsPill />
             <SyncBadge />
           </div>
@@ -274,14 +274,14 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
         </div>
 
         {/* BACK SIDE */}
-        <div className="absolute inset-0 w-full h-full min-h-[360px] p-5 sm:p-6 rounded-3xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-950 text-gray-900 dark:text-white shadow-lg backface-hidden rotate-y-180 flex flex-col justify-between overflow-y-auto">
+        <div className="absolute inset-0 w-full h-full min-h-[360px] p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 text-slate-900 dark:text-white shadow-lg backface-hidden rotate-y-180 flex flex-col justify-between overflow-y-auto">
 
           
           {/* Top Header */}
-          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3 gap-2">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 gap-2">
             <div className="flex items-center space-x-2 min-w-0">
               <ShieldCheck className="w-5 h-5 text-brand-600 dark:text-brand-400 flex-shrink-0" />
-              <span className="font-extrabold text-base text-gray-900 dark:text-white truncate tracking-tight" title={student.name}>{student.name}</span>
+              <span className="font-extrabold text-base text-slate-900 dark:text-white truncate tracking-tight" title={student.name}>{student.name}</span>
             </div>
             <span className="text-xs text-brand-700 dark:text-brand-300 font-mono font-bold bg-brand-50 dark:bg-brand-950 px-3 py-1.5 rounded-xl border border-brand-200 dark:border-brand-800 flex-shrink-0">
               {student.reg_no}
@@ -295,17 +295,17 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
               /* ── PENDING / FAILED state placeholder ── */
               <div className={`p-4 rounded-2xl text-center space-y-2 ${
                 state === 'pending_username' ? 'bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800' :
-                state === 'pending' ? 'bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800' :
+                state === 'pending' ? 'bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800' :
                 state === 'mismatch' ? 'bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800' :
                 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800'
               }`}>
                   {state === 'pending_username' ? 'PENDING' : state === 'pending' ? 'WAITING' : ''}
-                <p className="font-extrabold text-sm text-gray-700 dark:text-gray-300">
+                <p className="font-extrabold text-sm text-slate-700 dark:text-slate-300">
                   {state === 'pending_username' ? 'Pending LeetCode Username' :
                    state === 'pending' ? 'Awaiting Scheduled Sync' :
                    state === 'mismatch' ? 'Data Mismatch Detected' : 'Stats Unavailable'}
                 </p>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   {state === 'pending_username' && 'Awaiting valid LeetCode profile assignment'}
                   {state === 'pending' && 'Scheduled for background sync'}
                   {state === 'failed' && (lastVerifiedAt ? `Last verified: ${verifiedAgo}` : 'Never successfully synced')}
@@ -320,7 +320,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
               <>
                 {/* Total Solved Banner */}
                 <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-brand-500/10 to-indigo-500/10 border border-emerald-500/20 dark:border-emerald-500/30 flex items-center justify-between">
-                  <span className="text-xs text-gray-600 dark:text-gray-400 font-bold uppercase tracking-wider">Total Problems Solved</span>
+                  <span className="text-xs text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider">Total Problems Solved</span>
                   <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
                     {totalSolved}
                   </span>
@@ -345,7 +345,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 {/* Recent Contest Performance Badge */}
                 {student.stats?.recent_contest_name && (
                   <div className="p-2 rounded-2xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800 flex items-center justify-between min-w-0">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider truncate">{student.stats.recent_contest_name}</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">{student.stats.recent_contest_name}</span>
                     <span className="text-xs font-black text-brand-600 dark:text-brand-400 font-mono flex-shrink-0 ml-1">{student.stats.recent_contest_score || '3 / 4'}</span>
                   </div>
                 )}
@@ -353,20 +353,20 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 {/* Contest Rating / Contest Rank / Profile Rank */}
                 <div className="grid grid-cols-3 gap-1.5 text-center text-[10px] min-w-0">
                   <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 min-w-0">
-                    <span className="text-gray-400 font-bold block uppercase tracking-tight">Rating</span>
+                    <span className="text-slate-400 font-bold block uppercase tracking-tight">Rating</span>
                     <span className="font-mono font-black text-amber-600 dark:text-amber-400 text-[11px] truncate block">
                       {isSolver && student.stats?.contest_rating ? student.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1 }) : '—'}
                     </span>
                   </div>
                   <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 min-w-0">
-                    <span className="text-gray-400 font-bold block uppercase tracking-tight">Contest Rank</span>
+                    <span className="text-slate-400 font-bold block uppercase tracking-tight">Contest Rank</span>
                     <span className="font-mono font-black text-indigo-600 dark:text-indigo-400 text-[11px] truncate block">
                       {isSolver && student.stats?.contest_global_ranking ? `#${student.stats.contest_global_ranking.toLocaleString('en-US')}` : '—'}
                     </span>
                   </div>
-                  <div className="p-2 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 min-w-0">
-                    <span className="text-gray-400 font-bold block uppercase tracking-tight">Profile Rank</span>
-                    <span className="font-mono font-black text-gray-700 dark:text-gray-300 text-[11px] truncate block">
+                  <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 min-w-0">
+                    <span className="text-slate-400 font-bold block uppercase tracking-tight">Profile Rank</span>
+                    <span className="font-mono font-black text-slate-700 dark:text-slate-300 text-[11px] truncate block">
                       {isSolver && student.stats?.public_profile_ranking ? `#${student.stats.public_profile_ranking.toLocaleString('en-US')}` : '—'}
                     </span>
                   </div>
@@ -376,7 +376,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
 
             {/* Verification Footer Row */}
             {isVerified && (
-              <div className="flex flex-wrap items-center justify-between text-[11px] font-semibold text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-100 dark:border-gray-800 gap-2">
+              <div className="flex flex-wrap items-center justify-between text-[11px] font-semibold text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800 gap-2">
                 <span className="flex items-center space-x-1 whitespace-nowrap">
                   <span className={`w-2 h-2 rounded-full flex-shrink-0 ${state === 'stale' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
                   <span className="text-[10.5px] font-medium">Source: LeetCode Public Profile</span>
@@ -389,7 +389,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
           </div>
 
           {/* Action Footer: View Full Profile Button */}
-          <div className="flex items-center space-x-2 pt-2.5 border-t border-gray-100 dark:border-gray-800 mt-auto">
+          <div className="flex items-center space-x-2 pt-2.5 border-t border-slate-100 dark:border-slate-800 mt-auto">
             <button
               type="button"
               onClick={(e) => {
@@ -409,7 +409,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                   e.stopPropagation();
                   onDeleteStudent(student);
                 }}
-                className="p-2.5 min-h-[42px] min-w-[42px] flex items-center justify-center rounded-xl text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 border border-gray-200 dark:border-gray-800 transition-colors"
+                className="p-2.5 min-h-[42px] min-w-[42px] flex items-center justify-center rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 border border-slate-200 dark:border-slate-800 transition-colors"
                 title="Delete Student Record"
               >
                 <Trash2 className="w-4 h-4" />

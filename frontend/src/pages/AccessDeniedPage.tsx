@@ -51,15 +51,15 @@ export const AccessDeniedPage: React.FC<AccessDeniedPageProps> = ({
       </div>
 
       {/* Title */}
-      <h1 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white mt-4 mb-3">
+      <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mt-4 mb-3">
         Restricted Area
       </h1>
 
       {/* Description */}
-      <p className="text-gray-500 dark:text-gray-400 max-w-md leading-relaxed mb-2">
-        You do not have permission to access <strong className="text-gray-700 dark:text-gray-200">{restrictedResource}</strong>.
+      <p className="text-slate-500 dark:text-slate-400 max-w-md leading-relaxed mb-2">
+        You do not have permission to access <strong className="text-slate-700 dark:text-slate-200">{restrictedResource}</strong>.
       </p>
-      <p className="text-sm text-gray-400 dark:text-gray-500 max-w-sm mb-8">
+      <p className="text-sm text-slate-400 dark:text-slate-500 max-w-sm mb-8">
         Your account role (<span className="font-semibold text-brand-500">{roleLabel}</span>) is
         not authorized for this page. If you believe this is an error, contact your system administrator.
       </p>
@@ -69,7 +69,7 @@ export const AccessDeniedPage: React.FC<AccessDeniedPageProps> = ({
         {onGoBack && (
           <button
             onClick={onGoBack}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-800 text-gray-700 dark:text-gray-200 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-navy-700 transition-all cursor-pointer"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-800 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-navy-700 transition-all cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             Go Back
@@ -85,7 +85,7 @@ export const AccessDeniedPage: React.FC<AccessDeniedPageProps> = ({
       </div>
 
       {/* Note */}
-      <p className="mt-10 text-[11px] text-gray-400 dark:text-gray-600 font-mono">
+      <p className="mt-10 text-[11px] text-slate-400 dark:text-slate-600 font-mono">
         This access attempt has been logged for security audit purposes.
       </p>
     </div>

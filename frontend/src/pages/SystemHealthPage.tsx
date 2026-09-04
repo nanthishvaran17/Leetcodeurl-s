@@ -543,7 +543,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
     !forensicLoading;
 
   return (
-    <div className="space-y-6 pb-20 animate-fade-in text-gray-900 dark:text-gray-100 font-sans">
+    <div className="space-y-6 pb-20 animate-fade-in text-slate-900 dark:text-slate-100 font-sans">
       {/* ── 1. TOP HERO BANNER (RICH GLOWING INSTITUTIONAL GRADIENT) ── */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-lg border border-brand-500/30">
 
@@ -555,7 +555,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 PRODUCTION
               </span>
-              <span className="px-3 py-1 rounded-full text-xs font-bold text-gray-300 bg-white/10 backdrop-blur-md border border-white/15">
+              <span className="px-3 py-1 rounded-full text-xs font-bold text-slate-300 bg-white/10 backdrop-blur-md border border-white/15">
                 Asia/Kolkata (IST)
               </span>
               <button
@@ -574,7 +574,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                   OPERATIONS CENTER
                 </span>
               </h1>
-              <p className="text-xs sm:text-sm font-semibold text-gray-300 mt-1">
+              <p className="text-xs sm:text-sm font-semibold text-slate-300 mt-1">
                 Real-time Academic Data • Automation • Integrity • Recovery • Intelligence
               </p>
             </div>
@@ -596,7 +596,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="text-2xl font-black text-white">{trustScore}</span>
-                <span className="text-xs text-gray-400 font-bold">/ 100</span>
+                <span className="text-xs text-slate-400 font-bold">/ 100</span>
               </div>
               <p className="text-[10px] text-amber-200 font-bold mt-0.5 flex items-center gap-1">
                 <span>Why this score?</span>
@@ -606,24 +606,24 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
             {/* Data Freshness Card */}
             <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-left shadow-sm">
-              <span className="text-[10px] font-black uppercase text-gray-300 tracking-wider">Data Freshness</span>
+              <span className="text-[10px] font-black uppercase text-slate-300 tracking-wider">Data Freshness</span>
               <div className="flex items-center gap-1.5 mt-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
                 <span className="text-sm font-black text-white">FRESH</span>
               </div>
-              <p className="text-[10px] text-gray-300 font-bold mt-0.5">Contest Data • Just now</p>
+              <p className="text-[10px] text-slate-300 font-bold mt-0.5">Contest Data • Just now</p>
             </div>
 
             {/* Next Automation Card */}
             <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-left shadow-sm">
-              <span className="text-[10px] font-black uppercase text-gray-300 tracking-wider">Next Sunday Run</span>
+              <span className="text-[10px] font-black uppercase text-slate-300 tracking-wider">Next Sunday Run</span>
               <p className="text-sm font-black text-white mt-1">08:00 AM</p>
               <p className="text-[10px] text-emerald-300 font-black mt-0.5">ARMED & READY</p>
             </div>
 
             {/* Last Verified Snapshot Card */}
             <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-left shadow-sm">
-              <span className="text-[10px] font-black uppercase text-gray-300 tracking-wider">Last Snapshot</span>
+              <span className="text-[10px] font-black uppercase text-slate-300 tracking-wider">Last Snapshot</span>
               <p className="text-xs font-black text-white mt-1 truncate">{hero.lastSnapshot || 'Verified'}</p>
               <p className="text-[10px] text-indigo-300 font-black mt-0.5">SHA-256 VALIDATED</p>
             </div>
@@ -632,18 +632,18 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       </div>
 
       {/* ── 2. LIVE SYSTEM PULSE (10 CORE SERVICES) ── */}
-      <div className="bg-white dark:bg-navy-900 rounded-3xl p-5 border border-gray-200 dark:border-gray-800 shadow-sm space-y-3">
-        <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+      <div className="bg-white dark:bg-navy-950 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
           <div className="flex items-center gap-2">
             <Activity className="w-4 h-4 text-emerald-500 animate-pulse" />
-            <h3 className="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white">
+            <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
               Live System Pulse (10 Core Infrastructure Nodes)
             </h3>
           </div>
           <button
             onClick={handleProbeAllServices}
             disabled={refreshing}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-800 transition-all cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             <span>{refreshing ? 'Probing...' : 'Probe All Services'}</span>
@@ -654,17 +654,17 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
           {Object.entries(livePulse).map(([key, svc]: [string, any]) => (
             <div
               key={key}
-              className="p-3 rounded-2xl bg-gray-50/70 dark:bg-navy-950/40 border border-gray-100 dark:border-gray-800/80 flex flex-col justify-between"
+              className="p-3 rounded-2xl bg-slate-50/70 dark:bg-navy-950/40 border border-slate-100 dark:border-slate-800/80 flex flex-col justify-between"
             >
               <div className="flex items-center justify-between">
-                <span className="text-[10.5px] font-extrabold text-gray-800 dark:text-gray-200 truncate">
+                <span className="text-[10.5px] font-extrabold text-slate-800 dark:text-slate-200 truncate">
                   {svc.name}
                 </span>
                 <span className={`w-2 h-2 rounded-full ${svc.status === 'HEALTHY' || svc.status === 'Healthy' ? 'bg-emerald-500' : 'bg-amber-500'} animate-pulse`}></span>
               </div>
-              <div className="flex items-center justify-between mt-2 pt-1 border-t border-gray-200/40 dark:border-gray-800/40 text-[10px]">
+              <div className="flex items-center justify-between mt-2 pt-1 border-t border-slate-200/40 dark:border-slate-800/40 text-[10px]">
                 <span className={`${svc.status === 'HEALTHY' || svc.status === 'Healthy' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600'} font-bold`}>● {svc.status}</span>
-                <span className="text-gray-400 font-mono">{svc.latencyMs ? `${svc.latencyMs}ms` : (svc.latency ? `${svc.latency}` : 'Latency Unavailable')}</span>
+                <span className="text-slate-400 font-mono">{svc.latencyMs ? `${svc.latencyMs}ms` : (svc.latency ? `${svc.latency}` : 'Latency Unavailable')}</span>
               </div>
             </div>
           ))}
@@ -674,15 +674,15 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       {/* ── 3. EXCEPTION-FIRST "ATTENTION REQUIRED" & NEXT BEST ACTION ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Left Column: Attention Required */}
-        <div className="lg:col-span-2 p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-3">
-          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5">
+        <div className="lg:col-span-2 p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
             <div className="flex items-center gap-2">
               <ShieldAlert className="w-4 h-4 text-amber-500" />
-              <h3 className="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white">
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
                 Attention Required (Exception-First Operational Monitor)
               </h3>
             </div>
-            <span className="text-[10px] font-bold text-gray-400">
+            <span className="text-[10px] font-bold text-slate-400">
               {attentionItems.length === 0 ? '0 Exceptions' : `${attentionItems.length} Exceptions Detected`}
             </span>
           </div>
@@ -711,9 +711,9 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                       <span className="px-1.5 py-0.5 text-[9px] font-black rounded bg-amber-500/20 text-amber-700 dark:text-amber-300">
                         {item.type}
                       </span>
-                      <h4 className="text-xs font-black text-gray-900 dark:text-white">{item.title}</h4>
+                      <h4 className="text-xs font-black text-slate-900 dark:text-white">{item.title}</h4>
                     </div>
-                    <p className="text-[11px] text-gray-600 dark:text-gray-300">{item.description}</p>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300">{item.description}</p>
                   </div>
                   <button
                     onClick={() => {
@@ -764,7 +764,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
 
       {/* ── 4. CANONICAL OPERATIONS NAVIGATION BAR ── */}
-      <div className="flex items-center space-x-2 overflow-x-auto pb-1 border-b border-gray-200 dark:border-gray-800 no-scrollbar">
+      <div className="flex items-center space-x-2 overflow-x-auto pb-1 border-b border-slate-200 dark:border-slate-800 no-scrollbar">
         {[
           { id: 'overview', label: 'Operations Overview' },
           { id: 'integrity', label: 'Data Integrity Command' },
@@ -780,7 +780,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             className={`px-4 py-2.5 rounded-2xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
               activeOpsTab === tab.id
                 ? 'bg-gradient-to-r from-indigo-600 to-brand-600 text-white shadow-lg shadow-indigo-500/25 scale-[1.02]'
-                : 'bg-white dark:bg-navy-900 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-800 border border-gray-200 dark:border-gray-800'
+                : 'bg-white dark:bg-navy-950 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 border border-slate-200 dark:border-slate-800'
             }`}
           >
             {tab.label}
@@ -792,17 +792,17 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       {activeOpsTab === 'overview' && (
         <div className="space-y-6">
           {/* Institutional Configuration Banner Card */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
+          <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
               <div>
-                <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight">
+                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
                   Admin System Control Center
                 </h3>
-                <p className="text-xs text-gray-500 font-medium mt-0.5">
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
                   Institutional Configuration • Automation • Integrity • Recovery • Nandha Engineering College
                 </p>
               </div>
-              <span className="text-[10px] font-mono text-gray-400 self-start sm:self-center">
+              <span className="text-[10px] font-mono text-slate-400 self-start sm:self-center">
                 Last configuration update: 2026-08-15 15:37:34 IST
               </span>
             </div>
@@ -812,16 +812,16 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               {Object.entries(dataFreshness).map(([key, item]: [string, any]) => (
                 <div
                   key={key}
-                  className="p-3.5 rounded-2xl bg-gray-50 dark:bg-navy-950/40 border border-gray-100 dark:border-gray-800"
+                  className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950/40 border border-slate-100 dark:border-slate-800"
                 >
-                  <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
                     {key.replace(/([A-Z])/g, ' $1')}
                   </span>
                   <div className="flex items-center gap-1.5 mt-1">
                     <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <span className="text-xs font-black text-gray-900 dark:text-white">{item.status}</span>
+                    <span className="text-xs font-black text-slate-900 dark:text-white">{item.status}</span>
                   </div>
-                  <p className="text-[10px] text-gray-400 mt-0.5">{item.timeAgo}</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">{item.timeAgo}</p>
                 </div>
               ))}
             </div>
@@ -836,7 +836,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                   <span>DATA INTEGRITY & PROFILE HEALTH • REALTIME AUDIT BOARD</span>
                 </div>
                 <h4 className="text-base font-black text-white">Data Quality & Profile Health Dashboard</h4>
-                <p className="text-xs text-gray-300">
+                <p className="text-xs text-slate-300">
                   Monitor missing links, invalid profile URLs, profile not found errors, and network anomalies across all
                   institutional student records.
                 </p>
@@ -849,7 +849,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {(data?.dataIntegrityMatrix || []).slice(0, 4).map((pillar: any, idx: number) => (
                 <div key={idx} className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1">
-                  <span className="text-[10px] font-black uppercase text-gray-400">{pillar.category}</span>
+                  <span className="text-[10px] font-black uppercase text-slate-400">{pillar.category}</span>
                   <p className="text-xs font-black text-white">{pillar.records}</p>
                   <p className="text-[10px] text-emerald-400 font-bold">0 Conflicts Detected</p>
                 </div>
@@ -858,16 +858,16 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
           </div>
 
           {/* Admin Identity & Audit Log Card Box */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
+          <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
                   <Fingerprint className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  <h4 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider">
+                  <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
                     Admin Identity & Audit Log
                   </h4>
                 </div>
-                <p className="text-[11px] text-gray-500">
+                <p className="text-[11px] text-slate-500">
                   Real-time database audit log recording administrator identity, logins, report generation, email
                   dispatches & setting modifications.
                 </p>
@@ -884,15 +884,15 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               {(data?.recentAudits || []).slice(0, 3).map((audit: any) => (
                 <div
                   key={audit.id}
-                  className="p-3 rounded-2xl bg-gray-50/70 dark:bg-navy-950/40 border border-gray-100 dark:border-gray-800 flex items-center justify-between gap-4 text-xs font-bold"
+                  className="p-3 rounded-2xl bg-slate-50/70 dark:bg-navy-950/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 text-xs font-bold"
                 >
                   <div className="flex items-center gap-3">
                     <span className="font-mono text-[11px] text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800">
                       {audit.timestamp}
                     </span>
                     <div>
-                      <p className="text-gray-900 dark:text-white">{audit.action}</p>
-                      <p className="text-[11px] text-gray-500 font-normal">{audit.description || audit.user}</p>
+                      <p className="text-slate-900 dark:text-white">{audit.action}</p>
+                      <p className="text-[11px] text-slate-500 font-normal">{audit.description || audit.user}</p>
                     </div>
                   </div>
                   <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
@@ -907,11 +907,11 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
       {/* ── 6. TAB 2: DATA INTEGRITY COMMAND CENTER ── */}
       {activeOpsTab === 'integrity' && (
-        <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-4">
+        <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
-              <h3 className="text-sm font-black text-gray-900 dark:text-white">DATA INTEGRITY COMMAND CENTER</h3>
-              <p className="text-xs text-gray-500">Live Institutional Verification Engine (Zero Mock Data • Sentinel Guard Active)</p>
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">DATA INTEGRITY COMMAND CENTER</h3>
+              <p className="text-xs text-slate-500">Live Institutional Verification Engine (Zero Mock Data • Sentinel Guard Active)</p>
             </div>
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
@@ -946,12 +946,12 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1">
                 {(integrityAuditResult.rules || []).map((rule: any, idx: number) => (
-                  <div key={idx} className="p-3 rounded-xl bg-white dark:bg-navy-900 border border-emerald-100 dark:border-emerald-900/40 text-xs">
+                  <div key={idx} className="p-3 rounded-xl bg-white dark:bg-navy-950 border border-emerald-100 dark:border-emerald-900/40 text-xs">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-extrabold text-gray-900 dark:text-white text-[11px]">{rule.rule}</span>
+                      <span className="font-extrabold text-slate-900 dark:text-white text-[11px]">{rule.rule}</span>
                       <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">● PASSED</span>
                     </div>
-                    <p className="text-[10.5px] text-gray-500">{rule.details}</p>
+                    <p className="text-[10.5px] text-slate-500">{rule.details}</p>
                   </div>
                 ))}
               </div>
@@ -962,10 +962,10 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             {(data?.dataIntegrityMatrix || []).map((pillar: any, idx: number) => (
               <div
                 key={idx}
-                className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950/40 border border-gray-200/80 dark:border-gray-800 space-y-2"
+                className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950/40 border border-slate-200/80 dark:border-slate-800 space-y-2"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
                     {pillar.category}
                   </span>
                   <span className="flex items-center gap-1 text-[10px] font-black text-emerald-600 dark:text-emerald-400">
@@ -973,8 +973,8 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                     {pillar.status}
                   </span>
                 </div>
-                <p className="text-xs font-black text-gray-900 dark:text-white">{pillar.records}</p>
-                <div className="flex items-center justify-between text-[10px] text-gray-500 pt-1 border-t border-gray-200/50 dark:border-gray-800/50">
+                <p className="text-xs font-black text-slate-900 dark:text-white">{pillar.records}</p>
+                <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-200/50 dark:border-slate-800/50">
                   <span>
                     Conflicts: <b>{pillar.conflicts}</b>
                   </span>
@@ -988,24 +988,24 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
       {/* ── 7. TAB 3: STUDENT × CONTEST FORENSIC TRACE (STRICTLY BLANK INITIAL STATE & EXPLICIT RUN FLOW) ── */}
       {activeOpsTab === 'forensic' && (
-        <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-4">
+        <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
               <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase">
                 <Search className="w-3 h-3" />
                 <span>EXPLICIT FORENSIC QUERY CONSOLE</span>
               </div>
-              <h3 className="text-base font-black text-gray-900 dark:text-white mt-1">
+              <h3 className="text-base font-black text-slate-900 dark:text-white mt-1">
                 STUDENT × CONTEST FORENSIC TRACE
               </h3>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-slate-500">
                 Select a student and contest to begin verification. No data will be queried or displayed automatically.
               </p>
             </div>
             {forensicResult && (
               <button
                 onClick={handleClearForensicTrace}
-                className="px-3.5 py-1.5 text-xs font-black rounded-xl bg-gray-100 dark:bg-navy-800 hover:bg-gray-200 text-gray-700 dark:text-gray-300 self-start sm:self-center cursor-pointer transition-all"
+                className="px-3.5 py-1.5 text-xs font-black rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 self-start sm:self-center cursor-pointer transition-all"
               >
                 [ Clear Trace ]
               </button>
@@ -1016,26 +1016,26 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
             {/* Student Search / Selector (5 cols) */}
             <div className="sm:col-span-6 relative">
-              <label className="block text-[11px] font-black uppercase text-gray-500 mb-1.5">
+              <label className="block text-[11px] font-black uppercase text-slate-500 mb-1.5">
                 1. Select Student (Search by Name, Reg No, or Username)
               </label>
               <div className="relative">
-                <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={forensicSearchInput}
                   onChange={(e) => handleStudentSearchChange(e.target.value)}
                   placeholder="Search student by name, register number, or LeetCode username..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl text-xs font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
                 {isSearchingStudents && (
-                  <RefreshCw className="w-3.5 h-3.5 text-gray-400 absolute right-3.5 top-1/2 -translate-y-1/2 animate-spin" />
+                  <RefreshCw className="w-3.5 h-3.5 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 animate-spin" />
                 )}
               </div>
 
               {/* Autocomplete Dropdown */}
               {showStudentDropdown && studentSuggestions.length > 0 && (
-                <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-2xl shadow-lg z-50 max-h-56 overflow-y-auto p-1.5 space-y-1 animate-fade-in">
+                <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-2xl shadow-lg z-50 max-h-56 overflow-y-auto p-1.5 space-y-1 animate-fade-in">
                   {studentSuggestions.map((st) => (
                     <button
                       key={st.id}
@@ -1044,8 +1044,8 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                       className="w-full text-left p-2 rounded-xl hover:bg-indigo-50 dark:hover:bg-navy-800 flex items-center justify-between text-xs transition-all cursor-pointer"
                     >
                       <div>
-                        <span className="font-black text-gray-900 dark:text-white">{st.name}</span>
-                        <span className="text-[10px] text-gray-400 block">
+                        <span className="font-black text-slate-900 dark:text-white">{st.name}</span>
+                        <span className="text-[10px] text-slate-400 block">
                           {st.reg_no} • {st.department?.code || 'CSE'} ({st.year_level || 'III'} Year)
                         </span>
                       </div>
@@ -1060,11 +1060,11 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
             {/* Contest Session Selector (4 cols) */}
             <div className="sm:col-span-4">
-              <label className="block text-[11px] font-black uppercase text-gray-500 mb-1.5">2. Select Contest</label>
+              <label className="block text-[11px] font-black uppercase text-slate-500 mb-1.5">2. Select Contest</label>
               <select
                 value={selectedContestId}
                 onChange={(e) => handleContestChange(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl text-xs font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
               >
                 <option value="">[ Select Contest ]</option>
                 {availableContests.map((c) => (
@@ -1091,14 +1091,14 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
           {/* ── INITIAL BLANK STATE GUIDANCE BANNER ── */}
           {!forensicResult && !forensicLoading && !forensicError && (
-            <div className="p-8 rounded-3xl bg-gray-50/70 dark:bg-navy-950/40 border border-dashed border-gray-200 dark:border-gray-800 text-center space-y-2">
+            <div className="p-8 rounded-3xl bg-slate-50/70 dark:bg-navy-950/40 border border-dashed border-slate-200 dark:border-slate-800 text-center space-y-2">
               <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto">
                 <Search className="w-5 h-5" />
               </div>
-              <h4 className="text-xs font-black uppercase tracking-wider text-gray-600 dark:text-gray-300">
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">
                 Awaiting Explicit Forensic Verification Request
               </h4>
-              <p className="text-xs text-gray-400 max-w-md mx-auto">
+              <p className="text-xs text-slate-400 max-w-md mx-auto">
                 Select a student from the institutional roster and choose a Weekly Contest session, then click{' '}
                 <b>Run Trace</b> to inspect verified evidence.
               </p>
@@ -1120,24 +1120,24 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[10.5px] font-bold text-gray-500">
-                <div className="p-2 rounded-xl bg-white dark:bg-navy-900 border border-indigo-100 dark:border-indigo-900/50 flex items-center gap-1.5">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[10.5px] font-bold text-slate-500">
+                <div className="p-2 rounded-xl bg-white dark:bg-navy-950 border border-indigo-100 dark:border-indigo-900/50 flex items-center gap-1.5">
                   <RefreshCw className="w-3 h-3 animate-spin text-indigo-500" />
                   <span>Student Identity</span>
                 </div>
-                <div className="p-2 rounded-xl bg-white dark:bg-navy-900 border border-indigo-100 dark:border-indigo-900/50 flex items-center gap-1.5">
+                <div className="p-2 rounded-xl bg-white dark:bg-navy-950 border border-indigo-100 dark:border-indigo-900/50 flex items-center gap-1.5">
                   <RefreshCw className="w-3 h-3 animate-spin text-indigo-500" />
                   <span>Contest Identity</span>
                 </div>
-                <div className="p-2 rounded-xl bg-white dark:bg-navy-900 border border-indigo-100 dark:border-indigo-900/50 flex items-center gap-1.5">
+                <div className="p-2 rounded-xl bg-white dark:bg-navy-950 border border-indigo-100 dark:border-indigo-900/50 flex items-center gap-1.5">
                   <RefreshCw className="w-3 h-3 animate-spin text-indigo-500" />
                   <span>GraphQL Standings</span>
                 </div>
-                <div className="p-2 rounded-xl bg-white dark:bg-navy-900 border border-indigo-100 dark:border-indigo-900/50 flex items-center gap-1.5">
+                <div className="p-2 rounded-xl bg-white dark:bg-navy-950 border border-indigo-100 dark:border-indigo-900/50 flex items-center gap-1.5">
                   <RefreshCw className="w-3 h-3 animate-spin text-indigo-500" />
                   <span>Canonical Resolution</span>
                 </div>
-                <div className="p-2 rounded-xl bg-white dark:bg-navy-900 border border-indigo-100 dark:border-indigo-900/50 flex items-center gap-1.5">
+                <div className="p-2 rounded-xl bg-white dark:bg-navy-950 border border-indigo-100 dark:border-indigo-900/50 flex items-center gap-1.5">
                   <RefreshCw className="w-3 h-3 animate-spin text-indigo-500" />
                   <span>Evidence Integrity</span>
                 </div>
@@ -1153,7 +1153,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 <h4 className="text-xs font-black uppercase tracking-wider">Forensic Verification Error</h4>
               </div>
               <p className="text-xs text-rose-600 dark:text-rose-400 font-bold">{forensicError}</p>
-              <div className="flex items-center justify-between pt-2 border-t border-rose-200 dark:border-rose-900/50 text-[11px] text-gray-500">
+              <div className="flex items-center justify-between pt-2 border-t border-rose-200 dark:border-rose-900/50 text-[11px] text-slate-500">
                 <span>Data safety: Zero existing canonical data modified.</span>
                 <button
                   type="button"
@@ -1172,19 +1172,19 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               {/* Top Result Bento Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {/* Student Identity */}
-                <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950/40 border border-gray-200 dark:border-gray-800 space-y-1">
-                  <span className="text-[10px] font-black uppercase text-gray-400">Student Identity</span>
-                  <p className="text-xs font-black text-gray-900 dark:text-white">{forensicResult.student.name}</p>
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950/40 border border-slate-200 dark:border-slate-800 space-y-1">
+                  <span className="text-[10px] font-black uppercase text-slate-400">Student Identity</span>
+                  <p className="text-xs font-black text-slate-900 dark:text-white">{forensicResult.student.name}</p>
                   <p className="text-[11px] text-indigo-600 dark:text-indigo-400 font-mono font-bold">
                     {forensicResult.student.reg_no} • {forensicResult.student.department} ({forensicResult.student.year})
                   </p>
-                  <p className="text-[10px] text-gray-500 font-mono">@{forensicResult.student.username}</p>
+                  <p className="text-[10px] text-slate-500 font-mono">@{forensicResult.student.username}</p>
                 </div>
 
                 {/* Contest & Resolved State */}
-                <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950/40 border border-gray-200 dark:border-gray-800 space-y-1">
-                  <span className="text-[10px] font-black uppercase text-gray-400">Contest & Resolved State</span>
-                  <p className="text-xs font-black text-gray-900 dark:text-white">
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950/40 border border-slate-200 dark:border-slate-800 space-y-1">
+                  <span className="text-[10px] font-black uppercase text-slate-400">Contest & Resolved State</span>
+                  <p className="text-xs font-black text-slate-900 dark:text-white">
                     {forensicResult.contest.contestName}
                   </p>
                   <span
@@ -1203,12 +1203,12 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 </div>
 
                 {/* Score & Questions */}
-                <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950/40 border border-gray-200 dark:border-gray-800 space-y-1">
-                  <span className="text-[10px] font-black uppercase text-gray-400">Score & Questions</span>
-                  <p className="text-xs font-black text-gray-900 dark:text-white">
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950/40 border border-slate-200 dark:border-slate-800 space-y-1">
+                  <span className="text-[10px] font-black uppercase text-slate-400">Score & Questions</span>
+                  <p className="text-xs font-black text-slate-900 dark:text-white">
                     Solved: {forensicResult.result.total_solved} Q • Score: {forensicResult.result.contest_score}
                   </p>
-                  <div className="flex items-center gap-1.5 text-[10px] font-mono text-gray-500 pt-0.5">
+                  <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500 pt-0.5">
                     <span>Q1:{forensicResult.result.q1}</span>
                     <span>|</span>
                     <span>Q2:{forensicResult.result.q2}</span>
@@ -1220,12 +1220,12 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 </div>
 
                 {/* Rank & Rating */}
-                <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950/40 border border-gray-200 dark:border-gray-800 space-y-1">
-                  <span className="text-[10px] font-black uppercase text-gray-400">Rank & Rating</span>
-                  <p className="text-xs font-black text-gray-900 dark:text-white">
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950/40 border border-slate-200 dark:border-slate-800 space-y-1">
+                  <span className="text-[10px] font-black uppercase text-slate-400">Rank & Rating</span>
+                  <p className="text-xs font-black text-slate-900 dark:text-white">
                     Rank: {forensicResult.result.contest_rank ? `#${forensicResult.result.contest_rank.toLocaleString()}` : '—'}
                   </p>
-                  <p className="text-[10.5px] text-gray-500 font-bold">
+                  <p className="text-[10.5px] text-slate-500 font-bold">
                     Rating: {forensicResult.result.contest_rating || '—'}
                   </p>
                 </div>
@@ -1236,10 +1236,10 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 <div className="flex items-center gap-2">
                   <FileCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                   <div>
-                    <h4 className="text-xs font-black text-gray-900 dark:text-white">
+                    <h4 className="text-xs font-black text-slate-900 dark:text-white">
                       Official Institutional Forensic Audit & Verification Document
                     </h4>
-                    <p className="text-[10px] text-gray-500 font-medium">
+                    <p className="text-[10px] text-slate-500 font-medium">
                       Nandha Engineering College • Autonomous Accreditation & Cryptographic Audit
                     </p>
                   </div>
@@ -1282,53 +1282,53 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               </div>
 
               {/* ── HUMAN-READABLE EVIDENCE SUMMARY & SOURCE METADATA ── */}
-              <div className="p-5 rounded-3xl bg-gray-50/70 dark:bg-navy-950/40 border border-gray-200 dark:border-gray-800 space-y-3">
-                <div className="flex items-center justify-between border-b border-gray-200/60 dark:border-gray-800 pb-2.5">
+              <div className="p-5 rounded-3xl bg-slate-50/70 dark:bg-navy-950/40 border border-slate-200 dark:border-slate-800 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-2.5">
                   <div className="flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                    <h4 className="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
                       EVIDENCE SUMMARY & SOURCE AUDIT
                     </h4>
                   </div>
-                  <span className="text-[10px] font-mono text-gray-400">
+                  <span className="text-[10px] font-mono text-slate-400">
                     Trace ID: {forensicResult.traceId || 'Verified'}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 text-xs font-bold">
-                  <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-gray-800">
-                    <span className="text-[9.5px] text-gray-400 block uppercase">Student Identity</span>
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-navy-950 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[9.5px] text-slate-400 block uppercase">Student Identity</span>
                     <span className="text-emerald-600 dark:text-emerald-400 font-black">Matched</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-gray-800">
-                    <span className="text-[9.5px] text-gray-400 block uppercase">Contest Identity</span>
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-navy-950 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[9.5px] text-slate-400 block uppercase">Contest Identity</span>
                     <span className="text-emerald-600 dark:text-emerald-400 font-black">Matched</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-gray-800">
-                    <span className="text-[9.5px] text-gray-400 block uppercase">Public Participation</span>
-                    <span className="text-gray-900 dark:text-white font-bold">
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-navy-950 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[9.5px] text-slate-400 block uppercase">Public Participation</span>
+                    <span className="text-slate-900 dark:text-white font-bold">
                       {forensicResult.evidenceSummary?.publicParticipation || 'Verified'}
                     </span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-gray-800">
-                    <span className="text-[9.5px] text-gray-400 block uppercase">Virtual Participation</span>
-                    <span className="text-gray-900 dark:text-white font-bold">
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-navy-950 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[9.5px] text-slate-400 block uppercase">Virtual Participation</span>
+                    <span className="text-slate-900 dark:text-white font-bold">
                       {forensicResult.evidenceSummary?.virtualParticipation || 'Not Found'}
                     </span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-gray-800">
-                    <span className="text-[9.5px] text-gray-400 block uppercase">Database Record</span>
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-navy-950 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[9.5px] text-slate-400 block uppercase">Database Record</span>
                     <span className="text-emerald-600 dark:text-emerald-400 font-black">Matched</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-gray-800">
-                    <span className="text-[9.5px] text-gray-400 block uppercase">Canonical Resolution</span>
+                  <div className="p-2.5 rounded-xl bg-white dark:bg-navy-950 border border-slate-100 dark:border-slate-800">
+                    <span className="text-[9.5px] text-slate-400 block uppercase">Canonical Resolution</span>
                     <span className="text-indigo-600 dark:text-indigo-400 font-black">
                       {forensicResult.evidenceSummary?.canonicalResolution || forensicResult.result.participation_status}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-gray-200/50 dark:border-gray-800/50 text-[11px] text-gray-500">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-200/50 dark:border-slate-800/50 text-[11px] text-slate-500">
                   <span>
                     Source: <b>{forensicResult.sourceMetadata?.sourceEngine || 'LeetCode GraphQL'}</b>
                   </span>
@@ -1339,7 +1339,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               </div>
 
               {/* ── EXPANDABLE DEVELOPER JSON VIEWER (ZERO EMPTY BRACES) ── */}
-              <div className="p-5 rounded-3xl bg-navy-950 text-gray-200 border border-indigo-900/50 space-y-3">
+              <div className="p-5 rounded-3xl bg-navy-950 text-slate-200 border border-indigo-900/50 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Code className="w-4 h-4 text-indigo-400" />
@@ -1385,18 +1385,18 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       {activeOpsTab === 'lineage' && (
         <div className="space-y-6">
           {/* Visual Data Lineage */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
+          <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
               <div>
-                <h3 className="text-sm font-black text-gray-900 dark:text-white">
+                <h3 className="text-sm font-black text-slate-900 dark:text-white">
                   DATA LINEAGE — SINGLE SOURCE OF TRUTH (SSOT)
                 </h3>
-                <p className="text-xs text-gray-500">Live row counts tracked from Ingestion → SQLite DB → API Normalization → Export Reports → UI</p>
+                <p className="text-xs text-slate-500">Live row counts tracked from Ingestion → SQLite DB → API Normalization → Export Reports → UI</p>
               </div>
               <button
                 onClick={fetchDataLineage}
                 disabled={loadingLineage}
-                className="px-3.5 py-1.5 rounded-xl bg-gray-100 dark:bg-navy-800 hover:bg-gray-200 text-gray-700 dark:text-gray-300 text-xs font-black self-start sm:self-center cursor-pointer transition-all flex items-center gap-1.5"
+                className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 text-xs font-black self-start sm:self-center cursor-pointer transition-all flex items-center gap-1.5"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${loadingLineage ? 'animate-spin' : ''}`} />
                 <span>{loadingLineage ? 'Recomputing...' : 'Re-verify Lineage'}</span>
@@ -1405,16 +1405,16 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {(dataLineageData?.stages || []).map((stg: any, idx: number) => (
-                <div key={idx} className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950/40 border border-gray-200 dark:border-gray-800 space-y-2">
+                <div key={idx} className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950/40 border border-slate-200 dark:border-slate-800 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-black text-indigo-600 dark:text-indigo-400">{stg.stage}</span>
                     <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md">
                       {stg.status}
                     </span>
                   </div>
-                  <p className="text-xs font-black text-gray-900 dark:text-white">{stg.subsystem}</p>
-                  <div className="flex items-center justify-between text-[11px] font-mono text-gray-500 pt-1 border-t border-gray-200/50 dark:border-gray-800/50">
-                    <span>Records: <b className="text-gray-900 dark:text-white">{stg.recordCount}</b></span>
+                  <p className="text-xs font-black text-slate-900 dark:text-white">{stg.subsystem}</p>
+                  <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 pt-1 border-t border-slate-200/50 dark:border-slate-800/50">
+                    <span>Records: <b className="text-slate-900 dark:text-white">{stg.recordCount}</b></span>
                     <span className="text-emerald-600 font-bold">Parity Matched</span>
                   </div>
                 </div>
@@ -1423,11 +1423,11 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
           </div>
 
           {/* Report Parity Comparison Table */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+          <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div>
-                <h3 className="text-sm font-black text-gray-900 dark:text-white">REPORT PARITY MONITOR</h3>
-                <p className="text-xs text-gray-500">Comparing identical student records across all output targets</p>
+                <h3 className="text-sm font-black text-slate-900 dark:text-white">REPORT PARITY MONITOR</h3>
+                <p className="text-xs text-slate-500">Comparing identical student records across all output targets</p>
               </div>
               <span className="px-3 py-1 text-[11px] font-black rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
                 100% PARITY MAINTAINED
@@ -1437,7 +1437,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse font-bold">
                 <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-800 text-[10.5px] uppercase text-gray-400">
+                  <tr className="border-b border-slate-200 dark:border-slate-800 text-[10.5px] uppercase text-slate-400">
                     <th className="py-2.5 px-3">Output Format / Channel</th>
                     <th className="py-2.5 px-3 text-center">Row Count</th>
                     <th className="py-2.5 px-3 text-center text-emerald-600">Public Attended</th>
@@ -1448,8 +1448,8 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800/60">
                   {(data?.reportParity?.sources || []).map((s: any, idx: number) => (
-                    <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-navy-800/50">
-                      <td className="py-2.5 px-3 font-extrabold text-gray-900 dark:text-white">{s.format}</td>
+                    <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-navy-800/50">
+                      <td className="py-2.5 px-3 font-extrabold text-slate-900 dark:text-white">{s.format}</td>
                       <td className="py-2.5 px-3 text-center">{s.rows}</td>
                       <td className="py-2.5 px-3 text-center text-emerald-600 font-black">{s.public}</td>
                       <td className="py-2.5 px-3 text-center text-rose-600 font-black">{s.notAttended}</td>
@@ -1467,11 +1467,11 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
       {/* ── 9. TAB 5: AUTONOMOUS SUNDAY SESSION ── */}
       {activeOpsTab === 'automation' && (
-        <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-4">
+        <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
-              <h3 className="text-sm font-black text-gray-900 dark:text-white">AUTONOMOUS SUNDAY CONTEST PIPELINE</h3>
-              <p className="text-xs text-gray-500">
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">AUTONOMOUS SUNDAY CONTEST PIPELINE</h3>
+              <p className="text-xs text-slate-500">
                 Weekly automation schedule, multi-stage timeline, and email dispatch configuration.
               </p>
             </div>
@@ -1482,14 +1482,14 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
           {/* Timeline Grid */}
           <div className="space-y-3">
-            <h4 className="text-xs font-black uppercase tracking-wider text-gray-400">
+            <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">
               Configured Sunday Execution Sequence (IST)
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {(data?.sundayAutomation?.timeline || []).map((step: any, idx: number) => (
                 <div
                   key={idx}
-                  className="p-3.5 rounded-2xl bg-gray-50 dark:bg-navy-950/40 border border-gray-200/80 dark:border-gray-800 space-y-1.5"
+                  className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950/40 border border-slate-200/80 dark:border-slate-800 space-y-1.5"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 font-mono">
@@ -1499,31 +1499,31 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                       {step.status}
                     </span>
                   </div>
-                  <p className="text-xs font-bold text-gray-900 dark:text-white">{step.step}</p>
+                  <p className="text-xs font-bold text-slate-900 dark:text-white">{step.step}</p>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Schedule Settings & Dispatch Configuration */}
-          <div className="p-5 rounded-2xl bg-gray-50/70 dark:bg-navy-950/40 border border-gray-200 dark:border-gray-800 space-y-4">
-            <h4 className="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white">
+          <div className="p-5 rounded-2xl bg-slate-50/70 dark:bg-navy-950/40 border border-slate-200 dark:border-slate-800 space-y-4">
+            <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
               Automation Timing & Recipient Settings
             </h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-gray-500">Day of Week</label>
+                <label className="text-[11px] font-bold text-slate-500">Day of Week</label>
                 <input
                   type="text"
                   disabled
                   value="Sunday"
-                  className="w-full px-3 py-2 bg-gray-100 dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-xl text-xs font-bold text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-gray-500">Execution Time (IST)</label>
+                <label className="text-[11px] font-bold text-slate-500">Execution Time (IST)</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
@@ -1531,7 +1531,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                     onChange={(e) => setSchedHour(Number(e.target.value))}
                     min={0}
                     max={23}
-                    className="w-1/2 px-3 py-2 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-xl text-xs font-bold text-gray-900 dark:text-white"
+                    className="w-1/2 px-3 py-2 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white"
                   />
                   <span>:</span>
                   <input
@@ -1540,18 +1540,18 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                     onChange={(e) => setSchedMinute(Number(e.target.value))}
                     min={0}
                     max={59}
-                    className="w-1/2 px-3 py-2 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-xl text-xs font-bold text-gray-900 dark:text-white"
+                    className="w-1/2 px-3 py-2 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-gray-500">Official Report Recipients</label>
+                <label className="text-[11px] font-bold text-slate-500">Official Report Recipients</label>
                 <input
                   type="text"
                   value={schedRecipients}
                   onChange={(e) => setSchedRecipients(e.target.value)}
-                  className="w-full px-3 py-2 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-xl text-xs font-bold text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white"
                 />
               </div>
             </div>
@@ -1577,11 +1577,11 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
       {/* ── 10. TAB 6: DATABASE RECOVERY & TIME MACHINE ── */}
       {activeOpsTab === 'recovery' && (
-        <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-4">
+        <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div>
-              <h3 className="text-sm font-black text-gray-900 dark:text-white">DATABASE SNAPSHOT & RECOVERY CENTER</h3>
-              <p className="text-xs text-gray-500">
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">DATABASE SNAPSHOT & RECOVERY CENTER</h3>
+              <p className="text-xs text-slate-500">
                 Cryptographically hashed snapshots with safe preview and zero-damage rollback protection.
               </p>
             </div>
@@ -1605,7 +1605,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse font-bold">
               <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-800 text-[10.5px] uppercase text-gray-400">
+                <tr className="border-b border-slate-200 dark:border-slate-800 text-[10.5px] uppercase text-slate-400">
                   <th className="py-2.5 px-3">Snapshot Filename</th>
                   <th className="py-2.5 px-3">Created At (IST)</th>
                   <th className="py-2.5 px-3">Size</th>
@@ -1617,19 +1617,19 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800/60">
                 {backupsList.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-4 text-center text-gray-400">
+                    <td colSpan={6} className="py-4 text-center text-slate-400">
                       No snapshots stored yet. Click "Create Snapshot Now" to generate an initial verified backup.
                     </td>
                   </tr>
                 ) : (
                   backupsList.map((bk: any) => (
-                    <tr key={bk.filename} className="hover:bg-gray-50 dark:hover:bg-navy-800/50">
-                      <td className="py-2.5 px-3 font-extrabold text-gray-900 dark:text-white font-mono text-[11px]">
+                    <tr key={bk.filename} className="hover:bg-slate-50 dark:hover:bg-navy-800/50">
+                      <td className="py-2.5 px-3 font-extrabold text-slate-900 dark:text-white font-mono text-[11px]">
                         {bk.filename}
                       </td>
-                      <td className="py-2.5 px-3 text-gray-500">{bk.created_at || 'Just now'}</td>
+                      <td className="py-2.5 px-3 text-slate-500">{bk.created_at || 'Just now'}</td>
                       <td className="py-2.5 px-3">{Math.round((bk.size_bytes || 0) / 1024)} KB</td>
-                      <td className="py-2.5 px-3 font-mono text-[10px] text-gray-400" title={bk.checksum}>
+                      <td className="py-2.5 px-3 font-mono text-[10px] text-slate-400" title={bk.checksum}>
                         {bk.checksum ? (bk.checksum.length > 20 ? `${bk.checksum.substring(0, 16)}...` : bk.checksum) : 'Verified'}
                       </td>
                       <td className="py-2.5 px-3 text-emerald-600 font-black">● {bk.status}</td>
@@ -1637,7 +1637,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                         <button
                           onClick={() => handleVerifySnapshot(bk.filename)}
                           disabled={verifyingSnapshot === bk.filename}
-                          className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-gray-100 dark:bg-navy-800 hover:bg-gray-200 text-gray-700 dark:text-gray-300 cursor-pointer"
+                          className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 cursor-pointer"
                         >
                           {verifyingSnapshot === bk.filename ? 'Checking...' : 'Verify'}
                         </button>
@@ -1653,28 +1653,28 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
       {/* ── 11. TAB 7: OPERATIONS AUDIT TIMELINE ── */}
       {activeOpsTab === 'audit' && (
-        <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+        <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
             <div>
-              <h3 className="text-sm font-black text-gray-900 dark:text-white">RECENT OPERATIONS & AUDIT TRAIL</h3>
-              <p className="text-xs text-gray-500">Live operational event log recorded across all sessions</p>
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">RECENT OPERATIONS & AUDIT TRAIL</h3>
+              <p className="text-xs text-slate-500">Live operational event log recorded across all sessions</p>
             </div>
-            <span className="text-xs font-bold text-gray-400">Strictly Non-Sensitive Audit</span>
+            <span className="text-xs font-bold text-slate-400">Strictly Non-Sensitive Audit</span>
           </div>
 
           <div className="space-y-2.5">
             {(data?.recentAudits || []).map((audit: any) => (
               <div
                 key={audit.id}
-                className="p-3 rounded-2xl bg-gray-50/70 dark:bg-navy-950/40 border border-gray-100 dark:border-gray-800 flex items-center justify-between gap-4 text-xs font-bold"
+                className="p-3 rounded-2xl bg-slate-50/70 dark:bg-navy-950/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 text-xs font-bold"
               >
                 <div className="flex items-center gap-3">
                   <span className="font-mono text-[11px] text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800">
                     {audit.timestamp}
                   </span>
                   <div>
-                    <p className="text-gray-900 dark:text-white">{audit.action}</p>
-                    <p className="text-[11px] text-gray-500 font-normal">{audit.description || audit.user}</p>
+                    <p className="text-slate-900 dark:text-white">{audit.action}</p>
+                    <p className="text-[11px] text-slate-500 font-normal">{audit.description || audit.user}</p>
                   </div>
                 </div>
                 <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
@@ -1688,14 +1688,14 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
       {/* ── 12. TAB 8: NEC OPERATIONS COPILOT ── */}
       {activeOpsTab === 'copilot' && (
-        <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-6">
-          <div className="flex items-center gap-3 border-b border-gray-100 dark:border-gray-800 pb-4">
+        <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+          <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-black text-gray-900 dark:text-white">NEC OPERATIONS COPILOT</h3>
-              <p className="text-xs text-gray-500">
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">NEC OPERATIONS COPILOT</h3>
+              <p className="text-xs text-slate-500">
                 Explainable operational intelligence powered by real SQLite & GraphQL metrics
               </p>
             </div>
@@ -1703,7 +1703,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
           {/* Quick Operational Prompts */}
           <div className="space-y-2">
-            <span className="text-[11px] font-black uppercase text-gray-400 tracking-wider">
+            <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider">
               Quick Operational Inquiries
             </span>
             <div className="flex flex-wrap gap-2">
@@ -1717,7 +1717,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 <button
                   key={q}
                   onClick={() => handleAskCopilot(q)}
-                  className="px-3.5 py-2 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 text-xs font-bold text-gray-700 dark:text-gray-300 hover:border-indigo-400 hover:text-indigo-600 transition-all cursor-pointer text-left"
+                  className="px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:border-indigo-400 hover:text-indigo-600 transition-all cursor-pointer text-left"
                 >
                   {q}
                 </button>
@@ -1744,19 +1744,19 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                <div className="p-3 rounded-xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-gray-800">
-                  <span className="text-[10px] font-black uppercase text-gray-400">Why (Explanation)</span>
-                  <p className="text-gray-800 dark:text-gray-200 font-bold mt-1">{copilotAnswer.why}</p>
+                <div className="p-3 rounded-xl bg-white dark:bg-navy-950 border border-slate-100 dark:border-slate-800">
+                  <span className="text-[10px] font-black uppercase text-slate-400">Why (Explanation)</span>
+                  <p className="text-slate-800 dark:text-slate-200 font-bold mt-1">{copilotAnswer.why}</p>
                 </div>
 
-                <div className="p-3 rounded-xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-gray-800">
-                  <span className="text-[10px] font-black uppercase text-gray-400">Evidence (Audit Source)</span>
-                  <p className="text-gray-800 dark:text-gray-200 font-bold mt-1">{copilotAnswer.evidence}</p>
+                <div className="p-3 rounded-xl bg-white dark:bg-navy-950 border border-slate-100 dark:border-slate-800">
+                  <span className="text-[10px] font-black uppercase text-slate-400">Evidence (Audit Source)</span>
+                  <p className="text-slate-800 dark:text-slate-200 font-bold mt-1">{copilotAnswer.evidence}</p>
                 </div>
 
-                <div className="p-3 rounded-xl bg-white dark:bg-navy-900 border border-gray-100 dark:border-gray-800">
-                  <span className="text-[10px] font-black uppercase text-gray-400">Actionable Recommendation</span>
-                  <p className="text-gray-800 dark:text-gray-200 font-bold mt-1">{copilotAnswer.recommendation}</p>
+                <div className="p-3 rounded-xl bg-white dark:bg-navy-950 border border-slate-100 dark:border-slate-800">
+                  <span className="text-[10px] font-black uppercase text-slate-400">Actionable Recommendation</span>
+                  <p className="text-slate-800 dark:text-slate-200 font-bold mt-1">{copilotAnswer.recommendation}</p>
                 </div>
               </div>
             </div>
@@ -1767,23 +1767,23 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       {/* ── 13. TRUST SCORE "WHY THIS SCORE?" FACTOR BREAKDOWN MODAL ── */}
       {showTrustModal && (
         <div className="modal-overlay-responsive animate-modal-backdrop">
-          <div className="modal-container-responsive max-w-xl bg-white dark:bg-navy-900 border border-indigo-300 dark:border-indigo-700/60 rounded-3xl shadow-lg p-6 space-y-4 animate-modal-content">
-            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+          <div className="modal-container-responsive max-w-xl bg-white dark:bg-navy-950 border border-indigo-300 dark:border-indigo-700/60 rounded-3xl shadow-lg p-6 space-y-4 animate-modal-content">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-indigo-600" />
-                <h3 className="text-sm font-black text-gray-900 dark:text-white">
+                <h3 className="text-sm font-black text-slate-900 dark:text-white">
                   System Trust Score: {trustScore} / 100
                 </h3>
               </div>
               <button
                 onClick={() => setShowTrustModal(false)}
-                className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
               >
                
               </button>
             </div>
 
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-slate-500">
               The System Trust Score is calculated in real-time from 6 weighted operational verification signals:
             </p>
 
@@ -1791,14 +1791,14 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               {(data?.trustFactors || []).map((f: any, idx: number) => (
                 <div
                   key={idx}
-                  className="p-3 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-gray-800 flex items-center justify-between text-xs font-bold"
+                  className="p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold"
                 >
                   <div className="space-y-0.5 max-w-md">
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-900 dark:text-white">{f.factor}</span>
-                      <span className="text-[10px] text-gray-400 font-normal">({f.weight})</span>
+                      <span className="text-slate-900 dark:text-white">{f.factor}</span>
+                      <span className="text-[10px] text-slate-400 font-normal">({f.weight})</span>
                     </div>
-                    <p className="text-[10.5px] text-gray-500 font-normal">{f.details}</p>
+                    <p className="text-[10.5px] text-slate-500 font-normal">{f.details}</p>
                   </div>
                   <span className="text-emerald-600 font-black">{f.score}%</span>
                 </div>
@@ -1820,10 +1820,10 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       {/* ── 13. OFFICIAL FORENSIC AUDIT CERTIFICATE PREVIEW MODAL ── */}
       {showCertPreviewModal && forensicResult && (
         <div className="modal-overlay-responsive animate-modal-backdrop">
-          <div className="modal-container-responsive max-w-3xl bg-white text-gray-900 rounded-3xl shadow-lg border-4 border-amber-500/40 animate-modal-content">
+          <div className="modal-container-responsive max-w-3xl bg-white text-slate-900 rounded-3xl shadow-lg border-4 border-amber-500/40 animate-modal-content">
             
             {/* Modal Controls Bar */}
-            <div className="px-6 py-3 bg-navy-950 text-white flex items-center justify-between border-b border-gray-800">
+            <div className="px-6 py-3 bg-navy-950 text-white flex items-center justify-between border-b border-slate-800">
               <div className="flex items-center gap-2">
                 <FileCheck className="w-5 h-5 text-amber-400" />
                 <span className="text-xs font-black uppercase tracking-wider">
@@ -1851,7 +1851,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 <button
                   type="button"
                   onClick={() => setShowCertPreviewModal(false)}
-                  className="p-1 rounded-lg text-gray-400 hover:text-white transition-colors cursor-pointer"
+                  className="p-1 rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1906,7 +1906,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                   </div>
                   <div className="col-span-2 pt-1 border-t border-slate-200">
                     <span className="text-[10px] text-slate-500 uppercase block">LeetCode Profile</span>
-                    <span className="font-mono font-bold text-blue-700">@{forensicResult.student.username}</span>
+                    <span className="font-mono font-bold text-brand-700">@{forensicResult.student.username}</span>
                   </div>
                   <div className="col-span-2 pt-1 border-t border-slate-200">
                     <span className="text-[10px] text-slate-500 uppercase block">Global Rating</span>
@@ -2004,18 +2004,18 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       {/* ── 14. SMART COMMAND PALETTE (CTRL+K / CMD+K) ── */}
       {showCommandPalette && (
         <div className="modal-overlay-responsive animate-modal-backdrop">
-          <div className="modal-container-responsive max-w-lg bg-white dark:bg-navy-900 border border-indigo-300 dark:border-indigo-700/60 rounded-3xl shadow-lg animate-modal-content">
-            <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2 shrink-0">
-              <Search className="w-4 h-4 text-gray-400" />
+          <div className="modal-container-responsive max-w-lg bg-white dark:bg-navy-950 border border-indigo-300 dark:border-indigo-700/60 rounded-3xl shadow-lg animate-modal-content">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2 shrink-0">
+              <Search className="w-4 h-4 text-slate-400" />
               <input
                 type="text"
                 autoFocus
                 value={paletteQuery}
                 onChange={(e) => setPaletteQuery(e.target.value)}
                 placeholder="Type an operational command or navigate (e.g. sync, forensic, backup, copilot)..."
-                className="w-full bg-transparent text-xs font-bold text-gray-900 dark:text-white focus:outline-none"
+                className="w-full bg-transparent text-xs font-bold text-slate-900 dark:text-white focus:outline-none"
               />
-              <span className="text-[10px] text-gray-400 font-mono">ESC</span>
+              <span className="text-[10px] text-slate-400 font-mono">ESC</span>
             </div>
 
             <div className="max-h-72 overflow-y-auto p-2 space-y-1">
@@ -2026,10 +2026,10 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                     item.action();
                     setShowCommandPalette(false);
                   }}
-                  className="w-full p-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-navy-800 flex items-center justify-between text-xs font-bold text-gray-800 dark:text-gray-200 transition-all cursor-pointer text-left"
+                  className="w-full p-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-navy-800 flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200 transition-all cursor-pointer text-left"
                 >
                   <span>{item.label}</span>
-                  <span className="text-[10px] font-mono text-gray-400 px-1.5 py-0.5 rounded bg-gray-100 dark:bg-navy-950">
+                  <span className="text-[10px] font-mono text-slate-400 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-navy-950">
                     {item.category}
                   </span>
                 </button>

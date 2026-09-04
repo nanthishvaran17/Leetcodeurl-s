@@ -31,7 +31,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
 
   if (user) {
     return (
-      <div className={`flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-md ${className}`}>
+      <div className={`flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-md ${className}`}>
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-600 to-indigo-600 text-white font-black text-sm flex items-center justify-center shadow-sm">
             {user.username ? user.username[0].toUpperCase() : 'A'}
@@ -39,14 +39,14 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
 
           <div>
             <div className="flex items-center space-x-1.5">
-              <h4 className="text-sm font-extrabold text-gray-900 dark:text-white truncate max-w-[160px]">
+              <h4 className="text-sm font-extrabold text-slate-900 dark:text-white truncate max-w-[160px]">
                 {user.username}
               </h4>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-brand-500/20 text-brand-600 dark:text-brand-300 uppercase tracking-wider">
                 {user.role}
               </span>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[180px]">
+            <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[180px]">
               {user.email}
             </p>
           </div>
@@ -72,7 +72,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
             <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
             <span>{errorMsg}</span>
           </div>
-          <button onClick={() => setErrorMsg('')} className="text-gray-400 hover:text-rose-600 text-sm font-bold ml-2"></button>
+          <button onClick={() => setErrorMsg('')} className="text-slate-400 hover:text-rose-600 text-sm font-bold ml-2"></button>
         </div>
       )}
 
@@ -80,7 +80,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
         type="button"
         onClick={handleSignIn}
         disabled={isSigningIn}
-        className={`w-full py-3 px-5 rounded-xl bg-white dark:bg-navy-900 hover:bg-gray-50 dark:hover:bg-navy-800 text-gray-800 dark:text-white font-extrabold text-xs border border-gray-300 dark:border-gray-700 shadow-md hover:shadow-lg flex items-center justify-center space-x-3 transition-all duration-200 ${className}`}
+        className={`w-full py-3 px-5 rounded-xl bg-white dark:bg-navy-950 hover:bg-slate-50 dark:hover:bg-navy-800 text-slate-800 dark:text-white font-extrabold text-xs border border-slate-300 dark:border-slate-700 shadow-md hover:shadow-lg flex items-center justify-center space-x-3 transition-all duration-200 ${className}`}
       >
         {isSigningIn ? (
           <>

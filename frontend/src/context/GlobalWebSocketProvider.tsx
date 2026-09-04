@@ -6,12 +6,14 @@ interface GlobalWebSocketContextType {
   isConnected: boolean;
   registerCallback: (id: string, callback: (data: any) => void) => void;
   unregisterCallback: (id: string) => void;
+  sendMessage: (payload: any) => void;
 }
 
 const GlobalWebSocketContext = createContext<GlobalWebSocketContextType | null>(null);
 
 export const GlobalWebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
+  const workerRef = useRef<Worker | null>(null);
   const queryClient = useQueryClient();
   const eventRouter = useMemo(() => new LiveEventRouter(queryClient), [queryClient]);
 
@@ -34,6 +36,12 @@ export const GlobalWebSocketProvider: React.FC<{ children: React.ReactNode }> = 
     callbacksRef.current.delete(id);
   };
 
+  const sendMessage = (payload: any) => {
+    if (workerRef.current && isConnected) {
+      workerRef.current.postMessage({ type: 'SEND_MESSAGE', payload });
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
     let worker: Worker | null = null;
@@ -54,6 +62,7 @@ export const GlobalWebSocketProvider: React.FC<{ children: React.ReactNode }> = 
       worker = new Worker(new URL('../workers/wsWorker.ts', import.meta.url), {
         type: 'module'
       });
+      workerRef.current = worker;
 
       let wasConnected = false;
 
@@ -97,7 +106,7 @@ export const GlobalWebSocketProvider: React.FC<{ children: React.ReactNode }> = 
   }, [eventRouter]);
 
   return (
-    <GlobalWebSocketContext.Provider value={{ isConnected, registerCallback, unregisterCallback }}>
+    <GlobalWebSocketContext.Provider value={{ isConnected, registerCallback, unregisterCallback, sendMessage }}>
       {children}
     </GlobalWebSocketContext.Provider>
   );

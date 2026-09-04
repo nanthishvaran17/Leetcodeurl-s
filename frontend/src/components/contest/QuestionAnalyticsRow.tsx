@@ -44,11 +44,11 @@ export const QuestionAnalyticsRow: React.FC<QuestionAnalyticsRowProps> = ({ matr
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Target className="w-4 h-4 text-brand-500" />
-          <h4 className="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white">Question Analytics</h4>
+          <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">Question Analytics</h4>
         </div>
         <div className="flex items-center gap-3 text-[10px] font-bold">
-          <span className="text-gray-500">Easiest: <span className="text-emerald-500">{stats.easiest.id}</span></span>
-          <span className="text-gray-500">Hardest: <span className="text-rose-500">{stats.hardest.id}</span></span>
+          <span className="text-slate-500">Easiest: <span className="text-emerald-500">{stats.easiest.id}</span></span>
+          <span className="text-slate-500">Hardest: <span className="text-rose-500">{stats.hardest.id}</span></span>
         </div>
       </div>
 
@@ -57,16 +57,16 @@ export const QuestionAnalyticsRow: React.FC<QuestionAnalyticsRowProps> = ({ matr
           <div key={q.id} className={`p-4 rounded-xl border ${q.border} ${q.bg} flex flex-col items-center text-center space-y-2`}>
             <div>
               <span className={`text-sm font-black ${q.color}`}>{q.id}</span>
-              <span className="text-[10px] text-gray-500 block uppercase font-bold">{q.diff}</span>
+              <span className="text-[10px] text-slate-500 block uppercase font-bold">{q.diff}</span>
             </div>
             
-            <div className="w-full flex justify-between items-end border-t border-gray-200 dark:border-gray-800/50 pt-2 mt-1">
+            <div className="w-full flex justify-between items-end border-t border-slate-200 dark:border-slate-800/50 pt-2 mt-1">
               <div className="text-left">
-                <span className="text-[9px] text-gray-500 block uppercase font-bold">Solved</span>
-                <span className="text-sm font-mono font-black text-gray-900 dark:text-white">{q.count}</span>
+                <span className="text-[9px] text-slate-500 block uppercase font-bold">Solved</span>
+                <span className="text-sm font-mono font-black text-slate-900 dark:text-white">{q.count}</span>
               </div>
               <div className="text-right">
-                <span className="text-[9px] text-gray-500 block uppercase font-bold">Solve %</span>
+                <span className="text-[9px] text-slate-500 block uppercase font-bold">Solve %</span>
                 <span className={`text-sm font-mono font-black ${q.color}`}>{q.pct}%</span>
               </div>
             </div>

@@ -72,17 +72,17 @@ export const FailedSyncModal: React.FC<FailedSyncModalProps> = ({ isOpen, onClos
 
   return (
     <div className="modal-overlay-responsive animate-modal-backdrop">
-      <div className="modal-container-responsive max-w-5xl bg-white dark:bg-navy-900 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-800 animate-modal-content">
+      <div className="modal-container-responsive max-w-5xl bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 animate-modal-content">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-navy-950/50">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-navy-950/50">
           <div className="flex items-center space-x-3">
             <div className="p-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400">
               <ShieldAlert className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-gray-900 dark:text-white">Sync Failure Audit ({failedStudents.length} Students)</h2>
-              <p className="text-xs font-bold text-gray-500">Transparent error diagnostics — attendance remains evidence-backed</p>
+              <h2 className="text-lg font-black text-slate-900 dark:text-white">Sync Failure Audit ({failedStudents.length} Students)</h2>
+              <p className="text-xs font-bold text-slate-500">Transparent error diagnostics — attendance remains evidence-backed</p>
             </div>
           </div>
 
@@ -90,14 +90,14 @@ export const FailedSyncModal: React.FC<FailedSyncModalProps> = ({ isOpen, onClos
             <button
               onClick={fetchFailedStudents}
               disabled={loading}
-              className="p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors"
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors"
               title="Refresh list"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors"
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -107,7 +107,7 @@ export const FailedSyncModal: React.FC<FailedSyncModalProps> = ({ isOpen, onClos
         {/* Content Body */}
         <div className="p-6 overflow-y-auto flex-1 space-y-3">
           {loading && failedStudents.length === 0 ? (
-            <div className="py-12 text-center text-gray-400 text-xs font-bold flex items-center justify-center space-x-2">
+            <div className="py-12 text-center text-slate-400 text-xs font-bold flex items-center justify-center space-x-2">
               <RefreshCw className="w-4 h-4 animate-spin text-brand-500" />
               <span>Checking database for failed sync records...</span>
             </div>
@@ -123,9 +123,9 @@ export const FailedSyncModal: React.FC<FailedSyncModalProps> = ({ isOpen, onClos
                   
                   <div className="space-y-1">
                     <div className="flex items-center space-x-2 flex-wrap">
-                      <span className="font-black text-gray-900 dark:text-white">{st.name}</span>
-                      <span className="font-mono text-gray-500 font-bold">({st.reg_no})</span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-gray-100 text-gray-700 dark:bg-navy-800 dark:text-gray-300">
+                      <span className="font-black text-slate-900 dark:text-white">{st.name}</span>
+                      <span className="font-mono text-slate-500 font-bold">({st.reg_no})</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700 dark:bg-navy-800 dark:text-slate-300">
                         {st.department} • {st.year_level} Year
                       </span>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
@@ -133,8 +133,8 @@ export const FailedSyncModal: React.FC<FailedSyncModalProps> = ({ isOpen, onClos
                       </span>
                     </div>
 
-                    <div className="flex items-center space-x-3 text-gray-500 text-[11px] font-bold">
-                      <span>LeetCode Username: <strong className="text-gray-800 dark:text-gray-200">@{st.username}</strong></span>
+                    <div className="flex items-center space-x-3 text-slate-500 text-[11px] font-bold">
+                      <span>LeetCode Username: <strong className="text-slate-800 dark:text-slate-200">@{st.username}</strong></span>
                       {st.leetcode_url && (
                         <a
                           href={st.leetcode_url}
@@ -155,7 +155,7 @@ export const FailedSyncModal: React.FC<FailedSyncModalProps> = ({ isOpen, onClos
 
                   <div className="flex items-center space-x-4 text-right">
                     <div className="text-right text-[11px]">
-                      <p className="text-gray-400 font-bold">Last Attempt: {st.last_attempt_at_formatted || 'Recently'}</p>
+                      <p className="text-slate-400 font-bold">Last Attempt: {st.last_attempt_at_formatted || 'Recently'}</p>
                       <p className="text-emerald-600 dark:text-emerald-400 font-bold">Last Valid Fetch: {st.last_successful_sync_formatted || 'Never'}</p>
                     </div>
 
@@ -176,13 +176,13 @@ export const FailedSyncModal: React.FC<FailedSyncModalProps> = ({ isOpen, onClos
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-navy-950/50 flex items-center justify-between">
-          <p className="text-xs text-gray-500 font-bold">
+        <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-navy-950/50 flex items-center justify-between">
+          <p className="text-xs text-slate-500 font-bold">
             Note: Network timeouts and rate limits do not count as zero solves or missing attendance.
           </p>
           <button
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl bg-gray-200 dark:bg-navy-800 hover:bg-gray-300 text-gray-800 dark:text-gray-200 font-bold text-xs transition-colors"
+            className="px-5 py-2.5 rounded-xl bg-slate-200 dark:bg-navy-800 hover:bg-slate-300 text-slate-800 dark:text-slate-200 font-bold text-xs transition-colors"
           >
             Close Audit
           </button>

@@ -98,88 +98,110 @@ def get_command_center_summary(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "faculty", "staff"))
 ):
-    from backend.services.hod_analytics_engine import (
-        calculate_department_health_score,
-        get_executive_brief,
-        get_needs_attention_metrics,
-        get_institutional_benchmarks
-    )
-    health = calculate_department_health_score(
-        db, current_user, dept_id=dept_id, staff_id=staff_id, year_level=year_level, section_id=section_id
-    )
-    brief = get_executive_brief(db, current_user, dept_id=dept_id, staff_id=staff_id)
-    needs_att = get_needs_attention_metrics(db, current_user, dept_id=dept_id, staff_id=staff_id)
-    benchmarks = get_institutional_benchmarks(db, current_user)
+    from backend.services.cache_service import cache_service
 
-    # Active staff list for Scope Selector
-    staff_users_q = db.query(User).options(joinedload(User.department)).filter(
-        User.role.ilike("%Staff%") | User.role.ilike("%Faculty%"),
-        User.is_active == True
-    )
+    # Build a scoped cache key based on the parameters
+    uid = current_user.id if current_user else "anon"
     role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
-    if role_clean == "hod" and current_user.department_id:
-        staff_users_q = staff_users_q.filter(User.department_id == current_user.department_id)
-    elif dept_id:
-        staff_users_q = staff_users_q.filter(User.department_id == dept_id)
-    staff_users = staff_users_q.all()
     
-    staff_list = []
-    for u in staff_users:
-        assigned_rows = db.query(Student, LeetCodeProfileStats).join(
-            FacultyStudentAssignment, FacultyStudentAssignment.student_id == Student.id
-        ).outerjoin(
-            LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
-        ).filter(
-            FacultyStudentAssignment.faculty_id == u.id,
-            FacultyStudentAssignment.is_active == True,
-            Student.is_active == True
-        ).all()
+    # If Super Admin or Admin, they see global data (unless they explicitly filter). 
+    # If HOD/Faculty, they see scoped data. We must include user_id in the cache key for role-based scoping unless they are global admins.
+    is_global_admin = role_clean in ["admin", "super_admin", "super admin"]
+    scope_key = f"global" if is_global_admin else f"user_{uid}"
+    
+    cache_key = f"cmd_center_summary:{scope_key}:d{dept_id or 'all'}:s{staff_id or 'all'}:y{year_level or 'all'}:sec{section_id or 'all'}"
+    tags = ["analytics", "dashboard", f"dept_{dept_id}" if dept_id else "global"]
 
-        assigned_cnt = len(assigned_rows)
-        active_cnt = sum(
-            1 for s, st in assigned_rows
-            if st and ((st.total_solved or 0) > 0 or (st.easy_solved or 0) + (st.medium_solved or 0) + (st.hard_solved or 0) > 0)
+    def _compute_summary():
+        from backend.services.hod_analytics_engine import (
+            calculate_department_health_score,
+            get_executive_brief,
+            get_needs_attention_metrics,
+            get_institutional_benchmarks
         )
-        dept_code = u.department.code if u.department else "CSE"
+        health = calculate_department_health_score(
+            db, current_user, dept_id=dept_id, staff_id=staff_id, year_level=year_level, section_id=section_id
+        )
+        brief = get_executive_brief(db, current_user, dept_id=dept_id, staff_id=staff_id)
+        needs_att = get_needs_attention_metrics(db, current_user, dept_id=dept_id, staff_id=staff_id)
+        benchmarks = get_institutional_benchmarks(db, current_user)
+    
+        # Active staff list for Scope Selector
+        staff_users_q = db.query(User).options(joinedload(User.department)).filter(
+            User.role.ilike("%Staff%") | User.role.ilike("%Faculty%"),
+            User.is_active == True
+        )
+        if role_clean == "hod" and current_user.department_id:
+            staff_users_q = staff_users_q.filter(User.department_id == current_user.department_id)
+        elif dept_id:
+            staff_users_q = staff_users_q.filter(User.department_id == dept_id)
+        staff_users = staff_users_q.all()
+        
+        staff_list = []
+        for u in staff_users:
+            assigned_rows = db.query(Student, LeetCodeProfileStats).join(
+                FacultyStudentAssignment, FacultyStudentAssignment.student_id == Student.id
+            ).outerjoin(
+                LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
+            ).filter(
+                FacultyStudentAssignment.faculty_id == u.id,
+                FacultyStudentAssignment.is_active == True,
+                Student.is_active == True
+            ).all()
+    
+            assigned_cnt = len(assigned_rows)
+            active_cnt = sum(
+                1 for s, st in assigned_rows
+                if st and ((st.total_solved or 0) > 0 or (st.easy_solved or 0) + (st.medium_solved or 0) + (st.hard_solved or 0) > 0)
+            )
+            dept_code = u.department.code if u.department else "CSE"
+    
+            staff_list.append({
+                "id": u.id,
+                "username": u.username,
+                "email": u.email,
+                "department_id": u.department_id,
+                "department_code": dept_code,
+                "assigned_count": assigned_cnt,
+                "active_count": active_cnt,
+                "max_allowed": MAX_STUDENTS_PER_FACULTY,
+                "workload_status": "NORMAL" if assigned_cnt < 20 else ("AT_RATIO" if assigned_cnt == 20 else "HIGH_WORKLOAD"),
+                "role": u.role or "Faculty",
+                "is_active": u.is_active,
+                "joined_date": u.created_at.strftime("%Y-%m-%d") if u.created_at else "N/A",
+                "last_active": u.last_activity.strftime("%Y-%m-%d") if u.last_activity else "N/A",
+                "coding_activity": sum(st.total_solved or 0 for s, st in assigned_rows if st)
+            })
+    
+        # Unassigned student count in this scope
+        unassigned_q = db.query(Student).outerjoin(
+            FacultyStudentAssignment,
+            and_(FacultyStudentAssignment.student_id == Student.id, FacultyStudentAssignment.is_active == True)
+        ).filter(
+            Student.is_active == True,
+            FacultyStudentAssignment.id.is_(None)
+        )
+        if dept_id:
+            unassigned_q = unassigned_q.filter(Student.department_id == dept_id)
+        unassigned_count = unassigned_q.count()
+    
+        return {
+            "department_health": health,
+            "executive_brief": brief,
+            "needs_attention": needs_att,
+            "benchmarks": benchmarks,
+            "staff_list": staff_list,
+            "unassigned_student_count": unassigned_count,
+            "refreshed_at": datetime.datetime.utcnow().strftime("%d %b %Y, %H:%M:%S IST"),
+        }
 
-        staff_list.append({
-            "id": u.id,
-            "username": u.username,
-            "email": u.email,
-            "department_id": u.department_id,
-            "department_code": dept_code,
-            "assigned_count": assigned_cnt,
-            "active_count": active_cnt,
-            "max_allowed": MAX_STUDENTS_PER_FACULTY,
-            "workload_status": "NORMAL" if assigned_cnt < 20 else ("AT_RATIO" if assigned_cnt == 20 else "HIGH_WORKLOAD"),
-            "role": u.role or "Faculty",
-            "is_active": u.is_active,
-            "joined_date": u.created_at.strftime("%Y-%m-%d") if u.created_at else "N/A",
-            "last_active": u.last_activity.strftime("%Y-%m-%d") if u.last_activity else "N/A",
-            "coding_activity": sum(st.total_solved or 0 for s, st in assigned_rows if st)
-        })
-
-    # Unassigned student count in this scope
-    unassigned_q = db.query(Student).outerjoin(
-        FacultyStudentAssignment,
-        and_(FacultyStudentAssignment.student_id == Student.id, FacultyStudentAssignment.is_active == True)
-    ).filter(
-        Student.is_active == True,
-        FacultyStudentAssignment.id.is_(None)
+    # 300 seconds (5 minutes) caching to drastically reduce database load
+    return cache_service.get_or_compute_sync(
+        key=cache_key,
+        compute_func=_compute_summary,
+        ttl_seconds=300,
+        tags=tags
     )
-    if dept_id:
-        unassigned_q = unassigned_q.filter(Student.department_id == dept_id)
-    unassigned_count = unassigned_q.count()
-
-    return {
-        "department_health": health,
-        "executive_brief": brief,
-        "needs_attention": needs_att,
-        "benchmarks": benchmarks,
-        "staff_list": staff_list,
-        "unassigned_student_count": unassigned_count,
-        "refreshed_at": datetime.datetime.utcnow().strftime("%d %b %Y, %H:%M:%S IST"),
-    }
 
 # ── 2. LIVE STUDENT LIST (Scoped & Paginated) ──────────────────────────────────
 

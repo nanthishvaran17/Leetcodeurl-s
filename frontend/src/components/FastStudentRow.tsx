@@ -3,11 +3,11 @@ import { useStudentEntity } from '../stores/studentLiveStore';
 import { Clock, AlertCircle, Trophy, Flame, Award, TrendingUp, RefreshCw, Trash2, Edit3, Eye, ExternalLink } from 'lucide-react';
 
 function getRankBadge(rank?: number) {
-  if (!rank || rank <= 0) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 border border-gray-300">Unranked</span>;
+  if (!rank || rank <= 0) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-300">Unranked</span>;
   if (rank === 1) return <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-100 text-amber-800 border border-amber-300 shadow-sm"><Trophy className="w-3.5 h-3.5 text-amber-500" /><span>#1</span></span>;
   if (rank === 2) return <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-slate-100 text-slate-800 border border-slate-300 shadow-sm"><Trophy className="w-3.5 h-3.5 text-slate-500" /><span>#2</span></span>;
   if (rank === 3) return <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-orange-100 text-orange-800 border border-orange-300 shadow-sm"><Trophy className="w-3.5 h-3.5 text-orange-500" /><span>#3</span></span>;
-  return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-white text-gray-700 border border-gray-200">#{rank}</span>;
+  return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-white text-slate-700 border border-slate-200">#{rank}</span>;
 }
 
 function parseUtcTime(ts?: string): number {
@@ -87,7 +87,7 @@ export const FastStudentRow = memo(({
           type="checkbox"
           checked={isSelected}
           onChange={() => toggleStudent(student.id)}
-          className="rounded border-gray-300 text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+          className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
         />
       </div>
 
@@ -95,15 +95,15 @@ export const FastStudentRow = memo(({
         {isSolver
           ? getRankBadge(effectiveCollegeRank)
           : syncState === 'pending'
-            ? <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-400 border border-gray-300"><Clock className="w-3 h-3" /><span>Pending</span></span>
+            ? <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-400 border border-slate-300"><Clock className="w-3 h-3" /><span>Pending</span></span>
             : syncState === 'failed'
               ? <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-600 border border-rose-300"><AlertCircle className="w-3 h-3" /><span>Failed</span></span>
-              : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 border border-gray-300">Unranked</span>
+              : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-300">Unranked</span>
         }
       </div>
 
       <div className="flex-none w-32 px-3">
-        <span className="font-mono text-xs font-bold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-navy-800 px-2 py-0.5 rounded-md border border-gray-200 dark:border-navy-700">
+        <span className="font-mono text-xs font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-navy-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-navy-700">
           {student.reg_no}
         </span>
       </div>
@@ -114,7 +114,7 @@ export const FastStudentRow = memo(({
             {student.name.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0">
-            <p className="font-black text-sm text-gray-900 dark:text-white truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+            <p className="font-black text-sm text-slate-900 dark:text-white truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
               {student.name}
             </p>
           </div>
@@ -122,8 +122,8 @@ export const FastStudentRow = memo(({
       </div>
 
       <div className="flex-none w-28 px-3 text-[11px] font-bold">
-        <span className="text-gray-900 dark:text-white block">{student.department?.code || student.department?.name || '—'}</span>
-        <span className="text-gray-500 dark:text-gray-400">{student.year_level} Yr</span>
+        <span className="text-slate-900 dark:text-white block">{student.department?.code || student.department?.name || '—'}</span>
+        <span className="text-slate-500 dark:text-slate-400">{student.year_level} Yr</span>
       </div>
 
       <div className="flex-none w-40 px-3">
@@ -131,13 +131,13 @@ export const FastStudentRow = memo(({
           <a href={`https://leetcode.com/u/${student.username}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">
             @{student.username}
           </a>
-        ) : <span className="text-gray-400 text-[11px]">Not Linked</span>}
+        ) : <span className="text-slate-400 text-[11px]">Not Linked</span>}
       </div>
 
       <div className={`flex-none w-24 px-3 py-1 rounded-lg text-center transition-colors ${flashSolved ? 'bg-emerald-200 dark:bg-emerald-800/50 duration-75' : 'bg-transparent duration-1000'}`}>
         {totalSolved !== null ? (
           <span className="text-base font-black text-emerald-600 dark:text-emerald-400">{totalSolved}</span>
-        ) : <span className="text-gray-400">—</span>}
+        ) : <span className="text-slate-400">—</span>}
       </div>
 
       <div className="flex-none w-32 px-3 flex items-center justify-center text-center">
@@ -164,7 +164,7 @@ export const FastStudentRow = memo(({
         {student.stats?.contest_global_ranking ? `#${student.stats.contest_global_ranking.toLocaleString()}` : '—'}
       </div>
 
-      <div className="flex-none w-28 px-3 text-center text-gray-600 font-bold">
+      <div className="flex-none w-28 px-3 text-center text-slate-600 font-bold">
         {student.stats?.public_profile_ranking ? `#${student.stats.public_profile_ranking.toLocaleString()}` : '—'}
       </div>
 
@@ -172,7 +172,7 @@ export const FastStudentRow = memo(({
         <div className="flex items-center justify-center gap-1 transition-opacity">
           <button onClick={() => onView(student)} className="p-1.5 rounded-xl text-brand-600 hover:bg-brand-50" title="View"><Eye className="w-4 h-4" /></button>
           <button onClick={() => onEdit(student)} className="p-1.5 rounded-xl text-amber-600 hover:bg-amber-50" title="Edit"><Edit3 className="w-4 h-4" /></button>
-          <button onClick={() => onRefresh(student.id)} disabled={isSyncing} className={`p-1.5 rounded-xl ${isSyncing ? 'text-blue-500 animate-spin' : 'text-emerald-600 hover:bg-emerald-50'}`}><RefreshCw className="w-4 h-4" /></button>
+          <button onClick={() => onRefresh(student.id)} disabled={isSyncing} className={`p-1.5 rounded-xl ${isSyncing ? 'text-brand-500 animate-spin' : 'text-emerald-600 hover:bg-emerald-50'}`}><RefreshCw className="w-4 h-4" /></button>
           <button onClick={(e) => { e.stopPropagation(); onDelete(student, e); }} className="p-1.5 rounded-xl text-rose-600 hover:bg-rose-50" title="Delete"><Trash2 className="w-4 h-4" /></button>
         </div>
       </div>

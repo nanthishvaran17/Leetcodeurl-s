@@ -34,10 +34,10 @@ const CustomSelect: React.FC<{
         onClick={() => setOpen(!open)}
         className={`flex items-center justify-between gap-3 min-w-[200px] w-full px-4 py-2.5 rounded-xl border transition-all cursor-pointer font-bold text-sm ${
           open 
-            ? 'border-brand-500 bg-white dark:bg-navy-900 ring-4 ring-brand-500/10 shadow-sm' 
+            ? 'border-brand-500 bg-white dark:bg-navy-950 ring-4 ring-brand-500/10 shadow-sm' 
             : (value && value !== 'ALL')
               ? 'border-brand-500/30 bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-300' 
-              : 'border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-200 hover:border-slate-300'
+              : 'border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-700 dark:text-slate-200 hover:border-slate-300'
         }`}
       >
         <div className="flex items-center gap-2">
@@ -55,7 +55,7 @@ const CustomSelect: React.FC<{
       </button>
 
       {open && (
-        <div className="absolute z-50 top-[110%] left-0 w-full min-w-[280px] p-1.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up">
+        <div className="absolute z-50 top-[110%] left-0 w-full min-w-[280px] p-1.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up">
           <button
             onClick={() => { onChange('ALL'); setOpen(false); }}
             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
@@ -469,9 +469,9 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
   if (loading && !summary) {
     return (
-      <div className="p-8 text-center bg-white dark:bg-navy-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
+      <div className="p-8 text-center bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
         <RefreshCw className="w-8 h-8 text-indigo-500 animate-spin mx-auto" />
-        <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">
+        <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
           Discovering & Analyzing LeetCode Contest...
         </p>
       </div>
@@ -515,11 +515,11 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
             <span>{summary?.contest_title || 'Weekly Contest Session'}</span>
-            <span className="text-xs font-mono px-2.5 py-0.5 rounded-lg bg-white/10 text-gray-300 font-normal">
+            <span className="text-xs font-mono px-2.5 py-0.5 rounded-lg bg-white/10 text-slate-300 font-normal">
               {summary?.contest_slug}
             </span>
           </h2>
-          <p className="text-xs text-gray-300">
+          <p className="text-xs text-slate-300">
             Authoritative question-level contest telemetry • 08:00 AM – 09:30 AM IST Official Window • Realtime Ingestion
           </p>
         </div>
@@ -653,17 +653,17 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       </div>
 
       {/* Filter Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-white dark:bg-navy-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
         <div className="flex items-center gap-2 flex-wrap flex-1 min-w-[280px]">
           {/* Search Box */}
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search student, reg no, or LeetCode username..."
-              className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900 dark:text-white"
+              className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white"
             />
           </div>
 
@@ -682,15 +682,15 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           </div>
         </div>
 
-        <div className="text-xs text-gray-500 dark:text-gray-400 font-bold font-mono">
+        <div className="text-xs text-slate-500 dark:text-slate-400 font-bold font-mono">
           Showing {filteredRecords.length} / {records.length} Students • Realtime Sync Active
         </div>
       </div>
 
       {/* Authoritative Question-Level Data Table */}
-      <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-900 shadow-sm">
+      <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 shadow-sm">
         <table className="w-full text-left text-xs border-collapse">
-          <thead className="bg-gray-50 dark:bg-navy-950 text-gray-400 font-black uppercase text-[10px] tracking-wider border-b border-gray-200 dark:border-gray-800">
+          <thead className="bg-slate-50 dark:bg-navy-950 text-slate-400 font-black uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
             <tr>
               <th className="p-3.5">#</th>
               <th className="p-3.5">Student Details</th>
@@ -718,26 +718,26 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                 return (
                   <tr 
                     key={rec.id || rec.student_id} 
-                    className="hover:bg-gray-50/50 dark:hover:bg-navy-800/50 transition-colors cursor-pointer"
+                    className="hover:bg-slate-50/50 dark:hover:bg-navy-800/50 transition-colors cursor-pointer"
                     onClick={() => {
                       if (onStudentClick) {
                         onStudentClick({ id: rec.student_id, name: rec.student_name, reg_no: rec.reg_no, department: { name: rec.department_name }, year_level: rec.year_level, username: rec.leetcode_username });
                       }
                     }}
                   >
-                    <td className="p-3.5 font-mono text-gray-400 font-bold">{idx + 1}</td>
+                    <td className="p-3.5 font-mono text-slate-400 font-bold">{idx + 1}</td>
                     <td className="p-3.5">
-                      <div className="font-extrabold text-gray-900 dark:text-white">{rec.student_name}</div>
-                      <div className="text-[10px] text-gray-400 font-mono">{rec.reg_no} • {rec.year_level || '—'} Year</div>
+                      <div className="font-extrabold text-slate-900 dark:text-white">{rec.student_name}</div>
+                      <div className="text-[10px] text-slate-400 font-mono">{rec.reg_no} • {rec.year_level || '—'} Year</div>
                     </td>
                     <td className="p-3.5 font-mono font-bold">
                       {rec.leetcode_username ? (
                         <span className="text-indigo-600 dark:text-indigo-400">@{rec.leetcode_username}</span>
                       ) : (
-                        <span className="text-gray-400 italic">Unlinked</span>
+                        <span className="text-slate-400 italic">Unlinked</span>
                       )}
                     </td>
-                    <td className="p-3.5 text-gray-600 dark:text-gray-300 font-semibold">
+                    <td className="p-3.5 text-slate-600 dark:text-slate-300 font-semibold">
                       {rec.department_name || '—'}
                     </td>
 
@@ -746,7 +746,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                       {q1Done ? (
                         <span className="text-emerald-600 dark:text-emerald-400 font-black">1</span>
                       ) : (
-                        <span className="text-gray-400 font-bold">0</span>
+                        <span className="text-slate-400 font-bold">0</span>
                       )}
                     </td>
 
@@ -755,7 +755,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                       {q2Done ? (
                         <span className="text-emerald-600 dark:text-emerald-400 font-black">1</span>
                       ) : (
-                        <span className="text-gray-400 font-bold">0</span>
+                        <span className="text-slate-400 font-bold">0</span>
                       )}
                     </td>
 
@@ -764,7 +764,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                       {q3Done ? (
                         <span className="text-emerald-600 dark:text-emerald-400 font-black">1</span>
                       ) : (
-                        <span className="text-gray-400 font-bold">0</span>
+                        <span className="text-slate-400 font-bold">0</span>
                       )}
                     </td>
 
@@ -773,7 +773,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                       {q4Done ? (
                         <span className="text-emerald-600 dark:text-emerald-400 font-black">1</span>
                       ) : (
-                        <span className="text-gray-400 font-bold">0</span>
+                        <span className="text-slate-400 font-bold">0</span>
                       )}
                     </td>
 
@@ -784,12 +784,12 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                           {rec.problems_solved} / 4
                         </span>
                       ) : (
-                        <span className="text-gray-400">0 / 4</span>
+                        <span className="text-slate-400">0 / 4</span>
                       )}
                     </td>
 
                     {/* Rank */}
-                    <td className="p-3.5 font-mono font-bold text-gray-700 dark:text-gray-300">
+                    <td className="p-3.5 font-mono font-bold text-slate-700 dark:text-slate-300">
                       {rec.official_rank ? `#${rec.official_rank}` : '—'}
                     </td>
 
@@ -828,7 +828,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
               })
             ) : (
               <tr>
-                <td colSpan={11} className="p-8 text-center text-gray-400 italic">
+                <td colSpan={11} className="p-8 text-center text-slate-400 italic">
                   No participation records match the selected filters.
                 </td>
               </tr>

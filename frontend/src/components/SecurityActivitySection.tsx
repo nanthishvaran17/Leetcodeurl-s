@@ -70,21 +70,21 @@ export const SecurityActivitySection: React.FC = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-2xl p-6 shadow-sm">
+    <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-2xl p-6 shadow-sm">
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <ShieldAlert className="w-5 h-5 text-indigo-500" />
             SECURITY ACTIVITY
           </h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Real-time audit log of protected resource access, authorization decisions, and security alerts.
           </p>
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex items-center gap-2 bg-gray-100 dark:bg-navy-800 p-1 rounded-xl">
+        <div className="flex items-center gap-2 bg-slate-100 dark:bg-navy-800 p-1 rounded-xl">
           {(['ALL', 'SUCCESS', 'BLOCKED', 'ALERTS'] as const).map((tab) => (
             <button
               key={tab}
@@ -92,7 +92,7 @@ export const SecurityActivitySection: React.FC = () => {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
                 filter === tab
                   ? 'bg-white dark:bg-navy-700 text-navy-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               {tab}
@@ -101,7 +101,7 @@ export const SecurityActivitySection: React.FC = () => {
           <button
             onClick={() => fetchSecurityActivities(filter)}
             disabled={loading}
-            className="p-1.5 text-gray-500 hover:text-navy-600 dark:hover:text-navy-400 transition-colors"
+            className="p-1.5 text-slate-500 hover:text-navy-600 dark:hover:text-navy-400 transition-colors"
             title="Refresh Security Logs"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
@@ -114,17 +114,17 @@ export const SecurityActivitySection: React.FC = () => {
           {error}
         </div>
       ) : loading && activities.length === 0 ? (
-        <div className="py-12 text-center text-gray-500 dark:text-gray-400 text-sm animate-pulse">
+        <div className="py-12 text-center text-slate-500 dark:text-slate-400 text-sm animate-pulse">
           Loading security activity logs...
         </div>
       ) : activities.length === 0 ? (
-        <div className="py-12 text-center text-gray-500 dark:text-gray-400 text-sm">
+        <div className="py-12 text-center text-slate-500 dark:text-slate-400 text-sm">
           No security events recorded for filter "{filter}".
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-gray-50 dark:bg-navy-800/60 text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold border-b border-gray-200 dark:border-navy-700">
+            <thead className="bg-slate-50 dark:bg-navy-800/60 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-navy-700">
               <tr>
                 <th className="py-3 px-4">Timestamp</th>
                 <th className="py-3 px-4">User / Role</th>
@@ -135,30 +135,30 @@ export const SecurityActivitySection: React.FC = () => {
                 <th className="py-3 px-4">Source Hash</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-navy-800 text-gray-700 dark:text-gray-300">
+            <tbody className="divide-y divide-gray-100 dark:divide-navy-800 text-slate-700 dark:text-slate-300">
               {activities.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50/60 dark:hover:bg-navy-800/40 transition-colors">
-                  <td className="py-3 px-4 font-mono text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                <tr key={item.id} className="hover:bg-slate-50/60 dark:hover:bg-navy-800/40 transition-colors">
+                  <td className="py-3 px-4 font-mono text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
                     {new Date(item.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
                   </td>
                   <td className="py-3 px-4 font-medium">
                     <div>{item.user}</div>
-                    <div className="text-[10px] text-gray-400 font-mono">{item.role}</div>
+                    <div className="text-[10px] text-slate-400 font-mono">{item.role}</div>
                   </td>
                   <td className="py-3 px-4 font-medium">
-                    <div className="text-gray-900 dark:text-gray-100">{item.action}</div>
-                    <div className="text-[10px] text-gray-400 truncate max-w-[180px]">{item.resource}</div>
+                    <div className="text-slate-900 dark:text-slate-100">{item.action}</div>
+                    <div className="text-[10px] text-slate-400 truncate max-w-[180px]">{item.resource}</div>
                   </td>
-                  <td className="py-3 px-4 text-gray-600 dark:text-gray-300 font-mono">
+                  <td className="py-3 px-4 text-slate-600 dark:text-slate-300 font-mono">
                     {item.contest || 'N/A'}
                   </td>
                   <td className="py-3 px-4 whitespace-nowrap">
                     {getStatusBadge(item.result)}
                   </td>
-                  <td className="py-3 px-4 text-gray-500 dark:text-gray-400 max-w-[200px] truncate" title={item.denial_reason}>
+                  <td className="py-3 px-4 text-slate-500 dark:text-slate-400 max-w-[200px] truncate" title={item.denial_reason}>
                     {item.denial_reason || 'Access Authorized'}
                   </td>
-                  <td className="py-3 px-4 font-mono text-[10px] text-gray-400 whitespace-nowrap">
+                  <td className="py-3 px-4 font-mono text-[10px] text-slate-400 whitespace-nowrap">
                     {item.ip_hash}
                   </td>
                 </tr>

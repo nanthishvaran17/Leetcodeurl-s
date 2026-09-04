@@ -91,5 +91,11 @@ self.onmessage = (event: MessageEvent) => {
     }
     if (pingInterval) clearInterval(pingInterval);
     if (batchTimeout) clearTimeout(batchTimeout);
+  } else if (type === 'SEND_MESSAGE') {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify(payload));
+    } else {
+      console.warn('Worker WS: Cannot send message, socket not open');
+    }
   }
 };

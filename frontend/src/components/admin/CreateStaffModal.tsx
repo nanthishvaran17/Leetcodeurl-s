@@ -97,7 +97,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
   const getRoleConfig = (role: string) => {
     const map: Record<string, { icon: React.ElementType; color: string; bgColor: string; borderColor: string; badgeColor: string; desc: string }> = {
       'Faculty Mentor': { icon: GraduationCap, color: 'text-indigo-600 dark:text-indigo-400', bgColor: 'bg-indigo-50 dark:bg-indigo-500/10', borderColor: 'border-indigo-200 dark:border-indigo-500/30', badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30', desc: 'Student mentoring & intervention access' },
-      'Staff Mentor': { icon: User, color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-50 dark:bg-blue-500/10', borderColor: 'border-blue-200 dark:border-blue-500/30', badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 border-blue-200 dark:border-blue-500/30', desc: 'Student support & academic guidance' },
+      'Staff Mentor': { icon: User, color: 'text-brand-600 dark:text-brand-400', bgColor: 'bg-brand-50 dark:bg-brand-500/10', borderColor: 'border-brand-200 dark:border-brand-500/30', badgeColor: 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300 border-brand-200 dark:border-brand-500/30', desc: 'Student support & academic guidance' },
       'Department HOD': { icon: Building2, color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-50 dark:bg-purple-500/10', borderColor: 'border-purple-200 dark:border-purple-500/30', badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 border-purple-200 dark:border-purple-500/30', desc: 'Department-level academic oversight' },
       'Administrator': { icon: Key, color: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-50 dark:bg-amber-500/10', borderColor: 'border-amber-200 dark:border-amber-500/30', badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border-amber-200 dark:border-amber-500/30', desc: 'Institutional administration & management' },
       'Super Admin': { icon: Shield, color: 'text-rose-600 dark:text-rose-400', bgColor: 'bg-rose-50 dark:bg-rose-500/10', borderColor: 'border-rose-200 dark:border-rose-500/30', badgeColor: 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 border-rose-200 dark:border-rose-500/30', desc: 'Full system control & root access' },
@@ -322,7 +322,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
   return (
     <GlobalModalBackdrop isOpen={true} onClose={onClose} zIndex={100000} className="flex items-end sm:items-center justify-center p-0 sm:p-6 bg-navy-950/70 backdrop-blur-md overflow-hidden">
-      <div className="bg-white dark:bg-navy-900 rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-[1050px] shadow-2xl flex flex-col h-[95dvh] sm:h-[92vh] sm:max-h-[850px] overflow-hidden border-t sm:border border-slate-200/80 dark:border-navy-700/80 animate-fade-in-up">
+      <div className="bg-white dark:bg-navy-950 rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-[1050px] shadow-2xl flex flex-col h-[95dvh] sm:h-[92vh] sm:max-h-[850px] overflow-hidden border-t sm:border border-slate-200/80 dark:border-navy-700/80 animate-fade-in-up">
         
         {/* HEADER */}
         <div className="px-6 py-4 bg-slate-50/90 dark:bg-navy-950/80 border-b border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0 z-20">
@@ -373,7 +373,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
             </div>
 
             {/* Non-sensitive details card */}
-            <div className="w-full max-w-lg bg-white dark:bg-navy-900 rounded-2xl p-5 border border-slate-200 dark:border-navy-700 text-left space-y-3 shadow-md">
+            <div className="w-full max-w-lg bg-white dark:bg-navy-950 rounded-2xl p-5 border border-slate-200 dark:border-navy-700 text-left space-y-3 shadow-md">
               <div className="flex justify-between items-center pb-2.5 border-b border-slate-100 dark:border-navy-800 text-xs">
                 <span className="text-slate-500 font-bold">Staff Member Name:</span>
                 <span className="font-black text-slate-900 dark:text-white">{createdStaffSummary.full_name || createdStaffSummary.username}</span>
@@ -415,7 +415,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
           <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-slate-50/50 dark:bg-navy-950/30">
             
             {/* LEFT STEPPER SIDEBAR */}
-            <div className="w-full md:w-72 bg-white dark:bg-navy-900 border-r border-slate-200/80 dark:border-navy-800 p-4 sm:p-6 shrink-0 overflow-x-auto md:overflow-y-auto custom-scrollbar">
+            <div className="w-full md:w-72 bg-white dark:bg-navy-950 border-r border-slate-200/80 dark:border-navy-800 p-4 sm:p-6 shrink-0 overflow-x-auto md:overflow-y-auto custom-scrollbar">
               <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4 hidden md:block">
                 Provisioning Steps
               </div>
@@ -528,7 +528,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                               className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl border-2 transition-all duration-200 text-left cursor-pointer group shadow-sm ${
                                 roleOpen
                                   ? `${rc.bgColor} ${rc.borderColor} ring-2 ring-brand-500/20`
-                                  : `bg-white dark:bg-navy-900 border-slate-200 dark:border-navy-700 hover:${rc.borderColor}`
+                                  : `bg-white dark:bg-navy-950 border-slate-200 dark:border-navy-700 hover:${rc.borderColor}`
                               }`}
                             >
                               <div className="flex items-center gap-3">
@@ -549,7 +549,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                             </button>
 
                             {roleOpen && (
-                              <div className="absolute left-0 right-0 z-[9999] mt-2 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xl p-2 space-y-1">
+                              <div className="absolute left-0 right-0 z-[9999] mt-2 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-2xl p-2 space-y-1">
                                 {roleOptions.map(opt => {
                                   const cfg = getRoleConfig(opt.value);
                                   const OptIcon = cfg.icon;
@@ -711,7 +711,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                         </div>
 
                         {/* Password Checklist & Strength */}
-                        <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 space-y-2">
+                        <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-2">
                           <div className="flex justify-between items-center">
                             <span className="text-[10px] font-black uppercase text-slate-400">Password Strength</span>
                             <span className={`text-xs font-black ${strengthStr === 'Strong' ? 'text-emerald-500' : strengthStr === 'Fair' ? 'text-amber-500' : 'text-rose-500'}`}>
@@ -771,7 +771,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                         </div>
 
                         {formData.confirm_password && (
-                          <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 flex items-center gap-2">
+                          <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 flex items-center gap-2">
                             {passwordsMatch ? (
                               <><CheckCircle className="w-4 h-4 text-emerald-500" /><span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Passwords match</span></>
                             ) : (
@@ -790,7 +790,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                   <section className="space-y-6 animate-fade-in">
                     <div>
                       <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
-                        <Mail className="w-5 h-5 text-blue-500" /> 3. Contact Information
+                        <Mail className="w-5 h-5 text-brand-500" /> 3. Contact Information
                       </h3>
                       <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
                         Provide official contact details and institutional identity numbers.
@@ -946,7 +946,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                     <div className="space-y-5">
                       
                       {/* Permissions List */}
-                      <div className="bg-white dark:bg-navy-900 rounded-2xl p-5 border border-slate-200 dark:border-navy-800 space-y-3">
+                      <div className="bg-white dark:bg-navy-950 rounded-2xl p-5 border border-slate-200 dark:border-navy-800 space-y-3">
                         <h4 className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider">
                           Inherited Role Permissions
                         </h4>
@@ -976,7 +976,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
                       {/* Options Checkboxes */}
                       <div className="space-y-3">
-                        <label className="flex items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-navy-850 transition-colors min-h-[48px]">
+                        <label className="flex items-center gap-3 p-3.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-navy-850 transition-colors min-h-[48px]">
                           <input
                             type="checkbox"
                             checked={formData.send_email}
@@ -1009,7 +1009,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                             <div className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-colors ${
                               formData.consent_checked
                                 ? 'bg-brand-600 border-brand-600'
-                                : 'bg-white dark:bg-navy-900 border-slate-300 dark:border-navy-600 peer-hover:border-brand-400'
+                                : 'bg-white dark:bg-navy-950 border-slate-300 dark:border-navy-600 peer-hover:border-brand-400'
                             }`}>
                               {formData.consent_checked && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
                             </div>

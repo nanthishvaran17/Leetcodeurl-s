@@ -265,7 +265,7 @@ export const GrowthIntelligencePage: React.FC = () => {
               </h1>
             </div>
 
-            <p className="text-xs md:text-sm text-gray-300 font-medium leading-relaxed">
+            <p className="text-xs md:text-sm text-slate-300 font-medium leading-relaxed">
               Track student problem-solving deltas, biggest improvers leaderboard, difficulty velocity, and granular historical stat snapshots across custom timeframe windows.
             </p>
           </div>
@@ -279,7 +279,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                 type="button"
                 onClick={() => { setDeptOpen(p => !p); setYearOpen(false); }}
                 className={`flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-navy-900/90 text-white text-xs font-bold border backdrop-blur-md shadow-inner transition-all focus:outline-none ${
-                  deptOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-gray-700/80 hover:border-brand-500'
+                  deptOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-slate-700/80 hover:border-brand-500'
                 }`}
               >
                 <Building2 className="w-3.5 h-3.5 text-brand-400 shrink-0" />
@@ -289,18 +289,18 @@ export const GrowthIntelligencePage: React.FC = () => {
                 <span className="truncate max-w-[120px]">
                   {deptFilter === 'ALL' ? 'All Departments' : departments.find(d => d.code === deptFilter)?.name || deptFilter}
                 </span>
-                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${deptOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${deptOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {deptOpen && (
-                <div className="absolute z-[200] top-full left-0 mt-1 min-w-[220px] bg-navy-900 border border-gray-700 rounded-2xl shadow-lg max-h-64 overflow-y-auto divide-y divide-navy-800">
+                <div className="absolute z-[200] top-full left-0 mt-1 min-w-[220px] bg-navy-900 border border-slate-700 rounded-2xl shadow-lg max-h-64 overflow-y-auto divide-y divide-navy-800">
                   {user?.role?.toLowerCase() !== 'hod' && (
                     <button
                       type="button"
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => { setDeptFilter('ALL'); setDeptOpen(false); }}
                       className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left text-xs transition-colors ${
-                        deptFilter === 'ALL' ? 'bg-brand-950/80 text-brand-300 font-black' : 'text-gray-300 hover:bg-navy-800 font-bold'
+                        deptFilter === 'ALL' ? 'bg-brand-950/80 text-brand-300 font-black' : 'text-slate-300 hover:bg-navy-800 font-bold'
                       }`}
                     >
                       <div className="flex items-center gap-2 truncate">
@@ -317,7 +317,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => { setDeptFilter(d.code); setDeptOpen(false); }}
                       className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left text-xs transition-colors ${
-                        deptFilter === d.code ? 'bg-brand-950/80 text-brand-300 font-black' : 'text-gray-300 hover:bg-navy-800 font-bold'
+                        deptFilter === d.code ? 'bg-brand-950/80 text-brand-300 font-black' : 'text-slate-300 hover:bg-navy-800 font-bold'
                       }`}
                     >
                       <div className="flex items-center gap-2 truncate">
@@ -337,7 +337,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                 type="button"
                 onClick={() => { setYearOpen(p => !p); setDeptOpen(false); }}
                 className={`flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-navy-900/90 text-white text-xs font-bold border backdrop-blur-md shadow-inner transition-all focus:outline-none ${
-                  yearOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-gray-700/80 hover:border-brand-500'
+                  yearOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-slate-700/80 hover:border-brand-500'
                 }`}
               >
                 <GraduationCap className="w-3.5 h-3.5 text-brand-400 shrink-0" />
@@ -347,17 +347,17 @@ export const GrowthIntelligencePage: React.FC = () => {
                 <span className="truncate">
                   {yearFilter === 'ALL' ? 'All Academic Years' : `${yearFilter} Year`}
                 </span>
-                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {yearOpen && (
-                <div className="absolute z-[200] top-full left-0 mt-1 min-w-[200px] bg-navy-900 border border-gray-700 rounded-2xl shadow-lg max-h-64 overflow-y-auto divide-y divide-navy-800">
+                <div className="absolute z-[200] top-full left-0 mt-1 min-w-[200px] bg-navy-900 border border-slate-700 rounded-2xl shadow-lg max-h-64 overflow-y-auto divide-y divide-navy-800">
                   <button
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => { setYearFilter('ALL'); setYearOpen(false); }}
                     className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left text-xs transition-colors ${
-                      yearFilter === 'ALL' ? 'bg-brand-950/80 text-brand-300 font-black' : 'text-gray-300 hover:bg-navy-800 font-bold'
+                      yearFilter === 'ALL' ? 'bg-brand-950/80 text-brand-300 font-black' : 'text-slate-300 hover:bg-navy-800 font-bold'
                     }`}
                   >
                     <div className="flex items-center gap-2 truncate">
@@ -373,7 +373,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => { setYearFilter(year); setYearOpen(false); }}
                       className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left text-xs transition-colors ${
-                        yearFilter === year ? 'bg-brand-950/80 text-brand-300 font-black' : 'text-gray-300 hover:bg-navy-800 font-bold'
+                        yearFilter === year ? 'bg-brand-950/80 text-brand-300 font-black' : 'text-slate-300 hover:bg-navy-800 font-bold'
                       }`}
                     >
                       <div className="flex items-center gap-2 truncate">
@@ -388,7 +388,7 @@ export const GrowthIntelligencePage: React.FC = () => {
             </div>
 
             {/* Timeframe Selector Pills */}
-            <div className="flex items-center space-x-1 bg-navy-900/90 p-1.5 rounded-2xl border border-gray-700/80 shadow-inner backdrop-blur-md">
+            <div className="flex items-center space-x-1 bg-navy-900/90 p-1.5 rounded-2xl border border-slate-700/80 shadow-inner backdrop-blur-md">
               {(['today', '7d', '30d', 'all'] as const).map((p) => (
                 <button
                   key={p}
@@ -396,7 +396,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                   className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                     period === p
                       ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30 scale-105'
-                      : 'text-gray-300 hover:text-white hover:bg-white/10'
+                      : 'text-slate-300 hover:text-white hover:bg-white/10'
                   }`}
                 >
                   {p === 'today' ? 'Today' : p === '7d' ? 'Last 7 Days' : p === '30d' ? 'Last 30 Days' : 'All Time'}
@@ -427,21 +427,21 @@ export const GrowthIntelligencePage: React.FC = () => {
       {/* College Aggregate Delta Metrics KPI Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         
-        <div className="glass-card p-5 rounded-3xl border border-emerald-500/30 bg-white dark:bg-navy-900 shadow-xl space-y-2">
-          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">
+        <div className="glass-card p-5 rounded-3xl border border-emerald-500/30 bg-white dark:bg-navy-950 shadow-xl space-y-2">
+          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
             <span className="text-emerald-600 dark:text-emerald-400">Total Solved Growth</span>
             <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <TrendingUp className="w-5 h-5 stroke-[2.5]" />
             </div>
           </div>
-          <div className="text-3xl font-black text-gray-900 dark:text-white">
+          <div className="text-3xl font-black text-slate-900 dark:text-white">
             +{collegeDelta?.delta_total ?? 0}
           </div>
-          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Problems solved in selected period</p>
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Problems solved in selected period</p>
         </div>
 
-        <div className="glass-card p-5 rounded-3xl border border-emerald-500/20 bg-white dark:bg-navy-900 shadow-xl space-y-2">
-          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">
+        <div className="glass-card p-5 rounded-3xl border border-emerald-500/20 bg-white dark:bg-navy-950 shadow-xl space-y-2">
+          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
             <span className="text-emerald-600 dark:text-emerald-400">Easy Solved</span>
             <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <TrendingUp className="w-5 h-5 stroke-[2.5]" />
@@ -450,11 +450,11 @@ export const GrowthIntelligencePage: React.FC = () => {
           <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
             +{collegeDelta?.easy_solved ?? 0}
           </div>
-          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Foundation skill building</p>
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Foundation skill building</p>
         </div>
 
-        <div className="glass-card p-5 rounded-3xl border border-amber-500/20 bg-white dark:bg-navy-900 shadow-xl space-y-2">
-          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">
+        <div className="glass-card p-5 rounded-3xl border border-amber-500/20 bg-white dark:bg-navy-950 shadow-xl space-y-2">
+          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
             <span className="text-amber-600 dark:text-amber-400">Medium Solved</span>
             <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
               <TrendingUp className="w-5 h-5 stroke-[2.5]" />
@@ -463,11 +463,11 @@ export const GrowthIntelligencePage: React.FC = () => {
           <div className="text-3xl font-black text-amber-600 dark:text-amber-400">
             +{collegeDelta?.medium_solved ?? 0}
           </div>
-          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Interview readiness problems</p>
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Interview readiness problems</p>
         </div>
 
-        <div className="glass-card p-5 rounded-3xl border border-rose-500/20 bg-white dark:bg-navy-900 shadow-xl space-y-2">
-          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">
+        <div className="glass-card p-5 rounded-3xl border border-rose-500/20 bg-white dark:bg-navy-950 shadow-xl space-y-2">
+          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
             <span className="text-rose-600 dark:text-rose-400">Hard Solved</span>
             <div className="p-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
               <TrendingUp className="w-5 h-5 stroke-[2.5]" />
@@ -476,24 +476,24 @@ export const GrowthIntelligencePage: React.FC = () => {
           <div className="text-3xl font-black text-rose-600 dark:text-rose-400">
             +{collegeDelta?.hard_solved ?? 0}
           </div>
-          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Advanced DSA mastery</p>
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Advanced DSA mastery</p>
         </div>
 
       </div>
 
       {/* Main Section: Top Improvers Leaderboard */}
-      <div className="glass-card p-6 rounded-3xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-900 shadow-lg space-y-5">
+      <div className="glass-card p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 shadow-lg space-y-5">
         
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
           <div className="flex items-center space-x-3">
             <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
               <Flame className="w-6 h-6 fill-amber-500" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-gray-900 dark:text-white">
+              <h2 className="text-xl font-black text-slate-900 dark:text-white">
                 Biggest Improvers Leaderboard
               </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 Showing top performance growth for: <span className="font-extrabold text-brand-600 dark:text-brand-400">{period === 'today' ? 'Today' : period === '7d' ? 'Last 7 Days' : period === '30d' ? 'Last 30 Days' : 'All Time'}</span>
               </p>
             </div>
@@ -501,14 +501,14 @@ export const GrowthIntelligencePage: React.FC = () => {
 
           <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
             {/* Rank By Sort Mode Toggle */}
-            <div className="flex items-center gap-1 bg-gray-100 dark:bg-navy-950 p-1 rounded-2xl border border-gray-200 dark:border-gray-800">
-              <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 font-mono">Rank By:</span>
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-950 p-1 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 px-2 font-mono">Rank By:</span>
               <button
                 onClick={() => { setSortMode('total'); setImprovers(prev => sortImprovers(prev, 'total')); }}
                 className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all cursor-pointer ${
                   sortMode === 'total'
                     ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 Total Solved 
@@ -518,7 +518,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                 className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all cursor-pointer ${
                   sortMode === 'growth'
                     ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 Growth (+Delta) 
@@ -526,8 +526,8 @@ export const GrowthIntelligencePage: React.FC = () => {
             </div>
 
             {/* Display Limit Selector Pills */}
-            <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-navy-950 p-1 rounded-2xl border border-gray-200 dark:border-gray-800">
-              <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 px-2 font-mono">Show:</span>
+            <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-navy-950 p-1 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 px-2 font-mono">Show:</span>
               {[10, 25, 50, 100, 'ALL'].map((limitVal) => (
                 <button
                   key={String(limitVal)}
@@ -535,7 +535,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                   className={`px-2.5 py-1 rounded-xl text-xs font-black transition-all cursor-pointer ${
                     displayLimit === limitVal
                       ? 'bg-brand-600 text-white shadow-md shadow-brand-600/30'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/50 dark:hover:bg-navy-800'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-navy-800'
                   }`}
                 >
                   {limitVal === 'ALL' ? 'All' : limitVal}
@@ -543,25 +543,25 @@ export const GrowthIntelligencePage: React.FC = () => {
               ))}
             </div>
 
-            <span className="px-3.5 py-1.5 rounded-2xl bg-gray-100 dark:bg-navy-950 text-gray-800 dark:text-gray-200 font-black text-xs border border-gray-200 dark:border-gray-800">
+            <span className="px-3.5 py-1.5 rounded-2xl bg-slate-100 dark:bg-navy-950 text-slate-800 dark:text-slate-200 font-black text-xs border border-slate-200 dark:border-slate-800">
               {collegeDelta?.active_students ?? 0} Active Solvers
             </span>
           </div>
         </div>
 
         {loading ? (
-          <div className="text-center py-16 text-gray-500 dark:text-gray-400 text-sm font-bold animate-pulse space-y-2">
+          <div className="text-center py-16 text-slate-500 dark:text-slate-400 text-sm font-bold animate-pulse space-y-2">
             <BarChart2 className="w-8 h-8 mx-auto text-brand-500 animate-bounce" />
             <p>Calculating growth metrics & delta velocity...</p>
           </div>
         ) : improvers.length === 0 ? (
-          <div className="text-center py-16 text-gray-500 dark:text-gray-400 text-xs font-semibold bg-gray-50 dark:bg-navy-950/40 rounded-2xl border border-dashed border-gray-300 dark:border-gray-800">
+          <div className="text-center py-16 text-slate-500 dark:text-slate-400 text-xs font-semibold bg-slate-50 dark:bg-navy-950/40 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800">
             No activity found for the selected filters.
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-gray-800">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
             <table className="w-full text-left text-xs">
-              <thead className="bg-gray-100 dark:bg-navy-950 text-gray-700 dark:text-gray-300 uppercase font-black text-[11px] border-b border-gray-200 dark:border-gray-800 tracking-wider">
+              <thead className="bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 uppercase font-black text-[11px] border-b border-slate-200 dark:border-slate-800 tracking-wider">
                 <tr>
                   <th className="py-3.5 px-4"># Rank</th>
                   <th className="py-3.5 px-4">Student</th>
@@ -573,7 +573,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                   <th className="py-3.5 px-4 text-right">Time Machine</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:border-gray-800 dark:divide-gray-800/80 bg-white dark:bg-navy-900 font-medium">
+              <tbody className="divide-y divide-gray-200 dark:border-slate-800 dark:divide-gray-800/80 bg-white dark:bg-navy-950 font-medium">
                 {(displayLimit === 'ALL' ? improvers : improvers.slice(0, Number(displayLimit))).map((imp, idx) => {
                   const isExpanded = String(expandedStudentId) === String(imp.student_id);
                   return (
@@ -583,18 +583,18 @@ export const GrowthIntelligencePage: React.FC = () => {
                         className={`transition-colors cursor-pointer ${
                           isExpanded
                             ? 'bg-brand-50/80 dark:bg-navy-800/90 border-l-4 border-l-brand-500'
-                            : 'hover:bg-gray-50 dark:hover:bg-navy-800/60'
+                            : 'hover:bg-slate-50 dark:hover:bg-navy-800/60'
                         }`}
                       >
                         
                         {/* Rank Badge */}
-                        <td className="py-4 px-4 font-black text-gray-900 dark:text-white">
+                        <td className="py-4 px-4 font-black text-slate-900 dark:text-white">
                           {idx === 0 ? (
                             <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black shadow-md shadow-amber-500/30 text-xs">
                               #1
                             </span>
                           ) : idx === 1 ? (
-                            <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-gradient-to-r from-slate-200 to-gray-300 text-slate-900 font-black shadow-sm text-xs">
+                            <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-gradient-to-r from-slate-200 to-slate-300 text-slate-900 font-black shadow-sm text-xs">
                               #2
                             </span>
                           ) : idx === 2 ? (
@@ -602,7 +602,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                               #3
                             </span>
                           ) : (
-                            <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 font-extrabold text-xs">
+                            <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-extrabold text-xs">
                               #{idx + 1}
                             </span>
                           )}
@@ -610,7 +610,7 @@ export const GrowthIntelligencePage: React.FC = () => {
 
                         {/* Student Info */}
                         <td className="py-4 px-4">
-                          <div className="font-extrabold text-sm text-gray-900 dark:text-white tracking-tight hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+                          <div className="font-extrabold text-sm text-slate-900 dark:text-white tracking-tight hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
                             {imp.name}
                           </div>
                           <div className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400 mt-0.5">
@@ -626,7 +626,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                         </td>
 
                         {/* Total Solved */}
-                        <td className="py-4 px-4 font-black text-sm text-gray-900 dark:text-white">
+                        <td className="py-4 px-4 font-black text-sm text-slate-900 dark:text-white">
                           {imp.total_solved}
                         </td>
 
@@ -645,7 +645,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                               <span>{imp.delta_solved}</span>
                             </span>
                           ) : (
-                            <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-slate-50 dark:bg-navy-900 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-navy-800 font-black text-sm shadow-sm">
+                            <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-slate-50 dark:bg-navy-950 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-navy-800 font-black text-sm shadow-sm">
                               <span>—</span>
                             </span>
                           )}
@@ -677,7 +677,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                               {imp.delta_rating > 0 ? `+${imp.delta_rating}` : imp.delta_rating}
                             </span>
                           ) : (
-                            <span className="text-gray-400 font-bold">—</span>
+                            <span className="text-slate-400 font-bold">—</span>
                           )}
                         </td>
 
@@ -706,10 +706,10 @@ export const GrowthIntelligencePage: React.FC = () => {
                             <div className="space-y-6">
                               
                               {/* Header & Details Strip */}
-                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-sm">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-sm">
                                 <div className="space-y-1">
                                   <div className="flex items-center space-x-2">
-                                    <h4 className="text-base font-black text-gray-900 dark:text-white">{imp.name}</h4>
+                                    <h4 className="text-base font-black text-slate-900 dark:text-white">{imp.name}</h4>
                                     <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300">
                                       {imp.reg_no}
                                     </span>
@@ -717,7 +717,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                                       {imp.department_code} • {imp.year_level} Yr
                                     </span>
                                   </div>
-                                  <p className="text-xs text-gray-500 font-semibold">
+                                  <p className="text-xs text-slate-500 font-semibold">
                                     Active Filter Time Window: <strong className="text-brand-600 dark:text-brand-400 uppercase tracking-wide">{period === 'today' ? 'Today' : period === '7d' ? 'Last 7 Days' : period === '30d' ? 'Last 30 Days' : 'All Time'}</strong>
                                   </p>
                                 </div>
@@ -725,7 +725,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                                 <button
                                   type="button"
                                   onClick={(e) => { e.stopPropagation(); setExpandedStudentId(null); }}
-                                  className="px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-navy-800 hover:bg-rose-500 hover:text-white transition-colors text-xs font-bold flex items-center space-x-1"
+                                  className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-rose-500 hover:text-white transition-colors text-xs font-bold flex items-center space-x-1"
                                 >
                                   <span>Close Details</span>
                                 </button>
@@ -733,9 +733,9 @@ export const GrowthIntelligencePage: React.FC = () => {
 
                               {/* Growth Breakdown Grid */}
                               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
-                                <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-sm">
-                                  <span className="text-[10px] font-extrabold uppercase text-gray-400">Total Solved</span>
-                                  <div className="text-lg font-black text-gray-900 dark:text-white mt-0.5">{imp.total_solved}</div>
+                                <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-sm">
+                                  <span className="text-[10px] font-extrabold uppercase text-slate-400">Total Solved</span>
+                                  <div className="text-lg font-black text-slate-900 dark:text-white mt-0.5">{imp.total_solved}</div>
                                 </div>
                                 <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/40 shadow-sm">
                                   <span className="text-[10px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400">Easy Solved</span>
@@ -763,13 +763,13 @@ export const GrowthIntelligencePage: React.FC = () => {
 
                               {/* Compact Area Chart */}
                               {historySnapshots.length > 1 && (
-                                <div className="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 space-y-2.5">
+                                <div className="p-4 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-2.5">
                                   <div className="flex items-center justify-between">
-                                    <h5 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider flex items-center space-x-1.5">
+                                    <h5 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-1.5">
                                       <BarChart2 className="w-4 h-4 text-brand-500" />
                                       <span>Solve Growth Trajectory</span>
                                     </h5>
-                                    <span className="text-[11px] font-mono text-gray-400">{historySnapshots.length} Data Points</span>
+                                    <span className="text-[11px] font-mono text-slate-400">{historySnapshots.length} Data Points</span>
                                   </div>
                                   <div className="h-44 w-full">
                                     <ResponsiveContainer width="100%" height="100%">
@@ -800,20 +800,20 @@ export const GrowthIntelligencePage: React.FC = () => {
                               {/* Snapshot History Table */}
                               <div className="space-y-2.5">
                                 <div className="flex items-center justify-between">
-                                  <h5 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider flex items-center space-x-1.5">
+                                  <h5 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-1.5">
                                     <Clock className="w-4 h-4 text-brand-500" />
                                     <span>Time Machine Historical Log</span>
                                   </h5>
                                 </div>
 
                                 {historyLoading ? (
-                                  <div className="p-6 text-center text-xs font-bold text-gray-500 animate-pulse">
+                                  <div className="p-6 text-center text-xs font-bold text-slate-500 animate-pulse">
                                     Loading historical snapshots...
                                   </div>
                                 ) : historySnapshots.length > 0 ? (
-                                  <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-900">
+                                  <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-950">
                                     <table className="w-full text-left text-xs">
-                                      <thead className="bg-gray-100 dark:bg-navy-950 text-gray-700 dark:text-gray-300 uppercase font-black text-[10px] border-b border-slate-200 dark:border-navy-800">
+                                      <thead className="bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 uppercase font-black text-[10px] border-b border-slate-200 dark:border-navy-800">
                                         <tr>
                                           <th className="py-2.5 px-3.5">Captured At</th>
                                           <th className="py-2.5 px-3.5">Total</th>
@@ -828,14 +828,14 @@ export const GrowthIntelligencePage: React.FC = () => {
                                       <tbody className="divide-y divide-slate-200 dark:divide-navy-800 font-mono text-xs">
                                         {historySnapshots.map((snap) => (
                                           <tr key={snap.id} className="hover:bg-slate-50 dark:hover:bg-navy-800/60 transition-colors">
-                                            <td className="py-2.5 px-3.5 font-sans font-bold text-gray-800 dark:text-gray-200">
+                                            <td className="py-2.5 px-3.5 font-sans font-bold text-slate-800 dark:text-slate-200">
                                               {new Date(snap.captured_at).toLocaleString([], { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                                             </td>
-                                            <td className="py-2.5 px-3.5 font-black text-gray-900 dark:text-white">{snap.total_solved}</td>
+                                            <td className="py-2.5 px-3.5 font-black text-slate-900 dark:text-white">{snap.total_solved}</td>
                                             <td className="py-2.5 px-3.5 font-bold text-emerald-600 dark:text-emerald-400">{snap.easy_solved}</td>
                                             <td className="py-2.5 px-3.5 font-bold text-amber-600 dark:text-amber-400">{snap.medium_solved}</td>
                                             <td className="py-2.5 px-3.5 font-bold text-rose-600 dark:text-rose-400">{snap.hard_solved}</td>
-                                            <td className="py-2.5 px-3.5 font-bold text-gray-700 dark:text-gray-300">{snap.contest_rating ?? '—'}</td>
+                                            <td className="py-2.5 px-3.5 font-bold text-slate-700 dark:text-slate-300">{snap.contest_rating ?? '—'}</td>
                                             <td className="py-2.5 px-3.5">
                                               {snap.delta_total === snap.total_solved ? (
                                                 <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-400 font-black text-[11px]" title="Initial Baseline Snapshot">
@@ -855,7 +855,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                                                 </span>
                                               )}
                                             </td>
-                                            <td className="py-2.5 px-3.5 text-[10px] font-sans font-bold text-gray-400">{snap.source || 'leetcode_sync'}</td>
+                                            <td className="py-2.5 px-3.5 text-[10px] font-sans font-bold text-slate-400">{snap.source || 'leetcode_sync'}</td>
                                           </tr>
                                         ))}
                                       </tbody>

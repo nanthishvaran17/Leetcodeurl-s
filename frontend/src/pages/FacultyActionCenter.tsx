@@ -23,14 +23,14 @@ const PRIORITY_CONFIG: Record<string, { tw: string; dot: string; icon: React.Rea
 
 const STATUS_CONFIG: Record<string, string> = {
   Pending:       'bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400 border border-violet-200 dark:border-violet-500/25 shadow-sm',
-  'In Progress': 'bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/25 shadow-sm',
+  'In Progress': 'bg-brand-50 dark:bg-brand-500/15 text-brand-700 dark:text-brand-400 border border-brand-200 dark:border-brand-500/25 shadow-sm',
   Monitoring:    'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/25 shadow-sm',
   Completed:     'bg-cyan-50 dark:bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-500/25 shadow-sm',
   Resolved:      'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/25 shadow-sm',
 };
 
 const EVENT_COLOR: Record<string, string> = {
-  ACTION_CREATED: 'text-blue-400',
+  ACTION_CREATED: 'text-brand-400',
   STATUS_CHANGED: 'text-violet-400',
   FACULTY_ASSIGNED: 'text-emerald-400',
   NOTE_ADDED: 'text-amber-400',
@@ -55,7 +55,7 @@ const PriorityBadge: React.FC<{ priority: string; score: number; reason: string 
         <span className="opacity-60 text-[10px]">({score})</span>
       </span>
       {show && (
-        <div className="absolute top-[110%] left-0 z-50 w-64 p-3 rounded-xl text-xs bg-slate-900 dark:bg-navy-900 border border-slate-700 dark:border-navy-700 shadow-lg leading-relaxed pointer-events-none">
+        <div className="absolute top-[110%] left-0 z-50 w-64 p-3 rounded-xl text-xs bg-slate-900 dark:bg-navy-950 border border-slate-700 dark:border-navy-700 shadow-lg leading-relaxed pointer-events-none">
           <div className={`font-bold mb-1 ${cfg.tw.split(' ')[1]}`}>Score: {score}/100</div>
           <div className="text-slate-400">{reason}</div>
         </div>
@@ -95,10 +95,10 @@ const CustomSelect: React.FC<{
         onClick={() => setOpen(!open)}
         className={`flex items-center justify-between gap-3 min-w-[200px] px-4 py-2.5 rounded-xl border transition-all cursor-pointer font-bold text-sm ${
           open 
-            ? 'border-brand-500 bg-white dark:bg-navy-900 ring-4 ring-brand-500/10 shadow-sm' 
+            ? 'border-brand-500 bg-white dark:bg-navy-950 ring-4 ring-brand-500/10 shadow-sm' 
             : value 
               ? 'border-brand-500/30 bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-300' 
-              : 'border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-200 hover:border-slate-300'
+              : 'border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-700 dark:text-slate-200 hover:border-slate-300'
         }`}
       >
         <div className="flex items-center gap-2">
@@ -116,7 +116,7 @@ const CustomSelect: React.FC<{
       </button>
 
       {open && (
-        <div className="absolute z-50 top-[110%] left-0 w-full min-w-[280px] p-1.5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up">
+        <div className="absolute z-50 top-[110%] left-0 w-full min-w-[280px] p-1.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up">
           <button
             onClick={() => { onChange(''); setOpen(false); }}
             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
@@ -179,7 +179,7 @@ const KPICard: React.FC<{
     red: { bg: 'bg-red-50 dark:bg-red-500/10', text: 'text-red-600 dark:text-red-400', border: 'border-red-200 dark:border-red-500/30', shadow: 'shadow-red-500/15', hover: 'hover:border-red-300 dark:hover:border-red-400/50' },
     orange: { bg: 'bg-orange-50 dark:bg-orange-500/10', text: 'text-orange-600 dark:text-orange-400', border: 'border-orange-200 dark:border-orange-500/30', shadow: 'shadow-orange-500/15', hover: 'hover:border-orange-300 dark:hover:border-orange-400/50' },
     amber: { bg: 'bg-amber-50 dark:bg-amber-500/10', text: 'text-amber-600 dark:text-amber-400', border: 'border-amber-200 dark:border-amber-500/30', shadow: 'shadow-amber-500/15', hover: 'hover:border-amber-300 dark:hover:border-amber-400/50' },
-    blue: { bg: 'bg-blue-50 dark:bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-500/30', shadow: 'shadow-blue-500/15', hover: 'hover:border-blue-300 dark:hover:border-blue-400/50' },
+    blue: { bg: 'bg-brand-50 dark:bg-brand-500/10', text: 'text-brand-600 dark:text-brand-400', border: 'border-brand-200 dark:border-brand-500/30', shadow: 'shadow-brand-500/15', hover: 'hover:border-brand-300 dark:hover:border-brand-400/50' },
     cyan: { bg: 'bg-cyan-50 dark:bg-cyan-500/10', text: 'text-cyan-600 dark:text-cyan-400', border: 'border-cyan-200 dark:border-cyan-500/30', shadow: 'shadow-cyan-500/15', hover: 'hover:border-cyan-300 dark:hover:border-cyan-400/50' },
     emerald: { bg: 'bg-emerald-50 dark:bg-emerald-500/10', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-200 dark:border-emerald-500/30', shadow: 'shadow-emerald-500/15', hover: 'hover:border-emerald-300 dark:hover:border-emerald-400/50' },
     pink: { bg: 'bg-pink-50 dark:bg-pink-500/10', text: 'text-pink-600 dark:text-pink-400', border: 'border-pink-200 dark:border-pink-500/30', shadow: 'shadow-pink-500/15', hover: 'hover:border-pink-300 dark:hover:border-pink-400/50' },
@@ -193,7 +193,7 @@ const KPICard: React.FC<{
       className={`flex-1 min-w-[130px] text-left rounded-2xl p-4 border transition-all duration-300 transform hover:-translate-y-1 cursor-pointer relative overflow-hidden group ${
         active
           ? `${theme.bg} ${theme.border} ring-2 ring-current/40 shadow-xl ${theme.shadow}`
-          : `bg-white dark:bg-navy-900 border-slate-200 dark:border-navy-700 hover:shadow-lg ${theme.hover}`
+          : `bg-white dark:bg-navy-950 border-slate-200 dark:border-navy-700 hover:shadow-lg ${theme.hover}`
       }`}
     >
       <div className="flex items-center justify-between gap-2 mb-2">
@@ -432,7 +432,7 @@ const UpdateModal: React.FC<{
     finally { setEscalating(false); }
   };
 
-  const inputCls = "w-full rounded-xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-700 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-brand-500 transition";
+  const inputCls = "w-full rounded-xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-brand-500 transition";
   const labelCls = "block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-navy-400 mb-1.5";
 
   return (
@@ -469,7 +469,7 @@ const UpdateModal: React.FC<{
         </div>
 
         {/* Signal pill */}
-        <div className="px-5 py-3 bg-slate-50 dark:bg-navy-900/50 border-b border-slate-200 dark:border-navy-700">
+        <div className="px-5 py-3 bg-slate-50 dark:bg-navy-950/50 border-b border-slate-200 dark:border-navy-700">
           <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Signal</div>
           <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">{item.signal_type}</div>
           <div className="text-xs text-brand-500 mt-1 italic">{item.recommended_action}</div>
@@ -552,7 +552,7 @@ const UpdateModal: React.FC<{
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 px-5 py-4 border-t border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-900/30">
+        <div className="flex justify-end gap-3 px-5 py-4 border-t border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950/30">
           <button onClick={onClose} className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 text-sm font-semibold hover:bg-slate-200 dark:hover:bg-navy-700 transition">Cancel</button>
           <button onClick={handleSave} disabled={saving} className="px-5 py-2 rounded-xl bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition flex items-center gap-2 shadow-md">
             {saving ? 'Saving...' : <><Send size={13} /> Save Changes</>}
@@ -690,14 +690,14 @@ export const FacultyActionCenter: React.FC = () => {
               Faculty <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-400 via-amber-300 to-brand-300">Action Center</span>
             </h1>
 
-            <p className="text-xs md:text-sm text-gray-300 font-medium leading-relaxed">
+            <p className="text-xs md:text-sm text-slate-300 font-medium leading-relaxed">
               {kpis?.subtitle || 'Real-time student intervention & mentoring management · Detect, Prioritize, Assign, Resolve'}
             </p>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
             {syncMsg && (
-              <span className={`text-xs font-bold px-3 py-1.5 rounded-xl bg-navy-900/90 border border-gray-700/80 ${syncMsg.startsWith('') ? 'text-emerald-400' : 'text-rose-400'}`}>
+              <span className={`text-xs font-bold px-3 py-1.5 rounded-xl bg-navy-900/90 border border-slate-700/80 ${syncMsg.startsWith('') ? 'text-emerald-400' : 'text-rose-400'}`}>
                 {syncMsg}
               </span>
             )}
@@ -711,10 +711,10 @@ export const FacultyActionCenter: React.FC = () => {
             </button>
             <button
               onClick={loadData}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-navy-900/90 hover:bg-navy-800 text-white text-xs font-bold border border-gray-700/80 backdrop-blur-md shadow-inner transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-navy-900/90 hover:bg-navy-800 text-white text-xs font-bold border border-slate-700/80 backdrop-blur-md shadow-inner transition-all cursor-pointer"
               title="Reload Data"
             >
-              <RotateCcw size={13} className="text-gray-300" />
+              <RotateCcw size={13} className="text-slate-300" />
             </button>
           </div>
         </div>
@@ -746,7 +746,7 @@ export const FacultyActionCenter: React.FC = () => {
       <div className="relative z-20 flex flex-wrap gap-3 items-center p-4 rounded-3xl bg-white/70 dark:bg-navy-800/70 border border-slate-200 dark:border-navy-700 backdrop-blur-md shadow-sm">
         <div className="relative group flex-1 min-w-[250px]">
           <div className="absolute -inset-0.5 bg-gradient-to-r from-brand-500 via-purple-500 to-indigo-500 rounded-full blur opacity-20 group-focus-within:opacity-75 transition duration-500 group-hover:opacity-40"></div>
-          <div className="relative flex items-center gap-3 bg-white dark:bg-navy-900 rounded-full px-5 py-3 border border-slate-200 dark:border-navy-700 focus-within:border-transparent shadow-sm">
+          <div className="relative flex items-center gap-3 bg-white dark:bg-navy-950 rounded-full px-5 py-3 border border-slate-200 dark:border-navy-700 focus-within:border-transparent shadow-sm">
             <Search size={18} className="text-slate-400 group-focus-within:text-brand-500 transition-colors flex-shrink-0" />
             <input
               value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
@@ -780,7 +780,7 @@ export const FacultyActionCenter: React.FC = () => {
           icon={<Activity size={16} />}
           options={[
             { label: 'Pending', value: 'Pending', icon: <Clock size={14} />, badge: 'PEN', badgeColor: 'bg-violet-100 text-violet-600' },
-            { label: 'In Progress', value: 'In Progress', icon: <Zap size={14} />, badge: 'INP', badgeColor: 'bg-blue-100 text-blue-600' },
+            { label: 'In Progress', value: 'In Progress', icon: <Zap size={14} />, badge: 'INP', badgeColor: 'bg-brand-100 text-brand-600' },
             { label: 'Monitoring', value: 'Monitoring', icon: <Activity size={14} />, badge: 'MON', badgeColor: 'bg-amber-100 text-amber-600' },
             { label: 'Completed', value: 'Completed', icon: <CheckCircle2 size={14} />, badge: 'COM', badgeColor: 'bg-cyan-100 text-cyan-600' },
             { label: 'Resolved', value: 'Resolved', icon: <CheckCircle2 size={14} />, badge: 'RES', badgeColor: 'bg-emerald-100 text-emerald-600' }
@@ -852,7 +852,7 @@ export const FacultyActionCenter: React.FC = () => {
               <col style={{ width: '8%' }} />
               <col style={{ width: '7%' }} />
             </colgroup>
-            <thead className="border-b border-slate-200 dark:border-navy-700 bg-slate-50/80 dark:bg-navy-900/50">
+            <thead className="border-b border-slate-200 dark:border-navy-700 bg-slate-50/80 dark:bg-navy-950/50">
               <tr>
                 {[['Student', 'student_name'], ['Priority', 'priority_score'], ['Stats', ''], ['Signal', ''], ['Status', 'status'], ['Faculty', ''], ['Due', 'due_date'], ['Actions', '']].map(([label, col]) => (
                   <th key={label} className={`${thCls} ${col ? 'cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none' : ''}`} onClick={() => col && toggleSort(col)}>
@@ -940,7 +940,7 @@ export const FacultyActionCenter: React.FC = () => {
 
                     {/* Expanded detail row */}
                     {isExpanded && (
-                      <tr className="bg-brand-500/5 dark:bg-navy-900/60">
+                      <tr className="bg-brand-500/5 dark:bg-navy-950/60">
                         <td colSpan={8} className="px-5 py-4">
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
                             <div>

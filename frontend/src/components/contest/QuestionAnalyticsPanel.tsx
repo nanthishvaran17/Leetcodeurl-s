@@ -72,14 +72,14 @@ export const QuestionAnalyticsPanel: React.FC<QuestionAnalyticsPanelProps> = ({
   }));
 
   return (
-    <div className="p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-md space-y-4">
+    <div className="p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-md space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white flex items-center gap-2">
+        <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
           <BarChart2 className="w-4 h-4 text-brand-500" />
           <span>Question Analytics</span>
         </h4>
         {data && (
-          <span className="text-[10px] font-mono text-gray-400">
+          <span className="text-[10px] font-mono text-slate-400">
             {data.totalAttended} participants · {data.totalStudents} total
           </span>
         )}
@@ -112,11 +112,11 @@ export const QuestionAnalyticsPanel: React.FC<QuestionAnalyticsPanelProps> = ({
               {/* Solve count */}
               <div className="text-center">
                 <span className={`text-3xl font-mono font-black ${cfg.color}`}>{q.totalSolved}</span>
-                <span className="text-[10px] text-gray-400 block">solved</span>
+                <span className="text-[10px] text-slate-400 block">solved</span>
               </div>
 
               {/* Progress bar */}
-              <div className="w-full bg-gray-200 dark:bg-gray-800 h-1.5 rounded-full overflow-hidden">
+              <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full ${cfg.bar} transition-all duration-700`}
                   style={{ width: `${barWidth}%` }}
@@ -131,7 +131,7 @@ export const QuestionAnalyticsPanel: React.FC<QuestionAnalyticsPanelProps> = ({
                   <div className="min-w-0">
                     <span className="text-[10px] font-bold text-white block truncate">{q.firstSolver.name}</span>
                     {q.firstSolver.dept && (
-                      <span className="text-[9px] text-gray-400">{q.firstSolver.dept} · {q.firstSolver.year} Yr</span>
+                      <span className="text-[9px] text-slate-400">{q.firstSolver.dept} · {q.firstSolver.year} Yr</span>
                     )}
                   </div>
                 </div>
@@ -145,7 +145,7 @@ export const QuestionAnalyticsPanel: React.FC<QuestionAnalyticsPanelProps> = ({
                     .slice(0, 2)
                     .map(([dept, cnt]) => (
                       <div key={dept} className="flex items-center justify-between text-[10px]">
-                        <span className="text-gray-400 truncate">{dept}</span>
+                        <span className="text-slate-400 truncate">{dept}</span>
                         <span className={`font-bold ${cfg.color}`}>{cnt}</span>
                       </div>
                     ))
@@ -161,12 +161,12 @@ export const QuestionAnalyticsPanel: React.FC<QuestionAnalyticsPanelProps> = ({
       {data && (data.easiest || data.hardest) && (
         <div className="flex items-center gap-4 flex-wrap pt-1">
           {data.easiest && (
-            <span className="text-[11px] text-gray-400">
+            <span className="text-[11px] text-slate-400">
               <span className="text-emerald-400 font-bold">Easiest:</span> {data.easiest}
             </span>
           )}
           {data.hardest && (
-            <span className="text-[11px] text-gray-400">
+            <span className="text-[11px] text-slate-400">
               <span className="text-rose-400 font-bold">Hardest:</span> {data.hardest}
             </span>
           )}

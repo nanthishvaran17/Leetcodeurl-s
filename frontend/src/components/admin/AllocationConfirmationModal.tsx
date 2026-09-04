@@ -81,7 +81,7 @@ export const AllocationConfirmationModal: React.FC<AllocationConfirmationModalPr
       className="flex items-center justify-center p-4"
     >
       <div 
-        className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl border border-slate-200 dark:border-navy-700 transition-all text-left"
+        className="bg-white dark:bg-navy-950 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl border border-slate-200 dark:border-navy-700 transition-all text-left"
         role="dialog"
         aria-modal="true"
         aria-labelledby="allocation-modal-title"
@@ -175,7 +175,7 @@ export const AllocationConfirmationModal: React.FC<AllocationConfirmationModalPr
                   </div>
                 </div>
 
-                <div className="p-3 rounded-2xl bg-white dark:bg-navy-900 border border-indigo-200 dark:border-navy-700 text-indigo-600 dark:text-indigo-400 shadow-sm">
+                <div className="p-3 rounded-2xl bg-white dark:bg-navy-950 border border-indigo-200 dark:border-navy-700 text-indigo-600 dark:text-indigo-400 shadow-sm">
                   <Users className="w-6 h-6" />
                 </div>
               </div>
@@ -233,7 +233,7 @@ export const AllocationConfirmationModal: React.FC<AllocationConfirmationModalPr
               type="button"
               disabled={submitting}
               onClick={onClose}
-              className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold bg-white dark:bg-navy-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 border border-slate-200 dark:border-navy-700 transition-colors disabled:opacity-50 cursor-pointer"
+              className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold bg-white dark:bg-navy-950 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 border border-slate-200 dark:border-navy-700 transition-colors disabled:opacity-50 cursor-pointer"
             >
               Cancel
             </button>

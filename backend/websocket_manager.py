@@ -23,7 +23,8 @@ class ConnectionManager:
         self._subscriptions: Dict[int, set] = {}  # session_id -> Set[WebSocket]
 
         # Per-WebSocket user context (populated on authenticated connect)
-        self._ws_user: Dict[WebSocket, Dict[str, Any]] = {}  # ws -> {user_id, role}
+        # _ws_user: ws -> {user_id, role, active_conversation: str | None}
+        self._ws_user: Dict[WebSocket, Dict[str, Any]] = {}
 
         # Sequence tracking: prevents stale events from overwriting fresher state.
         # Key: "virtual_{session_id}_{student_id}" → last_seen_sequence (epoch ms)
@@ -126,6 +127,18 @@ class ConnectionManager:
         for subs in self._subscriptions.values():
             subs.discard(websocket)
         self._ws_user.pop(websocket, None)
+
+    def set_active_conversation(self, websocket: WebSocket, conversation_id: Optional[str]):
+        """Sets the currently active conversation for a WebSocket connection."""
+        if websocket in self._ws_user:
+            self._ws_user[websocket]["active_conversation"] = conversation_id
+
+    def is_user_in_conversation(self, user_id: str, conversation_id: str) -> bool:
+        """Checks if a user has an active WebSocket looking at the specified conversation."""
+        for ctx in self._ws_user.values():
+            if ctx.get("user_id") == user_id and ctx.get("active_conversation") == conversation_id:
+                return True
+        return False
 
     def is_sequence_fresh(self, scope_key: str, incoming_sequence: int) -> bool:
         """

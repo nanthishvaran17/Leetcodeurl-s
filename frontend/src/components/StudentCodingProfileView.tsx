@@ -38,9 +38,9 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
 
   if (loading) {
     return (
-      <div className="p-8 text-center bg-white dark:bg-navy-900 rounded-3xl border border-gray-200 dark:border-gray-800 space-y-4">
+      <div className="p-8 text-center bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-4">
         <RefreshCw className="w-8 h-8 animate-spin mx-auto text-brand-500" />
-        <p className="text-sm font-bold text-gray-600 dark:text-gray-300">Evaluating AI Coding Intelligence & DSA Skill Map...</p>
+        <p className="text-sm font-bold text-slate-600 dark:text-slate-300">Evaluating AI Coding Intelligence & DSA Skill Map...</p>
       </div>
     );
   }
@@ -96,19 +96,19 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
           {/* Quick Metrics */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="bg-white/5 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
-              <span className="text-[10px] font-extrabold uppercase text-gray-400 block">Overall Score</span>
+              <span className="text-[10px] font-extrabold uppercase text-slate-400 block">Overall Score</span>
               <span className="text-xl font-black text-brand-400">{profile.overall_score}/100</span>
             </div>
             <div className="bg-white/5 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
-              <span className="text-[10px] font-extrabold uppercase text-gray-400 block">Contest Skill</span>
+              <span className="text-[10px] font-extrabold uppercase text-slate-400 block">Contest Skill</span>
               <span className="text-xl font-black text-indigo-400">{profile.contest_skill}</span>
             </div>
             <div className="bg-white/5 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
-              <span className="text-[10px] font-extrabold uppercase text-gray-400 block">DSA Skill</span>
+              <span className="text-[10px] font-extrabold uppercase text-slate-400 block">DSA Skill</span>
               <span className="text-xl font-black text-purple-400">{profile.dsa_skill}</span>
             </div>
             <div className="bg-white/5 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
-              <span className="text-[10px] font-extrabold uppercase text-gray-400 block">Consistency</span>
+              <span className="text-[10px] font-extrabold uppercase text-slate-400 block">Consistency</span>
               <span className="text-xl font-black text-emerald-400">{profile.consistency_score}%</span>
             </div>
           </div>
@@ -117,14 +117,14 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
 
         {/* Strong / Weak Summary Pills */}
         <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-white/10 text-xs">
-          <span className="font-bold text-gray-400">Strong Areas:</span>
+          <span className="font-bold text-slate-400">Strong Areas:</span>
           {profile.strong_areas.map(t => (
             <span key={t} className="px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold flex items-center gap-1">
               <CheckCircle2 className="w-3.5 h-3.5" /> {t}
             </span>
           ))}
 
-          <span className="font-bold text-gray-400 ml-2">Weak Areas:</span>
+          <span className="font-bold text-slate-400 ml-2">Weak Areas:</span>
           {profile.weak_areas.map(t => (
             <span key={t} className="px-2.5 py-1 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 font-bold flex items-center gap-1">
               <AlertTriangle className="w-3.5 h-3.5" /> {t}
@@ -134,15 +134,15 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
       </div>
 
       {/* ── 2. EXPLAINABLE AI RISK PREDICTION ENGINE PANEL ── */}
-      <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border border-gray-200 dark:border-gray-800 shadow-xl space-y-4">
+      <div className="bg-white dark:bg-navy-950 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="p-2.5 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
               <ShieldAlert className="w-6 h-6 stroke-[2.5]" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-gray-900 dark:text-white">AI Risk Prediction & Early Disengagement Warning</h3>
-              <p className="text-xs text-gray-500 font-bold">10-Signal Automated Risk Scoring & Explainable AI Diagnosis</p>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">AI Risk Prediction & Early Disengagement Warning</h3>
+              <p className="text-xs text-slate-500 font-bold">10-Signal Automated Risk Scoring & Explainable AI Diagnosis</p>
             </div>
           </div>
 
@@ -150,7 +150,7 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
             <span className={`px-3 py-1 rounded-xl text-xs font-black border ${getRiskBadgeColor(risk_engine.risk_level)}`}>
               RISK SCORE: {risk_engine.risk_score}/100 ({risk_engine.risk_level})
             </span>
-            <span className="text-xs font-bold text-gray-500 bg-gray-100 dark:bg-navy-800 px-3 py-1 rounded-xl">
+            <span className="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-navy-800 px-3 py-1 rounded-xl">
               Confidence: {risk_engine.confidence_pct}%
             </span>
           </div>
@@ -169,9 +169,9 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
 
         {/* Explainable AI Evidence & Explanation */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-          <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950/60 border border-gray-200 dark:border-navy-800 space-y-2">
-            <h4 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider">Signals & Evidence Observed</h4>
-            <ul className="space-y-1.5 text-xs text-gray-600 dark:text-gray-300">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200 dark:border-navy-800 space-y-2">
+            <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">Signals & Evidence Observed</h4>
+            <ul className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
               {risk_engine.evidence.map((ev, i) => (
                 <li key={i} className="flex items-start space-x-2">
                   <span className="text-brand-500 font-black">•</span>
@@ -181,14 +181,14 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
             </ul>
           </div>
 
-          <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950/60 border border-gray-200 dark:border-navy-800 space-y-2">
-            <h4 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider">AI Explanation & Recommended Action</h4>
-            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200 dark:border-navy-800 space-y-2">
+            <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">AI Explanation & Recommended Action</h4>
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
               {risk_engine.explanation}
             </p>
-            <div className="pt-2 border-t border-gray-200 dark:border-navy-800">
+            <div className="pt-2 border-t border-slate-200 dark:border-navy-800">
               <span className="text-[11px] font-black text-brand-600 dark:text-brand-400 block uppercase mb-1">Recommended Mentor Action:</span>
-              <p className="text-xs font-bold text-gray-800 dark:text-gray-200">
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
                 {risk_engine.recommended_action}
               </p>
             </div>
@@ -209,19 +209,19 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
       </div>
 
       {/* ── 3. DSA SKILL KNOWLEDGE MAP (16 TOPICS) ── */}
-      <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border border-gray-200 dark:border-gray-800 shadow-xl space-y-4">
+      <div className="bg-white dark:bg-navy-950 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="p-2.5 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
               <BarChart2 className="w-6 h-6 stroke-[2.5]" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-gray-900 dark:text-white">DSA Skill Knowledge Map (16 Topics)</h3>
-              <p className="text-xs text-gray-500 font-bold">Topic-Level Accuracy & Problem-Solving Proficiency</p>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">DSA Skill Knowledge Map (16 Topics)</h3>
+              <p className="text-xs text-slate-500 font-bold">Topic-Level Accuracy & Problem-Solving Proficiency</p>
             </div>
           </div>
 
-          <span className="text-xs font-black text-gray-500">
+          <span className="text-xs font-black text-slate-500">
             Next Recommended: <strong className="text-brand-600 dark:text-brand-400">{profile.next_recommended_skill}</strong>
           </span>
         </div>
@@ -238,12 +238,12 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
                     ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400' 
                     : isWeak 
                     ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400' 
-                    : 'bg-gray-50 dark:bg-navy-950/60 border-gray-200 dark:border-navy-800 text-gray-700 dark:text-gray-300'
+                    : 'bg-slate-50 dark:bg-navy-950/60 border-slate-200 dark:border-navy-800 text-slate-700 dark:text-slate-300'
                 }`}
               >
                 <span className="text-[10px] font-black uppercase truncate block">{topic}</span>
                 <span className="text-base font-black mt-1 block">{score}%</span>
-                <div className="w-full bg-gray-200 dark:bg-navy-800 h-1.5 rounded-full mt-2 overflow-hidden">
+                <div className="w-full bg-slate-200 dark:bg-navy-800 h-1.5 rounded-full mt-2 overflow-hidden">
                   <div 
                     className={`h-full rounded-full ${isStrong ? 'bg-emerald-500' : isWeak ? 'bg-rose-500' : 'bg-brand-500'}`}
                     style={{ width: `${score}%` }}
@@ -259,21 +259,21 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         {/* Contest Readiness Engine */}
-        <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border border-gray-200 dark:border-gray-800 shadow-xl space-y-4">
+        <div className="bg-white dark:bg-navy-950 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
           <div className="flex items-center space-x-3">
             <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
               <Zap className="w-6 h-6 stroke-[2.5]" />
             </div>
             <div>
-              <h3 className="text-base font-black text-gray-900 dark:text-white">Contest Readiness Engine</h3>
-              <p className="text-xs text-gray-500 font-bold">Speed, Accuracy, Medium/Hard Progress & Status</p>
+              <h3 className="text-base font-black text-slate-900 dark:text-white">Contest Readiness Engine</h3>
+              <p className="text-xs text-slate-500 font-bold">Speed, Accuracy, Medium/Hard Progress & Status</p>
             </div>
           </div>
 
           <div className="flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 to-brand-500/10 border border-amber-500/20">
             <div>
-              <span className="text-[11px] font-black text-gray-500 uppercase block">Contest Readiness</span>
-              <span className="text-2xl font-black text-gray-900 dark:text-white">{contest_readiness.contest_readiness_score}%</span>
+              <span className="text-[11px] font-black text-slate-500 uppercase block">Contest Readiness</span>
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{contest_readiness.contest_readiness_score}%</span>
             </div>
             <span className={`px-3 py-1.5 rounded-xl text-xs font-black border ${
               contest_readiness.status === 'READY' 
@@ -285,56 +285,56 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-xs">
-            <div className="p-3 rounded-2xl bg-gray-50 dark:bg-navy-950/60 border border-gray-200 dark:border-navy-800">
-              <span className="text-gray-500 font-bold">Speed Rating:</span>
-              <strong className="block text-sm text-gray-900 dark:text-white mt-0.5">{contest_readiness.speed_score}%</strong>
+            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200 dark:border-navy-800">
+              <span className="text-slate-500 font-bold">Speed Rating:</span>
+              <strong className="block text-sm text-slate-900 dark:text-white mt-0.5">{contest_readiness.speed_score}%</strong>
             </div>
-            <div className="p-3 rounded-2xl bg-gray-50 dark:bg-navy-950/60 border border-gray-200 dark:border-navy-800">
-              <span className="text-gray-500 font-bold">Accuracy Rating:</span>
-              <strong className="block text-sm text-gray-900 dark:text-white mt-0.5">{contest_readiness.accuracy_score}%</strong>
+            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200 dark:border-navy-800">
+              <span className="text-slate-500 font-bold">Accuracy Rating:</span>
+              <strong className="block text-sm text-slate-900 dark:text-white mt-0.5">{contest_readiness.accuracy_score}%</strong>
             </div>
-            <div className="p-3 rounded-2xl bg-gray-50 dark:bg-navy-950/60 border border-gray-200 dark:border-navy-800">
-              <span className="text-gray-500 font-bold">Medium Progress:</span>
-              <strong className="block text-sm text-gray-900 dark:text-white mt-0.5">{contest_readiness.medium_problems_pct}%</strong>
+            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200 dark:border-navy-800">
+              <span className="text-slate-500 font-bold">Medium Progress:</span>
+              <strong className="block text-sm text-slate-900 dark:text-white mt-0.5">{contest_readiness.medium_problems_pct}%</strong>
             </div>
-            <div className="p-3 rounded-2xl bg-gray-50 dark:bg-navy-950/60 border border-gray-200 dark:border-navy-800">
-              <span className="text-gray-500 font-bold">Hard Progress:</span>
-              <strong className="block text-sm text-gray-900 dark:text-white mt-0.5">{contest_readiness.hard_problems_pct}%</strong>
+            <div className="p-3 rounded-2xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200 dark:border-navy-800">
+              <span className="text-slate-500 font-bold">Hard Progress:</span>
+              <strong className="block text-sm text-slate-900 dark:text-white mt-0.5">{contest_readiness.hard_problems_pct}%</strong>
             </div>
           </div>
 
-          <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-navy-950/60 p-3 rounded-2xl border border-gray-200 dark:border-navy-800">
+          <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-navy-950/60 p-3 rounded-2xl border border-slate-200 dark:border-navy-800">
             <strong>Recommendation:</strong> {contest_readiness.recommendation}
           </p>
         </div>
 
         {/* Coding Consistency Intelligence */}
-        <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border border-gray-200 dark:border-gray-800 shadow-xl space-y-4">
+        <div className="bg-white dark:bg-navy-950 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
           <div className="flex items-center space-x-3">
             <div className="p-2.5 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
               <Flame className="w-6 h-6 stroke-[2.5]" />
             </div>
             <div>
-              <h3 className="text-base font-black text-gray-900 dark:text-white">Coding Consistency Intelligence</h3>
-              <p className="text-xs text-gray-500 font-bold">Sustainable Learning Habits & Active Days</p>
+              <h3 className="text-base font-black text-slate-900 dark:text-white">Coding Consistency Intelligence</h3>
+              <p className="text-xs text-slate-500 font-bold">Sustainable Learning Habits & Active Days</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-xs">
-            <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-navy-950/60 border border-gray-200 dark:border-navy-800">
-              <span className="text-gray-500 font-bold block">Active Days:</span>
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200 dark:border-navy-800">
+              <span className="text-slate-500 font-bold block">Active Days:</span>
               <span className="text-xl font-black text-emerald-500 block mt-1">{consistency_intelligence.active_days_label}</span>
             </div>
-            <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-navy-950/60 border border-gray-200 dark:border-navy-800">
-              <span className="text-gray-500 font-bold block">Longest Streak:</span>
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200 dark:border-navy-800">
+              <span className="text-slate-500 font-bold block">Longest Streak:</span>
               <span className="text-xl font-black text-amber-500 block mt-1">{consistency_intelligence.longest_streak_days} Days</span>
             </div>
-            <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-navy-950/60 border border-gray-200 dark:border-navy-800">
-              <span className="text-gray-500 font-bold block">Weekly Avg Output:</span>
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200 dark:border-navy-800">
+              <span className="text-slate-500 font-bold block">Weekly Avg Output:</span>
               <span className="text-xl font-black text-brand-500 block mt-1">{consistency_intelligence.weekly_average_problems} / week</span>
             </div>
-            <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-navy-950/60 border border-gray-200 dark:border-navy-800">
-              <span className="text-gray-500 font-bold block">Inactive Periods:</span>
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200 dark:border-navy-800">
+              <span className="text-slate-500 font-bold block">Inactive Periods:</span>
               <span className="text-xl font-black text-rose-500 block mt-1">{consistency_intelligence.inactive_periods_count}</span>
             </div>
           </div>
@@ -343,15 +343,15 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
       </div>
 
       {/* ── 5. PERSONALIZED 4-WEEK AI LEARNING PATH ── */}
-      <div className="bg-white dark:bg-navy-900 rounded-3xl p-6 border border-gray-200 dark:border-gray-800 shadow-xl space-y-4">
+      <div className="bg-white dark:bg-navy-950 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="p-2.5 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
               <BookOpen className="w-6 h-6 stroke-[2.5]" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-gray-900 dark:text-white">{learning_path.title}</h3>
-              <p className="text-xs text-gray-500 font-bold">Adaptive 4-Week Skill Roadmap Tailored to Student Weakness</p>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">{learning_path.title}</h3>
+              <p className="text-xs text-slate-500 font-bold">Adaptive 4-Week Skill Roadmap Tailored to Student Weakness</p>
             </div>
           </div>
 
@@ -367,7 +367,7 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
               className={`p-5 rounded-2xl border flex flex-col justify-between space-y-3 ${
                 wk.week_number === learning_path.current_week
                   ? 'bg-brand-500/5 border-brand-500/40 shadow-md ring-1 ring-brand-500/20'
-                  : 'bg-gray-50 dark:bg-navy-950/60 border-gray-200 dark:border-navy-800'
+                  : 'bg-slate-50 dark:bg-navy-950/60 border-slate-200 dark:border-navy-800'
               }`}
             >
               <div className="space-y-2">
@@ -375,23 +375,23 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
                   <span className="text-[11px] font-black px-2 py-0.5 rounded bg-brand-500/10 text-brand-600 dark:text-brand-400">
                     WEEK {wk.week_number}
                   </span>
-                  <span className="text-xs font-extrabold text-gray-500">
+                  <span className="text-xs font-extrabold text-slate-500">
                     Target: {wk.target_problems.total} Problems
                   </span>
                 </div>
 
-                <h4 className="text-xs font-black text-gray-900 dark:text-white leading-snug">
+                <h4 className="text-xs font-black text-slate-900 dark:text-white leading-snug">
                   {wk.title}
                 </h4>
 
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
                   {wk.goal}
                 </p>
               </div>
 
-              <div className="pt-2 border-t border-gray-200 dark:border-navy-800 text-[11px] space-y-1">
-                <span className="font-bold text-gray-700 dark:text-gray-300 block">Target Breakdown:</span>
-                <span className="text-gray-500 block">
+              <div className="pt-2 border-t border-slate-200 dark:border-navy-800 text-[11px] space-y-1">
+                <span className="font-bold text-slate-700 dark:text-slate-300 block">Target Breakdown:</span>
+                <span className="text-slate-500 block">
                   • {wk.target_problems.easy} Easy, {wk.target_problems.medium} Medium, {wk.target_problems.hard} Hard
                 </span>
               </div>

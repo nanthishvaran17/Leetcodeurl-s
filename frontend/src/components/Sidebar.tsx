@@ -2,6 +2,9 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
+  Sun,
+  Moon,
+  LogOut,
   LayoutDashboard,
   Users,
   BarChart3,
@@ -26,6 +29,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { CollegeLogo } from './CollegeLogo';
 
 interface SidebarProps {
@@ -50,12 +54,22 @@ interface NavSection {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpen, onClose }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const roleClean = (user?.role || '').trim().toLowerCase();
   const isFaculty = ['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(roleClean);
   const isHOD = ['hod', 'department hod', 'department_hod'].includes(roleClean);
   const isAdmin = ['admin', 'administrator', 'super admin', 'super_admin'].includes(roleClean);
   const isStudent = roleClean === 'student';
+
+  React.useEffect(() => {
+    if (isOpen && window.innerWidth < 1024) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isOpen]);
 
   // ── FACULTY / STAFF MENTOR: Full Academic, Contest & Mentoring Access ────────
   const facultySections: NavSection[] = [
@@ -199,7 +213,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-            className="relative w-4/5 max-w-xs xl:max-w-[325px] h-full shadow-lg bg-white dark:bg-navy-900 pt-[max(1rem,env(safe-area-inset-top,1rem))] pb-[max(1rem,env(safe-area-inset-bottom,1rem))] px-4 sm:px-5 flex flex-col justify-between overflow-hidden z-10 border-r border-gray-200 dark:border-navy-800"
+            className="relative w-4/5 max-w-xs xl:max-w-[325px] h-full shadow-lg bg-white dark:bg-navy-950 pt-[max(1rem,env(safe-area-inset-top,1rem))] pb-[max(1rem,env(safe-area-inset-bottom,1rem))] px-4 sm:px-5 flex flex-col justify-between overflow-hidden z-10 border-r border-slate-200 dark:border-navy-800"
           >
             {/* ── Ambient Radial Mesh Glows ── */}
 
@@ -226,7 +240,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
               <button
                 type="button"
                 onClick={onClose}
-                className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-navy-800 cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
+                className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-navy-800 cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
                 title="Close Navigation Menu"
               >
                 <X className="w-5 h-5" />
@@ -270,7 +284,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                       <div className={`p-1.5 rounded-xl transition-all duration-200 shrink-0 ${
                         isActive 
                           ? 'bg-white/20 text-white shadow-inner scale-105' 
-                          : 'bg-slate-100 dark:bg-navy-900 text-slate-500 dark:text-slate-400 group-hover:bg-brand-50 dark:group-hover:bg-navy-800 group-hover:text-brand-600 dark:group-hover:text-brand-300 group-hover:scale-110 group-hover:rotate-3 shadow-sm'
+                          : 'bg-slate-100 dark:bg-navy-950 text-slate-500 dark:text-slate-400 group-hover:bg-brand-50 dark:group-hover:bg-navy-800 group-hover:text-brand-600 dark:group-hover:text-brand-300 group-hover:scale-110 group-hover:rotate-3 shadow-sm'
                       }`}>
                         <Icon className="w-4 h-4 shrink-0 transition-transform duration-200" />
                       </div>
@@ -318,6 +332,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
             </nav>
           </div>
         ))}
+      </div>
+
+      {/* ── Mobile Action Bar (Theme & Auth) ── */}
+      <div className="sm:hidden pt-3 mt-2 border-t border-slate-100 dark:border-navy-800 shrink-0 relative z-10 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="p-2.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-navy-800 transition-all duration-200 flex items-center justify-center flex-1 mr-2"
+        >
+          {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400 mr-2" /> : <Moon className="w-4 h-4 text-navy-700 mr-2" />}
+          <span className="text-xs font-bold">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+        </button>
+        {user && (
+          <button
+            type="button"
+            onClick={logout}
+            className="p-2.5 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors flex items-center justify-center flex-1 ml-2"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            <span className="font-bold text-xs">Sign Out</span>
+          </button>
+        )}
       </div>
 
       {/* ── Bottom Institution Footer Card ── */}

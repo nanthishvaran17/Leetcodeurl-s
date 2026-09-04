@@ -58,7 +58,7 @@ export const LiveCommandBar: React.FC<LiveCommandBarProps> = ({
     ? 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10'
     : isPartial
       ? 'text-amber-400 border-amber-500/40 bg-amber-500/10'
-      : 'text-gray-400 border-gray-600/40 bg-gray-800/30';
+      : 'text-slate-400 border-slate-600/40 bg-slate-800/30';
 
   const lastEventStr = lastEvent?.timestamp
     ? lastEvent.timestamp
@@ -89,10 +89,10 @@ export const LiveCommandBar: React.FC<LiveCommandBarProps> = ({
           )}
           <span className="text-white font-black text-sm tracking-wide">{contestName || 'Weekly Contest'}</span>
           {contestDate && (
-            <span className="text-gray-400 text-xs font-mono">{contestDate}</span>
+            <span className="text-slate-400 text-xs font-mono">{contestDate}</span>
           )}
-          <span className="text-gray-500 text-xs">•</span>
-          <span className="text-gray-300 text-xs font-mono">08:00 AM – 09:30 AM IST</span>
+          <span className="text-slate-500 text-xs">•</span>
+          <span className="text-slate-300 text-xs font-mono">08:00 AM – 09:30 AM IST</span>
         </div>
 
         {/* WS status */}
@@ -107,7 +107,7 @@ export const LiveCommandBar: React.FC<LiveCommandBarProps> = ({
           }
           <span>{wsStatus === 'connected' ? 'REALTIME CONNECTED' : 'RECONNECTING...'}</span>
           {wsStatus === 'connected' && wsConnectionCount > 0 && (
-            <span className="text-gray-500">({wsConnectionCount})</span>
+            <span className="text-slate-500">({wsConnectionCount})</span>
           )}
         </div>
       </div>
@@ -116,17 +116,17 @@ export const LiveCommandBar: React.FC<LiveCommandBarProps> = ({
       <div className="grid grid-cols-3 sm:grid-cols-6 divide-x divide-white/5 px-0">
         {/* Timer */}
         <div className="flex flex-col items-center justify-center py-3 px-4">
-          <span className="text-[10px] font-bold uppercase text-gray-500 tracking-wider flex items-center gap-1 mb-1">
+          <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider flex items-center gap-1 mb-1">
             <Clock className="w-3 h-3" /> {isLive ? 'TIME LEFT' : 'CONTEST'}
           </span>
-          <span className={`text-lg font-mono font-black ${isLive ? 'text-rose-400' : 'text-gray-400'}`}>
+          <span className={`text-lg font-mono font-black ${isLive ? 'text-rose-400' : 'text-slate-400'}`}>
             {isLive ? formatTime(timeRemainingSec) : '00:00:00'}
           </span>
         </div>
 
         {/* Verification */}
         <div className="flex flex-col items-center justify-center py-3 px-4">
-          <span className="text-[10px] font-bold uppercase text-gray-500 tracking-wider flex items-center gap-1 mb-1">
+          <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider flex items-center gap-1 mb-1">
             <ShieldCheck className="w-3 h-3" /> VERIFIED
           </span>
           <span className={`text-xs font-black font-mono px-2 py-0.5 rounded-full border ${verifColor}`}>
@@ -136,7 +136,7 @@ export const LiveCommandBar: React.FC<LiveCommandBarProps> = ({
 
         {/* Participants */}
         <div className="flex flex-col items-center justify-center py-3 px-4">
-          <span className="text-[10px] font-bold uppercase text-gray-500 tracking-wider flex items-center gap-1 mb-1">
+          <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider flex items-center gap-1 mb-1">
             <Activity className="w-3 h-3" /> PARTICIPANTS
           </span>
           <span className="text-lg font-mono font-black text-indigo-300">{attendedCount}</span>
@@ -144,7 +144,7 @@ export const LiveCommandBar: React.FC<LiveCommandBarProps> = ({
 
         {/* Live Events */}
         <div className="flex flex-col items-center justify-center py-3 px-4">
-          <span className="text-[10px] font-bold uppercase text-gray-500 tracking-wider flex items-center gap-1 mb-1">
+          <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider flex items-center gap-1 mb-1">
             <Zap className="w-3 h-3" /> EVENTS
           </span>
           <span className="text-lg font-mono font-black text-amber-400">{eventCount}</span>
@@ -152,7 +152,7 @@ export const LiveCommandBar: React.FC<LiveCommandBarProps> = ({
 
         {/* Last Event */}
         <div className="flex flex-col items-center justify-center py-3 px-4">
-          <span className="text-[10px] font-bold uppercase text-gray-500 tracking-wider flex items-center gap-1 mb-1">
+          <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider flex items-center gap-1 mb-1">
             <Radio className="w-3 h-3" /> LAST EVENT
           </span>
           <span className="text-[11px] font-bold text-white text-center truncate max-w-[110px]">{lastEventStr}</span>
@@ -160,10 +160,10 @@ export const LiveCommandBar: React.FC<LiveCommandBarProps> = ({
 
         {/* Errors / Pending */}
         <div className="flex flex-col items-center justify-center py-3 px-4">
-          <span className="text-[10px] font-bold uppercase text-gray-500 tracking-wider flex items-center gap-1 mb-1">
+          <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider flex items-center gap-1 mb-1">
             <AlertTriangle className="w-3 h-3" /> ERRORS
           </span>
-          <span className={`text-lg font-mono font-black ${errorCount > 0 ? 'text-red-400' : 'text-gray-500'}`}>
+          <span className={`text-lg font-mono font-black ${errorCount > 0 ? 'text-red-400' : 'text-slate-500'}`}>
             {errorCount}
           </span>
         </div>

@@ -80,7 +80,7 @@ export const DepartmentAnalyticsGrid: React.FC<DepartmentAnalyticsGridProps> = (
     return (
       <div className="flex items-center justify-center py-8">
         <div className="w-5 h-5 rounded-full border-2 border-brand-500 border-t-transparent animate-spin mr-2" />
-        <span className="text-xs text-gray-400">Loading department analytics...</span>
+        <span className="text-xs text-slate-400">Loading department analytics...</span>
       </div>
     );
   }
@@ -91,12 +91,12 @@ export const DepartmentAnalyticsGrid: React.FC<DepartmentAnalyticsGridProps> = (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Building2 className="w-4 h-4 text-brand-500" />
-        <h4 className="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white">Department Analytics</h4>
-        <span className="text-[10px] font-mono text-gray-500">({depts.length} departments)</span>
+        <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">Department Analytics</h4>
+        <span className="text-[10px] font-mono text-slate-500">({depts.length} departments)</span>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
         {depts.map(d => (
-          <div key={d.dept} className="p-4 rounded-2xl bg-white dark:bg-navy-950 border border-gray-200 dark:border-gray-800 shadow-sm space-y-3 hover:shadow-md transition-shadow">
+          <div key={d.dept} className="p-4 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3 hover:shadow-md transition-shadow">
             {/* Dept header */}
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-black uppercase tracking-wider text-indigo-400 truncate max-w-[100px]">{d.dept}</span>
@@ -106,21 +106,21 @@ export const DepartmentAnalyticsGrid: React.FC<DepartmentAnalyticsGridProps> = (
             {/* Stats row */}
             <div className="grid grid-cols-3 gap-1 text-center">
               <div>
-                <span className="text-[9px] text-gray-500 uppercase block">Total</span>
-                <span className="text-sm font-mono font-black text-gray-300">{d.total}</span>
+                <span className="text-[9px] text-slate-500 uppercase block">Total</span>
+                <span className="text-sm font-mono font-black text-slate-300">{d.total}</span>
               </div>
               <div>
-                <span className="text-[9px] text-gray-500 uppercase block">Participated</span>
+                <span className="text-[9px] text-slate-500 uppercase block">Participated</span>
                 <span className="text-sm font-mono font-black text-emerald-400">{d.attended}</span>
               </div>
               <div>
-                <span className="text-[9px] text-gray-500 uppercase block">Avg Solved</span>
+                <span className="text-[9px] text-slate-500 uppercase block">Avg Solved</span>
                 <span className="text-sm font-mono font-black text-indigo-400">{d.avgSolved}</span>
               </div>
             </div>
 
             {/* Progress bar */}
-            <div className="w-full bg-gray-200 dark:bg-gray-800 h-1.5 rounded-full overflow-hidden">
+            <div className="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full ${pctBg(d.participationPct)} transition-all duration-700`}
                 style={{ width: `${d.participationPct}%` }}
@@ -136,10 +136,10 @@ export const DepartmentAnalyticsGrid: React.FC<DepartmentAnalyticsGridProps> = (
                   const colors = ['bg-emerald-500','bg-purple-500','bg-indigo-500','bg-rose-500'];
                   return (
                     <div key={q} className="text-center">
-                      <div className="w-full bg-gray-800 h-1 rounded-full overflow-hidden mb-0.5">
+                      <div className="w-full bg-slate-800 h-1 rounded-full overflow-hidden mb-0.5">
                         <div className={`h-full ${colors[q-1]} rounded-full`} style={{ width: `${pct}%` }} />
                       </div>
-                      <span className="text-[9px] text-gray-500 font-mono">Q{q}:{cnt}</span>
+                      <span className="text-[9px] text-slate-500 font-mono">Q{q}:{cnt}</span>
                     </div>
                   );
                 })}
@@ -148,11 +148,11 @@ export const DepartmentAnalyticsGrid: React.FC<DepartmentAnalyticsGridProps> = (
 
             {/* Top performer */}
             {d.topPerformer && (
-              <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-gray-50 dark:bg-navy-900 border border-gray-200 dark:border-gray-800">
+              <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800">
                 <Award className="w-3 h-3 text-amber-400 shrink-0" />
                 <div className="min-w-0">
-                  <span className="text-[10px] font-bold text-gray-900 dark:text-white block truncate">{d.topPerformer.name}</span>
-                  <span className="text-[9px] text-gray-500">{d.topPerformer.totalSolved}Q solved</span>
+                  <span className="text-[10px] font-bold text-slate-900 dark:text-white block truncate">{d.topPerformer.name}</span>
+                  <span className="text-[9px] text-slate-500">{d.topPerformer.totalSolved}Q solved</span>
                 </div>
               </div>
             )}

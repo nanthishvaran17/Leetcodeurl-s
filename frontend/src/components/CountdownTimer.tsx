@@ -149,7 +149,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <h4 className="font-black text-base text-gray-900 dark:text-white">
+              <h4 className="font-black text-base text-slate-900 dark:text-white">
                 {isSessionLive ? 'SUNDAY SESSION LIVE NOW' : timing.headerTitle}
               </h4>
               {isSessionLive ? (
@@ -157,12 +157,12 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
                   Live Window
                 </span>
               ) : timing.phase === 'COUNTDOWN_TODAY' ? (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/30">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-brand-500/20 text-brand-600 dark:text-brand-400 border border-brand-500/30">
                   Starting Today
                 </span>
               ) : null}
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               {timing.subTitle}
             </p>
           </div>
@@ -173,45 +173,45 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
           {!isSessionLive && (
             <>
               <div className="flex flex-col items-center">
-                <span className="text-2xl md:text-3xl font-extrabold px-3 py-1.5 rounded-2xl bg-gray-100 dark:bg-gray-800 text-brand-600 dark:text-brand-400 shadow-sm">
+                <span className="text-2xl md:text-3xl font-extrabold px-3 py-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-400 shadow-sm">
                   {time.days}
                 </span>
-                <span className="text-[10px] text-gray-400 font-sans mt-1 uppercase font-bold">Days</span>
+                <span className="text-[10px] text-slate-400 font-sans mt-1 uppercase font-bold">Days</span>
               </div>
-              <span className="text-xl font-black text-gray-400">:</span>
+              <span className="text-xl font-black text-slate-400">:</span>
             </>
           )}
           <div className="flex flex-col items-center">
             <span className={`text-2xl md:text-3xl font-extrabold px-3 py-1.5 rounded-2xl shadow-sm ${
               isSessionLive 
                 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100'
             }`}>
               {time.hours}
             </span>
-            <span className="text-[10px] text-gray-400 font-sans mt-1 uppercase font-bold">Hours</span>
+            <span className="text-[10px] text-slate-400 font-sans mt-1 uppercase font-bold">Hours</span>
           </div>
-          <span className="text-xl font-black text-gray-400">:</span>
+          <span className="text-xl font-black text-slate-400">:</span>
           <div className="flex flex-col items-center">
             <span className={`text-2xl md:text-3xl font-extrabold px-3 py-1.5 rounded-2xl shadow-sm ${
               isSessionLive 
                 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100'
             }`}>
               {time.minutes}
             </span>
-            <span className="text-[10px] text-gray-400 font-sans mt-1 uppercase font-bold">Mins</span>
+            <span className="text-[10px] text-slate-400 font-sans mt-1 uppercase font-bold">Mins</span>
           </div>
-          <span className="text-xl font-black text-gray-400">:</span>
+          <span className="text-xl font-black text-slate-400">:</span>
           <div className="flex flex-col items-center">
             <span className={`text-2xl md:text-3xl font-extrabold px-3 py-1.5 rounded-2xl shadow-sm ${
               isSessionLive 
                 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                : 'bg-gray-100 dark:bg-gray-800 text-rose-500 dark:text-rose-400'
+                : 'bg-slate-100 dark:bg-slate-800 text-rose-500 dark:text-rose-400'
             }`}>
               {time.seconds}
             </span>
-            <span className="text-[10px] text-gray-400 font-sans mt-1 uppercase font-bold">Secs</span>
+            <span className="text-[10px] text-slate-400 font-sans mt-1 uppercase font-bold">Secs</span>
           </div>
         </div>
 

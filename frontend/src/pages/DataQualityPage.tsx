@@ -51,7 +51,7 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
     return (
       <div className="p-12 flex flex-col items-center justify-center space-y-4">
         <RefreshCw className="w-8 h-8 animate-spin text-brand-500" />
-        <p className="font-bold text-gray-700 dark:text-gray-300">Auditing Data Quality & Student Roster Health...</p>
+        <p className="font-bold text-slate-700 dark:text-slate-300">Auditing Data Quality & Student Roster Health...</p>
       </div>
     );
   }
@@ -94,7 +94,7 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
               Data Quality & <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-orange-300 to-rose-300">Profile Health Dashboard</span>
             </h1>
 
-            <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide">
+            <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide">
               Monitor missing links, invalid profile URLs, profile not found errors, and network anomalies across all institutional student records.
             </p>
           </div>
@@ -173,7 +173,7 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
 
         <div 
           onClick={() => setFilterCategory('NETWORK')}
-          className={`p-5 rounded-3xl border shadow-xl text-center space-y-1 transition-all cursor-pointer ${filterCategory === 'NETWORK' ? 'ring-2 ring-blue-400 scale-[1.03]' : 'hover:scale-[1.01]'}`}
+          className={`p-5 rounded-3xl border shadow-xl text-center space-y-1 transition-all cursor-pointer ${filterCategory === 'NETWORK' ? 'ring-2 ring-brand-400 scale-[1.03]' : 'hover:scale-[1.01]'}`}
           style={{ background: 'linear-gradient(135deg, #0c1a2e15, #0f254015)', borderColor: 'rgba(59,130,246,0.25)' }}
         >
           <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#60a5fa' }}>Network / Sync</p>
@@ -183,57 +183,57 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
       </div>
 
       {/* Profile Attention & Quality Issues Board */}
-      <div className="border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-navy-900 p-6 space-y-4">
+      <div className="border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-navy-950 p-6 space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="space-y-1">
-            <h3 className="text-sm font-black uppercase text-gray-900 dark:text-white flex items-center space-x-2">
+            <h3 className="text-sm font-black uppercase text-slate-900 dark:text-white flex items-center space-x-2">
               <AlertCircle className="w-4 h-4 text-amber-500" />
               <span>Profile Attention & Data Quality Roster ({filteredIssues.length} Items Displayed)</span>
             </h3>
-            <p className="text-xs text-gray-500 font-medium">Filter by category or search name, register number, or issue flag.</p>
+            <p className="text-xs text-slate-500 font-medium">Filter by category or search name, register number, or issue flag.</p>
           </div>
 
           {/* Interactive Search & Filter Controls */}
           <div className="flex items-center gap-2 flex-wrap">
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search name, reg no..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-navy-950 text-xs font-semibold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 w-44 sm:w-56"
+                className="pl-8 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-navy-950 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 w-44 sm:w-56"
               />
             </div>
 
-            <div className="flex items-center gap-1 bg-gray-100 dark:bg-navy-950 p-1 rounded-xl border border-gray-200 dark:border-gray-800 text-[11px] font-bold">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold">
               <button
                 onClick={() => setFilterCategory('ALL')}
-                className={`px-2.5 py-1 rounded-lg transition-all ${filterCategory === 'ALL' ? 'bg-white dark:bg-navy-800 text-gray-900 dark:text-white shadow-sm font-black' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
+                className={`px-2.5 py-1 rounded-lg transition-all ${filterCategory === 'ALL' ? 'bg-white dark:bg-navy-800 text-slate-900 dark:text-white shadow-sm font-black' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
               >
                 All ({issuesList.length})
               </button>
               <button
                 onClick={() => setFilterCategory('VALID')}
-                className={`px-2.5 py-1 rounded-lg transition-all ${filterCategory === 'VALID' ? 'bg-emerald-500/20 text-emerald-400 font-black' : 'text-gray-500 hover:text-emerald-400'}`}
+                className={`px-2.5 py-1 rounded-lg transition-all ${filterCategory === 'VALID' ? 'bg-emerald-500/20 text-emerald-400 font-black' : 'text-slate-500 hover:text-emerald-400'}`}
               >
                 Valid Profiles ({data?.valid_profiles || 0})
               </button>
               <button
                 onClick={() => setFilterCategory('MISSING')}
-                className={`px-2.5 py-1 rounded-lg transition-all ${filterCategory === 'MISSING' ? 'bg-amber-500/20 text-amber-400 font-black' : 'text-gray-500 hover:text-amber-400'}`}
+                className={`px-2.5 py-1 rounded-lg transition-all ${filterCategory === 'MISSING' ? 'bg-amber-500/20 text-amber-400 font-black' : 'text-slate-500 hover:text-amber-400'}`}
               >
                 Missing ({data?.missing_links || 0})
               </button>
               <button
                 onClick={() => setFilterCategory('NOT_FOUND')}
-                className={`px-2.5 py-1 rounded-lg transition-all ${filterCategory === 'NOT_FOUND' ? 'bg-rose-500/20 text-rose-400 font-black' : 'text-gray-500 hover:text-rose-400'}`}
+                className={`px-2.5 py-1 rounded-lg transition-all ${filterCategory === 'NOT_FOUND' ? 'bg-rose-500/20 text-rose-400 font-black' : 'text-slate-500 hover:text-rose-400'}`}
               >
                 Not Found ({data?.profile_not_found || 0})
               </button>
               <button
                 onClick={() => setFilterCategory('NETWORK')}
-                className={`px-2.5 py-1 rounded-lg transition-all ${filterCategory === 'NETWORK' ? 'bg-blue-500/20 text-blue-400 font-black' : 'text-gray-500 hover:text-blue-400'}`}
+                className={`px-2.5 py-1 rounded-lg transition-all ${filterCategory === 'NETWORK' ? 'bg-brand-500/20 text-brand-400 font-black' : 'text-slate-500 hover:text-brand-400'}`}
               >
                 Network ({data?.network_errors || 0})
               </button>
@@ -248,7 +248,7 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
         </div>
 
         {filteredIssues.length > 0 ? (
-          <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-x-auto">
+          <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-navy-950 text-white font-black uppercase">
                 <tr>
@@ -261,9 +261,9 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                 {filteredIssues.map((item: any, idx: number) => (
-                  <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors">
-                    <td className="px-4 py-2.5 font-bold text-gray-900 dark:text-white">{item.reg_no}</td>
-                    <td className="px-4 py-2.5 font-semibold text-gray-800 dark:text-gray-200">{item.name}</td>
+                  <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors">
+                    <td className="px-4 py-2.5 font-bold text-slate-900 dark:text-white">{item.reg_no}</td>
+                    <td className="px-4 py-2.5 font-semibold text-slate-800 dark:text-slate-200">{item.name}</td>
                     <td className="px-4 py-2.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{item.dept}</td>
                     <td className="px-4 py-2.5">
                       <span className={`px-3 py-1 rounded-full font-black text-[10px] ${
@@ -272,13 +272,13 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
                           : item.status === 'MISSING_USERNAME' || item.status === 'INVALID_PROFILE_URL'
                           ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-500/30'
                           : item.status === 'NETWORK_ERROR'
-                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-500/30'
+                          ? 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300 border border-brand-500/30'
                           : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-500/30'
                       }`}>
                         {item.issue}
                       </span>
                     </td>
-                    <td className="px-4 py-2.5 text-right font-bold text-gray-700 dark:text-gray-300">
+                    <td className="px-4 py-2.5 text-right font-bold text-slate-700 dark:text-slate-300">
                       {item.action_required || (item.status === 'VALID_PROFILE' ? 'Verified Record' : item.status === 'MISSING_USERNAME' || item.status === 'INVALID_PROFILE_URL' ? 'Verify LeetCode URL' : 'Audit Profile')}
                     </td>
                   </tr>

@@ -44,10 +44,10 @@ export const TopPerformersRow: React.FC<TopPerformersRowProps> = ({ matrixRows }
           let rankColor = 'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300';
           
           if (isSilver) {
-            ringColor = 'border-gray-300 dark:border-gray-600';
-            bgColor = 'bg-gray-50 dark:bg-gray-800/40';
-            textColor = 'text-gray-700 dark:text-gray-300';
-            rankColor = 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
+            ringColor = 'border-slate-300 dark:border-slate-600';
+            bgColor = 'bg-slate-50 dark:bg-slate-800/40';
+            textColor = 'text-slate-700 dark:text-slate-300';
+            rankColor = 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
           } else if (isBronze) {
             ringColor = 'border-orange-300 dark:border-orange-800/50';
             bgColor = 'bg-orange-50 dark:bg-orange-950/20';
@@ -61,7 +61,7 @@ export const TopPerformersRow: React.FC<TopPerformersRowProps> = ({ matrixRows }
                 #{idx + 1}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-black text-gray-900 dark:text-white truncate">
+                <div className="text-sm font-black text-slate-900 dark:text-white truncate">
                   {p.name}
                 </div>
                 <div className={`text-[10px] font-bold truncate ${textColor}`}>
@@ -69,7 +69,7 @@ export const TopPerformersRow: React.FC<TopPerformersRowProps> = ({ matrixRows }
                 </div>
               </div>
               <div className="shrink-0 flex flex-col items-end">
-                <span className="text-sm font-mono font-black text-gray-900 dark:text-white">{p.total_solved || p.total_contest_solved || 0}/4</span>
+                <span className="text-sm font-mono font-black text-slate-900 dark:text-white">{p.total_solved || p.total_contest_solved || 0}/4</span>
                 <span className={`text-[9px] uppercase font-bold ${textColor}`}>Solved</span>
               </div>
             </div>

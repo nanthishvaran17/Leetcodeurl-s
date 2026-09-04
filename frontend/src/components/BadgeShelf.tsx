@@ -77,14 +77,14 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
   ];
 
   return (
-    <div className="glass-card p-6 rounded-3xl border border-gray-200/90 dark:border-gray-800 shadow-xl space-y-4 bg-white/90 dark:bg-navy-900/90">
+    <div className="glass-card p-6 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-xl space-y-4 bg-white/90 dark:bg-navy-950/90">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-black text-base text-gray-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
+          <h3 className="font-black text-base text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
             <Award className="w-5 h-5 text-amber-500" />
             <span>Achievement Badge Shelf</span>
           </h3>
-          <p className="text-xs text-gray-600 dark:text-gray-300 font-bold">Unlocked Gamified Achievements</p>
+          <p className="text-xs text-slate-600 dark:text-slate-300 font-bold">Unlocked Gamified Achievements</p>
         </div>
         <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 text-xs font-black uppercase shadow-sm">
           {badges.filter(b => b.unlocked).length} / {badges.length} Unlocked
@@ -100,19 +100,19 @@ export const BadgeShelf: React.FC<BadgeShelfProps> = ({
               className={`p-4 rounded-2xl border-2 text-center transition-all duration-300 relative group ${
                 b.unlocked
                   ? `${b.bg} shadow-md hover:scale-105`
-                  : 'bg-gray-100 dark:bg-gray-800/40 border-gray-300 dark:border-gray-700 opacity-50 grayscale'
+                  : 'bg-slate-100 dark:bg-slate-800/40 border-slate-300 dark:border-slate-700 opacity-50 grayscale'
               }`}
             >
-              <div className={`w-11 h-11 rounded-2xl mx-auto flex items-center justify-center mb-2 shadow-sm ${b.unlocked ? b.bg : 'bg-gray-200 dark:bg-gray-800'}`}>
-                <IconComp className={`w-6 h-6 ${b.unlocked ? b.color : 'text-gray-400'}`} />
+              <div className={`w-11 h-11 rounded-2xl mx-auto flex items-center justify-center mb-2 shadow-sm ${b.unlocked ? b.bg : 'bg-slate-200 dark:bg-slate-800'}`}>
+                <IconComp className={`w-6 h-6 ${b.unlocked ? b.color : 'text-slate-400'}`} />
               </div>
-              <p className="font-black text-xs text-gray-900 dark:text-gray-100 truncate">{b.name}</p>
-              <p className="text-[10px] text-gray-600 dark:text-gray-300 font-extrabold uppercase tracking-wider mt-0.5">{b.category}</p>
+              <p className="font-black text-xs text-slate-900 dark:text-slate-100 truncate">{b.name}</p>
+              <p className="text-[10px] text-slate-600 dark:text-slate-300 font-extrabold uppercase tracking-wider mt-0.5">{b.category}</p>
 
               {/* Tooltip on hover */}
               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 hidden group-hover:block w-48 p-2.5 rounded-2xl bg-slate-950 border border-slate-700 text-white text-xs shadow-lg z-30 pointer-events-none">
                 <p className="font-black text-amber-400">{b.name}</p>
-                <p className="text-gray-200 text-[10px] font-medium mt-1 leading-snug">{b.description}</p>
+                <p className="text-slate-200 text-[10px] font-medium mt-1 leading-snug">{b.description}</p>
               </div>
             </div>
           );

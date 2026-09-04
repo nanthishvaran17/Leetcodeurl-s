@@ -29,7 +29,7 @@ import api from '../services/api';
 // ─── Shared Card Component ───────────────────────────────────────────────────
 
 const Card: React.FC<{ children: React.ReactNode; className?: string; id?: string; onClick?: () => void }> = ({ children, className = '', id, onClick }) => (
-  <div id={id} onClick={onClick} className={`bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm ${className}`}>
+  <div id={id} onClick={onClick} className={`bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm ${className}`}>
     {children}
   </div>
 );
@@ -46,7 +46,7 @@ const StudentDetailDrawer: React.FC<{
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-none animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-md h-full bg-white dark:bg-navy-900 border-l border-slate-200 dark:border-navy-700 shadow-2xl p-6 overflow-y-auto space-y-6 flex flex-col justify-between">
+      <div className="w-full max-w-md h-full bg-white dark:bg-navy-950 border-l border-slate-200 dark:border-navy-700 shadow-2xl p-6 overflow-y-auto space-y-6 flex flex-col justify-between">
         <div className="space-y-6">
           {/* Header */}
           <div className="flex items-start justify-between pb-4 border-b border-slate-100 dark:border-navy-800">
@@ -153,7 +153,7 @@ const StudentDetailDrawer: React.FC<{
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Activity Status:</span>
-                <span className={`font-bold font-mono px-2 py-0.5 rounded text-[10px] ${student.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : student.status === 'IMPROVING' ? 'bg-blue-100 text-blue-700' : 'bg-rose-100 text-rose-700'}`}>
+                <span className={`font-bold font-mono px-2 py-0.5 rounded text-[10px] ${student.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : student.status === 'IMPROVING' ? 'bg-brand-100 text-brand-700' : 'bg-rose-100 text-rose-700'}`}>
                   {student.status || 'ACTIVE'}
                 </span>
               </div>
@@ -267,7 +267,7 @@ const StaffAllocationModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-none animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-4xl max-h-[90vh] bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-2xl flex flex-col justify-between overflow-hidden">
+      <div className="w-full max-w-4xl max-h-[90vh] bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-2xl flex flex-col justify-between overflow-hidden">
         {/* Modal Header */}
         <div className="p-5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -320,13 +320,13 @@ const StaffAllocationModal: React.FC<{
                 const count = fac.assigned_students || 0;
                 const pct = Math.min(100, Math.round((count / 20) * 100));
                 return (
-                  <div key={fac.faculty_id} className="p-3.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 space-y-2.5">
+                  <div key={fac.faculty_id} className="p-3.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 space-y-2.5">
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="font-bold text-slate-900 dark:text-white font-display text-sm">{fac.faculty_name}</div>
                         <div className="text-[11px] text-slate-400 font-mono">{fac.email}</div>
                       </div>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${fac.workload_status === 'NORMAL' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : fac.workload_status === 'AT_RATIO' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${fac.workload_status === 'NORMAL' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : fac.workload_status === 'AT_RATIO' ? 'bg-brand-50 text-brand-700 border border-brand-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
                         {count}/20 ({pct}%)
                       </span>
                     </div>
@@ -475,7 +475,7 @@ const ReportHubModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-none animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-4xl max-h-[90vh] bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-2xl flex flex-col justify-between overflow-hidden">
+      <div className="w-full max-w-4xl max-h-[90vh] bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-2xl flex flex-col justify-between overflow-hidden">
         {/* Header */}
         <div className="p-5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -958,7 +958,7 @@ export const HODCommandCenter: React.FC = () => {
     { value: 'ALL', label: 'All Status', badge: 'ALL', icon: Activity },
     { value: 'ACTIVE', label: 'Active Solvers', badge: 'Active', badgeColor: 'bg-emerald-500/10 text-emerald-600', icon: CheckCircle2 },
     { value: 'INACTIVE', label: 'Inactive', badge: 'Inactive', badgeColor: 'bg-rose-500/10 text-rose-600', icon: AlertTriangle },
-    { value: 'IMPROVING', label: 'Improving', badge: 'Improving', badgeColor: 'bg-blue-500/10 text-blue-600', icon: TrendingUp }
+    { value: 'IMPROVING', label: 'Improving', badge: 'Improving', badgeColor: 'bg-brand-500/10 text-brand-600', icon: TrendingUp }
   ];
 
   return (
@@ -1038,7 +1038,7 @@ export const HODCommandCenter: React.FC = () => {
 
 
       {/* ── 3. STUDENT COHORT SUMMARY BANNER ───────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 font-bold font-mono text-sm">
             {totalInScope}
@@ -1048,7 +1048,7 @@ export const HODCommandCenter: React.FC = () => {
               Your Student Cohort ({scopeStaffName} • {scopeDeptCode})
             </div>
             <div className="text-xs text-slate-500 font-mono">
-              <span className="text-emerald-600 font-bold">{activeInScope} Active</span> • <span className="text-rose-600 font-bold">{inactiveInScope} Inactive</span> • <span className="text-blue-600 font-bold">{improvingInScope} Improving</span>
+              <span className="text-emerald-600 font-bold">{activeInScope} Active</span> • <span className="text-rose-600 font-bold">{inactiveInScope} Inactive</span> • <span className="text-brand-600 font-bold">{improvingInScope} Improving</span>
             </div>
           </div>
         </div>
@@ -1116,19 +1116,19 @@ export const HODCommandCenter: React.FC = () => {
         </Card>
 
         <Card 
-          className={`p-4 flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-1 hover:shadow-md ${selectedStatus === 'IMPROVING' ? 'ring-2 ring-blue-500 bg-blue-50/50 dark:bg-blue-900/20' : ''}`}
+          className={`p-4 flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-1 hover:shadow-md ${selectedStatus === 'IMPROVING' ? 'ring-2 ring-brand-500 bg-brand-50/50 dark:bg-brand-900/20' : ''}`}
           onClick={() => {
             setSelectedStatus('IMPROVING');
             document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
           }}
         >
-          <div className="flex items-center justify-between text-blue-600">
+          <div className="flex items-center justify-between text-brand-600">
             <span className="text-[10px] font-bold uppercase tracking-wider font-mono">IMPROVING TREND</span>
             <TrendingUp size={15} />
           </div>
           <div className="mt-2">
-            <div className="font-display text-3xl font-extrabold text-blue-600 font-mono">{improvingInScope}</div>
-            <div className="text-[11px] text-blue-500 mt-0.5 font-semibold">Positive Velocity</div>
+            <div className="font-display text-3xl font-extrabold text-brand-600 font-mono">{improvingInScope}</div>
+            <div className="text-[11px] text-brand-500 mt-0.5 font-semibold">Positive Velocity</div>
           </div>
         </Card>
       </div>
@@ -1221,7 +1221,7 @@ export const HODCommandCenter: React.FC = () => {
                 onClick: () => setSelectedStatus('INACTIVE')
               },
               {
-                color: 'text-blue-600 bg-blue-50 border-blue-200',
+                color: 'text-brand-600 bg-brand-50 border-brand-200',
                 badge: 'IMPROVING',
                 count: improvingInScope,
                 title: 'Accelerating Solvers',
@@ -1387,7 +1387,7 @@ export const HODCommandCenter: React.FC = () => {
                         {s.contest_standing || '—'}
                       </td>
                       <td className="py-3 px-3 text-center">
-                        <span className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded ${s.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : s.status === 'IMPROVING' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
+                        <span className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded ${s.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : s.status === 'IMPROVING' ? 'bg-brand-50 text-brand-700 border border-brand-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
                           {s.status || 'ACTIVE'}
                         </span>
                       </td>
@@ -1447,7 +1447,7 @@ export const HODCommandCenter: React.FC = () => {
               </h3>
               <p className="text-xs text-slate-500">Comprehensive real-time view of departmental health, engagement, and mentorship.</p>
             </div>
-            <span className="text-[10px] text-slate-400 font-mono bg-slate-50 dark:bg-navy-900 px-2 py-1 rounded-md border border-slate-100 dark:border-navy-700">
+            <span className="text-[10px] text-slate-400 font-mono bg-slate-50 dark:bg-navy-950 px-2 py-1 rounded-md border border-slate-100 dark:border-navy-700">
               Click row to inspect details
             </span>
           </div>
@@ -1455,7 +1455,7 @@ export const HODCommandCenter: React.FC = () => {
           <div className="overflow-x-auto stylish-scrollbar">
             <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
               <thead>
-                <tr className="text-[10px] font-bold uppercase text-slate-500 font-mono border-b border-slate-100 dark:border-navy-800 bg-slate-50 dark:bg-navy-900/50">
+                <tr className="text-[10px] font-bold uppercase text-slate-500 font-mono border-b border-slate-100 dark:border-navy-800 bg-slate-50 dark:bg-navy-950/50">
                   <th className="py-2.5 px-3 rounded-tl-lg">Rank</th>
                   <th className="py-2.5 px-3">Dept</th>
                   <th className="py-2.5 px-3 text-right">Roster</th>
@@ -1494,7 +1494,7 @@ export const HODCommandCenter: React.FC = () => {
                       <td className="py-3 px-3 text-right">
                         <div className="flex flex-col items-end gap-1">
                           <span className="font-bold text-slate-700 dark:text-slate-300">{d.active_score || 0}/100</span>
-                          <div className="w-16 bg-slate-100 dark:bg-navy-900 rounded-full h-1">
+                          <div className="w-16 bg-slate-100 dark:bg-navy-950 rounded-full h-1">
                             <div className="bg-brand-500 h-1 rounded-full" style={{ width: `${d.active_score || 0}%` }} />
                           </div>
                         </div>
@@ -1502,7 +1502,7 @@ export const HODCommandCenter: React.FC = () => {
                       <td className="py-3 px-3 text-center">
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                           d.coding_engagement === 'HIGH' ? 'bg-emerald-100 text-emerald-800' :
-                          d.coding_engagement === 'MEDIUM' ? 'bg-blue-100 text-blue-800' :
+                          d.coding_engagement === 'MEDIUM' ? 'bg-brand-100 text-brand-800' :
                           'bg-rose-100 text-rose-800'
                         }`}>
                           {d.coding_engagement || 'N/A'}
@@ -1519,8 +1519,8 @@ export const HODCommandCenter: React.FC = () => {
                       <td className="py-3 px-3 text-right">
                         <div className="flex flex-col items-end gap-1">
                           <span className="font-bold text-slate-700 dark:text-slate-300">{d.completion_rate || 0}%</span>
-                          <div className="w-16 bg-slate-100 dark:bg-navy-900 rounded-full h-1">
-                            <div className="bg-blue-500 h-1 rounded-full" style={{ width: `${d.completion_rate || 0}%` }} />
+                          <div className="w-16 bg-slate-100 dark:bg-navy-950 rounded-full h-1">
+                            <div className="bg-brand-500 h-1 rounded-full" style={{ width: `${d.completion_rate || 0}%` }} />
                           </div>
                         </div>
                       </td>
@@ -1544,7 +1544,7 @@ export const HODCommandCenter: React.FC = () => {
                       <td className="py-3 px-3 text-center">
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold whitespace-nowrap ${
                           d.health_status === 'Excellent' ? 'bg-emerald-100 text-emerald-800' :
-                          d.health_status === 'Healthy' ? 'bg-blue-100 text-blue-800' :
+                          d.health_status === 'Healthy' ? 'bg-brand-100 text-brand-800' :
                           d.health_status === 'Needs Attention' ? 'bg-amber-100 text-amber-800' :
                           'bg-rose-100 text-rose-800'
                         }`}>
@@ -1691,7 +1691,7 @@ export const HODCommandCenter: React.FC = () => {
                         </div>
                       </td>
                       <td className="py-2.5 px-3 text-center">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${assigned >= 30 ? 'bg-purple-50 text-purple-700 border border-purple-200' : assigned >= 20 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${assigned >= 30 ? 'bg-purple-50 text-purple-700 border border-purple-200' : assigned >= 20 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-brand-50 text-brand-700 border border-brand-200'}`}>
                           {assigned >= 30 ? 'MAX CAPACITY (30)' : assigned >= 20 ? 'TARGET REACHED (20+)' : 'WITHIN CAPACITY'}
                         </span>
                       </td>
@@ -1770,7 +1770,7 @@ export const HODCommandCenter: React.FC = () => {
           className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
           onClick={e => { if (e.target === e.currentTarget) setConfirmUnassignTarget(null); }}
         >
-          <div className="w-full max-w-md bg-white dark:bg-navy-900 rounded-2xl shadow-2xl border border-rose-200 dark:border-rose-800/60 overflow-hidden">
+          <div className="w-full max-w-md bg-white dark:bg-navy-950 rounded-2xl shadow-2xl border border-rose-200 dark:border-rose-800/60 overflow-hidden">
             {/* Red warning header */}
             <div className="bg-rose-50 dark:bg-rose-900/30 px-6 py-4 border-b border-rose-100 dark:border-rose-800/50 flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-rose-100 dark:bg-rose-800/60 flex items-center justify-center flex-shrink-0">
@@ -1829,7 +1829,7 @@ export const HODCommandCenter: React.FC = () => {
       {/* ── View Methodology Modal ── */}
       {showMethodologyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 animate-fade-in" onClick={e => e.target === e.currentTarget && setShowMethodologyModal(false)}>
-          <div className="w-full max-w-lg bg-white dark:bg-navy-900 rounded-2xl p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
+          <div className="w-full max-w-lg bg-white dark:bg-navy-950 rounded-2xl p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
               <h3 className="font-display text-base font-bold text-slate-900 dark:text-white">
                 5-Dimension Health Index Methodology
@@ -1858,7 +1858,7 @@ export const HODCommandCenter: React.FC = () => {
       {/* ── Ask AI Modal ── */}
       {showAIModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 animate-fade-in" onClick={e => e.target === e.currentTarget && setShowAIModal(false)}>
-          <div className="w-full max-w-lg bg-white dark:bg-navy-900 rounded-2xl p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
+          <div className="w-full max-w-lg bg-white dark:bg-navy-950 rounded-2xl p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
               <h3 className="font-display text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Sparkles size={16} className="text-brand-600" />
@@ -1893,7 +1893,7 @@ export const HODCommandCenter: React.FC = () => {
       {/* ── What-If Simulator Modal ── */}
       {showWhatIfModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 animate-fade-in" onClick={e => e.target === e.currentTarget && setShowWhatIfModal(false)}>
-          <div className="w-full max-w-md bg-white dark:bg-navy-900 rounded-2xl p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
+          <div className="w-full max-w-md bg-white dark:bg-navy-950 rounded-2xl p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
               <h3 className="font-display text-base font-bold text-slate-900 dark:text-white">
                 What-If Policy Simulator (Read-Only)

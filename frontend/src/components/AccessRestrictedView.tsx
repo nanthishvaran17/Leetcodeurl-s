@@ -31,7 +31,7 @@ export const AccessRestrictedView: React.FC<AccessRestrictedViewProps> = ({
     <div className="min-h-[75vh] flex items-center justify-center p-4 relative overflow-hidden animate-fade-in">
       {/* Ambient Lighting Background Blurs */}
 
-      <div className="max-w-lg w-full bg-white/85 dark:bg-navy-900/85 backdrop-blur-2xl border border-gray-200/80 dark:border-navy-700/80 rounded-3xl p-8 sm:p-10 text-center shadow-lg space-y-6 relative z-10 transition-all duration-300 transform hover:scale-[1.005]">
+      <div className="max-w-lg w-full bg-white/85 dark:bg-navy-950/85 backdrop-blur-2xl border border-slate-200/80 dark:border-navy-700/80 rounded-3xl p-8 sm:p-10 text-center shadow-lg space-y-6 relative z-10 transition-all duration-300 transform hover:scale-[1.005]">
         
         {/* Institutional Security Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20 dark:border-rose-500/30 text-[11px] font-black tracking-wider uppercase text-rose-600 dark:text-rose-400">
@@ -52,19 +52,19 @@ export const AccessRestrictedView: React.FC<AccessRestrictedViewProps> = ({
 
         {/* Access Restriction Header & Context */}
         <div className="space-y-2">
-          <h2 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white tracking-tight flex items-center justify-center gap-2">
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center justify-center gap-2">
             <Shield className="w-7 h-7 text-rose-500 inline-block" />
             <span>Access Restricted</span>
           </h2>
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed font-medium">
-            Authorization clearance required to access <strong className="text-gray-900 dark:text-white font-black">{resourceName}</strong>.
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+            Authorization clearance required to access <strong className="text-slate-900 dark:text-white font-black">{resourceName}</strong>.
           </p>
 
-          <div className="mt-4 p-3.5 bg-gray-50/80 dark:bg-navy-950/60 rounded-2xl border border-gray-200/60 dark:border-navy-800 text-xs text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2.5">
+          <div className="mt-4 p-3.5 bg-slate-50/80 dark:bg-navy-950/60 rounded-2xl border border-slate-200/60 dark:border-navy-800 text-xs text-slate-600 dark:text-slate-300 flex items-center justify-center gap-2.5">
             <UserCheck className="w-4 h-4 text-indigo-500 flex-shrink-0" />
             <span className="font-semibold">
               {isAuthenticated ? (
-                <>Authenticated as <strong className="text-gray-900 dark:text-white font-bold">{user?.name || user?.email}</strong> ({user?.role || 'User'}). HOD or Admin clearance required.</>
+                <>Authenticated as <strong className="text-slate-900 dark:text-white font-bold">{user?.name || user?.email}</strong> ({user?.role || 'User'}). HOD or Admin clearance required.</>
               ) : (
                 <>Currently browsing in Guest Mode. Authoritative HOD, Faculty, or Admin credentials required.</>
               )}
@@ -88,7 +88,7 @@ export const AccessRestrictedView: React.FC<AccessRestrictedViewProps> = ({
           {/* Secondary Action: Return to Public Dashboard */}
           <button
             onClick={onGoBack}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-gray-700 dark:text-gray-300 text-xs font-bold rounded-2xl transition-all border border-gray-200 dark:border-navy-700 cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-2xl transition-all border border-slate-200 dark:border-navy-700 cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Return to Starting Overview</span>
@@ -96,7 +96,7 @@ export const AccessRestrictedView: React.FC<AccessRestrictedViewProps> = ({
         </div>
 
         {/* Institutional Footer */}
-        <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium">
+        <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
           Nandha Engineering College • Autonomous • Official Performance Tracking Platform
         </p>
 

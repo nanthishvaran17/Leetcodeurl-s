@@ -119,14 +119,14 @@ export const StatusNotificationModal: React.FC<StatusNotificationModalProps> = (
     >
       {/* Modal Container Card */}
       <div
-        className={`modal-container-responsive max-w-[500px] bg-slate-900/95 dark:bg-navy-900/95 backdrop-blur-2xl rounded-3xl border ${config.borderGlow} p-6 sm:p-8 text-center space-y-5 text-white animate-modal-content transition-all shadow-lg overflow-y-auto`}
+        className={`modal-container-responsive max-w-[500px] bg-slate-900/95 dark:bg-navy-950/95 backdrop-blur-2xl rounded-3xl border ${config.borderGlow} p-6 sm:p-8 text-center space-y-5 text-white animate-modal-content transition-all shadow-lg overflow-y-auto`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Subtle Top Close Icon */}
         <button
           onClick={handleCancelClick}
           aria-label="Close notification"
-          className="absolute top-4 right-4 p-1.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+          className="absolute top-4 right-4 p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
@@ -147,11 +147,11 @@ export const StatusNotificationModal: React.FC<StatusNotificationModalProps> = (
           <h3 id="notif-modal-title" className="text-lg sm:text-xl font-black text-white tracking-tight">
             {title}
           </h3>
-          <p className="text-xs sm:text-sm text-gray-300 font-medium leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
             {message}
           </p>
           {details && (
-            <div className="mt-3 p-3 rounded-xl bg-black/40 border border-white/10 text-left font-mono text-[11px] text-gray-400 break-words max-h-32 overflow-y-auto">
+            <div className="mt-3 p-3 rounded-xl bg-black/40 border border-white/10 text-left font-mono text-[11px] text-slate-400 break-words max-h-32 overflow-y-auto">
               {details}
             </div>
           )}
@@ -163,7 +163,7 @@ export const StatusNotificationModal: React.FC<StatusNotificationModalProps> = (
             <button
               type="button"
               onClick={handleCancelClick}
-              className="flex-1 py-2.5 px-4 rounded-xl border border-gray-700 hover:border-gray-600 bg-slate-800/80 hover:bg-slate-800 text-gray-300 text-xs font-black transition-all cursor-pointer"
+              className="flex-1 py-2.5 px-4 rounded-xl border border-slate-700 hover:border-slate-600 bg-slate-800/80 hover:bg-slate-800 text-slate-300 text-xs font-black transition-all cursor-pointer"
             >
               {cancelText}
             </button>

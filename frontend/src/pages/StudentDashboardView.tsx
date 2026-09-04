@@ -52,7 +52,7 @@ export const StudentDashboardView: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center py-16 space-y-4">
         <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-sm font-bold text-gray-500">Loading your LeetCode student dashboard...</p>
+        <p className="text-sm font-bold text-slate-500">Loading your LeetCode student dashboard...</p>
       </div>
     );
   }
@@ -94,7 +94,7 @@ export const StudentDashboardView: React.FC = () => {
                 <span>AUTHENTICATED STUDENT DASHBOARD</span>
               </div>
               <h1 className="text-2xl md:text-3xl font-black">{user?.name}</h1>
-              <p className="text-xs text-gray-300 font-mono font-bold">
+              <p className="text-xs text-slate-300 font-mono font-bold">
                 {user?.registerNo ? `Reg No: ${user.registerNo}` : user?.email} • {user?.department || 'Department'} • {user?.year ? `${user.year} Year` : ''}
               </p>
             </div>
@@ -121,7 +121,7 @@ export const StudentDashboardView: React.FC = () => {
             <span>Profile Linking Note</span>
           </div>
           <p className="leading-relaxed">{error}</p>
-          <p className="text-[11px] text-gray-500 dark:text-gray-400">
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">
             If your Google account email is not matched with your student record, please contact your department admin.
           </p>
         </div>
@@ -135,11 +135,11 @@ export const StudentDashboardView: React.FC = () => {
 
             {/* Total Solved */}
             <div className="glass-card p-6 rounded-3xl border border-brand-500/30 space-y-2 shadow-lg">
-              <div className="flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
                 <span>Total Solved</span>
                 <Trophy className="w-5 h-5 text-amber-500" />
               </div>
-              <h3 className="text-3xl font-black text-gray-900 dark:text-white">
+              <h3 className="text-3xl font-black text-slate-900 dark:text-white">
                 {reportedTotal}
               </h3>
               <p className="text-xs text-brand-600 dark:text-brand-400 font-bold">
@@ -149,21 +149,21 @@ export const StudentDashboardView: React.FC = () => {
 
             {/* Contest Rating */}
             <div className="glass-card p-6 rounded-3xl border border-amber-500/30 space-y-2 shadow-lg">
-              <div className="flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
                 <span>Contest Rating</span>
                 <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
               </div>
               <h3 className="text-3xl font-black text-amber-500">
                 {studentData.stats?.contest_rating ? Math.round(studentData.stats.contest_rating) : 'Unrated'}
               </h3>
-              <p className="text-xs text-gray-500 font-medium">
+              <p className="text-xs text-slate-500 font-medium">
                 Global Rank: {studentData.stats?.contest_global_ranking ? `#${studentData.stats.contest_global_ranking}` : 'N/A'}
               </p>
             </div>
 
             {/* Weekly Progress */}
             <div className="glass-card p-6 rounded-3xl border border-emerald-500/30 space-y-2 shadow-lg">
-              <div className="flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
                 <span>Weekly Progress</span>
                 <TrendingUp className="w-5 h-5 text-emerald-500" />
               </div>
@@ -178,15 +178,15 @@ export const StudentDashboardView: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <p className="text-xs text-gray-400 font-bold pt-1">No activity data available yet</p>
-                  <p className="text-[10px] text-gray-500">Awaiting Sunday session sync</p>
+                  <p className="text-xs text-slate-400 font-bold pt-1">No activity data available yet</p>
+                  <p className="text-[10px] text-slate-500">Awaiting Sunday session sync</p>
                 </>
               )}
             </div>
 
             {/* Active Streak */}
             <div className="glass-card p-6 rounded-3xl border border-rose-500/30 space-y-2 shadow-lg">
-              <div className="flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
                 <span>Active Streak</span>
                 <Flame className="w-5 h-5 text-rose-500 fill-rose-500" />
               </div>
@@ -195,14 +195,14 @@ export const StudentDashboardView: React.FC = () => {
                   <h3 className="text-3xl font-black text-rose-500">
                     {studentData.streak_count || 0} Days
                   </h3>
-                  <p className="text-xs text-gray-500 font-medium">
+                  <p className="text-xs text-slate-500 font-medium">
                     Consistency: {studentData.consistency_score || 0}%
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="text-xs text-gray-400 font-bold pt-1">No streak recorded</p>
-                  <p className="text-[10px] text-gray-500">Solve daily problems to build streak</p>
+                  <p className="text-xs text-slate-400 font-bold pt-1">No streak recorded</p>
+                  <p className="text-[10px] text-slate-500">Solve daily problems to build streak</p>
                 </>
               )}
             </div>
@@ -212,7 +212,7 @@ export const StudentDashboardView: React.FC = () => {
           {/* Difficulty Breakdown */}
           <div className="glass-card p-6 rounded-3xl border space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-black text-gray-900 dark:text-white flex items-center space-x-2">
+              <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center space-x-2">
                 <Zap className="w-5 h-5 text-brand-500" />
                 <span>Difficulty Distribution</span>
               </h3>
@@ -244,7 +244,7 @@ export const StudentDashboardView: React.FC = () => {
           {/* Badges Shelf */}
           {studentData.badge_list && studentData.badge_list.length > 0 && (
             <div className="glass-card p-6 rounded-3xl border space-y-4 shadow-xl">
-              <h3 className="text-base font-black text-gray-900 dark:text-white flex items-center space-x-2">
+              <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center space-x-2">
                 <Award className="w-5 h-5 text-amber-500" />
                 <span>Earned Achievements & Badges</span>
               </h3>

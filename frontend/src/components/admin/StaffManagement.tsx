@@ -364,10 +364,10 @@ export const StaffManagement: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
             <Shield className="w-5 h-5 text-indigo-500" /> Staff Management
           </h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Manage institutional staff accounts, administrative roles, and student mentoring access.
           </p>
         </div>
@@ -375,7 +375,7 @@ export const StaffManagement: React.FC = () => {
           <button
             type="button"
             onClick={fetchStaff}
-            className="p-2 rounded-xl border border-gray-200 dark:border-navy-700 hover:bg-gray-50 dark:hover:bg-navy-750 text-gray-500 transition-colors cursor-pointer"
+            className="p-2 rounded-xl border border-slate-200 dark:border-navy-700 hover:bg-slate-50 dark:hover:bg-navy-750 text-slate-500 transition-colors cursor-pointer"
             title="Refresh staff list"
           >
             <RefreshCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -390,7 +390,7 @@ export const StaffManagement: React.FC = () => {
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 bg-gray-50 dark:bg-navy-900/60 rounded-2xl border border-gray-200/80 dark:border-navy-700">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 bg-slate-50 dark:bg-navy-950/60 rounded-2xl border border-slate-200/80 dark:border-navy-700">
         <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
           {[
             { id: 'ALL', label: `All (${staffList.length})` },
@@ -405,7 +405,7 @@ export const StaffManagement: React.FC = () => {
               onClick={() => setRoleFilter(tab.id)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${roleFilter === tab.id
                 ? 'bg-brand-600 text-white shadow-sm'
-                : 'bg-white dark:bg-navy-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-700 border border-gray-200/60 dark:border-navy-700'
+                : 'bg-white dark:bg-navy-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-700 border border-slate-200/60 dark:border-navy-700'
                 }`}
             >
               {tab.label}
@@ -414,16 +414,16 @@ export const StaffManagement: React.FC = () => {
         </div>
 
         <div className="relative flex-1 sm:max-w-xs">
-          <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search username, email, ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-9 pl-9 pr-8 text-xs font-medium rounded-xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none shadow-sm"
+            className="w-full h-9 pl-9 pr-8 text-xs font-medium rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none shadow-sm"
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
               <X className="w-3.5 h-3.5" />
             </button>
           )}
@@ -431,15 +431,15 @@ export const StaffManagement: React.FC = () => {
       </div>
 
       {/* Main Table / State Views */}
-      <div className="bg-white dark:bg-navy-800 rounded-3xl border border-gray-200 dark:border-navy-700 overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-navy-800 rounded-3xl border border-slate-200 dark:border-navy-700 overflow-hidden shadow-sm">
         {/* 1. LOADING STATE */}
         {loading && (
           <div className="p-16 text-center space-y-3">
             <RefreshCcw className="w-8 h-8 text-brand-500 animate-spin mx-auto" />
-            <p className="text-sm font-bold text-gray-700 dark:text-gray-300">
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
               Loading staff accounts...
             </p>
-            <p className="text-xs text-gray-400">Querying authoritative database records.</p>
+            <p className="text-xs text-slate-400">Querying authoritative database records.</p>
           </div>
         )}
 
@@ -453,12 +453,12 @@ export const StaffManagement: React.FC = () => {
               <AlertCircle className="w-7 h-7" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-base font-bold text-gray-900 dark:text-white">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
                 {errorState.type === 'FORBIDDEN'
                   ? 'Access Restricted'
                   : (errorState.type === 'NETWORK_ERROR' ? 'Network Connection Error' : 'Unable to load staff accounts')}
               </h3>
-              <p className="text-xs text-gray-500 leading-relaxed">
+              <p className="text-xs text-slate-500 leading-relaxed">
                 {errorState.message}
               </p>
             </div>
@@ -477,14 +477,14 @@ export const StaffManagement: React.FC = () => {
         {/* 3. SUCCESS WITH ZERO RECORDS */}
         {!loading && !errorState && staffList.length === 0 && (
           <div className="p-16 text-center space-y-4 max-w-md mx-auto">
-            <div className="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-navy-900 text-gray-400 flex items-center justify-center mx-auto">
+            <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-navy-950 text-slate-400 flex items-center justify-center mx-auto">
               <UserX className="w-7 h-7" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-base font-bold text-gray-900 dark:text-white">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
                 No staff accounts have been created.
               </h3>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-slate-500">
                 Click "Add Staff Member" above to provision faculty, mentors, or administrators.
               </p>
             </div>
@@ -502,7 +502,7 @@ export const StaffManagement: React.FC = () => {
         {!loading && !errorState && staffList.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-gray-50 dark:bg-navy-900/50 text-gray-600 dark:text-gray-400 font-bold uppercase text-[10px] tracking-wider border-b border-gray-100 dark:border-navy-700">
+              <thead className="bg-slate-50 dark:bg-navy-950/50 text-slate-600 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider border-b border-slate-100 dark:border-navy-700">
                 <tr>
                   <th className="px-6 py-4">Institutional ID</th>
                   <th className="px-6 py-4">Username / Email</th>
@@ -516,18 +516,18 @@ export const StaffManagement: React.FC = () => {
               <tbody className="divide-y divide-gray-100 dark:divide-navy-700">
                 {filteredStaff.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center text-xs font-bold text-gray-400">
+                    <td colSpan={7} className="px-6 py-8 text-center text-xs font-bold text-slate-400">
                       No staff accounts match your current filter.
                     </td>
                   </tr>
                 ) : (
                   filteredStaff.map((staff) => (
-                    <tr key={staff.id} className="hover:bg-gray-50/80 dark:hover:bg-navy-750/50 transition-colors">
+                    <tr key={staff.id} className="hover:bg-slate-50/80 dark:hover:bg-navy-750/50 transition-colors">
                       <td className="px-6 py-4 font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">
                         {staff.institutional_id || `NEC-STAFF-${staff.id}`}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                        <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                           <span>{staff.username}</span>
                           {staff.role === 'Super Admin' && (
                             <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
@@ -535,14 +535,14 @@ export const StaffManagement: React.FC = () => {
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-gray-500">{staff.email}</div>
+                        <div className="text-xs text-slate-500">{staff.email}</div>
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${staff.department === 'CSE(CS)'
                           ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
                           : (staff.department === 'CSE(IOT)'
                             ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20'
-                            : 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20')
+                            : 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20')
                           }`}>
                           {staff.department || 'INSTITUTIONAL'}
                         </span>
@@ -554,16 +554,16 @@ export const StaffManagement: React.FC = () => {
                             ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
                             : (staff.role?.includes('Admin')
                               ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-                              : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'))
+                              : 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20'))
                           }`}>
                           {staff.role || 'Staff'}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                        <div className="text-xs font-bold text-slate-700 dark:text-slate-300">
                           {staff.assigned_count || 0} / {staff.max_capacity || 30}
                         </div>
-                        <div className="w-20 h-1.5 bg-gray-100 dark:bg-navy-900 rounded-full overflow-hidden mt-1">
+                        <div className="w-20 h-1.5 bg-slate-100 dark:bg-navy-950 rounded-full overflow-hidden mt-1">
                           <div
                             className="h-full bg-brand-500 rounded-full"
                             style={{ width: `${Math.min(100, ((staff.assigned_count || 0) / (staff.max_capacity || 30)) * 100)}%` }}
@@ -585,7 +585,7 @@ export const StaffManagement: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleOpenEditModal(staff)}
-                          className="p-2 rounded-xl text-gray-400 hover:bg-brand-100 hover:text-brand-600 dark:hover:bg-brand-500/20 dark:hover:text-brand-400 transition-colors cursor-pointer"
+                          className="p-2 rounded-xl text-slate-400 hover:bg-brand-100 hover:text-brand-600 dark:hover:bg-brand-500/20 dark:hover:text-brand-400 transition-colors cursor-pointer"
                           title="Edit Staff Account & Role"
                         >
                           <Edit2 className="w-4 h-4" />
@@ -593,7 +593,7 @@ export const StaffManagement: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleToggleStatus(staff.id, staff.is_active)}
-                          className={`p-2 rounded-xl transition-colors cursor-pointer ${staff.is_active ? 'hover:bg-amber-100 hover:text-amber-600 dark:hover:bg-amber-500/20 text-gray-400' : 'hover:bg-emerald-100 hover:text-emerald-600 dark:hover:bg-emerald-500/20 text-gray-400'}`}
+                          className={`p-2 rounded-xl transition-colors cursor-pointer ${staff.is_active ? 'hover:bg-amber-100 hover:text-amber-600 dark:hover:bg-amber-500/20 text-slate-400' : 'hover:bg-emerald-100 hover:text-emerald-600 dark:hover:bg-emerald-500/20 text-slate-400'}`}
                           title={staff.is_active ? "Suspend Account" : "Activate Account"}
                         >
                           {staff.is_active ? <UserX className="w-4 h-4" /> : <RefreshCcw className="w-4 h-4" />}
@@ -601,7 +601,7 @@ export const StaffManagement: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setDeletingStaff(staff)}
-                          className="p-2 rounded-xl text-gray-400 hover:bg-rose-100 hover:text-rose-600 dark:hover:bg-rose-500/20 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                          className="p-2 rounded-xl text-slate-400 hover:bg-rose-100 hover:text-rose-600 dark:hover:bg-rose-500/20 dark:hover:text-rose-400 transition-colors cursor-pointer"
                           title="Permanently Delete Staff Account"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -653,19 +653,19 @@ export const StaffManagement: React.FC = () => {
         <>
           {showCancelConfirm && (
             <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
-              <div className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-gray-200 dark:border-navy-700 p-6 text-center space-y-5">
+              <div className="bg-white dark:bg-navy-950 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-slate-200 dark:border-navy-700 p-6 text-center space-y-5">
                 <div className="w-14 h-14 bg-rose-100 dark:bg-rose-500/20 text-rose-500 rounded-2xl flex items-center justify-center mx-auto">
                   <UserX className="w-7 h-7" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-gray-900 dark:text-white mb-1">Discard Changes?</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">You have unsaved changes in this form. Are you sure you want to discard them? This cannot be undone.</p>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white mb-1">Discard Changes?</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">You have unsaved changes in this form. Are you sure you want to discard them? This cannot be undone.</p>
                 </div>
                 <div className="flex gap-3">
                   <button
                     type="button"
                     onClick={() => setShowCancelConfirm(false)}
-                    className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800 transition-all cursor-pointer"
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-navy-800 transition-all cursor-pointer"
                   >
                     Keep Editing
                   </button>
@@ -684,42 +684,42 @@ export const StaffManagement: React.FC = () => {
           {/* Centered Create Staff Account Confirmation Modal */}
           {showConfirmCreate && (
             <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
-              <div className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-indigo-200/50 dark:border-indigo-900/40 p-6 text-center space-y-5">
+              <div className="bg-white dark:bg-navy-950 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-indigo-200/50 dark:border-indigo-900/40 p-6 text-center space-y-5">
                 <div className="w-16 h-16 bg-brand-100 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-brand-500/20">
                   <UserPlus className="w-8 h-8" />
                 </div>
 
                 <div className="space-y-1.5">
-                  <h3 className="text-xl font-black text-gray-900 dark:text-white">
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white">
                     Create Institutional Account?
                   </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                     Please confirm the details before creating this staff account.
                   </p>
                 </div>
 
-                <div className="p-4 bg-gray-50 dark:bg-navy-800/60 rounded-2xl border border-gray-200/80 dark:border-navy-700/80 text-left space-y-2 text-xs">
+                <div className="p-4 bg-slate-50 dark:bg-navy-800/60 rounded-2xl border border-slate-200/80 dark:border-navy-700/80 text-left space-y-2 text-xs">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-500 font-medium">Username:</span>
-                    <span className="font-bold text-gray-900 dark:text-white">{formData.username}</span>
+                    <span className="text-slate-500 font-medium">Username:</span>
+                    <span className="font-bold text-slate-900 dark:text-white">{formData.username}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-500 font-medium">Official Email:</span>
-                    <span className="font-mono text-gray-800 dark:text-gray-200">{formData.email}</span>
+                    <span className="text-slate-500 font-medium">Official Email:</span>
+                    <span className="font-mono text-slate-800 dark:text-slate-200">{formData.email}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-500 font-medium">Assigned Role:</span>
+                    <span className="text-slate-500 font-medium">Assigned Role:</span>
                     <span className="font-black px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
                       {formData.role}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-500 font-medium">Department:</span>
-                    <span className="font-semibold text-gray-700 dark:text-gray-300 truncate max-w-[200px]">
+                    <span className="text-slate-500 font-medium">Department:</span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[200px]">
                       {departments.find(d => String(d.id) === String(formData.department_id))?.code || 'CSE(CS)'}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center pt-1.5 border-t border-gray-200 dark:border-navy-700 text-[11px] text-gray-500">
+                  <div className="flex justify-between items-center pt-1.5 border-t border-slate-200 dark:border-navy-700 text-[11px] text-slate-500">
                     <span>Default Password:</span>
                     <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
                       {formData.password?.trim() ? 'Custom Provided' : 'Staff@123456!'}
@@ -732,7 +732,7 @@ export const StaffManagement: React.FC = () => {
                     type="button"
                     disabled={submitting}
                     onClick={() => setShowConfirmCreate(false)}
-                    className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-navy-700 transition-colors cursor-pointer"
+                    className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-700 transition-colors cursor-pointer"
                   >
                     Cancel / Edit
                   </button>
@@ -764,31 +764,31 @@ export const StaffManagement: React.FC = () => {
 
           {deletingStaff && (
             <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
-              <div className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-rose-200/50 dark:border-rose-900/40 p-6 text-center space-y-5">
+              <div className="bg-white dark:bg-navy-950 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-rose-200/50 dark:border-rose-900/40 p-6 text-center space-y-5">
                 <div className="w-16 h-16 bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-rose-500/20">
                   <Trash2 className="w-8 h-8" />
                 </div>
 
                 <div className="space-y-2">
-                  <h3 className="text-xl font-black text-gray-900 dark:text-white">
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white">
                     Delete Staff Account?
                   </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                     You are about to permanently remove this institutional staff account from the system.
                   </p>
                 </div>
 
                 <div className="p-3.5 bg-rose-50/50 dark:bg-rose-950/30 rounded-2xl border border-rose-100 dark:border-rose-900/30 text-left space-y-1.5">
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-500 font-medium">Username:</span>
-                    <span className="font-bold text-gray-900 dark:text-white">{deletingStaff.username}</span>
+                    <span className="text-slate-500 font-medium">Username:</span>
+                    <span className="font-bold text-slate-900 dark:text-white">{deletingStaff.username}</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-500 font-medium">Official Email:</span>
-                    <span className="font-semibold text-gray-700 dark:text-gray-300">{deletingStaff.email}</span>
+                    <span className="text-slate-500 font-medium">Official Email:</span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">{deletingStaff.email}</span>
                   </div>
                   <div className="flex justify-between text-xs">
-                    <span className="text-gray-500 font-medium">Role:</span>
+                    <span className="text-slate-500 font-medium">Role:</span>
                     <span className="font-bold text-indigo-600 dark:text-indigo-400">{deletingStaff.role}</span>
                   </div>
                 </div>
@@ -798,7 +798,7 @@ export const StaffManagement: React.FC = () => {
                     type="button"
                     disabled={isDeleting}
                     onClick={() => setDeletingStaff(null)}
-                    className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-navy-700 transition-colors cursor-pointer"
+                    className="flex-1 px-4 py-2.5 rounded-xl font-bold text-xs bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-700 transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>

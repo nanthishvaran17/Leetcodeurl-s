@@ -65,8 +65,13 @@ def calculate_department_health_score(
     if total_students == 0:
         return _empty_health()
 
-    # Pull stats for filtered students
-    stats_q = db.query(LeetCodeProfileStats).join(Student, Student.id == LeetCodeProfileStats.student_id).filter(
+    # Pull stats for filtered students (Fetch only required columns for massive speedup)
+    stats_q = db.query(
+        LeetCodeProfileStats.total_solved,
+        LeetCodeProfileStats.contest_rating,
+        LeetCodeProfileStats.medium_solved,
+        LeetCodeProfileStats.hard_solved
+    ).join(Student, Student.id == LeetCodeProfileStats.student_id).filter(
         Student.is_active == True
     )
     if staff_id:
@@ -92,10 +97,10 @@ def calculate_department_health_score(
 
     stats_rows = stats_q.all()
 
-    total_solved_list = [s.total_solved or 0 for s in stats_rows]
-    rating_list       = [s.contest_rating or 0.0 for s in stats_rows if (s.contest_rating or 0) > 100]
-    medium_list       = [s.medium_solved or 0 for s in stats_rows]
-    hard_list         = [s.hard_solved or 0 for s in stats_rows]
+    total_solved_list = [s[0] or 0 for s in stats_rows]
+    rating_list       = [s[1] or 0.0 for s in stats_rows if (s[1] or 0) > 100]
+    medium_list       = [s[2] or 0 for s in stats_rows]
+    hard_list         = [s[3] or 0 for s in stats_rows]
 
     active_students = sum(1 for v in total_solved_list if v > 0)
     inactive_students = max(0, total_students - active_students)
@@ -158,7 +163,12 @@ def get_institutional_benchmarks(db: Session, current_user: Optional[User] = Non
     departments = db.query(Department).all()
     dept_map = {d.id: d for d in departments if _is_real_dept(d.code)}
     
-    q = db.query(Student, LeetCodeProfileStats).outerjoin(
+    q = db.query(
+        Student.id, 
+        Student.department_id, 
+        LeetCodeProfileStats.total_solved, 
+        LeetCodeProfileStats.contest_rating
+    ).outerjoin(
         LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
     ).filter(
         Student.is_active == True,
@@ -168,12 +178,13 @@ def get_institutional_benchmarks(db: Session, current_user: Optional[User] = Non
     student_stats = q.all()
     
     dept_stats = {}
-    for student, stats in student_stats:
-        did = student.department_id
-        if did not in dept_stats:
-            dept_stats[did] = []
-        if stats:
-            dept_stats[did].append(stats)
+    for student_id, dept_id, total_solved, contest_rating in student_stats:
+        if dept_id not in dept_stats:
+            dept_stats[dept_id] = []
+        dept_stats[dept_id].append({
+            "total_solved": total_solved,
+            "contest_rating": contest_rating
+        })
 
     dept_matrix = []
     
@@ -198,13 +209,12 @@ def get_institutional_benchmarks(db: Session, current_user: Optional[User] = Non
 
     for did, d in dept_map.items():
         stats_rows = dept_stats.get(did, [])
-        dept_students = [s for s, _ in student_stats if s.department_id == did]
-        cnt = len(dept_students)
+        cnt = sum(1 for s in student_stats if s[1] == did)
         if cnt == 0:
             continue
 
-        ratings = [s.contest_rating or 0 for s in stats_rows if (s.contest_rating or 0) > 100]
-        solveds = [s.total_solved or 0 for s in stats_rows]
+        ratings = [s["contest_rating"] or 0 for s in stats_rows if (s["contest_rating"] or 0) > 100]
+        solveds = [s["total_solved"] or 0 for s in stats_rows]
         active  = sum(1 for v in solveds if v > 0)
         inactive = max(0, cnt - active)
         improving = sum(1 for r in ratings if r > 1450)
@@ -235,13 +245,13 @@ def get_institutional_benchmarks(db: Session, current_user: Optional[User] = Non
             engagement_status = "LOW"
             
         # At-risk students
-        at_risk_students = sum(1 for s in dept_students if s.id in risk_map)
+        at_risk_students = sum(1 for s in student_stats if s[1] == did and s[0] in risk_map)
         
         # Faculty Mentors
         faculty_mentors = faculty_map.get(did, 0)
         
         # Completion Rate
-        completed_students = sum(1 for s in dept_students if s.id in completed_map)
+        completed_students = sum(1 for s in student_stats if s[1] == did and s[0] in completed_map)
         completion_rate = round((completed_students / cnt) * 100, 1) if cnt > 0 else 0
         
         # Performance Trend
@@ -294,7 +304,11 @@ def calculate_year_matrix(db: Session, current_user: Optional[User] = None) -> L
     dept_map = {d.id: d for d in departments if _is_real_dept(d.code)}
     YEAR_ORDER = {"I": 1, "II": 2, "III": 3, "IV": 4}
     
-    q = db.query(Student, LeetCodeProfileStats).outerjoin(
+    q = db.query(
+        Student.year_level, 
+        LeetCodeProfileStats.total_solved, 
+        LeetCodeProfileStats.contest_rating
+    ).outerjoin(
         LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
     ).filter(
         Student.is_active == True,
@@ -305,24 +319,25 @@ def calculate_year_matrix(db: Session, current_user: Optional[User] = None) -> L
     student_stats = q.all()
     
     stats_by_year = {}
-    for student, stats in student_stats:
-        yl = student.year_level
-        if yl not in stats_by_year:
-            stats_by_year[yl] = []
-        if stats:
-            stats_by_year[yl].append(stats)
+    for year_level, total_solved, contest_rating in student_stats:
+        if year_level not in stats_by_year:
+            stats_by_year[year_level] = []
+        stats_by_year[year_level].append({
+            "total_solved": total_solved,
+            "contest_rating": contest_rating
+        })
             
     year_matrix = []
     for year_level, stats_rows in stats_by_year.items():
         if not year_level:
             continue
             
-        count = sum(1 for s, _ in student_stats if s.year_level == year_level)
+        count = sum(1 for s in student_stats if s[0] == year_level)
         if count == 0:
             continue
 
-        ratings = [s.contest_rating or 0 for s in stats_rows if (s.contest_rating or 0) > 100]
-        solveds = [s.total_solved or 0 for s in stats_rows]
+        ratings = [s["contest_rating"] or 0 for s in stats_rows if (s["contest_rating"] or 0) > 100]
+        solveds = [s["total_solved"] or 0 for s in stats_rows]
         active  = sum(1 for v in solveds if v > 0)
         inactive = max(0, count - active)
 

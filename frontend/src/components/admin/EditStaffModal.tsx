@@ -210,7 +210,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
   const getRoleConfig = (role: string) => {
     const map: Record<string, { icon: React.ElementType; color: string; bgColor: string; borderColor: string; badgeColor: string; desc: string }> = {
       'Faculty Mentor': { icon: GraduationCap, color: 'text-indigo-600 dark:text-indigo-400', bgColor: 'bg-indigo-50 dark:bg-indigo-500/10', borderColor: 'border-indigo-200 dark:border-indigo-500/30', badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30', desc: 'Student mentoring & intervention access' },
-      'Staff Mentor': { icon: User, color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-50 dark:bg-blue-500/10', borderColor: 'border-blue-200 dark:border-blue-500/30', badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 border-blue-200 dark:border-blue-500/30', desc: 'Student support & academic guidance' },
+      'Staff Mentor': { icon: User, color: 'text-brand-600 dark:text-brand-400', bgColor: 'bg-brand-50 dark:bg-brand-500/10', borderColor: 'border-brand-200 dark:border-brand-500/30', badgeColor: 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300 border-brand-200 dark:border-brand-500/30', desc: 'Student support & academic guidance' },
       'Department HOD': { icon: Building2, color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-50 dark:bg-purple-500/10', borderColor: 'border-purple-200 dark:border-purple-500/30', badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 border-purple-200 dark:border-purple-500/30', desc: 'Department-level academic oversight' },
       'Admin': { icon: Key, color: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-50 dark:bg-amber-500/10', borderColor: 'border-amber-200 dark:border-amber-500/30', badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border-amber-200 dark:border-amber-500/30', desc: 'Institutional administration & management' },
       'Administrator': { icon: Key, color: 'text-amber-600 dark:text-amber-400', bgColor: 'bg-amber-50 dark:bg-amber-500/10', borderColor: 'border-amber-200 dark:border-amber-500/30', badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border-amber-200 dark:border-amber-500/30', desc: 'Institutional administration & management' },
@@ -371,7 +371,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
 
   return (
     <GlobalModalBackdrop isOpen={true} onClose={handleAttemptClose} className="flex items-center justify-center p-3 sm:p-6 bg-navy-950/70 backdrop-blur-md overflow-y-auto z-[999]">
-      <div className="bg-white dark:bg-navy-900 rounded-[2.2rem] w-full max-w-[1050px] shadow-2xl flex flex-col h-[92vh] max-h-[880px] overflow-hidden border border-slate-200/80 dark:border-navy-700/80 animate-fade-in-up">
+      <div className="bg-white dark:bg-navy-950 rounded-[2.2rem] w-full max-w-[1050px] shadow-2xl flex flex-col h-[92vh] max-h-[880px] overflow-hidden border border-slate-200/80 dark:border-navy-700/80 animate-fade-in-up">
         
         {/* HEADER */}
         <div className="px-6 py-4 bg-slate-50/90 dark:bg-navy-950/80 border-b border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0 z-20">
@@ -458,11 +458,11 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
               <div className="lg:col-span-6 space-y-8">
                 
                 {/* 01 IDENTITY */}
-                <section className="bg-white dark:bg-navy-900 rounded-3xl p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-5">
+                <section className="bg-white dark:bg-navy-950 rounded-3xl p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-5">
                   <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-navy-800 pb-3">
-                    <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-blue-500 text-white font-black text-xs shadow-sm shadow-blue-500/30">01</span>
-                    <h3 className="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <User className="w-4 h-4 text-blue-500" /> Identity
+                    <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-brand-500 text-white font-black text-xs shadow-sm shadow-brand-500/30">01</span>
+                    <h3 className="text-xs font-black text-brand-600 dark:text-brand-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <User className="w-4 h-4 text-brand-500" /> Identity
                     </h3>
                   </div>
 
@@ -535,7 +535,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                 </section>
 
                 {/* 02 PROFESSIONAL DETAILS */}
-                <section className="bg-white dark:bg-navy-900 rounded-3xl p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-5">
+                <section className="bg-white dark:bg-navy-950 rounded-3xl p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-5">
                   <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-navy-800 pb-3">
                     <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-indigo-500 text-white font-black text-xs shadow-sm shadow-indigo-500/30">02</span>
                     <h3 className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -591,7 +591,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                             </button>
 
                             {roleOpen && (
-                              <div className="absolute left-0 right-0 z-[9999] mt-2 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xl p-2 space-y-1">
+                              <div className="absolute left-0 right-0 z-[9999] mt-2 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-2xl p-2 space-y-1">
                                 {roleOptions.map(opt => {
                                   const cfg = getRoleConfig(opt.value);
                                   const OptIcon = cfg.icon;
@@ -629,7 +629,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
               <div className="lg:col-span-6 space-y-8">
                 
                 {/* 03 DEPARTMENT & ACADEMIC SCOPE */}
-                <section className="bg-white dark:bg-navy-900 rounded-3xl p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-5">
+                <section className="bg-white dark:bg-navy-950 rounded-3xl p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-5">
                   <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-navy-800 pb-3">
                     <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-cyan-500 text-white font-black text-xs shadow-sm shadow-cyan-500/30">03</span>
                     <h3 className="text-xs font-black text-cyan-600 dark:text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -679,7 +679,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                 </section>
 
                 {/* 04 ACCESS & PERMISSIONS */}
-                <section className="bg-white dark:bg-navy-900 rounded-3xl p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
+                <section className="bg-white dark:bg-navy-950 rounded-3xl p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-4">
                   <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-navy-800 pb-3">
                     <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-amber-500 text-white font-black text-xs shadow-sm shadow-amber-500/30">04</span>
                     <h3 className="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -713,7 +713,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                 </section>
 
                 {/* 05 ACCOUNT STATUS & SECURITY ACTIONS */}
-                <section className="bg-white dark:bg-navy-900 rounded-3xl p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-5">
+                <section className="bg-white dark:bg-navy-950 rounded-3xl p-6 border border-slate-200 dark:border-navy-800 shadow-sm space-y-5">
                   <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-navy-800 pb-3">
                     <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-500 text-white font-black text-xs shadow-sm shadow-emerald-500/30">05</span>
                     <h3 className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -781,7 +781,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                             Copy Password
                           </button>
                         </div>
-                        <div className="flex items-center justify-between text-xs bg-white dark:bg-navy-900 px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-navy-700">
+                        <div className="flex items-center justify-between text-xs bg-white dark:bg-navy-950 px-3 py-1.5 rounded-xl border border-emerald-100 dark:border-navy-700">
                           <span className="font-mono font-black text-emerald-700 dark:text-emerald-300 tracking-wider">
                             {tempPasswordResult.password}
                           </span>
@@ -845,7 +845,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         {/* DANGEROUS SUSPEND CONFIRMATION MODAL */}
         {showSuspendModal && (
           <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4 z-[9999]">
-            <div className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-md p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4 text-center">
+            <div className="bg-white dark:bg-navy-950 rounded-3xl w-full max-w-md p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4 text-center">
               <div className="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto">
                 <AlertTriangle className="w-7 h-7" />
               </div>
@@ -886,7 +886,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         {/* UNSAVED CHANGES WARNING MODAL */}
         {showUnsavedModal && (
           <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4 z-[9999]">
-            <div className="bg-white dark:bg-navy-900 rounded-3xl w-full max-w-md p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4 text-center">
+            <div className="bg-white dark:bg-navy-950 rounded-3xl w-full max-w-md p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4 text-center">
               <div className="w-14 h-14 rounded-2xl bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
                 <AlertCircle className="w-7 h-7" />
               </div>

@@ -114,7 +114,7 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
     { key: 'database', name: 'DATABASE ENGINE', status: db.status || 'HEALTHY', detail: `${db.roster_records || 0} Roster Records • ${db.latency_ms || 0}ms`, icon: Database, color: 'text-indigo-400', data: db },
     { key: 'api_engine', name: 'API ENGINE', status: apiEng.status || 'HEALTHY', detail: `REST Latency: ${apiEng.latency_ms || 0}ms`, icon: Server, color: 'text-cyan-400', data: apiEng },
     { key: 'sync_worker', name: 'SYNC WORKER', status: worker.status || 'RUNNING', detail: `Worker ${worker.worker_id || '01'} • ${worker.current_job || 'Idle'}`, icon: Cpu, color: 'text-amber-400', data: worker },
-    { key: 'sync_queue', name: 'SYNC QUEUE', status: queue.status || 'HEALTHY', detail: `Queued: ${queue.queued || 0} • Completed: ${queue.completed || 0}`, icon: Layers, color: 'text-blue-400', data: queue },
+    { key: 'sync_queue', name: 'SYNC QUEUE', status: queue.status || 'HEALTHY', detail: `Queued: ${queue.queued || 0} • Completed: ${queue.completed || 0}`, icon: Layers, color: 'text-brand-400', data: queue },
     { key: 'scheduler', name: 'SUNDAY SCHEDULER', status: sched.status || 'ACTIVE', detail: `${sched.schedule || 'Sunday 08:00 AM IST'} • ${sched.countdown_str || 'Scheduled'}`, icon: Calendar, color: 'text-purple-400', data: sched },
     { key: 'cache', name: 'LIVE CACHE', status: cache.status || 'HEALTHY', detail: `Age: ${cache.cache_age_minutes || 0}m • ${cache.entries_count || 0} Entries`, icon: RefreshCw, color: 'text-emerald-400', data: cache },
     { key: 'email', name: 'EMAIL DISPATCH', status: email.status || 'CONNECTED', detail: `${email.provider || 'Brevo v3 API'} (${email.transport || 'Port 443'}) • ${email.success_rate_pct || 100}%`, icon: Mail, color: 'text-teal-400', data: email },
@@ -146,7 +146,7 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
               Institutional <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">AI Control Center</span>
             </h1>
 
-            <p className="text-xs sm:text-sm text-gray-300 font-bold tracking-wide">
+            <p className="text-xs sm:text-sm text-slate-300 font-bold tracking-wide">
               Continuous Contest Synchronization, Infrastructure Telemetry &amp; Automated Lifecycle Dispatch
             </p>
           </div>
@@ -192,9 +192,9 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
               <span>DATABASE: {db.status || 'HEALTHY'} ({db.roster_records || 0} Roster Records)</span>
             </span>
 
-            <span className="text-gray-400">•</span>
-            <span className="text-gray-300 font-medium">Last Checked (IST): <strong className="text-white">{timestampIst}</strong></span>
-            <span className="text-gray-400">•</span>
+            <span className="text-slate-400">•</span>
+            <span className="text-slate-300 font-medium">Last Checked (IST): <strong className="text-white">{timestampIst}</strong></span>
+            <span className="text-slate-400">•</span>
             <span className="text-indigo-300 font-medium">Email Transport: <strong className="text-amber-400">{email.provider || 'Brevo v3 API (Port 443)'}</strong></span>
           </div>
 
@@ -211,7 +211,7 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
             <RefreshCw className="w-4 h-4 animate-spin text-brand-400" />
             <span>{syncFeedback}</span>
           </span>
-          <button onClick={() => setSyncFeedback(null)} className="text-gray-400 hover:text-white"><X className="w-4 h-4" /></button>
+          <button onClick={() => setSyncFeedback(null)} className="text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>
         </div>
       )}
 
@@ -222,7 +222,7 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
             <Calendar className="w-4 h-4 animate-bounce text-amber-400" />
             <span>{scheduleFeedback}</span>
           </span>
-          <button onClick={() => setScheduleFeedback(null)} className="text-gray-400 hover:text-white"><X className="w-4 h-4" /></button>
+          <button onClick={() => setScheduleFeedback(null)} className="text-slate-400 hover:text-white"><X className="w-4 h-4" /></button>
         </div>
       )}
 
@@ -264,11 +264,11 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
       {/* ── 3. 10-COMPONENT 24/7 SYSTEM SERVICE MATRIX GRID ── */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+          <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
             <Activity className="w-4 h-4 text-brand-500" />
             <span>24/7 Institutional System Matrix</span>
           </h3>
-          <span className="text-xs text-gray-400 font-medium">Click any row to open detailed diagnostics</span>
+          <span className="text-xs text-slate-400 font-medium">Click any row to open detailed diagnostics</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3.5">
@@ -283,14 +283,14 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
                 onClick={() => setSelectedService(svc.key)}
                 className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between space-y-3 group transform hover:-translate-y-0.5 shadow-sm hover:shadow-md ${
                   isHealthy
-                    ? 'bg-white dark:bg-navy-900/90 border-gray-200 dark:border-navy-800 hover:border-brand-500/40'
+                    ? 'bg-white dark:bg-navy-950/90 border-slate-200 dark:border-navy-800 hover:border-brand-500/40'
                     : isWarning
                     ? 'bg-amber-500/5 dark:bg-amber-950/30 border-amber-300 dark:border-amber-700/60'
                     : 'bg-rose-500/5 dark:bg-rose-950/30 border-rose-300 dark:border-rose-700/60'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <div className={`p-2 rounded-xl bg-gray-100 dark:bg-navy-800 ${svc.color}`}>
+                  <div className={`p-2 rounded-xl bg-slate-100 dark:bg-navy-800 ${svc.color}`}>
                     <IconComp className="w-4 h-4" />
                   </div>
 
@@ -306,10 +306,10 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
                 </div>
 
                 <div>
-                  <h4 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-tight group-hover:text-brand-500 transition-colors">
+                  <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-brand-500 transition-colors">
                     {svc.name}
                   </h4>
-                  <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium truncate mt-0.5" title={svc.detail}>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5" title={svc.detail}>
                     {svc.detail}
                   </p>
                 </div>
@@ -324,13 +324,13 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
 
         {/* Live Contest Synchronization Panel */}
         <div className="glass-card p-6 sm:p-7 rounded-3xl border border-brand-500/30 dark:border-brand-500/20 shadow-xl space-y-5 bg-gradient-to-br from-brand-500/5 via-transparent to-indigo-500/5">
-          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-4">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
             <div className="space-y-1">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-xs font-black">
                 <Zap className="w-3.5 h-3.5 text-amber-400" />
                 <span>LIVE CONTEST ENGINE</span>
               </div>
-              <h3 className="text-lg font-black text-gray-900 dark:text-white">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">
                 Live Contest Synchronization
               </h3>
             </div>
@@ -346,45 +346,45 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-            <div className="p-3 bg-gray-50 dark:bg-navy-950/60 rounded-2xl border border-gray-200 dark:border-navy-800">
-              <span className="text-[10px] font-black uppercase text-gray-400 block">Status</span>
+            <div className="p-3 bg-slate-50 dark:bg-navy-950/60 rounded-2xl border border-slate-200 dark:border-navy-800">
+              <span className="text-[10px] font-black uppercase text-slate-400 block">Status</span>
               <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">{liveSync.status || 'IDLE'}</span>
             </div>
-            <div className="p-3 bg-gray-50 dark:bg-navy-950/60 rounded-2xl border border-gray-200 dark:border-navy-800">
-              <span className="text-[10px] font-black uppercase text-gray-400 block">Scanned</span>
-              <span className="text-xs font-black text-gray-900 dark:text-white">{liveSync.records_checked || db.roster_records || 302}</span>
+            <div className="p-3 bg-slate-50 dark:bg-navy-950/60 rounded-2xl border border-slate-200 dark:border-navy-800">
+              <span className="text-[10px] font-black uppercase text-slate-400 block">Scanned</span>
+              <span className="text-xs font-black text-slate-900 dark:text-white">{liveSync.records_checked || db.roster_records || 302}</span>
             </div>
-            <div className="p-3 bg-gray-50 dark:bg-navy-950/60 rounded-2xl border border-gray-200 dark:border-navy-800">
-              <span className="text-[10px] font-black uppercase text-gray-400 block">Updated</span>
+            <div className="p-3 bg-slate-50 dark:bg-navy-950/60 rounded-2xl border border-slate-200 dark:border-navy-800">
+              <span className="text-[10px] font-black uppercase text-slate-400 block">Updated</span>
               <span className="text-xs font-black text-indigo-600 dark:text-indigo-400">{liveSync.records_updated || 17}</span>
             </div>
-            <div className="p-3 bg-gray-50 dark:bg-navy-950/60 rounded-2xl border border-gray-200 dark:border-navy-800">
-              <span className="text-[10px] font-black uppercase text-gray-400 block">Duration</span>
-              <span className="text-xs font-black text-gray-900 dark:text-white">{liveSync.duration_seconds || 12.4}s</span>
+            <div className="p-3 bg-slate-50 dark:bg-navy-950/60 rounded-2xl border border-slate-200 dark:border-navy-800">
+              <span className="text-[10px] font-black uppercase text-slate-400 block">Duration</span>
+              <span className="text-xs font-black text-slate-900 dark:text-white">{liveSync.duration_seconds || 12.4}s</span>
             </div>
           </div>
 
-          <div className="p-3.5 bg-gray-50/80 dark:bg-navy-950/50 rounded-2xl border border-gray-200 dark:border-navy-800 space-y-1.5 text-xs">
-            <div className="flex justify-between text-gray-500 font-bold">
+          <div className="p-3.5 bg-slate-50/80 dark:bg-navy-950/50 rounded-2xl border border-slate-200 dark:border-navy-800 space-y-1.5 text-xs">
+            <div className="flex justify-between text-slate-500 font-bold">
               <span>Primary Sync Source:</span>
-              <span className="text-gray-900 dark:text-white font-black">{liveSync.source || 'LeetCode GraphQL & Institutional API'}</span>
+              <span className="text-slate-900 dark:text-white font-black">{liveSync.source || 'LeetCode GraphQL & Institutional API'}</span>
             </div>
-            <div className="flex justify-between text-gray-500 font-bold">
+            <div className="flex justify-between text-slate-500 font-bold">
               <span>Last Successful Fetch (IST):</span>
-              <span className="text-gray-900 dark:text-white font-mono">{liveSync.last_sync_ist || timestampIst}</span>
+              <span className="text-slate-900 dark:text-white font-mono">{liveSync.last_sync_ist || timestampIst}</span>
             </div>
           </div>
         </div>
 
         {/* Sunday Automation Panel */}
         <div className="glass-card p-6 sm:p-7 rounded-3xl border border-purple-500/30 dark:border-purple-500/20 shadow-xl space-y-5 bg-gradient-to-br from-purple-500/5 via-transparent to-indigo-500/5">
-          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-4">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
             <div className="space-y-1">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 text-xs font-black">
                 <Calendar className="w-3.5 h-3.5 text-amber-400" />
                 <span>SUNDAY AUTOMATION CRON</span>
               </div>
-              <h3 className="text-lg font-black text-gray-900 dark:text-white">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">
                 Sunday Dispatch Control Center
               </h3>
             </div>
@@ -400,28 +400,28 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-center">
-            <div className="p-3 bg-gray-50 dark:bg-navy-950/60 rounded-2xl border border-gray-200 dark:border-navy-800">
-              <span className="text-[10px] font-black uppercase text-gray-400 block">Cron Status</span>
+            <div className="p-3 bg-slate-50 dark:bg-navy-950/60 rounded-2xl border border-slate-200 dark:border-navy-800">
+              <span className="text-[10px] font-black uppercase text-slate-400 block">Cron Status</span>
               <span className="text-xs font-black text-purple-600 dark:text-purple-400">{sched.status || 'ACTIVE'}</span>
             </div>
-            <div className="p-3 bg-gray-50 dark:bg-navy-950/60 rounded-2xl border border-gray-200 dark:border-navy-800">
-              <span className="text-[10px] font-black uppercase text-gray-400 block">Next Run IST</span>
-              <span className="text-xs font-black text-gray-900 dark:text-white truncate block" title={sched.next_run_ist}>{sched.next_run_ist || 'Sunday 08:00 AM'}</span>
+            <div className="p-3 bg-slate-50 dark:bg-navy-950/60 rounded-2xl border border-slate-200 dark:border-navy-800">
+              <span className="text-[10px] font-black uppercase text-slate-400 block">Next Run IST</span>
+              <span className="text-xs font-black text-slate-900 dark:text-white truncate block" title={sched.next_run_ist}>{sched.next_run_ist || 'Sunday 08:00 AM'}</span>
             </div>
-            <div className="p-3 bg-gray-50 dark:bg-navy-950/60 rounded-2xl border border-gray-200 dark:border-navy-800 col-span-2 sm:col-span-1">
-              <span className="text-[10px] font-black uppercase text-gray-400 block">Countdown</span>
+            <div className="p-3 bg-slate-50 dark:bg-navy-950/60 rounded-2xl border border-slate-200 dark:border-navy-800 col-span-2 sm:col-span-1">
+              <span className="text-[10px] font-black uppercase text-slate-400 block">Countdown</span>
               <span className="text-xs font-black text-amber-600 dark:text-amber-400">{sched.countdown_str || 'Scheduled'}</span>
             </div>
           </div>
 
-          <div className="p-3.5 bg-gray-50/80 dark:bg-navy-950/50 rounded-2xl border border-gray-200 dark:border-navy-800 space-y-1.5 text-xs">
-            <div className="flex justify-between text-gray-500 font-bold">
+          <div className="p-3.5 bg-slate-50/80 dark:bg-navy-950/50 rounded-2xl border border-slate-200 dark:border-navy-800 space-y-1.5 text-xs">
+            <div className="flex justify-between text-slate-500 font-bold">
               <span>Recipients Configured:</span>
-              <span className="text-gray-900 dark:text-white font-black">{sched.recipients_count || 3} Active Recipients</span>
+              <span className="text-slate-900 dark:text-white font-black">{sched.recipients_count || 3} Active Recipients</span>
             </div>
-            <div className="flex justify-between text-gray-500 font-bold">
+            <div className="flex justify-between text-slate-500 font-bold">
               <span>Timezone Policy:</span>
-              <span className="text-gray-900 dark:text-white font-mono">Asia/Kolkata (IST • UTC+5:30)</span>
+              <span className="text-slate-900 dark:text-white font-mono">Asia/Kolkata (IST • UTC+5:30)</span>
             </div>
           </div>
         </div>
@@ -429,31 +429,31 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
       </div>
 
       {/* ── 5. RECENT SYSTEM EVENT LOG TIMELINE ── */}
-      <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-800 shadow-xl space-y-4">
-        <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-          <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+      <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-xl space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+          <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
             <FileText className="w-4 h-4 text-indigo-500" />
             <span>Recent System Event Log Timeline</span>
           </h3>
-          <span className="text-xs text-gray-400 font-medium">{events.length} Recent Audit Logs</span>
+          <span className="text-xs text-slate-400 font-medium">{events.length} Recent Audit Logs</span>
         </div>
 
         <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
           {events.length === 0 ? (
-            <p className="text-xs text-gray-400 font-bold text-center py-4">No recent system events logged.</p>
+            <p className="text-xs text-slate-400 font-bold text-center py-4">No recent system events logged.</p>
           ) : (
             events.map((ev: any, idx: number) => (
-              <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 dark:bg-navy-950/60 border border-gray-200/60 dark:border-navy-800 text-xs gap-3">
+              <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200/60 dark:border-navy-800 text-xs gap-3">
                 <div className="flex items-center space-x-3 min-w-0">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
                   <div className="min-w-0">
-                    <span className="font-black text-gray-900 dark:text-white block truncate">{ev.action}</span>
-                    <span className="text-[11px] text-gray-500 truncate block">{ev.description}</span>
+                    <span className="font-black text-slate-900 dark:text-white block truncate">{ev.action}</span>
+                    <span className="text-[11px] text-slate-500 truncate block">{ev.description}</span>
                   </div>
                 </div>
 
                 <div className="text-right shrink-0">
-                  <span className="text-[10.5px] font-mono text-gray-400 block">{ev.timestamp_ist}</span>
+                  <span className="text-[10.5px] font-mono text-slate-400 block">{ev.timestamp_ist}</span>
                   <span className="text-[10px] font-bold text-indigo-500 uppercase">{ev.user}</span>
                 </div>
               </div>
@@ -465,41 +465,41 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
       {/* ── 6. SERVICE DETAIL DIAGNOSTICS DRAWER ── */}
       {selectedService && (
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/60 backdrop-blur-sm animate-fade-in p-4">
-          <div className="bg-white dark:bg-navy-900 border-l border-gray-200 dark:border-navy-700 w-full max-w-lg h-full rounded-3xl p-6 sm:p-8 shadow-lg space-y-6 overflow-y-auto relative">
+          <div className="bg-white dark:bg-navy-950 border-l border-slate-200 dark:border-navy-700 w-full max-w-lg h-full rounded-3xl p-6 sm:p-8 shadow-lg space-y-6 overflow-y-auto relative">
             <button
               onClick={() => setSelectedService(null)}
-              className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white rounded-full transition-colors cursor-pointer"
+              className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-full transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center space-x-3 border-b border-gray-100 dark:border-gray-800 pb-4">
+            <div className="flex items-center space-x-3 border-b border-slate-100 dark:border-slate-800 pb-4">
               <div className="p-3 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
                 <Activity className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-lg font-black text-gray-900 dark:text-white uppercase">
+                <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase">
                   {selectedService.replace('_', ' ')} Diagnostics
                 </h3>
-                <p className="text-xs text-gray-400 font-mono">
+                <p className="text-xs text-slate-400 font-mono">
                   Checked At (IST): {timestampIst}
                 </p>
               </div>
             </div>
 
             <div className="space-y-4 text-xs">
-              <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-800 space-y-2">
-                <span className="text-[10px] font-black uppercase text-gray-400 block">Raw Operational Metrics</span>
-                <pre className="font-mono text-[11px] text-gray-800 dark:text-gray-200 overflow-x-auto whitespace-pre-wrap">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-2">
+                <span className="text-[10px] font-black uppercase text-slate-400 block">Raw Operational Metrics</span>
+                <pre className="font-mono text-[11px] text-slate-800 dark:text-slate-200 overflow-x-auto whitespace-pre-wrap">
                   {JSON.stringify(healthData[selectedService] || healthData, null, 2)}
                 </pre>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-gray-100 dark:border-gray-800 flex justify-end">
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
               <button
                 onClick={() => setSelectedService(null)}
-                className="px-6 py-2.5 bg-gray-100 dark:bg-navy-800 text-gray-700 dark:text-gray-200 rounded-2xl text-xs font-black hover:bg-gray-200 transition-all cursor-pointer"
+                className="px-6 py-2.5 bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-black hover:bg-slate-200 transition-all cursor-pointer"
               >
                 Close Diagnostics
               </button>
@@ -511,7 +511,7 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
       {/* ── 7. UNIFIED AI COMMAND SHORTCUTS AT BOTTOM ── */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+          <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
             <Bot className="w-4 h-4 text-brand-500" />
             <span>Institutional AI Operations Shortcuts</span>
           </h3>
@@ -520,45 +520,45 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div
             onClick={() => launchCommandInUnifiedAI("Check the entire database for bugs and duplicate URLs")}
-            className="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-800 hover:border-rose-500/40 transition-all cursor-pointer group shadow-sm"
+            className="p-4 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 hover:border-rose-500/40 transition-all cursor-pointer group shadow-sm"
           >
             <div className="flex items-center space-x-3">
               <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-500">
                 <AlertOctagon className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-xs font-black text-gray-900 dark:text-white group-hover:text-rose-500 transition-colors">Run Deep Audit</h4>
-                <p className="text-[11px] text-gray-500 font-medium">Verify data integrity &amp; duplicates</p>
+                <h4 className="text-xs font-black text-slate-900 dark:text-white group-hover:text-rose-500 transition-colors">Run Deep Audit</h4>
+                <p className="text-[11px] text-slate-500 font-medium">Verify data integrity &amp; duplicates</p>
               </div>
             </div>
           </div>
 
           <div
             onClick={() => launchCommandInUnifiedAI("mail panu low solvers-ukku")}
-            className="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-800 hover:border-brand-500/40 transition-all cursor-pointer group shadow-sm"
+            className="p-4 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 hover:border-brand-500/40 transition-all cursor-pointer group shadow-sm"
           >
             <div className="flex items-center space-x-3">
               <div className="p-2.5 rounded-xl bg-brand-500/10 text-brand-500">
                 <Mail className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-xs font-black text-gray-900 dark:text-white group-hover:text-brand-500 transition-colors">Draft Warning Email</h4>
-                <p className="text-[11px] text-gray-500 font-medium">Draft email to low solvers</p>
+                <h4 className="text-xs font-black text-slate-900 dark:text-white group-hover:text-brand-500 transition-colors">Draft Warning Email</h4>
+                <p className="text-[11px] text-slate-500 font-medium">Draft email to low solvers</p>
               </div>
             </div>
           </div>
 
           <div
             onClick={() => launchCommandInUnifiedAI("Who are the top 10 college solvers overall?")}
-            className="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-800 hover:border-amber-500/40 transition-all cursor-pointer group shadow-sm"
+            className="p-4 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 hover:border-amber-500/40 transition-all cursor-pointer group shadow-sm"
           >
             <div className="flex items-center space-x-3">
               <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500">
                 <Trophy className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-xs font-black text-gray-900 dark:text-white group-hover:text-amber-500 transition-colors">Top Solvers Roster</h4>
-                <p className="text-[11px] text-gray-500 font-medium">View top 10 college solvers</p>
+                <h4 className="text-xs font-black text-slate-900 dark:text-white group-hover:text-amber-500 transition-colors">Top Solvers Roster</h4>
+                <p className="text-[11px] text-slate-500 font-medium">View top 10 college solvers</p>
               </div>
             </div>
           </div>

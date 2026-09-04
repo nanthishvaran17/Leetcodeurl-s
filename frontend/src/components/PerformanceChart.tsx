@@ -51,8 +51,8 @@ const PerformanceChart: React.FC = () => {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="glass-card p-4 rounded-xl border border-white/20 shadow-xl bg-white/90 dark:bg-navy-900/90 backdrop-blur-md">
-          <p className="font-bold text-gray-900 dark:text-white mb-2 pb-2 border-b border-gray-100 dark:border-gray-800">
+        <div className="glass-card p-4 rounded-xl border border-white/20 shadow-xl bg-white/90 dark:bg-navy-950/90 backdrop-blur-md">
+          <p className="font-bold text-slate-900 dark:text-white mb-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             {label}
           </p>
           <div className="space-y-2">
@@ -60,11 +60,11 @@ const PerformanceChart: React.FC = () => {
               <div key={index} className="flex items-center justify-between space-x-4">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
                     {entry.name}
                   </span>
                 </div>
-                <span className="text-xs font-black text-gray-900 dark:text-white">
+                <span className="text-xs font-black text-slate-900 dark:text-white">
                   {entry.value.toLocaleString()}
                 </span>
               </div>
@@ -77,18 +77,18 @@ const PerformanceChart: React.FC = () => {
   };
 
   return (
-    <div className="stagger-3 relative overflow-hidden rounded-xl bg-white dark:bg-navy-900 p-6 shadow-sm border border-gray-200 dark:border-navy-700 mt-6">
+    <div className="stagger-3 relative overflow-hidden rounded-xl bg-white dark:bg-navy-950 p-6 shadow-sm border border-slate-200 dark:border-navy-700 mt-6">
       
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
           <div className="flex items-center space-x-2 mb-1">
             <Activity className="w-4 h-4 text-brand-500" />
-            <h3 className="font-extrabold text-sm text-gray-900 dark:text-white uppercase tracking-wider">
+            <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider">
               Real-Time Performance Trajectory
             </h3>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium pl-6">
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium pl-6">
             Institutional problem solving throughput & active participation
           </p>
         </div>
@@ -98,14 +98,14 @@ const PerformanceChart: React.FC = () => {
           <select
             value={timeframe}
             onChange={(e) => setTimeframe(e.target.value as Timeframe)}
-            className="appearance-none bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-navy-800 text-gray-700 dark:text-gray-300 py-2 pl-4 pr-10 rounded-xl text-xs font-bold tracking-wider uppercase focus:outline-none focus:ring-2 focus:ring-brand-500/50 cursor-pointer shadow-sm transition-all"
+            className="appearance-none bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 text-slate-700 dark:text-slate-300 py-2 pl-4 pr-10 rounded-xl text-xs font-bold tracking-wider uppercase focus:outline-none focus:ring-2 focus:ring-brand-500/50 cursor-pointer shadow-sm transition-all"
           >
             <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
             <option value="monthly">Monthly</option>
             <option value="yearly">Yearly</option>
           </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
             </svg>
@@ -122,11 +122,11 @@ const PerformanceChart: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-navy-900/50 backdrop-blur-sm z-10 rounded-xl"
+              className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-navy-950/50 backdrop-blur-sm z-10 rounded-xl"
             >
               <div className="flex flex-col items-center space-y-3">
                 <BarChart2 className="w-6 h-6 text-brand-500 animate-pulse" />
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                   Aggregating Telemetry...
                 </span>
               </div>

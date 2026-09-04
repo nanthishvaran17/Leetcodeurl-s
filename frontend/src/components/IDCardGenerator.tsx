@@ -240,16 +240,16 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     <div className="glass-card p-6 md:p-8 rounded-3xl border border-emerald-500/20 dark:border-emerald-500/30 shadow-lg space-y-6">
       
       {/* Top Bar */}
-      <div className="flex items-center justify-between flex-wrap gap-4 border-b border-gray-200 dark:border-gray-800 pb-4">
+      <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
         <div className="space-y-1">
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[11px] font-black uppercase tracking-wider border border-emerald-200 dark:border-emerald-500/40 shadow-sm">
             <Award className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             <span>OFFICIAL AUTONOMOUS DIGITAL VERIFICATION BADGE</span>
           </div>
-          <h3 className="font-black text-xl text-gray-900 dark:text-white tracking-tight flex items-center space-x-2">
+          <h3 className="font-black text-xl text-slate-900 dark:text-white tracking-tight flex items-center space-x-2">
             <span>Executive Digital Student Pass</span>
           </h3>
-          <p className="text-xs text-gray-500 dark:text-slate-400 font-bold">
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">
             Ultra-HD Certified Pass with Dual Institutional Signatures (Principal & HOD).
           </p>
         </div>

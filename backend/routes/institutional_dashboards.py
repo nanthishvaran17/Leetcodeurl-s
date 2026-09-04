@@ -38,100 +38,104 @@ def get_super_admin_dashboard(
     Super Admin Dashboard: Institution-wide visibility across all departments,
     faculty, students, sync health, and system telemetry.
     """
+    from backend.services.cache_service import cache_service
+    
     cache_key = "dash:super_admin"
-    cached = cache.get(cache_key)
-    if cached:
-        return cached
 
-    total_students = db.query(func.count(Student.id)).filter(
-        (Student.is_active == True) | (Student.is_active.is_(None))
-    ).scalar() or 0
+    def _compute():
+        total_students = db.query(func.count(Student.id)).filter(
+            (Student.is_active == True) | (Student.is_active.is_(None))
+        ).scalar() or 0
+    
+        total_depts = db.query(func.count(Department.id)).scalar() or 0
+        total_faculty = db.query(func.count(User.id)).filter(
+            User.role.in_(["Faculty", "faculty", "Staff", "staff"])
+        ).scalar() or 0
+        total_hods = db.query(func.count(User.id)).filter(
+            User.role.in_(["HOD", "hod"])
+        ).scalar() or 0
+    
+        # Sync health metrics
+        sync_stats = db.query(
+            LeetCodeProfileStats.sync_status,
+            func.count(LeetCodeProfileStats.id)
+        ).group_by(LeetCodeProfileStats.sync_status).all()
+        sync_breakdown = {status or "unknown": cnt for status, cnt in sync_stats}
+    
+        # Department breakdown matrix using efficient single grouped SQL queries
+        depts = db.query(Department).all()
+    
+        dept_rows = db.query(
+            Student.department_id,
+            func.count(Student.id).label("total_students"),
+            func.coalesce(func.sum(LeetCodeProfileStats.total_solved), 0).label("total_solved"),
+            func.coalesce(func.avg(LeetCodeProfileStats.contest_rating), 0.0).label("avg_rating")
+        ).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
+         .filter((Student.is_active == True) | (Student.is_active.is_(None)))\
+         .group_by(Student.department_id).all()
+    
+        dept_student_stats = {r[0]: (r[1], r[2], r[3]) for r in dept_rows}
+    
+        dept_faculty_rows = db.query(
+            User.department_id,
+            func.count(User.id)
+        ).filter(
+            User.role.in_(["Faculty", "faculty", "Staff", "staff"]),
+            User.is_active == True
+        ).group_by(User.department_id).all()
+    
+        dept_faculty_counts = {r[0]: r[1] for r in dept_faculty_rows}
+    
+        dept_matrix = []
+        for d in depts:
+            stats = dept_student_stats.get(d.id)
+            d_students = stats[0] if stats else 0
+            d_solved = int(stats[1]) if stats else 0
+            d_avg_rating = round(float(stats[2]), 1) if stats else 0.0
+            d_faculty = dept_faculty_counts.get(d.id, 0)
+    
+            dept_matrix.append({
+                "department_id": d.id,
+                "department_code": d.code,
+                "department_name": d.name,
+                "total_students": d_students,
+                "total_faculty": d_faculty,
+                "total_problems_solved": d_solved,
+                "avg_contest_rating": d_avg_rating,
+                "avg_solved_per_student": round(d_solved / d_students, 1) if d_students > 0 else 0
+            })
+    
+        # Latest contest session status
+        latest_sess = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+        contest_status = {
+            "session_id": latest_sess.id if latest_sess else None,
+            "contest_name": latest_sess.contest_name if latest_sess else "None",
+            "status": latest_sess.status if latest_sess else "NONE",
+            "session_date": latest_sess.session_date if latest_sess else None
+        }
+    
+        return {
+            "role": "Super Admin",
+            "total_students": total_students,
+            "total_departments": total_depts,
+            "total_faculty": total_faculty,
+            "total_hods": total_hods,
+            "sync_health": {
+                "verified_active": sync_breakdown.get("success", 0) + sync_breakdown.get("OK", 0) + sync_breakdown.get("verified", 0),
+                "pending": sync_breakdown.get("pending", 0) + sync_breakdown.get("not_started", 0),
+                "failed": sync_breakdown.get("failed", 0) + sync_breakdown.get("fetch_failed", 0)
+            },
+            "department_matrix": dept_matrix,
+            "latest_contest": contest_status,
+            "last_updated": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+        }
 
-    total_depts = db.query(func.count(Department.id)).scalar() or 0
-    total_faculty = db.query(func.count(User.id)).filter(
-        User.role.in_(["Faculty", "faculty", "Staff", "staff"])
-    ).scalar() or 0
-    total_hods = db.query(func.count(User.id)).filter(
-        User.role.in_(["HOD", "hod"])
-    ).scalar() or 0
-
-    # Sync health metrics
-    sync_stats = db.query(
-        LeetCodeProfileStats.sync_status,
-        func.count(LeetCodeProfileStats.id)
-    ).group_by(LeetCodeProfileStats.sync_status).all()
-    sync_breakdown = {status or "unknown": cnt for status, cnt in sync_stats}
-
-    # Department breakdown matrix using efficient single grouped SQL queries
-    depts = db.query(Department).all()
-
-    dept_rows = db.query(
-        Student.department_id,
-        func.count(Student.id).label("total_students"),
-        func.coalesce(func.sum(LeetCodeProfileStats.total_solved), 0).label("total_solved"),
-        func.coalesce(func.avg(LeetCodeProfileStats.contest_rating), 0.0).label("avg_rating")
-    ).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
-     .filter((Student.is_active == True) | (Student.is_active.is_(None)))\
-     .group_by(Student.department_id).all()
-
-    dept_student_stats = {r[0]: (r[1], r[2], r[3]) for r in dept_rows}
-
-    dept_faculty_rows = db.query(
-        User.department_id,
-        func.count(User.id)
-    ).filter(
-        User.role.in_(["Faculty", "faculty", "Staff", "staff"]),
-        User.is_active == True
-    ).group_by(User.department_id).all()
-
-    dept_faculty_counts = {r[0]: r[1] for r in dept_faculty_rows}
-
-    dept_matrix = []
-    for d in depts:
-        stats = dept_student_stats.get(d.id)
-        d_students = stats[0] if stats else 0
-        d_solved = int(stats[1]) if stats else 0
-        d_avg_rating = round(float(stats[2]), 1) if stats else 0.0
-        d_faculty = dept_faculty_counts.get(d.id, 0)
-
-        dept_matrix.append({
-            "department_id": d.id,
-            "department_code": d.code,
-            "department_name": d.name,
-            "total_students": d_students,
-            "total_faculty": d_faculty,
-            "total_problems_solved": d_solved,
-            "avg_contest_rating": d_avg_rating,
-            "avg_solved_per_student": round(d_solved / d_students, 1) if d_students > 0 else 0
-        })
-
-    # Latest contest session status
-    latest_sess = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
-    contest_status = {
-        "session_id": latest_sess.id if latest_sess else None,
-        "contest_name": latest_sess.contest_name if latest_sess else "None",
-        "status": latest_sess.status if latest_sess else "NONE",
-        "session_date": latest_sess.session_date if latest_sess else None
-    }
-
-    result = {
-        "role": "Super Admin",
-        "total_students": total_students,
-        "total_departments": total_depts,
-        "total_faculty": total_faculty,
-        "total_hods": total_hods,
-        "sync_health": {
-            "verified_active": sync_breakdown.get("success", 0) + sync_breakdown.get("OK", 0) + sync_breakdown.get("verified", 0),
-            "pending": sync_breakdown.get("pending", 0) + sync_breakdown.get("not_started", 0),
-            "failed": sync_breakdown.get("failed", 0) + sync_breakdown.get("fetch_failed", 0)
-        },
-        "department_matrix": dept_matrix,
-        "latest_contest": contest_status,
-        "last_updated": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
-    }
-
-    cache.set(cache_key, result, ttl_seconds=30)
-    return result
+    return cache_service.get_or_compute_sync(
+        key=cache_key,
+        compute_func=_compute,
+        ttl_seconds=300,
+        tags=["dashboard", "super_admin"]
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────

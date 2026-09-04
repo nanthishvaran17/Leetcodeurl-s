@@ -179,10 +179,10 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   ];
 
   return (
-    <div className="h-full flex flex-col overflow-hidden animate-fade-in bg-white dark:bg-navy-900 rounded-3xl">
+    <div className="h-full flex flex-col overflow-hidden animate-fade-in bg-white dark:bg-navy-950 rounded-3xl">
       
       {/* Sticky Header Bar with Close Button & Actions */}
-      <div className="p-4 sm:p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex flex-col md:flex-row items-center justify-between gap-4 border-b border-gray-800 shrink-0 z-10 sticky top-0 shadow-xl">
+      <div className="p-4 sm:p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex flex-col md:flex-row items-center justify-between gap-4 border-b border-slate-800 shrink-0 z-10 sticky top-0 shadow-xl">
         <div className="flex items-center space-x-4 w-full md:w-auto">
           <button
             type="button"
@@ -274,22 +274,22 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         
         <div className="glass-card p-5 rounded-2xl border text-center shadow-md">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">College Rank</p>
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">College Rank</p>
           <h3 className="text-2xl font-extrabold text-brand-600 dark:text-brand-400 mt-1">#{detail?.college_rank || '—'}</h3>
         </div>
 
         <div className="glass-card p-5 rounded-2xl border text-center shadow-md">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Department Rank</p>
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Department Rank</p>
           <h3 className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">#{detail?.dept_rank || '—'}</h3>
         </div>
 
         <div className="glass-card p-5 rounded-2xl border text-center shadow-md">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Weekly Progress</p>
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Weekly Progress</p>
           <h3 className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">+{detail?.weekly_progress || 0}</h3>
         </div>
 
         <div className="glass-card p-5 rounded-2xl border text-center shadow-md">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Active Streak</p>
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active Streak</p>
           <h3 className="text-2xl font-extrabold text-amber-500 mt-1">{detail?.lc_activity?.current_streak || detail?.streak_count || 0} Days</h3>
         </div>
 
@@ -298,20 +298,20 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       {/* Contest Performance Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <div className="glass-card p-5 rounded-2xl border text-center shadow-md">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Official Contests</p>
-          <h3 className="text-2xl font-extrabold text-blue-600 dark:text-blue-400 mt-1">{detail?.lc_contest_standing?.attended_count || detail?.stats?.official_contests || 0}</h3>
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Official Contests</p>
+          <h3 className="text-2xl font-extrabold text-brand-600 dark:text-brand-400 mt-1">{detail?.lc_contest_standing?.attended_count || detail?.stats?.official_contests || 0}</h3>
         </div>
         <div className="glass-card p-5 rounded-2xl border text-center shadow-md">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Virtual Contests</p>
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Virtual Contests</p>
           <div className="mt-1">
-            <h3 className="text-2xl font-extrabold text-blue-600 dark:text-blue-400">
+            <h3 className="text-2xl font-extrabold text-brand-600 dark:text-brand-400">
               {detail?.stats?.virtual_contests || (detail?.has_virtual ? 1 : 0)}
             </h3>
             <div className="mt-1">
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
                 (detail?.stats?.virtual_contest_status === 'ATTENDED' || detail?.has_virtual || (detail?.stats?.virtual_contests && detail.stats.virtual_contests > 0))
-                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-400/30'
-                  : 'bg-gray-100 text-gray-600 dark:bg-navy-950 dark:text-gray-400 border border-gray-300/30'
+                  ? 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300 border border-brand-400/30'
+                  : 'bg-slate-100 text-slate-600 dark:bg-navy-950 dark:text-slate-400 border border-slate-300/30'
               }`}>
                 {(detail?.stats?.virtual_contest_status === 'ATTENDED' || detail?.has_virtual || (detail?.stats?.virtual_contests && detail.stats.virtual_contests > 0))
                   ? 'Attended'
@@ -321,7 +321,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           </div>
         </div>
         <div className="glass-card p-5 rounded-2xl border text-center shadow-md col-span-2 md:col-span-1">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Contest Rating</p>
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Contest Rating</p>
           <h3 className="text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">
             {(detail?.lc_contest_standing?.contest_rating || detail?.stats?.contest_rating) ? (detail.lc_contest_standing?.contest_rating || detail.stats?.contest_rating).toLocaleString('en-US', { minimumFractionDigits: 1 }) : 'Unrated'}
           </h3>
@@ -354,7 +354,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         
         {/* Pie Chart */}
         <div className="glass-card p-6 rounded-3xl border space-y-4 shadow-xl">
-          <h3 className="font-extrabold text-base text-gray-900 dark:text-white">Problem Difficulty Breakdown</h3>
+          <h3 className="font-extrabold text-base text-slate-900 dark:text-white">Problem Difficulty Breakdown</h3>
           
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -395,20 +395,20 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         <div className="glass-card p-6 rounded-3xl border space-y-4 bg-gradient-to-br from-amber-900/10 to-indigo-900/10 shadow-xl">
           <div className="flex items-center space-x-2 text-amber-500">
             <Lightbulb className="w-5 h-5" />
-            <h3 className="font-extrabold text-base text-gray-900 dark:text-white">AI Focus Recommendation</h3>
+            <h3 className="font-extrabold text-base text-slate-900 dark:text-white">AI Focus Recommendation</h3>
           </div>
 
           {insights ? (
             <div className="space-y-3 text-xs">
               <div>
-                <span className="font-bold text-gray-400 uppercase">Trajectory:</span>
+                <span className="font-bold text-slate-400 uppercase">Trajectory:</span>
                 <span className="ml-2 font-bold px-2.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                   {insights.trajectory}
                 </span>
               </div>
 
               <div>
-                <span className="font-bold text-gray-400 uppercase">Recommended Weak Focus Areas:</span>
+                <span className="font-bold text-slate-400 uppercase">Recommended Weak Focus Areas:</span>
                 <div className="flex flex-wrap gap-1.5 mt-1.5">
                   {insights.focus_areas.map((area: string, i: number) => (
                     <span key={i} className="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 font-bold">
@@ -418,12 +418,12 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-gray-100 dark:bg-navy-900 text-gray-700 dark:text-gray-300 leading-relaxed">
+              <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 leading-relaxed">
                 {insights.recommendation}
               </div>
             </div>
           ) : (
-            <p className="text-xs text-gray-500">Loading topic insights...</p>
+            <p className="text-xs text-slate-500">Loading topic insights...</p>
           )}
         </div>
       </div>

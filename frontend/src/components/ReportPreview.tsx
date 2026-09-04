@@ -169,12 +169,12 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
       className="modal-overlay-responsive animate-modal-backdrop print:bg-white print:p-0 print:absolute print:inset-0 print:z-auto"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="modal-container-responsive max-w-6xl bg-white dark:bg-navy-900 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-800 animate-modal-content print:rounded-none print:shadow-none print:border-none print:max-w-full print:w-full">
+      <div className="modal-container-responsive max-w-6xl bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 animate-modal-content print:rounded-none print:shadow-none print:border-none print:max-w-full print:w-full">
         
         {/* ── 1. HEADER BANNER ── */}
-        <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-950 text-white flex items-center justify-between shrink-0 print:bg-white print:text-black print:border-b-2 print:border-black">
+        <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-brand-900 via-indigo-950 to-slate-950 text-white flex items-center justify-between shrink-0 print:bg-white print:text-black print:border-b-2 print:border-black">
           <div className="flex items-center space-x-3 min-w-0">
-            <div className="shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-black text-white text-base shadow-lg shadow-blue-500/30 print:hidden">
+            <div className="shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center font-black text-white text-base shadow-lg shadow-brand-500/30 print:hidden">
               <FileSpreadsheet className="w-5 h-5 text-white" />
             </div>
             <div className="min-w-0">
@@ -184,13 +184,13 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                   READY
                 </span>
               </h2>
-              <p className="text-xs text-blue-200/80 print:text-gray-700 font-medium mt-0.5 truncate print:whitespace-normal">
+              <p className="text-xs text-brand-200/80 print:text-slate-700 font-medium mt-0.5 truncate print:whitespace-normal">
                 {isContestReport && report.contestName && (
                   <span className="font-bold text-amber-300 print:text-black mr-2">
                     {report.contestName} ({report.contestDate || report.sessionDate || 'Sunday Session'})
                   </span>
                 )}
-                Report ID: <span className="font-mono text-blue-200 print:text-gray-600">{report.reportId || report.report_id}</span>
+                Report ID: <span className="font-mono text-brand-200 print:text-slate-600">{report.reportId || report.report_id}</span>
               </p>
             </div>
           </div>
@@ -207,7 +207,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
         </div>
 
         {/* ── 2. DATASET QUALITY & RECONCILIATION BAR ── */}
-        <div className="px-5 py-2.5 bg-gray-100 dark:bg-navy-950 border-b border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-3 text-xs font-bold shrink-0">
+        <div className="px-5 py-2.5 bg-slate-100 dark:bg-navy-950 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs font-bold shrink-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className="flex items-center space-x-1 text-slate-700 dark:text-slate-300 font-black">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
@@ -217,7 +217,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
               Roster: {allRows.length} Students
             </span>
             {isContestReport && (
-              <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 font-mono text-[11px] font-black">
+              <span className="px-2 py-0.5 rounded-md bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300 font-mono text-[11px] font-black">
                 Participants: {(contestSummary.publicAttended || 0) + (contestSummary.virtualAttended || 0)}
               </span>
             )}
@@ -244,11 +244,11 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
               {/* Contest Summary KPI Cards (Interactive Filter Triggers) */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-black uppercase text-gray-500 dark:text-gray-400 tracking-wider flex items-center space-x-1.5">
-                    <Users className="w-4 h-4 text-blue-500" />
+                  <h3 className="text-xs font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider flex items-center space-x-1.5">
+                    <Users className="w-4 h-4 text-brand-500" />
                     <span>Contest Attendance &amp; Performance Summary</span>
                   </h3>
-                  <span className="text-[11px] text-gray-500 font-medium">Click any card to filter student details below</span>
+                  <span className="text-[11px] text-slate-500 font-medium">Click any card to filter student details below</span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
@@ -256,11 +256,11 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                   {/* Total Students */}
                   <div 
                     onClick={() => setActiveFilter(null)}
-                    className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${activeFilter === null ? 'bg-blue-500/10 border-blue-500 ring-2 ring-blue-500/30' : 'bg-gray-50 dark:bg-navy-950 border-gray-200 dark:border-gray-800 hover:border-blue-400'}`}
+                    className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${activeFilter === null ? 'bg-brand-500/10 border-brand-500 ring-2 ring-brand-500/30' : 'bg-slate-50 dark:bg-navy-950 border-slate-200 dark:border-slate-800 hover:border-brand-400'}`}
                   >
-                    <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-black">Total Students</p>
-                    <p className="text-xl font-black text-gray-900 dark:text-white mt-1">{contestSummary.totalStudents || allRows.length}</p>
-                    <p className="text-[10px] text-blue-600 dark:text-blue-400 font-bold mt-0.5">All Roster</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-black">Total Students</p>
+                    <p className="text-xl font-black text-slate-900 dark:text-white mt-1">{contestSummary.totalStudents || allRows.length}</p>
+                    <p className="text-[10px] text-brand-600 dark:text-brand-400 font-bold mt-0.5">All Roster</p>
                   </div>
 
                   {/* Public Attended */}
@@ -327,21 +327,21 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
               </div>
 
               {/* Additional KPI Stats */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-gray-50 dark:bg-navy-950/60 rounded-2xl border border-gray-200 dark:border-gray-800">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-slate-50 dark:bg-navy-950/60 rounded-2xl border border-slate-200 dark:border-slate-800">
                 <div className="text-center">
-                  <p className="text-[10px] text-gray-500 uppercase font-black">Total Contest Solved</p>
+                  <p className="text-[10px] text-slate-500 uppercase font-black">Total Contest Solved</p>
                   <p className="text-lg font-black text-emerald-600 dark:text-emerald-400">{contestSummary.totalContestSolved ?? "—"}</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-[10px] text-gray-500 uppercase font-black">Avg Solved (All Students)</p>
-                  <p className="text-lg font-black text-gray-800 dark:text-gray-200">{contestSummary.averageProblemsSolved ?? "—"}</p>
+                  <p className="text-[10px] text-slate-500 uppercase font-black">Avg Solved (All Students)</p>
+                  <p className="text-lg font-black text-slate-800 dark:text-slate-200">{contestSummary.averageProblemsSolved ?? "—"}</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-[10px] text-gray-500 uppercase font-black">Avg Solved (Participants)</p>
+                  <p className="text-[10px] text-slate-500 uppercase font-black">Avg Solved (Participants)</p>
                   <p className="text-lg font-black text-indigo-600 dark:text-indigo-400">{contestSummary.averageSolvedAmongParticipants ?? "—"}</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-[10px] text-gray-500 uppercase font-black">Participation Rate</p>
+                  <p className="text-[10px] text-slate-500 uppercase font-black">Participation Rate</p>
                   <p className="text-lg font-black text-brand-600 dark:text-brand-400">{contestSummary.participationRate ?? "—"}</p>
                 </div>
               </div>
@@ -349,11 +349,11 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
               {/* Problem Solve Distribution (Clickable) */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-black uppercase text-gray-500 dark:text-gray-400 tracking-wider flex items-center space-x-1.5">
+                  <h3 className="text-xs font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider flex items-center space-x-1.5">
                     <Flame className="w-4 h-4 text-amber-500" />
                     <span>Problem Solve Distribution (Clickable Filter)</span>
                   </h3>
-                  <span className="text-[11px] text-gray-500 font-medium">Click to filter by exact problems solved</span>
+                  <span className="text-[11px] text-slate-500 font-medium">Click to filter by exact problems solved</span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
@@ -363,9 +363,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                     onClick={() => toggleFilter('SOLVED_4')}
                     className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${activeFilter === 'SOLVED_4' ? 'bg-emerald-500/20 border-emerald-500 ring-2 ring-emerald-500/30' : 'bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-400'}`}
                   >
-                    <div className="text-[11px] font-bold text-gray-600 dark:text-gray-300">4 Problems Solved</div>
+                    <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300">4 Problems Solved</div>
                     <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{solveDist.solved4 ?? report.metrics?.['4 Q Solved'] ?? 0}</div>
-                    <div className="text-[10px] text-gray-500 font-medium mt-0.5">Students</div>
+                    <div className="text-[10px] text-slate-500 font-medium mt-0.5">Students</div>
                   </div>
 
                   {/* 3 Problems Solved */}
@@ -373,19 +373,19 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                     onClick={() => toggleFilter('SOLVED_3')}
                     className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${activeFilter === 'SOLVED_3' ? 'bg-teal-500/20 border-teal-500 ring-2 ring-teal-500/30' : 'bg-teal-500/5 border-teal-500/20 hover:border-teal-400'}`}
                   >
-                    <div className="text-[11px] font-bold text-gray-600 dark:text-gray-300">3 Problems Solved</div>
+                    <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300">3 Problems Solved</div>
                     <div className="text-xl font-black text-teal-600 dark:text-teal-400 mt-1">{solveDist.solved3 ?? report.metrics?.['3 Q Solved'] ?? 0}</div>
-                    <div className="text-[10px] text-gray-500 font-medium mt-0.5">Students</div>
+                    <div className="text-[10px] text-slate-500 font-medium mt-0.5">Students</div>
                   </div>
 
                   {/* 2 Problems Solved */}
                   <div 
                     onClick={() => toggleFilter('SOLVED_2')}
-                    className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${activeFilter === 'SOLVED_2' ? 'bg-blue-500/20 border-blue-500 ring-2 ring-blue-500/30' : 'bg-blue-500/5 border-blue-500/20 hover:border-blue-400'}`}
+                    className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${activeFilter === 'SOLVED_2' ? 'bg-brand-500/20 border-brand-500 ring-2 ring-brand-500/30' : 'bg-brand-500/5 border-brand-500/20 hover:border-brand-400'}`}
                   >
-                    <div className="text-[11px] font-bold text-gray-600 dark:text-gray-300">2 Problems Solved</div>
-                    <div className="text-xl font-black text-blue-600 dark:text-blue-400 mt-1">{solveDist.solved2 ?? report.metrics?.['2 Q Solved'] ?? 0}</div>
-                    <div className="text-[10px] text-gray-500 font-medium mt-0.5">Students</div>
+                    <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300">2 Problems Solved</div>
+                    <div className="text-xl font-black text-brand-600 dark:text-brand-400 mt-1">{solveDist.solved2 ?? report.metrics?.['2 Q Solved'] ?? 0}</div>
+                    <div className="text-[10px] text-slate-500 font-medium mt-0.5">Students</div>
                   </div>
 
                   {/* 1 Problem Solved */}
@@ -393,9 +393,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                     onClick={() => toggleFilter('SOLVED_1')}
                     className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${activeFilter === 'SOLVED_1' ? 'bg-amber-500/20 border-amber-500 ring-2 ring-amber-500/30' : 'bg-amber-500/5 border-amber-500/20 hover:border-amber-400'}`}
                   >
-                    <div className="text-[11px] font-bold text-gray-600 dark:text-gray-300">1 Problem Solved</div>
+                    <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300">1 Problem Solved</div>
                     <div className="text-xl font-black text-amber-600 dark:text-amber-400 mt-1">{solveDist.solved1 ?? report.metrics?.['1 Q Solved'] ?? 0}</div>
-                    <div className="text-[10px] text-gray-500 font-medium mt-0.5">Students</div>
+                    <div className="text-[10px] text-slate-500 font-medium mt-0.5">Students</div>
                   </div>
 
                   {/* 0 Problems Solved (Participated) */}
@@ -403,9 +403,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                     onClick={() => toggleFilter('SOLVED_0')}
                     className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${activeFilter === 'SOLVED_0' ? 'bg-purple-500/20 border-purple-500 ring-2 ring-purple-500/30' : 'bg-purple-500/5 border-purple-500/20 hover:border-purple-400'}`}
                   >
-                    <div className="text-[11px] font-bold text-gray-600 dark:text-gray-300">0 Solved (Attended)</div>
+                    <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300">0 Solved (Attended)</div>
                     <div className="text-xl font-black text-purple-600 dark:text-purple-400 mt-1">{solveDist.solved0 ?? 0}</div>
-                    <div className="text-[10px] text-gray-500 font-medium mt-0.5">Participants</div>
+                    <div className="text-[10px] text-slate-500 font-medium mt-0.5">Participants</div>
                   </div>
 
                   {/* Not Attended */}
@@ -413,9 +413,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                     onClick={() => toggleFilter('NOT_ATTENDED')}
                     className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${activeFilter === 'NOT_ATTENDED' ? 'bg-rose-500/20 border-rose-500 ring-2 ring-rose-500/30' : 'bg-rose-500/5 border-rose-500/20 hover:border-rose-400'}`}
                   >
-                    <div className="text-[11px] font-bold text-gray-600 dark:text-gray-300">Not Attended</div>
+                    <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300">Not Attended</div>
                     <div className="text-xl font-black text-rose-600 dark:text-rose-400 mt-1">{solveDist.notParticipated ?? contestSummary.notAttended ?? 0}</div>
-                    <div className="text-[10px] text-gray-500 font-medium mt-0.5">Absent</div>
+                    <div className="text-[10px] text-slate-500 font-medium mt-0.5">Absent</div>
                   </div>
 
                 </div>
@@ -424,7 +424,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
               {/* Student Detail Table */}
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-black uppercase text-gray-500 dark:text-gray-400 tracking-wider">
+                  <h3 className="text-xs font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">
                     Student Contest Detail Table ({displayedStudents.length} Students {activeFilter ? `• Filter: ${activeFilter}` : ''})
                   </h3>
                   {activeFilter && (
@@ -437,12 +437,12 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                   )}
                 </div>
 
-                <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-x-auto shadow-sm max-h-[480px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
+                <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm max-h-[480px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
                   <table className="w-full text-left text-xs min-w-[850px] print:min-w-0 print:w-full">
-                    <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 print:bg-gray-200 print:text-black">
+                    <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 print:bg-slate-200 print:text-black">
                       <tr>
                         <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black">S.No</th>
-                        <th className="px-3.5 py-3 sticky left-0 bg-navy-950 print:bg-gray-200 print:border-b print:border-black z-20">Register No</th>
+                        <th className="px-3.5 py-3 sticky left-0 bg-navy-950 print:bg-slate-200 print:border-b print:border-black z-20">Register No</th>
                         <th className="px-3.5 py-3 print:border-b print:border-black">Student Name</th>
                         <th className="px-3.5 py-3 text-center print:border-b print:border-black">Dept</th>
                         <th className="px-3.5 py-3 text-center print:border-b print:border-black">Year</th>
@@ -460,42 +460,42 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                         const cSolved = s.contest_solved !== undefined && s.contest_solved !== null ? s.contest_solved : (isPart && s.total_solved !== undefined && s.total_solved !== null ? s.total_solved : null);
 
                         return (
-                          <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors group">
-                            <td className="px-3.5 py-2.5 text-center text-gray-400 font-mono text-[11px] print:text-black">{idx + 1}</td>
-                            <td className="px-3.5 py-2.5 font-bold text-gray-900 dark:text-white font-mono sticky left-0 bg-white dark:bg-navy-900 group-hover:bg-gray-50 dark:group-hover:bg-navy-800 print:bg-transparent print:text-black z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] print:shadow-none">{s.reg_no}</td>
-                            <td className="px-3.5 py-2.5 font-semibold text-gray-800 dark:text-gray-200 print:text-black">{s.name || s.student_name}</td>
+                          <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors group">
+                            <td className="px-3.5 py-2.5 text-center text-slate-400 font-mono text-[11px] print:text-black">{idx + 1}</td>
+                            <td className="px-3.5 py-2.5 font-bold text-slate-900 dark:text-white font-mono sticky left-0 bg-white dark:bg-navy-950 group-hover:bg-slate-50 dark:group-hover:bg-navy-800 print:bg-transparent print:text-black z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] print:shadow-none">{s.reg_no}</td>
+                            <td className="px-3.5 py-2.5 font-semibold text-slate-800 dark:text-slate-200 print:text-black">{s.name || s.student_name}</td>
                             <td className="px-3.5 py-2.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{s.dept}</td>
-                            <td className="px-3.5 py-2.5 text-center font-medium text-gray-600 dark:text-gray-400">{s.year}</td>
+                            <td className="px-3.5 py-2.5 text-center font-medium text-slate-600 dark:text-slate-400">{s.year}</td>
                             <td className="px-4 py-2.5 text-center">
                               {getStatusBadge(s.status)}
                             </td>
                             <td className="px-3 py-2.5 text-center font-bold">
                               {isPart ? (
-                                s.q1 === 1 ? <span className="text-emerald-600 dark:text-emerald-400">1</span> : <span className="text-gray-400">0</span>
-                              ) : <span className="text-gray-400">—</span>}
+                                s.q1 === 1 ? <span className="text-emerald-600 dark:text-emerald-400">1</span> : <span className="text-slate-400">0</span>
+                              ) : <span className="text-slate-400">—</span>}
                             </td>
                             <td className="px-3 py-2.5 text-center font-bold">
                               {isPart ? (
-                                s.q2 === 1 ? <span className="text-emerald-600 dark:text-emerald-400">1</span> : <span className="text-gray-400">0</span>
-                              ) : <span className="text-gray-400">—</span>}
+                                s.q2 === 1 ? <span className="text-emerald-600 dark:text-emerald-400">1</span> : <span className="text-slate-400">0</span>
+                              ) : <span className="text-slate-400">—</span>}
                             </td>
                             <td className="px-3 py-2.5 text-center font-bold">
                               {isPart ? (
-                                s.q3 === 1 ? <span className="text-emerald-600 dark:text-emerald-400">1</span> : <span className="text-gray-400">0</span>
-                              ) : <span className="text-gray-400">—</span>}
+                                s.q3 === 1 ? <span className="text-emerald-600 dark:text-emerald-400">1</span> : <span className="text-slate-400">0</span>
+                              ) : <span className="text-slate-400">—</span>}
                             </td>
                             <td className="px-3 py-2.5 text-center font-bold">
                               {isPart ? (
-                                s.q4 === 1 ? <span className="text-emerald-600 dark:text-emerald-400">1</span> : <span className="text-gray-400">0</span>
-                              ) : <span className="text-gray-400">—</span>}
+                                s.q4 === 1 ? <span className="text-emerald-600 dark:text-emerald-400">1</span> : <span className="text-slate-400">0</span>
+                              ) : <span className="text-slate-400">—</span>}
                             </td>
                             <td className="px-4 py-2.5 text-center font-black text-sm">
                               {isPart && cSolved !== null ? (
-                                <span className={cSolved >= 3 ? "text-emerald-600 dark:text-emerald-400" : cSolved >= 1 ? "text-blue-600 dark:text-blue-400" : "text-gray-500"}>
+                                <span className={cSolved >= 3 ? "text-emerald-600 dark:text-emerald-400" : cSolved >= 1 ? "text-brand-600 dark:text-brand-400" : "text-slate-500"}>
                                   {cSolved}
                                 </span>
                               ) : (
-                                <span className="text-gray-400 font-normal">—</span>
+                                <span className="text-slate-400 font-normal">—</span>
                               )}
                             </td>
                           </tr>
@@ -514,14 +514,14 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
               {/* Metrics Overview Cards */}
               {report.metrics && (
                 <div className="space-y-3">
-                  <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider">Executive Summary Metrics</h3>
+                  <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider">Executive Summary Metrics</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {Object.entries(report.metrics).map(([key, value]) => (
-                      <div key={key} className="p-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-navy-950 text-center shadow-sm">
-                        <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-black tracking-wider mb-1">
+                      <div key={key} className="p-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-navy-950 text-center shadow-sm">
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-black tracking-wider mb-1">
                           {key.replace(/([A-Z])/g, ' $1').trim()}
                         </p>
-                        <p className="text-xl font-black text-gray-900 dark:text-white">
+                        <p className="text-xl font-black text-slate-900 dark:text-white">
                           {value !== null && value !== undefined ? (typeof value === 'number' && value > 999 ? value.toLocaleString() : String(value)) : "—"}
                         </p>
                       </div>
@@ -533,14 +533,14 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
               {/* Category Distribution Grid */}
               {report.distribution && (
                 <div className="space-y-3">
-                  <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider flex items-center space-x-1.5">
+                  <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center space-x-1.5">
                     <Layers className="w-4 h-4 text-purple-500" />
                     <span>Problem Solving Category Distribution</span>
                   </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                     {Object.entries(report.distribution).map(([cat, count]: [string, any]) => (
                       <div key={cat} className="p-3.5 rounded-2xl bg-purple-500/5 border border-purple-500/20 text-center">
-                        <div className="text-[11px] font-bold text-gray-600 dark:text-gray-300 mb-1">{cat}</div>
+                        <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">{cat}</div>
                         <div className="text-lg font-black text-purple-700 dark:text-purple-400">{count}</div>
                       </div>
                     ))}
@@ -551,11 +551,11 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
               {/* Top Performers Table */}
               {report.topStudents && report.topStudents.length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider flex items-center space-x-1.5">
+                  <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center space-x-1.5">
                     <Trophy className="w-4 h-4 text-amber-500" />
                     <span>Top Performers Leaderboard</span>
                   </h3>
-                  <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-x-auto shadow-sm">
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
                     <table className="w-full text-left text-xs min-w-[750px]">
                       <thead className="bg-navy-950 text-white font-black uppercase">
                         <tr>
@@ -573,17 +573,17 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                       </thead>
                       <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                         {report.topStudents.map((s: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors">
+                          <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors">
                             <td className="px-4 py-2.5 text-center font-black text-amber-500">#{idx + 1}</td>
-                            <td className="px-4 py-2.5 font-bold text-gray-900 dark:text-white">{s.reg_no}</td>
-                            <td className="px-4 py-2.5 font-semibold text-gray-800 dark:text-gray-200">{s.name}</td>
+                            <td className="px-4 py-2.5 font-bold text-slate-900 dark:text-white">{s.reg_no}</td>
+                            <td className="px-4 py-2.5 font-semibold text-slate-800 dark:text-slate-200">{s.name}</td>
                             <td className="px-4 py-2.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{s.dept}</td>
                             <td className="px-4 py-2.5 text-center">{s.year}</td>
                             <td className="px-4 py-2.5 text-right font-medium">{s.easy ?? "—"}</td>
                             <td className="px-4 py-2.5 text-right font-medium">{s.medium ?? "—"}</td>
                             <td className="px-4 py-2.5 text-right font-medium">{s.hard ?? "—"}</td>
                             <td className="px-4 py-2.5 text-right font-black text-emerald-600 dark:text-emerald-400 text-sm">{s.total_solved ?? "—"}</td>
-                            <td className="px-4 py-2.5 text-right font-mono text-gray-600 dark:text-gray-400">{s.rating ? Math.round(s.rating) : "—"}</td>
+                            <td className="px-4 py-2.5 text-right font-mono text-slate-600 dark:text-slate-400">{s.rating ? Math.round(s.rating) : "—"}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -595,15 +595,15 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
               {/* Full Student Roster Table */}
               {allRows.length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="text-xs font-black uppercase text-gray-400 tracking-wider">
+                  <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider">
                     Full Student Performance Roster ({allRows.length} Students)
                   </h3>
-                  <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-x-auto shadow-sm max-h-[450px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm max-h-[450px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
                     <table className="w-full text-left text-xs min-w-[800px] print:min-w-0 print:w-full">
-                      <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 print:bg-gray-200 print:text-black">
+                      <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 print:bg-slate-200 print:text-black">
                         <tr>
                           <th className="px-4 py-3 text-center print:border-b print:border-black">S.No</th>
-                          <th className="px-4 py-3 sticky left-0 bg-navy-950 print:bg-gray-200 print:border-b print:border-black z-20">Reg No</th>
+                          <th className="px-4 py-3 sticky left-0 bg-navy-950 print:bg-slate-200 print:border-b print:border-black z-20">Reg No</th>
                           <th className="px-4 py-3 print:border-b print:border-black">Student Name</th>
                           <th className="px-4 py-3 text-center print:border-b print:border-black">Dept</th>
                           <th className="px-4 py-3 text-center print:border-b print:border-black">Year</th>
@@ -616,10 +616,10 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                       </thead>
                       <tbody className="divide-y divide-gray-100 dark:divide-gray-800 print:divide-black">
                         {allRows.map((s: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors group">
-                            <td className="px-4 py-2.5 text-center text-gray-400 font-mono print:text-black">{idx + 1}</td>
-                            <td className="px-4 py-2.5 font-bold text-gray-900 dark:text-white sticky left-0 bg-white dark:bg-navy-900 group-hover:bg-gray-50 dark:group-hover:bg-navy-800 print:bg-transparent print:text-black z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] print:shadow-none">{s.reg_no}</td>
-                            <td className="px-4 py-2.5 font-semibold text-gray-800 dark:text-gray-200 print:text-black">{s.name}</td>
+                          <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors group">
+                            <td className="px-4 py-2.5 text-center text-slate-400 font-mono print:text-black">{idx + 1}</td>
+                            <td className="px-4 py-2.5 font-bold text-slate-900 dark:text-white sticky left-0 bg-white dark:bg-navy-950 group-hover:bg-slate-50 dark:group-hover:bg-navy-800 print:bg-transparent print:text-black z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] print:shadow-none">{s.reg_no}</td>
+                            <td className="px-4 py-2.5 font-semibold text-slate-800 dark:text-slate-200 print:text-black">{s.name}</td>
                             <td className="px-4 py-2.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{s.dept}</td>
                             <td className="px-4 py-2.5 text-center">{s.year}</td>
                             <td className="px-4 py-2.5 text-right text-emerald-600 dark:text-emerald-400 font-semibold">{s.easy ?? "—"}</td>
@@ -645,12 +645,12 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
         </div>
 
         {/* ── 4. FOOTER / EXPORT ACTIONS ── */}
-        <div className="p-4 sm:p-5 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-3 shrink-0 print:hidden">
-          <div className="text-xs text-gray-500 font-semibold flex items-center space-x-2">
+        <div className="p-4 sm:p-5 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0 print:hidden">
+          <div className="text-xs text-slate-500 font-semibold flex items-center space-x-2">
             <span>Official Institutional Report Dataset</span>
           </div>
           <div className="flex items-center space-x-2 flex-wrap gap-2">
-            <button onClick={() => window.print()} className="flex items-center space-x-1.5 px-3.5 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105">
+            <button onClick={() => window.print()} className="flex items-center space-x-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105">
               <FileText className="w-4 h-4" />
               <span>Print UI</span>
             </button>
@@ -662,7 +662,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
               <FileText className="w-4 h-4" />
               <span>PDF</span>
             </button>
-            <button onClick={() => downloadFile('word')} className="flex items-center space-x-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105">
+            <button onClick={() => downloadFile('word')} className="flex items-center space-x-1.5 px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-black transition-all shadow-md cursor-pointer hover:scale-105">
               <FileText className="w-4 h-4" />
               <span>Word</span>
             </button>

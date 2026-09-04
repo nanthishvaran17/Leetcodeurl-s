@@ -81,10 +81,10 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   const performanceOptions: DropdownOption[] = [
     { value: 'all', label: 'All Students', count: performanceCounts.total },
     { value: '500_plus', label: '500+ Solved', badge: '500+', badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20', count: performanceCounts.above500 },
-    { value: '251_500', label: '251–500 Solved', badge: '251-500', badgeColor: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20', count: performanceCounts.between251And500 },
+    { value: '251_500', label: '251–500 Solved', badge: '251-500', badgeColor: 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20', count: performanceCounts.between251And500 },
     { value: '101_250', label: '101–250 Solved', badge: '101-250', badgeColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20', count: performanceCounts.between101And250 },
     { value: '1_100', label: '1–100 Solved', badge: '1-100', badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20', count: performanceCounts.between1And100 },
-    { value: 'not_started', label: 'Not Started', badge: '0 Solved', badgeColor: 'bg-gray-500/10 text-gray-500 dark:text-gray-400 border-gray-500/20', count: performanceCounts.notStarted }
+    { value: 'not_started', label: 'Not Started', badge: '0 Solved', badgeColor: 'bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-500/20', count: performanceCounts.notStarted }
   ];
 
   // Sort Options
@@ -133,7 +133,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
               <h1 className="text-3xl md:text-4xl font-black tracking-tight">
                 Department & Academic <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Year Dashboard</span>
               </h1>
-              <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide">
+              <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide">
                 Filter students by Department, Academic Year, Name & Performance side-by-side
               </p>
             </div>
@@ -153,16 +153,16 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
       </div>
 
       {/* Filter Tabs Bar */}
-      <div className="glass-card p-6 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-xl space-y-6 relative z-30 overflow-visible">
+      <div className="glass-card p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-6 relative z-30 overflow-visible">
         
         {/* Header with Title & Controls */}
-        <div className="flex items-center justify-between flex-wrap gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
+        <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div className="space-y-1">
-            <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center space-x-2">
+            <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center space-x-2">
               <Filter className="w-4 h-4 text-brand-500" />
               <span>Department Cohort Filtering</span>
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Select department and cohort criteria to analyze student metrics
             </p>
           </div>
@@ -171,7 +171,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
             {/* View Mode Switch */}
             <button
               onClick={() => setViewMode(viewMode === 'cards' ? 'table' : 'cards')}
-              className="p-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-2xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 transition-all cursor-pointer shadow-sm flex items-center justify-center"
+              className="p-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 transition-all cursor-pointer shadow-sm flex items-center justify-center"
               title={viewMode === 'cards' ? 'Switch to Table View' : 'Switch to Grid View'}
             >
               {viewMode === 'cards' ? (
@@ -184,10 +184,10 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
             {/* Reset Filters Button */}
             <button
               onClick={handleResetFilters}
-              className="flex items-center space-x-1.5 px-3.5 py-2 rounded-2xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 text-xs font-bold border border-gray-200 dark:border-gray-700 transition-all cursor-pointer shadow-sm"
+              className="flex items-center space-x-1.5 px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold border border-slate-200 dark:border-slate-700 transition-all cursor-pointer shadow-sm"
               title="Reset all filters to default"
             >
-              <RotateCcw className="w-3.5 h-3.5 text-gray-500" />
+              <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
               <span>Reset Filters</span>
             </button>
           </div>
@@ -222,11 +222,11 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
 
           {/* 3. Name Search */}
           <div className="space-y-1.5 min-w-0">
-            <label htmlFor="dept-dashboard-name-search" className="block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">
+            <label htmlFor="dept-dashboard-name-search" className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
               Search Student Name
             </label>
             <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                 <Search className="w-3.5 h-3.5" />
               </div>
               <input
@@ -238,12 +238,12 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                   setDisplayCount(32);
                 }}
                 placeholder="Search by name, reg no..."
-                className="w-full h-11 bg-white dark:bg-slate-800 text-gray-900 dark:text-white text-xs font-bold py-2.5 pl-8 pr-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 truncate transition-all"
+                className="w-full h-11 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-bold py-2.5 pl-8 pr-8 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 truncate transition-all"
               />
               {nameSearch && (
                 <button
                   onClick={() => { setNameSearch(''); setDisplayCount(32); }}
-                  className="absolute inset-y-0 right-0 flex items-center px-2.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer"
+                  className="absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                   title="Clear search"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -284,7 +284,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
       {/* Main View Display */}
       <div className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <h3 className="font-extrabold text-sm text-gray-900 dark:text-white">
+          <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">
             {selectedDept === 'all' || selectedDept === 'ALL'
               ? 'All Departments'
               : (departments.find(d => String(d.id) === String(selectedDept) || d.code === selectedDept)?.name || selectedDept)}
@@ -314,13 +314,13 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
         </div>
 
         {finalStudentList.length === 0 ? (
-          <div className="text-center py-16 px-6 bg-white dark:bg-navy-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
+          <div className="text-center py-16 px-6 bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
               <AlertCircle className="w-6 h-6" />
             </div>
             <div className="space-y-1">
-              <h4 className="text-base font-black text-gray-900 dark:text-white">No students found</h4>
-              <p className="text-xs text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+              <h4 className="text-base font-black text-slate-900 dark:text-white">No students found</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
                 No students match the selected filters. Try changing or resetting the filters.
               </p>
             </div>
@@ -354,8 +354,8 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
 
             {displayCount < finalStudentList.length && (
               <div className="flex flex-col items-center justify-center pt-4 space-y-2">
-                <p className="text-xs text-gray-500 font-semibold">
-                  Showing <span className="font-extrabold text-brand-600 dark:text-brand-400">{Math.min(displayCount, finalStudentList.length)}</span> of <span className="font-extrabold text-gray-900 dark:text-white">{finalStudentList.length}</span> Students
+                <p className="text-xs text-slate-500 font-semibold">
+                  Showing <span className="font-extrabold text-brand-600 dark:text-brand-400">{Math.min(displayCount, finalStudentList.length)}</span> of <span className="font-extrabold text-slate-900 dark:text-white">{finalStudentList.length}</span> Students
                 </p>
                 <div className="flex items-center space-x-3">
                   <button
@@ -366,7 +366,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                   </button>
                   <button
                     onClick={() => setDisplayCount(finalStudentList.length)}
-                    className="px-5 py-3 rounded-2xl glass-card hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold text-xs border border-gray-200 dark:border-gray-700 transition-all cursor-pointer"
+                    className="px-5 py-3 rounded-2xl glass-card hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
                   >
                     Show All {finalStudentList.length} Students
                   </button>

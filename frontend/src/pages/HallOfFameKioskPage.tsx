@@ -347,7 +347,7 @@ export const HallOfFameKioskPage: React.FC = () => {
             <div className="grid grid-cols-4 gap-4">
               {[
                 { title: "100-Day Streak Knight", icon: "", desc: "100+ consecutive days active", holders: 48, grad: "from-orange-500 to-amber-600" },
-                { title: "Speed Demon", icon: "", desc: "Q1+Q2 in < 10 mins", holders: 34, grad: "from-cyan-500 to-blue-600" },
+                { title: "Speed Demon", icon: "", desc: "Q1+Q2 in < 10 mins", holders: 34, grad: "from-cyan-500 to-brand-600" },
                 { title: "Algorithm Master", icon: "", desc: "30+ Hard problems solved", holders: 22, grad: "from-purple-500 to-indigo-600" },
                 { title: "Grandmaster", icon: "", desc: "2000+ Contest Rating", holders: 9, grad: "from-emerald-500 to-teal-600" }
               ].map((badge) => (

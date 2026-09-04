@@ -1,4 +1,5 @@
 import pytest
+import os
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -7,6 +8,11 @@ from backend.database import SessionLocal, engine, Base
 from backend.models import User, Student, Department
 
 client = TestClient(app)
+
+pytestmark = pytest.mark.skipif(
+    not os.environ.get("GEMINI_API_KEY"),
+    reason="Skipping AI tests because GEMINI_API_KEY is not set in the environment."
+)
 
 @pytest.fixture(scope="module")
 def db_session():

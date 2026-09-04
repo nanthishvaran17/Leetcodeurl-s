@@ -35,7 +35,7 @@ function LcValidationChip({ state }: { state: LcValidationState }) {
 
   if (state.status === 'validating') {
     return (
-      <div className="flex items-center gap-1.5 text-xs text-blue-500 dark:text-blue-400 mt-1.5 animate-pulse">
+      <div className="flex items-center gap-1.5 text-xs text-brand-500 dark:text-brand-400 mt-1.5 animate-pulse">
         <Loader2 className="w-3.5 h-3.5 animate-spin" />
         <span className="font-semibold">Verifying account with LeetCode...</span>
       </div>
@@ -50,7 +50,7 @@ function LcValidationChip({ state }: { state: LcValidationState }) {
           <span className="font-bold">Account verified — <span className="font-black">{state.username}</span></span>
         </div>
         {(state.total_solved != null || state.contest_rating != null) && (
-          <div className="text-xs text-gray-500 dark:text-gray-400 pl-5">
+          <div className="text-xs text-slate-500 dark:text-slate-400 pl-5">
             {state.total_solved != null && <span>{state.total_solved} solved</span>}
             {state.total_solved != null && state.contest_rating != null && <span> · </span>}
             {state.contest_rating != null && <span>Rating {state.contest_rating}</span>}
@@ -98,7 +98,7 @@ function LcValidationChip({ state }: { state: LcValidationState }) {
 
   if (state.status === 'network_error') {
     return (
-      <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 mt-1.5">
+      <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1.5">
         <WifiOff className="w-3.5 h-3.5" />
         <span className="font-semibold">Could not reach LeetCode — check your connection</span>
       </div>
@@ -407,7 +407,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
               <h1 className="text-3xl md:text-4xl font-display font-black tracking-tight">
                 Student Master <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Directory</span>
               </h1>
-              <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide leading-relaxed">
+              <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide leading-relaxed">
                 Manage student profiles, LeetCode connectivity, and live synchronization across all institutional departments.
               </p>
             </div>
@@ -421,7 +421,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                 className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer ${
                   viewMode === 'table'
                     ? 'bg-white text-navy-950 shadow-sm'
-                    : 'text-gray-400 hover:text-white'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <List className="w-3.5 h-3.5" />
@@ -432,7 +432,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                 className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer ${
                   viewMode === 'cards'
                     ? 'bg-white text-navy-950 shadow-sm'
-                    : 'text-gray-400 hover:text-white'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
@@ -463,7 +463,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       </div>
 
       {/* Search Bar - Redesigned */}
-      <div className="bg-white dark:bg-navy-900 rounded-2xl p-4 shadow-sm border border-gray-200 dark:border-navy-700 space-y-4">
+      <div className="bg-white dark:bg-navy-950 rounded-2xl p-4 shadow-sm border border-slate-200 dark:border-navy-700 space-y-4">
         <div className="relative">
           <Search className="w-5 h-5 text-slate-400 absolute left-4 top-3.5" />
           <input
@@ -471,12 +471,12 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
             value={filters.searchQuery}
             onChange={(e) => filters.setSearchQuery(e.target.value)}
             placeholder="Search name, register no, username..."
-            className="w-full pl-12 pr-12 py-3 rounded-xl border border-slate-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-950 text-sm font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 focus:outline-none transition-all"
+            className="w-full pl-12 pr-12 py-3 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-sm font-semibold text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 focus:outline-none transition-all"
           />
           {filters.searchQuery && (
             <button
               onClick={() => filters.setSearchQuery('')}
-              className="absolute right-3 top-3 p-1 rounded-lg hover:bg-gray-200 dark:hover:bg-navy-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+              className="absolute right-3 top-3 p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
               title="Clear search"
             >
               <XCircle className="w-5 h-5" />
@@ -484,10 +484,10 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           )}
         </div>
         
-        <div className="flex items-center justify-between px-1 text-xs font-semibold text-gray-500 dark:text-gray-400">
+        <div className="flex items-center justify-between px-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
           {filters.isFilteringActive ? (
             <span>
-              Showing <span className="text-gray-900 dark:text-white font-bold">{serverTotalCount}</span> of <span className="text-gray-900 dark:text-white font-bold">{globalStudents.length}</span> students
+              Showing <span className="text-slate-900 dark:text-white font-bold">{serverTotalCount}</span> of <span className="text-slate-900 dark:text-white font-bold">{globalStudents.length}</span> students
             </span>
           ) : (
             <span>Showing all {globalStudents.length} students</span>
@@ -496,13 +496,13 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       </div>
 
       {serverTotalCount === 0 && filters.isFilteringActive && (
-        <div className="text-center py-16 px-6 bg-white dark:bg-navy-900 rounded-3xl border border-gray-200 dark:border-navy-700 shadow-sm space-y-4">
+        <div className="text-center py-16 px-6 bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-sm space-y-4">
           <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
             <AlertTriangle className="w-6 h-6" />
           </div>
           <div className="space-y-1">
-            <h4 className="text-base font-black text-gray-900 dark:text-white">No students found</h4>
-            <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+            <h4 className="text-base font-black text-slate-900 dark:text-white">No students found</h4>
+            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
               Try searching with: <br/>
               • Student name<br/>
               • Register number<br/>
@@ -543,7 +543,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           </div>
           
           {serverTotalCount > 0 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-white/50 dark:bg-navy-900/50 border border-slate-200 dark:border-navy-700">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-white/50 dark:bg-navy-950/50 border border-slate-200 dark:border-navy-700">
               <div className="text-sm font-semibold text-slate-500 dark:text-navy-300">
                 Showing <span className="text-slate-900 dark:text-white font-bold">{Math.min((serverPage - 1) * serverPageSize + 1, serverTotalCount)}</span> to <span className="text-slate-900 dark:text-white font-bold">{Math.min(serverPage * serverPageSize, serverTotalCount)}</span> of <span className="text-slate-900 dark:text-white font-bold">{serverTotalCount}</span> students
               </div>
@@ -593,41 +593,41 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       {/* Add Student Modal */}
       {showAddModal && (
         <div className="modal-overlay-responsive animate-modal-backdrop">
-          <div className="modal-container-responsive max-w-md bg-white dark:bg-navy-900 rounded-2xl border border-gray-200 dark:border-navy-700 shadow-sm animate-modal-content">
-            <div className="p-5 border-b border-gray-100 dark:border-gray-800 shrink-0 bg-gray-50/50 dark:bg-navy-900/50 flex items-center justify-between">
-              <h3 className="text-base font-extrabold text-gray-900 dark:text-white">Add New Student Record</h3>
-              <button onClick={handleCloseAddModal} className="p-1 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors cursor-pointer">
+          <div className="modal-container-responsive max-w-md bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm animate-modal-content">
+            <div className="p-5 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50/50 dark:bg-navy-950/50 flex items-center justify-between">
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Add New Student Record</h3>
+              <button onClick={handleCloseAddModal} className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer">
                
               </button>
             </div>
 
             <form onSubmit={handleCreateStudent} className="p-5 flex-1 min-h-0 overflow-y-auto space-y-3.5 text-xs">
               <div>
-                <label className="block font-bold text-gray-700 dark:text-gray-300 mb-1">Register Number</label>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Register Number</label>
                 <input
                   type="text"
                   value={regNo}
                   onChange={(e) => setRegNo(e.target.value)}
                   placeholder="e.g. 732224CC001"
                   required
-                  className="w-full p-2.5 rounded-xl border bg-white dark:bg-navy-900"
+                  className="w-full p-2.5 rounded-xl border bg-white dark:bg-navy-950"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 dark:text-gray-300 mb-1">Student Name</label>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Student Name</label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. AJAY A"
                   required
-                  className="w-full p-2.5 rounded-xl border bg-white dark:bg-navy-900"
+                  className="w-full p-2.5 rounded-xl border bg-white dark:bg-navy-950"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 dark:text-gray-300 mb-1">Department</label>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Department</label>
                 <GlobalFilter
                   value={deptId?.toString() || ""}
                   onChange={(val) => setDeptId(Number(val))}
@@ -638,7 +638,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 dark:text-gray-300 mb-1">Year Level</label>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Year Level</label>
                 <GlobalFilter
                   value={yearLevel}
                   onChange={(val) => setYearLevel(val)}
@@ -654,7 +654,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
               {/* ── LeetCode URL with live validation ── */}
               <div>
-                <label className="block font-bold text-gray-700 dark:text-gray-300 mb-1">LeetCode Profile Link</label>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">LeetCode Profile Link</label>
                 <div className="relative">
                   <input
                     type="text"
@@ -662,17 +662,17 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                     value={leetcodeUrl}
                     onChange={(e) => handleLcUrlChange(e.target.value)}
                     placeholder="e.g. https://leetcode.com/u/ajay_a/"
-                    className={`w-full p-2.5 pr-9 rounded-xl border bg-white dark:bg-navy-900 transition-colors ${
+                    className={`w-full p-2.5 pr-9 rounded-xl border bg-white dark:bg-navy-950 transition-colors ${
                       lcValidation.status === 'valid'
                         ? 'border-emerald-400 focus:ring-emerald-400'
                         : lcValidation.status === 'not_found' || lcValidation.status === 'identity_mismatch' || lcValidation.status === 'invalid_format'
                         ? 'border-red-400 focus:ring-red-400'
-                        : 'border-gray-300 dark:border-gray-700'
+                        : 'border-slate-300 dark:border-slate-700'
                     } focus:outline-none focus:ring-2`}
                   />
                   {/* Inline status icon */}
                   <div className="absolute right-2.5 top-2.5 pointer-events-none">
-                    {lcValidation.status === 'validating' && <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />}
+                    {lcValidation.status === 'validating' && <Loader2 className="w-4 h-4 text-brand-400 animate-spin" />}
                     {lcValidation.status === 'valid' && <CheckCircle className="w-4 h-4 text-emerald-500" />}
                     {(lcValidation.status === 'not_found' || lcValidation.status === 'identity_mismatch' || lcValidation.status === 'invalid_format') && (
                       <XCircle className="w-4 h-4 text-red-500" />
@@ -686,7 +686,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                 <LcValidationChip state={lcValidation} />
                 {/* If validation hard-failed, offer a skip hint */}
                 {!saveAllowed && (
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
                     Fix the URL above, or clear it to save without a LeetCode link.
                   </p>
                 )}
@@ -696,7 +696,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                 <button
                   type="button"
                   onClick={handleCloseAddModal}
-                  className="px-4 py-2 rounded-xl text-gray-500 font-bold hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className="px-4 py-2 rounded-xl text-slate-500 font-bold hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
                   Cancel
                 </button>
@@ -706,7 +706,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                   title={!saveAllowed ? 'Fix the LeetCode URL to continue' : undefined}
                   className={`px-4 py-2 rounded-xl font-bold shadow-md transition-all ${
                     loading || !saveAllowed
-                      ? 'bg-gray-300 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
+                      ? 'bg-slate-300 dark:bg-slate-700 text-slate-400 cursor-not-allowed'
                       : 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-600/30'
                   }`}
                 >

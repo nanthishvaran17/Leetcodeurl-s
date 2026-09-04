@@ -191,10 +191,10 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
 
   return (
     <div className="modal-overlay-responsive animate-modal-backdrop">
-      <div className="modal-container-responsive max-w-3xl glass-card rounded-3xl border border-gray-200 dark:border-gray-800 shadow-2xl animate-modal-content overflow-hidden">
+      <div className="modal-container-responsive max-w-3xl glass-card rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl animate-modal-content overflow-hidden">
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b p-6 border-gray-200 dark:border-gray-800 shrink-0 bg-gradient-to-r from-gray-50 via-slate-50 to-gray-100 dark:from-navy-900 dark:via-navy-950 dark:to-slate-900">
+        <div className="flex items-center justify-between border-b p-6 border-slate-200 dark:border-slate-800 shrink-0 bg-gradient-to-r from-slate-50 via-slate-50 to-slate-100 dark:from-navy-900 dark:via-navy-950 dark:to-slate-900">
           <div className="flex items-center space-x-3">
             <div className={`p-3 rounded-2xl ${isCompleted ? 'bg-emerald-600' : isImporting ? 'bg-brand-600 animate-pulse' : 'bg-indigo-600'} text-white shadow-lg`}>
               {isCompleted ? (
@@ -206,7 +206,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
               )}
             </div>
             <div>
-              <h3 className="font-black text-xl text-gray-900 dark:text-white tracking-tight flex items-center space-x-2">
+              <h3 className="font-black text-xl text-slate-900 dark:text-white tracking-tight flex items-center space-x-2">
                 <span>{isCompleted ? 'Excel Import Complete' : isImporting ? 'High-Speed Excel Import Active' : 'Import Students from Excel'}</span>
                 {isImporting && (
                   <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-black uppercase tracking-wider animate-pulse">
@@ -214,7 +214,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
                   </span>
                 )}
               </h3>
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
                 {isCompleted ? 'All student roster records verified and updated in real-time.' : isImporting ? `Processing job ${jobId}... live updating database.` : 'Upload .xlsx or .xls file containing institutional student profiles'}
               </p>
             </div>
@@ -222,7 +222,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
           <button
             onClick={onClose}
             disabled={isImporting}
-            className={`p-2 rounded-xl text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${isImporting ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+            className={`p-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${isImporting ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
           >
             <X className="w-5 h-5" />
           </button>
@@ -236,13 +236,13 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
             <div className="space-y-4">
               <div className="border-2 border-dashed border-brand-500/30 dark:border-brand-500/20 rounded-3xl p-10 text-center hover:border-brand-500 bg-brand-500/5 transition-all">
                 <UploadCloud className="w-14 h-14 text-brand-600 dark:text-brand-400 mx-auto mb-3 animate-bounce" />
-                <p className="font-extrabold text-base text-gray-900 dark:text-white">Click to upload or drag & drop Excel file</p>
-                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1">Columns: <code className="bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded font-mono text-[11px] text-brand-600 dark:text-brand-300">REG NO</code>, <code className="bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded font-mono text-[11px] text-brand-600 dark:text-brand-300">NAME</code>, <code className="bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded font-mono text-[11px] text-brand-600 dark:text-brand-300">DEPT</code>, <code className="bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded font-mono text-[11px] text-brand-600 dark:text-brand-300">YEAR</code>, <code className="bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded font-mono text-[11px] text-brand-600 dark:text-brand-300">PRIMARY LEETCODE LINK</code>, <code className="bg-gray-200 dark:bg-gray-800 px-1.5 py-0.5 rounded font-mono text-[11px] text-emerald-600 dark:text-emerald-400">SECONDARY LEETCODE LINK (Optional)</code></p>
+                <p className="font-extrabold text-base text-slate-900 dark:text-white">Click to upload or drag & drop Excel file</p>
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">Columns: <code className="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono text-[11px] text-brand-600 dark:text-brand-300">REG NO</code>, <code className="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono text-[11px] text-brand-600 dark:text-brand-300">NAME</code>, <code className="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono text-[11px] text-brand-600 dark:text-brand-300">DEPT</code>, <code className="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono text-[11px] text-brand-600 dark:text-brand-300">YEAR</code>, <code className="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono text-[11px] text-brand-600 dark:text-brand-300">PRIMARY LEETCODE LINK</code>, <code className="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono text-[11px] text-emerald-600 dark:text-emerald-400">SECONDARY LEETCODE LINK (Optional)</code></p>
                 <input
                   type="file"
                   accept=".xlsx, .xls"
                   onChange={handleFileChange}
-                  className="mt-6 block w-full text-xs text-gray-500 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-brand-600 file:text-white hover:file:bg-brand-700 mx-auto max-w-xs transition-all shadow-md"
+                  className="mt-6 block w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-brand-600 file:text-white hover:file:bg-brand-700 mx-auto max-w-xs transition-all shadow-md"
                 />
               </div>
 
@@ -266,16 +266,16 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
           {/* STATE 2: File Selected (Ready to Commit) */}
           {file && !isImporting && !isCompleted && (
             <div className="space-y-6">
-              <div className="p-6 rounded-3xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 text-center space-y-2">
-                <FileSpreadsheet className="w-12 h-12 text-blue-600 dark:text-blue-400 mx-auto" />
-                <p className="text-base font-extrabold text-blue-900 dark:text-blue-100">{file.name}</p>
-                <p className="text-xs font-medium text-blue-600 dark:text-blue-300">File size: {(file.size / 1024).toFixed(2)} KB • Ready for high-speed import</p>
+              <div className="p-6 rounded-3xl bg-brand-50/80 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800/60 text-center space-y-2">
+                <FileSpreadsheet className="w-12 h-12 text-brand-600 dark:text-brand-400 mx-auto" />
+                <p className="text-base font-extrabold text-brand-900 dark:text-brand-100">{file.name}</p>
+                <p className="text-xs font-medium text-brand-600 dark:text-brand-300">File size: {(file.size / 1024).toFixed(2)} KB • Ready for high-speed import</p>
               </div>
 
-              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-800">
+              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-200 dark:border-slate-800">
                 <button
                   onClick={() => setFile(null)}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
                 >
                   Choose Different File
                 </button>
@@ -313,7 +313,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
                   />
                 </div>
 
-                <div className="flex items-center justify-between text-xs text-gray-300 font-semibold">
+                <div className="flex items-center justify-between text-xs text-slate-300 font-semibold">
                   <span>Processed: <strong className="text-white">{importStatus?.processed_rows ?? 0}</strong> / {importStatus?.total_rows ?? 1} rows</span>
                   <span className="text-teal-300 font-mono">Job ID: {jobId}</span>
                 </div>
@@ -325,9 +325,9 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
                   <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Processed</p>
                   <p className="text-xl font-black text-emerald-700 dark:text-emerald-300 mt-1">{importStatus?.processed_rows ?? 0}</p>
                 </div>
-                <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-center">
-                  <p className="text-xs font-bold text-blue-600 dark:text-blue-400">Successfully Imported</p>
-                  <p className="text-xl font-black text-blue-700 dark:text-blue-300 mt-1">{importStatus?.successful ?? 0}</p>
+                <div className="p-4 rounded-2xl bg-brand-500/10 border border-brand-500/20 text-center">
+                  <p className="text-xs font-bold text-brand-600 dark:text-brand-400">Successfully Imported</p>
+                  <p className="text-xl font-black text-brand-700 dark:text-brand-300 mt-1">{importStatus?.successful ?? 0}</p>
                 </div>
                 <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center">
                   <p className="text-xs font-bold text-amber-600 dark:text-amber-400">Skipped / Duplicates</p>
@@ -338,18 +338,18 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
               {/* Real-time Log Feed */}
               {importStatus?.recent_logs && importStatus.recent_logs.length > 0 && (
                 <div className="rounded-2xl bg-navy-950 border border-navy-800 p-4 text-xs space-y-2">
-                  <div className="flex items-center justify-between text-gray-400 font-bold border-b border-navy-800 pb-2">
+                  <div className="flex items-center justify-between text-slate-400 font-bold border-b border-navy-800 pb-2">
                     <span className="flex items-center space-x-1.5">
                       <Terminal className="w-3.5 h-3.5 text-brand-400" />
                       <span>Live Terminal Activity Feed</span>
                     </span>
-                    <span className="text-[10px] text-gray-500 font-mono">Real-time Stream</span>
+                    <span className="text-[10px] text-slate-500 font-mono">Real-time Stream</span>
                   </div>
-                  <div className="max-h-36 overflow-y-auto font-mono text-[11px] space-y-1 text-gray-300 pr-1">
+                  <div className="max-h-36 overflow-y-auto font-mono text-[11px] space-y-1 text-slate-300 pr-1">
                     {importStatus.recent_logs.map((log, i) => (
                       <div key={i} className="flex items-start space-x-2">
                         <span className="text-emerald-400 font-black">›</span>
-                        <span className={log.includes('Skipped') ? 'text-amber-400' : 'text-gray-200'}>{log}</span>
+                        <span className={log.includes('Skipped') ? 'text-amber-400' : 'text-slate-200'}>{log}</span>
                       </div>
                     ))}
                     <div ref={logEndRef} />
@@ -367,17 +367,17 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
               </div>
 
               <div>
-                <h4 className="text-2xl font-black text-gray-900 dark:text-white">Excel Import Complete!</h4>
-                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1">
+                <h4 className="text-2xl font-black text-slate-900 dark:text-white">Excel Import Complete!</h4>
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
                   Roster database successfully updated and synchronized with campus system.
                 </p>
               </div>
 
               {/* Summary Metrics */}
               <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto">
-                <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-900 border border-gray-200 dark:border-gray-800">
-                  <p className="text-[11px] font-bold text-gray-500">Total Rows</p>
-                  <p className="text-2xl font-black text-gray-900 dark:text-white mt-0.5">{importStatus?.total_rows ?? importStatus?.processed_rows ?? 0}</p>
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800">
+                  <p className="text-[11px] font-bold text-slate-500">Total Rows</p>
+                  <p className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">{importStatus?.total_rows ?? importStatus?.processed_rows ?? 0}</p>
                 </div>
                 <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60">
                   <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">Imported / Updated</p>
@@ -389,7 +389,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
                 <button
                   onClick={() => {
                     onSuccess();

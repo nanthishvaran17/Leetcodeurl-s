@@ -198,7 +198,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
     {
       title: "Student Operations",
       icon: Users,
-      color: "from-blue-500/10 to-indigo-500/10 border-blue-500/30 text-blue-400",
+      color: "from-brand-500/10 to-indigo-500/10 border-brand-500/30 text-brand-400",
       actions: [
         { label: "Lookup Student Profile", query: "Lookup Bharath K profile details" },
         { label: "Filter CSE(CS) III Year", query: "Show Cyber Security III Year students" },
@@ -246,7 +246,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
     {
       title: "Report Exporters",
       icon: FileText,
-      color: "from-cyan-500/10 to-blue-500/10 border-cyan-500/30 text-cyan-400",
+      color: "from-cyan-500/10 to-brand-500/10 border-cyan-500/30 text-cyan-400",
       actions: [
         { label: "Generate HOD Summary Report", query: "Generate HOD weekly summary report" },
         { label: "Verify Report Parity", query: "Are PDF and Excel reports in 100% parity?" }
@@ -419,7 +419,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                 setIsOpen(true);
               }
             }}
-            className="w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white shadow-md cursor-grab active:cursor-grabbing border-2 border-white/20 transition-all"
+            className="w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-700 hover:from-brand-500 hover:to-indigo-500 text-white shadow-md cursor-grab active:cursor-grabbing border-2 border-white/20 transition-all"
             title="Drag to move, Click to open AI"
           >
             <div className="relative flex items-center justify-center">
@@ -438,10 +438,10 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 20 }}
             transition={{ type: "spring", stiffness: 350, damping: 25 }}
-            className={`bg-white dark:bg-navy-900 rounded-3xl border border-gray-200 dark:border-navy-800 shadow-lg flex flex-col overflow-hidden text-gray-900 dark:text-gray-100 transition-all ${
+            className={`bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-navy-800 shadow-lg flex flex-col overflow-hidden text-slate-900 dark:text-slate-100 transition-all ${
               isExpanded
                 ? 'w-[800px] max-w-[calc(100vw-2rem)] h-[780px] max-h-[calc(100vh-4rem)]'
-                : 'w-[420px] max-w-[calc(100vw-2rem)] h-[640px]'
+                : 'w-[420px] max-w-[calc(100vw-2rem)] h-[640px] max-h-[calc(100vh-5rem)]'
             }`}
           >
           {/* Header */}
@@ -493,17 +493,17 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
                 <span>DB: HEALTHY ({telemetry?.total_students || 302})</span>
               </span>
-              <span className="text-gray-500">•</span>
+              <span className="text-slate-500">•</span>
               <span className="text-emerald-300">Verified: {telemetry?.verified_students || 237}</span>
-              <span className="text-gray-500">•</span>
+              <span className="text-slate-500">•</span>
               <span className="text-amber-300">Pending: {telemetry?.pending_students || 21}</span>
-              <span className="text-gray-500">•</span>
+              <span className="text-slate-500">•</span>
               <span className="text-rose-300">Failed: {telemetry?.failed_students || 44}</span>
             </div>
 
             <button
               onClick={fetchTelemetry}
-              className="text-gray-400 hover:text-white cursor-pointer ml-2"
+              className="text-slate-400 hover:text-white cursor-pointer ml-2"
               title="Refresh DB Telemetry"
             >
               <RefreshCw className={`w-3 h-3 ${loadingTelemetry ? 'animate-spin' : ''}`} />
@@ -512,9 +512,9 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
 
           {/* Launchers Overlay Panel */}
           {showLaunchers ? (
-            <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-gray-50 dark:bg-navy-950 animate-fade-in text-xs">
-              <div className="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-gray-800">
-                <div className="flex items-center space-x-2 font-black text-gray-900 dark:text-white text-sm">
+            <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50 dark:bg-navy-950 animate-fade-in text-xs">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                <div className="flex items-center space-x-2 font-black text-slate-900 dark:text-white text-sm">
                   <Sliders className="w-4 h-4 text-indigo-500" />
                   <span>AI Operations Launchers & Audit Tools</span>
                 </div>
@@ -532,9 +532,9 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                   return (
                     <div
                       key={idx}
-                      className="p-3 rounded-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-800 shadow-sm space-y-2"
+                      className="p-3 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-sm space-y-2"
                     >
-                      <div className="flex items-center space-x-2 font-bold text-gray-900 dark:text-white text-xs">
+                      <div className="flex items-center space-x-2 font-bold text-slate-900 dark:text-white text-xs">
                         <IconComp className="w-3.5 h-3.5 text-indigo-500" />
                         <span>{cat.title}</span>
                       </div>
@@ -543,10 +543,10 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                           <button
                             key={aIdx}
                             onClick={() => handleSend(act.query, 'operations')}
-                            className="w-full p-2 rounded-lg bg-gray-50 dark:bg-navy-950 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 border border-gray-200/80 dark:border-gray-800 text-left text-[11px] font-bold text-gray-700 dark:text-gray-300 flex items-center justify-between transition-all cursor-pointer"
+                            className="w-full p-2 rounded-lg bg-slate-50 dark:bg-navy-950 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 border border-slate-200/80 dark:border-slate-800 text-left text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between transition-all cursor-pointer"
                           >
                             <span>{act.label}</span>
-                            <ArrowRight className="w-3 h-3 text-gray-400" />
+                            <ArrowRight className="w-3 h-3 text-slate-400" />
                           </button>
                         ))}
                       </div>
@@ -561,7 +561,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                   <Lock className="w-3.5 h-3.5" />
                   <span>Action Safety Guard Active</span>
                 </div>
-                <p className="text-gray-300 text-[10px]">
+                <p className="text-slate-300 text-[10px]">
                   Read-only queries execute automatically. Email drafts and data modifications require explicit two-step user confirmation before dispatching.
                 </p>
               </div>
@@ -578,7 +578,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                     className={`max-w-[92%] p-3 rounded-2xl ${
                       msg.sender === 'user'
                         ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white rounded-br-none shadow-md font-bold'
-                        : 'bg-gray-50 dark:bg-navy-950/70 border border-gray-200/80 dark:border-gray-800 text-gray-800 dark:text-gray-100 rounded-bl-none shadow-sm space-y-2'
+                        : 'bg-slate-50 dark:bg-navy-950/70 border border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-100 rounded-bl-none shadow-sm space-y-2'
                     }`}
                   >
                     {/* Task Plan Badge */}
@@ -593,7 +593,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                             {msg.task_plan.status}
                           </span>
                         </div>
-                        <ul className="text-[10px] text-gray-600 dark:text-gray-300 space-y-0.5 pl-3 list-disc">
+                        <ul className="text-[10px] text-slate-600 dark:text-slate-300 space-y-0.5 pl-3 list-disc">
                           {msg.task_plan.subtasks.map((st, idx) => (
                             <li key={idx}>{st}</li>
                           ))}
@@ -614,10 +614,10 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                           <CheckCircle2 className="w-4.5 h-4.5 text-emerald-500 shrink-0" />
                           <span>ACTION CONFIRMED & DISPATCHED SUCCESSFULLY</span>
                         </div>
-                        <div className="text-[11px] space-y-1 text-gray-700 dark:text-gray-200 font-medium">
-                          <div><span className="font-bold text-gray-900 dark:text-white">Action:</span> {msg.action_result?.action || 'Email Notification'}</div>
-                          <div><span className="font-bold text-gray-900 dark:text-white">Details:</span> {msg.action_result?.result || 'Emails sent successfully via Brevo/SMTP'}</div>
-                          <div><span className="font-bold text-gray-900 dark:text-white">Dispatched At:</span> {msg.action_result?.timestamp || 'Just now'}</div>
+                        <div className="text-[11px] space-y-1 text-slate-700 dark:text-slate-200 font-medium">
+                          <div><span className="font-bold text-slate-900 dark:text-white">Action:</span> {msg.action_result?.action || 'Email Notification'}</div>
+                          <div><span className="font-bold text-slate-900 dark:text-white">Details:</span> {msg.action_result?.result || 'Emails sent successfully via Brevo/SMTP'}</div>
+                          <div><span className="font-bold text-slate-900 dark:text-white">Dispatched At:</span> {msg.action_result?.timestamp || 'Just now'}</div>
                         </div>
                       </div>
                     )}
@@ -630,18 +630,18 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                           <span>Action Safety Guard Confirmation Required</span>
                         </div>
 
-                        <p className="text-[11px] text-gray-800 dark:text-gray-200 font-bold">
+                        <p className="text-[11px] text-slate-800 dark:text-slate-200 font-bold">
                           {msg.pending_action.description}
                         </p>
 
                         {/* Email Subject & Preview Card */}
                         {msg.pending_action.email_subject && (
-                          <div className="p-2.5 rounded-xl bg-white dark:bg-navy-900 border border-amber-200 dark:border-amber-800/60 space-y-1 text-[11px]">
-                            <div className="font-bold text-gray-900 dark:text-white flex items-center gap-1">
+                          <div className="p-2.5 rounded-xl bg-white dark:bg-navy-950 border border-amber-200 dark:border-amber-800/60 space-y-1 text-[11px]">
+                            <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1">
                               <Mail className="w-3 h-3 text-amber-500" />
                               <span>Subject: {msg.pending_action.email_subject}</span>
                             </div>
-                            <p className="text-gray-600 dark:text-gray-300 italic text-[10.5px]">
+                            <p className="text-slate-600 dark:text-slate-300 italic text-[10.5px]">
                               "{msg.pending_action.email_preview}"
                             </p>
                           </div>
@@ -649,8 +649,8 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
 
                         {/* Recipient Roster */}
                         {msg.pending_action.target_details && msg.pending_action.target_details.length > 0 && (
-                          <div className="text-[10.5px] bg-white/80 dark:bg-navy-950 p-2.5 rounded-xl border border-amber-200 dark:border-amber-800/60 space-y-1 font-mono text-gray-700 dark:text-gray-300">
-                            <span className="font-bold block text-gray-500 uppercase tracking-wider text-[9.5px]">
+                          <div className="text-[10.5px] bg-white/80 dark:bg-navy-950 p-2.5 rounded-xl border border-amber-200 dark:border-amber-800/60 space-y-1 font-mono text-slate-700 dark:text-slate-300">
+                            <span className="font-bold block text-slate-500 uppercase tracking-wider text-[9.5px]">
                               Recipients ({msg.pending_action.affected_records}):
                             </span>
                             {msg.pending_action.target_details.map((t, idx) => (
@@ -701,14 +701,14 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                     )}
                   </div>
 
-                  <div className="flex items-center space-x-2 text-[9px] text-gray-400 px-1">
+                  <div className="flex items-center space-x-2 text-[9px] text-slate-400 px-1">
                     <span>{msg.timestamp}</span>
                   </div>
                 </div>
               ))}
 
               {loading && (
-                <div className="flex items-center space-x-2 text-gray-400 text-xs p-2">
+                <div className="flex items-center space-x-2 text-slate-400 text-xs p-2">
                   <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
                   <span className="font-bold">Evaluating ground truth database & contest models…</span>
                 </div>
@@ -719,12 +719,12 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
 
           {/* Quick Actions Suggestions */}
           {!showLaunchers && (
-            <div className="p-2 bg-gray-50 dark:bg-navy-950 border-t border-gray-100 dark:border-gray-800/80 flex space-x-1.5 overflow-x-auto no-scrollbar shrink-0">
+            <div className="p-2 bg-slate-50 dark:bg-navy-950 border-t border-slate-100 dark:border-slate-800/80 flex space-x-1.5 overflow-x-auto no-scrollbar shrink-0">
               {quickActionsOps.map((action, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleSend(action.query)}
-                  className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 text-[10.5px] font-bold text-gray-700 dark:text-gray-300 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-300 whitespace-nowrap cursor-pointer transition-all shadow-sm flex items-center space-x-1"
+                  className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-[10.5px] font-bold text-slate-700 dark:text-slate-300 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-300 whitespace-nowrap cursor-pointer transition-all shadow-sm flex items-center space-x-1"
                 >
                   <span>{action.label}</span>
                 </button>
@@ -733,7 +733,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
           )}
 
           {/* Input Box */}
-          <div className="p-3 bg-white dark:bg-navy-900 border-t border-gray-200 dark:border-navy-800 flex items-center space-x-2 shrink-0">
+          <div className="p-3 bg-white dark:bg-navy-950 border-t border-slate-200 dark:border-navy-800 flex items-center space-x-2 shrink-0">
             <input
               type="text"
               value={input}
@@ -744,7 +744,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                   ? 'Issue command (e.g. mail panu, run audit, last fetch kaatu)...'
                   : 'Ask about contest performance, student, comparison, or architecture...'
               }
-              className="flex-1 px-3.5 py-2 bg-gray-50 dark:bg-navy-950 border border-gray-200 dark:border-gray-800 rounded-xl text-xs font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="flex-1 px-3.5 py-2 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
             <button
               onClick={() => handleSend()}

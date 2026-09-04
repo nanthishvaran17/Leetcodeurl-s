@@ -7,6 +7,8 @@ from backend.models import (
     User, Student, Conversation, Message, FacultyStudentAssignment
 )
 from backend.services.notification_service import NotificationService
+from backend.websocket_manager import manager
+from backend.logger import logger
 
 class MessagingService:
     @staticmethod
@@ -149,6 +151,28 @@ class MessagingService:
             
         db.commit()
         db.refresh(msg)
+        
+        message_payload = {
+            "messageId": msg.message_id,
+            "conversationId": msg.conversation_id,
+            "senderId": msg.sender_id,
+            "receiverId": msg.receiver_id,
+            "content": msg.content,
+            "status": msg.status,
+            "attachmentFileId": msg.attachment_file_id,
+            "createdAt": msg.created_at.isoformat() if msg.created_at else None
+        }
+
+        # WebSocket Broadcast for real-time delivery
+        manager.broadcast_sync({
+            "type": "NEW_MESSAGE",
+            "message": message_payload
+        })
+        
+        # Check if recipient is actively viewing this specific conversation via WebSocket
+        if manager.is_user_in_conversation(receiver_id, conv.conversation_id):
+            logger.info(f"[MESSAGING] Recipient {receiver_id} is active in {conv.conversation_id}, skipping OS push notification.")
+            return msg
         
         # 5. Emit Notification (Deep linked)
         sender_name = getattr(current_user, "full_name", None) or getattr(current_user, "name", "A user")

@@ -312,7 +312,7 @@ export const ComparePage: React.FC = () => {
                 className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
                   compareMode === 'STUDENT'
                     ? 'bg-gradient-to-r from-brand-500 to-indigo-600 text-white shadow-lg scale-105'
-                    : 'text-gray-300 hover:text-white'
+                    : 'text-slate-300 hover:text-white'
                 }`}
               >
                 <User className="w-3.5 h-3.5" />
@@ -324,7 +324,7 @@ export const ComparePage: React.FC = () => {
                 className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${
                   compareMode === 'GROUP'
                     ? 'bg-gradient-to-r from-brand-500 to-indigo-600 text-white shadow-lg scale-105'
-                    : 'text-gray-300 hover:text-white'
+                    : 'text-slate-300 hover:text-white'
                 }`}
               >
                 <Building2 className="w-3.5 h-3.5" />
@@ -337,7 +337,7 @@ export const ComparePage: React.FC = () => {
             <h1 className="text-3xl md:text-4xl font-black tracking-tight">
               {compareMode === 'STUDENT' ? 'Student Head-to-Head Comparison Arena' : 'Group & Batch Aggregate Analytics'}
             </h1>
-            <p className="text-xs md:text-sm text-gray-300 font-bold mt-1">
+            <p className="text-xs md:text-sm text-slate-300 font-bold mt-1">
               Analyze side-by-side performance metrics, total problem counts, difficulty breakdown, contest ratings, and weekly streaks across students.
             </p>
           </div>
@@ -349,8 +349,8 @@ export const ComparePage: React.FC = () => {
         <div className="space-y-6">
           {/* Filter Controls Bar */}
           <div className={`glass-card p-6 rounded-3xl border space-y-4 shadow-xl relative ${deptOpen || yearOpen ? 'z-50' : 'z-10'}`}>
-            <div className="flex items-center justify-between flex-wrap gap-3 border-b border-gray-200 dark:border-gray-800 pb-3">
-              <h3 className="font-extrabold text-sm text-gray-900 dark:text-white flex items-center space-x-2">
+            <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
                 <Filter className="w-4 h-4 text-brand-500" />
                 <span>Filter Students by Department & Academic Year</span>
               </h3>
@@ -369,26 +369,26 @@ export const ComparePage: React.FC = () => {
 
               {/* Year Filter — Premium Custom Dropdown */}
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Select Academic Year Level</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Select Academic Year Level</label>
                 <div className={`relative ${yearOpen ? 'z-30' : 'z-10'}`}>
                   <button
                     type="button"
                     onClick={() => { setYearOpen(p => !p); setDeptOpen(false); setFighterAOpen(false); setFighterBOpen(false); }}
                     className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${
-                      yearOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-gray-200 dark:border-gray-800 hover:border-brand-300'
+                      yearOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-slate-200 dark:border-slate-800 hover:border-brand-300'
                     }`}
                   >
                     <GraduationCap className="w-3.5 h-3.5 text-brand-500 shrink-0" />
                     <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300">
                       {selectedYear}
                     </span>
-                    <span className="text-xs font-bold text-gray-900 dark:text-white truncate flex-1">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
                       {selectedYear === 'ALL' ? 'All Academic Years' : selectedYear === 'II' ? 'II Year (Batch 2025 - 2029)' : selectedYear === 'III' ? 'III Year (Batch 2024 - 2028)' : 'IV Year (Batch 2023 - 2027)'}
                     </span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {yearOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
                       {[
                         { value: 'ALL', code: 'ALL', label: 'All Academic Years' },
                         { value: 'II',  code: 'II',  label: 'II Year (Batch 2025 - 2029)' },
@@ -401,12 +401,12 @@ export const ComparePage: React.FC = () => {
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => { setSelectedYear(opt.value); setYearOpen(false); }}
                           className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${
-                            selectedYear === opt.value ? 'bg-brand-50 dark:bg-brand-950/60' : 'hover:bg-gray-50 dark:hover:bg-navy-800'
+                            selectedYear === opt.value ? 'bg-brand-50 dark:bg-brand-950/60' : 'hover:bg-slate-50 dark:hover:bg-navy-800'
                           }`}
                         >
-                          <GraduationCap className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                          <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                           <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300">{opt.code}</span>
-                          <span className={`text-xs truncate flex-1 ${selectedYear === opt.value ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-gray-700 dark:text-gray-300'}`}>{opt.label}</span>
+                          <span className={`text-xs truncate flex-1 ${selectedYear === opt.value ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-slate-700 dark:text-slate-300'}`}>{opt.label}</span>
                           {selectedYear === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
                         </button>
                       ))}
@@ -429,13 +429,13 @@ export const ComparePage: React.FC = () => {
 
               {/* Search Box Input */}
               <div className="relative">
-                <Search className="w-4 h-4 absolute left-3.5 top-3 text-gray-400" />
+                <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Search Student A by Name, Reg No, or Handle..."
                   value={searchA}
                   onChange={(e) => setSearchA(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border-brand-400/40 focus:ring-2 focus:ring-brand-500 outline-none shadow-inner"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-950 text-slate-900 dark:text-white border-brand-400/40 focus:ring-2 focus:ring-brand-500 outline-none shadow-inner"
                 />
               </div>
 
@@ -444,7 +444,7 @@ export const ComparePage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => { setFighterAOpen(p => !p); setFighterBOpen(false); setDeptOpen(false); setYearOpen(false); }}
-                  className={`w-full flex items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-white dark:bg-navy-900 border text-left transition-all focus:outline-none shadow-sm ${
+                  className={`w-full flex items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none shadow-sm ${
                     fighterAOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-brand-400/40 hover:border-brand-400'
                   }`}
                 >
@@ -455,23 +455,23 @@ export const ComparePage: React.FC = () => {
                         <span className="px-2 py-0.5 rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-300 font-mono font-black text-[10px]">
                           #{studentA.college_rank || '—'}
                         </span>
-                        <span className="text-xs font-black text-gray-900 dark:text-white truncate">{studentA.name}</span>
-                        <span className="text-[11px] text-gray-400 font-mono">({studentA.reg_no})</span>
+                        <span className="text-xs font-black text-slate-900 dark:text-white truncate">{studentA.name}</span>
+                        <span className="text-[11px] text-slate-400 font-mono">({studentA.reg_no})</span>
                         <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                           {studentA.stats?.total_solved || 0} Solved
                         </span>
                       </div>
                     ) : (
-                      <span className="text-xs font-extrabold text-gray-400">Select Fighter A</span>
+                      <span className="text-xs font-extrabold text-slate-400">Select Fighter A</span>
                     )}
                   </div>
-                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform shrink-0 ${fighterAOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform shrink-0 ${fighterAOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {fighterAOpen && (
-                  <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-brand-200 dark:border-navy-700 rounded-2xl shadow-lg max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
+                  <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-brand-200 dark:border-navy-700 rounded-2xl shadow-lg max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
                     {filteredStudentsA.length === 0 ? (
-                      <div className="p-4 text-center text-xs font-bold text-gray-400">No matching student found</div>
+                      <div className="p-4 text-center text-xs font-bold text-slate-400">No matching student found</div>
                     ) : (
                       filteredStudentsA.map((s) => (
                         <button
@@ -480,7 +480,7 @@ export const ComparePage: React.FC = () => {
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => { handleSelectA(Number(s.id)); setFighterAOpen(false); }}
                           className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-left transition-colors ${
-                            studentAId === s.id ? 'bg-brand-50/70 dark:bg-brand-950/60' : 'hover:bg-gray-50 dark:hover:bg-navy-800'
+                            studentAId === s.id ? 'bg-brand-50/70 dark:bg-brand-950/60' : 'hover:bg-slate-50 dark:hover:bg-navy-800'
                           }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -488,10 +488,10 @@ export const ComparePage: React.FC = () => {
                               #{s.college_rank || '—'}
                             </span>
                             <div className="min-w-0 flex-1">
-                              <p className={`text-xs truncate ${studentAId === s.id ? 'font-black text-brand-700 dark:text-brand-300' : 'font-bold text-gray-900 dark:text-white'}`}>
+                              <p className={`text-xs truncate ${studentAId === s.id ? 'font-black text-brand-700 dark:text-brand-300' : 'font-bold text-slate-900 dark:text-white'}`}>
                                 {s.name}
                               </p>
-                              <p className="text-[10px] text-gray-400 font-mono truncate">
+                              <p className="text-[10px] text-slate-400 font-mono truncate">
                                 {s.reg_no} • {s.department?.code || 'DEPT'}
                               </p>
                             </div>
@@ -511,7 +511,7 @@ export const ComparePage: React.FC = () => {
 
               {/* Quick Select Preset Buttons */}
               <div className="flex items-center space-x-2 pt-1">
-                <span className="text-[10px] text-gray-400 font-bold">Quick Select:</span>
+                <span className="text-[10px] text-slate-400 font-bold">Quick Select:</span>
                 {students[0] && (
                   <button
                     onClick={() => handleSelectA(Number(students[0].id))}
@@ -532,13 +532,13 @@ export const ComparePage: React.FC = () => {
 
               {/* Search Box Input */}
               <div className="relative">
-                <Search className="w-4 h-4 absolute left-3.5 top-3 text-gray-400" />
+                <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Search Student B by Name, Reg No, or Handle..."
                   value={searchB}
                   onChange={(e) => setSearchB(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-900 text-gray-900 dark:text-white border-indigo-400/40 focus:ring-2 focus:ring-indigo-500 outline-none shadow-inner"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-950 text-slate-900 dark:text-white border-indigo-400/40 focus:ring-2 focus:ring-indigo-500 outline-none shadow-inner"
                 />
               </div>
 
@@ -547,7 +547,7 @@ export const ComparePage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => { setFighterBOpen(p => !p); setFighterAOpen(false); setDeptOpen(false); setYearOpen(false); }}
-                  className={`w-full flex items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-white dark:bg-navy-900 border text-left transition-all focus:outline-none shadow-sm ${
+                  className={`w-full flex items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none shadow-sm ${
                     fighterBOpen ? 'border-indigo-400 ring-2 ring-indigo-400/20' : 'border-indigo-400/40 hover:border-indigo-400'
                   }`}
                 >
@@ -558,23 +558,23 @@ export const ComparePage: React.FC = () => {
                         <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 font-mono font-black text-[10px]">
                           #{studentB.college_rank || '—'}
                         </span>
-                        <span className="text-xs font-black text-gray-900 dark:text-white truncate">{studentB.name}</span>
-                        <span className="text-[11px] text-gray-400 font-mono">({studentB.reg_no})</span>
+                        <span className="text-xs font-black text-slate-900 dark:text-white truncate">{studentB.name}</span>
+                        <span className="text-[11px] text-slate-400 font-mono">({studentB.reg_no})</span>
                         <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                           {studentB.stats?.total_solved || 0} Solved
                         </span>
                       </div>
                     ) : (
-                      <span className="text-xs font-extrabold text-gray-400">Select Fighter B</span>
+                      <span className="text-xs font-extrabold text-slate-400">Select Fighter B</span>
                     )}
                   </div>
-                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform shrink-0 ${fighterBOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform shrink-0 ${fighterBOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {fighterBOpen && (
-                  <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-indigo-200 dark:border-navy-700 rounded-2xl shadow-lg max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
+                  <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-indigo-200 dark:border-navy-700 rounded-2xl shadow-lg max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
                     {filteredStudentsB.length === 0 ? (
-                      <div className="p-4 text-center text-xs font-bold text-gray-400">No matching student found</div>
+                      <div className="p-4 text-center text-xs font-bold text-slate-400">No matching student found</div>
                     ) : (
                       filteredStudentsB.map((s) => (
                         <button
@@ -583,7 +583,7 @@ export const ComparePage: React.FC = () => {
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => { handleSelectB(Number(s.id)); setFighterBOpen(false); }}
                           className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-left transition-colors ${
-                            studentBId === s.id ? 'bg-indigo-50/70 dark:bg-indigo-950/60' : 'hover:bg-gray-50 dark:hover:bg-navy-800'
+                            studentBId === s.id ? 'bg-indigo-50/70 dark:bg-indigo-950/60' : 'hover:bg-slate-50 dark:hover:bg-navy-800'
                           }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -591,10 +591,10 @@ export const ComparePage: React.FC = () => {
                               #{s.college_rank || '—'}
                             </span>
                             <div className="min-w-0 flex-1">
-                              <p className={`text-xs truncate ${studentBId === s.id ? 'font-black text-indigo-700 dark:text-indigo-300' : 'font-bold text-gray-900 dark:text-white'}`}>
+                              <p className={`text-xs truncate ${studentBId === s.id ? 'font-black text-indigo-700 dark:text-indigo-300' : 'font-bold text-slate-900 dark:text-white'}`}>
                                 {s.name}
                               </p>
-                              <p className="text-[10px] text-gray-400 font-mono truncate">
+                              <p className="text-[10px] text-slate-400 font-mono truncate">
                                 {s.reg_no} • {s.department?.code || 'DEPT'}
                               </p>
                             </div>
@@ -614,7 +614,7 @@ export const ComparePage: React.FC = () => {
 
               {/* Quick Select Preset Buttons */}
               <div className="flex items-center space-x-2 pt-1">
-                <span className="text-[10px] text-gray-400 font-bold">Quick Select:</span>
+                <span className="text-[10px] text-slate-400 font-bold">Quick Select:</span>
                 {students.length > 1 && students[1] && (
                   <button
                     onClick={() => handleSelectB(Number(students[1].id))}
@@ -653,7 +653,7 @@ export const ComparePage: React.FC = () => {
                 <div className={`lg:col-span-3 glass-card p-6 rounded-3xl border-2 transition-all space-y-5 flex flex-col justify-between ${
                   battleResult?.winner === 'A'
                     ? 'border-amber-400/70 shadow-xl shadow-amber-500/10 bg-gradient-to-b from-amber-500/5 via-white to-white dark:via-navy-950 dark:to-navy-950'
-                    : 'border-gray-200 dark:border-gray-800'
+                    : 'border-slate-200 dark:border-slate-800'
                 }`}>
                   <div className="space-y-5">
                     <div className="flex items-center justify-between">
@@ -669,7 +669,7 @@ export const ComparePage: React.FC = () => {
                       <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white font-black text-2xl flex items-center justify-center shadow-lg border-2 border-white/20">
                         {studentA.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                       </div>
-                      <h3 className="font-extrabold text-lg text-gray-900 dark:text-white truncate max-w-[260px] mx-auto">
+                      <h3 className="font-extrabold text-lg text-slate-900 dark:text-white truncate max-w-[260px] mx-auto">
                         {studentA.name}
                       </h3>
                       <p className="text-xs text-brand-600 dark:text-brand-400 font-mono font-bold">
@@ -680,7 +680,7 @@ export const ComparePage: React.FC = () => {
                           href={`https://leetcode.com/u/${studentA.username}/`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center space-x-1 text-[11px] text-gray-500 hover:text-brand-500 transition-colors font-mono font-semibold"
+                          className="inline-flex items-center space-x-1 text-[11px] text-slate-500 hover:text-brand-500 transition-colors font-mono font-semibold"
                         >
                           <span>@{studentA.username}</span>
                           <Sparkles className="w-3 h-3 text-amber-500" />
@@ -698,15 +698,15 @@ export const ComparePage: React.FC = () => {
                     {/* Difficulty Stats Breakdown */}
                     <div className="grid grid-cols-3 gap-2 text-center text-xs">
                       <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-extrabold">
-                        <p className="text-[10px] uppercase tracking-wider text-gray-500">Easy</p>
+                        <p className="text-[10px] uppercase tracking-wider text-slate-500">Easy</p>
                         <p className="text-base font-black mt-0.5">{studentA.stats?.easy_solved || 0}</p>
                       </div>
                       <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold">
-                        <p className="text-[10px] uppercase tracking-wider text-gray-500">Medium</p>
+                        <p className="text-[10px] uppercase tracking-wider text-slate-500">Medium</p>
                         <p className="text-base font-black mt-0.5">{studentA.stats?.medium_solved || 0}</p>
                       </div>
                       <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 font-extrabold">
-                        <p className="text-[10px] uppercase tracking-wider text-gray-500">Hard</p>
+                        <p className="text-[10px] uppercase tracking-wider text-slate-500">Hard</p>
                         <p className="text-base font-black mt-0.5">{studentA.stats?.hard_solved || 0}</p>
                       </div>
                     </div>
@@ -714,11 +714,11 @@ export const ComparePage: React.FC = () => {
                     {/* Extended Metrics: Contest Rating & Active Streak */}
                     <div className="grid grid-cols-2 gap-2 text-center text-xs">
                       <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400">
-                        <p className="text-[10px] uppercase font-bold text-gray-500">Contest Rating</p>
+                        <p className="text-[10px] uppercase font-bold text-slate-500">Contest Rating</p>
                         <p className="text-sm font-black mt-0.5">{studentA.stats?.contest_rating ? Math.round(studentA.stats.contest_rating) : 'Unrated'}</p>
                       </div>
                       <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400">
-                        <p className="text-[10px] uppercase font-bold text-gray-500">Weekly Progress</p>
+                        <p className="text-[10px] uppercase font-bold text-slate-500">Weekly Progress</p>
                         <p className="text-sm font-black mt-0.5">+{studentA.weekly_progress || 0}</p>
                       </div>
                     </div>
@@ -730,14 +730,14 @@ export const ComparePage: React.FC = () => {
                   <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-base flex items-center justify-center shadow-xl border-2 border-white dark:border-navy-900">
                     VS
                   </div>
-                  <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">MATCHUP</span>
+                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">MATCHUP</span>
                 </div>
 
                 {/* Student B Card (3 cols) */}
                 <div className={`lg:col-span-3 glass-card p-6 rounded-3xl border-2 transition-all space-y-5 flex flex-col justify-between ${
                   battleResult?.winner === 'B'
                     ? 'border-amber-400/70 shadow-xl shadow-amber-500/10 bg-gradient-to-b from-amber-500/5 via-white to-white dark:via-navy-950 dark:to-navy-950'
-                    : 'border-gray-200 dark:border-gray-800'
+                    : 'border-slate-200 dark:border-slate-800'
                 }`}>
                   <div className="space-y-5">
                     <div className="flex items-center justify-between">
@@ -753,7 +753,7 @@ export const ComparePage: React.FC = () => {
                       <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-black text-2xl flex items-center justify-center shadow-lg border-2 border-white/20">
                         {studentB.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                       </div>
-                      <h3 className="font-extrabold text-lg text-gray-900 dark:text-white truncate max-w-[260px] mx-auto">
+                      <h3 className="font-extrabold text-lg text-slate-900 dark:text-white truncate max-w-[260px] mx-auto">
                         {studentB.name}
                       </h3>
                       <p className="text-xs text-indigo-600 dark:text-indigo-400 font-mono font-bold">
@@ -764,7 +764,7 @@ export const ComparePage: React.FC = () => {
                           href={`https://leetcode.com/u/${studentB.username}/`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center space-x-1 text-[11px] text-gray-500 hover:text-indigo-500 transition-colors font-mono font-semibold"
+                          className="inline-flex items-center space-x-1 text-[11px] text-slate-500 hover:text-indigo-500 transition-colors font-mono font-semibold"
                         >
                           <span>@{studentB.username}</span>
                           <Sparkles className="w-3 h-3 text-amber-500" />
@@ -782,15 +782,15 @@ export const ComparePage: React.FC = () => {
                     {/* Difficulty Stats Breakdown */}
                     <div className="grid grid-cols-3 gap-2 text-center text-xs">
                       <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-extrabold">
-                        <p className="text-[10px] uppercase tracking-wider text-gray-500">Easy</p>
+                        <p className="text-[10px] uppercase tracking-wider text-slate-500">Easy</p>
                         <p className="text-base font-black mt-0.5">{studentB.stats?.easy_solved || 0}</p>
                       </div>
                       <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold">
-                        <p className="text-[10px] uppercase tracking-wider text-gray-500">Medium</p>
+                        <p className="text-[10px] uppercase tracking-wider text-slate-500">Medium</p>
                         <p className="text-base font-black mt-0.5">{studentB.stats?.medium_solved || 0}</p>
                       </div>
                       <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 font-extrabold">
-                        <p className="text-[10px] uppercase tracking-wider text-gray-500">Hard</p>
+                        <p className="text-[10px] uppercase tracking-wider text-slate-500">Hard</p>
                         <p className="text-base font-black mt-0.5">{studentB.stats?.hard_solved || 0}</p>
                       </div>
                     </div>
@@ -798,11 +798,11 @@ export const ComparePage: React.FC = () => {
                     {/* Extended Metrics: Contest Rating & Active Streak */}
                     <div className="grid grid-cols-2 gap-2 text-center text-xs">
                       <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400">
-                        <p className="text-[10px] uppercase font-bold text-gray-500">Contest Rating</p>
+                        <p className="text-[10px] uppercase font-bold text-slate-500">Contest Rating</p>
                         <p className="text-sm font-black mt-0.5">{studentB.stats?.contest_rating ? Math.round(studentB.stats.contest_rating) : 'Unrated'}</p>
                       </div>
                       <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400">
-                        <p className="text-[10px] uppercase font-bold text-gray-500">Weekly Progress</p>
+                        <p className="text-[10px] uppercase font-bold text-slate-500">Weekly Progress</p>
                         <p className="text-sm font-black mt-0.5">+{studentB.weekly_progress || 0}</p>
                       </div>
                     </div>
@@ -813,7 +813,7 @@ export const ComparePage: React.FC = () => {
 
               {/* Side-by-Side Metric Comparison Bars */}
               <div className="glass-card p-6 rounded-3xl border space-y-5 shadow-xl">
-                <h3 className="font-extrabold text-base text-gray-900 dark:text-white flex items-center space-x-2">
+                <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center space-x-2">
                   <Zap className="w-5 h-5 text-amber-500" />
                   <span>Head-to-Head Metric Distribution</span>
                 </h3>
@@ -822,12 +822,12 @@ export const ComparePage: React.FC = () => {
                   
                   {/* Total Solved Bar */}
                   <div className="space-y-1.5">
-                    <div className="flex justify-between text-gray-600 dark:text-gray-300">
+                    <div className="flex justify-between text-slate-600 dark:text-slate-300">
                       <span>{studentA.name} ({studentA.stats?.total_solved || 0})</span>
-                      <span className="uppercase text-gray-400 font-extrabold text-[10px]">Total Solved</span>
+                      <span className="uppercase text-slate-400 font-extrabold text-[10px]">Total Solved</span>
                       <span>{studentB.name} ({studentB.stats?.total_solved || 0})</span>
                     </div>
-                    <div className="flex h-3 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800">
+                    <div className="flex h-3 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800">
                       <div
                         style={{ width: `${((studentA.stats?.total_solved || 0) / Math.max((studentA.stats?.total_solved || 0) + (studentB.stats?.total_solved || 0), 1)) * 100}%` }}
                         className="bg-brand-500"
@@ -841,12 +841,12 @@ export const ComparePage: React.FC = () => {
 
                   {/* Contest Rating Bar */}
                   <div className="space-y-1.5 pt-2">
-                    <div className="flex justify-between text-gray-600 dark:text-gray-300">
+                    <div className="flex justify-between text-slate-600 dark:text-slate-300">
                       <span>Rating: {studentA.stats?.contest_rating ? Math.round(studentA.stats.contest_rating) : 'Unrated'}</span>
                       <span className="uppercase text-indigo-500 font-extrabold text-[10px]">Contest Rating</span>
                       <span>Rating: {studentB.stats?.contest_rating ? Math.round(studentB.stats.contest_rating) : 'Unrated'}</span>
                     </div>
-                    <div className="flex h-3 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800">
+                    <div className="flex h-3 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800">
                       <div
                         style={{ width: `${((studentA.stats?.contest_rating || 0) / Math.max((studentA.stats?.contest_rating || 0) + (studentB.stats?.contest_rating || 0), 1)) * 100}%` }}
                         className="bg-amber-500"
@@ -875,24 +875,24 @@ export const ComparePage: React.FC = () => {
           <div className={`glass-card p-6 rounded-3xl border space-y-6 shadow-xl relative ${groupAOpen || groupBOpen ? 'z-50' : 'z-10'}`}>
             
             {/* Dimension Sub-Tabs (Department & Year Combo vs Department vs Year Level vs Section) */}
-            <div className="flex items-center justify-between flex-wrap gap-3 border-b border-gray-200 dark:border-gray-800 pb-4">
+            <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
               <div>
-                <h3 className="font-extrabold text-base text-gray-900 dark:text-white flex items-center space-x-2">
+                <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center space-x-2">
                   <Building2 className="w-5 h-5 text-brand-500" />
                   <span>Choose Group Comparison Dimension</span>
                 </h3>
-                <p className="text-xs text-gray-500 mt-0.5">Compare performance by Dept & Year Batch (e.g. 2nd Yr Cyber vs 2nd Yr IoT), Department, Year, or Section</p>
+                <p className="text-xs text-slate-500 mt-0.5">Compare performance by Dept & Year Batch (e.g. 2nd Yr Cyber vs 2nd Yr IoT), Department, Year, or Section</p>
               </div>
 
               {/* Sub-Dimension Tabs */}
-              <div className="flex items-center space-x-2 bg-gray-100 dark:bg-navy-900 p-1.5 rounded-2xl border flex-wrap gap-1">
+              <div className="flex items-center space-x-2 bg-slate-100 dark:bg-navy-950 p-1.5 rounded-2xl border flex-wrap gap-1">
                 
                 <button
                   onClick={() => setGroupDimension('DEPT_YEAR')}
                   className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
                     groupDimension === 'DEPT_YEAR'
                       ? 'bg-gradient-to-r from-brand-500 to-indigo-600 text-white shadow-md'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-brand-500'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-brand-500'
                   }`}
                 >
                   <Layers className="w-3.5 h-3.5 text-amber-400" />
@@ -904,7 +904,7 @@ export const ComparePage: React.FC = () => {
                   className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
                     groupDimension === 'DEPT'
                       ? 'bg-brand-500 text-white shadow-md'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-brand-500'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-brand-500'
                   }`}
                 >
                   <Building2 className="w-3.5 h-3.5" />
@@ -916,7 +916,7 @@ export const ComparePage: React.FC = () => {
                   className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
                     groupDimension === 'YEAR'
                       ? 'bg-brand-500 text-white shadow-md'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-brand-500'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-brand-500'
                   }`}
                 >
                   <GraduationCap className="w-3.5 h-3.5" />
@@ -928,7 +928,7 @@ export const ComparePage: React.FC = () => {
                   className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black transition-all ${
                     groupDimension === 'SECTION'
                       ? 'bg-brand-500 text-white shadow-md'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-brand-500'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-brand-500'
                   }`}
                 >
                   <School className="w-3.5 h-3.5" />
@@ -949,21 +949,21 @@ export const ComparePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => { setGroupAOpen(p => !p); setGroupBOpen(false); setFighterAOpen(false); setFighterBOpen(false); }}
-                    className={`w-full flex items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-white dark:bg-navy-900 border text-left transition-all focus:outline-none shadow-sm ${
+                    className={`w-full flex items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none shadow-sm ${
                       groupAOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-brand-400/40 hover:border-brand-400'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <Building2 className="w-4 h-4 text-brand-500 shrink-0" />
-                      <span className="text-xs font-black text-gray-900 dark:text-white truncate">
+                      <span className="text-xs font-black text-slate-900 dark:text-white truncate">
                         {groupOptions.find(g => g.key === groupAKey)?.label || groupAKey || 'Select Group A'}
                       </span>
                     </div>
-                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform shrink-0 ${groupAOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform shrink-0 ${groupAOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {groupAOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-brand-200 dark:border-navy-700 rounded-2xl shadow-lg max-h-64 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-brand-200 dark:border-navy-700 rounded-2xl shadow-lg max-h-64 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
                       {groupOptions.map((g) => (
                         <button
                           key={g.key}
@@ -971,10 +971,10 @@ export const ComparePage: React.FC = () => {
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => { setGroupAKey(g.key); setGroupAOpen(false); }}
                           className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-left transition-colors ${
-                            groupAKey === g.key ? 'bg-brand-50/70 dark:bg-brand-950/60' : 'hover:bg-gray-50 dark:hover:bg-navy-800'
+                            groupAKey === g.key ? 'bg-brand-50/70 dark:bg-brand-950/60' : 'hover:bg-slate-50 dark:hover:bg-navy-800'
                           }`}
                         >
-                          <span className={`text-xs truncate ${groupAKey === g.key ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-gray-700 dark:text-gray-300'}`}>
+                          <span className={`text-xs truncate ${groupAKey === g.key ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-slate-700 dark:text-slate-300'}`}>
                             {g.label}
                           </span>
                           {groupAKey === g.key && <Check className="w-4 h-4 text-brand-500 shrink-0" />}
@@ -986,7 +986,7 @@ export const ComparePage: React.FC = () => {
 
                 {groupDimension === 'DEPT_YEAR' && (
                   <div className="flex items-center space-x-2 pt-1">
-                    <span className="text-[10px] text-gray-400 font-bold">Quick Pick A:</span>
+                    <span className="text-[10px] text-slate-400 font-bold">Quick Pick A:</span>
                     <button
                       onClick={() => {
                         const opt = groupOptions.find(g => g.key.endsWith('II') && g.key.startsWith('1'));
@@ -1009,21 +1009,21 @@ export const ComparePage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => { setGroupBOpen(p => !p); setGroupAOpen(false); setFighterAOpen(false); setFighterBOpen(false); }}
-                    className={`w-full flex items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-white dark:bg-navy-900 border text-left transition-all focus:outline-none shadow-sm ${
+                    className={`w-full flex items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none shadow-sm ${
                       groupBOpen ? 'border-indigo-400 ring-2 ring-indigo-400/20' : 'border-indigo-400/40 hover:border-indigo-400'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <Building2 className="w-4 h-4 text-indigo-500 shrink-0" />
-                      <span className="text-xs font-black text-gray-900 dark:text-white truncate">
+                      <span className="text-xs font-black text-slate-900 dark:text-white truncate">
                         {groupOptions.find(g => g.key === groupBKey)?.label || groupBKey || 'Select Group B'}
                       </span>
                     </div>
-                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform shrink-0 ${groupBOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform shrink-0 ${groupBOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {groupBOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-indigo-200 dark:border-navy-700 rounded-2xl shadow-lg max-h-64 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-indigo-200 dark:border-navy-700 rounded-2xl shadow-lg max-h-64 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
                       {groupOptions.map((g) => (
                         <button
                           key={g.key}
@@ -1031,10 +1031,10 @@ export const ComparePage: React.FC = () => {
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => { setGroupBKey(g.key); setGroupBOpen(false); }}
                           className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-left transition-colors ${
-                            groupBKey === g.key ? 'bg-indigo-50/70 dark:bg-indigo-950/60' : 'hover:bg-gray-50 dark:hover:bg-navy-800'
+                            groupBKey === g.key ? 'bg-indigo-50/70 dark:bg-indigo-950/60' : 'hover:bg-slate-50 dark:hover:bg-navy-800'
                           }`}
                         >
-                          <span className={`text-xs truncate ${groupBKey === g.key ? 'font-black text-indigo-700 dark:text-indigo-300' : 'font-semibold text-gray-700 dark:text-gray-300'}`}>
+                          <span className={`text-xs truncate ${groupBKey === g.key ? 'font-black text-indigo-700 dark:text-indigo-300' : 'font-semibold text-slate-700 dark:text-slate-300'}`}>
                             {g.label}
                           </span>
                           {groupBKey === g.key && <Check className="w-4 h-4 text-indigo-500 shrink-0" />}
@@ -1046,7 +1046,7 @@ export const ComparePage: React.FC = () => {
 
                 {groupDimension === 'DEPT_YEAR' && (
                   <div className="flex items-center space-x-2 pt-1">
-                    <span className="text-[10px] text-gray-400 font-bold">Quick Pick B:</span>
+                    <span className="text-[10px] text-slate-400 font-bold">Quick Pick B:</span>
                     <button
                       onClick={() => {
                         const opt = groupOptions.find(g => g.key.endsWith('II') && g.key.startsWith('2'));
@@ -1087,12 +1087,12 @@ export const ComparePage: React.FC = () => {
                 <div className={`glass-card p-6 rounded-3xl border-2 space-y-6 shadow-xl ${
                   groupWinner?.winner === 'A' ? 'border-amber-400 shadow-amber-500/10' : 'border-brand-500/30'
                 }`}>
-                  <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-4">
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
                     <div>
                       <span className="px-3 py-1 rounded-full text-[10px] font-black bg-brand-500 text-white uppercase tracking-wider">
                         GROUP A
                       </span>
-                      <h3 className="text-lg font-black text-gray-900 dark:text-white mt-1">
+                      <h3 className="text-lg font-black text-slate-900 dark:text-white mt-1">
                         {groupAData.label}
                       </h3>
                     </div>
@@ -1102,7 +1102,7 @@ export const ComparePage: React.FC = () => {
                   <div className="grid grid-cols-2 gap-3 text-center">
                     <div className="p-4 rounded-2xl bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800">
                       <p className="text-xs text-brand-600 dark:text-brand-400 font-bold">Total Students</p>
-                      <p className="text-2xl font-black text-gray-900 dark:text-white mt-1">{groupAData.total_students}</p>
+                      <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{groupAData.total_students}</p>
                     </div>
 
                     <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
@@ -1123,19 +1123,19 @@ export const ComparePage: React.FC = () => {
 
                   {/* Top 5 Performers in Group A */}
                   <div className="space-y-3 pt-2">
-                    <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider flex items-center space-x-1.5">
+                    <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center space-x-1.5">
                       <Award className="w-4 h-4 text-brand-500" />
                       <span>Top Performers in Group A</span>
                     </h4>
 
                     <div className="space-y-2">
                       {groupAData.top_students.map((s, idx) => (
-                        <div key={s.id} className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 dark:bg-navy-900 border text-xs font-bold">
+                        <div key={s.id} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-navy-950 border text-xs font-bold">
                           <div className="flex items-center space-x-3">
                             <span className="w-6 h-6 rounded-full bg-brand-500/20 text-brand-600 dark:text-brand-400 font-black text-[10px] flex items-center justify-center">
                               #{idx + 1}
                             </span>
-                            <span className="text-gray-900 dark:text-white font-extrabold">{s.name}</span>
+                            <span className="text-slate-900 dark:text-white font-extrabold">{s.name}</span>
                           </div>
                           <span className="text-emerald-600 dark:text-emerald-400 font-mono font-black">
                             {s.stats?.total_solved || 0} Solved
@@ -1150,12 +1150,12 @@ export const ComparePage: React.FC = () => {
                 <div className={`glass-card p-6 rounded-3xl border-2 space-y-6 shadow-xl ${
                   groupWinner?.winner === 'B' ? 'border-amber-400 shadow-amber-500/10' : 'border-indigo-500/30'
                 }`}>
-                  <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 pb-4">
+                  <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
                     <div>
                       <span className="px-3 py-1 rounded-full text-[10px] font-black bg-indigo-600 text-white uppercase tracking-wider">
                         GROUP B
                       </span>
-                      <h3 className="text-lg font-black text-gray-900 dark:text-white mt-1">
+                      <h3 className="text-lg font-black text-slate-900 dark:text-white mt-1">
                         {groupBData.label}
                       </h3>
                     </div>
@@ -1165,7 +1165,7 @@ export const ComparePage: React.FC = () => {
                   <div className="grid grid-cols-2 gap-3 text-center">
                     <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
                       <p className="text-xs text-indigo-600 dark:text-indigo-400 font-bold">Total Students</p>
-                      <p className="text-2xl font-black text-gray-900 dark:text-white mt-1">{groupBData.total_students}</p>
+                      <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{groupBData.total_students}</p>
                     </div>
 
                     <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
@@ -1186,19 +1186,19 @@ export const ComparePage: React.FC = () => {
 
                   {/* Top 5 Performers in Group B */}
                   <div className="space-y-3 pt-2">
-                    <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider flex items-center space-x-1.5">
+                    <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center space-x-1.5">
                       <Award className="w-4 h-4 text-indigo-500" />
                       <span>Top Performers in Group B</span>
                     </h4>
 
                     <div className="space-y-2">
                       {groupBData.top_students.map((s, idx) => (
-                        <div key={s.id} className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 dark:bg-navy-900 border text-xs font-bold">
+                        <div key={s.id} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-navy-950 border text-xs font-bold">
                           <div className="flex items-center space-x-3">
                             <span className="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-black text-[10px] flex items-center justify-center">
                               #{idx + 1}
                             </span>
-                            <span className="text-gray-900 dark:text-white font-extrabold">{s.name}</span>
+                            <span className="text-slate-900 dark:text-white font-extrabold">{s.name}</span>
                           </div>
                           <span className="text-emerald-600 dark:text-emerald-400 font-mono font-black">
                             {s.stats?.total_solved || 0} Solved
@@ -1213,7 +1213,7 @@ export const ComparePage: React.FC = () => {
 
               {/* Side-by-Side Group Metric Bars */}
               <div className="glass-card p-6 rounded-3xl border space-y-5 shadow-xl">
-                <h3 className="font-extrabold text-base text-gray-900 dark:text-white flex items-center space-x-2">
+                <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center space-x-2">
                   <BarChart3 className="w-5 h-5 text-brand-500" />
                   <span>Side-by-Side Group Metric Comparison Bars</span>
                 </h3>
@@ -1222,12 +1222,12 @@ export const ComparePage: React.FC = () => {
                   
                   {/* Average Solved Bar */}
                   <div className="space-y-1.5">
-                    <div className="flex justify-between text-gray-600 dark:text-gray-300 truncate">
+                    <div className="flex justify-between text-slate-600 dark:text-slate-300 truncate">
                       <span className="truncate max-w-[45%] font-extrabold text-brand-600 dark:text-brand-400">{groupAData.label} ({groupAData.avg_solved} / student)</span>
-                      <span className="uppercase text-gray-400 font-extrabold">Avg Solved / Student</span>
+                      <span className="uppercase text-slate-400 font-extrabold">Avg Solved / Student</span>
                       <span className="truncate max-w-[45%] text-right font-extrabold text-indigo-600 dark:text-indigo-400">{groupBData.label} ({groupBData.avg_solved} / student)</span>
                     </div>
-                    <div className="flex h-3.5 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 shadow-inner">
+                    <div className="flex h-3.5 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-inner">
                       <div
                         style={{ width: `${(groupAData.avg_solved / Math.max(groupAData.avg_solved + groupBData.avg_solved, 1)) * 100}%` }}
                         className="bg-gradient-to-r from-brand-600 to-brand-400"
@@ -1241,12 +1241,12 @@ export const ComparePage: React.FC = () => {
 
                   {/* Participation Rate Bar */}
                   <div className="space-y-1.5 pt-2">
-                    <div className="flex justify-between text-gray-600 dark:text-gray-300 truncate">
+                    <div className="flex justify-between text-slate-600 dark:text-slate-300 truncate">
                       <span className="truncate max-w-[45%] font-extrabold text-teal-600 dark:text-teal-400">{groupAData.label} ({groupAData.participation_rate}%)</span>
                       <span className="uppercase text-indigo-500 font-extrabold">Active Participation Rate</span>
                       <span className="truncate max-w-[45%] text-right font-extrabold text-purple-600 dark:text-purple-400">{groupBData.label} ({groupBData.participation_rate}%)</span>
                     </div>
-                    <div className="flex h-3.5 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 shadow-inner">
+                    <div className="flex h-3.5 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-inner">
                       <div
                         style={{ width: `${(groupAData.participation_rate / Math.max(groupAData.participation_rate + groupBData.participation_rate, 1)) * 100}%` }}
                         className="bg-gradient-to-r from-teal-600 to-teal-400"

@@ -173,10 +173,10 @@ export const StudentAllocationCenter: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
             <Users className="w-5 h-5 text-brand-500" /> Student Allocation Center
           </h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Filter by Department &amp; Academic Year to accurately assign unallocated students to faculty mentors.
           </p>
         </div>
@@ -191,15 +191,15 @@ export const StudentAllocationCenter: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left Pane: Unassigned Students with Year & Department Filters */}
-        <div className="lg:col-span-7 bg-white dark:bg-navy-800 rounded-3xl border border-gray-200 dark:border-navy-700 p-5 flex flex-col h-[650px] shadow-sm">
+        <div className="lg:col-span-7 bg-white dark:bg-navy-800 rounded-3xl border border-slate-200 dark:border-navy-700 p-5 flex flex-col h-[650px] shadow-sm">
           
           {/* Department Filters */}
           <div className="space-y-3 mb-4">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-gray-400 dark:text-gray-500 flex items-center gap-1.5">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
                 <Building2 className="w-3.5 h-3.5 text-indigo-500" /> Department Scope
               </span>
-              <span className="text-[10px] text-gray-400">
+              <span className="text-[10px] text-slate-400">
                 Showing {filteredStudents.length} of {unassignedStudents.length}
               </span>
             </div>
@@ -211,7 +211,7 @@ export const StudentAllocationCenter: React.FC = () => {
                 className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                   selectedDept === 'ALL'
                     ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
-                    : 'bg-gray-100 dark:bg-navy-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-navy-700'
+                    : 'bg-slate-100 dark:bg-navy-950 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-navy-700'
                 }`}
               >
                 <span>All Depts</span>
@@ -247,7 +247,7 @@ export const StudentAllocationCenter: React.FC = () => {
 
             {/* Academic Year Cohort Tabs */}
             <div className="flex items-center justify-between pt-1">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-gray-400 dark:text-gray-500 flex items-center gap-1.5">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
                 <GraduationCap className="w-3.5 h-3.5 text-emerald-500" /> Academic Year Cohort
               </span>
             </div>
@@ -259,7 +259,7 @@ export const StudentAllocationCenter: React.FC = () => {
                 className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all text-center cursor-pointer ${
                   selectedYear === 'ALL'
                     ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'bg-gray-100 dark:bg-navy-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-navy-700'
+                    : 'bg-slate-100 dark:bg-navy-950 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-navy-700'
                 }`}
               >
                 All ({yearCounts.all})
@@ -302,16 +302,16 @@ export const StudentAllocationCenter: React.FC = () => {
             {/* Search Input & Select All Controls */}
             <div className="flex items-center gap-2 pt-1">
               <div className="relative flex-1">
-                <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="Search by name, roll no, or section..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-9 pl-9 pr-8 text-xs font-medium rounded-xl border border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-950 text-gray-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none"
+                  className="w-full h-9 pl-9 pr-8 text-xs font-medium rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none"
                 />
                 {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 )}
@@ -331,8 +331,8 @@ export const StudentAllocationCenter: React.FC = () => {
           {/* Students Scrollable List */}
           <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
             {filteredStudents.length === 0 && !loading && (
-              <div className="text-center py-16 text-gray-500 dark:text-gray-400 text-xs space-y-2">
-                <Users className="w-8 h-8 mx-auto text-gray-300 dark:text-navy-600" />
+              <div className="text-center py-16 text-slate-500 dark:text-slate-400 text-xs space-y-2">
+                <Users className="w-8 h-8 mx-auto text-slate-300 dark:text-navy-600" />
                 <p className="font-bold">No unassigned students match this filter.</p>
                 <button
                   onClick={() => { setSelectedDept('ALL'); setSelectedYear('ALL'); setSearchQuery(''); }}
@@ -355,7 +355,7 @@ export const StudentAllocationCenter: React.FC = () => {
                   className={`p-3 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
                     isSelected
                       ? 'border-brand-500 bg-brand-50/70 dark:bg-brand-950/30 shadow-sm'
-                      : 'border-gray-200/80 dark:border-navy-700/80 hover:border-gray-300 dark:hover:border-navy-600 bg-white dark:bg-navy-900/50'
+                      : 'border-slate-200/80 dark:border-navy-700/80 hover:border-slate-300 dark:hover:border-navy-600 bg-white dark:bg-navy-950/50'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
@@ -367,12 +367,12 @@ export const StudentAllocationCenter: React.FC = () => {
                     />
                     <div className="min-w-0 space-y-0.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-gray-900 dark:text-white truncate">
+                        <span className="text-xs font-black text-slate-900 dark:text-white truncate">
                           {student.name || student.username}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-[11px] text-gray-500">
-                        <span className="font-mono font-bold text-gray-600 dark:text-gray-400">{student.reg_no}</span>
+                      <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                        <span className="font-mono font-bold text-slate-600 dark:text-slate-400">{student.reg_no}</span>
                       </div>
                     </div>
                   </div>
@@ -399,28 +399,28 @@ export const StudentAllocationCenter: React.FC = () => {
         </div>
 
         {/* Right Pane: Target Staff Selection */}
-        <div className="lg:col-span-5 bg-white dark:bg-navy-800 rounded-3xl border border-gray-200 dark:border-navy-700 p-5 flex flex-col h-[650px] shadow-sm justify-between">
+        <div className="lg:col-span-5 bg-white dark:bg-navy-800 rounded-3xl border border-slate-200 dark:border-navy-700 p-5 flex flex-col h-[650px] shadow-sm justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-black text-gray-900 dark:text-white flex items-center gap-2">
+              <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <UserCheck className="w-4 h-4 text-emerald-500" /> Target Staff Member
               </h3>
               <button
                 onClick={fetchData}
-                className="text-xs font-bold text-gray-400 hover:text-emerald-500 flex items-center gap-1 transition-colors cursor-pointer"
+                className="text-xs font-bold text-slate-400 hover:text-emerald-500 flex items-center gap-1 transition-colors cursor-pointer"
                 title="Refresh staff list"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
               </button>
             </div>
 
-            <p className="text-[11px] text-gray-400 mb-3">
+            <p className="text-[11px] text-slate-400 mb-3">
               Select an active mentor to assign the selected students.
             </p>
             
             <div className="max-h-[380px] overflow-y-auto space-y-2.5 pr-1 custom-scrollbar">
               {staffList.filter(s => s.is_active).length === 0 && !loading && (
-                <div className="text-center py-12 text-gray-400 text-xs">
+                <div className="text-center py-12 text-slate-400 text-xs">
                   No active staff members found. Add staff in Staff Management above.
                 </div>
               )}
@@ -433,19 +433,19 @@ export const StudentAllocationCenter: React.FC = () => {
                     className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
                       isSelected
                         ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/30 shadow-sm ring-2 ring-emerald-500/20'
-                        : 'border-gray-200 dark:border-navy-700 hover:border-gray-300 dark:hover:border-navy-600 bg-white dark:bg-navy-900/50'
+                        : 'border-slate-200 dark:border-navy-700 hover:border-slate-300 dark:hover:border-navy-600 bg-white dark:bg-navy-950/50'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                          isSelected ? 'border-emerald-500' : 'border-gray-300 dark:border-navy-600'
+                          isSelected ? 'border-emerald-500' : 'border-slate-300 dark:border-navy-600'
                         }`}>
                           {isSelected && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
                         </div>
                         <div>
-                          <p className="text-xs font-black text-gray-900 dark:text-white">{staff.username}</p>
-                          <p className="text-[10px] text-gray-400">{staff.email}</p>
+                          <p className="text-xs font-black text-slate-900 dark:text-white">{staff.username}</p>
+                          <p className="text-[10px] text-slate-400">{staff.email}</p>
                         </div>
                       </div>
 
@@ -453,7 +453,7 @@ export const StudentAllocationCenter: React.FC = () => {
                         <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
                           {staff.role || 'Faculty'}
                         </span>
-                        <span className="text-[10px] font-bold text-gray-500">
+                        <span className="text-[10px] font-bold text-slate-500">
                           {staff.assigned_count || 0} / {staff.max_capacity || 30} Allocated
                         </span>
                       </div>
@@ -465,17 +465,17 @@ export const StudentAllocationCenter: React.FC = () => {
           </div>
 
           {/* Allocation Action Summary Card */}
-          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-navy-700 space-y-3">
-            <div className="p-3 bg-gray-50 dark:bg-navy-900/60 rounded-2xl border border-gray-200/60 dark:border-navy-700 space-y-1.5">
+          <div className="mt-4 pt-4 border-t border-slate-100 dark:border-navy-700 space-y-3">
+            <div className="p-3 bg-slate-50 dark:bg-navy-950/60 rounded-2xl border border-slate-200/60 dark:border-navy-700 space-y-1.5">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-gray-500 font-medium">Selected for Allocation:</span>
+                <span className="text-slate-500 font-medium">Selected for Allocation:</span>
                 <span className="font-black text-brand-600 dark:text-brand-400 text-sm">
                   {selectedStudents.length} Student{selectedStudents.length !== 1 ? 's' : ''}
                 </span>
               </div>
               {selectedStaff && (
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-500 font-medium">Assignee:</span>
+                  <span className="text-slate-500 font-medium">Assignee:</span>
                   <span className="font-bold text-emerald-600 dark:text-emerald-400">
                     {staffList.find(s => String(s.id) === selectedStaff)?.username}
                   </span>
@@ -488,7 +488,7 @@ export const StudentAllocationCenter: React.FC = () => {
                 <button
                   type="button"
                   onClick={clearSelection}
-                  className="px-3.5 py-3 rounded-2xl font-bold text-xs bg-gray-100 dark:bg-navy-900 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-navy-700 transition-colors cursor-pointer"
+                  className="px-3.5 py-3 rounded-2xl font-bold text-xs bg-slate-100 dark:bg-navy-950 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-navy-700 transition-colors cursor-pointer"
                 >
                   Clear
                 </button>

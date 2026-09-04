@@ -101,19 +101,19 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: -20 }}
         transition={{ duration: 0.2 }}
-        className="relative w-full max-w-xl bg-white dark:bg-navy-900 rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-navy-700"
+        className="relative w-full max-w-xl bg-white dark:bg-navy-950 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-navy-700"
       >
-        <div className="flex items-center px-4 py-4 border-b border-gray-100 dark:border-navy-800">
-          <Search className="w-5 h-5 text-gray-400" />
+        <div className="flex items-center px-4 py-4 border-b border-slate-100 dark:border-navy-800">
+          <Search className="w-5 h-5 text-slate-400" />
           <input
             ref={inputRef}
             type="text"
-            className="flex-1 ml-3 bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400 text-lg"
+            className="flex-1 ml-3 bg-transparent border-none outline-none text-slate-900 dark:text-white placeholder-gray-400 text-lg"
             placeholder="Search commands, students, pages..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
-          <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-100 dark:bg-navy-800 rounded text-xs font-semibold text-gray-500">
+          <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-100 dark:bg-navy-800 rounded text-xs font-semibold text-slate-500">
             <Command className="w-3 h-3" />
             <span>K</span>
           </div>
@@ -121,7 +121,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
 
         <div className="max-h-[60vh] overflow-y-auto p-2 custom-scrollbar" ref={listRef}>
           {filteredCommands.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
+            <div className="p-8 text-center text-slate-500">
               No results found for "{search}"
             </div>
           ) : (
@@ -131,7 +131,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
                 className={`flex items-center px-4 py-3 rounded-xl cursor-pointer transition-colors ${
                   idx === selectedIndex 
                     ? 'bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400' 
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800/50'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-navy-800/50'
                 }`}
                 onClick={() => {
                   cmd.action();
@@ -139,10 +139,10 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
                 }}
                 onMouseEnter={() => setSelectedIndex(idx)}
               >
-                <cmd.icon className={`w-5 h-5 mr-3 ${idx === selectedIndex ? 'text-brand-500' : 'text-gray-400'}`} />
+                <cmd.icon className={`w-5 h-5 mr-3 ${idx === selectedIndex ? 'text-brand-500' : 'text-slate-400'}`} />
                 <div className="flex flex-col">
                   <span className="font-semibold text-sm">{cmd.label}</span>
-                  <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">{cmd.type}</span>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">{cmd.type}</span>
                 </div>
                 {idx === selectedIndex && (
                   <span className="ml-auto text-xs text-brand-500 font-semibold">Enter ↵</span>

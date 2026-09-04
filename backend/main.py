@@ -485,6 +485,15 @@ async def websocket_leaderboard_endpoint(websocket: WebSocket, token: Optional[s
                     elif msg.get("action") == "UNSUBSCRIBE" and msg.get("session_id"):
                         manager.unsubscribe_session(websocket, int(msg["session_id"]))
                         await websocket.send_text(json.dumps({"type": "UNSUBSCRIBED", "session_id": msg["session_id"]}))
+                    
+                    # Messaging: Track active conversation to prevent duplicate FCM pushes
+                    elif msg.get("action") == "VIEW_CONVERSATION" and msg.get("conversation_id"):
+                        manager.set_active_conversation(websocket, msg["conversation_id"])
+                        await websocket.send_text(json.dumps({"type": "VIEWING_CONVERSATION", "conversation_id": msg["conversation_id"]}))
+                    elif msg.get("action") == "LEAVE_CONVERSATION":
+                        manager.set_active_conversation(websocket, None)
+                        await websocket.send_text(json.dumps({"type": "LEFT_CONVERSATION"}))
+                        
                 except (json.JSONDecodeError, ValueError):
                     pass  # Non-JSON messages (e.g. plain strings) — ignore
     except WebSocketDisconnect:

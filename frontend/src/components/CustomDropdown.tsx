@@ -92,7 +92,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
 
   return (
     <div className={`space-y-1 min-w-0 relative ${isOpen ? 'z-[100]' : 'z-10'} ${className}`} ref={dropdownRef} id={id}>
-      <label className={labelClassName || "block text-[10px] font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate flex items-center justify-between"}>
+      <label className={labelClassName || "block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate flex items-center justify-between"}>
         <span>{label}</span>
         {selectedOption?.count !== undefined && selectedOption.count > 0 && (
           <span className="text-[9px] font-mono font-bold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-1.5 py-0.5 rounded-full border border-brand-500/20">
@@ -108,13 +108,13 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
         className={triggerClassName || `w-full h-11 flex items-center justify-between px-4 rounded-2xl border transition-all duration-200 text-left cursor-pointer group shadow-sm ${
           isOpen
             ? 'bg-white dark:bg-slate-800 border-brand-500 ring-2 ring-brand-500/20 shadow-md shadow-brand-500/10'
-            : 'bg-white dark:bg-slate-800/90 hover:bg-gray-50 dark:hover:bg-slate-800 border-gray-200 dark:border-gray-700/80 hover:border-brand-500/40'
+            : 'bg-white dark:bg-slate-800/90 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700/80 hover:border-brand-500/40'
         }`}
       >
         <div className="flex items-center space-x-2.5 min-w-0 pr-2">
           {HeaderIcon && (
             <HeaderIcon className={`w-4 h-4 shrink-0 transition-colors ${
-              isOpen ? 'text-brand-500' : 'text-gray-400 group-hover:text-brand-500'
+              isOpen ? 'text-brand-500' : 'text-slate-400 group-hover:text-brand-500'
             }`} />
           )}
           <div className="flex items-center space-x-2 min-w-0">
@@ -126,15 +126,15 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
               </span>
             )}
             <span className={`text-sm truncate ${
-              selectedOption ? 'font-bold text-gray-900 dark:text-gray-100' : 'font-semibold text-gray-400 dark:text-gray-500'
+              selectedOption ? 'font-bold text-slate-900 dark:text-slate-100' : 'font-semibold text-slate-400 dark:text-slate-500'
             }`}>
               {selectedOption ? selectedOption.label : (placeholder || label || 'Select...')}
             </span>
           </div>
         </div>
 
-        <ChevronDown className={`w-4 h-4 shrink-0 text-gray-400 transition-transform duration-200 ${
-          isOpen ? 'rotate-180 text-brand-500' : 'group-hover:text-gray-600 dark:group-hover:text-gray-300'
+        <ChevronDown className={`w-4 h-4 shrink-0 text-slate-400 transition-transform duration-200 ${
+          isOpen ? 'rotate-180 text-brand-500' : 'group-hover:text-slate-600 dark:group-hover:text-slate-300'
         }`} />
       </button>
 
@@ -146,7 +146,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.98 }}
             transition={{ duration: 0.16, ease: 'easeOut' }}
-            className={`absolute ${alignClass} z-[9999] mt-1.5 ${popoverWidth} max-h-80 overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 shadow-xl p-1.5 space-y-1 focus:outline-none ring-1 ring-black/10 dark:ring-white/10`}
+            className={`absolute ${alignClass} z-[9999] mt-1.5 ${popoverWidth} max-h-80 overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl p-1.5 space-y-1 focus:outline-none ring-1 ring-black/10 dark:ring-white/10`}
             style={{
               backgroundColor: 'var(--dropdown-bg, #ffffff)',
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.08)'
@@ -164,13 +164,13 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
                   className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-left text-sm font-bold transition-all cursor-pointer group ${
                     isSelected
                       ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30'
-                      : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-800'
+                      : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <div className="flex items-center space-x-2.5 min-w-0 pr-2">
                     {OptIcon && (
                       <OptIcon className={`w-3.5 h-3.5 shrink-0 ${
-                        isSelected ? 'text-white' : 'text-gray-400 group-hover:text-brand-500'
+                        isSelected ? 'text-white' : 'text-slate-400 group-hover:text-brand-500'
                       }`} />
                     )}
                     {opt.badge && !opt.hidePill && (
@@ -186,7 +186,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
                       <span className="truncate">{opt.label}</span>
                       {opt.sublabel && (
                         <span className={`text-[10px] font-medium truncate ${
-                          isSelected ? 'text-indigo-100' : 'text-gray-400 dark:text-gray-500'
+                          isSelected ? 'text-indigo-100' : 'text-slate-400 dark:text-slate-500'
                         }`}>
                           {opt.sublabel}
                         </span>
@@ -199,7 +199,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
                       <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md ${
                         isSelected
                           ? 'bg-white/20 text-white'
-                          : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
                       }`}>
                         {opt.count}
                       </span>

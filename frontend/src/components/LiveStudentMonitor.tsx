@@ -49,20 +49,20 @@ export const LiveStudentMonitor: React.FC = () => {
             Live Student <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Contest Profiler</span>
           </h2>
 
-          <p className="text-xs sm:text-sm text-gray-300 font-medium leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
             Enter any student Register Number or LeetCode Username to execute an instant on-demand GraphQL live inspection with 100% verified contest classification.
           </p>
 
           {/* Inspection Form */}
           <form onSubmit={handleInspectStudent} className="flex flex-col sm:flex-row gap-3 pt-2">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 placeholder="Enter Register Number (e.g. 732224CC031) or Username..."
-                className="w-full pl-11 pr-4 py-3 bg-white/10 dark:bg-navy-900/60 border border-white/20 dark:border-navy-700 text-white placeholder-gray-400 text-xs sm:text-sm font-semibold rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500 backdrop-blur-md transition-all"
+                className="w-full pl-11 pr-4 py-3 bg-white/10 dark:bg-navy-950/60 border border-white/20 dark:border-navy-700 text-white placeholder-gray-400 text-xs sm:text-sm font-semibold rounded-2xl focus:outline-none focus:ring-2 focus:ring-brand-500 backdrop-blur-md transition-all"
               />
             </div>
 
@@ -85,7 +85,7 @@ export const LiveStudentMonitor: React.FC = () => {
             <AlertCircle className="w-4 h-4 text-rose-500" />
             <span>{error}</span>
           </span>
-          <button onClick={() => setError(null)} className="text-gray-400 hover:text-white"><XCircle className="w-4 h-4" /></button>
+          <button onClick={() => setError(null)} className="text-slate-400 hover:text-white"><XCircle className="w-4 h-4" /></button>
         </div>
       )}
 
@@ -93,18 +93,18 @@ export const LiveStudentMonitor: React.FC = () => {
       {data && (
         <div className="space-y-6 animate-fade-in">
           {/* Profile Overview & Badge */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-800 shadow-xl space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-5">
+          <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-5">
               <div className="flex items-center space-x-4">
                 <div className="w-14 h-14 rounded-2xl bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center font-black text-xl shadow-inner">
                   {student.name ? student.name[0] : 'S'}
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                     <span>{student.name}</span>
-                    <span className="text-xs font-mono text-gray-400 font-bold">({student.reg_no})</span>
+                    <span className="text-xs font-mono text-slate-400 font-bold">({student.reg_no})</span>
                   </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                     {student.department} • {student.year} • Username: <a href={student.profile_url} target="_blank" rel="noreferrer" className="text-brand-500 underline hover:text-brand-400 font-bold">{student.username}</a>
                   </p>
                 </div>
@@ -124,34 +124,34 @@ export const LiveStudentMonitor: React.FC = () => {
 
             {/* Diagnostic Metrics Matrix */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200/80 dark:border-navy-800 space-y-1">
-                <span className="text-[10px] font-black uppercase text-gray-400 block">Total Contest Solved</span>
-                <p className="text-2xl font-black text-gray-900 dark:text-white">{perf.solved_count} / {perf.total_problems}</p>
-                <span className="text-[10.5px] text-gray-500 font-semibold">Score: {perf.score} pts</span>
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800 space-y-1">
+                <span className="text-[10px] font-black uppercase text-slate-400 block">Total Contest Solved</span>
+                <p className="text-2xl font-black text-slate-900 dark:text-white">{perf.solved_count} / {perf.total_problems}</p>
+                <span className="text-[10.5px] text-slate-500 font-semibold">Score: {perf.score} pts</span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200/80 dark:border-navy-800 space-y-1">
-                <span className="text-[10px] font-black uppercase text-gray-400 block">Contest Rank &amp; Rating</span>
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800 space-y-1">
+                <span className="text-[10px] font-black uppercase text-slate-400 block">Contest Rank &amp; Rating</span>
                 <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{perf.contest_rating || '1535.0'}</p>
-                <span className="text-[10.5px] text-gray-500 font-semibold">Global Rank: #{perf.contest_rank || 'N/A'}</span>
+                <span className="text-[10.5px] text-slate-500 font-semibold">Global Rank: #{perf.contest_rank || 'N/A'}</span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200/80 dark:border-navy-800 space-y-1">
-                <span className="text-[10px] font-black uppercase text-gray-400 block">Finish Timestamp</span>
-                <p className="text-base font-black text-gray-900 dark:text-white truncate" title={perf.finish_time_formatted}>{perf.finish_time_formatted}</p>
-                <span className="text-[10.5px] text-gray-500 font-semibold">Verified Window</span>
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800 space-y-1">
+                <span className="text-[10px] font-black uppercase text-slate-400 block">Finish Timestamp</span>
+                <p className="text-base font-black text-slate-900 dark:text-white truncate" title={perf.finish_time_formatted}>{perf.finish_time_formatted}</p>
+                <span className="text-[10.5px] text-slate-500 font-semibold">Verified Window</span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-200/80 dark:border-navy-800 space-y-1">
-                <span className="text-[10px] font-black uppercase text-gray-400 block">Inspection Timestamp</span>
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800 space-y-1">
+                <span className="text-[10px] font-black uppercase text-slate-400 block">Inspection Timestamp</span>
                 <p className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 mt-2">{data.timestamp_ist}</p>
-                <span className="text-[10px] text-gray-400">Live GQL Sync</span>
+                <span className="text-[10px] text-slate-400">Live GQL Sync</span>
               </div>
             </div>
 
             {/* Q1 - Q4 Individual Question Matrix */}
             <div>
-              <h4 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+              <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
                 <Trophy className="w-4 h-4 text-amber-500" />
                 <span>Question Solve Matrix (Q1 - Q4)</span>
               </h4>
@@ -166,14 +166,14 @@ export const LiveStudentMonitor: React.FC = () => {
                       className={`p-3.5 rounded-2xl border flex items-center justify-between ${
                         isSolved
                           ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
-                          : 'bg-gray-100 dark:bg-navy-950 border-gray-200 dark:border-navy-800 text-gray-400'
+                          : 'bg-slate-100 dark:bg-navy-950 border-slate-200 dark:border-navy-800 text-slate-400'
                       }`}
                     >
                       <div>
                         <span className="text-xs font-black block">{qLabel}</span>
                         <span className="text-[10px] font-semibold">{isSolved ? 'SOLVED (AC)' : 'NOT SOLVED'}</span>
                       </div>
-                      {isSolved ? <CheckCircle2 className="w-5 h-5 text-emerald-500" /> : <XCircle className="w-5 h-5 text-gray-400" />}
+                      {isSolved ? <CheckCircle2 className="w-5 h-5 text-emerald-500" /> : <XCircle className="w-5 h-5 text-slate-400" />}
                     </div>
                   );
                 })}
@@ -182,8 +182,8 @@ export const LiveStudentMonitor: React.FC = () => {
 
             {/* Historical Contest Rating Graph (Recharts) */}
             {ratingGraph.length > 0 && (
-              <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
-                <h4 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-indigo-500" />
                   <span>Historical Contest Rating Trajectory</span>
                 </h4>
@@ -205,7 +205,7 @@ export const LiveStudentMonitor: React.FC = () => {
             )}
 
             {/* Verification Audit Note */}
-            <p className="text-[11px] text-gray-500 font-medium italic border-t border-gray-100 dark:border-gray-800 pt-3">
+            <p className="text-[11px] text-slate-500 font-medium italic border-t border-slate-100 dark:border-slate-800 pt-3">
               Verification Audit Note: {perf.verification_note}
             </p>
           </div>

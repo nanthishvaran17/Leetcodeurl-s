@@ -62,27 +62,27 @@ export const AlertCenterModal: React.FC<AlertCenterModalProps> = ({ isOpen, onCl
 
   return (
     <div className="modal-overlay-responsive animate-fade-in">
-      <div className="modal-container-responsive max-w-2xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 rounded-3xl shadow-lg flex flex-col overflow-hidden">
+      <div className="modal-container-responsive max-w-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-lg flex flex-col overflow-hidden">
         
         {/* Header */}
-        <div className="p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-navy-950/50 flex items-center justify-between shrink-0">
+        <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-navy-950/50 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-3">
             <div className="p-2.5 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
               <Bell className="w-5 h-5 stroke-[2.5]" />
             </div>
             <div>
-              <h2 className="text-base font-black text-gray-900 dark:text-white">Automated Priority Alert Center</h2>
-              <p className="text-xs text-gray-500 font-bold">Institutional Anomalies, Critical Risk & Milestones</p>
+              <h2 className="text-base font-black text-slate-900 dark:text-white">Automated Priority Alert Center</h2>
+              <p className="text-xs text-slate-500 font-bold">Institutional Anomalies, Critical Risk & Milestones</p>
             </div>
           </div>
 
-          <button onClick={onClose} className="p-1 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-white cursor-pointer">
+          <button onClick={onClose} className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Filter Bar */}
-        <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-navy-900 text-xs font-bold text-gray-600 shrink-0">
+        <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-navy-950 text-xs font-bold text-slate-600 shrink-0">
           <div className="flex items-center space-x-2">
             {['ALL', 'UNREAD', 'CRITICAL'].map(f => (
               <button
@@ -91,7 +91,7 @@ export const AlertCenterModal: React.FC<AlertCenterModalProps> = ({ isOpen, onCl
                 className={`px-3 py-1 rounded-xl transition-colors cursor-pointer ${
                   filter === f 
                     ? 'bg-brand-600 text-white font-black' 
-                    : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300'
+                    : 'bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300'
                 }`}
               >
                 {f}
@@ -99,7 +99,7 @@ export const AlertCenterModal: React.FC<AlertCenterModalProps> = ({ isOpen, onCl
             ))}
           </div>
 
-          <button onClick={loadAlerts} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-navy-800 cursor-pointer">
+          <button onClick={loadAlerts} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-navy-800 cursor-pointer">
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
@@ -107,7 +107,7 @@ export const AlertCenterModal: React.FC<AlertCenterModalProps> = ({ isOpen, onCl
         {/* Alert Items List */}
         <div className="p-5 overflow-y-auto space-y-3 flex-1">
           {filteredAlerts.length === 0 ? (
-            <div className="text-center py-10 text-gray-500 font-bold text-xs">
+            <div className="text-center py-10 text-slate-500 font-bold text-xs">
               No active alerts matching selected filter.
             </div>
           ) : (
@@ -119,8 +119,8 @@ export const AlertCenterModal: React.FC<AlertCenterModalProps> = ({ isOpen, onCl
                   key={a.id}
                   className={`p-4 rounded-2xl border transition-all flex items-start justify-between gap-4 ${
                     a.is_read 
-                      ? 'bg-gray-50/50 dark:bg-navy-950/40 border-gray-200 dark:border-navy-800 opacity-80' 
-                      : 'bg-white dark:bg-navy-900 border-brand-500/30 shadow-sm'
+                      ? 'bg-slate-50/50 dark:bg-navy-950/40 border-slate-200 dark:border-navy-800 opacity-80' 
+                      : 'bg-white dark:bg-navy-950 border-brand-500/30 shadow-sm'
                   }`}
                 >
                   <div className="flex items-start space-x-3">
@@ -133,9 +133,9 @@ export const AlertCenterModal: React.FC<AlertCenterModalProps> = ({ isOpen, onCl
                         <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${badge.bg}`}>
                           {a.alert_type}
                         </span>
-                        <h4 className="text-xs font-black text-gray-900 dark:text-white">{a.title}</h4>
+                        <h4 className="text-xs font-black text-slate-900 dark:text-white">{a.title}</h4>
                       </div>
-                      <p className="text-xs text-gray-600 dark:text-gray-300 font-medium leading-relaxed">{a.message}</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">{a.message}</p>
                     </div>
                   </div>
 

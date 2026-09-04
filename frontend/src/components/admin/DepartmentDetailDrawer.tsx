@@ -55,7 +55,7 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="relative w-full max-w-2xl bg-white dark:bg-navy-900 h-full shadow-2xl flex flex-col border-l border-slate-200 dark:border-navy-700"
+          className="relative w-full max-w-2xl bg-white dark:bg-navy-950 h-full shadow-2xl flex flex-col border-l border-slate-200 dark:border-navy-700"
         >
           {/* Header */}
           <div className="p-6 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between bg-slate-50/50 dark:bg-navy-800/50">
@@ -75,7 +75,7 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                 <div className="flex items-center gap-3 mt-1.5 text-sm">
                   <span className={`px-2 py-0.5 rounded text-xs font-bold ${
                     department.health_status === 'Excellent' ? 'bg-emerald-100 text-emerald-800' :
-                    department.health_status === 'Healthy' ? 'bg-blue-100 text-blue-800' :
+                    department.health_status === 'Healthy' ? 'bg-brand-100 text-brand-800' :
                     department.health_status === 'Needs Attention' ? 'bg-amber-100 text-amber-800' :
                     'bg-rose-100 text-rose-800'
                   }`}>
@@ -117,7 +117,7 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                 <div className="text-2xl font-display font-bold text-slate-900 dark:text-white">
                   {department.coding_engagement || 'N/A'}
                 </div>
-                <div className="w-full bg-slate-100 dark:bg-navy-900 rounded-full h-1.5 mt-2">
+                <div className="w-full bg-slate-100 dark:bg-navy-950 rounded-full h-1.5 mt-2">
                   <div className="bg-brand-500 h-1.5 rounded-full" style={{ width: `${department.active_score || 0}%` }} />
                 </div>
               </div>
@@ -144,8 +144,8 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                 <div className="text-2xl font-display font-bold text-slate-900 dark:text-white">
                   {department.completion_rate}%
                 </div>
-                <div className="w-full bg-slate-100 dark:bg-navy-900 rounded-full h-1.5 mt-2">
-                  <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${department.completion_rate || 0}%` }} />
+                <div className="w-full bg-slate-100 dark:bg-navy-950 rounded-full h-1.5 mt-2">
+                  <div className="bg-brand-500 h-1.5 rounded-full" style={{ width: `${department.completion_rate || 0}%` }} />
                 </div>
               </div>
             </div>
@@ -176,7 +176,7 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                     <div className="bg-white dark:bg-navy-800 rounded-2xl border border-slate-200 dark:border-navy-700 overflow-hidden">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="bg-slate-50 dark:bg-navy-900 border-b border-slate-200 dark:border-navy-700 text-[11px] uppercase tracking-wider text-slate-500 font-bold">
+                          <tr className="bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700 text-[11px] uppercase tracking-wider text-slate-500 font-bold">
                             <th className="p-3">Rank</th>
                             <th className="p-3">Student</th>
                             <th className="p-3">Problems Solved</th>
@@ -218,7 +218,7 @@ export const DepartmentDetailDrawer: React.FC<DepartmentDetailDrawerProps> = ({ 
                     <div className="bg-white dark:bg-navy-800 rounded-2xl border border-slate-200 dark:border-navy-700 overflow-hidden">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="bg-slate-50 dark:bg-navy-900 border-b border-slate-200 dark:border-navy-700 text-[11px] uppercase tracking-wider text-slate-500 font-bold">
+                          <tr className="bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700 text-[11px] uppercase tracking-wider text-slate-500 font-bold">
                             <th className="p-3">Student</th>
                             <th className="p-3">Risk Level</th>
                             <th className="p-3">Problems Solved</th>

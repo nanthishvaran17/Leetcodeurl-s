@@ -42,7 +42,7 @@ export const BatchPerformanceMatrix: React.FC = () => {
       
       {/* Official Academic Header Banner */}
       <div className="bg-gradient-to-r from-navy-950 via-slate-900 to-navy-950 p-5 rounded-2xl text-white border border-navy-800 shadow-md space-y-3">
-        <div className="flex items-center justify-between flex-wrap gap-2 text-xs text-gray-300 border-b border-white/10 pb-2">
+        <div className="flex items-center justify-between flex-wrap gap-2 text-xs text-slate-300 border-b border-white/10 pb-2">
           <span className="font-mono font-bold text-emerald-400">Date: 10.08.2026</span>
           <span className="font-black tracking-wider text-amber-400 uppercase">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</span>
         </div>
@@ -60,7 +60,7 @@ export const BatchPerformanceMatrix: React.FC = () => {
 
           <div className="flex items-center space-x-2 text-xs bg-white/10 px-3.5 py-1.5 rounded-xl border border-white/20">
             <UserCheck className="w-4 h-4 text-cyan-300" />
-            <span className="font-medium text-gray-200">
+            <span className="font-medium text-slate-200">
               Name & Designation of the Academic Coordinator: <b className="text-white font-bold">HOD / Academic Lead (CSE)</b>
             </span>
           </div>
@@ -68,7 +68,7 @@ export const BatchPerformanceMatrix: React.FC = () => {
       </div>
 
       {/* Grid Table */}
-      <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-gray-800 shadow-inner">
+      <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner">
         <table className="w-full text-xs text-center border-collapse">
           <thead>
             {/* Header Row 1 */}
@@ -91,22 +91,22 @@ export const BatchPerformanceMatrix: React.FC = () => {
             </tr>
 
             {/* Header Row 2 */}
-            <tr className="bg-gray-100 dark:bg-navy-900 text-gray-700 dark:text-gray-200 font-extrabold text-[11px] border-b border-gray-300 dark:border-gray-800">
+            <tr className="bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-200 font-extrabold text-[11px] border-b border-slate-300 dark:border-slate-800">
               {/* Problem solved columns */}
-              <th className="py-2 px-3 border-r border-gray-300 dark:border-gray-800 text-emerald-600 dark:text-emerald-400">Above 500</th>
-              <th className="py-2 px-3 border-r border-gray-300 dark:border-gray-800 text-teal-600 dark:text-teal-400">250 - 500</th>
-              <th className="py-2 px-3 border-r border-gray-300 dark:border-gray-800 text-brand-600 dark:text-brand-400">Less than 250</th>
-              <th className="py-2 px-3 border-r border-gray-300 dark:border-gray-800 text-amber-600 dark:text-amber-400">Less than 100</th>
-              <th className="py-2 px-3 border-r border-gray-300 dark:border-gray-800 text-rose-600 dark:text-rose-400">Not yet started</th>
+              <th className="py-2 px-3 border-r border-slate-300 dark:border-slate-800 text-emerald-600 dark:text-emerald-400">Above 500</th>
+              <th className="py-2 px-3 border-r border-slate-300 dark:border-slate-800 text-teal-600 dark:text-teal-400">250 - 500</th>
+              <th className="py-2 px-3 border-r border-slate-300 dark:border-slate-800 text-brand-600 dark:text-brand-400">Less than 250</th>
+              <th className="py-2 px-3 border-r border-slate-300 dark:border-slate-800 text-amber-600 dark:text-amber-400">Less than 100</th>
+              <th className="py-2 px-3 border-r border-slate-300 dark:border-slate-800 text-rose-600 dark:text-rose-400">Not yet started</th>
 
               {/* Contest Attended columns */}
-              <th className="py-2 px-3 border-r border-gray-300 dark:border-gray-800 text-emerald-600 dark:text-emerald-400">4 Q Solved</th>
-              <th className="py-2 px-3 border-r border-gray-300 dark:border-gray-800 text-teal-600 dark:text-teal-400">3 Q Solved</th>
-              <th className="py-2 px-3 border-r border-gray-300 dark:border-gray-800 text-brand-600 dark:text-brand-400">2 Q Solved</th>
-              <th className="py-2 px-3 border-r border-gray-300 dark:border-gray-800 text-amber-600 dark:text-amber-400">1 Q Solved</th>
+              <th className="py-2 px-3 border-r border-slate-300 dark:border-slate-800 text-emerald-600 dark:text-emerald-400">4 Q Solved</th>
+              <th className="py-2 px-3 border-r border-slate-300 dark:border-slate-800 text-teal-600 dark:text-teal-400">3 Q Solved</th>
+              <th className="py-2 px-3 border-r border-slate-300 dark:border-slate-800 text-brand-600 dark:text-brand-400">2 Q Solved</th>
+              <th className="py-2 px-3 border-r border-slate-300 dark:border-slate-800 text-amber-600 dark:text-amber-400">1 Q Solved</th>
 
               {/* Contest Rating & Ranking columns */}
-              <th className="py-2 px-3 border-r border-gray-300 dark:border-gray-800 text-purple-600 dark:text-purple-400">Rating: Above 1500</th>
+              <th className="py-2 px-3 border-r border-slate-300 dark:border-slate-800 text-purple-600 dark:text-purple-400">Rating: Above 1500</th>
               <th className="py-2 px-3 text-indigo-600 dark:text-indigo-400">Ranking: Below 20000</th>
             </tr>
           </thead>
@@ -114,13 +114,13 @@ export const BatchPerformanceMatrix: React.FC = () => {
           <tbody className="divide-y divide-gray-200 dark:divide-gray-800 font-semibold">
             {loading ? (
               <tr>
-                <td colSpan={13} className="py-8 text-center text-gray-500 font-bold">
+                <td colSpan={13} className="py-8 text-center text-slate-500 font-bold">
                   Loading Executive Batch Matrix...
                 </td>
               </tr>
             ) : matrixData.length === 0 ? (
               <tr>
-                <td colSpan={13} className="py-8 text-center text-gray-500 font-bold">
+                <td colSpan={13} className="py-8 text-center text-slate-500 font-bold">
                   No batch matrix data available.
                 </td>
               </tr>
@@ -133,51 +133,51 @@ export const BatchPerformanceMatrix: React.FC = () => {
                     key={idx}
                     className={`transition-colors ${
                       isCurrentWeek
-                        ? 'bg-brand-50/40 dark:bg-brand-950/20 font-bold text-gray-900 dark:text-white'
-                        : 'bg-white dark:bg-navy-950 text-gray-600 dark:text-gray-400'
+                        ? 'bg-brand-50/40 dark:bg-brand-950/20 font-bold text-slate-900 dark:text-white'
+                        : 'bg-white dark:bg-navy-950 text-slate-600 dark:text-slate-400'
                     }`}
                   >
-                    <td className="py-3 px-4 text-left font-black border-r border-gray-200 dark:border-gray-800">
+                    <td className="py-3 px-4 text-left font-black border-r border-slate-200 dark:border-slate-800">
                       {row.batch}
                     </td>
 
-                    <td className="py-3 px-3 font-black text-center border-r border-gray-200 dark:border-gray-800 text-brand-600 dark:text-brand-400">
+                    <td className="py-3 px-3 font-black text-center border-r border-slate-200 dark:border-slate-800 text-brand-600 dark:text-brand-400">
                       {row.total_count}
                     </td>
 
                     {/* Solve Counts */}
-                    <td className="py-3 px-3 border-r border-gray-200 dark:border-gray-800 font-black text-emerald-600 dark:text-emerald-400">
+                    <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 font-black text-emerald-600 dark:text-emerald-400">
                       {row.above_500 || '—'}
                     </td>
-                    <td className="py-3 px-3 border-r border-gray-200 dark:border-gray-800 font-black text-teal-600 dark:text-teal-400">
+                    <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 font-black text-teal-600 dark:text-teal-400">
                       {row.range_250_500 || '—'}
                     </td>
-                    <td className="py-3 px-3 border-r border-gray-200 dark:border-gray-800 font-bold text-brand-600 dark:text-brand-400">
+                    <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 font-bold text-brand-600 dark:text-brand-400">
                       {row.less_than_250 || '—'}
                     </td>
-                    <td className="py-3 px-3 border-r border-gray-200 dark:border-gray-800 font-bold text-amber-600 dark:text-amber-400">
+                    <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 font-bold text-amber-600 dark:text-amber-400">
                       {row.less_than_100 || '—'}
                     </td>
-                    <td className="py-3 px-3 border-r border-gray-200 dark:border-gray-800 font-bold text-rose-500">
+                    <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 font-bold text-rose-500">
                       {row.not_yet_started || '—'}
                     </td>
 
                     {/* Contest Counts */}
-                    <td className="py-3 px-3 border-r border-gray-200 dark:border-gray-800 font-black text-emerald-600 dark:text-emerald-400">
+                    <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 font-black text-emerald-600 dark:text-emerald-400">
                       {row.q4_solved || '—'}
                     </td>
-                    <td className="py-3 px-3 border-r border-gray-200 dark:border-gray-800 font-black text-teal-600 dark:text-teal-400">
+                    <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 font-black text-teal-600 dark:text-teal-400">
                       {row.q3_solved || '—'}
                     </td>
-                    <td className="py-3 px-3 border-r border-gray-200 dark:border-gray-800 font-bold text-brand-600 dark:text-brand-400">
+                    <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 font-bold text-brand-600 dark:text-brand-400">
                       {row.q2_solved || '—'}
                     </td>
-                    <td className="py-3 px-3 border-r border-gray-200 dark:border-gray-800 font-bold text-amber-600 dark:text-amber-400">
+                    <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 font-bold text-amber-600 dark:text-amber-400">
                       {row.q1_solved || '—'}
                     </td>
 
                     {/* Contest Rating & Ranking */}
-                    <td className="py-3 px-3 border-r border-gray-200 dark:border-gray-800 font-black text-purple-600 dark:text-purple-400">
+                    <td className="py-3 px-3 border-r border-slate-200 dark:border-slate-800 font-black text-purple-600 dark:text-purple-400">
                       {row.rating_above_1500 || '—'}
                     </td>
                     <td className="py-3 px-3 font-black text-indigo-600 dark:text-indigo-400">

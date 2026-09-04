@@ -132,22 +132,22 @@ const ContestCountdown = memo(({ initialSec }: { initialSec: number }) => {
     <div className="flex items-center gap-2 sm:gap-3">
       <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
         <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{days}</span>
-        <span className="text-[9px] uppercase font-bold text-gray-400 block">Days</span>
+        <span className="text-[9px] uppercase font-bold text-slate-400 block">Days</span>
       </div>
       <span className="text-2xl font-mono font-black text-amber-500">:</span>
       <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
         <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{hours}</span>
-        <span className="text-[9px] uppercase font-bold text-gray-400 block">Hours</span>
+        <span className="text-[9px] uppercase font-bold text-slate-400 block">Hours</span>
       </div>
       <span className="text-2xl font-mono font-black text-amber-500">:</span>
       <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
         <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{minutes}</span>
-        <span className="text-[9px] uppercase font-bold text-gray-400 block">Minutes</span>
+        <span className="text-[9px] uppercase font-bold text-slate-400 block">Minutes</span>
       </div>
       <span className="text-2xl font-mono font-black text-amber-500">:</span>
       <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
         <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{seconds}</span>
-        <span className="text-[9px] uppercase font-bold text-gray-400 block">Seconds</span>
+        <span className="text-[9px] uppercase font-bold text-slate-400 block">Seconds</span>
       </div>
     </div>
   );
@@ -181,7 +181,7 @@ const ContestMatrixRow = memo(({ r, actualIdx, isSelected, onEdit, onDelete, onS
         : isNotVerifiedFinal
           ? { cls: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-400/30', label: 'NOT VERIFIED (FINAL)' }
           : isNotVerified
-            ? { cls: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border border-blue-400/30', label: 'NOT VERIFIED ' }
+            ? { cls: 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300 border border-brand-400/30', label: 'NOT VERIFIED ' }
             : isError
               ? { cls: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300', label: 'DATA ERROR' }
               : { cls: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300', label: 'PENDING' };
@@ -193,7 +193,7 @@ const ContestMatrixRow = memo(({ r, actualIdx, isSelected, onEdit, onDelete, onS
       : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30';
 
   const renderQ = (val: any) => {
-    if (!isAttended || val === '—' || val === null || val === undefined) return <span className="text-gray-300 dark:text-gray-600 font-normal">—</span>;
+    if (!isAttended || val === '—' || val === null || val === undefined) return <span className="text-slate-300 dark:text-slate-600 font-normal">—</span>;
     return (val === 1 || val === '1')
       ? <span className="inline-block w-5 h-5 leading-5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-black text-center">1</span>
       : <span className="inline-block w-5 h-5 leading-5 rounded bg-rose-500/10 text-rose-400 dark:text-rose-500 font-bold text-center">0</span>;
@@ -201,7 +201,7 @@ const ContestMatrixRow = memo(({ r, actualIdx, isSelected, onEdit, onDelete, onS
 
   return (
     <tr
-      className={`hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors ${!isAttended ? 'opacity-60' : ''} ${isSelected ? 'bg-brand-50/50 dark:bg-brand-900/20' : ''}`}
+      className={`hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors ${!isAttended ? 'opacity-60' : ''} ${isSelected ? 'bg-brand-50/50 dark:bg-brand-900/20' : ''}`}
       onClick={(e) => {
         if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).tagName.toLowerCase() === 'input') return;
         onSelect(r);
@@ -211,20 +211,20 @@ const ContestMatrixRow = memo(({ r, actualIdx, isSelected, onEdit, onDelete, onS
       <td className="px-4 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
         <input
           type="checkbox"
-          className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-navy-900 focus:ring-brand-500 checked:bg-brand-500"
+          className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-navy-950 focus:ring-brand-500 checked:bg-brand-500"
           checked={isSelected}
           onChange={(e) => onCheckbox(r.reg_no, e.target.checked)}
         />
       </td>
-      <td className="px-4 py-2.5 text-center text-gray-400 font-mono">{actualIdx + 1}</td>
-      <td className="px-4 py-2.5 font-bold text-gray-900 dark:text-white font-mono text-[11px]">{r.reg_no}</td>
-      <td className="px-4 py-2.5 font-semibold text-gray-800 dark:text-gray-200">{r.name}</td>
+      <td className="px-4 py-2.5 text-center text-slate-400 font-mono">{actualIdx + 1}</td>
+      <td className="px-4 py-2.5 font-bold text-slate-900 dark:text-white font-mono text-[11px]">{r.reg_no}</td>
+      <td className="px-4 py-2.5 font-semibold text-slate-800 dark:text-slate-200">{r.name}</td>
       <td className="px-4 py-2.5 text-center font-bold">
         <span className={`px-2 py-0.5 rounded-md text-[10px] ${r.dept === 'CSE(CS)' || r.dept === 'Cyber Security' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300' : 'bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300'}`}>
           {r.dept}
         </span>
       </td>
-      <td className="px-4 py-2.5 text-center text-gray-600 dark:text-gray-400 font-bold">{r.year}</td>
+      <td className="px-4 py-2.5 text-center text-slate-600 dark:text-slate-400 font-bold">{r.year}</td>
       <td className="px-4 py-2.5 text-center">
         <div className="flex flex-col items-center gap-0.5">
           <span className={`px-2 py-0.5 text-[9px] font-extrabold rounded-full whitespace-nowrap ${statusBadge.cls}`}>
@@ -247,14 +247,14 @@ const ContestMatrixRow = memo(({ r, actualIdx, isSelected, onEdit, onDelete, onS
         ) : isPublicAttended ? (
           <span className="text-brand-600 dark:text-brand-400 font-mono">{r.total_solved ?? '—'}/4</span>
         ) : (
-          <span className="text-gray-300 dark:text-gray-600">—</span>
+          <span className="text-slate-300 dark:text-slate-600">—</span>
         )}
       </td>
-      <td className="px-4 py-2.5 text-right font-mono text-gray-600 dark:text-gray-400">
-        {isVirtualAttended ? <span className="text-gray-400 italic text-[10px]">Virtual</span> : (isPublicAttended ? (r.rank || '—') : '—')}
+      <td className="px-4 py-2.5 text-right font-mono text-slate-600 dark:text-slate-400">
+        {isVirtualAttended ? <span className="text-slate-400 italic text-[10px]">Virtual</span> : (isPublicAttended ? (r.rank || '—') : '—')}
       </td>
       <td className="px-4 py-2.5 text-right font-mono font-bold text-amber-600 dark:text-amber-400">
-        {isVirtualAttended ? <span className="text-gray-400 italic text-[10px]">—</span> : (isPublicAttended ? (r.rating && !isNaN(Number(r.rating)) && Number(r.rating) > 0 ? Number(r.rating).toFixed(1) : '—') : '—')}
+        {isVirtualAttended ? <span className="text-slate-400 italic text-[10px]">—</span> : (isPublicAttended ? (r.rating && !isNaN(Number(r.rating)) && Number(r.rating) > 0 ? Number(r.rating).toFixed(1) : '—') : '—')}
       </td>
       <td className="px-4 py-2.5 text-center whitespace-nowrap">
         <div className="flex items-center justify-center space-x-1.5">
@@ -1229,7 +1229,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     return (
       <div className="p-12 flex flex-col items-center justify-center space-y-4">
         <RefreshCw className="w-8 h-8 animate-spin text-brand-500" />
-        <p className="font-bold text-gray-700 dark:text-gray-300">Loading {loadingName}...</p>
+        <p className="font-bold text-slate-700 dark:text-slate-300">Loading {loadingName}...</p>
       </div>
     );
   }
@@ -1307,7 +1307,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   <span>SCHEDULED CONTEST</span>
                 </span>
               ) : isFinalizing ? (
-                <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center space-x-1.5 shadow-sm bg-blue-600 text-white animate-pulse">
+                <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center space-x-1.5 shadow-sm bg-brand-600 text-white animate-pulse">
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                   <span>FINALIZING SNAPSHOT</span>
                 </span>
@@ -1323,7 +1323,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <span>CONTEST ANALYTICS • INSTITUTIONAL EDITION (CYBER SECURITY & IOT)</span>
               </div>
 
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/10 text-gray-300 text-xs font-mono font-bold">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/10 text-slate-300 text-xs font-mono font-bold">
                 <Clock className="w-3.5 h-3.5 text-brand-400" />
                 <span>08:00 AM – 09:30 AM IST</span>
               </span>
@@ -1384,16 +1384,16 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </div>
             </div>
 
-            <div className="flex items-center flex-wrap gap-2 text-xs sm:text-sm text-gray-300 font-bold tracking-wide">
+            <div className="flex items-center flex-wrap gap-2 text-xs sm:text-sm text-slate-300 font-bold tracking-wide">
               <span>NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</span>
-              <span className="text-gray-500">•</span>
+              <span className="text-slate-500">•</span>
               <span className="text-indigo-300">
                 {isLive ? <>Last Updated: {liveTelemetry?.lastUpdatedIst || '08:42:17 AM IST'} (Next in <NextUpdateTicker initialSec={nextUpdateTicker} />)</> : 'Filter students by Department, Academic Year, Name & Status'}
               </span>
               {!isLive && activeSessionObj?.status && (
                 <>
-                  <span className="text-gray-500">•</span>
-                  <span className="text-gray-400">
+                  <span className="text-slate-500">•</span>
+                  <span className="text-slate-400">
                     Last synced: {sessionMetrics?.last_synced || 'Timestamp unavailable'}
                   </span>
                 </>
@@ -1402,7 +1402,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           </div>
 
           {/* Right Controls: Unified Session Selector, Date Picker & Admin Monitor Toggle */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-white/10 dark:bg-navy-900/80 p-2.5 rounded-2xl border border-white/15 backdrop-blur-md shadow-lg">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-white/10 dark:bg-navy-950/80 p-2.5 rounded-2xl border border-white/15 backdrop-blur-md shadow-lg">
             {/* Calendar Date Picker - Elegant Variant */}
             <div className="flex items-center justify-between min-w-[150px] bg-gradient-to-r from-navy-950 to-slate-900/90 pl-3 pr-2 py-1.5 rounded-xl border border-indigo-500/20 shadow-lg hover:border-indigo-500/40 transition-all duration-300 focus-within:border-indigo-400 focus-within:ring-1 focus-within:ring-indigo-400/50">
               <div className="flex items-center">
@@ -1412,7 +1412,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   value={customCalendarDate}
                   onChange={(e) => handleCalendarDateChange(e.target.value)}
                   style={{ colorScheme: 'dark' }}
-                  className="bg-transparent text-xs font-bold text-gray-200 outline-none cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-60 hover:[&::-webkit-calendar-picker-indicator]:opacity-100 transition-opacity"
+                  className="bg-transparent text-xs font-bold text-slate-200 outline-none cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-60 hover:[&::-webkit-calendar-picker-indicator]:opacity-100 transition-opacity"
                 />
               </div>
               {customCalendarDate && (
@@ -1436,7 +1436,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               <select
                 value={selectedSessionId || ''}
                 onChange={(e) => handleSelectSession(Number(e.target.value))}
-                className="px-4 py-2.5 rounded-xl bg-navy-950/90 border border-gray-700/80 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer min-w-[220px] shadow-inner"
+                className="px-4 py-2.5 rounded-xl bg-navy-950/90 border border-slate-700/80 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer min-w-[220px] shadow-inner"
               >
                 {displaySessions.length === 0 ? (
                   <option value="">No completed contest session</option>
@@ -1521,7 +1521,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               <Clock className="w-3.5 h-3.5 text-amber-400" />
               <span> NEXT UPCOMING WEEKLY CONTEST</span>
             </div>
-            <span className="text-xs font-mono font-bold text-gray-300">
+            <span className="text-xs font-mono font-bold text-slate-300">
               Official Window: 08:00 AM – 09:30 AM IST (Asia/Kolkata)
             </span>
           </div>
@@ -1530,7 +1530,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             <div className="space-y-1">
               <h2 className="text-2xl sm:text-3xl font-black text-white">{activeSessionObj.contestName}</h2>
               <p className="text-sm font-bold text-amber-200">{activeSessionObj.sessionDate} • Nandha Engineering College Cohorts</p>
-              <p className="text-xs text-gray-400 mt-1">Automatic live activation starts Sunday at 08:00 AM IST without manual refresh.</p>
+              <p className="text-xs text-slate-400 mt-1">Automatic live activation starts Sunday at 08:00 AM IST without manual refresh.</p>
             </div>
 
             {/* Dynamic Countdown Clock — isolated memo, won't re-render the page */}
@@ -1558,11 +1558,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
             <div className="flex items-center gap-6">
               <div className="text-right">
-                <p className="text-[10px] font-bold text-gray-400 uppercase">Contest Ends At</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase">Contest Ends At</p>
                 <p className="text-sm font-mono font-black text-rose-200">09:30:00 AM IST</p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] font-bold text-gray-400 uppercase">Next Sync In</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase">Next Sync In</p>
                 <p className="text-sm font-mono font-black text-emerald-400">
                   <NextUpdateTicker initialSec={nextUpdateTicker} />
                 </p>
@@ -1571,13 +1571,13 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           </div>
 
           {/* Live Question Progress (Q1..Q4) */}
-          <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-md space-y-3">
+          <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-md space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white flex items-center gap-2">
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
                 <Layers className="w-4 h-4 text-brand-500" />
                 <span>Live Question Solved Progress</span>
               </h4>
-              <span className="text-[10px] font-mono font-bold text-gray-400">
+              <span className="text-[10px] font-mono font-bold text-slate-400">
                 Total Solves: {liveTelemetry?.questionProgress?.totalSolved || 0} • Avg: {liveTelemetry?.questionProgress?.avgSolved || 0.0}
               </span>
             </div>
@@ -1592,7 +1592,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <div key={idx} className={`p-3 rounded-2xl border ${item.bg} text-center shadow-sm`}>
                   <span className="text-[10px] font-extrabold uppercase tracking-wider block opacity-75">{item.q}</span>
                   <span className={`text-xl font-black font-mono ${item.color}`}>{item.count}</span>
-                  <span className="text-[9px] text-gray-400 block font-medium">solved</span>
+                  <span className="text-[9px] text-slate-400 block font-medium">solved</span>
                 </div>
               ))}
             </div>
@@ -1600,19 +1600,19 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
           {/* Live Verified Activity Feed */}
           {liveTelemetry?.liveEvents && liveTelemetry.liveEvents.length > 0 && (
-            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-navy-950 to-indigo-950 text-white border border-gray-700 shadow-md space-y-2">
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-navy-950 to-indigo-950 text-white border border-slate-700 shadow-md space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black uppercase text-brand-300 flex items-center gap-1.5">
                   <Activity className="w-3.5 h-3.5 text-brand-400 animate-pulse" />
                   <span>Live Activity Feed (Verified Events)</span>
                 </span>
-                <span className="text-[10px] text-gray-400">Real-time solve stream</span>
+                <span className="text-[10px] text-slate-400">Real-time solve stream</span>
               </div>
               <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1 no-scrollbar">
                 {liveTelemetry.liveEvents.map((evt: any) => (
                   <div key={evt.id} className="flex items-center justify-between text-xs py-1 px-2.5 rounded-lg bg-white/5 border border-white/5">
                     <div className="flex items-center space-x-2">
-                      <span className="font-mono text-[10px] text-gray-400">{evt.timestamp}</span>
+                      <span className="font-mono text-[10px] text-slate-400">{evt.timestamp}</span>
                       <span className="font-bold text-white">{evt.studentName}</span>
                       <span className="text-emerald-400 font-bold">{evt.detail}</span>
                     </div>
@@ -1670,7 +1670,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 <span>{adminActionMsg}</span>
               </span>
-              <button onClick={() => setAdminActionMsg('')} className="text-gray-400 hover:text-white">
+              <button onClick={() => setAdminActionMsg('')} className="text-slate-400 hover:text-white">
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -1761,12 +1761,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             <div className="space-y-5 animate-fade-in">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-gray-400 block">Worker State</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Worker State</span>
                   <span className="text-base font-mono font-black text-white">{liveTelemetry?.workerState || 'READY'}</span>
                   <span className="text-[10px] text-emerald-400 block">Single-Worker DB Lock Active</span>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-gray-400 block">Students Processed</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Students Processed</span>
                   <span className="text-base font-mono font-black text-emerald-400">
                     {loading ? <span className="animate-pulse">Loading...</span> : `${liveTelemetry?.processedCount ?? sessionMetrics?.totalStudents ?? 0} / ${sessionMetrics?.totalStudents ?? 0}`}
                   </span>
@@ -1775,14 +1775,14 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   </div>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-gray-400 block">Successful Syncs</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Successful Syncs</span>
                   <span className="text-base font-mono font-black text-emerald-400">
                     {loading ? '...' : (liveTelemetry?.successfulCount ?? ((sessionMetrics?.totalStudents ?? 0) - (liveTelemetry?.failedCount ?? 0)))}
                   </span>
-                  <span className="text-[10px] text-gray-400 block">99% Accuracy Rate</span>
+                  <span className="text-[10px] text-slate-400 block">99% Accuracy Rate</span>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-gray-400 block">Data Errors</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Data Errors</span>
                   <span className="text-base font-mono font-black text-amber-400">{liveTelemetry?.failedCount || 20}</span>
                   <span className="text-[10px] text-amber-300 block">Auto-Retry Eligible</span>
                 </div>
@@ -1843,37 +1843,37 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             <div className="space-y-4 animate-fade-in">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
-                  <div className="flex items-center justify-between text-gray-400">
+                  <div className="flex items-center justify-between text-slate-400">
                     <span>Token Replenishment Rate</span>
                     <Gauge className="w-4 h-4 text-brand-400" />
                   </div>
-                  <p className="text-xl font-mono font-black text-emerald-400">3.0 <span className="text-xs text-gray-400">req / sec</span></p>
-                  <p className="text-[10px] text-gray-400">Smooth token refill with zero API throttle risks.</p>
+                  <p className="text-xl font-mono font-black text-emerald-400">3.0 <span className="text-xs text-slate-400">req / sec</span></p>
+                  <p className="text-[10px] text-slate-400">Smooth token refill with zero API throttle risks.</p>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
-                  <div className="flex items-center justify-between text-gray-400">
+                  <div className="flex items-center justify-between text-slate-400">
                     <span>Burst Bucket Capacity</span>
                     <Database className="w-4 h-4 text-purple-400" />
                   </div>
-                  <p className="text-xl font-mono font-black text-purple-400">5.0 <span className="text-xs text-gray-400">Tokens Max</span></p>
-                  <p className="text-[10px] text-gray-400">Bounded burst capacity for fast concurrent queries.</p>
+                  <p className="text-xl font-mono font-black text-purple-400">5.0 <span className="text-xs text-slate-400">Tokens Max</span></p>
+                  <p className="text-[10px] text-slate-400">Bounded burst capacity for fast concurrent queries.</p>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
-                  <div className="flex items-center justify-between text-gray-400">
+                  <div className="flex items-center justify-between text-slate-400">
                     <span>Asyncio Socket Semaphore</span>
                     <Cpu className="w-4 h-4 text-indigo-400" />
                   </div>
-                  <p className="text-xl font-mono font-black text-indigo-400">5 <span className="text-xs text-gray-400">Concurrent Sockets</span></p>
-                  <p className="text-[10px] text-gray-400">Strict bounded concurrent HTTP sockets.</p>
+                  <p className="text-xl font-mono font-black text-indigo-400">5 <span className="text-xs text-slate-400">Concurrent Sockets</span></p>
+                  <p className="text-[10px] text-slate-400">Strict bounded concurrent HTTP sockets.</p>
                 </div>
               </div>
 
               <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between flex-wrap gap-3">
                 <div className="space-y-1">
                   <p className="text-xs font-bold text-white">Cache & Rate Limiting Controls</p>
-                  <p className="text-[11px] text-gray-400">Instantly flush memory cache keys or reset token state without dropping DB records.</p>
+                  <p className="text-[11px] text-slate-400">Instantly flush memory cache keys or reset token state without dropping DB records.</p>
                 </div>
                 <button
                   onClick={() => handleAdminAction('flush_cache')}
@@ -1894,7 +1894,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   <h5 className="text-xs font-black uppercase tracking-wider text-amber-400">
                     Unresolved Student Profiles ({liveTelemetry?.failedCount || stats.errorRows} Errors)
                   </h5>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-slate-400">
                     Students without configured usernames or whose LeetCode profiles encountered transient timeouts.
                   </p>
                 </div>
@@ -1902,16 +1902,16 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <button
                   onClick={() => handleAdminAction('retry_failed')}
                   disabled={isPerformingAdminAction}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-900/30 transition-all cursor-pointer active:scale-95"
+                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold shadow-lg shadow-brand-900/30 transition-all cursor-pointer active:scale-95"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>Retry All Unresolved Records</span>
                 </button>
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 text-xs text-gray-300 space-y-2">
+              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 text-xs text-slate-300 space-y-2">
                 <p className="font-bold text-white">Transient Error Breakdown & Invariants:</p>
-                <ul className="list-disc list-inside space-y-1 text-[11px] text-gray-400">
+                <ul className="list-disc list-inside space-y-1 text-[11px] text-slate-400">
                   <li><strong>Missing Usernames:</strong> Students whose LeetCode handle is not set in Master Roster.</li>
                   <li><strong>Upstream Timeouts (5xx / 429):</strong> Automatically retried with exponential backoff and jitter.</li>
                   <li><strong>Data Error Contract:</strong> <code className="text-amber-300">Data Errors = CONFLICT + SOURCE_ERROR</code> strictly holds across all views.</li>
@@ -1934,7 +1934,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       ACTIVE
                     </span>
                   </div>
-                  <p className="text-[11px] text-gray-400 font-mono">
+                  <p className="text-[11px] text-slate-400 font-mono">
                     trg_prevent_snapshot_mutation enforced on official_weekly_snapshots table.
                   </p>
                 </div>
@@ -1949,7 +1949,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       3 DAYS
                     </span>
                   </div>
-                  <p className="text-[11px] text-gray-400">
+                  <p className="text-[11px] text-slate-400">
                     Transitions to <code className="text-indigo-300">NOT_VERIFIED_FINAL</code> automatically once window expires.
                   </p>
                 </div>
@@ -1961,7 +1961,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           {adminSubTab === 'live_logs' && (
             <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3 font-mono text-xs animate-fade-in">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <span className="text-gray-400 font-bold flex items-center gap-2">
+                <span className="text-slate-400 font-bold flex items-center gap-2">
                   <Terminal className="w-3.5 h-3.5 text-emerald-400" />
                   <span>REAL-TIME AUDIT LOG STREAM</span>
                 </span>
@@ -1973,11 +1973,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   liveTelemetry.liveEvents.map((evt: any) => (
                     <div key={evt.id || Math.random()} className="p-2 rounded-lg bg-slate-900/80 border border-slate-800 text-[11px] flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <span className="text-gray-500">{evt.timestamp}</span>
+                        <span className="text-slate-500">{evt.timestamp}</span>
                         <span className="px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 font-bold text-[9px]">{evt.type}</span>
                         <span className="text-white font-bold">{evt.studentName}</span>
-                        <span className="text-gray-400">({evt.regNo})</span>
-                        <span className="text-gray-300">{evt.detail}</span>
+                        <span className="text-slate-400">({evt.regNo})</span>
+                        <span className="text-slate-300">{evt.detail}</span>
                       </div>
                       {evt.rank && (
                         <span className="text-amber-400 font-bold">Rank #{evt.rank}</span>
@@ -1985,7 +1985,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-500 italic py-4 text-center">No live events recorded yet in current cycle. Click 'Start Live Sync' or use 'Sandbox' tab to simulate events.</p>
+                  <p className="text-slate-500 italic py-4 text-center">No live events recorded yet in current cycle. Click 'Start Live Sync' or use 'Sandbox' tab to simulate events.</p>
                 )}
               </div>
             </div>
@@ -2001,7 +2001,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       <FlaskConical className="w-4 h-4 text-amber-400" />
                       <span>Live Simulation Sandbox & Testing Lab</span>
                     </h5>
-                    <p className="text-xs text-gray-300">
+                    <p className="text-xs text-slate-300">
                       Test live event streaming, rank fluctuations, and problem solves dynamically without waiting for Sunday morning!
                     </p>
                   </div>
@@ -2036,37 +2036,37 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                       <span>SYSTEM INVARIANT VALIDATION SCORECARD (100% PASS)</span>
                     </span>
-                    <span className="text-[10px] text-gray-400 font-mono">Status: Verified</span>
+                    <span className="text-[10px] text-slate-400 font-mono">Status: Verified</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                     <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
-                      <span className="text-gray-300">1. Master Roster Size</span>
+                      <span className="text-slate-300">1. Master Roster Size</span>
                       <span className="font-mono font-bold text-emerald-400">{invariantResults.masterRosterCount} Students</span>
                     </div>
 
                     <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
-                      <span className="text-gray-300">2. Total Classification Sum</span>
+                      <span className="text-slate-300">2. Total Classification Sum</span>
                       <span className="font-mono font-bold text-emerald-400">100% Parity</span>
                     </div>
 
                     <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
-                      <span className="text-gray-300">3. Data Errors Contract</span>
+                      <span className="text-slate-300">3. Data Errors Contract</span>
                       <span className="font-mono font-bold text-emerald-400">CONFLICT + SRC_ERR</span>
                     </div>
 
                     <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
-                      <span className="text-gray-300">4. Token Bucket Limiter</span>
+                      <span className="text-slate-300">4. Token Bucket Limiter</span>
                       <span className="font-mono font-bold text-emerald-400">&le; 3.0 req/s</span>
                     </div>
 
                     <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
-                      <span className="text-gray-300">5. Snapshot Immutability</span>
+                      <span className="text-slate-300">5. Snapshot Immutability</span>
                       <span className="font-mono font-bold text-emerald-400">TRIGGER ACTIVE</span>
                     </div>
 
                     <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
-                      <span className="text-gray-300">6. Verification Window</span>
+                      <span className="text-slate-300">6. Verification Window</span>
                       <span className="font-mono font-bold text-emerald-400">3-Day Bound</span>
                     </div>
                   </div>
@@ -2085,13 +2085,13 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       )}
 
       {/* ── PRIMARY VIEW TAB SWITCHER ── */}
-      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-gray-100 dark:bg-navy-950 border border-gray-200 dark:border-gray-800">
+      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-slate-800">
         <button
           onClick={() => setActiveTab('previous_week')}
           className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeTab === 'previous_week'
               ? 'bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 text-white shadow-lg shadow-indigo-500/20'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           <ShieldCheck className="w-4 h-4" />
@@ -2103,7 +2103,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeTab === 'matrix'
               ? 'bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 text-white shadow-lg shadow-indigo-500/20'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           <Trophy className="w-4 h-4" />
@@ -2120,23 +2120,23 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       {activeTab === 'matrix' && (
         <>
           {/* ── 2. UNIFIED COHESIVE FILTER & ACTION COMMAND BAR ── */}
-          <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-xl space-y-4 no-print">
+          <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4 no-print">
         {/* Row 1: Search Input + Full Consolidated Action Toolbar */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           {/* Real-time Search Input */}
-          <div className="flex-1 min-w-[260px] max-w-md relative flex items-center bg-gray-50 dark:bg-navy-950 px-3.5 py-2 rounded-2xl border border-gray-200 dark:border-gray-800 focus-within:ring-2 focus-within:ring-brand-500/40 focus-within:border-brand-500 transition-all shadow-inner">
-            <Search className="w-4 h-4 text-gray-400 mr-2 shrink-0" />
+          <div className="flex-1 min-w-[260px] max-w-md relative flex items-center bg-slate-50 dark:bg-navy-950 px-3.5 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 focus-within:ring-2 focus-within:ring-brand-500/40 focus-within:border-brand-500 transition-all shadow-inner">
+            <Search className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search student by name, reg no, or LeetCode handle..."
-              className="w-full bg-transparent border-none p-0 m-0 text-xs font-bold text-gray-900 dark:text-white placeholder-gray-400 outline-none focus:ring-0 focus:outline-none focus:border-transparent"
+              className="w-full bg-transparent border-none p-0 m-0 text-xs font-bold text-slate-900 dark:text-white placeholder-gray-400 outline-none focus:ring-0 focus:outline-none focus:border-transparent"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="w-5 h-5 rounded-full bg-gray-200 dark:bg-navy-800 text-gray-600 dark:text-gray-300 flex items-center justify-center text-[10px] hover:bg-gray-300 cursor-pointer shrink-0 ml-1"
+                className="w-5 h-5 rounded-full bg-slate-200 dark:bg-navy-800 text-slate-600 dark:text-slate-300 flex items-center justify-center text-[10px] hover:bg-slate-300 cursor-pointer shrink-0 ml-1"
                 title="Clear Search"
               >
                 <X className="w-3 h-3" />
@@ -2152,7 +2152,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               <button
                 onClick={() => setShowExportMenu(!showExportMenu)}
                 disabled={!selectedSessionId || isSyncing}
-                className="flex items-center space-x-1.5 px-3.5 py-2 bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 text-xs font-black rounded-xl shadow-md transition-all cursor-pointer hover:bg-slate-200 dark:hover:bg-navy-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center space-x-1.5 px-3.5 py-2 bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 text-xs font-black rounded-xl shadow-md transition-all cursor-pointer hover:bg-slate-200 dark:hover:bg-navy-800 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Actions & Export</span>
@@ -2160,39 +2160,39 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </button>
               
               {showExportMenu && (
-                <div className="absolute z-50 right-0 mt-2 w-56 bg-white dark:bg-navy-900 rounded-xl shadow-lg border border-gray-200 dark:border-navy-700 overflow-hidden">
+                <div className="absolute z-50 right-0 mt-2 w-56 bg-white dark:bg-navy-950 rounded-xl shadow-lg border border-slate-200 dark:border-navy-700 overflow-hidden">
                   <div className="py-1">
-                    <button onClick={() => { setShowPreviewModal(true); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 flex items-center space-x-2">
+                    <button onClick={() => { setShowPreviewModal(true); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 flex items-center space-x-2">
                       <Eye className="w-4 h-4 text-purple-500" />
                       <span>Live Preview</span>
                     </button>
-                    <button onClick={() => { setShowEmailModal(true); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 flex items-center space-x-2 border-b border-gray-100 dark:border-navy-800">
+                    <button onClick={() => { setShowEmailModal(true); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 flex items-center space-x-2 border-b border-slate-100 dark:border-navy-800">
                       <Mail className="w-4 h-4 text-indigo-500" />
                       <span>Send Email Report</span>
                     </button>
                     
-                    <button onClick={() => { downloadReportFile('excel'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 flex items-center space-x-2 mt-1">
+                    <button onClick={() => { downloadReportFile('excel'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 flex items-center space-x-2 mt-1">
                       <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
                       <span>Export as Excel</span>
                     </button>
-                    <button onClick={() => { downloadReportFile('csv'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 flex items-center space-x-2">
-                      <FileText className="w-4 h-4 text-blue-500" />
+                    <button onClick={() => { downloadReportFile('csv'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 flex items-center space-x-2">
+                      <FileText className="w-4 h-4 text-brand-500" />
                       <span>Export as CSV</span>
                     </button>
-                    <button onClick={() => { downloadReportFile('pdf'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 flex items-center space-x-2">
+                    <button onClick={() => { downloadReportFile('pdf'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 flex items-center space-x-2">
                       <FileText className="w-4 h-4 text-rose-500" />
                       <span>Export as PDF</span>
                     </button>
-                    <button onClick={() => { downloadReportFile('word'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 flex items-center space-x-2">
-                      <FileText className="w-4 h-4 text-blue-600" />
+                    <button onClick={() => { downloadReportFile('word'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 flex items-center space-x-2">
+                      <FileText className="w-4 h-4 text-brand-600" />
                       <span>Export as Word</span>
                     </button>
-                    <button onClick={() => { downloadReportFile('zip'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 flex items-center space-x-2 border-b border-gray-100 dark:border-navy-800">
+                    <button onClick={() => { downloadReportFile('zip'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 flex items-center space-x-2 border-b border-slate-100 dark:border-navy-800">
                       <Download className="w-4 h-4 text-slate-500" />
                       <span>Download ZIP</span>
                     </button>
 
-                    <button onClick={() => { window.print(); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-navy-800 flex items-center space-x-2 mt-1">
+                    <button onClick={() => { window.print(); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 flex items-center space-x-2 mt-1">
                       <FileText className="w-4 h-4 text-slate-700 dark:text-slate-400" />
                       <span>Print View</span>
                     </button>
@@ -2204,19 +2204,19 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             <button
               onClick={handleFetchSelectedContest}
               disabled={isSyncing || !selectedSessionId}
-              className="flex items-center space-x-1.5 px-3.5 py-2 bg-gray-900 hover:bg-black text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50 active:scale-95 border border-gray-700/50"
+              className="flex items-center space-x-1.5 px-3.5 py-2 bg-slate-900 hover:bg-black text-white text-xs font-black rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50 active:scale-95 border border-slate-700/50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
               <span>{syncStatusStage || (isSyncing ? 'Syncing...' : 'Sync Contest')}</span>
             </button>
 
             {/* Auto Refresh Toggle */}
-            <div className="flex items-center space-x-2 ml-2 pl-3 border-l border-gray-200 dark:border-gray-700">
-              <span className="text-[10px] font-bold text-gray-500 uppercase">Auto-Refresh</span>
+            <div className="flex items-center space-x-2 ml-2 pl-3 border-l border-slate-200 dark:border-slate-700">
+              <span className="text-[10px] font-bold text-slate-500 uppercase">Auto-Refresh</span>
               <button
                 type="button"
                 onClick={() => setAutoRefresh(!autoRefresh)}
-                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${autoRefresh ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${autoRefresh ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`}
               >
                 <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${autoRefresh ? 'translate-x-5' : 'translate-x-1'}`} />
               </button>
@@ -2225,7 +2225,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         </div>
 
         {/* Row 2: Clean 3-Column Dropdowns + 1-Click Reset Control */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
           {/* Department Select — Premium Custom Dropdown */}
           {(() => {
             const DEPT_OPTIONS = [
@@ -2240,32 +2240,32 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <button
                   type="button"
                   onClick={() => setDeptOpen(p => !p)}
-                  className={`w-full flex items-center gap-2.5 bg-gray-50 dark:bg-navy-950 px-3.5 py-2.5 rounded-2xl border shadow-sm text-left transition-all hover:border-indigo-300 dark:hover:border-indigo-600 focus:outline-none ${deptOpen ? 'border-indigo-400 ring-2 ring-indigo-400/20 dark:border-indigo-500' : 'border-gray-200 dark:border-gray-800'}`}
+                  className={`w-full flex items-center gap-2.5 bg-slate-50 dark:bg-navy-950 px-3.5 py-2.5 rounded-2xl border shadow-sm text-left transition-all hover:border-indigo-300 dark:hover:border-indigo-600 focus:outline-none ${deptOpen ? 'border-indigo-400 ring-2 ring-indigo-400/20 dark:border-indigo-500' : 'border-slate-200 dark:border-slate-800'}`}
                 >
                   <Building2 className="w-4 h-4 text-indigo-500 shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Department</p>
+                    <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Department</p>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${selectedDeptObj.color}`}>{selectedDeptObj.code}</span>
-                      <span className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{selectedDeptObj.label}</span>
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{selectedDeptObj.label}</span>
                     </div>
                   </div>
-                  <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${deptOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${deptOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {/* Dropdown Panel */}
                 {deptOpen && (
-                  <div className="absolute z-50 top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden max-h-72 overflow-y-auto">
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden max-h-72 overflow-y-auto">
                     {DEPT_OPTIONS.map(opt => (
                       <button
                         key={opt.value}
                         type="button"
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => { setSelectedDeptFilter(opt.value); setDeptOpen(false); }}
-                        className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-navy-800 ${selectedDeptFilter === opt.value ? 'bg-indigo-50 dark:bg-indigo-950/60' : ''}`}
+                        className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-navy-800 ${selectedDeptFilter === opt.value ? 'bg-indigo-50 dark:bg-indigo-950/60' : ''}`}
                       >
-                        <Building2 className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                        <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                         <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${opt.color}`}>{opt.code}</span>
-                        <span className={`text-xs font-semibold truncate flex-1 ${selectedDeptFilter === opt.value ? 'text-indigo-700 dark:text-indigo-300 font-black' : 'text-gray-700 dark:text-gray-300'}`}>{opt.label}</span>
+                        <span className={`text-xs font-semibold truncate flex-1 ${selectedDeptFilter === opt.value ? 'text-indigo-700 dark:text-indigo-300 font-black' : 'text-slate-700 dark:text-slate-300'}`}>{opt.label}</span>
                         {selectedDeptFilter === opt.value && <Check className="w-3.5 h-3.5 text-indigo-500 shrink-0" />}
                       </button>
                     ))}
@@ -2280,15 +2280,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             <button
               type="button"
               onClick={() => { setYearOpen(p => !p); setDeptOpen(false); setAttOpen(false); }}
-              className={`w-full flex items-center gap-2.5 bg-gray-50 dark:bg-navy-950 px-3.5 py-2.5 rounded-2xl border shadow-sm text-left transition-all focus:outline-none ${
+              className={`w-full flex items-center gap-2.5 bg-slate-50 dark:bg-navy-950 px-3.5 py-2.5 rounded-2xl border shadow-sm text-left transition-all focus:outline-none ${
                 yearOpen
                   ? 'border-brand-400 ring-2 ring-brand-400/20 dark:border-brand-500'
-                  : 'border-gray-200 dark:border-gray-800 hover:border-brand-300'
+                  : 'border-slate-200 dark:border-slate-800 hover:border-brand-300'
               }`}
             >
               <GraduationCap className="w-4 h-4 text-brand-500 shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Academic Year</p>
+                <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Academic Year</p>
                 {!yearOpen && (
                   <div className="flex items-center gap-1.5 mt-0.5">
                     {selectedYearFilter === 'ALL' ? (
@@ -2300,17 +2300,17 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     ) : (
                       <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300">IV</span>
                     )}
-                    <span className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                       {selectedYearFilter === 'ALL' ? 'All Academic Years' : selectedYearFilter === 'II' ? 'Year (2025–2029)' : selectedYearFilter === 'III' ? 'Year (2024–2028)' : 'Year (2023–2027)'}
                     </span>
                   </div>
                 )}
-                {yearOpen && <p className="text-[10px] text-gray-400 mt-0.5 italic">Choose a year below...</p>}
+                {yearOpen && <p className="text-[10px] text-slate-400 mt-0.5 italic">Choose a year below...</p>}
               </div>
-              <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
             </button>
             {yearOpen && (
-              <div className="absolute z-[100] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg overflow-hidden">
+              <div className="absolute z-[100] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-lg overflow-hidden">
                 {[
                   { value: 'ALL', label: 'All Academic Years', code: 'ALL', color: 'text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300' },
                   { value: 'II',  label: 'Year (2025–2029)',    code: 'II',  color: 'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
@@ -2325,13 +2325,13 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${
                       selectedYearFilter === opt.value
                         ? 'bg-brand-50 dark:bg-brand-950/60'
-                        : 'hover:bg-gray-50 dark:hover:bg-navy-800'
+                        : 'hover:bg-slate-50 dark:hover:bg-navy-800'
                     }`}
                   >
-                    <GraduationCap className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${opt.color}`}>{opt.code}</span>
                     <span className={`text-xs truncate flex-1 ${
-                      selectedYearFilter === opt.value ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-gray-700 dark:text-gray-300'
+                      selectedYearFilter === opt.value ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-slate-700 dark:text-slate-300'
                     }`}>{opt.label}</span>
                     {selectedYearFilter === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
                   </button>
@@ -2345,31 +2345,31 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             <button
               type="button"
               onClick={() => { setAttOpen(p => !p); setDeptOpen(false); setYearOpen(false); }}
-              className={`w-full flex items-center gap-2.5 bg-gray-50 dark:bg-navy-950 px-3.5 py-2.5 rounded-2xl border shadow-sm text-left transition-all focus:outline-none ${
+              className={`w-full flex items-center gap-2.5 bg-slate-50 dark:bg-navy-950 px-3.5 py-2.5 rounded-2xl border shadow-sm text-left transition-all focus:outline-none ${
                 attOpen
                   ? 'border-emerald-400 ring-2 ring-emerald-400/20 dark:border-emerald-500'
-                  : 'border-gray-200 dark:border-gray-800 hover:border-emerald-300'
+                  : 'border-slate-200 dark:border-slate-800 hover:border-emerald-300'
               }`}
             >
               <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Attendance Status</p>
+                <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Attendance Status</p>
                 {!attOpen && (
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${({ 'ALL':'bg-gray-400','PUBLIC_ATTENDED':'bg-emerald-500','VIRTUAL_ATTENDED':'bg-purple-500','PUBLIC_NOT_ATTENDED':'bg-rose-400','DATA_ERROR':'bg-amber-500' } as any)[selectedAttendanceFilter] || 'bg-gray-400'}`} />
-                    <span className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${({ 'ALL':'bg-slate-400','PUBLIC_ATTENDED':'bg-emerald-500','VIRTUAL_ATTENDED':'bg-purple-500','PUBLIC_NOT_ATTENDED':'bg-rose-400','DATA_ERROR':'bg-amber-500' } as any)[selectedAttendanceFilter] || 'bg-slate-400'}`} />
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                       {({ 'ALL':'All Statuses','PUBLIC_ATTENDED':'Public Attended','VIRTUAL_ATTENDED':'Virtual Attended','PUBLIC_NOT_ATTENDED':'Not Attended','DATA_ERROR':'Data Errors' } as any)[selectedAttendanceFilter] || 'All Statuses'}
                     </span>
                   </div>
                 )}
-                {attOpen && <p className="text-[10px] text-gray-400 mt-0.5 italic">Choose a status below...</p>}
+                {attOpen && <p className="text-[10px] text-slate-400 mt-0.5 italic">Choose a status below...</p>}
               </div>
-              <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${attOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${attOpen ? 'rotate-180' : ''}`} />
             </button>
             {attOpen && (
-              <div className="absolute z-[100] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg overflow-hidden">
+              <div className="absolute z-[100] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-lg overflow-hidden">
                 {[
-                  { value: 'ALL',                label: 'All Statuses',    code: 'ALL',  dot: 'bg-gray-400',    color: 'text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-300' },
+                  { value: 'ALL',                label: 'All Statuses',    code: 'ALL',  dot: 'bg-slate-400',    color: 'text-slate-600 bg-slate-100 dark:bg-slate-800 dark:text-slate-300' },
                   { value: 'PUBLIC_ATTENDED',    label: 'Public Attended', code: 'PUB',  dot: 'bg-emerald-500', color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300' },
                   { value: 'VIRTUAL_ATTENDED',   label: 'Virtual Attended',code: 'VIRT', dot: 'bg-purple-500',  color: 'text-purple-700 bg-purple-50 dark:bg-purple-950 dark:text-purple-300' },
                   { value: 'PUBLIC_NOT_ATTENDED',label: 'Not Attended',    code: 'ABS',  dot: 'bg-rose-400',   color: 'text-rose-700 bg-rose-50 dark:bg-rose-950 dark:text-rose-300' },
@@ -2383,13 +2383,13 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${
                       selectedAttendanceFilter === opt.value
                         ? 'bg-emerald-50 dark:bg-emerald-950/60'
-                        : 'hover:bg-gray-50 dark:hover:bg-navy-800'
+                        : 'hover:bg-slate-50 dark:hover:bg-navy-800'
                     }`}
                   >
                     <span className={`w-2 h-2 rounded-full shrink-0 ${opt.dot}`} />
                     <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${opt.color}`}>{opt.code}</span>
                     <span className={`text-xs truncate flex-1 ${
-                      selectedAttendanceFilter === opt.value ? 'font-black text-emerald-700 dark:text-emerald-300' : 'font-semibold text-gray-700 dark:text-gray-300'
+                      selectedAttendanceFilter === opt.value ? 'font-black text-emerald-700 dark:text-emerald-300' : 'font-semibold text-slate-700 dark:text-slate-300'
                     }`}>{opt.label}</span>
                     {selectedAttendanceFilter === opt.value && <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
                   </button>
@@ -2415,13 +2415,13 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               className={`w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-2xl text-xs font-black border transition-all cursor-pointer active:scale-95 shadow-sm ${
                 (selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL' || searchTerm !== '')
                   ? 'bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/60 ring-2 ring-rose-500/20'
-                  : 'bg-gray-50 dark:bg-navy-950 hover:bg-gray-100 dark:hover:bg-navy-900 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-800 hover:border-gray-300'
+                  : 'bg-slate-50 dark:bg-navy-950 hover:bg-slate-100 dark:hover:bg-navy-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300'
               }`}
             >
               <RotateCcw className={`w-3.5 h-3.5 ${
                 (selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL' || searchTerm !== '')
                   ? 'text-rose-600 dark:text-rose-400 animate-spin-once'
-                  : 'text-gray-400'
+                  : 'text-slate-400'
               }`} />
               <span>
                 {(selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL' || searchTerm !== '')
@@ -2451,7 +2451,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     <Building2 className="w-3.5 h-3.5" />
                     <span>CSE (Cyber Security)</span>
                   </h4>
-                  <p className="text-[10px] text-gray-500 font-medium mt-1">Total Active Students: {csTotal}</p>
+                  <p className="text-[10px] text-slate-500 font-medium mt-1">Total Active Students: {csTotal}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-black text-indigo-700 dark:text-indigo-300">{csAttended}</p>
@@ -2464,7 +2464,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     <Building2 className="w-3.5 h-3.5" />
                     <span>CSE (IoT)</span>
                   </h4>
-                  <p className="text-[10px] text-gray-500 font-medium mt-1">Total Active Students: {iotTotal}</p>
+                  <p className="text-[10px] text-slate-500 font-medium mt-1">Total Active Students: {iotTotal}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-black text-cyan-700 dark:text-cyan-300">{iotAttended}</p>
@@ -2479,16 +2479,16 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           <div className="bg-indigo-50/80 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50 rounded-2xl px-4 py-2.5 flex items-center justify-between flex-wrap gap-2 shadow-sm animate-fade-in -mb-1 mt-4">
             <div className="flex items-center gap-2 text-xs">
               <span className="font-black text-indigo-800 dark:text-indigo-400 uppercase tracking-wider text-[10px]">Active Scope:</span>
-              <span className="font-bold text-gray-800 dark:text-gray-200 flex items-center gap-1.5">
-                <span className={selectedDeptFilter !== 'ALL' ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500'}>
+              <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <span className={selectedDeptFilter !== 'ALL' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500'}>
                   {selectedDeptFilter === 'ALL' ? 'All Departments' : selectedDeptFilter}
                 </span>
-                <span className="text-gray-300 dark:text-gray-700">•</span>
-                <span className={selectedYearFilter !== 'ALL' ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500'}>
+                <span className="text-slate-300 dark:text-slate-700">•</span>
+                <span className={selectedYearFilter !== 'ALL' ? 'text-purple-600 dark:text-purple-400' : 'text-slate-500'}>
                   {selectedYearFilter === 'ALL' ? 'All Years' : `${selectedYearFilter} Year`}
                 </span>
-                <span className="text-gray-300 dark:text-gray-700">•</span>
-                <span className={selectedAttendanceFilter !== 'ALL' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500'}>
+                <span className="text-slate-300 dark:text-slate-700">•</span>
+                <span className={selectedAttendanceFilter !== 'ALL' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500'}>
                   {selectedAttendanceFilter === 'ALL' ? 'All Statuses' : selectedAttendanceFilter.replace('_', ' ')}
                 </span>
               </span>
@@ -2499,7 +2499,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 setSelectedYearFilter('ALL');
                 setSelectedAttendanceFilter('ALL');
               }}
-              className="text-[10px] font-black uppercase tracking-wider text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors cursor-pointer flex items-center gap-1 bg-white dark:bg-navy-900 px-2.5 py-1 rounded-lg border border-indigo-100 dark:border-indigo-800 shadow-sm hover:shadow"
+              className="text-[10px] font-black uppercase tracking-wider text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors cursor-pointer flex items-center gap-1 bg-white dark:bg-navy-950 px-2.5 py-1 rounded-lg border border-indigo-100 dark:border-indigo-800 shadow-sm hover:shadow"
             >
               <X className="w-3 h-3" />
               Clear Filters
@@ -2512,16 +2512,16 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           {/* Card 1: Total Students */}
           <button
             onClick={() => setSelectedAttendanceFilter('ALL')}
-            className={`h-24 p-4 rounded-2xl bg-white dark:bg-navy-900 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${selectedAttendanceFilter === 'ALL'
+            className={`h-24 p-4 rounded-2xl bg-white dark:bg-navy-950 border text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer flex flex-col justify-between ${selectedAttendanceFilter === 'ALL'
               ? 'border-brand-500 ring-4 ring-brand-500/20 shadow-lg'
-              : 'border-gray-200 dark:border-gray-800 hover:border-brand-300 shadow-sm'
+              : 'border-slate-200 dark:border-slate-800 hover:border-brand-300 shadow-sm'
               }`}
           >
             <div className="flex items-center justify-between w-full">
-              <p className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Total Students</p>
-              <Users className="w-3.5 h-3.5 text-gray-400" />
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Total Students</p>
+              <Users className="w-3.5 h-3.5 text-slate-400" />
             </div>
-            <p className="text-2xl sm:text-3xl font-black font-mono text-gray-900 dark:text-white">
+            <p className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white">
               <AnimatedNumber value={stats.totalRows} />
             </p>
           </button>
@@ -2613,15 +2613,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         {/* Feature Spotlight: Quick Statistics + Trend (Sparkline) + Top Performers */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Card 1: Quick Statistics Progress Bars */}
-          <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-md space-y-4">
-            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800/80 pb-3">
-              <h4 className="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white flex items-center gap-2">
+          <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-md space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
                 <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                   <Layers className="w-3.5 h-3.5" />
                 </div>
                 <span>Participation Distribution</span>
               </h4>
-              <span className="text-[10px] font-mono font-bold text-gray-400 px-2 py-0.5 rounded-md bg-gray-100 dark:bg-navy-950">
+              <span className="text-[10px] font-mono font-bold text-slate-400 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-950">
                 Total: {stats.totalRows}
               </span>
             </div>
@@ -2633,9 +2633,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                     <span>PUBLIC ATTENDED ({stats.attendedRows})</span>
                   </span>
-                  <span className="text-gray-900 dark:text-white font-mono">{stats.publicPct}%</span>
+                  <span className="text-slate-900 dark:text-white font-mono">{stats.publicPct}%</span>
                 </div>
-                <div className="w-full bg-gray-100 dark:bg-navy-950 rounded-full h-2.5 overflow-hidden">
+                <div className="w-full bg-slate-100 dark:bg-navy-950 rounded-full h-2.5 overflow-hidden">
                   <div className="bg-gradient-to-r from-emerald-500 to-teal-400 h-2.5 rounded-full transition-all duration-700 shadow-sm" style={{ width: `${stats.publicPct}%` }}></div>
                 </div>
               </div>
@@ -2646,9 +2646,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     <span className="w-2 h-2 rounded-full bg-purple-500"></span>
                     <span>VIRTUAL PRACTICE ({stats.virtualRows})</span>
                   </span>
-                  <span className="text-gray-900 dark:text-white font-mono">{stats.virtualPct}%</span>
+                  <span className="text-slate-900 dark:text-white font-mono">{stats.virtualPct}%</span>
                 </div>
-                <div className="w-full bg-gray-100 dark:bg-navy-950 rounded-full h-2.5 overflow-hidden">
+                <div className="w-full bg-slate-100 dark:bg-navy-950 rounded-full h-2.5 overflow-hidden">
                   <div className="bg-gradient-to-r from-purple-500 to-indigo-500 h-2.5 rounded-full transition-all duration-700 shadow-sm" style={{ width: `${stats.virtualPct}%` }}></div>
                 </div>
               </div>
@@ -2659,9 +2659,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     <span className="w-2 h-2 rounded-full bg-rose-400"></span>
                     <span>NOT ATTENDED ({stats.notAttendedRows})</span>
                   </span>
-                  <span className="text-gray-900 dark:text-white font-mono">{stats.notAttendedPct}%</span>
+                  <span className="text-slate-900 dark:text-white font-mono">{stats.notAttendedPct}%</span>
                 </div>
-                <div className="w-full bg-gray-100 dark:bg-navy-950 rounded-full h-2.5 overflow-hidden">
+                <div className="w-full bg-slate-100 dark:bg-navy-950 rounded-full h-2.5 overflow-hidden">
                   <div className="bg-gradient-to-r from-rose-400 to-rose-500 h-2.5 rounded-full transition-all duration-700 shadow-sm" style={{ width: `${stats.notAttendedPct}%` }}></div>
                 </div>
               </div>
@@ -2688,7 +2688,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   <span className="text-3xl sm:text-4xl font-black text-white font-mono">{stats.totalParticipationPct}%</span>
                   <span className="text-xs font-bold text-indigo-200 uppercase tracking-wider">Active Solved</span>
                 </div>
-                <p className="text-[11px] text-gray-300 leading-snug">
+                <p className="text-[11px] text-slate-300 leading-snug">
                   <b className="text-white">{stats.attendedRows} Public</b> + <b className="text-purple-300">{stats.virtualRows} Virtual</b> participants
                 </p>
               </div>
@@ -2705,21 +2705,21 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           </div>
 
           {/* Card 3: Top Performers Spotlight */}
-          <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-md space-y-3">
-            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800/80 pb-3">
+          <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-md space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
               <h4 className="text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-2">
                 <div className="w-6 h-6 rounded-lg bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                   <Trophy className="w-3.5 h-3.5" />
                 </div>
                 <span>Top Performers Spotlight</span>
               </h4>
-              <span className="text-[10px] font-bold text-gray-400">Live Global Rank</span>
+              <span className="text-[10px] font-bold text-slate-400">Live Global Rank</span>
             </div>
 
             <div className="space-y-2">
               {stats.topPerformers.length > 0 ? (
                 stats.topPerformers.map((p, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-2.5 rounded-2xl bg-gray-50 dark:bg-navy-950/60 border border-gray-100 dark:border-gray-800 text-xs transition-all hover:bg-gray-100 dark:hover:bg-navy-800 hover:scale-[1.01]">
+                  <div key={idx} className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-slate-800 text-xs transition-all hover:bg-slate-100 dark:hover:bg-navy-800 hover:scale-[1.01]">
                     <div className="flex items-center space-x-2.5">
                       <span className={`w-6 h-6 rounded-xl flex items-center justify-center font-black text-[11px] shadow-sm ${idx === 0 ? 'bg-gradient-to-br from-amber-400 to-orange-400 text-slate-950' :
                         idx === 1 ? 'bg-gradient-to-br from-slate-200 to-slate-400 text-slate-900' : 'bg-gradient-to-br from-amber-700 to-amber-900 text-white'
@@ -2727,12 +2727,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                         {idx + 1}
                       </span>
                       <div>
-                        <span className="font-extrabold text-gray-900 dark:text-white truncate max-w-[120px] block">{p.name}</span>
-                        <span className="text-[10px] text-gray-400 font-mono">{p.dept} • {p.year} Year</span>
+                        <span className="font-extrabold text-slate-900 dark:text-white truncate max-w-[120px] block">{p.name}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">{p.dept} • {p.year} Year</span>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className="font-mono text-[11px] text-gray-500 font-bold">
+                      <span className="font-mono text-[11px] text-slate-500 font-bold">
                         {p.rank || p.contest_rank ? `#${p.rank || p.contest_rank}` : (p.participation_status?.includes('VIRTUAL') ? 'Virtual' : '—')}
                       </span>
                       <span className="px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-mono font-black text-xs border border-emerald-200 dark:border-emerald-800">
@@ -2742,14 +2742,14 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   </div>
                 ))
               ) : (
-                <p className="text-xs text-gray-400 italic py-4 text-center">No live ranked submissions recorded yet.</p>
+                <p className="text-xs text-slate-400 italic py-4 text-center">No live ranked submissions recorded yet.</p>
               )}
             </div>
           </div>
         </div>
 
         {/* ── Virtual Students Detail Card (High Contrast, Beautiful Purple Theme) ── */}
-        <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-navy-900 border border-purple-200 dark:border-purple-900/50 shadow-lg shadow-purple-500/5 flex flex-wrap items-center justify-between gap-4">
+        <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-navy-950 border border-purple-200 dark:border-purple-900/50 shadow-lg shadow-purple-500/5 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center space-x-3.5">
             <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-inner shrink-0">
               <Sparkles className="w-6 h-6" />
@@ -2759,11 +2759,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <span className="px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-black text-[10px] uppercase tracking-wider border border-purple-300 dark:border-purple-800">
                   Virtual Practice Cohort
                 </span>
-                <span className="text-xs font-black text-gray-900 dark:text-white">
+                <span className="text-xs font-black text-slate-900 dark:text-white">
                   {stats.virtualRows} Active Participants
                 </span>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                 Questions solved during virtual contest windows are tracked separately from live public contests.
               </p>
             </div>
@@ -2791,7 +2791,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         </div>
 
         {/* ── Active Cohort Problem-Wise Solve Distribution (Dynamic for Selected Department/Year) ── */}
-        <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-lg flex flex-wrap items-center justify-between gap-4">
+        <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-lg flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center space-x-3.5">
             <div className="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800/60 text-brand-600 dark:text-brand-400 flex items-center justify-center shadow-inner shrink-0">
               <Award className="w-6 h-6" />
@@ -2801,11 +2801,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <span className="px-2.5 py-0.5 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 font-black text-[10px] uppercase tracking-wider border border-brand-300 dark:border-brand-800">
                   {selectedDeptFilter === 'ALL' ? 'College-Wide' : selectedDeptFilter} • {selectedYearFilter === 'ALL' ? 'All Years' : `${selectedYearFilter} Year`}
                 </span>
-                <span className="text-xs font-black text-gray-900 dark:text-white">
+                <span className="text-xs font-black text-slate-900 dark:text-white">
                   {stats.attendedRows + stats.virtualRows} Total Solved Participants ({stats.totalRows} Students in Scope)
                 </span>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                 Breakdown of students solving 4/4, 3/4, 2/4, or 1/4 contest problems in the selected scope.
               </p>
             </div>
@@ -2849,15 +2849,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
       {/* ── 4. DETAILED VIEW SECTION (LAZY-LOADED ON TOGGLE) ── */}
       {showDetailedView && (
-        <div className="space-y-6 pt-4 border-t border-gray-200 dark:border-gray-800 animate-fade-in">
+        <div className="space-y-6 pt-4 border-t border-slate-200 dark:border-slate-800 animate-fade-in">
           {/* Detailed View Sub-Tab Switcher */}
-          <div className="flex items-center justify-between flex-wrap gap-3 border-b border-gray-200 dark:border-gray-800 pb-3">
+          <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
             <div className="flex space-x-2 flex-wrap gap-y-1">
               <button
                 onClick={() => setSubTab('matrix')}
                 className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${subTab === 'matrix'
                   ? 'bg-brand-500 text-white shadow-md'
-                  : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+                  : 'bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
                   }`}
               >
                 Student Matrix Roster ({totalRows})
@@ -2866,7 +2866,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 onClick={() => setSubTab('dept_year')}
                 className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${subTab === 'dept_year'
                   ? 'bg-purple-600 text-white shadow-md'
-                  : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+                  : 'bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
                   }`}
               >
                 Dept & Year Breakdown
@@ -2876,7 +2876,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 onClick={() => setSubTab('error_board')}
                 className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 cursor-pointer ${subTab === 'error_board'
                   ? 'bg-amber-500 text-white shadow-md'
-                  : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+                  : 'bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
                   }`}
               >
                 <AlertTriangle className="w-3.5 h-3.5" />
@@ -2887,7 +2887,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 onClick={() => setActiveTab('post_930_activity' as any)}
                 className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 cursor-pointer ${activeTab === ('post_930_activity' as any)
                   ? 'bg-amber-600 text-white shadow-md'
-                  : 'bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+                  : 'bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
                   }`}
               >
                 <Clock className="w-3.5 h-3.5 text-amber-400" />
@@ -2895,7 +2895,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </button>
             </div>
 
-            <span className="text-[11px] font-bold text-gray-400">
+            <span className="text-[11px] font-bold text-slate-400">
               Active Scope: <b className="text-indigo-500">{selectedDeptFilter}</b> • <b className="text-purple-500">{selectedYearFilter} Year</b> • <b className="text-emerald-500">{selectedAttendanceFilter}</b>
             </span>
           </div>
@@ -2934,17 +2934,17 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
           {/* Tab 1: Live Question-Wise Student Matrix Table */}
           {subTab === 'matrix' && (
-            <div className="border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-navy-900">
+            <div className="border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-navy-950">
               {/* Table Legend */}
-              <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-800 flex flex-wrap items-center justify-between gap-2 bg-gray-50 dark:bg-navy-950 text-[10px] font-bold">
+              <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 bg-slate-50 dark:bg-navy-950 text-[10px] font-bold">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <span className="font-extrabold uppercase text-gray-400">Legend:</span>
+                  <span className="font-extrabold uppercase text-slate-400">Legend:</span>
                   <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-extrabold">PUBLIC </span>
                   <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 font-extrabold">VIRTUAL </span>
                   <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-extrabold">NOT ATTENDED </span>
                   <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-extrabold">DATA ERROR</span>
                 </div>
-                <span className="text-gray-400 font-medium">Q cells: <b className="text-emerald-600">1</b> = solved | <b className="text-rose-500">0</b> = not solved | <b>—</b> = not attended</span>
+                <span className="text-slate-400 font-medium">Q cells: <b className="text-emerald-600">1</b> = solved | <b className="text-rose-500">0</b> = not solved | <b>—</b> = not attended</span>
               </div>
 
               {/* Bulk Action Bar */}
@@ -2991,7 +2991,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       <th className="px-4 py-3 text-center w-12">
                         <input 
                           type="checkbox" 
-                          className="w-4 h-4 rounded border-gray-600 bg-navy-900 focus:ring-brand-500 checked:bg-brand-500"
+                          className="w-4 h-4 rounded border-slate-600 bg-navy-900 focus:ring-brand-500 checked:bg-brand-500"
                           checked={selectedRowIds.size > 0 && selectedRowIds.size === paginatedMatrixRows.length}
                           onChange={(e) => {
                             if (e.target.checked) {
@@ -3047,7 +3047,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                     {paginatedMatrixRows.length === 0 ? (
                       <tr>
-                        <td colSpan={14} className="p-12 text-center text-gray-500 font-bold">
+                        <td colSpan={14} className="p-12 text-center text-slate-500 font-bold">
                           No matching student records found.
                         </td>
                       </tr>
@@ -3074,15 +3074,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
               {/* ── HIGH-SPEED VIRTUALIZED PAGINATION BAR ── */}
               {totalRows > 0 && (
-                <div className="px-5 py-3.5 bg-gray-50 dark:bg-navy-950 border-t border-gray-100 dark:border-gray-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="px-5 py-3.5 bg-slate-50 dark:bg-navy-950 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
                   {/* Showing count */}
-                  <div className="text-gray-500 dark:text-gray-400 font-bold">
+                  <div className="text-slate-500 dark:text-slate-400 font-bold">
                     {loading ? (
                       <span className="animate-pulse">Loading students...</span>
                     ) : (
                       <>
-                        Showing <span className="text-gray-900 dark:text-white font-black">{filteredMatrixRows.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}</span> to{' '}
-                        <span className="text-gray-900 dark:text-white font-black">{Math.min(currentPage * pageSize, totalRows)}</span> of{' '}
+                        Showing <span className="text-slate-900 dark:text-white font-black">{filteredMatrixRows.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}</span> to{' '}
+                        <span className="text-slate-900 dark:text-white font-black">{Math.min(currentPage * pageSize, totalRows)}</span> of{' '}
                         <span className="text-brand-600 dark:text-brand-400 font-black">{totalRows}</span> students
                       </>
                     )}
@@ -3090,8 +3090,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
                   {/* Page Size Selector */}
                   <div className="flex items-center space-x-2">
-                    <span className="text-gray-400 font-medium">Rows per page:</span>
-                    <div className="flex items-center space-x-1 bg-white dark:bg-navy-900 p-1 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
+                    <span className="text-slate-400 font-medium">Rows per page:</span>
+                    <div className="flex items-center space-x-1 bg-white dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
                       {[50, 100, 250, 1450].map(sz => (
                         <button
                           key={sz}
@@ -3100,7 +3100,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                           className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
                             pageSize === sz
                               ? 'bg-brand-500 text-white shadow-sm'
-                              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-800'
+                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-800'
                           }`}
                         >
                           {sz === 1450 ? 'All' : sz}
@@ -3115,7 +3115,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       type="button"
                       disabled={currentPage <= 1}
                       onClick={() => setCurrentPage(1)}
-                      className="px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-900 font-bold hover:bg-gray-100 dark:hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 font-bold hover:bg-slate-100 dark:hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                       title="First Page"
                     >
                       «
@@ -3124,7 +3124,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       type="button"
                       disabled={currentPage <= 1}
                       onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                      className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-900 font-bold hover:bg-gray-100 dark:hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 font-bold hover:bg-slate-100 dark:hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                     >
                       ‹ Prev
                     </button>
@@ -3137,7 +3137,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       type="button"
                       disabled={currentPage >= totalPages}
                       onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                      className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-900 font-bold hover:bg-gray-100 dark:hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 font-bold hover:bg-slate-100 dark:hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                     >
                       Next ›
                     </button>
@@ -3145,7 +3145,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       type="button"
                       disabled={currentPage >= totalPages}
                       onClick={() => setCurrentPage(totalPages)}
-                      className="px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-navy-900 font-bold hover:bg-gray-100 dark:hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 font-bold hover:bg-slate-100 dark:hover:bg-navy-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                       title="Last Page"
                     >
                       »
@@ -3158,21 +3158,21 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
           {/* Tab 2: Department & Academic Year Matrix Breakdown */}
           {subTab === 'dept_year' && (
-            <div className="p-5 rounded-3xl bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+            <div className="p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div className="flex items-center gap-2">
                   <Layers className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                  <h4 className="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
                     Department & Academic Year Aggregation Breakdown
                   </h4>
                 </div>
-                <span className="text-[11px] font-bold text-gray-400">Single-Source-of-Truth Aggregation</span>
+                <span className="text-[11px] font-bold text-slate-400">Single-Source-of-Truth Aggregation</span>
               </div>
 
               <div className="overflow-x-auto -mx-1 px-1">
                 <table className="w-full min-w-[700px] text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-gray-200 dark:border-gray-800 text-[11px] font-black text-gray-400 uppercase tracking-wider">
+                    <tr className="border-b border-slate-200 dark:border-slate-800 text-[11px] font-black text-slate-400 uppercase tracking-wider">
                       <th className="py-2.5 px-3">Segment / Category</th>
                       <th className="py-2.5 px-3 text-center">Total</th>
                       <th className="py-2.5 px-3 text-center text-emerald-600 dark:text-emerald-400">Public</th>
@@ -3194,14 +3194,14 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       const pct = tot > 0 ? (((pub + virt) / tot) * 100).toFixed(1) : '0.0';
 
                       return (
-                        <tr key={deptCode} className="hover:bg-gray-50 dark:hover:bg-navy-800/50">
-                          <td className="py-2.5 px-3 font-extrabold text-gray-900 dark:text-white">
+                        <tr key={deptCode} className="hover:bg-slate-50 dark:hover:bg-navy-800/50">
+                          <td className="py-2.5 px-3 font-extrabold text-slate-900 dark:text-white">
                             <div className="flex items-center gap-2">
                               <span className={`w-2.5 h-2.5 rounded-full ${deptCode === 'CSE(CS)' ? 'bg-indigo-500' : 'bg-teal-500'} shrink-0`}></span>
                               <span>Department: {deptCode === 'CSE(CS)' ? 'Cyber Security' : 'Internet of Things (IoT)'}</span>
                             </div>
                           </td>
-                          <td className="py-2.5 px-3 text-center text-gray-700 dark:text-gray-300">{tot}</td>
+                          <td className="py-2.5 px-3 text-center text-slate-700 dark:text-slate-300">{tot}</td>
                           <td className="py-2.5 px-3 text-center text-emerald-600 dark:text-emerald-400 font-black">{pub}</td>
                           <td className="py-2.5 px-3 text-center text-purple-600 dark:text-purple-400 font-black">{virt}</td>
                           <td className="py-2.5 px-3 text-center text-rose-600 dark:text-rose-400 font-black">{notAtt}</td>
@@ -3222,14 +3222,14 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       const pct = tot > 0 ? (((pub + virt) / tot) * 100).toFixed(1) : '0.0';
 
                       return (
-                        <tr key={yr} className="hover:bg-gray-50 dark:hover:bg-navy-800/50 bg-gray-50/40 dark:bg-navy-950/20">
-                          <td className="py-2.5 px-3 font-extrabold text-gray-900 dark:text-white">
+                        <tr key={yr} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 bg-slate-50/40 dark:bg-navy-950/20">
+                          <td className="py-2.5 px-3 font-extrabold text-slate-900 dark:text-white">
                             <div className="flex items-center gap-2">
                               <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shrink-0"></span>
                               <span>Academic Year: {yr} Year ({yr === 'II' ? '2025–2029' : (yr === 'III' ? '2024–2028' : '2023–2027')})</span>
                             </div>
                           </td>
-                          <td className="py-2.5 px-3 text-center text-gray-700 dark:text-gray-300">{tot}</td>
+                          <td className="py-2.5 px-3 text-center text-slate-700 dark:text-slate-300">{tot}</td>
                           <td className="py-2.5 px-3 text-center text-emerald-600 dark:text-emerald-400 font-black">{pub}</td>
                           <td className="py-2.5 px-3 text-center text-purple-600 dark:text-purple-400 font-black">{virt}</td>
                           <td className="py-2.5 px-3 text-center text-rose-600 dark:text-rose-400 font-black">{notAtt}</td>
@@ -3246,14 +3246,14 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
           {/* Tab 3: Itemized Data Quality Error Board (21 Actionable Errors) */}
           {subTab === 'error_board' && (
-            <div className="border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-navy-900 p-6 space-y-4">
+            <div className="border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-navy-950 p-6 space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
                   <h3 className="text-sm font-black uppercase text-amber-600 dark:text-amber-400 flex items-center space-x-2">
                     <AlertTriangle className="w-4 h-4" />
                     <span>Itemized Data Quality Errors ({stats.errorRows} Students)</span>
                   </h3>
-                  <p className="text-xs text-gray-500 font-bold mt-0.5">
+                  <p className="text-xs text-slate-500 font-bold mt-0.5">
                     Root Cause: Missing or invalid LeetCode username handles. API failure is NEVER falsely marked as Not Attended.
                   </p>
                 </div>
@@ -3263,7 +3263,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 </span>
               </div>
 
-              <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-x-auto overflow-y-hidden shadow-sm">
+              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto overflow-y-hidden shadow-sm">
                 <table className="w-full min-w-[700px] text-left text-xs">
                   <thead className="bg-navy-950 text-white font-black uppercase">
                     <tr>
@@ -3281,12 +3281,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       .filter(r => !r.username || r.participation_status === 'DATA_ERROR' || r.status === 'USERNAME_NOT_FOUND')
                       .map((errStudent, idx) => (
                         <tr key={idx} className="hover:bg-amber-50/50 dark:hover:bg-amber-950/20">
-                          <td className="px-4 py-2.5 text-center text-gray-400 font-mono">{idx + 1}</td>
+                          <td className="px-4 py-2.5 text-center text-slate-400 font-mono">{idx + 1}</td>
                           <td className="px-4 py-2.5 font-bold font-mono text-amber-600 dark:text-amber-400">{errStudent.reg_no}</td>
-                          <td className="px-4 py-2.5 font-semibold text-gray-900 dark:text-white">{errStudent.name}</td>
+                          <td className="px-4 py-2.5 font-semibold text-slate-900 dark:text-white">{errStudent.name}</td>
                           <td className="px-4 py-2.5 text-center font-bold">{errStudent.dept}</td>
-                          <td className="px-4 py-2.5 text-center text-gray-500">{errStudent.year}</td>
-                          <td className="px-4 py-2.5 text-gray-500">
+                          <td className="px-4 py-2.5 text-center text-slate-500">{errStudent.year}</td>
+                          <td className="px-4 py-2.5 text-slate-500">
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
                               {errStudent.username ? 'Invalid LeetCode Handle / API Error' : 'Missing LeetCode Username Handle'}
                             </span>
@@ -3315,12 +3315,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           className="modal-overlay-responsive animate-modal-backdrop"
           onClick={(e) => { if (e.target === e.currentTarget) setShowPreviewModal(false); }}
         >
-          <div className="modal-container-responsive max-w-5xl bg-white dark:bg-navy-900 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-800 animate-modal-content">
+          <div className="modal-container-responsive max-w-5xl bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 animate-modal-content">
 
             {/* ── A. SLEEK GRADIENT HEADER (Matches Image 2) ── */}
-            <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-950 text-white flex items-center justify-between shrink-0">
+            <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-brand-900 via-indigo-950 to-slate-950 text-white flex items-center justify-between shrink-0">
               <div className="flex items-center space-x-3 min-w-0">
-                <div className="shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-black text-white text-base shadow-lg shadow-blue-500/30">
+                <div className="shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center font-black text-white text-base shadow-lg shadow-brand-500/30">
                   <FileSpreadsheet className="w-5 h-5 text-white" />
                 </div>
                 <div className="min-w-0">
@@ -3335,7 +3335,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       {activeSessionObj?.contestName || 'Weekly Contest'}
                     </span>
                   </div>
-                  <p className="text-xs text-blue-200/80 font-medium truncate mt-0.5">
+                  <p className="text-xs text-brand-200/80 font-medium truncate mt-0.5">
                     Nandha Engineering College • Session Date: {activeSessionObj?.sessionDate || 'Sunday Session'} • Showing {filteredMatrixRows.length} Students
                   </p>
                 </div>
@@ -3353,10 +3353,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             </div>
 
             {/* ── B. COMPACT METRICS & FILTER SUMMARY BAR ── */}
-            <div className="px-4 py-2.5 bg-slate-50 dark:bg-navy-950 border-b border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-2.5 text-xs shrink-0">
+            <div className="px-4 py-2.5 bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2.5 text-xs shrink-0">
               {/* Quick Metrics Badges */}
               <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                <span className="px-2.5 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50 font-black text-[11px]">
+                <span className="px-2.5 py-1 rounded-xl bg-brand-50 dark:bg-brand-950/50 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800/50 font-black text-[11px]">
                   Roster: {filteredMatrixRows.length}
                 </span>
                 <span className="px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50 font-black text-[11px]">
@@ -3368,7 +3368,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </div>
 
               {/* Active Filter Badges */}
-              <div className="flex items-center space-x-1.5 flex-wrap gap-y-1 text-[11px] font-bold text-gray-500">
+              <div className="flex items-center space-x-1.5 flex-wrap gap-y-1 text-[11px] font-bold text-slate-500">
                 <span>Filters:</span>
                 <span className="px-2 py-0.5 rounded-lg bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 font-bold">{selectedDeptFilter}</span>
                 <span className="px-2 py-0.5 rounded-lg bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 font-bold">{selectedYearFilter}</span>
@@ -3378,7 +3378,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
             {/* ── C. SCROLLABLE PREVIEW TABLE ── */}
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-4">
-              <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-x-auto shadow-sm">
+              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
                 <table className="w-full min-w-[780px] text-left text-xs">
                   <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 text-[11px]">
                     <tr>
@@ -3399,7 +3399,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800/80">
                     {previewPaginatedRows.length === 0 ? (
                       <tr>
-                        <td colSpan={12} className="p-8 text-center text-gray-500 font-bold">
+                        <td colSpan={12} className="p-8 text-center text-slate-500 font-bold">
                           No matching student records found for the active filter selection.
                         </td>
                       </tr>
@@ -3410,17 +3410,17 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                         const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL';
                         const isAttended = isPublicAttended || isVirtualAttended;
                         return (
-                          <tr key={actualIdx} className="hover:bg-blue-50/40 dark:hover:bg-navy-800/40 transition-colors">
-                            <td className="px-3 py-1.5 text-center text-gray-400 font-mono text-[11px]">{actualIdx + 1}</td>
-                            <td className="px-3 py-1.5 font-bold font-mono text-gray-900 dark:text-white text-[11px]">{r.reg_no}</td>
-                            <td className="px-3 py-1.5 font-semibold text-gray-800 dark:text-gray-200">{r.name}</td>
+                          <tr key={actualIdx} className="hover:bg-brand-50/40 dark:hover:bg-navy-800/40 transition-colors">
+                            <td className="px-3 py-1.5 text-center text-slate-400 font-mono text-[11px]">{actualIdx + 1}</td>
+                            <td className="px-3 py-1.5 font-bold font-mono text-slate-900 dark:text-white text-[11px]">{r.reg_no}</td>
+                            <td className="px-3 py-1.5 font-semibold text-slate-800 dark:text-slate-200">{r.name}</td>
                             <td className="px-3 py-1.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{r.dept}</td>
-                            <td className="px-3 py-1.5 text-center text-gray-600 dark:text-gray-400 font-bold">{r.year}</td>
+                            <td className="px-3 py-1.5 text-center text-slate-600 dark:text-slate-400 font-bold">{r.year}</td>
                             <td className="px-3 py-1.5 text-center">
                               <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${isPublicAttended
                                 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
                                 : isVirtualAttended
-                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
+                                  ? 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300'
                                   : r.status === 'USERNAME_NOT_FOUND'
                                     ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
                                     : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
@@ -3428,12 +3428,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                                 {isPublicAttended ? 'PUBLIC' : isVirtualAttended ? 'VIRTUAL' : r.status === 'USERNAME_NOT_FOUND' ? (r.username ? 'INVALID HANDLE' : 'UNLINKED') : 'NOT ATTENDED'}
                               </span>
                             </td>
-                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q1 === 1 || r.q1 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-gray-300 font-normal">—</span>}</td>
-                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q2 === 1 || r.q2 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-gray-300 font-normal">—</span>}</td>
-                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q3 === 1 || r.q3 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-gray-300 font-normal">—</span>}</td>
-                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q4 === 1 || r.q4 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-gray-300 font-normal">—</span>}</td>
+                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q1 === 1 || r.q1 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-300 font-normal">—</span>}</td>
+                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q2 === 1 || r.q2 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-300 font-normal">—</span>}</td>
+                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q3 === 1 || r.q3 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-300 font-normal">—</span>}</td>
+                            <td className="px-2 py-1.5 text-center font-bold">{isAttended ? (r.q4 === 1 || r.q4 === '1' ? <span className="text-emerald-600 font-black">1</span> : <span className="text-rose-400 font-bold">0</span>) : <span className="text-slate-300 font-normal">—</span>}</td>
                             <td className="px-3 py-1.5 text-right font-black text-emerald-600 dark:text-emerald-400">{isAttended ? (r.total_solved ?? '—') : '—'}</td>
-                            <td className="px-3 py-1.5 text-right font-bold text-gray-600 dark:text-gray-400">{isAttended ? (r.rank || r.contest_rank || '—') : '—'}</td>
+                            <td className="px-3 py-1.5 text-right font-bold text-slate-600 dark:text-slate-400">{isAttended ? (r.rank || r.contest_rank || '—') : '—'}</td>
                           </tr>
                         );
                       })
@@ -3444,14 +3444,14 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
               {/* Preview Pagination Toolbar */}
               {filteredMatrixRows.length > previewPageSize && (
-                <div className="mt-3 px-3 py-2 bg-slate-100 dark:bg-navy-950 rounded-xl flex items-center justify-between text-xs font-bold text-gray-500">
+                <div className="mt-3 px-3 py-2 bg-slate-100 dark:bg-navy-950 rounded-xl flex items-center justify-between text-xs font-bold text-slate-500">
                   <span>Page {previewPage} of {previewTotalPages} ({totalRows} total)</span>
                   <div className="flex items-center space-x-1.5">
                     <button
                       type="button"
                       disabled={previewPage <= 1}
                       onClick={() => setPreviewPage(p => Math.max(1, p - 1))}
-                      className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 disabled:opacity-40 cursor-pointer"
+                      className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 disabled:opacity-40 cursor-pointer"
                     >
                       ‹ Prev
                     </button>
@@ -3459,7 +3459,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       type="button"
                       disabled={previewPage >= previewTotalPages}
                       onClick={() => setPreviewPage(p => Math.min(previewTotalPages, p + 1))}
-                      className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 disabled:opacity-40 cursor-pointer"
+                      className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 disabled:opacity-40 cursor-pointer"
                     >
                       Next ›
                     </button>
@@ -3469,8 +3469,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             </div>
 
             {/* ── D. CLEAN COMPACT ACTION FOOTER (Matches Image 2) ── */}
-            <div className="p-3.5 sm:p-4 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
-              <span className="text-[11px] text-gray-500 font-bold font-mono">
+            <div className="p-3.5 sm:p-4 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
+              <span className="text-[11px] text-slate-500 font-bold font-mono">
                 Nandha Engineering College • LeetCode Tracker
               </span>
               <div className="flex items-center space-x-2 flex-wrap gap-y-1">
@@ -3490,7 +3490,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 </button>
                 <button
                   onClick={() => downloadReportFile('word')}
-                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm flex items-center space-x-1"
+                  className="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm flex items-center space-x-1"
                 >
                   <span>Word (.docx)</span>
                 </button>
@@ -3515,7 +3515,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       {/* Interactive Report Email Dispatch Modal */}
       {showEmailModal && (
         <div className="modal-overlay-responsive animate-modal-backdrop">
-          <div className="modal-container-responsive max-w-2xl bg-white dark:bg-navy-900 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col my-auto">
+          <div className="modal-container-responsive max-w-2xl bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col my-auto">
             {/* Modal Header */}
             <div className="p-5 sm:p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between shrink-0">
               <div>
@@ -3523,7 +3523,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   <Mail className="w-5 h-5 text-indigo-400" />
                   <span>Dispatch Filtered Weekly Report</span>
                 </h3>
-                <p className="text-xs text-gray-300 font-bold mt-0.5">
+                <p className="text-xs text-slate-300 font-bold mt-0.5">
                   Sends the exact generated Excel report (<code className="text-indigo-300 font-mono">NEC_Weekly_Contest_{selectedSessionId}_PUBLIC.xlsx</code>)
                 </p>
               </div>
@@ -3543,16 +3543,16 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   Report Scope & Target Roster
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs">
-                  <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 font-bold">
-                    Contest: <b className="text-gray-900 dark:text-white">{activeSessionObj?.contestName || 'Weekly Contest'}</b>
+                  <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 font-bold">
+                    Contest: <b className="text-slate-900 dark:text-white">{activeSessionObj?.contestName || 'Weekly Contest'}</b>
                   </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 font-bold">
+                  <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 font-bold">
                     Dept: <b className="text-indigo-600">{selectedDeptFilter}</b>
                   </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 font-bold">
+                  <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 font-bold">
                     Year: <b className="text-purple-600">{selectedYearFilter}</b>
                   </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-800 font-bold">
+                  <span className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 font-bold">
                     Attendance: <b className="text-emerald-600">{selectedAttendanceFilter}</b>
                   </span>
                   <span className="px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-black">
@@ -3564,7 +3564,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               {/* Recipient Contacts */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                     Select Delivery Recipients ({selectedRecipients.length} selected)
                   </label>
                   <button
@@ -3578,9 +3578,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   </button>
                 </div>
 
-                <div className="max-h-36 overflow-y-auto space-y-1.5 border border-gray-200 dark:border-gray-800 rounded-xl p-3 bg-gray-50 dark:bg-navy-950">
+                <div className="max-h-36 overflow-y-auto space-y-1.5 border border-slate-200 dark:border-slate-800 rounded-xl p-3 bg-slate-50 dark:bg-navy-950">
                   {recipientsList.length === 0 ? (
-                    <p className="text-xs text-gray-500 font-bold py-2 text-center">
+                    <p className="text-xs text-slate-500 font-bold py-2 text-center">
                       No configured recipients found in database. You can send a test email below.
                     </p>
                   ) : (
@@ -3600,9 +3600,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                             }}
                             className="rounded text-brand-600 focus:ring-brand-500"
                           />
-                          <span className="font-bold text-gray-800 dark:text-gray-200">{r.name}</span>
-                          <span className="text-gray-400 font-mono text-[11px]">({r.email})</span>
-                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-gray-200 dark:bg-navy-800 text-gray-600 dark:text-gray-300 ml-auto">
+                          <span className="font-bold text-slate-800 dark:text-slate-200">{r.name}</span>
+                          <span className="text-slate-400 font-mono text-[11px]">({r.email})</span>
+                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-slate-200 dark:bg-navy-800 text-slate-600 dark:text-slate-300 ml-auto">
                             {r.role || 'HOD'}
                           </span>
                         </label>
@@ -3614,7 +3614,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
               {/* Custom Note */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                   Executive Note / Remarks (Optional)
                 </label>
                 <textarea
@@ -3622,7 +3622,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   onChange={(e) => setCustomEmailNote(e.target.value)}
                   placeholder="e.g. Please review the CSE(CS) performance metrics from Sunday contest..."
                   rows={2}
-                  className="w-full px-3.5 py-2.5 text-xs bg-gray-50 dark:bg-navy-950 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500 resize-none"
+                  className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-navy-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500 resize-none"
                 />
               </div>
 
@@ -3638,7 +3638,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     value={testEmailInput}
                     onChange={(e) => setTestEmailInput(e.target.value)}
                     placeholder="Enter test recipient email (e.g. admin@nandha.edu.in)"
-                    className="flex-1 px-3 py-1.5 text-xs bg-white dark:bg-navy-900 border border-amber-300 dark:border-amber-700 rounded-lg text-gray-900 dark:text-white outline-none"
+                    className="flex-1 px-3 py-1.5 text-xs bg-white dark:bg-navy-950 border border-amber-300 dark:border-amber-700 rounded-lg text-slate-900 dark:text-white outline-none"
                   />
                   <button
                     onClick={() => handleSendWeeklyEmail(true)}
@@ -3652,17 +3652,17 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 sm:p-5 bg-gray-50 dark:bg-navy-950 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between shrink-0">
+            <div className="p-4 sm:p-5 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
               <button
                 onClick={() => setShowEmailModal(false)}
-                className="px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-gray-800 cursor-pointer"
+                className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-800 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleSendWeeklyEmail(false)}
                 disabled={isSendingEmail || selectedRecipients.length === 0}
-                className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black shadow-lg shadow-blue-500/20 transition-all cursor-pointer disabled:opacity-50"
+                className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black shadow-lg shadow-brand-500/20 transition-all cursor-pointer disabled:opacity-50"
               >
                 <Send className="w-3.5 h-3.5" />
                 <span>{isSendingEmail ? 'Dispatching...' : `Dispatch Report to ${selectedRecipients.length} Recipient(s)`}</span>
@@ -3706,7 +3706,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           }}
         >
           <div
-            className="modal-container-responsive max-w-md bg-white dark:bg-navy-900 rounded-3xl shadow-lg border border-rose-200 dark:border-rose-900/50 overflow-hidden flex flex-col p-6 space-y-4 my-auto"
+            className="modal-container-responsive max-w-md bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-rose-200 dark:border-rose-900/50 overflow-hidden flex flex-col p-6 space-y-4 my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
@@ -3714,9 +3714,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             </div>
 
             <div className="text-center space-y-1">
-              <h3 className="text-base font-black text-gray-900 dark:text-white">Deactivate Student Record?</h3>
-              <p className="text-xs text-gray-500">
-                Are you sure you want to deactivate <b className="text-gray-900 dark:text-white">{deletingStudent.name}</b> (<code className="font-mono text-rose-600">{deletingStudent.reg_no}</code>)?
+              <h3 className="text-base font-black text-slate-900 dark:text-white">Deactivate Student Record?</h3>
+              <p className="text-xs text-slate-500">
+                Are you sure you want to deactivate <b className="text-slate-900 dark:text-white">{deletingStudent.name}</b> (<code className="font-mono text-rose-600">{deletingStudent.reg_no}</code>)?
               </p>
             </div>
 
@@ -3728,7 +3728,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               <button
                 type="button"
                 onClick={() => setDeletingStudent(null)}
-                className="px-4 py-2 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-gray-800 cursor-pointer"
+                className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-800 cursor-pointer"
               >
                 Cancel
               </button>
@@ -3754,16 +3754,16 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       {/* Centered Institutional Authentication Required Modal */}
       {showAuthRequiredModal && (
         <div className="modal-overlay-responsive animate-fade-in">
-          <div className="modal-container-responsive max-w-md bg-white dark:bg-navy-900 rounded-3xl shadow-lg border border-amber-300 dark:border-amber-700/60 p-6 space-y-4 my-auto text-center overflow-y-auto">
+          <div className="modal-container-responsive max-w-md bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-amber-300 dark:border-amber-700/60 p-6 space-y-4 my-auto text-center overflow-y-auto">
             <div className="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-inner">
               <Lock className="w-7 h-7" />
             </div>
 
             <div className="space-y-1.5">
-              <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center justify-center gap-2">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center justify-center gap-2">
                 <span>Authentication Required</span>
               </h3>
-              <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed px-2">
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed px-2">
                 The institutional contest resource requires authentication. Please authenticate and try Sync again.
               </p>
             </div>
@@ -3782,7 +3782,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               <button
                 type="button"
                 onClick={() => setShowAuthRequiredModal(false)}
-                className="px-4 py-2.5 text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 cursor-pointer rounded-xl hover:bg-gray-100 dark:hover:bg-navy-800 transition-all"
+                className="px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer rounded-xl hover:bg-slate-100 dark:hover:bg-navy-800 transition-all"
               >
                 Cancel
               </button>
@@ -3807,18 +3807,18 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       {/* ── STUDENT PROFILE MODAL ── */}
       {viewingProfileStudent && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setViewingProfileStudent(null)}>
-          <div className="bg-white dark:bg-navy-900 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-200 dark:border-gray-800" onClick={e => e.stopPropagation()}>
-            <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-start bg-gray-50 dark:bg-navy-950">
+          <div className="bg-white dark:bg-navy-950 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200 dark:border-slate-800" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start bg-slate-50 dark:bg-navy-950">
               <div className="flex items-center space-x-4">
                 <div className="w-14 h-14 rounded-full bg-brand-100 dark:bg-brand-900/50 flex items-center justify-center text-brand-600 dark:text-brand-400 font-black text-xl border-2 border-brand-200 dark:border-brand-700">
                   {viewingProfileStudent.name?.charAt(0) || '?'}
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-gray-900 dark:text-white">{viewingProfileStudent.name}</h3>
-                  <p className="text-sm font-bold text-gray-500 font-mono mt-0.5">{viewingProfileStudent.reg_no} • {viewingProfileStudent.dept}</p>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white">{viewingProfileStudent.name}</h3>
+                  <p className="text-sm font-bold text-slate-500 font-mono mt-0.5">{viewingProfileStudent.reg_no} • {viewingProfileStudent.dept}</p>
                 </div>
               </div>
-              <button onClick={() => setViewingProfileStudent(null)} className="p-2 hover:bg-gray-200 dark:hover:bg-navy-800 rounded-full transition-colors text-gray-400 hover:text-gray-900 dark:hover:text-white">
+              <button onClick={() => setViewingProfileStudent(null)} className="p-2 hover:bg-slate-200 dark:hover:bg-navy-800 rounded-full transition-colors text-slate-400 hover:text-slate-900 dark:hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -3826,13 +3826,13 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             <div className="p-6 space-y-6">
               {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-gray-800">
-                  <p className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Total Solved</p>
-                  <p className="text-2xl font-black font-mono mt-1 text-gray-900 dark:text-white">{viewingProfileStudent.total_solved ?? viewingProfileStudent.total_contest_solved ?? ((viewingProfileStudent.q1 || 0) + (viewingProfileStudent.q2 || 0) + (viewingProfileStudent.q3 || 0) + (viewingProfileStudent.q4 || 0))}/4</p>
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-100 dark:border-slate-800">
+                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Total Solved</p>
+                  <p className="text-2xl font-black font-mono mt-1 text-slate-900 dark:text-white">{viewingProfileStudent.total_solved ?? viewingProfileStudent.total_contest_solved ?? ((viewingProfileStudent.q1 || 0) + (viewingProfileStudent.q2 || 0) + (viewingProfileStudent.q3 || 0) + (viewingProfileStudent.q4 || 0))}/4</p>
                 </div>
-                <div className="p-4 rounded-2xl bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-gray-800">
-                  <p className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Global Rank</p>
-                  <p className="text-2xl font-black font-mono mt-1 text-gray-900 dark:text-white">{viewingProfileStudent.rank || viewingProfileStudent.contest_rank || '—'}</p>
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-100 dark:border-slate-800">
+                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Global Rank</p>
+                  <p className="text-2xl font-black font-mono mt-1 text-slate-900 dark:text-white">{viewingProfileStudent.rank || viewingProfileStudent.contest_rank || '—'}</p>
                 </div>
                 <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50">
                   <p className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">Status</p>
@@ -3849,7 +3849,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </div>
 
               {/* Actions */}
-              <div className="pt-4 border-t border-gray-100 dark:border-gray-800 flex justify-end space-x-3">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end space-x-3">
                 {viewingProfileStudent.username && (
                   <a 
                     href={`https://leetcode.com/u/${viewingProfileStudent.username}`}
@@ -3866,7 +3866,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     setViewingProfileStudent(null);
                     handleOpenEditStudent(viewingProfileStudent);
                   }}
-                  className="px-5 py-2.5 rounded-xl bg-gray-900 dark:bg-white hover:bg-black dark:hover:bg-gray-100 text-white dark:text-gray-900 font-black text-sm transition-transform hover:scale-105 active:scale-95 shadow-lg"
+                  className="px-5 py-2.5 rounded-xl bg-slate-900 dark:bg-white hover:bg-black dark:hover:bg-slate-100 text-white dark:text-slate-900 font-black text-sm transition-transform hover:scale-105 active:scale-95 shadow-lg"
                 >
                   Edit Record
                 </button>

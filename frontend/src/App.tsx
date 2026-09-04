@@ -7,6 +7,7 @@ import { Sidebar } from './components/Sidebar';
 import { StudentData } from './components/LeaderboardTable';
 import api, { logActivity } from './services/api';
 import { getCachedSummary, saveCachedSummary } from './data/canonicalRoster';
+import { ErrorBoundary } from './ErrorBoundary';
 import { useAuth } from './context/AuthContext';
 import { useKeyboardContext } from './context/KeyboardContext';
 import { CommandPalette } from './components/CommandPalette';
@@ -111,9 +112,21 @@ export const App: React.FC = () => {
     const handleRefresh = () => fetchSummary();
     window.addEventListener('refresh_dashboard_summary', handleRefresh);
 
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash && hash.startsWith('#/')) {
+        const tab = hash.replace('#/', '');
+        if (tab) setActiveTab(tab);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    // Call once on mount to handle initial load with hash
+    handleHashChange();
+
     return () => {
       clearTimeout(timer);
       window.removeEventListener('refresh_dashboard_summary', handleRefresh);
+      window.removeEventListener('hashchange', handleHashChange);
     };
   }, [isAuthenticated]);
 
@@ -286,8 +299,11 @@ export const App: React.FC = () => {
     };
   }, [selectedStudent, showLoginModal, showImportModal, showAlertCenterModal, pushContext, popContext, registerEscHandler]);
 
+  const handleOpenImport = useCallback(() => setShowImportModal(true), []);
+  const handleOpenLogin = useCallback(() => setShowLoginModal(true), []);
+  
   // Determine main dashboard component based on role
-  const renderDashboardComponent = () => {
+  const renderDashboardComponent = useCallback(() => {
     const roleClean = (user?.role || '').trim().toLowerCase();
     if (roleClean === 'student') {
       return <StudentDashboardView />;
@@ -301,11 +317,11 @@ export const App: React.FC = () => {
     return (
       <DashboardPage
         onSelectStudent={handleSelectStudent}
-        onOpenImport={() => setShowImportModal(true)}
-        onNavigateTab={(tab) => handleTabChange(tab)}
+        onOpenImport={handleOpenImport}
+        onNavigateTab={handleTabChange}
       />
     );
-  };
+  }, [user?.role, handleSelectStudent, handleOpenImport, handleTabChange]);
 
   // ─── CENTRALIZED ROLE PERMISSION MATRIX ────────────────────────────────────
   // Single source of truth for all role-based tab access.
@@ -396,7 +412,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-navy-950 text-gray-900 dark:text-gray-100 flex flex-col font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-navy-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
       
       {/* COMMAND PALETTE */}
       <CommandPalette 
@@ -408,7 +424,7 @@ export const App: React.FC = () => {
       {/* Top Navbar */}
       <Navbar
         currentSessionStatus={summaryData?.sync?.is_running ? "RUNNING" : (summaryData?.session?.current_session?.status || "UPCOMING")}
-        onOpenLogin={() => setShowLoginModal(true)}
+        onOpenLogin={handleOpenLogin}
         activeTab={activeTab}
         setActiveTab={handleTabChange}
         isSidebarOpen={isSidebarOpen}
@@ -441,13 +457,13 @@ export const App: React.FC = () => {
             className="min-w-0 w-full"
           >
 
-          
-            <Suspense fallback={<PageSkeleton />}>
-              {activeTab === 'landing' && (
+            <ErrorBoundary>
+              <Suspense fallback={<PageSkeleton />}>
+                {activeTab === 'landing' && (
                 <LandingPage
                   summaryData={summaryData}
                   onViewDashboard={() => handleTabChange('dashboard')}
-                  onOpenLogin={() => setShowLoginModal(true)}
+                  onOpenLogin={handleOpenLogin}
                   onSelectStudent={handleSelectStudent}
                 />
               )}
@@ -496,7 +512,7 @@ export const App: React.FC = () => {
 
               {activeTab === 'students' && (
                 isTabAllowed('students')
-                  ? <StudentMasterPage onSelectStudent={handleSelectStudent} onOpenImport={() => setShowImportModal(true)} />
+                  ? <StudentMasterPage onSelectStudent={handleSelectStudent} onOpenImport={handleOpenImport} />
                   : renderAccessDenied('Student Master Management')
               )}
 
@@ -565,8 +581,9 @@ export const App: React.FC = () => {
                   : renderAccessDenied('AI Control Center — Admin Only')
               )}
             </Suspense>
-          </motion.main>
-        </AnimatePresence>
+          </ErrorBoundary>
+        </motion.main>
+      </AnimatePresence>
 
 
       </div>
@@ -624,7 +641,7 @@ export const App: React.FC = () => {
           onClick={(e) => { if (e.target === e.currentTarget) setSelectedStudent(null); }}
         >
           <div
-            className="modal-container-responsive bg-white dark:bg-navy-900 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-800 animate-modal-content max-w-4xl"
+            className="modal-container-responsive bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 animate-modal-content max-w-4xl"
             onClick={(e) => e.stopPropagation()}
           >
             <Suspense fallback={null}>

@@ -48,7 +48,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
     switch (toast.type) {
       case 'success':
         return {
-          bg: 'bg-white dark:bg-navy-900 border-emerald-500/30 dark:border-emerald-500/30',
+          bg: 'bg-white dark:bg-navy-950 border-emerald-500/30 dark:border-emerald-500/30',
           badgeBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
           icon: CheckCircle2,
           iconColor: 'text-emerald-500',
@@ -57,7 +57,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
         };
       case 'error':
         return {
-          bg: 'bg-white dark:bg-navy-900 border-rose-500/30 dark:border-rose-500/30',
+          bg: 'bg-white dark:bg-navy-950 border-rose-500/30 dark:border-rose-500/30',
           badgeBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
           icon: XCircle,
           iconColor: 'text-rose-500',
@@ -66,7 +66,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
         };
       case 'warning':
         return {
-          bg: 'bg-white dark:bg-navy-900 border-amber-500/30 dark:border-amber-500/30',
+          bg: 'bg-white dark:bg-navy-950 border-amber-500/30 dark:border-amber-500/30',
           badgeBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
           icon: AlertTriangle,
           iconColor: 'text-amber-500',
@@ -84,7 +84,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
         };
       case 'loading':
         return {
-          bg: 'bg-white dark:bg-navy-900 border-brand-500/30 dark:border-brand-500/30',
+          bg: 'bg-white dark:bg-navy-950 border-brand-500/30 dark:border-brand-500/30',
           badgeBg: 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20',
           icon: Loader2,
           iconColor: 'text-brand-500 animate-spin',
@@ -94,7 +94,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
       case 'info':
       default:
         return {
-          bg: 'bg-white dark:bg-navy-900 border-indigo-500/30 dark:border-indigo-500/30',
+          bg: 'bg-white dark:bg-navy-950 border-indigo-500/30 dark:border-indigo-500/30',
           badgeBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
           icon: Info,
           iconColor: 'text-indigo-500',
@@ -121,18 +121,18 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
 
         <div className="flex-1 min-w-0 pr-2 space-y-1">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-400">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-400">
               {toast.category || style.defaultCategory}
             </span>
-            <span className="text-[10px] text-gray-400 font-bold shrink-0">{toast.timestamp}</span>
+            <span className="text-[10px] text-slate-400 font-bold shrink-0">{toast.timestamp}</span>
           </div>
 
-          <h4 className="text-xs sm:text-sm font-black text-gray-900 dark:text-white leading-snug tracking-tight">
+          <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-snug tracking-tight">
             {toast.title}
           </h4>
 
           {toast.description && (
-            <p className="text-xs text-gray-600 dark:text-gray-300 font-medium leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
               {toast.description}
             </p>
           )}
@@ -154,7 +154,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
         <button
           type="button"
           onClick={() => onDismiss(toast.id)}
-          className="p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors shrink-0 cursor-pointer"
+          className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors shrink-0 cursor-pointer"
           title="Dismiss notification"
         >
           <X className="w-3.5 h-3.5" />
@@ -163,7 +163,7 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
 
       {/* Auto-dismiss Progress Bar */}
       {toast.duration && toast.duration > 0 ? (
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-100 dark:bg-navy-950 overflow-hidden">
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-100 dark:bg-navy-950 overflow-hidden">
           <div
             className={`h-full transition-all ease-linear ${style.progressBg}`}
             style={{ width: `${progress}%` }}
@@ -222,7 +222,7 @@ export const NotificationCenter: React.FC = () => {
           aria-labelledby="confirm-dialog-title"
         >
           <div
-            className="modal-container-responsive max-w-[520px] bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-3xl shadow-lg overflow-hidden p-6 sm:p-8 space-y-5 animate-modal-content"
+            className="modal-container-responsive max-w-[520px] bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-3xl shadow-lg overflow-hidden p-6 sm:p-8 space-y-5 animate-modal-content"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header Icon */}
@@ -245,27 +245,27 @@ export const NotificationCenter: React.FC = () => {
                 )}
               </div>
 
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
                 {confirmOptions.category || 'CONFIRMATION REQUIRED'}
               </span>
             </div>
 
             {/* Content Body */}
             <div className="space-y-2">
-              <h3 id="confirm-dialog-title" className="text-lg sm:text-xl font-black text-gray-900 dark:text-white leading-tight">
+              <h3 id="confirm-dialog-title" className="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-tight">
                 {confirmOptions.title}
               </h3>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 font-medium leading-relaxed">
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
                 {confirmOptions.message}
               </p>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-end space-x-3 pt-2 border-t border-gray-100 dark:border-navy-800">
+            <div className="flex items-center justify-end space-x-3 pt-2 border-t border-slate-100 dark:border-navy-800">
               <button
                 type="button"
                 onClick={() => dismissConfirm(false)}
-                className="px-5 py-2.5 rounded-2xl text-xs font-bold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors cursor-pointer"
+                className="px-5 py-2.5 rounded-2xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors cursor-pointer"
               >
                 {confirmOptions.cancelLabel || 'Cancel'}
               </button>

@@ -291,7 +291,7 @@ export const ReportsPage: React.FC = () => {
       filename: 'Batch_2028_Contest_Matrix.xlsx',
       icon: FileSpreadsheet,
       iconBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
-      btnGradient: 'from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 shadow-indigo-600/30',
+      btnGradient: 'from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 shadow-indigo-600/30',
       onClick: handleDownloadMatrix2028
     },
     {
@@ -334,12 +334,12 @@ export const ReportsPage: React.FC = () => {
       id: 'word-summary',
       title: 'Executive Word Summary (.DOCX)',
       badge: 'WORD DOCX (TIMES NEW ROMAN)',
-      badgeColor: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+      badgeColor: 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20',
       description: 'Editable Microsoft Word document report with official Nandha Engineering College header, executive summary table, and student performance roster styled in Times New Roman.',
       filename: 'Executive_Word_Summary.docx',
       icon: FileText,
-      iconBg: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-      btnGradient: 'from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 shadow-blue-600/30',
+      iconBg: 'bg-brand-500/10 text-brand-600 dark:text-brand-400',
+      btnGradient: 'from-brand-600 to-cyan-600 hover:from-brand-700 hover:to-cyan-700 shadow-brand-600/30',
       onClick: handleDownloadWord
     }
   ];
@@ -369,7 +369,7 @@ export const ReportsPage: React.FC = () => {
               )}
             </h1>
 
-            <p className="text-xs md:text-sm text-gray-300 font-bold tracking-wide">
+            <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide">
               {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '')
                 ? "Download individual formatted Excel workbooks and reports for your assigned students."
                 : "Download individual formatted Excel workbooks, executive PDF summaries, and dispatch automated Sunday email reports to management"}
@@ -389,12 +389,12 @@ export const ReportsPage: React.FC = () => {
       </div>
 
       {/* Main Tab Navigation */}
-      <div className="flex items-center space-x-2 bg-gray-100 dark:bg-navy-900 p-1.5 rounded-2xl max-w-fit border border-gray-200 dark:border-gray-800 flex-wrap gap-1">
+      <div className="flex items-center space-x-2 bg-slate-100 dark:bg-navy-950 p-1.5 rounded-2xl max-w-fit border border-slate-200 dark:border-slate-800 flex-wrap gap-1">
         <button
           onClick={() => setActiveTab('reports')}
           className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${activeTab === 'reports'
               ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
         >
           <FileSpreadsheet className="w-4 h-4" />
@@ -405,7 +405,7 @@ export const ReportsPage: React.FC = () => {
           onClick={() => setActiveTab('email')}
           className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${activeTab === 'email' || activeTab === 'manual_email' || activeTab === 'auto_email'
               ? 'bg-gradient-to-r from-indigo-600 to-brand-600 text-white shadow-md'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
         >
           <Mail className="w-4 h-4 text-emerald-400" />
@@ -419,41 +419,41 @@ export const ReportsPage: React.FC = () => {
         <>
 
           {/* Universal Institutional Reports Section */}
-          <div className={`glass-card p-6 md:p-8 rounded-3xl border border-blue-500/30 dark:border-blue-500/20 shadow-xl space-y-6 bg-gradient-to-r from-blue-500/5 via-cyan-500/5 to-transparent relative ${rptTypeOpen || rptYearOpen || rptScopeOpen ? 'z-50' : 'z-10'}`}>
-            <div className="flex items-center justify-between flex-wrap gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
+          <div className={`glass-card p-6 md:p-8 rounded-3xl border border-brand-500/30 dark:border-brand-500/20 shadow-xl space-y-6 bg-gradient-to-r from-brand-500/5 via-cyan-500/5 to-transparent relative ${rptTypeOpen || rptYearOpen || rptScopeOpen ? 'z-50' : 'z-10'}`}>
+            <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
               <div className="flex items-center space-x-3">
-                <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                <div className="p-3 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
                   <Layers className="w-6 h-6" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-gray-900 dark:text-white">Universal Reports & Analytics</h2>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 font-bold">
+                  <h2 className="text-xl font-black text-slate-900 dark:text-white">Universal Reports & Analytics</h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">
                     Central Report Engine: Generate standardized datasets viewable via <b>Preview</b>, <b>Excel (.xlsx)</b>, <b>PDF (.pdf)</b>, <b>Word (.docx)</b>, and <b>CSV (.csv)</b>.
                   </p>
                 </div>
               </div>
-              <div className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-semibold">
+              <div className="px-3 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-400 text-xs font-semibold">
                 Institutional Report Engine
               </div>
             </div>
 
             {/* Unified Report Builder Form Controls */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 p-5 bg-white/70 dark:bg-navy-900/70 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-inner">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 p-5 bg-white/70 dark:bg-navy-950/70 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-inner">
 
               {/* 1. Report Type — Premium Dropdown */}
               <div className="space-y-1.5">
-                <label className="text-xs font-black uppercase text-gray-600 dark:text-gray-400 tracking-wider">
+                <label className="text-xs font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider">
                   Report Type
                 </label>
                 <div className={`relative ${rptTypeOpen ? 'z-30' : 'z-10'}`}>
                   <button
                     type="button"
                     onClick={() => { setRptTypeOpen(p => !p); setRptYearOpen(false); setRptScopeOpen(false); }}
-                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${rptTypeOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-gray-300 dark:border-gray-700 hover:border-brand-300'
+                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${rptTypeOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-slate-300 dark:border-slate-700 hover:border-brand-300'
                       }`}
                   >
                     <LayoutTemplate className="w-3.5 h-3.5 text-brand-500 shrink-0" />
-                    <span className="text-xs font-bold text-gray-900 dark:text-white truncate flex-1">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
                       {({
                         'STUDENT_PERFORMANCE': 'Student Performance Detail',
                         'COLLEGE_EXECUTIVE': 'College Executive Overview',
@@ -465,10 +465,10 @@ export const ReportsPage: React.FC = () => {
                         'CUSTOM': 'Custom Report',
                       } as Record<string, string>)[selectedReportType] || selectedReportType}
                     </span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${rptTypeOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${rptTypeOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {rptTypeOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
                       {[
                         { value: 'STUDENT_PERFORMANCE', label: 'Student Performance Detail', dot: 'bg-brand-500' },
                         { value: 'COLLEGE_EXECUTIVE', label: 'College Executive Overview', dot: 'bg-indigo-500' },
@@ -477,16 +477,16 @@ export const ReportsPage: React.FC = () => {
                         { value: 'CONTEST_PERFORMANCE', label: 'Contest Performance', dot: 'bg-amber-500' },
                         { value: 'STUDENT_MASTER', label: 'Student Master (All Roster)', dot: 'bg-teal-500' },
                         { value: 'LEADERBOARD', label: 'Leaderboard', dot: 'bg-rose-500' },
-                        { value: 'CUSTOM', label: 'Custom Report', dot: 'bg-gray-500' },
+                        { value: 'CUSTOM', label: 'Custom Report', dot: 'bg-slate-500' },
                       ].map(opt => (
                         <button key={opt.value} type="button"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => { setSelectedReportType(opt.value); setRptTypeOpen(false); }}
-                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${selectedReportType === opt.value ? 'bg-brand-50 dark:bg-brand-950/60' : 'hover:bg-gray-50 dark:hover:bg-navy-800'
+                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${selectedReportType === opt.value ? 'bg-brand-50 dark:bg-brand-950/60' : 'hover:bg-slate-50 dark:hover:bg-navy-800'
                             }`}
                         >
                           <span className={`w-2 h-2 rounded-full shrink-0 ${opt.dot}`} />
-                          <span className={`text-xs truncate flex-1 ${selectedReportType === opt.value ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-gray-700 dark:text-gray-300'}`}>{opt.label}</span>
+                          <span className={`text-xs truncate flex-1 ${selectedReportType === opt.value ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-slate-700 dark:text-slate-300'}`}>{opt.label}</span>
                           {selectedReportType === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
                         </button>
                       ))}
@@ -506,12 +506,12 @@ export const ReportsPage: React.FC = () => {
 
               {/* 3. Year / Batch — Premium Dropdown */}
               <div className="space-y-1.5">
-                <label className="text-xs font-black uppercase text-gray-600 dark:text-gray-400 tracking-wider">Year / Batch</label>
+                <label className="text-xs font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider">Year / Batch</label>
                 <div className={`relative ${rptYearOpen ? 'z-30' : 'z-10'}`}>
                   <button
                     type="button"
                     onClick={() => { setRptYearOpen(p => !p); setRptTypeOpen(false); setRptScopeOpen(false); }}
-                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${rptYearOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-gray-300 dark:border-gray-700 hover:border-brand-300'
+                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${rptYearOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-slate-300 dark:border-slate-700 hover:border-brand-300'
                       }`}
                   >
                     <GraduationCap className="w-3.5 h-3.5 text-brand-500 shrink-0" />
@@ -524,13 +524,13 @@ export const ReportsPage: React.FC = () => {
                     ) : (
                       <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300">IV</span>
                     )}
-                    <span className="text-xs font-bold text-gray-900 dark:text-white truncate flex-1">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
                       {selectedYear === 'ALL' ? 'All Academic Years' : selectedYear === 'II' ? 'Year (2025–2029)' : selectedYear === 'III' ? 'Year (2024–2028)' : 'Year (2023–2027)'}
                     </span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${rptYearOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${rptYearOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {rptYearOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
                       {[
                         { value: 'ALL', code: 'ALL', label: 'All Academic Years', color: 'text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300' },
                         { value: 'II', code: 'II', label: 'Year (2025–2029)', color: 'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
@@ -540,12 +540,12 @@ export const ReportsPage: React.FC = () => {
                         <button key={opt.value} type="button"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => { setSelectedYear(opt.value); setRptYearOpen(false); }}
-                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${selectedYear === opt.value ? 'bg-brand-50 dark:bg-brand-950/60' : 'hover:bg-gray-50 dark:hover:bg-navy-800'
+                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${selectedYear === opt.value ? 'bg-brand-50 dark:bg-brand-950/60' : 'hover:bg-slate-50 dark:hover:bg-navy-800'
                             }`}
                         >
-                          <GraduationCap className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                          <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                           <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${opt.color}`}>{opt.code}</span>
-                          <span className={`text-xs truncate flex-1 ${selectedYear === opt.value ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-gray-700 dark:text-gray-300'}`}>{opt.label}</span>
+                          <span className={`text-xs truncate flex-1 ${selectedYear === opt.value ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-slate-700 dark:text-slate-300'}`}>{opt.label}</span>
                           {selectedYear === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
                         </button>
                       ))}
@@ -556,22 +556,22 @@ export const ReportsPage: React.FC = () => {
 
               {/* 4. Output Scope — Premium Dropdown */}
               <div className="space-y-1.5">
-                <label className="text-xs font-black uppercase text-gray-600 dark:text-gray-400 tracking-wider">Output Scope</label>
+                <label className="text-xs font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider">Output Scope</label>
                 <div className={`relative ${rptScopeOpen ? 'z-30' : 'z-10'}`}>
                   <button
                     type="button"
                     onClick={() => { setRptScopeOpen(p => !p); setRptTypeOpen(false); setRptYearOpen(false); }}
-                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${rptScopeOpen ? 'border-purple-400 ring-2 ring-purple-400/20' : 'border-gray-300 dark:border-gray-700 hover:border-purple-300'
+                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${rptScopeOpen ? 'border-purple-400 ring-2 ring-purple-400/20' : 'border-slate-300 dark:border-slate-700 hover:border-purple-300'
                       }`}
                   >
                     <Target className="w-3.5 h-3.5 text-purple-500 shrink-0" />
-                    <span className="text-xs font-bold text-gray-900 dark:text-white truncate flex-1">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
                       {{ 'COLLEGE': 'College-wide', 'DEPARTMENT': 'Department-wide', 'YEAR': 'Year-wise', 'DEPT_YEAR': 'Department + Year', 'CUSTOM': 'Custom Filters' }[selectedOutputScope] || selectedOutputScope}
                     </span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${rptScopeOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${rptScopeOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {rptScopeOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
                       {[
                         { value: 'COLLEGE', label: 'College-wide', dot: 'bg-indigo-500' },
                         { value: 'DEPARTMENT', label: 'Department-wide', dot: 'bg-purple-500' },
@@ -582,11 +582,11 @@ export const ReportsPage: React.FC = () => {
                         <button key={opt.value} type="button"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => { setSelectedOutputScope(opt.value); setRptScopeOpen(false); }}
-                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${selectedOutputScope === opt.value ? 'bg-purple-50 dark:bg-purple-950/60' : 'hover:bg-gray-50 dark:hover:bg-navy-800'
+                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${selectedOutputScope === opt.value ? 'bg-purple-50 dark:bg-purple-950/60' : 'hover:bg-slate-50 dark:hover:bg-navy-800'
                             }`}
                         >
                           <span className={`w-2 h-2 rounded-full shrink-0 ${opt.dot}`} />
-                          <span className={`text-xs truncate flex-1 ${selectedOutputScope === opt.value ? 'font-black text-purple-700 dark:text-purple-300' : 'font-semibold text-gray-700 dark:text-gray-300'}`}>{opt.label}</span>
+                          <span className={`text-xs truncate flex-1 ${selectedOutputScope === opt.value ? 'font-black text-purple-700 dark:text-purple-300' : 'font-semibold text-slate-700 dark:text-slate-300'}`}>{opt.label}</span>
                           {selectedOutputScope === opt.value && <Check className="w-3.5 h-3.5 text-purple-500 shrink-0" />}
                         </button>
                       ))}
@@ -599,7 +599,7 @@ export const ReportsPage: React.FC = () => {
 
             {/* Action Button Bar */}
             <div className="flex items-center justify-between flex-wrap gap-4 pt-2">
-              <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400 font-bold">
+              <div className="flex items-center space-x-2 text-xs text-slate-500 dark:text-slate-400 font-bold">
                 <Sparkles className="w-4 h-4 text-amber-500" />
                 <span>Workflow: <b>1. Select Parameters</b> → <b>2. Generate Preview</b> → <b>3. Review & Export</b></span>
               </div>
@@ -607,7 +607,7 @@ export const ReportsPage: React.FC = () => {
               <button
                 onClick={() => handleGenerateUniversalReport()}
                 disabled={isGeneratingUniversal}
-                className="flex items-center space-x-2.5 px-8 py-3.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 text-white font-black text-sm rounded-2xl shadow-xl shadow-blue-500/25 transition-all transform hover:scale-105 cursor-pointer"
+                className="flex items-center space-x-2.5 px-8 py-3.5 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-700 hover:to-purple-700 disabled:opacity-50 text-white font-black text-sm rounded-2xl shadow-xl shadow-brand-500/25 transition-all transform hover:scale-105 cursor-pointer"
               >
                 <Sparkles className={`w-4 h-4 ${isGeneratingUniversal ? 'animate-spin' : ''}`} />
                 <span>{isGeneratingUniversal ? 'Building Dataset...' : 'Generate Preview'}</span>
@@ -653,8 +653,8 @@ export const ReportsPage: React.FC = () => {
 
           {/* Floating Success / Status Toast */}
           {toastMessage && (
-            <div className="fixed bottom-6 right-6 z-[10000] animate-slideUp">
-              <div className="px-5 py-3 rounded-2xl bg-slate-900 border border-slate-700 text-white text-xs font-bold shadow-lg flex items-center space-x-3">
+            <div className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-4 right-4 sm:left-auto sm:right-6 z-[10000] animate-slideUp">
+              <div className="px-5 py-3 rounded-2xl bg-slate-900 border border-slate-700 text-white text-xs font-bold shadow-lg flex items-center space-x-3 w-full sm:w-auto max-w-md mx-auto">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 <span>{toastMessage}</span>
                 <button

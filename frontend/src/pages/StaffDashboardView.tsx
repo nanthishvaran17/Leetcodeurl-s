@@ -142,7 +142,7 @@ export const StaffDashboardView: React.FC = () => {
               <span>MY MENTORING DASHBOARD</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-black">Welcome, {user?.name || user?.username}</h1>
-            <p className="text-xs text-gray-300 flex items-center gap-2">
+            <p className="text-xs text-slate-300 flex items-center gap-2">
               <span>Restricted Portfolio • Monitoring {myStudents.length} Assigned Students</span>
               {lastSyncTime && (
                 <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
@@ -185,7 +185,7 @@ export const StaffDashboardView: React.FC = () => {
             <button 
               type="button"
               onClick={() => setSyncStatusMsg(null)}
-              className="text-gray-400 hover:text-white text-[10px] ml-2 underline cursor-pointer"
+              className="text-slate-400 hover:text-white text-[10px] ml-2 underline cursor-pointer"
             >
               Dismiss
             </button>
@@ -206,11 +206,11 @@ export const StaffDashboardView: React.FC = () => {
               : 'hover:border-brand-500/30'
           }`}
         >
-          <div className="flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
             <span>Assigned</span>
             <Users className="w-4 h-4 text-brand-500" />
           </div>
-          <h3 className="text-2xl font-black text-gray-900 dark:text-white">
+          <h3 className="text-2xl font-black text-slate-900 dark:text-white">
             {totalAssignedCount} / {summary?.max_capacity || 30}
           </h3>
           <div className="flex items-center gap-1.5 mt-1">
@@ -236,7 +236,7 @@ export const StaffDashboardView: React.FC = () => {
               : 'border-emerald-500/30 hover:border-emerald-500/60'
           }`}
         >
-          <div className="flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
             <span>Active</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
           </div>
@@ -258,7 +258,7 @@ export const StaffDashboardView: React.FC = () => {
               : 'border-indigo-500/30 hover:border-indigo-500/60'
           }`}
         >
-          <div className="flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
             <span>Completed</span>
             <Award className="w-4 h-4 text-indigo-500" />
           </div>
@@ -280,7 +280,7 @@ export const StaffDashboardView: React.FC = () => {
               : 'border-amber-500/30 hover:border-amber-500/60'
           }`}
         >
-          <div className="flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
             <span>Attention</span>
             <Clock className="w-4 h-4 text-amber-500" />
           </div>
@@ -302,7 +302,7 @@ export const StaffDashboardView: React.FC = () => {
               : 'border-rose-500/30 hover:border-rose-500/60'
           }`}
         >
-          <div className="flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
             <span>At Risk</span>
             <AlertTriangle className="w-4 h-4 text-rose-500" />
           </div>
@@ -320,14 +320,14 @@ export const StaffDashboardView: React.FC = () => {
           title="Average solved problems per assigned student"
           className="glass-card p-5 rounded-3xl border space-y-2 shadow-lg cursor-pointer transition-all hover:scale-[1.03] active:scale-[0.98]"
         >
-          <div className="flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
             <span>Avg Progress</span>
             <BarChart3 className="w-4 h-4 text-brand-500" />
           </div>
-          <h3 className="text-2xl font-black text-gray-900 dark:text-white">
+          <h3 className="text-2xl font-black text-slate-900 dark:text-white">
             {avgSolvedProgress}
           </h3>
-          <p className="text-[10px] text-gray-500 font-bold">Solved / Student</p>
+          <p className="text-[10px] text-slate-500 font-bold">Solved / Student</p>
         </div>
 
       </div>
@@ -346,7 +346,7 @@ export const StaffDashboardView: React.FC = () => {
                   {summary.post_930_solvers_count} Students
                 </span>
               </h4>
-              <p className="text-xs text-gray-300">
+              <p className="text-xs text-slate-300">
                 {summary.post_930_solvers_count} of your assigned students solved +{summary.post_930_total_solves} problems after 09:30 AM IST lock time.
               </p>
             </div>
@@ -360,7 +360,7 @@ export const StaffDashboardView: React.FC = () => {
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center space-x-2">
               <AlertCircle className="w-5 h-5 text-amber-500 animate-pulse" />
-              <h3 className="text-base font-black text-gray-900 dark:text-white">
+              <h3 className="text-base font-black text-slate-900 dark:text-white">
                 Today's Priority — ({priorityStudents.length} Students Need Attention)
               </h3>
             </div>
@@ -371,18 +371,18 @@ export const StaffDashboardView: React.FC = () => {
             {priorityStudents.slice(0, 3).map((st: any) => (
               <div 
                 key={st.id} 
-                className="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-amber-200/80 dark:border-amber-900/50 shadow-md flex flex-col justify-between transition-all hover:border-amber-400 hover:shadow-lg"
+                className="p-4 rounded-2xl bg-white dark:bg-navy-950 border border-amber-200/80 dark:border-amber-900/50 shadow-md flex flex-col justify-between transition-all hover:border-amber-400 hover:shadow-lg"
               >
                 <div className="space-y-2.5">
                   <div className="flex items-start justify-between gap-2">
-                    <span className="font-extrabold text-sm text-gray-900 dark:text-white truncate" title={st.name}>
+                    <span className="font-extrabold text-sm text-slate-900 dark:text-white truncate" title={st.name}>
                       {st.name}
                     </span>
                     <span className="px-2 py-0.5 rounded text-[10px] font-black bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 whitespace-nowrap shrink-0">
                       {st.status_label || 'Needs Attention'}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500 font-mono">
+                  <p className="text-xs text-slate-500 font-mono">
                     Reg: {st.reg_no} • {st.department} ({st.year_level} Year)
                   </p>
                   <div className="space-y-1.5 pt-1 min-h-[44px]">
@@ -423,13 +423,13 @@ export const StaffDashboardView: React.FC = () => {
 
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center space-x-2">
+            <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center space-x-2">
               <Users className="w-5 h-5 text-brand-500" />
               <span>
                 My Assigned Students ({filteredStudents.length}{filteredStudents.length !== myStudents.length ? ` of ${myStudents.length}` : ''})
               </span>
             </h3>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-slate-500">
               Only students strictly assigned to your mentorship allocation are fetched.
             </p>
           </div>
@@ -442,7 +442,7 @@ export const StaffDashboardView: React.FC = () => {
               const filterOpts: { value: FilterVal; label: string; code: string; color: string }[] = [
                 { value: 'ALL',       label: 'All Students',    code: 'ALL',    color: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300' },
                 { value: 'ACTIVE',    label: 'Active Solvers',  code: 'ACTIVE', color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300' },
-                { value: 'COMPLETED', label: 'Target Achieved', code: 'DONE',   color: 'text-blue-600 bg-blue-50 dark:bg-blue-950 dark:text-blue-300' },
+                { value: 'COMPLETED', label: 'Target Achieved', code: 'DONE',   color: 'text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300' },
                 { value: 'ATTENTION', label: 'Needs Attention', code: 'ATTN',   color: 'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
                 { value: 'AT_RISK',   label: 'At Risk',         code: 'RISK',   color: 'text-red-600 bg-red-50 dark:bg-red-950 dark:text-red-300' },
               ];
@@ -452,32 +452,32 @@ export const StaffDashboardView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setIsFilterOpen(p => !p)}
-                    className={`w-full flex items-center gap-2.5 bg-gray-50 dark:bg-navy-950 px-3.5 py-2.5 rounded-2xl border shadow-sm text-left transition-all hover:border-indigo-300 dark:hover:border-indigo-600 focus:outline-none ${isFilterOpen ? 'border-indigo-400 ring-2 ring-indigo-400/20 dark:border-indigo-500' : 'border-gray-200 dark:border-gray-800'}`}
+                    className={`w-full flex items-center gap-2.5 bg-slate-50 dark:bg-navy-950 px-3.5 py-2.5 rounded-2xl border shadow-sm text-left transition-all hover:border-indigo-300 dark:hover:border-indigo-600 focus:outline-none ${isFilterOpen ? 'border-indigo-400 ring-2 ring-indigo-400/20 dark:border-indigo-500' : 'border-slate-200 dark:border-slate-800'}`}
                   >
                     <ShieldCheck className="w-4 h-4 text-indigo-500 shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[9px] font-black uppercase text-gray-400 tracking-wider">Student Filter</p>
+                      <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Student Filter</p>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${sel.color}`}>{sel.code}</span>
-                        <span className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{sel.label}</span>
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{sel.label}</span>
                       </div>
                     </div>
-                    <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform shrink-0 ${isFilterOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${isFilterOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {isFilterOpen && (
-                    <div className="absolute z-50 top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden max-h-72 overflow-y-auto">
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden max-h-72 overflow-y-auto">
                       {filterOpts.map(opt => (
                         <button
                           key={opt.value}
                           type="button"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => { setFilterStatus(opt.value); setIsFilterOpen(false); }}
-                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-navy-800 ${filterStatus === opt.value ? 'bg-indigo-50 dark:bg-indigo-950/60' : ''}`}
+                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-navy-800 ${filterStatus === opt.value ? 'bg-indigo-50 dark:bg-indigo-950/60' : ''}`}
                         >
-                          <ShieldCheck className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                          <ShieldCheck className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                           <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${opt.color}`}>{opt.code}</span>
-                          <span className={`text-xs truncate flex-1 ${filterStatus === opt.value ? 'text-indigo-700 dark:text-indigo-300 font-black' : 'font-semibold text-gray-700 dark:text-gray-300'}`}>{opt.label}</span>
+                          <span className={`text-xs truncate flex-1 ${filterStatus === opt.value ? 'text-indigo-700 dark:text-indigo-300 font-black' : 'font-semibold text-slate-700 dark:text-slate-300'}`}>{opt.label}</span>
                           {filterStatus === opt.value && <Check className="w-3.5 h-3.5 text-indigo-500 shrink-0" />}
                         </button>
                       ))}
@@ -489,22 +489,22 @@ export const StaffDashboardView: React.FC = () => {
 
             {/* Search inside assigned set strictly */}
             <div className="relative w-full sm:w-64">
-              <Search className="w-4 h-4 absolute left-3.5 top-3 text-gray-400" />
+              <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search assigned students..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-medium text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
               />
             </div>
           </div>
         </div>
 
         {/* Assigned Students Table */}
-        <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-navy-800">
+        <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-800">
           <table className="w-full text-left text-xs">
-            <thead className="bg-gray-50 dark:bg-navy-950 text-gray-400 font-black uppercase text-[10px] tracking-wider border-b">
+            <thead className="bg-slate-50 dark:bg-navy-950 text-slate-400 font-black uppercase text-[10px] tracking-wider border-b">
               <tr>
                 <th className="px-4 py-3">Student Name</th>
                 <th className="px-4 py-3">Reg No</th>
@@ -519,13 +519,13 @@ export const StaffDashboardView: React.FC = () => {
             <tbody className="divide-y divide-gray-100 dark:divide-navy-800">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-gray-400 font-bold animate-pulse">
+                  <td colSpan={8} className="p-8 text-center text-slate-400 font-bold animate-pulse">
                     Loading your assigned students...
                   </td>
                 </tr>
               ) : filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-gray-400 italic">
+                  <td colSpan={8} className="p-8 text-center text-slate-400 italic">
                     {search ? "No student found in your assigned portfolio matching search." : "No students assigned to your portfolio yet."}
                   </td>
                 </tr>
@@ -536,20 +536,20 @@ export const StaffDashboardView: React.FC = () => {
                   const statusColor = statusLabel === 'Excellent' ? 'emerald' : 'amber';
 
                   return (
-                    <tr key={st.id} className="hover:bg-gray-50/50 dark:hover:bg-navy-850 transition-colors">
-                      <td className="px-4 py-3.5 font-extrabold text-gray-900 dark:text-white">
+                    <tr key={st.id} className="hover:bg-slate-50/50 dark:hover:bg-navy-850 transition-colors">
+                      <td className="px-4 py-3.5 font-extrabold text-slate-900 dark:text-white">
                         {st.name}
                       </td>
-                      <td className="px-4 py-3.5 font-mono text-gray-500">
+                      <td className="px-4 py-3.5 font-mono text-slate-500">
                         {st.reg_no}
                       </td>
-                      <td className="px-4 py-3.5 text-gray-600 dark:text-gray-300">
+                      <td className="px-4 py-3.5 text-slate-600 dark:text-slate-300">
                         {st.department} ({st.year_level} Year)
                       </td>
                       <td className="px-4 py-3.5 font-bold text-brand-600 dark:text-brand-400">
                         {st.username ? `@${st.username}` : 'Not Linked'}
                       </td>
-                      <td className="px-4 py-3.5 font-black text-gray-900 dark:text-white">
+                      <td className="px-4 py-3.5 font-black text-slate-900 dark:text-white">
                         {solved}
                       </td>
                       <td className="px-4 py-3.5 font-bold text-amber-500">

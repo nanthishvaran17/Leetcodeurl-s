@@ -92,17 +92,17 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={twMerge(
-            "relative w-full flex items-center justify-between px-4 py-2.5 bg-white dark:bg-navy-900",
+            "relative w-full flex items-center justify-between px-4 py-2.5 bg-white dark:bg-navy-950",
             "border transition-all duration-200 outline-none select-none rounded-[1.25rem]",
             isOpen 
-              ? "border-blue-500 ring-4 ring-blue-500/10 shadow-sm" 
+              ? "border-brand-500 ring-4 ring-brand-500/10 shadow-sm" 
               : "border-slate-200 dark:border-navy-700 hover:border-slate-300 dark:hover:border-navy-600 hover:shadow-sm"
           )}
         >
           <div className="flex items-center space-x-3 overflow-hidden">
             <div className={clsx(
               "shrink-0 transition-colors duration-200",
-              isOpen ? "text-blue-500" : "text-slate-400 dark:text-slate-500"
+              isOpen ? "text-brand-500" : "text-slate-400 dark:text-slate-500"
             )}>
               {selectedOption?.icon || icon || <Filter className="w-5 h-5" />}
             </div>
@@ -124,7 +124,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
           <ChevronDown 
             className={clsx(
               "w-4 h-4 shrink-0 transition-transform duration-200 ml-3",
-              isOpen ? "rotate-180 text-blue-500" : "text-slate-400 dark:text-slate-500"
+              isOpen ? "rotate-180 text-brand-500" : "text-slate-400 dark:text-slate-500"
             )} 
           />
         </button>
@@ -138,7 +138,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
               exit={{ opacity: 0, y: -5, scale: 0.98 }}
               transition={{ duration: 0.15, ease: 'easeOut' }}
               className={clsx(
-                "absolute z-[9999] mt-2 top-full left-0 bg-white dark:bg-navy-900",
+                "absolute z-[9999] mt-2 top-full left-0 bg-white dark:bg-navy-950",
                 "rounded-[1.25rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 dark:border-navy-800/60 overflow-hidden",
                 dropdownWidth
               )}
@@ -158,7 +158,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
                       className={clsx(
                         "w-full flex items-center justify-between px-3 py-2.5 mx-2 w-[calc(100%-16px)] rounded-xl transition-all duration-150 outline-none text-left",
                         isSelected 
-                          ? "bg-blue-600 text-white shadow-md shadow-blue-500/20" 
+                          ? "bg-brand-600 text-white shadow-md shadow-brand-500/20" 
                           : "hover:bg-slate-50 dark:hover:bg-navy-800"
                       )}
                     >

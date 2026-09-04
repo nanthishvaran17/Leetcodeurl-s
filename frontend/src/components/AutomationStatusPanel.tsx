@@ -89,7 +89,7 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
               <span>{isSyncing ? 'Syncing...' : 'Sync Now'}</span>
             </button>
           )}
-          <div className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-[11px] font-mono font-bold text-slate-700 dark:text-slate-300">
+          <div className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 text-[11px] font-mono font-bold text-slate-700 dark:text-slate-300">
             {currentTime || 'Syncing clock...'}
           </div>
         </div>
@@ -185,15 +185,15 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
               console.error('Report export error:', e);
             }
           }}
-          className="p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 hover:bg-blue-50/60 dark:hover:bg-navy-900/80 border border-slate-200/60 dark:border-navy-800/60 hover:border-blue-400/50 flex flex-col justify-between space-y-1 transition-all cursor-pointer group"
+          className="p-3 rounded-2xl bg-slate-50/80 dark:bg-navy-950/60 hover:bg-brand-50/60 dark:hover:bg-navy-900/80 border border-slate-200/60 dark:border-navy-800/60 hover:border-brand-400/50 flex flex-col justify-between space-y-1 transition-all cursor-pointer group"
           title="Click to export official Excel report matrix"
         >
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider group-hover:text-blue-600 dark:group-hover:text-blue-400">Dual Reports</span>
-            <ShieldCheck className="w-3.5 h-3.5 text-blue-500 group-hover:scale-110 transition-transform" />
+            <span className="text-[10px] font-extrabold uppercase tracking-wider group-hover:text-brand-600 dark:group-hover:text-brand-400">Dual Reports</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-brand-500 group-hover:scale-110 transition-transform" />
           </div>
           <div className="flex items-center space-x-1.5">
-            <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+            <span className="w-2 h-2 rounded-full bg-brand-500"></span>
             <span className="text-xs font-black text-slate-900 dark:text-white">Ready</span>
           </div>
           <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Click to Export Excel</span>

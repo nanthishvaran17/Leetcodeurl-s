@@ -39,7 +39,7 @@ export const YearAnalyticsRow: React.FC<YearAnalyticsRowProps> = ({ matrixRows }
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <GraduationCap className="w-4 h-4 text-brand-500" />
-        <h4 className="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white">Year-wise Analytics</h4>
+        <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">Year-wise Analytics</h4>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {yearData.map(d => {
@@ -54,23 +54,23 @@ export const YearAnalyticsRow: React.FC<YearAnalyticsRowProps> = ({ matrixRows }
               </div>
               <div className="grid grid-cols-3 gap-1 text-center text-[10px]">
                 <div>
-                  <span className="text-gray-500 block">Total</span>
-                  <span className="font-mono font-black text-gray-300">{d.total}</span>
+                  <span className="text-slate-500 block">Total</span>
+                  <span className="font-mono font-black text-slate-300">{d.total}</span>
                 </div>
                 <div>
-                  <span className="text-gray-500 block">Active</span>
+                  <span className="text-slate-500 block">Active</span>
                   <span className={`font-mono font-black ${cfg.text}`}>{d.attended}</span>
                 </div>
                 <div>
-                  <span className="text-gray-500 block">Avg Q</span>
+                  <span className="text-slate-500 block">Avg Q</span>
                   <span className="font-mono font-black text-white">{d.avgSolved}</span>
                 </div>
               </div>
-              <div className="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
+              <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
                 <div className={`h-full ${cfg.bar} rounded-full transition-all duration-700`} style={{ width: `${barW}%` }} />
               </div>
               {d.topPerformer && (
-                <div className="text-[10px] text-gray-400 truncate">
+                <div className="text-[10px] text-slate-400 truncate">
                   <span className={`font-bold ${cfg.text}`}>Top: </span>{d.topPerformer.name} ({d.topPerformer.solved}Q)
                 </div>
               )}

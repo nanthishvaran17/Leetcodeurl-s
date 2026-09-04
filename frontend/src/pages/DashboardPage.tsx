@@ -284,7 +284,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               )}
             </h1>
 
-            <p className="text-sm text-gray-300 font-bold tracking-wide leading-relaxed">
+            <p className="text-sm text-slate-300 font-bold tracking-wide leading-relaxed">
               {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') 
                 ? "Your exclusive mentorship cohort — live sync, contest verification, and analytics."
                 : `${loading ? '...' : totalStudents} enrolled students across all departments — live sync, contest verification, leaderboard analytics, and automated reporting.`}
@@ -331,7 +331,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
 
       {/* REAL-TIME GROWTH & DELTA ENGINE */}
-      <div className="stagger-4 relative overflow-hidden rounded-xl bg-white dark:bg-navy-900 p-6 sm:p-8 shadow-sm border border-gray-200 dark:border-navy-700 mt-6">
+      <div className="stagger-4 relative overflow-hidden rounded-xl bg-white dark:bg-navy-950 p-6 sm:p-8 shadow-sm border border-slate-200 dark:border-navy-700 mt-6">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-3 max-w-3xl">
             <div className="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-black tracking-wider uppercase">
@@ -339,20 +339,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <span>NANDHA ENGINEERING COLLEGE • ERODE</span>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-gray-900 dark:text-white flex items-center space-x-3">
+            <h2 className="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center space-x-3">
               <span>REAL-TIME GROWTH & DELTA ENGINE</span>
               <span className="px-2 py-0.5 rounded-md text-[10px] bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-400 font-bold uppercase tracking-widest border border-brand-200 dark:border-brand-800/50">LIVE</span>
             </h2>
 
-            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
-              <strong className="text-gray-700 dark:text-gray-300">Growth Intelligence & Time Machine</strong> — Track student problem-solving deltas, biggest improvers leaderboard, difficulty velocity, and granular historical stat snapshots across custom timeframe windows.
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+              <strong className="text-slate-700 dark:text-slate-300">Growth Intelligence & Time Machine</strong> — Track student problem-solving deltas, biggest improvers leaderboard, difficulty velocity, and granular historical stat snapshots across custom timeframe windows.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => onNavigateTab('growth')}
-              className="px-5 py-3 rounded-lg bg-gray-900 hover:bg-gray-800 dark:bg-brand-600 dark:hover:bg-brand-500 text-white font-bold text-xs shadow-md shadow-gray-900/20 dark:shadow-brand-500/20 flex items-center space-x-2 transition-all cursor-pointer transform hover:scale-[1.02]"
+              className="px-5 py-3 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-brand-600 dark:hover:bg-brand-500 text-white font-bold text-xs shadow-md shadow-slate-900/20 dark:shadow-brand-500/20 flex items-center space-x-2 transition-all cursor-pointer transform hover:scale-[1.02]"
             >
               <Activity className="w-4 h-4" />
               <span>Launch Growth Engine</span>
@@ -367,9 +367,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       <div className="stagger-5 grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
         
         {/* Participation Analytics */}
-        <div className="glass-card p-6 rounded-2xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-900 shadow-sm space-y-5">
+        <div className="glass-card p-6 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 shadow-sm space-y-5">
           <div className="flex items-center justify-between">
-            <h3 className="font-extrabold text-sm text-gray-900 dark:text-white flex items-center space-x-2">
+            <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
               <PieChart className="w-4 h-4 text-indigo-500" />
               <span className="uppercase tracking-wider">College Participation Analytics</span>
             </h3>
@@ -379,7 +379,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <div className="relative w-32 h-32 flex items-center justify-center shrink-0">
               <svg className="w-full h-full transform -rotate-90 drop-shadow-xl" viewBox="0 0 36 36">
                 <circle
-                  className="text-gray-100 dark:text-navy-800"
+                  className="text-slate-100 dark:text-navy-800"
                   strokeWidth="3.5"
                   stroke="currentColor"
                   fill="none"
@@ -396,56 +396,56 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   style={{ strokeDashoffset: '0' }}
                 />
               </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-navy-900 rounded-full m-3 shadow-inner border border-gray-50 dark:border-navy-800">
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-navy-950 rounded-full m-3 shadow-inner border border-slate-50 dark:border-navy-800">
                 <span className="text-2xl font-display font-black text-indigo-600 dark:text-indigo-400">{participationRate}%</span>
               </div>
             </div>
             
             <div className="flex flex-col space-y-1 text-center sm:text-left">
-              <span className="text-sm font-extrabold text-gray-900 dark:text-white">Active Participation</span>
-              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+              <span className="text-sm font-extrabold text-slate-900 dark:text-white">Active Participation</span>
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
                 Out of {totalStudents.toLocaleString()} total {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') ? 'assigned students' : 'enrolled students across all departments'}, {activeStudents.toLocaleString()} have actively verified LeetCode profiles.
               </span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-xs font-bold">
-            <div className="flex flex-col p-3 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-gray-800">
-              <span className="text-gray-500">Active Students</span>
-              <span className="text-base text-gray-900 dark:text-white">{activeStudents.toLocaleString()}</span>
+            <div className="flex flex-col p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-100 dark:border-slate-800">
+              <span className="text-slate-500">Active Students</span>
+              <span className="text-base text-slate-900 dark:text-white">{activeStudents.toLocaleString()}</span>
             </div>
-            <div className="flex flex-col p-3 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-gray-800">
-              <span className="text-gray-500">Not Started</span>
-              <span className="text-base text-gray-900 dark:text-white">{notStartedStudents.toLocaleString()}</span>
+            <div className="flex flex-col p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-100 dark:border-slate-800">
+              <span className="text-slate-500">Not Started</span>
+              <span className="text-base text-slate-900 dark:text-white">{notStartedStudents.toLocaleString()}</span>
             </div>
-            <div className="col-span-2 flex flex-col p-3 rounded-xl bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-gray-800 text-center">
-              <span className="text-gray-500">{['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') ? 'Total Assigned' : 'Total Enrolled'}</span>
-              <span className="text-base text-gray-900 dark:text-white">{totalStudents.toLocaleString()}</span>
+            <div className="col-span-2 flex flex-col p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-100 dark:border-slate-800 text-center">
+              <span className="text-slate-500">{['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') ? 'Total Assigned' : 'Total Enrolled'}</span>
+              <span className="text-base text-slate-900 dark:text-white">{totalStudents.toLocaleString()}</span>
             </div>
           </div>
         </div>
 
         {/* Data Quality Board */}
-        <div className="glass-card p-6 rounded-2xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-900 shadow-sm flex flex-col justify-between">
+        <div className="glass-card p-6 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 shadow-sm flex flex-col justify-between">
           <div className="space-y-5">
-            <h3 className="font-extrabold text-sm text-gray-900 dark:text-white flex items-center space-x-2">
+            <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
               <ShieldCheck className="w-4 h-4 text-emerald-500" />
               <span className="uppercase tracking-wider">Data Quality Board</span>
             </h3>
 
             <div className="space-y-3">
               <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/30">
-                <span className="text-xs font-bold text-gray-600 dark:text-gray-400">Valid Profiles</span>
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Valid Profiles</span>
                 <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">{validProfiles}</span>
               </div>
 
               <div className="flex justify-between items-center p-3 rounded-xl bg-rose-50/50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-800/30">
-                <span className="text-xs font-bold text-gray-600 dark:text-gray-400">Missing Profile URLs</span>
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Missing Profile URLs</span>
                 <span className="text-sm font-black text-rose-600 dark:text-rose-400">{missingLinks}</span>
               </div>
 
               <div className="flex justify-between items-center p-3 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/30">
-                <span className="text-xs font-bold text-gray-600 dark:text-gray-400">Profile Health Score</span>
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Profile Health Score</span>
                 <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">{healthScorePercentage}%</span>
               </div>
             </div>
@@ -453,7 +453,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
           <button
             onClick={() => onNavigateTab('quality')}
-            className="w-full mt-4 py-2.5 rounded-xl bg-gray-50 dark:bg-navy-950 hover:bg-gray-100 dark:hover:bg-navy-800 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 text-xs font-bold transition-all cursor-pointer"
+            className="w-full mt-4 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 hover:bg-slate-100 dark:hover:bg-navy-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer"
           >
             Open Data Quality Details →
           </button>
@@ -462,12 +462,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       </div>
 
       {/* 7. DEPARTMENT PERFORMANCE MATRIX */}
-      <div className="stagger-6 glass-card p-6 rounded-2xl border border-gray-200 dark:border-navy-700 bg-white dark:bg-navy-900 shadow-sm space-y-4 overflow-hidden mt-6">
+      <div className="stagger-6 glass-card p-6 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 shadow-sm space-y-4 overflow-hidden mt-6">
         <div className="flex items-center justify-between">
-          <h3 className="font-extrabold text-sm text-gray-900 dark:text-white flex items-center space-x-2">
+          <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
             <Building2 className="w-4 h-4 text-brand-500" />
             <span className="uppercase tracking-wider">Department Performance Matrix</span>
-            <span className="px-2 py-0.5 rounded-md bg-gray-100 dark:bg-navy-800 text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase tracking-wider border border-gray-200 dark:border-navy-700">Institution-Wide</span>
+            <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider border border-slate-200 dark:border-navy-700">Institution-Wide</span>
           </h3>
           <button onClick={() => onNavigateTab('departments')} className="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">
             View Full Department Report →
@@ -477,7 +477,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs whitespace-nowrap">
             <thead>
-              <tr className="border-b border-gray-200 dark:border-navy-700 text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">
+              <tr className="border-b border-slate-200 dark:border-navy-700 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
                 <th className="py-3 px-4 font-extrabold">Department</th>
                 <th className="py-3 px-4 font-extrabold">Students</th>
                 <th className="py-3 px-4 font-extrabold">Active</th>
@@ -491,13 +491,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 <tr>
                   <td colSpan={6} className="py-12">
                     <div className="flex flex-col items-center justify-center text-center space-y-3">
-                      <div className="w-12 h-12 rounded-full bg-gray-50 dark:bg-navy-800 flex items-center justify-center border border-gray-100 dark:border-navy-700">
-                        <Building2 className="w-5 h-5 text-gray-400" />
+                      <div className="w-12 h-12 rounded-full bg-slate-50 dark:bg-navy-800 flex items-center justify-center border border-slate-100 dark:border-navy-700">
+                        <Building2 className="w-5 h-5 text-slate-400" />
                       </div>
-                      <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
                         {loading ? 'Aggregating Department Matrices...' : 'Matrix Waiting for Initial Sync'}
                       </span>
-                      <span className="text-xs text-gray-500 max-w-sm">
+                      <span className="text-xs text-slate-500 max-w-sm">
                         Department comparative analytics will populate here automatically once sufficient institutional data is gathered.
                       </span>
                     </div>
@@ -513,22 +513,22 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     return (a.department_code || '').localeCompare(b.department_code || '');
                   })
                   .map((dept) => (
-                  <tr key={dept.department_code || dept.department_id} className="hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors">
+                  <tr key={dept.department_code || dept.department_id} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors">
                     <td className="py-3 px-4">
-                      <div className="font-black text-gray-900 dark:text-white">{dept.department_code}</div>
-                      <div className="text-[10px] text-gray-500 truncate max-w-[200px]">{dept.department_name}</div>
+                      <div className="font-black text-slate-900 dark:text-white">{dept.department_code}</div>
+                      <div className="text-[10px] text-slate-500 truncate max-w-[200px]">{dept.department_name}</div>
                     </td>
-                    <td className="py-3 px-4 font-medium text-gray-600 dark:text-gray-300">{dept.total_students}</td>
+                    <td className="py-3 px-4 font-medium text-slate-600 dark:text-slate-300">{dept.total_students}</td>
                     <td className="py-3 px-4 font-medium text-emerald-600 dark:text-emerald-400">{dept.active_students ?? dept.active_count ?? Math.round((dept.participation_rate / 100) * dept.total_students)}</td>
                     <td className="py-3 px-4">
                       <div className="flex items-center space-x-2">
-                        <div className="w-16 h-1.5 bg-gray-200 dark:bg-navy-700 rounded-full overflow-hidden">
+                        <div className="w-16 h-1.5 bg-slate-200 dark:bg-navy-700 rounded-full overflow-hidden">
                           <div style={{ width: `${dept.participation_rate}%` }} className="h-full bg-indigo-500 rounded-full"></div>
                         </div>
-                        <span className="font-bold text-gray-700 dark:text-gray-300">{dept.participation_rate}%</span>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">{dept.participation_rate}%</span>
                       </div>
                     </td>
-                    <td className="py-3 px-4 font-bold text-gray-900 dark:text-white">{dept.avg_solved}</td>
+                    <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">{dept.avg_solved}</td>
                     <td className="py-3 px-4 text-right">
                       {dept.top_student_name ? (
                         <div className="flex items-center justify-end space-x-2">
@@ -537,7 +537,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                             <button
                               onClick={() => handleSingleStudentRefresh(dept.top_student_id, dept.top_student_name)}
                               disabled={refreshingStudentId === dept.top_student_id}
-                              className="p-1 rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-navy-700 dark:hover:bg-navy-600 text-gray-500 transition-colors disabled:opacity-50"
+                              className="p-1 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-navy-700 dark:hover:bg-navy-600 text-slate-500 transition-colors disabled:opacity-50"
                               title={`Refresh ${dept.top_student_name}`}
                             >
                               <RefreshCw className={`w-3 h-3 ${refreshingStudentId === dept.top_student_id ? 'animate-spin' : ''}`} />
@@ -545,7 +545,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                           )}
                         </div>
                       ) : (
-                        <span className="text-gray-400">-</span>
+                        <span className="text-slate-400">-</span>
                       )}
                     </td>
                   </tr>
@@ -559,7 +559,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       {/* 8. TOP COLLEGE LEADERBOARD (PREVIEW) */}
       <div className="stagger-7 space-y-4 mt-6">
         <div className="flex items-center justify-between">
-          <h3 className="font-extrabold text-sm text-gray-900 dark:text-white flex items-center space-x-2">
+          <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-2">
             <Trophy className="w-4 h-4 text-amber-500" />
             <span className="uppercase tracking-wider">Top College Leaderboard</span>
           </h3>
@@ -578,7 +578,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         />
         
         <div className="text-center pt-2">
-           <span className="text-[11px] font-bold text-gray-400 bg-gray-50 dark:bg-navy-950 px-3 py-1.5 rounded-full border border-gray-100 dark:border-gray-800">
+           <span className="text-[11px] font-bold text-slate-400 bg-slate-50 dark:bg-navy-950 px-3 py-1.5 rounded-full border border-slate-100 dark:border-slate-800">
              Showing Top {Math.min(filteredStudents.length, 10)} of {totalStudents} students. 
              <button onClick={() => onNavigateTab('students')} className="text-brand-500 hover:underline ml-1">View Full Roster</button>
            </span>
