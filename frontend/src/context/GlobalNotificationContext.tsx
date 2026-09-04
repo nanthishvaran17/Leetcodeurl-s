@@ -230,6 +230,13 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
       }
     });
 
+    // Dispatch native status bar push notification for mobile devices
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('trigger_native_push_notification', {
+        detail: { title, body: message, actionRoute, notifId }
+      }));
+    }
+
     if (document.hidden) {
       // Browser background tab notification
       if ('Notification' in window && Notification.permission === 'granted') {

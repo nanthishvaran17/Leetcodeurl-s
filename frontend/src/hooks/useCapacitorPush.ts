@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
 import { useAuth } from '../context/AuthContext';
+import { createNotificationChannels, triggerNativeStatusBarNotification } from '../services/pushNotifications';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '';
 
@@ -15,6 +16,8 @@ export const useCapacitorPush = () => {
 
     const registerPush = async () => {
       try {
+        await createNotificationChannels();
+
         let permStatus = await PushNotifications.checkPermissions();
 
         if (permStatus.receive === 'prompt') {
@@ -33,8 +36,19 @@ export const useCapacitorPush = () => {
       }
     };
 
+    // Handler for global custom native notification triggers
+    const handleNativeTrigger = (evt: Event) => {
+      const customEvt = evt as CustomEvent;
+      const detail = customEvt.detail || {};
+      if (detail.title) {
+        triggerNativeStatusBarNotification(detail.title, detail.body || '', detail.extraData || detail);
+      }
+    };
+
     // Register listeners only once
     const addListeners = async () => {
+      window.addEventListener('trigger_native_push_notification', handleNativeTrigger);
+
       await PushNotifications.addListener('registration', async (capacitorToken) => {
         console.log('[CAPACITOR PUSH] Push registration success, token:', capacitorToken.value);
         try {
@@ -61,6 +75,11 @@ export const useCapacitorPush = () => {
 
       await PushNotifications.addListener('pushNotificationReceived', (notification) => {
         console.log('[CAPACITOR PUSH] Push received in foreground: ', notification);
+        triggerNativeStatusBarNotification(
+          notification.title || 'LeetCode Tracker',
+          notification.body || '',
+          notification.data
+        );
         window.dispatchEvent(new CustomEvent('fcm_notification_received', { detail: notification }));
       });
 
@@ -68,10 +87,9 @@ export const useCapacitorPush = () => {
         console.log('[CAPACITOR PUSH] Push action performed: ', notification);
         const data = notification.notification.data;
         if (data && data.actionRoute) {
-          // Route the user to the deeply linked page
           let route = data.actionRoute;
           if (!route.startsWith('/')) route = '/' + route;
-          window.location.href = route; // Simplest deep link fallback for React router if history not available in hook
+          window.location.href = route;
         }
       });
     };
@@ -81,6 +99,7 @@ export const useCapacitorPush = () => {
 
     return () => {
       isMounted = false;
+      window.removeEventListener('trigger_native_push_notification', handleNativeTrigger);
       if (Capacitor.isNativePlatform()) {
         PushNotifications.removeAllListeners();
       }
