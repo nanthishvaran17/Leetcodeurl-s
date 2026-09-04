@@ -5,11 +5,10 @@ Consumes ONLY the canonical dataset dictionary.
 """
 import io
 import datetime
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
 
 try:
-    import docx
     from docx import Document
     from docx.shared import Inches, Pt, RGBColor
     from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -78,7 +77,8 @@ def build_weekly_performance_docx(data: Dict[str, Any], dept_id: Optional[int] =
         section.right_margin = Inches(0.5)
 
     report_date_str = data.get("report_date", datetime.date.today().strftime("%d.%m.%Y"))
-    dept_summaries = data.get("dept_summaries", [])
+    # Support both key names: weekly_report_service uses 'department_summaries', legacy uses 'dept_summaries'
+    dept_summaries = data.get("department_summaries") or data.get("dept_summaries") or []
 
     if dept_id is not None:
         dept_summaries = [d for d in dept_summaries if d.get("department_id") == dept_id]

@@ -519,7 +519,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                       <div className="text-[10px] text-gray-500 truncate max-w-[200px]">{dept.department_name}</div>
                     </td>
                     <td className="py-3 px-4 font-medium text-gray-600 dark:text-gray-300">{dept.total_students}</td>
-                    <td className="py-3 px-4 font-medium text-emerald-600 dark:text-emerald-400">{dept.active_count || Math.round((dept.participation_rate / 100) * dept.total_students)}</td>
+                    <td className="py-3 px-4 font-medium text-emerald-600 dark:text-emerald-400">{dept.active_students ?? dept.active_count ?? Math.round((dept.participation_rate / 100) * dept.total_students)}</td>
                     <td className="py-3 px-4">
                       <div className="flex items-center space-x-2">
                         <div className="w-16 h-1.5 bg-gray-200 dark:bg-navy-700 rounded-full overflow-hidden">
