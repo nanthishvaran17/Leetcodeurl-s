@@ -342,6 +342,16 @@ app.add_middleware(
     expose_headers=["Content-Disposition", "Content-Length", "Content-Type"],
 )
 
+@app.middleware("http")
+async def add_performance_cache_headers(request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+    if path.startswith("/assets/") or path.endswith((".js", ".css", ".png", ".jpg", ".ico", ".svg", ".woff2")):
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    elif path.startswith("/api/public/") or path.startswith("/api/stats"):
+        response.headers["Cache-Control"] = "public, max-age=60, s-maxage=60"
+    return response
+
 # Mount All API Routers
 # RULE: Routers whose own prefix already starts with /api are mounted ONCE (no extra prefix).
 #       Routers with short/no prefix get BOTH a /api-prefixed and root mount for compat.
