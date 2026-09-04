@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Loader2, LogOut, AlertCircle, Smartphone } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { authenticateWithGoogle } from '../services/googleAuth';
@@ -96,12 +96,27 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
   return (
     <div className="space-y-3 w-full">
       {errorMsg && (
-        <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
-            <span>{errorMsg}</span>
+        <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs space-y-2 animate-fade-in">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2 font-bold">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+              <span>{errorMsg.includes('Unauthorized Domain') ? 'Firebase Domain Authorization Needed' : 'Sign-In Notice'}</span>
+            </div>
+            <button onClick={() => setErrorMsg('')} className="text-slate-400 hover:text-rose-600 text-sm font-bold px-1.5 py-0.5 rounded-md hover:bg-rose-100 dark:hover:bg-rose-900/50">×</button>
           </div>
-          <button onClick={() => setErrorMsg('')} className="text-slate-400 hover:text-rose-600 text-sm font-bold ml-2">x</button>
+          <p className="text-[11.5px] leading-relaxed font-medium">{errorMsg}</p>
+          {errorMsg.includes('Unauthorized Domain') && (
+            <div className="p-3 rounded-xl bg-white dark:bg-navy-950 border border-rose-200 dark:border-rose-900 text-[11px] text-slate-700 dark:text-slate-300 space-y-1.5 shadow-sm">
+              <p className="font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                <span>📋 1-Minute Fix in Firebase Console:</span>
+              </p>
+              <ol className="list-decimal list-inside space-y-1 text-[10.5px] leading-snug">
+                <li>Go to <b className="text-slate-900 dark:text-white">Firebase Console</b> &rarr; Select project <b className="text-brand-600">leetcode-student-data</b></li>
+                <li>Navigate to <b className="text-slate-900 dark:text-white">Authentication</b> &rarr; <b className="text-slate-900 dark:text-white">Settings</b> &rarr; <b className="text-slate-900 dark:text-white">Authorized domains</b></li>
+                <li>Click <b className="text-indigo-600">Add domain</b> &rarr; Paste: <code className="bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 px-1.5 py-0.5 rounded font-mono font-bold">{typeof window !== 'undefined' ? window.location.hostname : 'leetcodeurl-s-roan.vercel.app'}</code></li>
+              </ol>
+            </div>
+          )}
         </div>
       )}
       <button
