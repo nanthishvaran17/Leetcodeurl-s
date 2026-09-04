@@ -31,6 +31,48 @@ class MessagingService:
         return f"STAFF_{user_obj.id}" if hasattr(user_obj, "role") else str(user_obj.id)
 
     @staticmethod
+    def _is_user_online(db: Session, user_id_str: str) -> bool:
+        """Robust helper checking if a user ID, email, username, or STAFF_ID has an active WebSocket connection."""
+        if not user_id_str:
+            return False
+
+        target_clean = str(user_id_str).strip().lower()
+        targets = {target_clean}
+
+        if target_clean.startswith("staff_"):
+            targets.add(target_clean.replace("staff_", ""))
+
+        num_id = int(target_clean.replace("staff_", "")) if (target_clean.isdigit() or ("staff_" in target_clean and target_clean.replace("staff_", "").isdigit())) else -1
+        u = db.query(User).filter(
+            or_(User.email == user_id_str, User.username == user_id_str, User.id == num_id)
+        ).first()
+        if u:
+            if u.email: targets.add(u.email.strip().lower())
+            if u.username: targets.add(u.username.strip().lower())
+            if u.id: targets.add(str(u.id).strip().lower())
+
+        s = db.query(Student).filter(
+            or_(Student.email == user_id_str, Student.reg_no == user_id_str, Student.username == user_id_str)
+        ).first()
+        if s:
+            if s.email: targets.add(s.email.strip().lower())
+            if s.username: targets.add(s.username.strip().lower())
+            if s.reg_no: targets.add(s.reg_no.strip().lower())
+            if s.id: targets.add(str(s.id).strip().lower())
+
+        for ctx in manager._ws_user.values():
+            if not ctx:
+                continue
+            ws_u = str(ctx.get("user_id") or "").strip().lower()
+            ws_email = str(ctx.get("email") or "").strip().lower()
+            ws_sub = str(ctx.get("sub") or "").strip().lower()
+
+            if ws_u in targets or ws_email in targets or ws_sub in targets:
+                return True
+
+        return False
+
+    @staticmethod
     def _get_user_display(db: Session, user_id: str) -> dict:
         """Returns minimal display info for a user ID."""
         # Try Staff
@@ -205,9 +247,7 @@ class MessagingService:
         # Determine initial status (Check if recipient is online / connected via WebSocket)
         initial_status = "SENT"
         delivered_at_val = None
-        is_recipient_connected = any(
-            ctx.get("user_id") == receiver_id for ctx in manager._ws_user.values()
-        )
+        is_recipient_connected = MessagingService._is_user_online(db, receiver_id)
         if is_recipient_connected:
             initial_status = "DELIVERED"
             delivered_at_val = datetime.datetime.utcnow()
@@ -253,7 +293,13 @@ class MessagingService:
             return msg
         
         # 5. Emit Notification (Deep linked to exact conversation)
-        sender_name = getattr(current_user, "full_name", None) or getattr(current_user, "name", "A user")
+        sender_name = (
+            getattr(current_user, "full_name", None) or 
+            getattr(current_user, "name", None) or 
+            getattr(current_user, "username", None) or 
+            getattr(current_user, "email", None) or 
+            "User"
+        )
         NotificationService.emit_event(
             event_type="DIRECT_MESSAGE",
             title=f"New message from {sender_name}",
@@ -381,7 +427,7 @@ class MessagingService:
             other_info = MessagingService._get_user_display(db, other_id)
             
             # Check online status of other_user via manager connections
-            is_online = any(ctx.get("user_id") == other_id for ctx in manager._ws_user.values())
+            is_online = MessagingService._is_user_online(db, other_id)
             other_info["isOnline"] = is_online
 
             result.append({

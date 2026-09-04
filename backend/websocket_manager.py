@@ -207,8 +207,16 @@ class ConnectionManager:
 
     def is_user_in_conversation(self, user_id: str, conversation_id: str) -> bool:
         """Checks if a user has an active WebSocket looking at the specified conversation."""
+        if not user_id:
+            return False
+        u_target = str(user_id).strip().lower()
         for ctx in self._ws_user.values():
-            if ctx.get("user_id") == user_id and ctx.get("active_conversation") == conversation_id:
+            if not ctx:
+                continue
+            c_id = str(ctx.get("user_id") or "").strip().lower()
+            c_email = str(ctx.get("email") or "").strip().lower()
+            c_sub = str(ctx.get("sub") or "").strip().lower()
+            if u_target in (c_id, c_email, c_sub) and ctx.get("active_conversation") == conversation_id:
                 return True
         return False
 
