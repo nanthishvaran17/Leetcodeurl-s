@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Sparkles, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers, Inbox, Trash2, Award, Clock, Building2, GraduationCap, ChevronDown, Check, Target, Loader2 } from 'lucide-react';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
-import api from '../services/api';
+import api, { getApiUrl } from '../services/api';
 import { ReportPreview } from '../components/ReportPreview';
 import { EmailDeliveryTab } from '../components/EmailDeliveryTab';
 import { CertificateManagementModal } from '../components/CertificateManagementModal';
@@ -120,11 +120,8 @@ export const ReportsPage: React.FC = () => {
     setDownloadingFiles(prev => ({ ...prev, [filename]: true }));
     setToastMessage(`Generating ${filename}...`);
 
-    // Build the full URL (same base as axios)
-    const baseUrl = (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '')
-      .replace(/\/+$/, '');
-    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    const fullUrl = `${baseUrl}/api${cleanEndpoint}`;
+    // Use canonical getApiUrl helper to avoid duplicate /api/api prefixes
+    const fullUrl = getApiUrl(endpoint);
 
     const result = await downloadFromUrl(
       fullUrl,
