@@ -1088,7 +1088,9 @@
   .form-head {
     text-align: center !important;
     margin-bottom: clamp(0.5rem, 1.2vh, 0.85rem) !important;
-    padding-right: 28px !important;
+    padding: 0 10px !important; /* 100% Symmetrical horizontal alignment */
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .form-head h2 {
@@ -1096,6 +1098,7 @@
     font-weight: 800 !important;
     margin: 0 0 0.2rem 0 !important;
     line-height: 1.2 !important;
+    text-align: center !important;
   }
 
   .form-head p {
@@ -1103,6 +1106,14 @@
     line-height: 1.25 !important;
     color: var(--text-muted) !important;
     margin: 0 !important;
+    text-align: center !important;
+  }
+
+  .view-wrapper {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
   }
 
   /* Segmented Control Tabs */
