@@ -248,7 +248,23 @@ export function useContestWebSocket(options: string | UseContestWebSocketOptions
 
   useEffect(() => {
     connect();
+
+    const handleResume = () => {
+      if (document.visibilityState === 'visible') {
+        if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED || wsRef.current.readyState === WebSocket.CLOSING) {
+          retryCountRef.current = 0;
+          if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+          connect();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleResume);
+    window.addEventListener('focus', handleResume);
+
     return () => {
+      document.removeEventListener('visibilitychange', handleResume);
+      window.removeEventListener('focus', handleResume);
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
       if (wsRef.current) wsRef.current.close();
     };

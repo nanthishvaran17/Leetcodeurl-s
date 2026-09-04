@@ -25,6 +25,7 @@ import { CustomDropdown } from '../components/CustomDropdown';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import api from '../services/api';
+import { useGlobalWebSocket } from '../context/GlobalWebSocketProvider';
 
 // ─── Shared Card Component ───────────────────────────────────────────────────
 
@@ -771,70 +772,49 @@ export const HODCommandCenter: React.FC = () => {
     loadStudents();
   }, [loadStudents]);
 
+  const { isConnected: isGlobalWsConnected, registerCallback, unregisterCallback } = useGlobalWebSocket();
+
+  useEffect(() => {
+    setWsConnected(isGlobalWsConnected);
+  }, [isGlobalWsConnected]);
+
   // ── WebSocket Ingestion Subscription ──
   useEffect(() => {
-    let socket: WebSocket | null = null;
-    try {
-      const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
-      let wsUrl = '';
-      if (envUrl) {
-        const targetHost = envUrl.replace(/^https?:\/\//, '').replace(/\/api\/?$/, '').replace(/\/+$/, '');
-        const wsProtocol = envUrl.startsWith('https') ? 'wss:' : 'ws:';
-        wsUrl = `${wsProtocol}//${targetHost}/ws/leaderboard`;
-      } else {
-        const isHttps = window.location.protocol === 'https:';
-        const wsProtocol = isHttps ? 'wss:' : 'ws:';
-        const wsHost = window.location.host;
-        wsUrl = `${wsProtocol}//${wsHost}/ws/leaderboard`;
+    registerCallback('hod_command_center', (data) => {
+      if (!data) return;
+
+      if (data.type === 'CONTEST_RESULT_UPDATED' || data.type === 'STUDENT_ACTIVITY_UPDATED') {
+        const sid = data.studentId || data.student_id;
+        const solved = data.solvedCount ?? data.total_solved;
+
+        setStudents(prev => prev.map(s => {
+          if (s.id === sid || s.reg_no === data.regNo) {
+            return {
+              ...s,
+              total_solved: solved ?? s.total_solved,
+              weekly_change: data.weeklyChange ?? s.weekly_change,
+              contest_standing: data.contestStanding ?? (data.q1 !== undefined ? `${(data.q1+data.q2+data.q3+data.q4)}/4` : s.contest_standing),
+              status: 'ACTIVE',
+              last_updated: 'Just now'
+            };
+          }
+          return s;
+        }));
+        setLastLiveTimestamp(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }));
       }
-      socket = new WebSocket(wsUrl);
 
-      socket.onopen = () => setWsConnected(true);
-      socket.onclose = () => setWsConnected(false);
-      socket.onerror = () => setWsConnected(false);
+      if (data.type === 'STAFF_ALLOCATION_UPDATED') {
+        loadScopedData(false);
+        loadStudents();
+      }
 
-      socket.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
+      if (data.type === 'DEPARTMENT_METRICS_UPDATED') {
+        loadScopedData(false);
+      }
+    });
 
-          if (data.type === 'CONTEST_RESULT_UPDATED' || data.type === 'STUDENT_ACTIVITY_UPDATED') {
-            const sid = data.studentId || data.student_id;
-            const solved = data.solvedCount ?? data.total_solved;
-
-            setStudents(prev => prev.map(s => {
-              if (s.id === sid || s.reg_no === data.regNo) {
-                return {
-                  ...s,
-                  total_solved: solved ?? s.total_solved,
-                  weekly_change: data.weeklyChange ?? s.weekly_change,
-                  contest_standing: data.contestStanding ?? (data.q1 !== undefined ? `${(data.q1+data.q2+data.q3+data.q4)}/4` : s.contest_standing),
-                  status: 'ACTIVE',
-                  last_updated: 'Just now'
-                };
-              }
-              return s;
-            }));
-            setLastLiveTimestamp(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }));
-          }
-
-          if (data.type === 'STAFF_ALLOCATION_UPDATED') {
-            loadScopedData(false);
-            loadStudents();
-          }
-
-          if (data.type === 'DEPARTMENT_METRICS_UPDATED') {
-            loadScopedData(false);
-          }
-        } catch (e) {}
-      };
-    } catch (e) {
-      setWsConnected(false);
-    }
-
-    return () => {
-      if (socket) socket.close();
-    };
-  }, [loadScopedData, loadStudents]);
+    return () => unregisterCallback('hod_command_center');
+  }, [registerCallback, unregisterCallback, loadScopedData, loadStudents]);
 
   const handleReassign = async (studentId: number, targetFacultyId: number) => {
     try {
