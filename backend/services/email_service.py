@@ -1580,3 +1580,39 @@ def send_weekly_report_email(
         if delivered:
             success = True
     return success
+
+
+def dispatch_notification_email(
+    to_email: str,
+    subject: str,
+    message_body: str,
+    action_route: Optional[str] = None
+) -> bool:
+    """Dispatches a transactional notification email to a single recipient."""
+    if not to_email or "@" not in to_email:
+        return False
+
+    target_link = f"https://leetcodeurl-s-roan.vercel.app{action_route}" if action_route else "https://leetcodeurl-s-roan.vercel.app/dashboard"
+    html_content = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+      <h2 style="color: #2563eb; margin-top: 0;">{subject}</h2>
+      <p style="color: #334155; font-size: 14px; line-height: 1.6;">{message_body}</p>
+      <p style="margin-top: 20px;">
+        <a href="{target_link}" style="display: inline-block; background-color: #2563eb; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold;">View Notification</a>
+      </p>
+      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-top: 20px;" />
+      <p style="font-size: 11px; color: #94a3b8;">Nandha Engineering College • LeetCode Intelligence System</p>
+    </div>
+    """
+
+    try:
+        delivered, err = send_email(
+            recipient=to_email,
+            subject=subject,
+            html_body=html_content
+        )
+        return delivered
+    except Exception as e:
+        logger.warning(f"[EMAIL_DISPATCH_ERROR] Failed sending email to {to_email}: {e}")
+        return False
+

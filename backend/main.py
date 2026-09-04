@@ -565,10 +565,13 @@ try:
 except Exception as e:
     logger.warning(f"Could not mount static reports directory: {e}")
 
+@app.websocket("/ws/notifications")
 @app.websocket("/ws/leaderboard")
 async def websocket_leaderboard_endpoint(websocket: WebSocket, token: Optional[str] = None):
-    """General leaderboard WebSocket. Accepts optional JWT token for RBAC."""
-    await manager.connect(websocket, token=token)
+    """Authenticated real-time WebSocket endpoint for notifications and leaderboard events."""
+    connected = await manager.connect(websocket, token=token)
+    if not connected:
+        return
     try:
         while True:
             data = await websocket.receive_text()

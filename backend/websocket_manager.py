@@ -58,23 +58,29 @@ class ConnectionManager:
             logger.error(f"Redis listener failed: {e}")
 
 
-    async def connect(self, websocket: WebSocket, token: Optional[str] = None):
-        """Accept a WebSocket connection. Optionally validate a JWT token for RBAC."""
+    async def connect(self, websocket: WebSocket, token: Optional[str] = None) -> bool:
+        """Accept a WebSocket connection. Enforces strict authentication when a token is provided."""
         await websocket.accept()
-        self.active_connections.append(websocket)
 
-        # Attempt token authentication — graceful fallback to anonymous on failure
         user_ctx: Dict[str, Any] = {"user_id": None, "role": "anonymous", "authenticated": False}
         if token:
             try:
                 user_ctx = self._decode_ws_token(token)
+                logger.info(
+                    f"[WS_AUTH] authentication_success user_id={user_ctx.get('user_id')} "
+                    f"email={user_ctx.get('email')} role={user_ctx.get('role')}"
+                )
             except Exception as _auth_err:
-                logger.warning(f"[WS_AUTH] Token validation failed (continuing as anonymous): {_auth_err}")
+                logger.error(f"[WS_AUTH] authentication_failed token_provided=true error={_auth_err}")
+                await websocket.close(code=1008, reason="Authentication failed: invalid or expired JWT token")
+                return False
+
+        self.active_connections.append(websocket)
         self._ws_user[websocket] = user_ctx
 
         logger.info(
             f"WebSocket connected. user={user_ctx.get('user_id')} role={user_ctx.get('role')} "
-            f"total={len(self.active_connections)}"
+            f"authenticated={user_ctx.get('authenticated')} total={len(self.active_connections)}"
         )
 
         if self.redis_url and not self.redis_client:
@@ -83,6 +89,8 @@ class ConnectionManager:
         # Start background batch flush if not running
         if self._batch_task is None or self._batch_task.done():
             self._batch_task = asyncio.create_task(self._flush_loop())
+
+        return True
 
     def _decode_ws_token(self, token: str) -> Dict[str, Any]:
         """Validate a JWT token and return user context dict. Accepts standard app JWT and Firebase ID tokens."""

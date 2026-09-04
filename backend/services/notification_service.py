@@ -29,6 +29,12 @@ def _init_firebase_admin():
         return
     try:
         if not firebase_admin._apps:
+            default_proj_id = (
+                os.environ.get("FIREBASE_PROJECT_ID") or 
+                os.environ.get("GOOGLE_CLOUD_PROJECT") or 
+                "leetcode-intelligence"
+            )
+
             # 1. Environment variable (JSON string)
             env_json = (
                 os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON") or 
@@ -38,9 +44,10 @@ def _init_firebase_admin():
             if env_json and env_json.strip():
                 try:
                     cred_dict = json.loads(env_json.strip())
+                    p_id = cred_dict.get("project_id") or default_proj_id
                     cred = credentials.Certificate(cred_dict)
-                    firebase_admin.initialize_app(cred)
-                    logger.info("[FIREBASE] Admin SDK initialized from environment JSON.")
+                    firebase_admin.initialize_app(cred, {'projectId': p_id})
+                    logger.info(f"[FIREBASE] Admin SDK initialized from environment JSON (projectId={p_id}).")
                     return
                 except Exception as _e_json:
                     logger.warning(f"[FIREBASE] Failed parsing env JSON: {_e_json}")
@@ -56,9 +63,16 @@ def _init_firebase_admin():
             for p in possible_paths:
                 if os.path.exists(p):
                     try:
+                        p_id = default_proj_id
+                        try:
+                            with open(p, 'r') as _f:
+                                _data = json.load(_f)
+                                p_id = _data.get("project_id") or default_proj_id
+                        except Exception:
+                            pass
                         cred = credentials.Certificate(p)
-                        firebase_admin.initialize_app(cred)
-                        logger.info(f"[FIREBASE] Admin SDK initialized from {os.path.basename(p)}.")
+                        firebase_admin.initialize_app(cred, {'projectId': p_id})
+                        logger.info(f"[FIREBASE] Admin SDK initialized from {os.path.basename(p)} (projectId={p_id}).")
                         return
                     except Exception as _file_err:
                         logger.warning(f"[FIREBASE] Certificate error with {p}: {_file_err}")
@@ -66,8 +80,8 @@ def _init_firebase_admin():
             # 3. Application Default Credentials
             try:
                 cred = credentials.ApplicationDefault()
-                firebase_admin.initialize_app(cred)
-                logger.info("[FIREBASE] Admin SDK initialized using ApplicationDefault.")
+                firebase_admin.initialize_app(cred, {'projectId': default_proj_id})
+                logger.info(f"[FIREBASE] Admin SDK initialized using ApplicationDefault (projectId={default_proj_id}).")
             except Exception as _adc_err:
                 logger.warning(f"[FIREBASE] Push notifications notice: serviceAccountKey.json missing or invalid ({_adc_err}).")
     except Exception as e:
