@@ -151,6 +151,33 @@ def run_db_migrations():
             "ALTER TABLE scheduled_job_executions ADD COLUMN IF NOT EXISTS error_message TEXT",
             "ALTER TABLE scheduled_job_executions ADD COLUMN IF NOT EXISTS last_error TEXT",
             "ALTER TABLE scheduled_job_executions ADD COLUMN IF NOT EXISTS next_run TIMESTAMP",
+            # ── conversations table ──────────────────────────────────────────
+            "ALTER TABLE conversations ADD COLUMN IF NOT EXISTS last_message_preview VARCHAR(255)",
+            "ALTER TABLE conversations ADD COLUMN IF NOT EXISTS last_message_at TIMESTAMP",
+            "ALTER TABLE conversations ADD COLUMN IF NOT EXISTS unread_count_1 INTEGER DEFAULT 0",
+            "ALTER TABLE conversations ADD COLUMN IF NOT EXISTS unread_count_2 INTEGER DEFAULT 0",
+            # ── messages table ───────────────────────────────────────────────
+            "ALTER TABLE messages ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMP",
+            "ALTER TABLE messages ADD COLUMN IF NOT EXISTS read_at TIMESTAMP",
+            "ALTER TABLE messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP",
+            "ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_edited BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_deleted_everyone BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE messages ADD COLUMN IF NOT EXISTS deleted_by_users TEXT DEFAULT '[]'",
+            "ALTER TABLE messages ADD COLUMN IF NOT EXISTS reply_to_message_id VARCHAR(100)",
+            "ALTER TABLE messages ADD COLUMN IF NOT EXISTS reactions TEXT DEFAULT '{}'",
+            "ALTER TABLE messages ADD COLUMN IF NOT EXISTS attachment_file_id VARCHAR(100)",
+            # ── notification_files table ─────────────────────────────────────
+            "ALTER TABLE notification_files ADD COLUMN IF NOT EXISTS file_size INTEGER",
+            "ALTER TABLE notification_files ADD COLUMN IF NOT EXISTS entity_type VARCHAR(60)",
+            "ALTER TABLE notification_files ADD COLUMN IF NOT EXISTS entity_id VARCHAR(100)",
+            "ALTER TABLE notification_files ADD COLUMN IF NOT EXISTS access_scope VARCHAR(100) DEFAULT 'ALL'",
+            "ALTER TABLE notification_files ADD COLUMN IF NOT EXISTS allowed_user_ids TEXT",
+            "ALTER TABLE notification_files ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE notification_files ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP",
+            # ── notification_preferences table ───────────────────────────────
+            "ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS push_enabled BOOLEAN DEFAULT TRUE",
+            "ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS email_enabled BOOLEAN DEFAULT TRUE",
+            "ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS categories_json TEXT",
             
             # ── Session Recovery ─────────────────────────────────────────────
             "UPDATE weekly_sessions SET status = 'SCHEDULED' WHERE status = 'FINALIZED' AND id NOT IN (SELECT session_id FROM official_weekly_snapshots)",
@@ -170,6 +197,10 @@ def run_db_migrations():
             "CREATE INDEX IF NOT EXISTS ix_weekly_virtual_results_session_student ON weekly_virtual_results (session_id, student_id)",
             "CREATE INDEX IF NOT EXISTS ix_weekly_student_progress_student_week ON weekly_student_progress (student_id, week_number)",
             "CREATE INDEX IF NOT EXISTS ix_students_active_dept ON students (is_active, department_id)",
+            "CREATE INDEX IF NOT EXISTS ix_messages_conv_created ON messages (conversation_id, created_at)",
+            "CREATE INDEX IF NOT EXISTS ix_messages_unread_status ON messages (conversation_id, receiver_id, status)",
+            "CREATE INDEX IF NOT EXISTS ix_messages_message_id ON messages (message_id)",
+            "CREATE INDEX IF NOT EXISTS ix_conversations_conversation_id ON conversations (conversation_id)",
         ]
         for idx_sql in perf_indexes:
             try:

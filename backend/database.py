@@ -320,27 +320,31 @@ def run_migrations():
 
             # Check messages table columns for WhatsApp-style messaging
             try:
-                result_msg = conn.execute(
-                    __import__('sqlalchemy').text("PRAGMA table_info(messages)")
-                )
-                msg_cols = {row[1] for row in result_msg}
-                if msg_cols:
-                    msg_migrations = [
-                        ("delivered_at", "ALTER TABLE messages ADD COLUMN delivered_at DATETIME"),
-                        ("read_at", "ALTER TABLE messages ADD COLUMN read_at DATETIME"),
-                        ("edited_at", "ALTER TABLE messages ADD COLUMN edited_at DATETIME"),
-                        ("is_edited", "ALTER TABLE messages ADD COLUMN is_edited BOOLEAN DEFAULT 0"),
-                        ("is_deleted_everyone", "ALTER TABLE messages ADD COLUMN is_deleted_everyone BOOLEAN DEFAULT 0"),
-                        ("deleted_by_users", "ALTER TABLE messages ADD COLUMN deleted_by_users TEXT DEFAULT '[]'"),
-                        ("reply_to_message_id", "ALTER TABLE messages ADD COLUMN reply_to_message_id VARCHAR(100)"),
-                        ("reactions", "ALTER TABLE messages ADD COLUMN reactions TEXT DEFAULT '{}'"),
-                        ("attachment_file_id", "ALTER TABLE messages ADD COLUMN attachment_file_id VARCHAR(100)")
-                    ]
-                    for col_name, sql in msg_migrations:
-                        if col_name not in msg_cols:
-                            conn.execute(__import__('sqlalchemy').text(sql))
-                            conn.commit()
-                            print(f"[DB Migration] Added messages column: {col_name}")
+                from sqlalchemy import inspect as _inspect
+                inspector = _inspect(conn)
+                if "messages" in inspector.get_table_names():
+                    msg_cols = {c["name"] for c in inspector.get_columns("messages")}
+                    if msg_cols:
+                        is_pg = "postgresql" in db_url or "postgres" in db_url
+                        dt_type = "TIMESTAMP" if is_pg else "DATETIME"
+                        bool_def = "FALSE" if is_pg else "0"
+                        
+                        msg_migrations = [
+                            ("delivered_at", f"ALTER TABLE messages ADD COLUMN delivered_at {dt_type}"),
+                            ("read_at", f"ALTER TABLE messages ADD COLUMN read_at {dt_type}"),
+                            ("edited_at", f"ALTER TABLE messages ADD COLUMN edited_at {dt_type}"),
+                            ("is_edited", f"ALTER TABLE messages ADD COLUMN is_edited BOOLEAN DEFAULT {bool_def}"),
+                            ("is_deleted_everyone", f"ALTER TABLE messages ADD COLUMN is_deleted_everyone BOOLEAN DEFAULT {bool_def}"),
+                            ("deleted_by_users", "ALTER TABLE messages ADD COLUMN deleted_by_users TEXT DEFAULT '[]'"),
+                            ("reply_to_message_id", "ALTER TABLE messages ADD COLUMN reply_to_message_id VARCHAR(100)"),
+                            ("reactions", "ALTER TABLE messages ADD COLUMN reactions TEXT DEFAULT '{}'"),
+                            ("attachment_file_id", "ALTER TABLE messages ADD COLUMN attachment_file_id VARCHAR(100)")
+                        ]
+                        for col_name, sql in msg_migrations:
+                            if col_name not in msg_cols:
+                                conn.execute(__import__('sqlalchemy').text(sql))
+                                conn.commit()
+                                print(f"[DB Migration] Added messages column: {col_name}")
             except Exception as _e_msg:
                 print(f"[DB Migration] messages table migration note: {_e_msg}")
 

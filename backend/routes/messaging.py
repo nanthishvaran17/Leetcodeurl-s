@@ -32,6 +32,24 @@ class TypingRequest(BaseModel):
     receiver_id: str
     is_typing: bool
 
+def _auto_migrate_and_retry(db: Session, fn, *args, **kwargs):
+    try:
+        return fn(*args, **kwargs)
+    except ValueError:
+        raise
+    except Exception as e:
+        err_str = str(e).lower()
+        if "undefinedcolumn" in err_str or "does not exist" in err_str or "no such column" in err_str or "column" in err_str:
+            logger.warning(f"[MESSAGING] DB schema out of sync ({e}). Running auto-migration and retrying...")
+            db.rollback()
+            try:
+                from backend.migrate_db import run_db_migrations
+                run_db_migrations()
+            except Exception as mig_err:
+                logger.error(f"[MESSAGING] Auto-migration error: {mig_err}")
+            return fn(*args, **kwargs)
+        raise
+
 @router.get("/available-recipients")
 def get_available_recipients_endpoint(
     db: Session = Depends(get_db),
@@ -39,7 +57,7 @@ def get_available_recipients_endpoint(
 ):
     """Returns a list of users the authenticated user is allowed to message."""
     try:
-        recipients = MessagingService.get_available_recipients(db, current_user)
+        recipients = _auto_migrate_and_retry(db, MessagingService.get_available_recipients, db, current_user)
         return {"success": True, "recipients": recipients}
     except Exception as e:
         logger.error(f"Error fetching recipients: {e}")
@@ -52,7 +70,7 @@ def get_conversations_endpoint(
 ):
     """Returns all active conversations for the authenticated user."""
     try:
-        conversations = MessagingService.get_conversations(db, current_user)
+        conversations = _auto_migrate_and_retry(db, MessagingService.get_conversations, db, current_user)
         return {"success": True, "conversations": conversations}
     except Exception as e:
         logger.error(f"Error fetching conversations: {e}")
@@ -67,10 +85,10 @@ def get_messages_endpoint(
 ):
     """Returns messages for a specific conversation."""
     try:
-        messages = MessagingService.get_messages(db, current_user, conversation_id, limit=limit)
+        messages = _auto_migrate_and_retry(db, MessagingService.get_messages, db, current_user, conversation_id, limit=limit)
         
         # Also mark them as read when fetching
-        MessagingService.mark_as_read(db, current_user, conversation_id)
+        _auto_migrate_and_retry(db, MessagingService.mark_as_read, db, current_user, conversation_id)
         
         return {"success": True, "messages": messages}
     except ValueError as e:
@@ -87,7 +105,9 @@ def send_message_endpoint(
 ):
     """Sends a new message and creates/updates the conversation."""
     try:
-        msg = MessagingService.send_message(
+        msg = _auto_migrate_and_retry(
+            db,
+            MessagingService.send_message,
             db=db,
             current_user=current_user,
             receiver_id=req.receiver_id,

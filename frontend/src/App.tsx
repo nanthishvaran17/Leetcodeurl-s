@@ -16,39 +16,61 @@ import { useGlobalKeyboardShortcuts } from './hooks/useGlobalKeyboardShortcuts';
 import { useCapacitorPush } from './hooks/useCapacitorPush';
 import { initPushNotifications } from './services/pushNotifications';
 import { InstallAppPrompt } from './components/InstallAppPrompt';
+// Safe lazy import wrapper with automatic chunk reload on Vercel deployment update
+function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ default: T }>) {
+  return lazy(() =>
+    factory().catch((error) => {
+      const msg = String(error?.message || error);
+      if (
+        msg.includes('Failed to fetch dynamically imported module') ||
+        msg.includes('Importing a module script failed') ||
+        error?.name === 'ChunkLoadError'
+      ) {
+        const reloadKey = 'app_chunk_reload_' + window.location.pathname;
+        if (!sessionStorage.getItem(reloadKey)) {
+          sessionStorage.setItem(reloadKey, '1');
+          window.location.reload();
+          return new Promise(() => {});
+        }
+      }
+      throw error;
+    })
+  );
+}
+
 // Critical-path pages (always needed within 1 navigation) — keep synchronous
-const LandingPage = lazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
-const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
-const DashboardPage = lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
-const StudentMasterPage = lazy(() => import('./pages/StudentMasterPage').then(m => ({ default: m.StudentMasterPage })));
-const StudentProfilePage = lazy(() => import('./pages/StudentProfilePage').then(m => ({ default: m.StudentProfilePage })));
+const LandingPage = safeLazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
+const LoginPage = safeLazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const DashboardPage = safeLazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
+const StudentMasterPage = safeLazy(() => import('./pages/StudentMasterPage').then(m => ({ default: m.StudentMasterPage })));
+const StudentProfilePage = safeLazy(() => import('./pages/StudentProfilePage').then(m => ({ default: m.StudentProfilePage })));
 // Heavy modals — lazy, only mounted on demand
-const AlertCenterModal = lazy(() => import('./components/AlertCenterModal').then(m => ({ default: m.AlertCenterModal })));
-const ImportModal = lazy(() => import('./components/ImportModal').then(m => ({ default: m.ImportModal })));
-const AIAssistantWidget = lazy(() => import('./components/AIAssistantWidget').then(m => ({ default: m.AIAssistantWidget })));
+const AlertCenterModal = safeLazy(() => import('./components/AlertCenterModal').then(m => ({ default: m.AlertCenterModal })));
+const ImportModal = safeLazy(() => import('./components/ImportModal').then(m => ({ default: m.ImportModal })));
+const AIAssistantWidget = safeLazy(() => import('./components/AIAssistantWidget').then(m => ({ default: m.AIAssistantWidget })));
 // Already-lazy-loaded heavy page modules for 60%+ smaller initial bundle size & ultra-fast initial load
-const ComparePage = lazy(() => import('./pages/ComparePage').then(m => ({ default: m.ComparePage })));
-const DataQualityPage = lazy(() => import('./pages/DataQualityPage').then(m => ({ default: m.DataQualityPage })));
-const ReportsPage = lazy(() => import('./pages/ReportsPage').then(m => ({ default: m.ReportsPage })));
-const DepartmentDashboard = lazy(() => import('./pages/DepartmentDashboard').then(m => ({ default: m.DepartmentDashboard })));
-const PublicLeaderboardPage = lazy(() => import('./pages/PublicLeaderboardPage').then(m => ({ default: m.PublicLeaderboardPage })));
-const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
-const AuditLogPage = lazy(() => import('./pages/AuditLogPage').then(m => ({ default: m.AuditLogPage })));
-const WeeklyContestPage = lazy(() => import('./pages/WeeklyContestPage').then(m => ({ default: m.WeeklyContestPage })));
-const StudentDashboardView = lazy(() => import('./pages/StudentDashboardView').then(m => ({ default: m.StudentDashboardView })));
-const StaffDashboardView = lazy(() => import('./pages/StaffDashboardView').then(m => ({ default: m.StaffDashboardView })));
-const GrowthIntelligencePage = lazy(() => import('./pages/GrowthIntelligencePage').then(m => ({ default: m.GrowthIntelligencePage })));
-const MessagesPage = lazy(() => import('./pages/MessagesPage').then(m => ({ default: m.MessagesPage })));
-const SystemHealthPage = lazy(() => import('./pages/SystemHealthPage').then(m => ({ default: m.SystemHealthPage })));
-const CertificateVerificationPage = lazy(() => import('./pages/CertificateVerificationPage').then(m => ({ default: m.CertificateVerificationPage })));
-const AIControlCenterPage = lazy(() => import('./pages/AIControlCenterPage').then(m => ({ default: m.AIControlCenterPage })));
-const HODCommandCenter = lazy(() => import('./pages/HODCommandCenter').then(m => ({ default: m.HODCommandCenter })));
-const FacultyActionCenter = lazy(() => import('./pages/FacultyActionCenter').then(m => ({ default: m.FacultyActionCenter })));
-const StudentDataIssuesPage = lazy(() => import('./pages/StudentDataIssuesPage').then(m => ({ default: m.StudentDataIssuesPage })));
-const HallOfFameKioskPage = lazy(() => import('./pages/HallOfFameKioskPage').then(m => ({ default: m.HallOfFameKioskPage })));
-const AccreditationStudioPage = lazy(() => import('./pages/AccreditationStudioPage').then(m => ({ default: m.AccreditationStudioPage })));
-const AccessDeniedPage = lazy(() => import('./pages/AccessDeniedPage').then(m => ({ default: m.AccessDeniedPage })));
-const ContestIntegrityMonitor = lazy(() => import('./pages/ContestIntegrityMonitor').then(m => ({ default: m.ContestIntegrityMonitor })));
+const ComparePage = safeLazy(() => import('./pages/ComparePage').then(m => ({ default: m.ComparePage })));
+const DataQualityPage = safeLazy(() => import('./pages/DataQualityPage').then(m => ({ default: m.DataQualityPage })));
+const ReportsPage = safeLazy(() => import('./pages/ReportsPage').then(m => ({ default: m.ReportsPage })));
+const DepartmentDashboard = safeLazy(() => import('./pages/DepartmentDashboard').then(m => ({ default: m.DepartmentDashboard })));
+const PublicLeaderboardPage = safeLazy(() => import('./pages/PublicLeaderboardPage').then(m => ({ default: m.PublicLeaderboardPage })));
+const SettingsPage = safeLazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const AuditLogPage = safeLazy(() => import('./pages/AuditLogPage').then(m => ({ default: m.AuditLogPage })));
+const WeeklyContestPage = safeLazy(() => import('./pages/WeeklyContestPage').then(m => ({ default: m.WeeklyContestPage })));
+const StudentDashboardView = safeLazy(() => import('./pages/StudentDashboardView').then(m => ({ default: m.StudentDashboardView })));
+const StaffDashboardView = safeLazy(() => import('./pages/StaffDashboardView').then(m => ({ default: m.StaffDashboardView })));
+const GrowthIntelligencePage = safeLazy(() => import('./pages/GrowthIntelligencePage').then(m => ({ default: m.GrowthIntelligencePage })));
+const MessagesPage = safeLazy(() => import('./pages/MessagesPage').then(m => ({ default: m.MessagesPage })));
+const SystemHealthPage = safeLazy(() => import('./pages/SystemHealthPage').then(m => ({ default: m.SystemHealthPage })));
+const CertificateVerificationPage = safeLazy(() => import('./pages/CertificateVerificationPage').then(m => ({ default: m.CertificateVerificationPage })));
+const AIControlCenterPage = safeLazy(() => import('./pages/AIControlCenterPage').then(m => ({ default: m.AIControlCenterPage })));
+const HODCommandCenter = safeLazy(() => import('./pages/HODCommandCenter').then(m => ({ default: m.HODCommandCenter })));
+const FacultyActionCenter = safeLazy(() => import('./pages/FacultyActionCenter').then(m => ({ default: m.FacultyActionCenter })));
+const StudentDataIssuesPage = safeLazy(() => import('./pages/StudentDataIssuesPage').then(m => ({ default: m.StudentDataIssuesPage })));
+const HallOfFameKioskPage = safeLazy(() => import('./pages/HallOfFameKioskPage').then(m => ({ default: m.HallOfFameKioskPage })));
+const AccreditationStudioPage = safeLazy(() => import('./pages/AccreditationStudioPage').then(m => ({ default: m.AccreditationStudioPage })));
+const AccessDeniedPage = safeLazy(() => import('./pages/AccessDeniedPage').then(m => ({ default: m.AccessDeniedPage })));
+const ContestIntegrityMonitor = safeLazy(() => import('./pages/ContestIntegrityMonitor').then(m => ({ default: m.ContestIntegrityMonitor })));
 
 const PageSkeleton = () => (
   <div className="p-8 text-center py-20 text-brand-600 dark:text-brand-400 font-bold space-y-3 animate-pulse">
