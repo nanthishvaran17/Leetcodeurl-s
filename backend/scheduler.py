@@ -278,13 +278,20 @@ async def sunday_2150_virtual_recheck_job():
 async def sunday_2200_virtual_contest_job():
     """
     Scheduled for Sunday 10:00 PM IST: End-of-Day Virtual contest finalization, combined report generation, email & rollover to Next Contest.
+    Evaluates 09:57 PM Final Lock Readiness Gate. If gate fails, state shifts to LOCK_BLOCKED.
     """
-    logger.info("[SCHEDULER] Sunday 10:00 PM IST: Autopilot Phase 7 & 8 Virtual Contest Final Lock & Next Contest Rollover...")
+    logger.info("[SCHEDULER] Sunday 10:00 PM IST: Evaluating Final Lock Gate & Executing Rollover...")
     db = SessionLocal()
     try:
+        gate_res = sunday_autopilot.evaluate_final_lock_readiness_gate(db=db)
+        if not gate_res.get("allow_lock", False):
+            logger.error(f"[SCHEDULER_LOCK_BLOCKED] Final Lock Gate blocked: {gate_res}")
+            return gate_res
+        
         res7 = sunday_autopilot.phase_7_virtual_sync_2200(db)
         res8 = sunday_autopilot.phase_8_prepare_next_contest(db)
         logger.info(f"[SCHEDULER] Sunday 10:00 PM Virtual Finalization & Next Contest Rollover Completed: {res7}, Next: {res8}")
+        return {"success": True, "gate": gate_res, "finalization": res7, "rollover": res8}
     except Exception as e:
         logger.error(f"[SCHEDULER] Error in sunday_2200_virtual_contest_job: {e}", exc_info=True)
     finally:
