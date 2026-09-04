@@ -83,6 +83,11 @@ export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
         );
       } else if (popupErr.code === 'auth/popup-closed-by-user') {
         throw new Error('Google sign-in was cancelled.');
+      } else if (popupErr.code === 'auth/unauthorized-domain' || errStr.includes('unauthorized-domain')) {
+        const currentHost = typeof window !== 'undefined' ? window.location.hostname : 'this domain';
+        throw new Error(
+          `Unauthorized Domain: "${currentHost}" is not authorized in Firebase Console. To enable Google Sign-In, add "${currentHost}" under Firebase Console -> Authentication -> Settings -> Authorized Domains (or use Email/Password / OTP login).`
+        );
       } else if (popupErr.code === 'auth/popup-blocked' || errStr.includes('popup-blocked') || errStr.includes('popup')) {
         console.warn('[GOOGLE_POPUP_BLOCKED] Popup blocked by browser. Falling back to signInWithRedirect...');
         await signInWithRedirect(auth, googleProvider);
