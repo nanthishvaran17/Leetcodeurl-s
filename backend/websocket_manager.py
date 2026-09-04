@@ -213,6 +213,43 @@ class ConnectionManager:
             except Exception as inner_e:
                 logger.warning(f"Could not broadcast sync event: {inner_e}")
 
+    async def send_to_user(self, user_id: str, message: dict):
+        """Sends a WebSocket message to all active connections matching user_id or email."""
+        if not user_id:
+            return
+        target = str(user_id).strip().lower()
+        payload = json.dumps(message)
+        disconnected = []
+
+        for ws, ctx in list(self._ws_user.items()):
+            ws_uid = str(ctx.get("user_id") or "").strip().lower()
+            ws_email = str(ctx.get("email") or "").strip().lower()
+            if ws_uid == target or ws_email == target or (ws_uid and target in ws_uid):
+                try:
+                    await ws.send_text(payload)
+                except Exception as e:
+                    logger.warning(f"[WS_SEND_USER] Error sending to user {user_id}: {e}")
+                    disconnected.append(ws)
+
+        for conn in disconnected:
+            self.disconnect(conn)
+
+    def send_to_user_sync(self, user_id: str, message: dict):
+        """Thread-safe synchronous wrapper around send_to_user."""
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                asyncio.create_task(self.send_to_user(user_id, message))
+            else:
+                loop.run_until_complete(self.send_to_user(user_id, message))
+        except Exception as e:
+            try:
+                new_loop = asyncio.new_event_loop()
+                new_loop.run_until_complete(self.send_to_user(user_id, message))
+                new_loop.close()
+            except Exception as inner_e:
+                logger.warning(f"Could not send sync message to user {user_id}: {inner_e}")
+
     async def broadcast_contest_result(
         self,
         student_id: int,

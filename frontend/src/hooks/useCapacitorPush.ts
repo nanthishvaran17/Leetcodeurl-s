@@ -61,7 +61,7 @@ export const useCapacitorPush = () => {
 
       await PushNotifications.addListener('pushNotificationReceived', (notification) => {
         console.log('[CAPACITOR PUSH] Push received in foreground: ', notification);
-        // We can show an in-app toast here if we want, or rely on Firestore sync
+        window.dispatchEvent(new CustomEvent('fcm_notification_received', { detail: notification }));
       });
 
       await PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {

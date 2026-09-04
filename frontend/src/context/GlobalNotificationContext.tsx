@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
+import { useGlobalWebSocket } from './GlobalWebSocketProvider';
+import { useNotification as useToastNotification } from './NotificationContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '';
 
@@ -55,11 +57,21 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
   // Keep selectedCategory in a ref so snapshot callbacks can read latest value
-  // WITHOUT being listed as a dependency (prevents tearing down Firestore listener on category change)
+  // WITHOUT being listed as a dependency
   const selectedCategoryRef = React.useRef(selectedCategory);
   selectedCategoryRef.current = selectedCategory;
   
   const { user, isAuthenticated, token } = useAuth();
+  const { registerCallback, unregisterCallback } = useGlobalWebSocket();
+  const { notify } = useToastNotification();
+  const seenNotificationIdsRef = React.useRef(new Set<string>());
+
+  // Request browser desktop notification permission if supported
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {});
+    }
+  }, []);
 
   const registerFCMDeviceToken = useCallback(async (fcmToken: string, platform: string = 'web'): Promise<boolean> => {
     if (!token) return false;
@@ -129,7 +141,6 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
   const fetchFromBackendAPI = useCallback(async () => {
     if (!token) return;
     try {
-      // Always fetch all — category filtering applied via useMemo
       const res = await fetch(`${API_BASE_URL}/api/notifications`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -151,9 +162,130 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
     } catch (err) {
       console.warn("[GlobalNotificationContext] REST API sync notice:", err);
     }
-  // token and user are stable — selectedCategory intentionally NOT in deps
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, user?.email]);
+
+  const handleIncomingNotification = useCallback((payload: any) => {
+    if (!payload) return;
+
+    const eventType = payload.type || payload.eventType;
+    if (eventType !== 'NEW_NOTIFICATION' && eventType !== 'notification') {
+      return;
+    }
+
+    const notif = payload.notification || payload;
+    const notifId = notif.id || notif.notification_id || notif.eventId || notif.event_id;
+    if (!notifId) return;
+
+    if (seenNotificationIdsRef.current.has(String(notifId))) {
+      return;
+    }
+    seenNotificationIdsRef.current.add(String(notifId));
+
+    const title = notif.title || 'New Notification';
+    const message = notif.message || notif.body || '';
+    const category = notif.category || notif.event_type || 'announcements';
+    const priority = notif.priority || 'normal';
+    const actionRoute = notif.action_url || notif.action_route || notif.actionRoute || '/dashboard';
+
+    const newNotificationItem: Notification = {
+      id: String(notifId),
+      eventId: notif.event_id || notif.eventId || String(notifId),
+      title,
+      message,
+      body: message,
+      type: category,
+      category,
+      priority,
+      recipientUserId: notif.recipient_user_id || notif.recipient_id || user?.email || '',
+      createdAt: notif.created_at || notif.createdAt || new Date().toISOString(),
+      isRead: false,
+      actionRoute,
+      entityType: notif.entity_type || notif.entityType,
+      entityId: notif.entity_id || notif.entityId,
+      fileId: notif.file_id || notif.fileId,
+      createdBy: notif.sender_name || notif.sender_id || 'System'
+    };
+
+    setAllNotifications(prev => [newNotificationItem, ...prev.filter(n => n.id !== String(notifId))]);
+    setUnreadCount(prev => prev + 1);
+
+    // Immediate Foreground Popup / Toast
+    if (!document.hidden) {
+      notify.info(title, message, {
+        category: category.toUpperCase(),
+        duration: priority === 'high' || priority === 'critical' ? 7000 : 5000,
+        actionLabel: 'Open',
+        onAction: () => {
+          if (actionRoute) {
+            window.location.href = actionRoute;
+          }
+        }
+      });
+    } else {
+      // Browser background tab notification
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+          const bNotif = new window.Notification(title, {
+            body: message,
+            icon: '/logo.png',
+            tag: String(notifId)
+          });
+          bNotif.onclick = () => {
+            window.focus();
+            if (actionRoute) window.location.href = actionRoute;
+          };
+        } catch (e) {
+          console.warn('[Browser Notification] Error showing notification:', e);
+        }
+      }
+    }
+  }, [user?.email, notify]);
+
+  // Register WebSocket listener
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    
+    registerCallback('global_notification_context', (data: any) => {
+      handleIncomingNotification(data);
+    });
+
+    return () => {
+      unregisterCallback('global_notification_context');
+    };
+  }, [isAuthenticated, registerCallback, unregisterCallback, handleIncomingNotification]);
+
+  // Listen to mobile FCM foreground custom event
+  useEffect(() => {
+    const handleFcmReceived = (event: any) => {
+      const detail = event.detail;
+      if (!detail) return;
+      const notifData = detail.notification || detail;
+      const notifId = notifData.data?.notificationId || notifData.id || `fcm_${Date.now()}`;
+
+      if (seenNotificationIdsRef.current.has(String(notifId))) return;
+      seenNotificationIdsRef.current.add(String(notifId));
+
+      const title = notifData.title || notifData.data?.title || 'New Notification';
+      const message = notifData.body || notifData.data?.message || '';
+      const actionRoute = notifData.data?.actionRoute || '/dashboard';
+
+      setUnreadCount(prev => prev + 1);
+      notify.info(title, message, {
+        category: 'MOBILE PUSH',
+        duration: 5000,
+        actionLabel: 'Open',
+        onAction: () => {
+          if (actionRoute) window.location.href = actionRoute;
+        }
+      });
+      fetchFromBackendAPI();
+    };
+
+    window.addEventListener('fcm_notification_received', handleFcmReceived);
+    return () => {
+      window.removeEventListener('fcm_notification_received', handleFcmReceived);
+    };
+  }, [notify, fetchFromBackendAPI]);
 
   useEffect(() => {
     if (!isAuthenticated || !user) {
@@ -166,29 +298,6 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
 
     setIsLoading(true);
     setError(null);
-
-    const roleClean = (user.role || '').trim().toLowerCase();
-    const isStaffOrAdmin = ['admin', 'administrator', 'super admin', 'super_admin', 'hod', 'faculty', 'staff', 'professor'].includes(roleClean);
-    const isAdmin = ['admin', 'administrator', 'super admin', 'super_admin'].includes(roleClean);
-
-    const targetIds = new Set<string>();
-    targetIds.add('ALL');
-    if (user.id) targetIds.add(String(user.id));
-    if (user.email) {
-      targetIds.add(user.email.toLowerCase().trim());
-      targetIds.add(user.email.trim());
-    }
-    if (user.uid) targetIds.add(user.uid);
-    if (user.username) {
-      targetIds.add(user.username.toLowerCase().trim());
-      targetIds.add(user.username.trim());
-    }
-    if (isStaffOrAdmin) targetIds.add('STAFF');
-    if (isAdmin) targetIds.add('ADMIN');
-    if (roleClean === 'student') targetIds.add('STUDENT');
-
-    const validTargets = Array.from(targetIds).slice(0, 10);
-    
     fetchFromBackendAPI();
   }, [user, isAuthenticated, fetchFromBackendAPI]);
 

@@ -358,6 +358,42 @@ class NotificationService:
 
             db.commit()
 
+            # 1.5 Real-Time WebSocket Delivery
+            try:
+                from backend.websocket_manager import manager
+                for item in firestore_batch_items:
+                    ws_payload = {
+                        "type": "NEW_NOTIFICATION",
+                        "notification": {
+                            "id": item["id"],
+                            "notification_id": item["id"],
+                            "event_id": eff_event_id,
+                            "recipient_id": item["recipientUserId"],
+                            "recipient_user_id": item["recipientUserId"],
+                            "category": category,
+                            "event_type": event_type,
+                            "title": title,
+                            "message": body,
+                            "body": body,
+                            "sender_id": actor_user_id,
+                            "sender_name": actor_user_id or "System",
+                            "created_at": now_utc.isoformat(),
+                            "action_url": eff_route,
+                            "action_route": eff_route,
+                            "priority": eff_priority,
+                            "entity_type": eff_entity_type,
+                            "entity_id": entity_id,
+                            "file_id": file_id,
+                            "is_read": False
+                        }
+                    }
+                    if (recipient_scope or "").upper() in ("ALL", "GLOBAL"):
+                        manager.broadcast_sync(ws_payload)
+                    else:
+                        manager.send_to_user_sync(item["recipientUserId"], ws_payload)
+            except Exception as _ws_err:
+                logger.warning(f"[NOTIF_ENGINE] WebSocket dispatch notice: {_ws_err}")
+
             # 2. Firestore Real-time Sync
             if FIREBASE_ADMIN_AVAILABLE and firestore and firebase_admin and firebase_admin._apps:
                 try:

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { LiveEventRouter } from '../services/LiveEventRouter';
+import { useAuth } from './AuthContext';
 
 interface GlobalWebSocketContextType {
   isConnected: boolean;
@@ -16,6 +17,7 @@ export const GlobalWebSocketProvider: React.FC<{ children: React.ReactNode }> = 
   const workerRef = useRef<Worker | null>(null);
   const queryClient = useQueryClient();
   const eventRouter = useMemo(() => new LiveEventRouter(queryClient), [queryClient]);
+  const { token } = useAuth();
 
   // Expose globally so WeeklyContestPage's ws_virtual_event listener can route
   // virtual contest events through the established handleMessage pipeline.
@@ -56,6 +58,10 @@ export const GlobalWebSocketProvider: React.FC<{ children: React.ReactNode }> = 
     } else {
       const loc = window.location;
       wsUrl = `${loc.protocol === 'https:' ? 'wss:' : 'ws:'}//${loc.host}/ws/leaderboard`;
+    }
+
+    if (token) {
+      wsUrl += `?token=${encodeURIComponent(token)}`;
     }
 
     try {
@@ -103,7 +109,7 @@ export const GlobalWebSocketProvider: React.FC<{ children: React.ReactNode }> = 
       }
       setIsConnected(false);
     };
-  }, [eventRouter]);
+  }, [eventRouter, token]);
 
   return (
     <GlobalWebSocketContext.Provider value={{ isConnected, registerCallback, unregisterCallback, sendMessage }}>
