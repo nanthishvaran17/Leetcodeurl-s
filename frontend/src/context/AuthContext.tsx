@@ -5,14 +5,7 @@ import {
   onAuthStateChanged,
   User as FirebaseUser
 } from 'firebase/auth';
-import {
-  doc,
-  getDoc,
-  setDoc,
-  serverTimestamp,
-  updateDoc
-} from 'firebase/firestore';
-import { auth, googleProvider, db, getOrInitAuth, getOrInitDb } from '../firebase';
+import { auth, googleProvider, getOrInitAuth } from '../firebase';
 import api from '../services/api';
 
 export interface AuthUser {
@@ -107,7 +100,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setToken(idToken);
           localStorage.setItem('token', idToken);
 
-          const activeDb = db || getOrInitDb();
+          const { doc, getDoc, setDoc, updateDoc, serverTimestamp } = await import('firebase/firestore');
+          const { getOrInitDbAsync } = await import('../firebase');
+          const activeDb = await getOrInitDbAsync();
+
           const userDocRef = doc(activeDb, 'users', fbUser.uid);
           const userDocSnap = await getDoc(userDocRef);
 
@@ -283,24 +279,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
   };
 
-  const clearAuthError = () => setAuthError(null);
+  const clearAuthError = React.useCallback(() => setAuthError(null), []);
+
+  const contextValue = React.useMemo(() => ({
+    user,
+    token,
+    loading,
+    authError,
+    login,
+    signInWithGoogle,
+    sendOtp,
+    verifyOtp,
+    logout,
+    clearAuthError,
+    isAuthenticated: !!user
+  }), [user, token, loading, authError, clearAuthError]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        loading,
-        authError,
-        login,
-        signInWithGoogle,
-        sendOtp,
-        verifyOtp,
-        logout,
-        clearAuthError,
-        isAuthenticated: !!user
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

@@ -318,6 +318,32 @@ def run_migrations():
                     conn.commit()
                     print("[DB Migration] Added students column: email_status")
 
+            # Check messages table columns for WhatsApp-style messaging
+            try:
+                result_msg = conn.execute(
+                    __import__('sqlalchemy').text("PRAGMA table_info(messages)")
+                )
+                msg_cols = {row[1] for row in result_msg}
+                if msg_cols:
+                    msg_migrations = [
+                        ("delivered_at", "ALTER TABLE messages ADD COLUMN delivered_at DATETIME"),
+                        ("read_at", "ALTER TABLE messages ADD COLUMN read_at DATETIME"),
+                        ("edited_at", "ALTER TABLE messages ADD COLUMN edited_at DATETIME"),
+                        ("is_edited", "ALTER TABLE messages ADD COLUMN is_edited BOOLEAN DEFAULT 0"),
+                        ("is_deleted_everyone", "ALTER TABLE messages ADD COLUMN is_deleted_everyone BOOLEAN DEFAULT 0"),
+                        ("deleted_by_users", "ALTER TABLE messages ADD COLUMN deleted_by_users TEXT DEFAULT '[]'"),
+                        ("reply_to_message_id", "ALTER TABLE messages ADD COLUMN reply_to_message_id VARCHAR(100)"),
+                        ("reactions", "ALTER TABLE messages ADD COLUMN reactions TEXT DEFAULT '{}'"),
+                        ("attachment_file_id", "ALTER TABLE messages ADD COLUMN attachment_file_id VARCHAR(100)")
+                    ]
+                    for col_name, sql in msg_migrations:
+                        if col_name not in msg_cols:
+                            conn.execute(__import__('sqlalchemy').text(sql))
+                            conn.commit()
+                            print(f"[DB Migration] Added messages column: {col_name}")
+            except Exception as _e_msg:
+                print(f"[DB Migration] messages table migration note: {_e_msg}")
+
             # Ensure system default Admin account exists
             admin_check = conn.execute(
                 __import__('sqlalchemy').text("SELECT id, role FROM users WHERE email = 'admin@college.edu' OR role = 'Admin'")

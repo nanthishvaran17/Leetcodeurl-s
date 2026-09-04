@@ -19,6 +19,18 @@ class SendMessageRequest(BaseModel):
     content: str
     receiver_id: str
     attachment_file_id: Optional[str] = None
+    reply_to_message_id: Optional[str] = None
+
+class EditMessageRequest(BaseModel):
+    content: str
+
+class ReactionRequest(BaseModel):
+    emoji: str
+
+class TypingRequest(BaseModel):
+    conversation_id: str
+    receiver_id: str
+    is_typing: bool
 
 @router.get("/available-recipients")
 def get_available_recipients_endpoint(
@@ -80,25 +92,105 @@ def send_message_endpoint(
             current_user=current_user,
             receiver_id=req.receiver_id,
             content=req.content,
-            attachment_file_id=req.attachment_file_id
+            attachment_file_id=req.attachment_file_id,
+            reply_to_message_id=req.reply_to_message_id
         )
+        msg_dict = MessagingService._format_message_dict(db, msg, MessagingService._get_user_id(current_user))
         return {
             "success": True,
-            "message": {
-                "messageId": msg.message_id,
-                "conversationId": msg.conversation_id,
-                "senderId": msg.sender_id,
-                "receiverId": msg.receiver_id,
-                "content": msg.content,
-                "status": msg.status,
-                "createdAt": msg.created_at.isoformat() if msg.created_at else None
-            }
+            "message": msg_dict
         }
     except ValueError as e:
         raise HTTPException(status_code=403, detail=str(e))
     except Exception as e:
         logger.error(f"Error sending message: {e}")
         raise HTTPException(status_code=500, detail="Failed to send message.")
+
+@router.put("/messages/{message_id}")
+def edit_message_endpoint(
+    message_id: str,
+    req: EditMessageRequest,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Edits an existing message owned by the current user."""
+    try:
+        updated = MessagingService.edit_message(db, current_user, message_id, req.content)
+        return {"success": True, "message": updated}
+    except ValueError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error editing message: {e}")
+        raise HTTPException(status_code=500, detail="Failed to edit message.")
+
+@router.delete("/messages/{message_id}")
+def delete_message_endpoint(
+    message_id: str,
+    mode: str = Query("FOR_ME", regex="^(FOR_ME|FOR_EVERYONE)$"),
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Deletes a message either FOR_ME or FOR_EVERYONE."""
+    try:
+        result = MessagingService.delete_message(db, current_user, message_id, mode)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error deleting message: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete message.")
+
+@router.post("/messages/{message_id}/reactions")
+def toggle_reaction_endpoint(
+    message_id: str,
+    req: ReactionRequest,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Adds or toggles an emoji reaction on a message."""
+    try:
+        result = MessagingService.toggle_reaction(db, current_user, message_id, req.emoji)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error toggling reaction: {e}")
+        raise HTTPException(status_code=500, detail="Failed to toggle reaction.")
+
+@router.post("/typing")
+def report_typing_endpoint(
+    req: TypingRequest,
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Broadcasts a typing start/stop event over WebSockets."""
+    try:
+        sender_id = MessagingService._get_user_id(current_user)
+        from backend.websocket_manager import manager
+        manager.broadcast_sync({
+            "type": "TYPING_STATUS",
+            "conversationId": req.conversation_id,
+            "senderId": sender_id,
+            "receiverId": req.receiver_id,
+            "isTyping": req.is_typing
+        })
+        return {"success": True}
+    except Exception as e:
+        logger.error(f"Error reporting typing status: {e}")
+        raise HTTPException(status_code=500, detail="Failed to send typing status.")
+
+@router.get("/search")
+def search_messages_endpoint(
+    q: str = Query(..., min_length=2),
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Searches messages by keyword within user's conversations."""
+    try:
+        results = MessagingService.search_messages(db, current_user, q)
+        return {"success": True, "results": results}
+    except Exception as e:
+        logger.error(f"Error searching messages: {e}")
+        raise HTTPException(status_code=500, detail="Failed to search messages.")
 
 @router.put("/conversations/{conversation_id}/read")
 def mark_conversation_read_endpoint(

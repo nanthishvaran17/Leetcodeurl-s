@@ -1,5 +1,4 @@
-import { doc, setDoc, getDoc, writeBatch } from 'firebase/firestore';
-import { getOrInitDb } from './firebase';
+import { getOrInitDbAsync } from './firebase';
 
 /**
  * Sync student records from the backend API response into Cloud Firestore.
@@ -14,8 +13,10 @@ import { getOrInitDb } from './firebase';
  */
 export async function syncAllStudentsToFirestoreWeb(studentsList: any[]) {
   try {
-    const firestoreDb = getOrInitDb();
+    const firestoreDb = await getOrInitDbAsync();
     if (!firestoreDb || !studentsList || studentsList.length === 0) return;
+
+    const { doc, writeBatch } = await import('firebase/firestore');
 
     console.log(`[Firestore] Syncing ${studentsList.length} students via Web SDK...`);
 
@@ -115,8 +116,9 @@ export async function syncAllStudentsToFirestoreWeb(studentsList: any[]) {
 
 export async function syncCertificateToFirestoreWeb(certData: any) {
   try {
-    const firestoreDb = getOrInitDb();
+    const firestoreDb = await getOrInitDbAsync();
     if (!firestoreDb || !certData || !certData.verification_id) return;
+    const { doc, setDoc } = await import('firebase/firestore');
     const certRef = doc(firestoreDb, 'certificates', certData.verification_id);
     await setDoc(certRef, {
       ...certData,
@@ -132,8 +134,9 @@ export async function syncCertificateToFirestoreWeb(certData: any) {
 
 export async function fetchCertificateFromFirestoreWeb(verificationId: string) {
   try {
-    const firestoreDb = getOrInitDb();
+    const firestoreDb = await getOrInitDbAsync();
     if (!firestoreDb || !verificationId) return null;
+    const { doc, getDoc } = await import('firebase/firestore');
     const certRef = doc(firestoreDb, 'certificates', verificationId);
     const snap = await getDoc(certRef);
     if (snap.exists()) {
@@ -145,4 +148,3 @@ export async function fetchCertificateFromFirestoreWeb(verificationId: string) {
     return null;
   }
 }
-

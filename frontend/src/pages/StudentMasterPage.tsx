@@ -9,9 +9,6 @@ import api from '../services/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { StudentFlipCard } from '../components/StudentFlipCard';
-import { collection, getDocs } from 'firebase/firestore';
-import { getOrInitDb } from '../services/firebase';
-
 import { useGlobalData } from '../context/GlobalDataContext';
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
 import { studentLiveStore } from '../stores/studentLiveStore';

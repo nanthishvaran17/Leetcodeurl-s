@@ -2,6 +2,7 @@ import React, { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRe
 import { createPortal } from 'react-dom';
 import { App as CapacitorApp } from '@capacitor/app';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { StudentData } from './components/LeaderboardTable';
@@ -87,6 +88,7 @@ export const App: React.FC = () => {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [summaryData, setSummaryData] = useState<any>(() => getCachedSummary());
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showAiWidget, setShowAiWidget] = useState(false);
 
   useGlobalKeyboardShortcuts(
     () => setShowCommandPalette(true),
@@ -627,10 +629,25 @@ export const App: React.FC = () => {
         </Suspense>
       )}
 
-      {/* Floating Global NEC Unified AI Widget */}
-      <Suspense fallback={null}>
-        <AIAssistantWidget onNavigateTab={handleTabChange} />
-      </Suspense>
+      {/* Floating Global NEC Unified AI Widget (Lazy Loaded on User Intent) */}
+      {showAiWidget ? (
+        <Suspense fallback={null}>
+          <AIAssistantWidget onNavigateTab={handleTabChange} />
+        </Suspense>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowAiWidget(true)}
+          onMouseEnter={() => {
+            import('./components/AIAssistantWidget');
+          }}
+          className="fixed bottom-5 right-5 z-[9990] p-3 rounded-full bg-brand-600 hover:bg-brand-500 text-white shadow-xl shadow-brand-500/30 flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer border border-white/20"
+          title="Open AI & Operations Assistant"
+          aria-label="Open AI Copilot"
+        >
+          <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
+        </button>
+      )}
 
       {/* Viewport-Centered Student Profile Modal */}
       {selectedStudent && typeof document !== 'undefined' && createPortal(

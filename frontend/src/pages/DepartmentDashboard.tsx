@@ -5,7 +5,7 @@ import api from '../services/api';
 import { useQuery } from '@tanstack/react-query';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { StudentFlipCard } from '../components/StudentFlipCard';
-import { CANONICAL_ROSTER, getCachedStudents, saveCachedStudents } from '../data/canonicalRoster';
+import { getCachedStudents, saveCachedStudents } from '../data/canonicalRoster';
 import { filterAndSortStudents } from '../utils/filterUtils';
 import { useNotification } from '../context/NotificationContext';
 import { CustomDropdown, DropdownOption } from '../components/CustomDropdown';

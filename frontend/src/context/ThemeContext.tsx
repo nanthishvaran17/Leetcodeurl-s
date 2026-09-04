@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type Theme = 'dark' | 'light';
+export type Theme = 'dark' | 'light';
 
 interface ThemeContextType {
   theme: Theme;
@@ -13,7 +13,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem('theme') as Theme;
     const userExplicitlyChose = localStorage.getItem('theme_user_set') === 'true';
-    // If user has never explicitly toggled the theme, default to light
     if (!saved || !userExplicitlyChose) return 'light';
     return saved || 'light';
   });

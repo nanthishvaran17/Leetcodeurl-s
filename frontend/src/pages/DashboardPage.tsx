@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { StatCard } from '../components/StatCard';
 import { CountdownTimer } from '../components/CountdownTimer';
-import { PerformanceChart } from '../components/PerformanceChart';
+const PerformanceChart = React.lazy(() => import('../components/PerformanceChart').then(m => ({ default: m.PerformanceChart })));
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { SyncHistoryModal } from '../components/SyncHistoryModal';
 import { FailedSyncModal } from '../components/FailedSyncModal';
@@ -361,7 +361,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
       </div>
 
-      <PerformanceChart />
+      <React.Suspense fallback={<div className="h-64 rounded-2xl bg-slate-100 dark:bg-navy-900 animate-pulse my-6 flex items-center justify-center text-xs font-bold text-slate-400">Loading Chart Engine...</div>}>
+        <PerformanceChart />
+      </React.Suspense>
 
       {/* 5 & 6. COLLEGE PARTICIPATION & DATA QUALITY */}
       <div className="stagger-5 grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">

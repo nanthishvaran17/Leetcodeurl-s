@@ -10,10 +10,12 @@ export interface Conversation {
     role: string;
     department: string;
     type: 'STAFF' | 'STUDENT' | 'UNKNOWN';
+    isOnline?: boolean;
   };
   lastMessagePreview: string | null;
   lastMessageAt: string | null;
   unreadCount: number;
+  isTyping?: boolean;
 }
 
 interface Props {
@@ -118,7 +120,7 @@ export const ConversationList: React.FC<Props> = ({
                 <button
                   onClick={() => onSelect(conv.conversationId)}
                   className={clsx(
-                    "w-full text-left p-3 hover:bg-slate-50 dark:hover:bg-[#151b23] transition-all flex items-start gap-3.5 rounded-xl border",
+                    "w-full text-left p-3 hover:bg-slate-50 dark:hover:bg-[#151b23] transition-all flex items-start gap-3.5 rounded-xl border cursor-pointer",
                     activeId === conv.conversationId 
                       ? "bg-brand-50 dark:bg-brand-900/10 border-brand-100 dark:border-brand-900/30 shadow-sm shadow-brand-500/5" 
                       : "bg-transparent border-transparent"
@@ -130,18 +132,20 @@ export const ConversationList: React.FC<Props> = ({
                         {conv.otherUser.name.charAt(0).toUpperCase()}
                       </span>
                     </div>
-                    {/* Mock online status */}
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-navy-950 rounded-full"></div>
+                    {/* Online status indicator */}
+                    {conv.otherUser.isOnline && (
+                      <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-navy-950 rounded-full" title="Online now"></div>
+                    )}
                   </div>
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline mb-0.5">
                       <h3 className={clsx(
-                        "text-[14px] truncate pr-2 tracking-tight",
+                        "text-[14px] truncate pr-2 tracking-tight flex items-center gap-1.5",
                         isUnread ? "font-black text-slate-900 dark:text-white" : "font-bold text-slate-700 dark:text-slate-200",
                         activeId === conv.conversationId && "text-brand-900 dark:text-brand-100"
                       )}>
-                        {conv.otherUser.name}
+                        <span>{conv.otherUser.name}</span>
                       </h3>
                       <span className={clsx(
                           "text-[11px] whitespace-nowrap shrink-0",
@@ -152,15 +156,21 @@ export const ConversationList: React.FC<Props> = ({
                     </div>
                     
                     <div className="flex justify-between items-center mt-1">
-                      <p className={clsx(
-                        "text-[13px] truncate pr-2 leading-snug",
-                        isUnread ? "text-slate-900 dark:text-slate-100 font-bold" : "text-slate-500 dark:text-slate-400 font-medium"
-                      )}>
-                        {conv.lastMessagePreview || "No messages yet"}
-                      </p>
+                      {conv.isTyping ? (
+                        <p className="text-[13px] text-emerald-500 font-extrabold italic animate-pulse">
+                          typing...
+                        </p>
+                      ) : (
+                        <p className={clsx(
+                          "text-[13px] truncate pr-2 leading-snug",
+                          isUnread ? "text-slate-900 dark:text-slate-100 font-bold" : "text-slate-500 dark:text-slate-400 font-medium"
+                        )}>
+                          {conv.lastMessagePreview || "No messages yet"}
+                        </p>
+                      )}
                       
                       {isUnread && (
-                        <span className="shrink-0 bg-brand-500 text-white text-[10px] font-black px-1.5 min-w-[20px] text-center rounded-full shadow-sm shadow-brand-500/20">
+                        <span className="shrink-0 bg-brand-500 text-white text-[10px] font-black px-1.5 min-w-[20px] h-[20px] leading-[20px] text-center rounded-full shadow-sm shadow-brand-500/20">
                           {conv.unreadCount}
                         </span>
                       )}

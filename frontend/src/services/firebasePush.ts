@@ -3,41 +3,61 @@ import { getApp } from 'firebase/app';
 import { isFirebaseConfigured } from './firebase';
 
 export const requestPushPermissionAndGetToken = async (): Promise<string | null> => {
-  if (!isFirebaseConfigured()) return null;
+  if (typeof window === 'undefined' || !('Notification' in window)) {
+    console.warn('[FCM] Notification API not available in window.');
+    return null;
+  }
 
   try {
+    console.log('[FCM] Requesting notification permission...');
     const permission = await Notification.requestPermission();
+    console.log('[FCM] Notification permission result:', permission);
     if (permission !== 'granted') {
       console.log('[FCM] Notification permission denied by user.');
       return null;
     }
 
+    if (!isFirebaseConfigured()) {
+      console.warn('[FCM] Firebase is not configured. Missing VITE_FIREBASE_API_KEY.');
+      return null;
+    }
+
     const messaging = getMessaging(getApp());
-    // We can fetch the token. 
-    // Wait: VAPID key is often needed for Web Push, but if not provided, Firebase might still work if config is enough.
-    // If a VAPID key is required, it must be added in the getToken call: { vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY }
-    
-    // As per the project structure, we will use the existing config or register the SW with params.
-    // Registering the SW with params first so that the SW has the config before we get the token.
-    const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
-    const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN;
-    const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
-    const storageBucket = import.meta.env.VITE_FIREBASE_STORAGE_BUCKET;
-    const messagingSenderId = import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID;
-    const appId = import.meta.env.VITE_FIREBASE_APP_ID;
+
+    const apiKey = import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyAsP9hOeAxrIO5hbmlrPhmGa3p1vv-1Jek";
+    const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "leetcode-student-data.firebaseapp.com";
+    const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || "leetcode-student-data";
+    const storageBucket = import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "leetcode-student-data.firebasestorage.app";
+    const messagingSenderId = import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "384483144435";
+    const appId = import.meta.env.VITE_FIREBASE_APP_ID || "1:384483144435:web:bcc3284e79ed3ac5323d86";
 
     const swUrl = `/firebase-messaging-sw.js?apiKey=${apiKey}&authDomain=${authDomain}&projectId=${projectId}&storageBucket=${storageBucket}&messagingSenderId=${messagingSenderId}&appId=${appId}`;
     
-    const registration = await navigator.serviceWorker.register(swUrl);
-    await navigator.serviceWorker.ready;
+    let registration: ServiceWorkerRegistration;
+    try {
+      registration = await navigator.serviceWorker.register(swUrl);
+      await navigator.serviceWorker.ready;
+      console.log('[FCM] Service worker registered successfully.');
+    } catch (swErr) {
+      console.warn('[FCM] SW registration error, attempting fallback:', swErr);
+      const existing = await navigator.serviceWorker.getRegistration();
+      if (existing) {
+        registration = existing;
+      } else {
+        throw swErr;
+      }
+    }
 
-    const currentToken = await getToken(messaging, { 
-      serviceWorkerRegistration: registration,
-      vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY // Optional if not strictly required
-    });
+    const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+    const getTokenOptions: any = { serviceWorkerRegistration: registration };
+    if (vapidKey) {
+      getTokenOptions.vapidKey = vapidKey;
+    }
+
+    const currentToken = await getToken(messaging, getTokenOptions);
 
     if (currentToken) {
-      console.log('[FCM] Token retrieved successfully.');
+      console.log('[FCM] Token retrieved successfully:', currentToken.substring(0, 15) + '...');
       return currentToken;
     } else {
       console.log('[FCM] No registration token available.');

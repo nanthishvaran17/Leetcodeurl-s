@@ -10,7 +10,7 @@ import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import api, { triggerFullSync, triggerTargetedSync, getSyncStatus } from '../services/api';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import { filterAndSortStudents } from '../utils/filterUtils';
-import { getCachedStudents, saveCachedStudents, CANONICAL_ROSTER } from '../data/canonicalRoster';
+import { getCachedStudents, saveCachedStudents } from '../data/canonicalRoster';
 import { CustomDropdown, DropdownOption } from '../components/CustomDropdown';
 
 function parseUtcTime(ts?: string): number {
@@ -343,11 +343,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         saveCachedStudents(res2.data);
         return;
       }
-      // If DB returns empty for any reason, preserve canonical roster
-      setStudents(prev => (prev && prev.length > 0) ? prev : CANONICAL_ROSTER);
+      // If DB returns empty for any reason, preserve cached students
+      setStudents(prev => (prev && prev.length > 0) ? prev : getCachedStudents());
     } catch (err) {
-      console.warn("fetchFilteredStudents error, preserving canonical roster:", err);
-      setStudents(prev => (prev && prev.length > 0) ? prev : CANONICAL_ROSTER);
+      console.warn("fetchFilteredStudents error, preserving cached students:", err);
+      setStudents(prev => (prev && prev.length > 0) ? prev : getCachedStudents());
     }
   };
 

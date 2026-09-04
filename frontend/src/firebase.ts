@@ -1,1 +1,1 @@
-export { default, auth, googleProvider, db, storage, getOrInitAuth, getOrInitDb, isFirebaseConfigured } from './services/firebase';
+export { default, auth, googleProvider, getOrInitAuth, getOrInitDbAsync, getOrInitStorageAsync, isFirebaseConfigured } from './services/firebase';

@@ -339,6 +339,7 @@ app.add_middleware(
 # ULTRA-FAST SUB-MILLISECOND IN-MEMORY API RESPONSE CACHE
 # =====================================================================
 _API_MEMORY_CACHE: dict = {}
+_MAX_CACHE_ENTRIES = 300
 _CACHE_TTL_MAP: dict = {
     "/api/public/stats": 120,
     "/api/sessions/dashboard-summary": 60,
@@ -352,6 +353,18 @@ def purge_api_memory_cache():
     """Purges in-memory API response cache on data mutation (POST/PUT/DELETE)."""
     _API_MEMORY_CACHE.clear()
 
+def _cleanup_expired_cache_entries(now: float):
+    """Purges stale cache items to keep RAM strictly bounded."""
+    if len(_API_MEMORY_CACHE) > _MAX_CACHE_ENTRIES:
+        stale_keys = [k for k, v in _API_MEMORY_CACHE.items() if now >= v.get("expires_at", 0)]
+        for sk in stale_keys:
+            _API_MEMORY_CACHE.pop(sk, None)
+        if len(_API_MEMORY_CACHE) > _MAX_CACHE_ENTRIES:
+            # Drop oldest 20% if still over limit
+            sorted_keys = sorted(_API_MEMORY_CACHE.keys(), key=lambda k: _API_MEMORY_CACHE[k].get("expires_at", 0))
+            for k in sorted_keys[:60]:
+                _API_MEMORY_CACHE.pop(k, None)
+
 @app.middleware("http")
 async def ultra_fast_memory_cache_middleware(request, call_next):
     method = request.method
@@ -362,12 +375,17 @@ async def ultra_fast_memory_cache_middleware(request, call_next):
         purge_api_memory_cache()
         return await call_next(request)
 
-    # Serve cached responses in < 1ms for high-frequency GET queries
+    # Serve cached responses in < 1ms for high-frequency GET queries with parameter & role isolation
     if method == "GET" and path in _CACHE_TTL_MAP:
         import time
+        from backend.middleware.performance_profiler import record_cache_hit, record_cache_miss
         now = time.time()
-        cached_item = _API_MEMORY_CACHE.get(path)
+        auth_hdr = request.headers.get("authorization", "")
+        cache_key = f"{path}?{request.url.query}#auth:{hash(auth_hdr)}"
+        cached_item = _API_MEMORY_CACHE.get(cache_key)
+
         if cached_item and now < cached_item["expires_at"]:
+            record_cache_hit()
             from fastapi.responses import Response as FastResponse
             return FastResponse(
                 content=cached_item["body"],
@@ -375,9 +393,11 @@ async def ultra_fast_memory_cache_middleware(request, call_next):
                 headers={
                     "Content-Type": cached_item["content_type"],
                     "X-Cache": "HIT-FASTAPI-RAM",
-                    "Cache-Control": f"public, max-age={_CACHE_TTL_MAP[path]}"
+                    "Cache-Control": f"private, max-age={_CACHE_TTL_MAP[path]}"
                 }
             )
+        else:
+            record_cache_miss()
 
     response = await call_next(request)
 
@@ -385,14 +405,20 @@ async def ultra_fast_memory_cache_middleware(request, call_next):
     if method == "GET" and path in _CACHE_TTL_MAP and response.status_code == 200:
         import time
         try:
+            now = time.time()
+            auth_hdr = request.headers.get("authorization", "")
+            cache_key = f"{path}?{request.url.query}#auth:{hash(auth_hdr)}"
+            
             body = [chunk async for chunk in response.body_iterator]
             full_body = b"".join(body)
             content_type = response.headers.get("content-type", "application/json")
-            _API_MEMORY_CACHE[path] = {
+            
+            _cleanup_expired_cache_entries(now)
+            _API_MEMORY_CACHE[cache_key] = {
                 "body": full_body,
                 "status": response.status_code,
                 "content_type": content_type,
-                "expires_at": time.time() + _CACHE_TTL_MAP[path]
+                "expires_at": now + _CACHE_TTL_MAP[path]
             }
             from fastapi.responses import Response as FastResponse
             return FastResponse(
@@ -642,7 +668,8 @@ def get_live_contest_snapshot_api(contest_id: str, db: Session = Depends(get_db)
     from backend.services.live_contest_monitor_engine import live_contest_monitor_engine
     return live_contest_monitor_engine.get_live_snapshot(db, contest_id)
 
-from fastapi.responses import FileResponse, HTTPException
+from fastapi import HTTPException
+from fastapi.responses import FileResponse
 
 @app.get("/api/download/apk")
 @app.get("/download/apk")

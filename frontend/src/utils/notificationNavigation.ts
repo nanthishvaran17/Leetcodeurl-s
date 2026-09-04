@@ -35,7 +35,19 @@ export function resolveNotificationDestination(notification: Notification): Noti
     let routeClean = actionRoute.replace(/^\//, '').trim();
     
     // Map deep-links to App.tsx top-level tab routes
-    if (routeClean.startsWith('messages')) routeClean = 'messages';
+    if (routeClean.startsWith('messages')) {
+      const parts = routeClean.split('/');
+      const notifAny = notification as any;
+      const convId = parts[1] || (notifAny.metadata && notifAny.metadata.conversation_id);
+      if (convId && typeof window !== 'undefined') {
+        try {
+          const url = new URL(window.location.href);
+          url.searchParams.set('conv', convId);
+          window.history.pushState({}, '', url.toString());
+        } catch (e) {}
+      }
+      routeClean = 'messages';
+    }
     if (routeClean.startsWith('settings')) routeClean = 'settings';
     if (routeClean.startsWith('audit')) routeClean = 'audit';
     if (routeClean.startsWith('reports')) routeClean = 'reports';

@@ -1,10 +1,12 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { resolveNotificationDestination } from '../utils/notificationNavigation';
-import { Bell, Check, Trash2, CheckCircle2, AlertTriangle, AlertCircle, Calendar, FileText, Download, Eye, X, Settings, ChevronRight, ArrowLeft, Send, Smartphone } from 'lucide-react';
+import { Bell, Check, Trash2, CheckCircle2, AlertTriangle, AlertCircle, Calendar, FileText, Download, Eye, X, Settings, ChevronRight, ArrowLeft, Send, Smartphone, Loader2 } from 'lucide-react';
 import { useGlobalNotifications, type Notification } from '../context/GlobalNotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { requestPushPermissionAndGetToken } from '../services/firebasePush';
+import { Capacitor } from '@capacitor/core';
+import { PushNotifications } from '@capacitor/push-notifications';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '';
 
@@ -71,37 +73,180 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
   const panelRef = useRef<HTMLDivElement>(null);
   const [activeFileModal, setActiveFileModal] = useState<{ fileId: string; title: string; filename?: string } | null>(null);
   const [pushPermState, setPushPermState] = useState<string>('default');
+  const [isEnablingPush, setIsEnablingPush] = useState(false);
   const [isSendingTestPush, setIsSendingTestPush] = useState(false);
   const [testPushStatus, setTestPushStatus] = useState<string | null>(null);
+  const [pushErrorMessage, setPushErrorMessage] = useState<string | null>(null);
+
+  const checkInitialPushPermission = async () => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const permStatus = await PushNotifications.checkPermissions();
+        console.log('[Push] Capacitor initial perm status:', permStatus.receive);
+        setPushPermState(permStatus.receive);
+      } catch (err) {
+        console.warn('[Push] Error checking Capacitor permissions:', err);
+        setPushPermState('default');
+      }
+    } else if (typeof window !== 'undefined' && 'Notification' in window) {
+      console.log('[Push] Web initial perm status:', Notification.permission);
+      setPushPermState(Notification.permission);
+    } else {
+      setPushPermState('unsupported');
+    }
+  };
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      setPushPermState(Notification.permission);
+    if (isOpen) {
+      checkInitialPushPermission();
     }
   }, [isOpen]);
 
   const handleEnablePush = async () => {
-    const fcmToken = await requestPushPermissionAndGetToken();
-    if (fcmToken) {
-      await registerFCMDeviceToken(fcmToken);
-      setPushPermState('granted');
-      setTestPushStatus('✓ Device registered for System Push Notifications');
-      setTimeout(() => setTestPushStatus(null), 4000);
-    } else {
-      setPushPermState(typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'denied');
+    if (isEnablingPush) return;
+    setIsEnablingPush(true);
+    setPushErrorMessage(null);
+    setTestPushStatus(null);
+
+    console.log('[Push] Enable Push clicked');
+
+    try {
+      if (Capacitor.isNativePlatform()) {
+        console.log('[Push] Platform: Capacitor Native', Capacitor.getPlatform());
+        let permStatus = await PushNotifications.checkPermissions();
+        console.log('[Push] Permission state before request:', permStatus.receive);
+
+        if (permStatus.receive !== 'granted') {
+          permStatus = await PushNotifications.requestPermissions();
+          console.log('[Push] Permission state after request:', permStatus.receive);
+        }
+
+        if (permStatus.receive !== 'granted') {
+          setPushPermState('denied');
+          setPushErrorMessage('Notifications are blocked. Enable notifications in your device settings.');
+          console.log('[Push] ERROR: Permission denied by user');
+          setIsEnablingPush(false);
+          return;
+        }
+
+        console.log('[Push] Permission granted, starting native push registration...');
+
+        const tokenPromise = new Promise<string>((resolve, reject) => {
+          let regListener: any;
+          let errListener: any;
+          const timeout = setTimeout(() => {
+            if (regListener) regListener.remove();
+            if (errListener) errListener.remove();
+            reject(new Error('Push registration timed out. Ensure Firebase FCM is active.'));
+          }, 12000);
+
+          PushNotifications.addListener('registration', (capToken) => {
+            clearTimeout(timeout);
+            if (regListener) regListener.remove();
+            if (errListener) errListener.remove();
+            resolve(capToken.value);
+          }).then(l => regListener = l);
+
+          PushNotifications.addListener('registrationError', (err) => {
+            clearTimeout(timeout);
+            if (regListener) regListener.remove();
+            if (errListener) errListener.remove();
+            reject(new Error(err.error || 'Registration failed'));
+          }).then(l => errListener = l);
+        });
+
+        await PushNotifications.register();
+        console.log('[Push] PushNotifications.register() called, waiting for FCM device token...');
+
+        const nativeToken = await tokenPromise;
+        console.log('[Push] Token: received (len ' + nativeToken.length + ')');
+
+        console.log('[Push] Backend registration: started');
+        const isBackendSaved = await registerFCMDeviceToken(nativeToken, Capacitor.getPlatform());
+
+        if (isBackendSaved) {
+          console.log('[Push] Backend registration: success');
+          console.log('[Push] Push status: ENABLED');
+          setPushPermState('granted');
+          setTestPushStatus('✓ Device registered for System Push Notifications');
+          setTimeout(() => setTestPushStatus(null), 5000);
+        } else {
+          console.log('[Push] ERROR: Backend registration failed');
+          setPushPermState('denied');
+          setPushErrorMessage('Device registration failed on server. Please try again.');
+        }
+      } else {
+        // Web / PWA Flow
+        console.log('[Push] Platform: Web / PWA');
+        if (typeof window === 'undefined' || !('Notification' in window)) {
+          setPushErrorMessage('Push notifications are not supported in this browser environment.');
+          setPushPermState('unsupported');
+          setIsEnablingPush(false);
+          return;
+        }
+
+        const currentPerm = Notification.permission;
+        console.log('[Push] Permission current state:', currentPerm);
+
+        if (currentPerm === 'denied') {
+          setPushPermState('denied');
+          setPushErrorMessage('Notifications are blocked. Enable notifications in your browser settings.');
+          console.log('[Push] ERROR: Browser permission blocked');
+          setIsEnablingPush(false);
+          return;
+        }
+
+        console.log('[Push] Service Worker / FCM Token registration starting...');
+        const fcmToken = await requestPushPermissionAndGetToken();
+
+        if (fcmToken) {
+          console.log('[Push] Token: received');
+          console.log('[Push] Backend registration: started');
+          const isBackendSaved = await registerFCMDeviceToken(fcmToken, 'web');
+
+          if (isBackendSaved) {
+            console.log('[Push] Backend registration: success');
+            console.log('[Push] Push status: ENABLED');
+            setPushPermState('granted');
+            setTestPushStatus('✓ Device registered for System Push Notifications');
+            setTimeout(() => setTestPushStatus(null), 5000);
+          } else {
+            console.log('[Push] ERROR: Backend token save failed');
+            setPushPermState('denied');
+            setPushErrorMessage('Device registration failed on server. Please try again.');
+          }
+        } else {
+          const updatedPerm = Notification.permission;
+          console.log('[Push] ERROR: Token generation failed. Permission status:', updatedPerm);
+          if (updatedPerm === 'denied') {
+            setPushPermState('denied');
+            setPushErrorMessage('Notifications are blocked. Enable notifications in your browser settings.');
+          } else {
+            setPushPermState(updatedPerm);
+            setPushErrorMessage('Unable to register this device for notifications. Please check your network or push configuration.');
+          }
+        }
+      }
+    } catch (err: any) {
+      console.error('[Push] ERROR:', err);
+      setPushErrorMessage(err.message || 'Unable to enable push notifications.');
+    } finally {
+      setIsEnablingPush(false);
     }
   };
 
   const handleSendTestSystemPush = async () => {
-    if (!token) return;
+    if (!token || isSendingTestPush) return;
     setIsSendingTestPush(true);
     setTestPushStatus('Dispatching system push to device...');
+    setPushErrorMessage(null);
 
     try {
-      // Ensure Web Push / FCM token is registered first
-      const fcmToken = await requestPushPermissionAndGetToken();
-      if (fcmToken) {
-        await registerFCMDeviceToken(fcmToken);
+      if (!Capacitor.isNativePlatform() && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+        const fcmToken = await requestPushPermissionAndGetToken();
+        if (fcmToken) {
+          await registerFCMDeviceToken(fcmToken, 'web');
+        }
       }
 
       const res = await fetch(`${API_BASE_URL}/api/notifications/test-push`, {
@@ -225,36 +370,62 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
             </div>
 
             {/* OS System Push Notification Status & Test Bar */}
-            <div className="px-3.5 py-2 bg-slate-900 text-white border-b border-slate-800 shrink-0 text-xs flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <Smartphone className="w-3.5 h-3.5 text-brand-400 shrink-0" />
-                <span className="font-semibold text-[11px] truncate">
-                  {pushPermState === 'granted' ? '🔔 OS Push: Enabled' : '🔕 OS Push: Disabled'}
-                </span>
+            <div className="px-3.5 py-2.5 bg-slate-900 text-white border-b border-slate-800 shrink-0 text-xs flex flex-col gap-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Smartphone className="w-3.5 h-3.5 text-brand-400 shrink-0" />
+                  <span className="font-bold text-[11px] truncate">
+                    {pushPermState === 'granted' ? '🟢 OS Push: Enabled' : '🔴 OS Push: Disabled'}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {pushPermState !== 'granted' ? (
+                    <button
+                      type="button"
+                      onClick={handleEnablePush}
+                      disabled={isEnablingPush}
+                      className="px-2.5 py-1 bg-brand-500 hover:bg-brand-600 disabled:opacity-60 text-white font-bold text-[10px] rounded-lg shadow transition-all cursor-pointer flex items-center gap-1 min-h-[30px]"
+                    >
+                      {isEnablingPush ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin text-white" />
+                          <span>Enabling Push...</span>
+                        </>
+                      ) : (
+                        <span>Enable Push</span>
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleSendTestSystemPush}
+                      disabled={isSendingTestPush}
+                      className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 disabled:opacity-60 text-brand-300 border border-brand-500/30 font-bold text-[10px] rounded-lg transition-all cursor-pointer flex items-center gap-1 min-h-[30px]"
+                      title="Send a real test push notification to lock screen & system panel"
+                    >
+                      {isSendingTestPush ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin text-brand-400" />
+                          <span>Sending...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-3 h-3 text-brand-400" />
+                          <span>Test Real Push</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
 
-              <div className="flex items-center gap-1.5 shrink-0">
-                {pushPermState !== 'granted' ? (
-                  <button
-                    type="button"
-                    onClick={handleEnablePush}
-                    className="px-2.5 py-1 bg-brand-500 hover:bg-brand-600 text-white font-bold text-[10px] rounded-lg shadow transition-all cursor-pointer"
-                  >
-                    Enable Push
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={handleSendTestSystemPush}
-                    disabled={isSendingTestPush}
-                    className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-brand-300 border border-brand-500/30 font-bold text-[10px] rounded-lg transition-all cursor-pointer flex items-center gap-1"
-                    title="Send a real test push notification to lock screen & system panel"
-                  >
-                    <Send className="w-3 h-3 text-brand-400" />
-                    <span>{isSendingTestPush ? 'Sending...' : 'Test Real Push'}</span>
-                  </button>
-                )}
-              </div>
+              {pushErrorMessage && (
+                <div className="text-[10.5px] text-rose-300 font-semibold bg-rose-950/70 border border-rose-800/60 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 animate-fade-in">
+                  <AlertCircle className="w-3 h-3 text-rose-400 shrink-0" />
+                  <span>{pushErrorMessage}</span>
+                </div>
+              )}
             </div>
 
             {testPushStatus && (

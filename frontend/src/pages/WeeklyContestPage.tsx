@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { StatusNotificationModal, NotificationState } from '../components/StatusNotificationModal';
-import { LiveStudentMonitor } from '../components/LiveStudentMonitor';
+const LiveStudentMonitor = React.lazy(() => import('../components/LiveStudentMonitor').then(m => ({ default: m.LiveStudentMonitor })));
 import { Post930SolversView } from './Post930SolversView';
 import { StudentEditOverlay } from '../components/StudentEditOverlay';
 import { PreviousWeekContestPanel } from '../components/PreviousWeekContestPanel';
@@ -2080,7 +2080,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       {/* ── LIVE STUDENT MONITOR PANEL ── */}
       {showAdminMonitor && adminSubTab === 'live_monitor' && (
         <div className="p-5 sm:p-6 rounded-3xl bg-slate-900 border border-slate-700 shadow-lg animate-fade-in">
-          <LiveStudentMonitor />
+          <React.Suspense fallback={<div className="p-8 text-center text-xs font-bold text-slate-400 animate-pulse">Loading Live Monitor Chart Engine...</div>}>
+            <LiveStudentMonitor />
+          </React.Suspense>
         </div>
       )}
 

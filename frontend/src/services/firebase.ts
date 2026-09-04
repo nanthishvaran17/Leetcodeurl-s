@@ -1,7 +1,5 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, Auth, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore';
-import { getStorage, FirebaseStorage } from 'firebase/storage';
 
 // Read configuration from Vite environment variables
 const firebaseConfig = {
@@ -13,23 +11,20 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID || "",
 };
 
-// Check if environment variables are configured (simple presence check)
 export const isFirebaseConfigured = (): boolean => {
   return !!firebaseConfig.apiKey && firebaseConfig.apiKey.trim() !== "";
 };
 
 let appInstance: FirebaseApp | null = null;
 let authInstance: Auth | null = null;
-let dbInstance: Firestore | null = null;
-let storageInstance: FirebaseStorage | null = null;
+let dbInstance: any = null;
+let storageInstance: any = null;
 
 if (isFirebaseConfigured()) {
   try {
     appInstance = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     authInstance = getAuth(appInstance);
     setPersistence(authInstance, browserLocalPersistence).catch(() => {});
-    dbInstance = getFirestore(appInstance);
-    storageInstance = getStorage(appInstance);
   } catch (err) {
     console.warn("Firebase lazy initialization mode active:", err);
   }
@@ -46,19 +41,28 @@ export const getOrInitAuth = (): Auth => {
   return authInstance;
 };
 
-export const getOrInitDb = (): Firestore => {
+export const getOrInitDbAsync = async (): Promise<any> => {
   if (dbInstance) return dbInstance;
   if (!appInstance) {
     getOrInitAuth();
   }
+  const { getFirestore } = await import('firebase/firestore');
   dbInstance = getFirestore(appInstance!);
   return dbInstance;
+};
+
+export const getOrInitStorageAsync = async (): Promise<any> => {
+  if (storageInstance) return storageInstance;
+  if (!appInstance) {
+    getOrInitAuth();
+  }
+  const { getStorage } = await import('firebase/storage');
+  storageInstance = getStorage(appInstance!);
+  return storageInstance;
 };
 
 export const auth = authInstance;
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
-export const db = dbInstance;
-export const storage = storageInstance;
 
 export default appInstance;

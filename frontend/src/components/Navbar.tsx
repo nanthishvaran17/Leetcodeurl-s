@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { Sun, Moon, User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, Zap, AlertOctagon, Bell } from 'lucide-react';
+import { Sun, Moon, User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, Zap, AlertOctagon, Bell, Palette, Check } from 'lucide-react';
 import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
 import { SyncStatusModal } from './SyncStatusModal';
@@ -30,6 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { theme, toggleTheme } = useTheme();
   const { user, logout, isAuthenticated } = useAuth();
 
+  const [showThemeMenu, setShowThemeMenu] = useState<boolean>(false);
   const [freshness, setFreshness] = useState<any>(null);
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState<boolean>(false);
@@ -174,9 +175,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                 title="Toggle Dark / Light Mode"
               >
                 {theme === 'dark' ? (
-                  <Sun className="w-4 h-4 sm:w-4 sm:h-4 text-amber-400 transition-transform duration-300 hover:rotate-90" />
+                  <Sun className="w-4 h-4 text-amber-400 transition-transform duration-300 hover:rotate-90" />
                 ) : (
-                  <Moon className="w-4 h-4 sm:w-4 sm:h-4 text-navy-700 transition-transform duration-300 hover:-rotate-12" />
+                  <Moon className="w-4 h-4 text-navy-700 transition-transform duration-300 hover:-rotate-12" />
                 )}
               </button>
 

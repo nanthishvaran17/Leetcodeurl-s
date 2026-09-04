@@ -2573,7 +2573,11 @@ class Message(Base):
     Tracks individual messages within a conversation.
     """
     __tablename__ = "messages"
-    __table_args__ = {"extend_existing": True}
+    __table_args__ = (
+        Index("ix_messages_conv_created", "conversation_id", "created_at"),
+        Index("ix_messages_unread_status", "conversation_id", "receiver_id", "status"),
+        {"extend_existing": True},
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     message_id = Column(String(100), unique=True, index=True, nullable=False)
@@ -2583,9 +2587,16 @@ class Message(Base):
     receiver_id = Column(String(150), index=True, nullable=False)
     
     content = Column(Text, nullable=False)
-    status = Column(String(30), default="SENT", index=True) # SENT, READ
+    status = Column(String(30), default="SENT", index=True) # SENT, DELIVERED, READ
     
+    delivered_at = Column(DateTime, nullable=True)
     read_at = Column(DateTime, nullable=True)
+    edited_at = Column(DateTime, nullable=True)
+    is_edited = Column(Boolean, default=False)
+    is_deleted_everyone = Column(Boolean, default=False)
+    deleted_by_users = Column(Text, default="[]") # JSON string of user_ids who executed delete-for-me
+    reply_to_message_id = Column(String(100), nullable=True, index=True)
+    reactions = Column(Text, default="{}") # JSON string mapping user_id -> emoji
     created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
     
     attachment_file_id = Column(String(100), nullable=True) # Optional reference to NotificationFile

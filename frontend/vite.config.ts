@@ -54,6 +54,12 @@ export default defineConfig({
           if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-') || id.includes('node_modules/victory-')) {
             return 'vendor-charts';
           }
+          if (id.includes('node_modules/emoji-picker-react')) {
+            return 'vendor-emoji-picker';
+          }
+          if (id.includes('node_modules/firebase/firestore')) {
+            return 'vendor-firebase-firestore';
+          }
           if (id.includes('node_modules/firebase/')) {
             return 'vendor-firebase';
           }
@@ -77,6 +83,10 @@ export default defineConfig({
           // Shared services, API layer, and stores
           if (id.includes('/src/services/') || id.includes('/src/lib/') || id.includes('/src/stores/')) {
             return 'app-services';
+          }
+          // Large static roster dataset — isolated so initial bundle doesn't load 1MB JSON
+          if (id.includes('/src/data/canonicalRosterData')) {
+            return 'canonical-roster-data';
           }
           // Shared static data / templates
           if (id.includes('/src/data/')) {

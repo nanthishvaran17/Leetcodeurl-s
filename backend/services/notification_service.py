@@ -335,6 +335,10 @@ class NotificationService:
             # 3. FCM Multi-Device Push Dispatch & Token Cleanup
             fcm_dispatched = 0
             if FIREBASE_ADMIN_AVAILABLE and messaging:
+                is_high_priority = eff_priority in ("high", "critical")
+                raw_route = str(eff_route or "/dashboard")
+                fcm_link = raw_route if raw_route.startswith("http") else f"https://leetcodeurl-s-3mig.onrender.com{raw_route}"
+                
                 target_uids = [r["user_id"] for r in recipients]
                 active_tokens = db.query(FCMDeviceToken).filter(
                     and_(FCMDeviceToken.user_id.in_(target_uids), FCMDeviceToken.is_active == True)
@@ -343,7 +347,6 @@ class NotificationService:
                 stale_tokens = []
                 for t_obj in active_tokens:
                     try:
-                        is_high_priority = eff_priority in ("high", "critical")
                         fcm_msg = messaging.Message(
                             notification=messaging.Notification(title=title, body=body),
                             token=t_obj.device_token,
@@ -351,7 +354,7 @@ class NotificationService:
                                 "notificationId": eff_event_id,
                                 "type": str(event_type),
                                 "category": str(category),
-                                "actionRoute": str(eff_route or "/dashboard"),
+                                "actionRoute": raw_route,
                                 "entityType": str(entity_type or ""),
                                 "entityId": str(entity_id or ""),
                                 "fileId": str(file_id or ""),
@@ -385,7 +388,7 @@ class NotificationService:
                                     require_interaction=is_high_priority
                                 ),
                                 fcm_options=messaging.WebpushFCMOptions(
-                                    link=str(eff_route or "/dashboard")
+                                    link=fcm_link
                                 )
                             )
                         )
@@ -413,7 +416,7 @@ class NotificationService:
                                 "notificationId": eff_event_id,
                                 "type": str(event_type),
                                 "category": str(category),
-                                "actionRoute": str(eff_route or "/dashboard"),
+                                "actionRoute": raw_route,
                                 "priority": str(eff_priority)
                             },
                             android=messaging.AndroidConfig(
@@ -441,7 +444,7 @@ class NotificationService:
                                     require_interaction=is_high_priority
                                 ),
                                 fcm_options=messaging.WebpushFCMOptions(
-                                    link=str(eff_route or "/dashboard")
+                                    link=fcm_link
                                 )
                             )
                         )
