@@ -77,8 +77,16 @@ class AutomaticNotificationEngine:
                     FacultyStudentAssignment, Student.id == FacultyStudentAssignment.student_id
                 ).filter(
                     FacultyStudentAssignment.faculty_id == faculty.id,
-                    Student.is_active == True
+                    or_(FacultyStudentAssignment.is_active == True, FacultyStudentAssignment.is_active.is_(None)),
+                    or_(Student.is_active == True, Student.is_active.is_(None))
                 ).all()
+
+                # Fallback to active department students if no individual assignments exist
+                if len(assigned_students) == 0 and faculty.department_id:
+                    assigned_students = db.query(Student).filter(
+                        Student.department_id == faculty.department_id,
+                        or_(Student.is_active == True, Student.is_active.is_(None))
+                    ).all()
 
                 total_assigned = len(assigned_students)
                 if total_assigned == 0:

@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -69,6 +69,37 @@ def test_daily_faculty_performance_dynamic_calculation(db_session):
 
     assert res["dispatched"] == 1, f"Expected 1 dispatched, got {res}"
     assert res["skipped"] == 0
+
+
+def test_daily_faculty_performance_department_fallback(db_session):
+    """Verifies that faculty without explicit assignments fall back to department active students."""
+    dept = Department(name="Mechanical Eng", code="MECH")
+    db_session.add(dept)
+    db_session.commit()
+
+    faculty = User(
+        username="faculty_fallback",
+        email="faculty_fallback@nandhaengg.org",
+        hashed_password="test_hash",
+        role="Faculty",
+        is_active=True,
+        department_id=dept.id
+    )
+    db_session.add(faculty)
+    db_session.commit()
+
+    s1 = Student(reg_no="732224MECH001", name="Eve", department_id=dept.id, year_level="III", is_active=True)
+    db_session.add(s1)
+    db_session.commit()
+
+    now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+    st1 = LeetCodeProfileStats(student_id=s1.id, total_solved=50, easy_solved=40, medium_solved=10, hard_solved=0, last_updated=now)
+    db_session.add(st1)
+    db_session.commit()
+
+    res = AutomaticNotificationEngine.run_daily_faculty_performance_job(db_session)
+    assert res["dispatched"] == 1, f"Expected 1 dispatched with department fallback, got {res}"
+
 
 
 def test_milestone_detection_and_deduplication(db_session):
