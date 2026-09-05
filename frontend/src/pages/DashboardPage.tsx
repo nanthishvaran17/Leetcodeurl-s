@@ -46,7 +46,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const { data: dataQuality } = useDataQualityQuery();
   const { data: systemHealth } = useSystemHealthQuery();
   const { data: syncStatus } = useSyncStatusQuery();
-  const { data: students = [], isLoading: studentsLoading } = useStudentsQuery();
+  const { data: students = [], isLoading: studentsLoading, isError: studentsError, refetch: refetchStudents } = useStudentsQuery();
 
   const loading = contextLoading || studentsLoading;
 
@@ -92,21 +92,21 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         const diffSeconds = Math.max(0, Math.floor((now - lastTime) / 1000));
 
         if (diffSeconds < 30) {
-          setRelativeTimeStr('Just now');
+          setRelativeTimeStr('Synced just now');
         } else if (diffSeconds < 60) {
-          setRelativeTimeStr(`${diffSeconds} seconds ago`);
+          setRelativeTimeStr(`Synced ${diffSeconds}s ago`);
         } else if (diffSeconds < 3600) {
           const mins = Math.floor(diffSeconds / 60);
-          setRelativeTimeStr(`${mins} ${mins === 1 ? 'minute' : 'minutes'} ago`);
+          setRelativeTimeStr(`Synced ${mins}${mins === 1 ? 'm' : 'm'} ago`);
         } else if (diffSeconds < 86400) {
           const hours = Math.floor(diffSeconds / 3600);
-          setRelativeTimeStr(`${hours} ${hours === 1 ? 'hour' : 'hours'} ago`);
+          setRelativeTimeStr(`Synced ${hours}${hours === 1 ? 'h' : 'h'} ago`);
         } else {
           const days = Math.floor(diffSeconds / 86400);
-          setRelativeTimeStr(`${days} ${days === 1 ? 'day' : 'days'} ago`);
+          setRelativeTimeStr(`Synced ${days}${days === 1 ? 'd' : 'd'} ago`);
         }
       } catch {
-        setRelativeTimeStr('Just now');
+        setRelativeTimeStr('Synced just now');
       }
     };
 
@@ -115,16 +115,35 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     return () => clearInterval(interval);
   }, [syncStatus, systemHealth]);
 
+  const isWorkerRunning = summary?.sync?.is_running ?? false;
+  const isSyncing = syncStarting || isWorkerRunning;
+  const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
+
+  const getLiveStatusBadge = () => {
+    if (isSyncing) {
+      return { label: 'SYNCING...', color: 'bg-amber-500/20 text-amber-300 border-amber-500/30 animate-pulse', dot: 'bg-amber-400 animate-ping' };
+    }
+    if (isOffline) {
+      return { label: 'OFFLINE', color: 'bg-rose-500/20 text-rose-300 border-rose-500/30', dot: 'bg-rose-400' };
+    }
+    if (relativeTimeStr !== 'Pending initial fetch') {
+      return { label: `LIVE • ${relativeTimeStr}`, color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30', dot: 'bg-emerald-400' };
+    }
+    return { label: 'NO DATA', color: 'bg-slate-500/20 text-slate-300 border-slate-500/30', dot: 'bg-slate-400' };
+  };
+
+  const liveStatus = getLiveStatusBadge();
+
   const handleStartSync = async () => {
     setSyncStarting(true);
     notify.info('Live Sync Started', 'Background synchronization process initiated for active student roster.', { category: 'SYNC ENGINE' });
     try {
-      await api.post('/sync/start?triggered_by=admin_dashboard', {}, { timeout: 3000 });
-      refreshAllData();
+      await api.post('/sync/start?triggered_by=admin_dashboard', {}, { timeout: 4000 });
+      await refreshAllData();
       notify.success('Synchronization Initiated', 'Sync worker is processing verified LeetCode profile statistics.', { category: 'SYNC ENGINE' });
     } catch (err: any) {
       console.warn('API sync fallback to local canonical snapshot', err);
-      refreshAllData();
+      await refreshAllData();
       notify.success('Sync Completed', 'Synchronized in-memory dataset with authoritative institutional snapshot.', { category: 'SYNC ENGINE' });
     } finally {
       setSyncStarting(false);
@@ -174,15 +193,39 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   };
 
   const handleGenerateReport = async () => {
+    const startTime = performance.now();
     setGeneratingReport(true);
-    notify.info('Generating PDF Report', 'Compiling institutional performance metrics and charts...', { category: 'REPORTS' });
     try {
-      // Use the latest session ID from the dashboard summary, fall back to fetching latest session
+      // Step 1: Pre-flight lookup (< 50ms)
       const sessionId = summary?.latest_session_id || summary?.current_session_id || 'latest';
-      const res = await api.get(`/reports/${sessionId}/pdf`, { responseType: 'blob' });
-      const filename = `NEC_Weekly_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
-      await triggerDownload(res.data, filename, 'application/pdf');
-      notify.success('Report Ready', 'Weekly Contest PDF report downloaded successfully.', { category: 'REPORTS' });
+      const infoRes = await api.get('/reports/download-info', { params: { file_type: 'pdf', session_id: sessionId }, timeout: 4000 });
+      const downloadInfo = infoRes.data;
+
+      if (downloadInfo.status === 'READY' && downloadInfo.download_url) {
+        // Fast instant download path (< 200ms initiation)
+        const downloadUrl = downloadInfo.download_url.startsWith('http')
+          ? downloadInfo.download_url
+          : `${api.defaults.baseURL || '/api'}${downloadInfo.download_url.replace(/^\/api/, '')}`;
+
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `NEC_Weekly_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        const duration = Math.round(performance.now() - startTime);
+        notify.success('✓ Weekly report downloaded', `Instant download initiated in ${duration}ms`, { category: 'REPORTS' });
+      } else {
+        // Non-blocking preparation state
+        notify.info('Preparing report...', downloadInfo.message || 'Background report generation in progress...', { category: 'REPORTS' });
+        
+        // Direct stream fallback if needed
+        const res = await api.get(`/reports/${sessionId}/pdf`, { responseType: 'blob', timeout: 20000 });
+        const filename = `NEC_Weekly_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
+        await triggerDownload(res.data, filename, 'application/pdf');
+        notify.success('✓ Weekly report downloaded', 'Weekly PDF report generated and downloaded.', { category: 'REPORTS' });
+      }
     } catch (err: any) {
       console.error("Report generation failed", err);
       const statusCode = err.response?.status;
@@ -191,9 +234,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       } else if (statusCode === 403) {
         notify.error('Access Denied', 'You do not have permission to generate this institutional report.', { category: 'SECURITY' });
       } else if (statusCode === 404) {
-        notify.error('No Contest Data', 'No weekly contest session found to generate a report. Please run a contest first.', { category: 'REPORTS' });
+        notify.error('No Contest Data', 'No weekly contest session found to generate a report.', { category: 'REPORTS' });
       } else {
-        notify.error('Report Error', 'Failed to generate PDF report. Please try again later.', { category: 'REPORTS' });
+        notify.error('Unable to generate report', 'Please try again later.', { category: 'REPORTS' });
       }
     } finally {
       setGeneratingReport(false);
@@ -202,23 +245,36 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
 
   const handleExportExcel = async () => {
-    notify.info('Preparing Excel Export', 'Gathering Weekly Contest statistics...', { category: 'REPORTS' });
+    const startTime = performance.now();
+    notify.info('Preparing Excel Export', 'Fetching Weekly Contest statistics...', { category: 'REPORTS' });
     try {
       const sessionId = summary?.latest_session_id || summary?.current_session_id || 'latest';
-      const res = await api.get(`/reports/${sessionId}/excel`, { responseType: 'blob' });
-      const filename = `NEC_Master_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
-      await triggerDownload(res.data, filename);
-      notify.success('Excel Export Complete', 'Weekly Contest workbook downloaded.', { category: 'REPORTS' });
+      const infoRes = await api.get('/reports/download-info', { params: { file_type: 'official_summary', session_id: sessionId }, timeout: 4000 });
+      const downloadInfo = infoRes.data;
+
+      if (downloadInfo.status === 'READY' && downloadInfo.download_url) {
+        const downloadUrl = downloadInfo.download_url.startsWith('http')
+          ? downloadInfo.download_url
+          : `${api.defaults.baseURL || '/api'}${downloadInfo.download_url.replace(/^\/api/, '')}`;
+
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `NEC_Master_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        const duration = Math.round(performance.now() - startTime);
+        notify.success('✓ Weekly report downloaded', `Instant download initiated in ${duration}ms`, { category: 'REPORTS' });
+      } else {
+        const res = await api.get(`/reports/export-official-college-summary`, { responseType: 'blob', timeout: 20000 });
+        const filename = `NEC_Master_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        await triggerDownload(res.data, filename);
+        notify.success('✓ Weekly report downloaded', 'Weekly Contest workbook downloaded.', { category: 'REPORTS' });
+      }
     } catch (err: any) {
       console.error("Excel export failed", err);
-      const statusCode = err.response?.status;
-      if (statusCode === 401) {
-        notify.error('Authentication Required', 'Please sign in again.', { category: 'AUTH' });
-      } else if (statusCode === 403) {
-        notify.error('Access Denied', 'You do not have permission to generate this institutional report.', { category: 'SECURITY' });
-      } else {
-        notify.error('Export Failed', 'Failed to generate Excel report.', { category: 'REPORTS' });
-      }
+      notify.error('Unable to generate report', 'Please try again.', { category: 'REPORTS' });
     }
   };
 
@@ -249,10 +305,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const participationRate = totalStudents > 0 ? ((activeStudents / totalStudents) * 100).toFixed(1) : "0";
   const healthScorePercentage = totalStudents > 0 ? Math.round(((totalStudents - missingLinks) / totalStudents) * 100) : 100;
 
-  const absoluteLastFetchFormatted = systemHealth?.last_successful_fetch_formatted || syncStatus?.last_sync_timestamp || 'N/A';
-  
-  const isWorkerRunning = summary?.sync?.is_running ?? false;
-
   return (
     <div className="space-y-5 sm:space-y-6 pt-1 sm:pt-2 pb-2 animate-page-enter w-full">
       
@@ -260,9 +312,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       <div className="stagger-1 relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-lg border border-brand-500/30">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-3 max-w-3xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[11px] font-black tracking-wider uppercase">
-              <Building2 className="w-3.5 h-3.5 text-amber-400" />
-              <span>NANDHA ENGINEERING COLLEGE • ERODE</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[11px] font-black tracking-wider uppercase">
+                <Building2 className="w-3.5 h-3.5 text-amber-400" />
+                <span>NANDHA ENGINEERING COLLEGE • ERODE</span>
+              </div>
+              <div className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full border text-[11px] font-black tracking-wider uppercase ${liveStatus.color}`}>
+                <span className={`w-2 h-2 rounded-full ${liveStatus.dot}`} />
+                <span>{liveStatus.label}</span>
+              </div>
             </div>
 
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-display font-extrabold tracking-tight text-white uppercase">
@@ -276,29 +334,50 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <p className="text-sm text-slate-300 font-bold tracking-wide leading-relaxed">
               {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') 
                 ? "Your exclusive mentorship cohort — live sync, contest verification, and analytics."
-                : `${loading ? '...' : totalStudents} enrolled students across all departments — live sync, contest verification, leaderboard analytics, and automated reporting.`}
+                : loading 
+                  ? "Loading institutional data..." 
+                  : studentsError 
+                    ? "Unable to load student data. Please retry." 
+                    : `${totalStudents} enrolled students across all departments — live sync, contest verification, leaderboard analytics, and automated reporting.`}
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            {studentsError && (
+              <button
+                onClick={() => refetchStudents()}
+                className="min-h-[44px] min-w-[44px] px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-lg flex items-center space-x-2 transition-all cursor-pointer focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                aria-label="Retry loading student roster data"
+                title="Retry loading student roster data"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Retry Roster</span>
+              </button>
+            )}
             <button
               onClick={handleStartSync}
-              disabled={syncStarting || isWorkerRunning}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-bold text-xs shadow-lg shadow-brand-600/30 flex items-center space-x-2 transition-all cursor-pointer disabled:opacity-50"
+              disabled={isSyncing}
+              className="min-h-[44px] min-w-[44px] px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-bold text-xs shadow-lg shadow-brand-600/30 flex items-center space-x-2 transition-all cursor-pointer disabled:opacity-50 focus:ring-2 focus:ring-brand-500 focus:outline-none"
+              aria-label="Fetch live LeetCode statistics"
+              title="Synchronize live profile statistics for all students"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${syncStarting || isWorkerRunning ? 'animate-spin' : ''}`} />
-              <span>{isWorkerRunning ? 'Syncing...' : 'Fetch Live Data'}</span>
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span>{isSyncing ? 'Syncing...' : 'Fetch Live Data'}</span>
             </button>
             <button
               onClick={onOpenImport}
-              className="px-4 py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 font-bold text-xs shadow-sm border border-slate-700/50 flex items-center space-x-2 transition-colors cursor-pointer"
+              className="min-h-[44px] min-w-[44px] px-4 py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 font-bold text-xs shadow-sm border border-slate-700/50 flex items-center space-x-2 transition-colors cursor-pointer focus:ring-2 focus:ring-brand-500 focus:outline-none"
+              aria-label="Import student roster from Excel"
+              title="Upload Excel roster (.xlsx) to parse, validate, and update student profiles"
             >
               <Plus className="w-3.5 h-3.5 text-slate-400" />
               <span>Import Roster</span>
             </button>
             <button
               onClick={handleExportExcel}
-              className="px-4 py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 font-bold text-xs shadow-sm border border-slate-700/50 flex items-center space-x-2 transition-colors cursor-pointer"
+              className="min-h-[44px] min-w-[44px] px-4 py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 font-bold text-xs shadow-sm border border-slate-700/50 flex items-center space-x-2 transition-colors cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              aria-label="Export raw student roster to Excel"
+              title="Export current active student roster & raw LeetCode statistics to Excel workbook (.xlsx)"
             >
               <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
               <span>Export Excel</span>
@@ -306,18 +385,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <button
               onClick={handleGenerateReport}
               disabled={generatingReport}
-              className="px-4 py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 font-bold text-xs shadow-sm border border-slate-700/50 flex items-center space-x-2 transition-colors cursor-pointer disabled:opacity-50"
+              className="min-h-[44px] min-w-[44px] px-4 py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 font-bold text-xs shadow-sm border border-slate-700/50 flex items-center space-x-2 transition-colors cursor-pointer disabled:opacity-50 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              aria-label="Generate official weekly institutional report"
+              title="Instant download of pre-generated 8-sheet weekly performance tracker & PDF summary"
             >
               <FileText className="w-3.5 h-3.5 text-amber-400" />
-              <span>{generatingReport ? "Generating..." : "Generate Weekly Report"}</span>
+              <span>{generatingReport ? "Preparing Report..." : "Generate Weekly Report"}</span>
             </button>
           </div>
         </div>
       </div>
-
-
-
-
 
       {/* REAL-TIME GROWTH & DELTA ENGINE */}
       <div className="stagger-4 relative overflow-hidden rounded-xl bg-white dark:bg-navy-950 p-6 sm:p-8 shadow-sm border border-slate-200 dark:border-navy-700 mt-6">

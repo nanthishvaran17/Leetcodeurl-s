@@ -138,6 +138,16 @@ async def _deferred_startup_tasks():
             with SessionLocal() as _sched_db:
                 _cfg = get_or_create_default_schedule(_sched_db)
                 register_apscheduler_job(_cfg)
+                
+            # Pre-generate weekly report cache in background for instant user download
+            try:
+                from backend.services.pregenerated_report_service import pregenerate_all_weekly_reports
+                with SessionLocal() as _report_db:
+                    pregenerate_all_weekly_reports(_report_db)
+                logger.info("[STARTUP] Weekly report pre-generation worker initiated.")
+            except Exception as _p_err:
+                logger.warning(f"[STARTUP] Weekly report pre-generation note: {_p_err}")
+
             logger.info("[STARTUP] ── Step 3: Scheduler started. Checking for missed jobs...")
 
 

@@ -1209,6 +1209,19 @@ def delete_student(
     return {"message": f"Successfully deactivated student roster record {reg_no} ({name})", "reg_no": reg_no}
 
 
+@router.post("/validate-import")
+async def validate_students_import(
+    file: UploadFile = File(...), 
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Import Pre-Validation", required_roles=["admin", "super admin", "hod"]))
+):
+    """Parses and validates uploaded Excel roster bytes prior to database insertion."""
+    content = await file.read()
+    from backend.services.excel_import_service import validate_excel_import_file
+    result = validate_excel_import_file(content)
+    return result
+
+
 @router.post("/import")
 async def import_students_async(
     file: UploadFile = File(...), 

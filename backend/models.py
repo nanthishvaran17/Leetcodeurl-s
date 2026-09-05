@@ -2602,3 +2602,43 @@ class Message(Base):
     attachment_file_id = Column(String(100), nullable=True) # Optional reference to NotificationFile
 
     conversation = relationship("Conversation", back_populates="messages")
+
+
+class ReportCache(Base):
+    """
+    Stores pre-generated report metadata and file links for instant downloads.
+    """
+    __tablename__ = "report_cache"
+    __table_args__ = (
+        UniqueConstraint("institution_id", "week_id", "file_type", "data_version", name="uix_report_cache_key"),
+        Index("ix_report_cache_lookup", "institution_id", "week_id", "file_type", "status"),
+        {"extend_existing": True},
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    institution_id = Column(String(50), default="NEC", index=True, nullable=False)
+    week_id = Column(String(50), default="latest", index=True, nullable=False)
+    file_type = Column(String(50), index=True, nullable=False) # e.g. pdf, excel, official_summary, master_tracker
+    storage_path = Column(String(500), nullable=True)
+    download_url = Column(String(500), nullable=True)
+    data_version = Column(String(100), index=True, nullable=False)
+    status = Column(String(30), default="READY", index=True, nullable=False) # READY, PREPARING, FAILED
+    generated_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    generation_time_ms = Column(Float, nullable=True)
+    file_size_bytes = Column(Integer, nullable=True)
+    error_message = Column(Text, nullable=True)
+
+
+class SystemSetting(Base):
+    """
+    Key-value system setting configuration store.
+    """
+    __tablename__ = "system_settings"
+    __table_args__ = ({"extend_existing": True},)
+
+    id = Column(Integer, primary_key=True, index=True)
+    key = Column(String(100), unique=True, index=True, nullable=False)
+    value = Column(Text, nullable=True)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+

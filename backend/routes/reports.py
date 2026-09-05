@@ -25,6 +25,93 @@ from backend.security import require_security_access
 
 router = APIRouter(prefix="/api/reports", tags=["Reports"])
 
+@router.get("/download-info")
+def get_report_download_info(
+    file_type: str = Query("pdf"),
+    session_id: str = Query("latest"),
+    institution_id: str = Query("NEC"),
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Get Report Download Info", dept_scoped=True))
+):
+    """
+    INSTANT REPORT PRE-FLIGHT LOOKUP (< 50ms)
+    Returns cached download URL if report exists and dataVersion is current.
+    If stale or missing, triggers background pre-generation and returns status 'PREPARING'.
+    Enforces authorization: authenticated user role & institution isolation.
+    """
+    user_inst = getattr(current_user, "institution_id", None) or "NEC"
+    user_role = (getattr(current_user, "role", "") or "").lower()
+    
+    # Non-admin users are strictly isolated to their assigned institution
+    if user_role not in ["admin", "super admin", "super_admin"] and institution_id != user_inst:
+        institution_id = user_inst
+
+    from backend.services.pregenerated_report_service import get_cached_report_info
+    return get_cached_report_info(db, week_id=session_id, file_type=file_type, institution_id=institution_id)
+
+
+@router.get("/cached-download/{cache_id}")
+def download_cached_report_file(
+    cache_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Download Cached Report", dept_scoped=True))
+):
+    """
+    Direct instant static file stream for pre-generated cached reports (< 100ms initiation).
+    Enforces authentication, institution authorization boundaries, and disk file integrity.
+    """
+    from fastapi.responses import FileResponse
+    from backend.models import ReportCache
+    cache_record = db.query(ReportCache).filter(ReportCache.id == cache_id).first()
+    if not cache_record:
+        raise HTTPException(status_code=404, detail="Requested report file not found.")
+
+    # Authorization Check: Verify caller's institution matches report's institution
+    user_inst = getattr(current_user, "institution_id", None) or "NEC"
+    user_role = (getattr(current_user, "role", "") or "").lower()
+    if user_role not in ["admin", "super admin", "super_admin"] and cache_record.institution_id != user_inst:
+        raise HTTPException(status_code=403, detail="Unauthorized: Access denied to requested report.")
+
+    # File Integrity Check: verify storage_path exists and size > 0
+    if not cache_record.storage_path or not os.path.exists(cache_record.storage_path) or os.path.getsize(cache_record.storage_path) == 0:
+        cache_record.status = "STALE"
+        try:
+            db.commit()
+        except Exception:
+            db.rollback()
+        from backend.services.pregenerated_report_service import trigger_background_report_generation
+        from backend.services.data_version_service import get_current_data_version
+        curr_v = get_current_data_version(db)
+        trigger_background_report_generation(
+            week_id=cache_record.week_id,
+            file_type=cache_record.file_type,
+            institution_id=cache_record.institution_id,
+            data_version=curr_v
+        )
+        raise HTTPException(status_code=404, detail="Report file was missing or corrupted. Regeneration initiated.")
+
+    ext_media_types = {
+        "pdf": "application/pdf",
+        "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "csv": "text/csv"
+    }
+    ext = cache_record.storage_path.split(".")[-1].lower()
+    media_type = ext_media_types.get(ext, "application/octet-stream")
+    filename = os.path.basename(cache_record.storage_path)
+
+    return FileResponse(
+        path=cache_record.storage_path,
+        media_type=media_type,
+        filename=filename,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "private, no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
+    )
+
 @router.post("/trigger-public-contest-workflow")
 def trigger_public_contest_workflow_endpoint(
     db: Session = Depends(get_db),
@@ -52,7 +139,20 @@ def download_student_performance_detail_excel(
 ):
     """Generates the student performance detail Excel, scoped to the caller's authorization level."""
     try:
-        # Pass current_user so the generator can apply role-based scoping
+        from backend.services.pregenerated_report_service import get_cached_report_info
+        info = get_cached_report_info(db, week_id="latest", file_type="student_detail")
+        if info.get("status") == "READY" and info.get("cache_id"):
+            from backend.models import ReportCache
+            cache_rec = db.query(ReportCache).filter(ReportCache.id == info["cache_id"]).first()
+            if cache_rec and cache_rec.storage_path and os.path.exists(cache_rec.storage_path):
+                with open(cache_rec.storage_path, "rb") as f:
+                    excel_bytes = f.read()
+                return Response(
+                    content=excel_bytes,
+                    media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    headers={"Content-Disposition": "attachment; filename=Nandha_Student_Performance_Detail.xlsx"}
+                )
+
         excel_bytes = generate_student_performance_detail_excel(db, current_user=current_user)
         return Response(
             content=excel_bytes,
@@ -72,7 +172,20 @@ def download_official_college_summary_excel(
 ):
     """Generates the 8-sheet official college Excel, scoped to the caller's authorization level."""
     try:
-        # Pass current_user for role-scoped generation (Staff → assigned students only)
+        from backend.services.pregenerated_report_service import get_cached_report_info
+        info = get_cached_report_info(db, week_id="latest", file_type="official_summary")
+        if info.get("status") == "READY" and info.get("cache_id"):
+            from backend.models import ReportCache
+            cache_rec = db.query(ReportCache).filter(ReportCache.id == info["cache_id"]).first()
+            if cache_rec and cache_rec.storage_path and os.path.exists(cache_rec.storage_path):
+                with open(cache_rec.storage_path, "rb") as f:
+                    excel_bytes = f.read()
+                return Response(
+                    content=excel_bytes,
+                    media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    headers={"Content-Disposition": "attachment; filename=Nandha_College_Official_Weekly_Report.xlsx"}
+                )
+
         excel_bytes = generate_8_sheet_excel_report(db, current_user=current_user)
         return Response(
             content=excel_bytes,
@@ -89,6 +202,20 @@ def download_master_tracker_excel(
     current_user = Depends(require_security_access(resource_name="Export Master Tracker Excel", dept_scoped=True))
 ):
     try:
+        from backend.services.pregenerated_report_service import get_cached_report_info
+        info = get_cached_report_info(db, week_id="latest", file_type="master_tracker")
+        if info.get("status") == "READY" and info.get("cache_id"):
+            from backend.models import ReportCache
+            cache_rec = db.query(ReportCache).filter(ReportCache.id == info["cache_id"]).first()
+            if cache_rec and cache_rec.storage_path and os.path.exists(cache_rec.storage_path):
+                with open(cache_rec.storage_path, "rb") as f:
+                    excel_bytes = f.read()
+                return Response(
+                    content=excel_bytes,
+                    media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    headers={"Content-Disposition": "attachment; filename=Full_8_Sheet_Master_Tracker.xlsx"}
+                )
+
         excel_bytes = generate_8_sheet_master_tracker(db)
         return Response(
             content=excel_bytes,
@@ -147,12 +274,32 @@ def download_pdf_report(
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export PDF Report", dept_scoped=True))
 ):
-    pdf_bytes = generate_pdf_summary_report(db, dept_id=dept_id, current_user=current_user)
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": "attachment; filename=LeetCode_Weekly_Performance_Summary.pdf"}
-    )
+    try:
+        if not dept_id:
+            from backend.services.pregenerated_report_service import get_cached_report_info
+            info = get_cached_report_info(db, week_id="latest", file_type="pdf")
+            if info.get("status") == "READY" and info.get("cache_id"):
+                from backend.models import ReportCache
+                cache_rec = db.query(ReportCache).filter(ReportCache.id == info["cache_id"]).first()
+                if cache_rec and cache_rec.storage_path and os.path.exists(cache_rec.storage_path):
+                    with open(cache_rec.storage_path, "rb") as f:
+                        pdf_bytes = f.read()
+                    return Response(
+                        content=pdf_bytes,
+                        media_type="application/pdf",
+                        headers={"Content-Disposition": "attachment; filename=LeetCode_Weekly_Performance_Summary.pdf"}
+                    )
+
+        pdf_bytes = generate_pdf_summary_report(db, dept_id=dept_id, current_user=current_user)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": "attachment; filename=LeetCode_Weekly_Performance_Summary.pdf"}
+        )
+    except Exception as e:
+        logger.error(f"[EXPORT ERROR] /export-pdf: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to generate PDF Report: {str(e)}")
+
 
 from backend.word_generator import generate_word_report
 

@@ -85,8 +85,15 @@ export const getOrInitStorageAsync = async (): Promise<any> => {
 };
 
 export const auth = authInstance;
-export const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+export const createGoogleProvider = (): GoogleAuthProvider => {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  return provider;
+};
+
+export const googleProvider = createGoogleProvider();
 
 export default appInstance;
+
 

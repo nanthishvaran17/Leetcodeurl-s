@@ -99,3 +99,9 @@ verification_10_10_final_report.*
 
 .vercel
 .env*
+backend/storage/
+data/backups/
+data/leetcode_tracker.db
+reports/
+
+

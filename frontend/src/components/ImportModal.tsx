@@ -36,6 +36,8 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
   const [jobId, setJobId] = useState<string | null>(null);
   const [importStatus, setImportStatus] = useState<ImportStatus | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [validationData, setValidationData] = useState<any>(null);
+  const [isValidating, setIsValidating] = useState(false);
   const pollIntervalRef = useRef<any>(null);
   const logEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -47,9 +49,12 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
       setJobId(null);
       setImportStatus(null);
       setIsCompleted(false);
+      setValidationData(null);
+      setIsValidating(false);
       if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
     }
   }, [isOpen]);
+
 
   // Real-time WebSocket listening for INSTANT progress updates
   useLiveLeaderboard((data) => {
@@ -122,12 +127,28 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
 
   if (!isOpen) return null;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selected = e.target.files[0];
       setFile(selected);
+      setValidationData(null);
+      setIsValidating(true);
+
+      const formData = new FormData();
+      formData.append('file', selected);
+      try {
+        const res = await api.post('/students/validate-import', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        setValidationData(res.data);
+      } catch (err: any) {
+        console.warn('Validation error:', err);
+      } finally {
+        setIsValidating(false);
+      }
     }
   };
+
 
   const handleCommit = async () => {
     if (!file) return;
@@ -257,28 +278,112 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
             </div>
           )}
 
-          {/* STATE 2: File Selected (Ready to Commit) */}
+          {/* STATE 2: File Selected (Parsed & Pre-Validated) */}
           {file && !isImporting && !isCompleted && (
-            <div className="space-y-6">
-              <div className="p-6 rounded-3xl bg-brand-50/80 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800/60 text-center space-y-2">
-                <FileSpreadsheet className="w-12 h-12 text-brand-600 dark:text-brand-400 mx-auto" />
-                <p className="text-base font-extrabold text-brand-900 dark:text-brand-100">{file.name}</p>
-                <p className="text-xs font-medium text-brand-600 dark:text-brand-300">File size: {(file.size / 1024).toFixed(2)} KB • Ready for high-speed import</p>
+            <div className="space-y-5">
+              <div className="p-5 rounded-3xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <FileSpreadsheet className="w-8 h-8 text-brand-600 dark:text-brand-400 shrink-0" />
+                    <div>
+                      <p className="text-sm font-extrabold text-slate-900 dark:text-white truncate max-w-md">{file.name}</p>
+                      <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                        {(file.size / 1024).toFixed(2)} KB • {isValidating ? 'Validating schema & rows...' : 'Pre-validated & schema verified'}
+                      </p>
+                    </div>
+                  </div>
+                  {isValidating && <Loader2 className="w-5 h-5 animate-spin text-brand-500" />}
+                </div>
+
+                {/* Validation Summary Breakdown Cards */}
+                {validationData && !isValidating && (
+                  <div className="space-y-4 pt-2 border-t border-slate-200 dark:border-navy-800">
+                    <div className="grid grid-cols-4 gap-2 text-center">
+                      <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-navy-800">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase">Total Rows</span>
+                        <p className="text-base font-black text-slate-900 dark:text-white">{validationData.total_rows}</p>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50">
+                        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">Valid Rows</span>
+                        <p className="text-base font-black text-emerald-700 dark:text-emerald-300">{validationData.valid_rows}</p>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50">
+                        <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase">Duplicates</span>
+                        <p className="text-base font-black text-amber-700 dark:text-amber-300">{validationData.duplicate_rows}</p>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/50">
+                        <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase">Invalid</span>
+                        <p className="text-base font-black text-rose-700 dark:text-rose-300">{validationData.invalid_rows}</p>
+                      </div>
+                    </div>
+
+                    {/* Invalid / Warning Alert */}
+                    {validationData.invalid_rows > 0 && (
+                      <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs space-y-1">
+                        <div className="flex items-center space-x-1.5 font-bold">
+                          <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+                          <span>{validationData.invalid_rows} Invalid Record(s) Skipped</span>
+                        </div>
+                        <p className="text-[11px] leading-snug">
+                          {validationData.errors?.[0] || 'Records with missing Register No or Name will be skipped safely without corrupting existing roster data.'}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Parse Preview Table (First 5 Rows) */}
+                    {validationData.preview && validationData.preview.length > 0 && (
+                      <div className="space-y-1.5">
+                        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Sample Parsed Roster Preview:</p>
+                        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-navy-800">
+                          <table className="w-full text-left text-[11px]">
+                            <thead className="bg-slate-100 dark:bg-navy-950 text-slate-600 dark:text-slate-400 font-bold">
+                              <tr>
+                                <th className="p-2">Reg No</th>
+                                <th className="p-2">Name</th>
+                                <th className="p-2">Department</th>
+                                <th className="p-2">Year</th>
+                                <th className="p-2 text-right">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
+                              {validationData.preview.map((row: any, idx: number) => (
+                                <tr key={idx}>
+                                  <td className="p-2 font-mono text-brand-600 dark:text-brand-400 font-bold">{row.reg_no}</td>
+                                  <td className="p-2 font-medium text-slate-900 dark:text-white">{row.name}</td>
+                                  <td className="p-2 text-slate-500">{row.dept || 'N/A'}</td>
+                                  <td className="p-2 text-slate-500">{row.year || 'N/A'}</td>
+                                  <td className="p-2 text-right font-bold">
+                                    {row.is_duplicate ? (
+                                      <span className="text-amber-600 dark:text-amber-400">UPDATE</span>
+                                    ) : (
+                                      <span className="text-emerald-600 dark:text-emerald-400">NEW</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
-              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+              <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
                 <button
-                  onClick={() => setFile(null)}
+                  onClick={() => { setFile(null); setValidationData(null); }}
                   className="px-4 py-2.5 rounded-xl text-xs font-bold border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
                 >
                   Choose Different File
                 </button>
                 <button
                   onClick={handleCommit}
-                  className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-lg shadow-emerald-600/30 flex items-center space-x-2 cursor-pointer transition-all"
+                  disabled={isValidating || (validationData && validationData.valid_rows === 0)}
+                  className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black text-xs shadow-lg shadow-emerald-600/30 flex items-center space-x-2 cursor-pointer transition-all"
                 >
                   <Zap className="w-4 h-4" />
-                  <span>Start High-Speed Import</span>
+                  <span>Confirm & Import {validationData ? validationData.valid_rows : ''} Valid Students</span>
                 </button>
               </div>
             </div>

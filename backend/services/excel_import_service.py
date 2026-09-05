@@ -118,7 +118,106 @@ def dispatch_import_task(coro):
         t = threading.Thread(target=asyncio.run, args=(coro,), daemon=True)
         t.start()
 
+def validate_excel_import_file(file_bytes: bytes) -> Dict[str, Any]:
+    """
+    Parses and validates uploaded Excel roster bytes prior to database insertion.
+    Returns row breakdown, valid count, invalid count, duplicates, and error preview.
+    """
+    import io
+    import pandas as pd
+    from backend.models import Student
+    
+    db = SessionLocal()
+    try:
+        try:
+            df = pd.read_excel(io.BytesIO(file_bytes))
+        except Exception:
+            df = pd.read_csv(io.BytesIO(file_bytes))
+
+        if df.empty:
+            return {
+                "success": False,
+                "total_rows": 0,
+                "valid_rows": 0,
+                "invalid_rows": 0,
+                "duplicate_rows": 0,
+                "missing_fields": 0,
+                "errors": ["Uploaded file is empty or unreadable."],
+                "preview": []
+            }
+
+        # Normalize column headers
+        df.columns = [str(c).strip().lower().replace(" ", "_").replace(".", "") for c in df.columns]
+        
+        # Existing database reg_nos for duplicate checking
+        existing_reg_nos = set(r[0] for r in db.query(Student.reg_no).all() if r[0])
+
+        total_rows = len(df)
+        valid_rows = 0
+        invalid_rows = 0
+        duplicate_rows = 0
+        missing_fields = 0
+        errors = []
+        preview = []
+        seen_in_file = set()
+
+        for idx, row in df.iterrows():
+            row_num = idx + 2 # 1-based index + header row
+            reg_no = str(row.get("register_no") or row.get("reg_no") or row.get("register_number") or "").strip()
+            name = str(row.get("name") or row.get("student_name") or "").strip()
+            dept = str(row.get("department") or row.get("dept") or row.get("branch") or "").strip()
+            year = str(row.get("year") or row.get("year_level") or "").strip()
+
+            if not reg_no or not name:
+                missing_fields += 1
+                invalid_rows += 1
+                if len(errors) < 15:
+                    errors.append(f"Row {row_num}: Missing required field (Register No or Name)")
+                continue
+
+            if reg_no in seen_in_file or reg_no in existing_reg_nos:
+                duplicate_rows += 1
+
+            seen_in_file.add(reg_no)
+            valid_rows += 1
+
+            if len(preview) < 5:
+                preview.append({
+                    "reg_no": reg_no,
+                    "name": name,
+                    "dept": dept,
+                    "year": year,
+                    "is_duplicate": reg_no in existing_reg_nos
+                })
+
+        return {
+            "success": True,
+            "total_rows": total_rows,
+            "valid_rows": valid_rows,
+            "invalid_rows": invalid_rows,
+            "duplicate_rows": duplicate_rows,
+            "missing_fields": missing_fields,
+            "errors": errors,
+            "preview": preview
+        }
+    except Exception as e:
+        logger.error(f"[VALIDATE_IMPORT_ERROR] {e}", exc_info=True)
+        return {
+            "success": False,
+            "total_rows": 0,
+            "valid_rows": 0,
+            "invalid_rows": 0,
+            "duplicate_rows": 0,
+            "missing_fields": 0,
+            "errors": [f"Failed to parse import file: {str(e)}"],
+            "preview": []
+        }
+    finally:
+        db.close()
+
+
 def start_excel_import_job(file_bytes: bytes, filename: str, triggered_by: str = "admin") -> Dict[str, Any]:
+
     """
     Initiates an asynchronous background Excel import job.
     """

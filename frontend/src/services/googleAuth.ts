@@ -1,5 +1,5 @@
-import { signInWithPopup, signInWithRedirect, getRedirectResult, UserCredential } from 'firebase/auth';
-import { getOrInitAuth, googleProvider } from './firebase';
+import { signInWithPopup, signInWithRedirect, getRedirectResult, UserCredential, GoogleAuthProvider } from 'firebase/auth';
+import { getOrInitAuth, createGoogleProvider } from './firebase';
 import api from './api';
 
 export interface GoogleAuthResult {
@@ -44,7 +44,6 @@ export const checkGoogleRedirectResult = async (): Promise<GoogleAuthResult | nu
         err?.code === 'auth/web-storage-unsupported'
       ) {
         console.warn('[GOOGLE_REDIRECT_STORAGE_PARTITIONED] Handled missing initial state gracefully:', errStr);
-        // Clear any orphaned redirect query params from URL if present
         if (typeof window !== 'undefined' && window.history && window.location.search.includes('state=')) {
           const cleanUrl = window.location.origin + window.location.pathname;
           window.history.replaceState({}, document.title, cleanUrl);
@@ -64,22 +63,49 @@ export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
 
   try {
     const auth = getOrInitAuth();
+    if (!auth) {
+      throw new Error('Authentication service is initializing. Please try again.');
+    }
 
-    // Configure Provider Scopes
-    googleProvider.setCustomParameters({ prompt: 'select_account' });
-    googleProvider.addScope('email');
-    googleProvider.addScope('profile');
+    // Always create a fresh provider instance to avoid argument corruption / duplicate scope accumulation
+    const provider = createGoogleProvider();
 
-    // Step 1: Attempt Firebase Google Sign-In Popup first (Works reliably across Desktop & Mobile with user gesture)
+    // Step 1: Attempt Firebase Google Sign-In Popup first (Works reliably across Desktop & Mobile)
     let cred: UserCredential;
     try {
-      cred = await signInWithPopup(auth, googleProvider);
+      cred = await signInWithPopup(auth, provider);
       console.log('[GOOGLE_POPUP_SUCCESS] Firebase Google popup authenticated successfully.');
     } catch (popupErr: any) {
-      const errStr = String(popupErr?.message || popupErr?.code || '');
+      const errStr = String(popupErr?.message || popupErr?.code || popupErr || '');
       console.warn('[GOOGLE_POPUP_FAIL]', popupErr.code, popupErr.message);
 
+      // Handle popup blocked, argument error, or mobile environment restrictions with resilient redirect fallback
       if (
+        popupErr?.code === 'auth/argument-error' ||
+        popupErr?.code === 'auth/popup-blocked' ||
+        popupErr?.code === 'auth/operation-not-supported-in-this-environment' ||
+        errStr.includes('argument-error') ||
+        errStr.includes('popup-blocked') ||
+        errStr.includes('popup')
+      ) {
+        console.warn('[GOOGLE_REDIRECT_FALLBACK] Attempting Google Sign-In redirect fallback...');
+        try {
+          const redirectProvider = createGoogleProvider();
+          await signInWithRedirect(auth, redirectProvider);
+          throw new Error('Redirecting to Google Sign-In...');
+        } catch (redirectErr: any) {
+          const rErrStr = String(redirectErr?.message || redirectErr?.code || '');
+          if (rErrStr.includes('missing initial state') || rErrStr.includes('sessionStorage')) {
+            throw new Error(
+              'Mobile browser storage restriction detected. Please sign in using institutional Email/Password or Secure OTP login.'
+            );
+          }
+          if (redirectErr.message === 'Redirecting to Google Sign-In...') {
+            throw redirectErr;
+          }
+          throw new Error('Unable to complete Google sign-in. Please use Password or OTP login.');
+        }
+      } else if (
         errStr.includes('missing initial state') ||
         errStr.includes('sessionStorage') ||
         popupErr.code === 'auth/missing-initial-state' ||
@@ -95,24 +121,10 @@ export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
         throw new Error(
           `Unauthorized Domain: "${currentHost}" is not authorized in Firebase Console. Add "${currentHost}" under Firebase Console -> Authentication -> Settings -> Authorized Domains.`
         );
-      } else if (popupErr.code === 'auth/popup-blocked' || errStr.includes('popup-blocked') || errStr.includes('popup')) {
-        console.warn('[GOOGLE_POPUP_BLOCKED] Popup blocked by browser. Attempting resilient redirect fallback...');
-        try {
-          await signInWithRedirect(auth, googleProvider);
-          throw new Error('Redirecting to Google Sign-In...');
-        } catch (redirectErr: any) {
-          const rErrStr = String(redirectErr?.message || redirectErr?.code || '');
-          if (rErrStr.includes('missing initial state') || rErrStr.includes('sessionStorage')) {
-            throw new Error(
-              'Your browser blocked redirect storage state. Please allow third-party cookies or use Email/Password / OTP login.'
-            );
-          }
-          throw redirectErr;
-        }
       } else if (popupErr.code === 'auth/account-exists-with-different-credential') {
         throw new Error('Please sign in using your existing authentication method for this account.');
       } else {
-        throw new Error(popupErr.message || 'Unable to complete Google sign-in. Please try again.');
+        throw new Error('Google sign-in was unable to complete on this mobile browser. Please try again or use Email/OTP login.');
       }
     }
 
@@ -141,4 +153,5 @@ export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
     throw new Error(err.message || 'Google authentication service is temporarily unavailable.');
   }
 };
+
 
