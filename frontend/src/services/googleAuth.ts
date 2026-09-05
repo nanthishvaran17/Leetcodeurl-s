@@ -2,19 +2,6 @@ import { signInWithPopup, signInWithRedirect, getRedirectResult, UserCredential 
 import { getOrInitAuth, googleProvider } from './firebase';
 import api from './api';
 
-/**
- * Checks whether the app is running inside a Capacitor native runtime (Android / iOS).
- * The Capacitor bridge injects window.Capacitor at runtime.
- */
-const isCapacitorNative = (): boolean => {
-  try {
-    // @ts-ignore — window.Capacitor is injected by the native bridge
-    return !!(window?.Capacitor?.isNativePlatform?.());
-  } catch {
-    return false;
-  }
-};
-
 export interface GoogleAuthResult {
   authenticated: boolean;
   user: {
@@ -27,25 +14,49 @@ export interface GoogleAuthResult {
   };
 }
 
+let redirectCheckPromise: Promise<GoogleAuthResult | null> | null = null;
+
 /**
- * Checks if the user is returning from a Google signInWithRedirect flow.
+ * Safely checks if the user is returning from a Google signInWithRedirect flow.
+ * Handles storage-partitioning ('missing initial state') gracefully without crashing the app.
  */
 export const checkGoogleRedirectResult = async (): Promise<GoogleAuthResult | null> => {
-  try {
-    const auth = getOrInitAuth();
-    const cred = await getRedirectResult(auth);
-    if (cred && cred.user && cred.user.email) {
-      console.log('[GOOGLE_REDIRECT_SUCCESS] Redirect result retrieved from Firebase Auth.');
-      const idToken = await cred.user.getIdToken(true);
-      const response = await api.post('/auth/google', { id_token: idToken }, { timeout: 35000 });
-      if (response.data && response.data.authenticated) {
-        return response.data;
+  if (redirectCheckPromise) return redirectCheckPromise;
+
+  redirectCheckPromise = (async () => {
+    try {
+      const auth = getOrInitAuth();
+      const cred = await getRedirectResult(auth);
+      if (cred && cred.user && cred.user.email) {
+        console.log('[GOOGLE_REDIRECT_SUCCESS] Redirect result retrieved from Firebase Auth.');
+        const idToken = await cred.user.getIdToken(true);
+        const response = await api.post('/auth/google', { id_token: idToken }, { timeout: 35000 });
+        if (response.data && response.data.authenticated) {
+          return response.data;
+        }
+      }
+    } catch (err: any) {
+      const errStr = String(err?.message || err?.code || err || '');
+      if (
+        errStr.includes('missing initial state') ||
+        errStr.includes('sessionStorage') ||
+        err?.code === 'auth/missing-initial-state' ||
+        err?.code === 'auth/web-storage-unsupported'
+      ) {
+        console.warn('[GOOGLE_REDIRECT_STORAGE_PARTITIONED] Handled missing initial state gracefully:', errStr);
+        // Clear any orphaned redirect query params from URL if present
+        if (typeof window !== 'undefined' && window.history && window.location.search.includes('state=')) {
+          const cleanUrl = window.location.origin + window.location.pathname;
+          window.history.replaceState({}, document.title, cleanUrl);
+        }
+      } else {
+        console.warn('[GOOGLE_REDIRECT_CHECK_ERR]', err);
       }
     }
-  } catch (err: any) {
-    console.warn('[GOOGLE_REDIRECT_CHECK_ERR]', err);
-  }
-  return null;
+    return null;
+  })();
+
+  return redirectCheckPromise;
 };
 
 export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
@@ -59,32 +70,45 @@ export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
     googleProvider.addScope('email');
     googleProvider.addScope('profile');
 
-    // Step 1: Firebase Google Sign-In Popup
+    // Step 1: Attempt Firebase Google Sign-In Popup first (Works reliably across Desktop & Mobile with user gesture)
     let cred: UserCredential;
     try {
       cred = await signInWithPopup(auth, googleProvider);
       console.log('[GOOGLE_POPUP_SUCCESS] Firebase Google popup authenticated successfully.');
     } catch (popupErr: any) {
       const errStr = String(popupErr?.message || popupErr?.code || '');
+      console.warn('[GOOGLE_POPUP_FAIL]', popupErr.code, popupErr.message);
+
       if (
         errStr.includes('missing initial state') ||
         errStr.includes('sessionStorage') ||
+        popupErr.code === 'auth/missing-initial-state' ||
         popupErr.code === 'auth/web-storage-unsupported'
       ) {
         throw new Error(
-          'Browser storage restriction detected. Please log in using your institutional Email/Password or allow third-party cookies in browser settings.'
+          'Mobile browser storage restriction detected. Please sign in using your institutional Email/Password or Secure OTP login.'
         );
-      } else if (popupErr.code === 'auth/popup-closed-by-user') {
+      } else if (popupErr.code === 'auth/popup-closed-by-user' || popupErr.code === 'auth/cancelled-popup-request') {
         throw new Error('Google sign-in was cancelled.');
       } else if (popupErr.code === 'auth/unauthorized-domain' || errStr.includes('unauthorized-domain')) {
         const currentHost = typeof window !== 'undefined' ? window.location.hostname : 'this domain';
         throw new Error(
-          `Unauthorized Domain: "${currentHost}" is not authorized in Firebase Console. To enable Google Sign-In, add "${currentHost}" under Firebase Console -> Authentication -> Settings -> Authorized Domains (or use Email/Password / OTP login).`
+          `Unauthorized Domain: "${currentHost}" is not authorized in Firebase Console. Add "${currentHost}" under Firebase Console -> Authentication -> Settings -> Authorized Domains.`
         );
       } else if (popupErr.code === 'auth/popup-blocked' || errStr.includes('popup-blocked') || errStr.includes('popup')) {
-        console.warn('[GOOGLE_POPUP_BLOCKED] Popup blocked by browser. Falling back to signInWithRedirect...');
-        await signInWithRedirect(auth, googleProvider);
-        throw new Error('Redirecting to Google Sign-In...');
+        console.warn('[GOOGLE_POPUP_BLOCKED] Popup blocked by browser. Attempting resilient redirect fallback...');
+        try {
+          await signInWithRedirect(auth, googleProvider);
+          throw new Error('Redirecting to Google Sign-In...');
+        } catch (redirectErr: any) {
+          const rErrStr = String(redirectErr?.message || redirectErr?.code || '');
+          if (rErrStr.includes('missing initial state') || rErrStr.includes('sessionStorage')) {
+            throw new Error(
+              'Your browser blocked redirect storage state. Please allow third-party cookies or use Email/Password / OTP login.'
+            );
+          }
+          throw redirectErr;
+        }
       } else if (popupErr.code === 'auth/account-exists-with-different-credential') {
         throw new Error('Please sign in using your existing authentication method for this account.');
       } else {
@@ -99,9 +123,9 @@ export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
 
     // Step 2: Retrieve Firebase ID Token
     const idToken = await firebaseUser.getIdToken(true);
-    console.log('[GOOGLE_TOKEN_RECEIVED] Firebase ID token retrieved.');
+    console.log('[GOOGLE_TOKEN_RECEIVED] Firebase ID token retrieved successfully.');
 
-    // Step 3: Backend verification & role authorization (35s timeout for Render cold-starts)
+    // Step 3: Backend verification & role authorization
     console.log('[GOOGLE_BACKEND_REQUEST] Posting ID token to backend /api/auth/google...');
     const response = await api.post('/auth/google', { id_token: idToken }, { timeout: 35000 });
 
@@ -117,3 +141,4 @@ export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
     throw new Error(err.message || 'Google authentication service is temporarily unavailable.');
   }
 };
+

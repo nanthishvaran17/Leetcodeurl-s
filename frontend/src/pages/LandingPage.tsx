@@ -800,7 +800,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   ? 'Refreshing...' 
                   : isFiltered 
                     ? `Refresh Filtered (${sortedList.length} Students)` 
-                    : 'Refresh 0.25 Allocated Students'
+                    : 'Refresh Allocated Students'
               }
             </span>
           </button>

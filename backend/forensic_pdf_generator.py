@@ -245,21 +245,32 @@ def generate_forensic_audit_pdf(db: Session, student_id: int, session_id: int, t
     contest_name = derive_clean_contest_name(session_obj)
     session_date = session_obj.session_date or "16.08.2026"
 
-    p_status = "PUBLIC_ATTENDED" if (contest_result and contest_result.participation_status == "PUBLIC_ATTENDED") else (
+    q1_val = contest_result.q1 if contest_result else 0
+    q2_val = contest_result.q2 if contest_result else 0
+    q3_val = contest_result.q3 if contest_result else 0
+    q4_val = contest_result.q4 if contest_result else 0
+    tot_solved = contest_result.total_contest_solved if (contest_result and contest_result.total_contest_solved) else (
+        (1 if q1_val else 0) + (1 if q2_val else 0) + (1 if q3_val else 0) + (1 if q4_val else 0)
+    )
+    contest_score = contest_result.contest_score if (contest_result and contest_result.contest_score) else (
+        (3 if q1_val else 0) + (4 if q2_val else 0) + (5 if q3_val else 0) + (6 if q4_val else 0)
+    )
+
+    is_public = False
+    if contest_result:
+        p_raw = (contest_result.participation_status or "").upper()
+        if p_raw in ("PUBLIC_ATTENDED", "PUBLIC", "ATTENDED", "COMPLETED", "PRESENT") or tot_solved > 0 or contest_score > 0:
+            is_public = True
+
+    p_status = "PUBLIC_ATTENDED" if is_public else (
         "VIRTUAL_ATTENDED" if virtual_result else (
             contest_result.participation_status if contest_result else "PUBLIC_NOT_ATTENDED"
         )
     )
 
-    q1_val = contest_result.q1 if contest_result else 0
-    q2_val = contest_result.q2 if contest_result else 0
-    q3_val = contest_result.q3 if contest_result else 0
-    q4_val = contest_result.q4 if contest_result else 0
-    tot_solved = contest_result.total_contest_solved if contest_result else 0
-    contest_score = contest_result.contest_score if contest_result else 0
     contest_rank = f"#{contest_result.contest_rank:,}" if (contest_result and contest_result.contest_rank) else "—"
-    contest_rating = str(contest_result.contest_rating) if (contest_result and contest_result.contest_rating) else (
-        str(student.stats.contest_rating) if (student.stats and student.stats.contest_rating) else "1392"
+    contest_rating = str(round(float(contest_result.contest_rating), 2)) if (contest_result and contest_result.contest_rating) else (
+        str(round(float(student.stats.contest_rating), 2)) if (student.stats and student.stats.contest_rating) else "1392"
     )
 
     # 3. Student Identification Table

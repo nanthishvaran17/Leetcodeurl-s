@@ -469,30 +469,35 @@ const ReportHubModal: React.FC<{
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-none animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-4xl max-h-[90vh] bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-2xl flex flex-col justify-between overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="w-full max-w-4xl max-h-[88vh] bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-2xl flex flex-col justify-between overflow-hidden text-slate-900 dark:text-white antialiased">
         {/* Header */}
-        <div className="p-5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between">
+        <div className="px-6 py-4 bg-slate-50 dark:bg-navy-900 border-b border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-brand-50 text-brand-600">
-              <FileSpreadsheet size={18} />
+            <div className="p-2.5 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 shadow-xs">
+              <FileSpreadsheet className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-display text-base font-bold text-slate-900 dark:text-white">
+              <h3 className="font-display text-base sm:text-lg font-black text-slate-950 dark:text-white">
                 Institutional Executive Report Generator
               </h3>
-              <p className="text-xs text-slate-500">Live generated audit and accreditation reports</p>
+              <p className="text-xs text-slate-600 dark:text-slate-300 font-bold">Live generated audit and accreditation reports</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100"><X size={18} /></button>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-navy-800 transition-colors cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Body */}
-        <div className="p-5 overflow-y-auto space-y-4 flex-1 text-xs">
+        <div className="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1 text-xs custom-scrollbar">
           {/* Controls */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-100">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-sm">
             <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase font-mono mb-1">Select Report Type</label>
+              <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Select Report Type</label>
               <GlobalFilter
                 value={selectedReportType}
                 onChange={val => setSelectedReportType(val)}
@@ -502,11 +507,11 @@ const ReportHubModal: React.FC<{
                   { value: "FACULTY_ALLOCATION", label: "Faculty Mentorship & Allocation Audit Report" },
                   { value: "INACTIVE_AT_RISK", label: "Inactive & At-Risk Intervention Report" }
                 ]}
-                icon={<FileText className="w-4 h-4" />}
+                icon={<FileText className="w-4 h-4 text-brand-500" />}
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase font-mono mb-1">Department Scope</label>
+              <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Department Scope</label>
               <GlobalFilter
                 value={selectedDeptId?.toString() || ""}
                 onChange={val => setSelectedDeptId(val ? Number(val) : undefined)}
@@ -515,22 +520,22 @@ const ReportHubModal: React.FC<{
                   { value: "", label: "All Institutional Departments", pillText: "ALL" },
                   ...departments.map((d: any) => ({ value: String(d.id), label: `${d.name} (${d.code})`, pillText: d.code }))
                 ]}
-                icon={<Building2 className="w-4 h-4" />}
+                icon={<Building2 className="w-4 h-4 text-indigo-500" />}
               />
             </div>
           </div>
 
           {/* Live Preview Paper */}
           {loading ? (
-            <div className="p-12 text-center text-slate-400">Loading live report data...</div>
+            <div className="p-16 text-center text-slate-500 font-black text-sm">Loading live report data...</div>
           ) : (
-            <div className="p-6 rounded-xl border border-slate-200 bg-white shadow-sm space-y-4 text-slate-900">
-              <div className="border-b pb-3 flex justify-between items-end">
+            <div className="p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 shadow-md space-y-4 text-slate-900 dark:text-white">
+              <div className="border-b border-slate-200 dark:border-navy-800 pb-3 flex justify-between items-end flex-wrap gap-2">
                 <div>
-                  <div className="text-[10px] font-mono uppercase font-bold text-slate-400">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</div>
-                  <h2 className="text-base font-bold font-display text-slate-900">{reportData?.report_title}</h2>
+                  <div className="text-[10px] font-mono uppercase font-black text-slate-500 dark:text-slate-400 tracking-wider">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</div>
+                  <h2 className="text-base sm:text-lg font-black font-display text-slate-950 dark:text-white mt-0.5">{reportData?.report_title}</h2>
                 </div>
-                <div className="text-right text-[10px] font-mono text-slate-500">
+                <div className="text-right text-xs font-mono text-slate-600 dark:text-slate-300 font-bold">
                   {reportData?.generated_at}
                 </div>
               </div>
@@ -538,27 +543,27 @@ const ReportHubModal: React.FC<{
               {/* Report Contents */}
               {selectedReportType === 'EXECUTIVE' && (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {Object.entries(reportData?.summary_metrics || {}).map(([k, v]: any) => (
-                      <div key={k} className="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
-                        <div className="text-[10px] text-slate-400 font-mono">{k}</div>
-                        <div className="text-base font-bold font-mono mt-0.5">{String(v)}</div>
+                      <div key={k} className="p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-xs">
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono font-bold uppercase tracking-wider">{k}</div>
+                        <div className="text-lg font-black font-mono text-brand-600 dark:text-brand-400 mt-0.5">{String(v)}</div>
                       </div>
                     ))}
                   </div>
 
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b font-mono font-bold text-slate-500">
-                        <th className="py-1.5">Dimension</th>
-                        <th className="py-1.5 text-right">Score</th>
+                      <tr className="border-b border-slate-200 dark:border-navy-800 font-mono font-black text-slate-500 dark:text-slate-400 uppercase text-[10px]">
+                        <th className="py-2.5 px-3">Dimension</th>
+                        <th className="py-2.5 px-3 text-right">Score</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y font-mono">
+                    <tbody className="divide-y divide-slate-100 dark:divide-navy-800/80 font-mono text-slate-800 dark:text-slate-200">
                       {(reportData?.dimension_breakdown || []).map((row: any, i: number) => (
-                        <tr key={i}>
-                          <td className="py-1.5 font-sans">{row.dimension}</td>
-                          <td className="py-1.5 text-right font-bold">{row.score}</td>
+                        <tr key={i} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors">
+                          <td className="py-2.5 px-3 font-sans font-bold">{row.dimension}</td>
+                          <td className="py-2.5 px-3 text-right font-black text-brand-600 dark:text-brand-400">{row.score}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -567,57 +572,67 @@ const ReportHubModal: React.FC<{
               )}
 
               {selectedReportType === 'FACULTY_ALLOCATION' && (
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="border-b font-mono font-bold text-slate-500">
-                      <th className="py-1.5">Faculty Mentor</th>
-                      <th className="py-1.5">Dept</th>
-                      <th className="py-1.5 text-right">Assigned</th>
-                      <th className="py-1.5 text-right">Active Solvers</th>
-                      <th className="py-1.5 text-center">Ratio Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y font-mono">
-                    {(reportData?.faculty_records || []).map((fac: any) => (
-                      <tr key={fac.faculty_id}>
-                        <td className="py-1.5 font-bold">{fac.faculty_name}</td>
-                        <td className="py-1.5">{fac.department_code}</td>
-                        <td className="py-1.5 text-right">{fac.assigned_students}/20</td>
-                        <td className="py-1.5 text-right text-emerald-600 font-bold">{fac.active_students}</td>
-                        <td className="py-1.5 text-center">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${fac.workload_status === 'NORMAL' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
-                            {fac.workload_status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-
-              {selectedReportType === 'INACTIVE_AT_RISK' && (
-                <div className="space-y-2">
-                  <div className="text-xs font-bold text-rose-600">Total Inactive Solvers: {reportData?.total_inactive}</div>
+                <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b font-mono font-bold text-slate-500">
-                        <th className="py-1.5">Reg No</th>
-                        <th className="py-1.5">Student Name</th>
-                        <th className="py-1.5">Dept</th>
-                        <th className="py-1.5">Assigned Faculty Mentor</th>
+                      <tr className="border-b border-slate-200 dark:border-navy-800 font-mono font-black text-slate-600 dark:text-slate-300 uppercase text-[10px]">
+                        <th className="py-2.5 px-3">Faculty Mentor</th>
+                        <th className="py-2.5 px-3">Dept</th>
+                        <th className="py-2.5 px-3 text-right">Assigned</th>
+                        <th className="py-2.5 px-3 text-right">Active Solvers</th>
+                        <th className="py-2.5 px-3 text-center">Ratio Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y font-mono">
-                      {(reportData?.students || []).map((st: any) => (
-                        <tr key={st.reg_no}>
-                          <td className="py-1.5 font-bold">{st.reg_no}</td>
-                          <td className="py-1.5 font-sans">{st.name}</td>
-                          <td className="py-1.5">{st.department}</td>
-                          <td className="py-1.5 text-brand-600 font-bold">{st.assigned_mentor}</td>
+                    <tbody className="divide-y divide-slate-100 dark:divide-navy-800/80 font-mono text-slate-900 dark:text-slate-100">
+                      {(reportData?.faculty_records || []).map((fac: any) => (
+                        <tr key={fac.faculty_id} className="hover:bg-slate-50 dark:hover:bg-navy-800/60 transition-colors">
+                          <td className="py-2.5 px-3 font-bold font-sans text-slate-950 dark:text-white text-xs sm:text-sm">{fac.faculty_name}</td>
+                          <td className="py-2.5 px-3 font-bold text-slate-700 dark:text-slate-300">{fac.department_code}</td>
+                          <td className="py-2.5 px-3 text-right font-black">{fac.assigned_students}/20</td>
+                          <td className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400 font-black">{fac.active_students}</td>
+                          <td className="py-2.5 px-3 text-center">
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black shadow-xs ${
+                              fac.workload_status === 'NORMAL'
+                                ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40'
+                                : 'bg-rose-100 dark:bg-rose-500/20 text-rose-900 dark:text-rose-300 border border-rose-300 dark:border-rose-500/40'
+                            }`}>
+                              {fac.workload_status}
+                            </span>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {selectedReportType === 'INACTIVE_AT_RISK' && (
+                <div className="space-y-3">
+                  <div className="text-xs font-black text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 p-3 rounded-xl border border-rose-200 dark:border-rose-800/50">
+                    Total Inactive Solvers: {reportData?.total_inactive}
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-200 dark:border-navy-800 font-mono font-black text-slate-600 dark:text-slate-300 uppercase text-[10px]">
+                          <th className="py-2.5 px-3">Reg No</th>
+                          <th className="py-2.5 px-3">Student Name</th>
+                          <th className="py-2.5 px-3">Dept</th>
+                          <th className="py-2.5 px-3">Assigned Faculty Mentor</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-navy-800/80 font-mono text-slate-900 dark:text-slate-100">
+                        {(reportData?.students || []).map((st: any) => (
+                          <tr key={st.reg_no} className="hover:bg-slate-50 dark:hover:bg-navy-800/60 transition-colors">
+                            <td className="py-2.5 px-3 font-black text-amber-700 dark:text-amber-300">{st.reg_no}</td>
+                            <td className="py-2.5 px-3 font-sans font-bold text-slate-950 dark:text-white">{st.name}</td>
+                            <td className="py-2.5 px-3 font-bold">{st.department}</td>
+                            <td className="py-2.5 px-3 text-brand-600 dark:text-brand-400 font-black">{st.assigned_mentor}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
@@ -625,20 +640,27 @@ const ReportHubModal: React.FC<{
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-100 dark:border-navy-800 flex justify-between items-center">
-          <button onClick={() => window.print()} className="px-3.5 py-1.5 rounded-xl border border-slate-200 text-xs font-bold inline-flex items-center gap-1.5 hover:bg-slate-50">
-            <Printer size={14} /> Print Document
+        <div className="px-6 py-4 bg-slate-50 dark:bg-navy-900 border-t border-slate-200 dark:border-navy-800 flex justify-between items-center shrink-0 flex-wrap gap-2">
+          <button
+            onClick={() => window.print()}
+            className="px-4 py-2 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-900 dark:text-slate-200 text-xs font-black inline-flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs"
+          >
+            <Printer size={14} className="text-amber-500" />
+            <span>Print Document</span>
           </button>
           <div className="flex gap-2">
             <button
               onClick={handleDownloadExcel}
               disabled={downloadingExcel}
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all shadow-md shadow-emerald-600/20"
             >
               <Download size={13} className={downloadingExcel ? 'animate-spin' : ''} />
               <span>{downloadingExcel ? 'Downloading...' : 'Export Excel (.xlsx)'}</span>
             </button>
-            <button onClick={onClose} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 text-xs">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl bg-slate-200 dark:bg-navy-800 text-slate-900 dark:text-slate-200 font-black hover:bg-slate-300 dark:hover:bg-navy-700 text-xs cursor-pointer transition-colors"
+            >
               Close Hub
             </button>
           </div>

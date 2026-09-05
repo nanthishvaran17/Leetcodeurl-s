@@ -83,6 +83,8 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
   const [downloadingPdf, setDownloadingPdf] = useState<boolean>(false);
   const [showCertPreviewModal, setShowCertPreviewModal] = useState<boolean>(false);
   const activeTraceRequestRef = useRef<number>(0);
+  const cachedStudentsRef = useRef<any[]>([]);
+  const searchDebounceRef = useRef<any>(null);
 
   // Trust Score "Why?" Modal
   const [showTrustModal, setShowTrustModal] = useState<boolean>(false);
@@ -130,11 +132,23 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  const fetchStudentsCache = useCallback(async () => {
+    try {
+      const res = await api.get('/students');
+      if (Array.isArray(res.data)) {
+        cachedStudentsRef.current = res.data;
+      }
+    } catch (err) {
+      console.error('Students cache fetch error:', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchOperationsCenterData();
     fetchBackups();
     fetchScheduleSettings();
     fetchAvailableContests();
+    fetchStudentsCache();
     const interval = setInterval(() => {
       fetchOperationsCenterData(true);
     }, 15000);
@@ -266,29 +280,68 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
 
   // ── FORENSIC SEARCH: LIVE STUDENT AUTOCOMPLETE (NON-AUTO-RUN) ──
-  const handleStudentSearchChange = async (val: string) => {
+  const handleStudentSearchChange = (val: string) => {
     setForensicSearchInput(val);
     setSelectedStudent(null);
-    setForensicResult(null); // Clear previous result immediately
+    setForensicResult(null);
     setForensicError(null);
 
-    if (!val || val.trim().length < 2) {
+    const raw = val.trim();
+    if (!raw || raw.length < 2) {
       setStudentSuggestions([]);
       setShowStudentDropdown(false);
       return;
     }
 
-    setIsSearchingStudents(true);
-    try {
-      const res = await api.get(`/students?search=${encodeURIComponent(val.trim())}`);
-      const list = Array.isArray(res.data) ? res.data.slice(0, 8) : [];
-      setStudentSuggestions(list);
-      setShowStudentDropdown(list.length > 0);
-    } catch (err) {
-      console.error('Student search autocomplete error:', err);
-    } finally {
-      setIsSearchingStudents(false);
+    const q = raw.toLowerCase();
+    const cleanQ = raw.replace(/[^A-Za-z0-9]+/g, '').toLowerCase();
+
+    // 1. Instant local filter from cached roster (0ms latency, zero lag)
+    const localMatches = (cachedStudentsRef.current || []).filter((st: any) => {
+      const nameMatch = st.name && st.name.toLowerCase().includes(q);
+      const regMatch = st.reg_no && st.reg_no.toLowerCase().includes(q);
+      const cleanRegMatch = st.reg_no && st.reg_no.replace(/[^A-Za-z0-9]+/g, '').toLowerCase().includes(cleanQ);
+      const userMatch = st.username && st.username.toLowerCase().includes(q);
+      return nameMatch || regMatch || cleanRegMatch || userMatch;
+    }).slice(0, 12);
+
+    setStudentSuggestions(localMatches);
+    setShowStudentDropdown(localMatches.length > 0);
+
+    // Auto-associate exact reg_no / username match if available
+    const exactMatch = localMatches.find((st: any) => {
+      const cleanReg = (st.reg_no || '').replace(/[^A-Za-z0-9]+/g, '').toLowerCase();
+      return st.reg_no?.toLowerCase() === q || cleanReg === cleanQ || st.username?.toLowerCase() === q;
+    });
+    if (exactMatch) {
+      setSelectedStudent(exactMatch);
     }
+
+    // 2. Fast API search fallback (100ms debounce)
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(async () => {
+      setIsSearchingStudents(true);
+      try {
+        const res = await api.get(`/students?search=${encodeURIComponent(raw)}`);
+        const list = Array.isArray(res.data) ? res.data.slice(0, 12) : [];
+        if (list.length > 0) {
+          setStudentSuggestions(list);
+          setShowStudentDropdown(true);
+
+          const apiExact = list.find((st: any) => {
+            const cleanReg = (st.reg_no || '').replace(/[^A-Za-z0-9]+/g, '').toLowerCase();
+            return st.reg_no?.toLowerCase() === q || cleanReg === cleanQ || st.username?.toLowerCase() === q;
+          });
+          if (apiExact && !selectedStudent) {
+            setSelectedStudent(apiExact);
+          }
+        }
+      } catch (err) {
+        console.error('Student search autocomplete error:', err);
+      } finally {
+        setIsSearchingStudents(false);
+      }
+    }, 100);
   };
 
   const handleSelectStudent = useCallback((student: any) => {
@@ -307,7 +360,41 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
   // ── EXPLICIT EXECUTE FORENSIC TRACE ──
   const handleExecuteForensicTrace = async () => {
-    const studentQuery = selectedStudent?.reg_no || selectedStudent?.username || forensicSearchInput.trim();
+    let studentToUse = selectedStudent;
+    if (!studentToUse && forensicSearchInput.trim()) {
+      const raw = forensicSearchInput.trim();
+      const q = raw.toLowerCase();
+      const cleanQ = raw.replace(/[^A-Za-z0-9]+/g, '').toLowerCase();
+
+      studentToUse = (cachedStudentsRef.current || []).find((st: any) => {
+        const cleanReg = (st.reg_no || '').replace(/[^A-Za-z0-9]+/g, '').toLowerCase();
+        return (
+          st.reg_no?.toLowerCase() === q ||
+          cleanReg === cleanQ ||
+          st.name?.toLowerCase() === q ||
+          st.username?.toLowerCase() === q ||
+          st.reg_no?.toLowerCase().includes(q)
+        );
+      }) || studentSuggestions[0] || null;
+
+      if (!studentToUse) {
+        try {
+          const res = await api.get(`/students?search=${encodeURIComponent(raw)}`);
+          if (Array.isArray(res.data) && res.data.length > 0) {
+            studentToUse = res.data.find((st: any) => {
+              const cleanReg = (st.reg_no || '').replace(/[^A-Za-z0-9]+/g, '').toLowerCase();
+              return st.reg_no?.toLowerCase() === q || cleanReg === cleanQ;
+            }) || res.data[0];
+          }
+        } catch (e) {}
+      }
+
+      if (studentToUse) {
+        setSelectedStudent(studentToUse);
+      }
+    }
+
+    const studentQuery = studentToUse?.reg_no || studentToUse?.username || forensicSearchInput.trim();
     if (!studentQuery || !selectedContestId) {
       setForensicError('Please select both a student and a contest before running forensic verification.');
       return;
@@ -1020,31 +1107,41 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                   type="text"
                   value={forensicSearchInput}
                   onChange={(e) => handleStudentSearchChange(e.target.value)}
+                  onFocus={() => {
+                    if (studentSuggestions.length > 0) setShowStudentDropdown(true);
+                  }}
+                  onBlur={() => {
+                    setTimeout(() => setShowStudentDropdown(false), 200);
+                  }}
                   placeholder="Search student by name, register number, or LeetCode username..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-inner"
                 />
                 {isSearchingStudents && (
-                  <RefreshCw className="w-3.5 h-3.5 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 animate-spin" />
+                  <RefreshCw className="w-3.5 h-3.5 text-indigo-500 absolute right-3.5 top-1/2 -translate-y-1/2 animate-spin" />
                 )}
               </div>
 
               {/* Autocomplete Dropdown */}
               {showStudentDropdown && studentSuggestions.length > 0 && (
-                <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-2xl shadow-lg z-50 max-h-56 overflow-y-auto p-1.5 space-y-1 animate-fade-in">
+                <div className="absolute left-0 right-0 top-full mt-1.5 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-2xl shadow-xl z-50 max-h-60 overflow-y-auto p-1.5 space-y-1 animate-fade-in custom-scrollbar">
                   {studentSuggestions.map((st) => (
                     <button
                       key={st.id}
                       type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleSelectStudent(st);
+                      }}
                       onClick={() => handleSelectStudent(st)}
-                      className="w-full text-left p-2 rounded-xl hover:bg-indigo-50 dark:hover:bg-navy-800 flex items-center justify-between text-xs transition-all cursor-pointer"
+                      className="w-full text-left p-2.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-navy-800 flex items-center justify-between text-xs transition-all cursor-pointer border border-transparent hover:border-indigo-200 dark:hover:border-navy-700"
                     >
                       <div>
                         <span className="font-black text-slate-900 dark:text-white">{st.name}</span>
-                        <span className="text-[10px] text-slate-400 block">
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-bold mt-0.5">
                           {st.reg_no} • {st.department?.code || 'CSE'} ({st.year_level || 'III'} Year)
                         </span>
                       </div>
-                      <span className="text-[10px] font-mono text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-navy-950 px-2 py-0.5 rounded-md">
+                      <span className="text-[10px] font-mono font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-navy-900 px-2.5 py-1 rounded-lg border border-indigo-200 dark:border-navy-700">
                         {st.username || 'No LeetCode'}
                       </span>
                     </button>

@@ -682,10 +682,15 @@ def revoke_certificate_endpoint(
 
 @router.get("/signatures")
 def list_signatures(db: Session = Depends(get_db)):
-    """Lists all configured authorized signatures."""
+    """Lists all configured authorized signatures with IST timestamps."""
     sigs = db.query(AuthorizedSignature).order_by(AuthorizedSignature.id.desc()).all()
-    return [
-        {
+    results = []
+    for s in sigs:
+        uploaded_str = None
+        if s.uploaded_at:
+            ist_time = s.uploaded_at + datetime.timedelta(hours=5, minutes=30)
+            uploaded_str = ist_time.strftime("%d %b %Y, %I:%M %p IST")
+        results.append({
             "id": s.id,
             "signature_type": s.signature_type,
             "department": s.department,
@@ -695,11 +700,10 @@ def list_signatures(db: Session = Depends(get_db)):
             "has_image": bool(s.image_data or (s.image_path and os.path.exists(s.image_path))),
             "image_preview": s.image_data,
             "is_active": s.is_active,
-            "uploaded_at": s.uploaded_at.strftime("%Y-%m-%d %H:%M:%S") if s.uploaded_at else None,
+            "uploaded_at": uploaded_str,
             "uploaded_by": s.uploaded_by
-        }
-        for s in sigs
-    ]
+        })
+    return results
 
 
 @router.post("/signatures/upload")
@@ -787,11 +791,12 @@ async def upload_signature(
 
 @router.delete("/signatures/{signature_id}")
 def delete_signature(signature_id: int, db: Session = Depends(get_db)):
-    """Deletes an authorized signature record."""
+    """Deletes an authorized signature record and activates remaining version if any."""
     sig = db.query(AuthorizedSignature).filter(AuthorizedSignature.id == signature_id).first()
     if not sig:
         raise HTTPException(status_code=404, detail="Signature not found.")
 
+    sig_type = sig.signature_type
     if sig.image_path and os.path.exists(sig.image_path):
         try:
             os.remove(sig.image_path)
@@ -800,4 +805,34 @@ def delete_signature(signature_id: int, db: Session = Depends(get_db)):
 
     db.delete(sig)
     db.commit()
-    return {"success": True, "message": "Signature record deleted."}
+
+    # If there are other signatures of this type, activate the newest remaining one
+    remaining = db.query(AuthorizedSignature).filter(
+        AuthorizedSignature.signature_type == sig_type
+    ).order_by(AuthorizedSignature.id.desc()).first()
+
+    if remaining:
+        remaining.is_active = True
+        db.commit()
+
+    return {"success": True, "message": f"Signature {signature_id} deleted."}
+
+
+@router.delete("/signatures/type/{sig_type}")
+def delete_all_signatures_of_type(sig_type: str, db: Session = Depends(get_db)):
+    """Deletes ALL signature records (active and history) for a specific signature type."""
+    sig_type_clean = sig_type.strip().upper()
+    sigs = db.query(AuthorizedSignature).filter(AuthorizedSignature.signature_type == sig_type_clean).all()
+    if not sigs:
+        return {"success": True, "message": f"No signatures found for type {sig_type_clean}."}
+
+    for sig in sigs:
+        if sig.image_path and os.path.exists(sig.image_path):
+            try:
+                os.remove(sig.image_path)
+            except Exception:
+                pass
+        db.delete(sig)
+
+    db.commit()
+    return {"success": True, "message": f"All signatures for {sig_type_clean} have been completely removed."}

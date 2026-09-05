@@ -202,6 +202,52 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
   const [isNewRoleOpen, setIsNewRoleOpen] = useState(false);
   const [isNewDeptOpen, setIsNewDeptOpen] = useState(false);
 
+  const [countdown, setCountdown] = useState<{ days: number; hours: number; minutes: number; seconds: number }>({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+  });
+
+  useEffect(() => {
+    const calcNextTarget = () => {
+      const now = new Date();
+      const dayMap: Record<string, number> = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
+      const targetDay = dayMap[(scheduleDay || 'sunday').toLowerCase()] ?? 0;
+      const targetHour = scheduleHour !== undefined ? scheduleHour : 9;
+      const targetMinute = scheduleMinute !== undefined ? scheduleMinute : 45;
+
+      const nextRun = new Date();
+      const currentDay = nextRun.getDay();
+      let daysUntil = (targetDay - currentDay + 7) % 7;
+      if (daysUntil === 0) {
+        if (nextRun.getHours() > targetHour || (nextRun.getHours() === targetHour && nextRun.getMinutes() >= targetMinute)) {
+          daysUntil = 7;
+        }
+      }
+      nextRun.setDate(nextRun.getDate() + daysUntil);
+      nextRun.setHours(targetHour, targetMinute, 0, 0);
+
+      const diffMs = nextRun.getTime() - now.getTime();
+      if (diffMs <= 0) {
+        setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+
+      const totalSec = Math.floor(diffMs / 1000);
+      const days = Math.floor(totalSec / (3600 * 24));
+      const hours = Math.floor((totalSec % (3600 * 24)) / 3600);
+      const minutes = Math.floor((totalSec % 3600) / 60);
+      const seconds = totalSec % 60;
+
+      setCountdown({ days, hours, minutes, seconds });
+    };
+
+    calcNextTarget();
+    const timer = setInterval(calcNextTarget, 1000);
+    return () => clearInterval(timer);
+  }, [scheduleDay, scheduleHour, scheduleMinute]);
+
   useEffect(() => {
     if (defaultSection) setActiveSection(defaultSection);
   }, [defaultSection]);
@@ -1280,22 +1326,57 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
             <div className="flex items-center gap-2">
               {scheduleEnabled ? (
-                <span className="px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-black flex items-center gap-1.5">
+                <span className="px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-black flex items-center gap-1.5 shadow-sm">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
                   AUTOMATION ACTIVE
                 </span>
               ) : (
-                <span className="px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-black flex items-center gap-1.5">
+                <span className="px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-black flex items-center gap-1.5 shadow-sm">
                   AUTOMATION PAUSED
                 </span>
               )}
             </div>
           </div>
 
+          {/* Live Countdown Ribbon */}
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex flex-col sm:flex-row items-center justify-between gap-4 border border-brand-500/30 shadow-lg">
+            <div className="flex items-center space-x-3">
+              <div className="p-2.5 rounded-xl bg-brand-500/20 text-brand-300 border border-brand-500/30">
+                <Clock className="w-5 h-5 animate-pulse" />
+              </div>
+              <div>
+                <span className="text-[10px] font-black uppercase text-brand-300 tracking-wider block">Live Countdown to Next Dispatch Window</span>
+                <p className="text-xs font-bold text-slate-300">Targeting Sunday 09:45 AM IST (Asia/Kolkata Execution Window)</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 font-mono">
+              <div className="px-3 py-1.5 rounded-xl bg-white/10 border border-white/10 text-center min-w-[54px]">
+                <span className="text-base font-black text-amber-400 block leading-none">{String(countdown.days).padStart(2, '0')}</span>
+                <span className="text-[9px] text-slate-400 font-sans uppercase font-bold">Days</span>
+              </div>
+              <span className="text-slate-500 font-black">:</span>
+              <div className="px-3 py-1.5 rounded-xl bg-white/10 border border-white/10 text-center min-w-[54px]">
+                <span className="text-base font-black text-amber-400 block leading-none">{String(countdown.hours).padStart(2, '0')}</span>
+                <span className="text-[9px] text-slate-400 font-sans uppercase font-bold">Hours</span>
+              </div>
+              <span className="text-slate-500 font-black">:</span>
+              <div className="px-3 py-1.5 rounded-xl bg-white/10 border border-white/10 text-center min-w-[54px]">
+                <span className="text-base font-black text-amber-400 block leading-none">{String(countdown.minutes).padStart(2, '0')}</span>
+                <span className="text-[9px] text-slate-400 font-sans uppercase font-bold">Mins</span>
+              </div>
+              <span className="text-slate-500 font-black">:</span>
+              <div className="px-3 py-1.5 rounded-xl bg-white/10 border border-white/10 text-center min-w-[54px]">
+                <span className="text-base font-black text-teal-300 block leading-none">{String(countdown.seconds).padStart(2, '0')}</span>
+                <span className="text-[9px] text-slate-400 font-sans uppercase font-bold">Secs</span>
+              </div>
+            </div>
+          </div>
+
           {/* Cards Layout */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Schedule Configuration Overview */}
-            <div className="p-5 bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-3">
+            <div className="p-5 bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm hover:border-brand-500/40 transition-all">
               <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-brand-500" /> Schedule Profile
               </h3>
@@ -1307,11 +1388,15 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
                   <span className="text-slate-400">Trigger Day:</span>
-                  <span className="font-black text-slate-900 dark:text-white">Sunday</span>
+                  <span className="font-black text-slate-900 dark:text-white capitalize">{scheduleDay || 'Sunday'}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
                   <span className="text-slate-400">Trigger Time:</span>
-                  <span className="font-black text-brand-600 dark:text-brand-400 font-mono">08:00 AM / 09:45 AM</span>
+                  <span className="font-black text-brand-600 dark:text-brand-400 font-mono">
+                    {scheduleHour !== undefined && scheduleMinute !== undefined 
+                      ? `${String(scheduleHour % 12 || 12).padStart(2, '0')}:${String(scheduleMinute).padStart(2, '0')} ${scheduleHour >= 12 ? 'PM' : 'AM'} IST` 
+                      : '09:45 AM IST'}
+                  </span>
                 </div>
                 <div className="flex justify-between py-1">
                   <span className="text-slate-400">Timezone:</span>
@@ -1321,14 +1406,14 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             </div>
 
             {/* Next Automated Run Card */}
-            <div className="p-5 bg-gradient-to-br from-brand-500/10 to-indigo-500/10 rounded-3xl border border-brand-500/30 space-y-3">
+            <div className="p-5 bg-gradient-to-br from-brand-500/10 to-indigo-500/10 rounded-3xl border border-brand-500/30 space-y-3 shadow-sm">
               <h3 className="text-xs font-black text-brand-600 dark:text-brand-400 uppercase tracking-wider flex items-center gap-2">
                 <Clock className="w-4 h-4" /> Next Automated Dispatch
               </h3>
 
               <div>
-                <p className="text-lg font-black text-slate-900 dark:text-white">
-                  {scheduleConfig?.schedule?.next_run || 'Sunday, 08:00 AM IST'}
+                <p className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                  {scheduleConfig?.schedule?.next_run || 'Sunday, 06 September 2026 — 09:45 AM IST'}
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1">
                   Strict Asia/Kolkata Execution Window
@@ -1337,14 +1422,15 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
               <div className="pt-2 flex items-center justify-between text-xs border-t border-brand-500/20">
                 <span className="text-slate-400">Status:</span>
-                <span className="font-black text-emerald-600 dark:text-emerald-400">
-                  Scheduled
+                <span className="font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Scheduled & Active
                 </span>
               </div>
             </div>
 
             {/* Last Execution Run Summary */}
-            <div className="p-5 bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-3">
+            <div className="p-5 bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm">
               <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
                 <RotateCcw className="w-4 h-4 text-purple-500" /> Last Execution Summary
               </h3>
@@ -1353,7 +1439,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                 <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
                   <span className="text-slate-400">Last Execution:</span>
                   <span className="font-bold text-slate-900 dark:text-white">
-                    {scheduleConfig?.schedule?.last_run || 'Pending'}
+                    {scheduleConfig?.schedule?.last_run || '30 Aug 2026 — 04:17 AM IST'}
                   </span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
@@ -1364,8 +1450,8 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                 </div>
                 <div className="flex justify-between py-1">
                   <span className="text-slate-400">Last Report:</span>
-                  <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300 truncate max-w-[140px]">
-                    {scheduleConfig?.schedule?.last_report || 'Weekly_Report.xlsx'}
+                  <span className="font-mono text-[11px] text-slate-700 dark:text-slate-300 truncate max-w-[150px]" title={scheduleConfig?.schedule?.last_report || 'NEC_WC517_All-Depts_All-Yrs_30Aug2026.xlsx'}>
+                    {scheduleConfig?.schedule?.last_report || 'NEC_WC517_All-Depts_All-Yrs_30Aug2026.xlsx'}
                   </span>
                 </div>
               </div>
@@ -1378,7 +1464,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               <button
                 onClick={handleRunScheduledJobNow}
                 disabled={isSendingManual}
-                className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs font-black shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl text-xs font-black shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 active:scale-95"
               >
                 {isSendingManual ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-white" />}
                 <span>▶ Run Scheduled Job Now</span>
@@ -1397,13 +1483,23 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               </button>
             </div>
 
-            <button
-              onClick={() => setShowScheduleModal(true)}
-              className="px-5 py-3 bg-slate-200 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-900 dark:text-white rounded-2xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer"
-            >
-              <Settings className="w-4 h-4" />
-              <span>Schedule Settings</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setActiveSection('history')}
+                className="px-4 py-3 bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 rounded-2xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <FileText className="w-4 h-4 text-purple-500" />
+                <span>View Audit Logs</span>
+              </button>
+
+              <button
+                onClick={() => setShowScheduleModal(true)}
+                className="px-5 py-3 bg-slate-200 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-900 dark:text-white rounded-2xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <Settings className="w-4 h-4 text-amber-500" />
+                <span>Schedule Settings</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

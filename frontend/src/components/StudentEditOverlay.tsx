@@ -432,10 +432,10 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       onClick={(e) => { if (e.target === e.currentTarget && !isSaving) handleAttemptClose(); }}
     >
       <div
-        className="modal-container-responsive max-w-xl bg-white dark:bg-navy-950 rounded-3xl shadow-2xl border border-slate-200 dark:border-navy-700 animate-modal-content text-slate-900 dark:text-slate-100 antialiased overflow-visible"
+        className="modal-container-responsive max-w-xl max-h-[calc(100dvh-1rem)] sm:max-h-[85vh] bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-navy-700 animate-modal-content text-slate-900 dark:text-slate-100 antialiased overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 z-30 px-6 py-4 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-slate-800 rounded-t-3xl shrink-0">
+        <div className="px-4 py-3 sm:px-6 sm:py-4 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-slate-800 rounded-t-2xl sm:rounded-t-3xl shrink-0 z-10">
           <div className="flex items-center space-x-3">
             <div className="p-2 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
               <Edit3 className="w-5 h-5" />
@@ -452,7 +452,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
           </button>
         </div>
 
-        <form onSubmit={handleSave} className="p-6 space-y-6 overflow-y-auto max-h-[75vh]">
+        <form id="edit-student-form" onSubmit={handleSave} className="p-3.5 sm:p-6 space-y-5 sm:space-y-6 flex-1 min-h-0 overflow-y-auto overscroll-contain">
           {errorMessage && (
             <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center space-x-2 animate-shake">
               <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -650,9 +650,9 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
           </div>
         </form>
 
-        <div className="sticky bottom-0 z-30 px-6 py-4 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-navy-800 flex items-center justify-between rounded-b-3xl shrink-0">
-          <button type="button" onClick={handleAttemptClose} className="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 transition-all">Cancel</button>
-          <button type="button" onClick={handleSave} disabled={isSaving} className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 text-white text-xs font-black shadow-md flex items-center space-x-2 disabled:opacity-50">
+        <div className="px-4 py-3 sm:px-6 sm:py-4 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-navy-800 flex items-center justify-between rounded-b-2xl sm:rounded-b-3xl shrink-0 sticky bottom-0 z-20 shadow-md">
+          <button type="button" onClick={handleAttemptClose} className="px-4 py-2.5 sm:px-5 sm:py-2.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 transition-all cursor-pointer active:scale-95">Cancel</button>
+          <button type="submit" form="edit-student-form" disabled={isSaving} className="px-5 py-2.5 sm:px-6 sm:py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white text-xs font-black shadow-md flex items-center space-x-2 disabled:opacity-50 cursor-pointer transition-all active:scale-95">
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             <span>{isSaving ? 'Saving...' : 'Save Changes'}</span>
           </button>

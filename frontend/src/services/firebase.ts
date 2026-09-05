@@ -1,5 +1,14 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, Auth, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import {
+  getAuth,
+  initializeAuth,
+  GoogleAuthProvider,
+  Auth,
+  indexedDBLocalPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence,
+  setPersistence
+} from 'firebase/auth';
 
 // Read configuration from Vite environment variables with authoritative institutional fallbacks
 const firebaseConfig = {
@@ -20,11 +29,26 @@ let authInstance: Auth | null = null;
 let dbInstance: any = null;
 let storageInstance: any = null;
 
+const createAuthInstance = (app: FirebaseApp): Auth => {
+  try {
+    // initializeAuth with indexedDBLocalPersistence primary, browserLocalPersistence fallback
+    return initializeAuth(app, {
+      persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence]
+    });
+  } catch (_e) {
+    // If initializeAuth fails because app is already initialized, get standard auth and set persistence
+    const a = getAuth(app);
+    setPersistence(a, indexedDBLocalPersistence)
+      .catch(() => setPersistence(a, browserLocalPersistence))
+      .catch(() => {});
+    return a;
+  }
+};
+
 if (isFirebaseConfigured()) {
   try {
     appInstance = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    authInstance = getAuth(appInstance);
-    setPersistence(authInstance, browserLocalPersistence).catch(() => {});
+    authInstance = createAuthInstance(appInstance);
   } catch (err) {
     console.warn("Firebase lazy initialization mode active:", err);
   }
@@ -36,8 +60,7 @@ export const getOrInitAuth = (): Auth => {
     throw new Error("auth/invalid-api-key: Please paste your VITE_FIREBASE_API_KEY into frontend/.env");
   }
   appInstance = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-  authInstance = getAuth(appInstance);
-  setPersistence(authInstance, browserLocalPersistence).catch(() => {});
+  authInstance = createAuthInstance(appInstance);
   return authInstance;
 };
 
@@ -66,3 +89,4 @@ export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 export default appInstance;
+
