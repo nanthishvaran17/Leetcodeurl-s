@@ -2,7 +2,7 @@
  * downloadUtils.ts
  *
  * Helper utilities for MIME mapping, filename processing, response validation,
- * and safe SPA browser download triggers.
+ * and safe SPA browser & Android Capacitor download triggers.
  */
 
 const MIME_MAP: Record<string, string> = {
@@ -23,6 +23,44 @@ const MIME_MAP: Record<string, string> = {
   sqlite: 'application/x-sqlite3',
   db: 'application/x-sqlite3',
 };
+
+/** True when running inside Capacitor Android/iOS native app */
+export function isNativeMobile(): boolean {
+  try {
+    return !!((window as any)?.Capacitor?.isNativePlatform?.());
+  } catch {
+    return false;
+  }
+}
+
+/** Convert a Blob to a raw base64 string */
+export function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Failed to read file binary.'));
+    reader.onload = () => {
+      const result = reader.result as string;
+      const base64 = result.includes(',') ? result.split(',')[1] : result;
+      resolve(base64);
+    };
+    reader.readAsDataURL(blob);
+  });
+}
+
+/** Native Android file open/share helper via Capacitor Share plugin */
+export async function shareOrOpenFile(fileUri: string, filename: string): Promise<void> {
+  try {
+    const { Share } = await import('@capacitor/share');
+    await Share.share({
+      title: filename,
+      text: `Downloaded ${filename}`,
+      url: fileUri,
+      dialogTitle: `Open ${filename}`,
+    });
+  } catch (err) {
+    console.warn('[DownloadUtils] Native share/open note:', err);
+  }
+}
 
 /** Infer MIME type from filename extension */
 export function getMimeTypeFromFilename(filename: string): string {
@@ -95,3 +133,4 @@ export async function triggerBrowserAnchorDownload(url: string, filename: string
     }
   }, 1000);
 }
+

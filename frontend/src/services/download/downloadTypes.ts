@@ -42,6 +42,8 @@ export interface DownloadState {
   error?: string;
   preparedUrl?: string;
   startTime?: number;
+  progress?: number;
+  localPath?: string;
 }
 
 export interface PrepareResponse {

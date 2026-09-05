@@ -1,10 +1,3 @@
-/**
- * downloadManager.ts
- *
- * Centralized Production-Grade Download Manager for LeetCode Tracker.
- * Every downloadable file across the entire application must call downloadManager.download(...)
- */
-
 import api from '../api';
 import { auth } from '../../firebase';
 import {
@@ -19,6 +12,9 @@ import {
   sanitizeFilename,
   triggerBrowserAnchorDownload,
   validateFileBlob,
+  isNativeMobile,
+  blobToBase64,
+  shareOrOpenFile,
 } from './downloadUtils';
 
 class DownloadManager {
@@ -27,7 +23,8 @@ class DownloadManager {
 
   /**
    * Main central download method.
-   * Enforces backend token pre-flight, branded notifications, state machine updates, and SPA anchor trigger.
+   * Enforces backend token pre-flight, branded notifications, state machine updates,
+   * and native Android Filesystem storage for mobile app or SPA anchor trigger for web.
    */
   async download(options: DownloadOptions): Promise<{ success: boolean; downloadId: string; error?: string }> {
     const endpoint = options.endpoint.startsWith('/') ? options.endpoint : `/${options.endpoint}`;
@@ -54,8 +51,63 @@ class DownloadManager {
 
     this.updateState(state, options.onStateChange);
 
+    // ─── 1. NATIVE ANDROID CAPACITOR MOBILE APP DOWNLOAD FLOW ──────────────────
+    if (isNativeMobile()) {
+      state.status = 'DOWNLOADING';
+      this.updateState(state, options.onStateChange);
+
+      await downloadNotification.notifyStart(filename, mimeType);
+
+      try {
+        // Direct authenticated REST request via Axios (includes Bearer Token)
+        const response = await api.get(endpoint, {
+          params: options.params || {},
+          responseType: 'blob',
+          onDownloadProgress: (progressEvent) => {
+            if (progressEvent.total) {
+              const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              state.progress = pct;
+              this.updateState(state, options.onStateChange);
+            }
+          },
+        });
+
+        const blob = response.data;
+        const validation = await validateFileBlob(blob, mimeType);
+        if (!validation.valid) {
+          throw new Error(validation.error || 'Downloaded file payload is invalid.');
+        }
+
+        // Save to device local storage via Capacitor Filesystem
+        const { Filesystem, Directory } = await import('@capacitor/filesystem');
+        const base64Data = await blobToBase64(blob);
+
+        const writeResult = await Filesystem.writeFile({
+          path: filename,
+          data: base64Data,
+          directory: Directory.Documents,
+          recursive: true,
+        });
+
+        state.status = 'COMPLETED';
+        state.localPath = writeResult.uri;
+        this.updateState(state, options.onStateChange);
+
+        await downloadNotification.notifySuccess(filename);
+
+        // Optionally trigger native file share/open dialog
+        setTimeout(() => {
+          shareOrOpenFile(writeResult.uri, filename);
+        }, 300);
+
+        return { success: true, downloadId };
+      } catch (err: any) {
+        return this.handleDownloadError(err, state, filename, options.onStateChange);
+      }
+    }
+
+    // ─── 2. WEB BROWSER SPA DOWNLOAD FLOW ────────────────────────────────────
     try {
-      // 1. AUTHENTICATING & PREPARING: Request secure temporary download authorization from backend
       state.status = 'PREPARING';
       this.updateState(state, options.onStateChange);
 
@@ -91,14 +143,11 @@ class DownloadManager {
       state.preparedUrl = prepData.download_url;
       this.updateState(state, options.onStateChange);
 
-      // 2. BRANDED APPLICATION NOTIFICATION: LeetCode Tracker
       await downloadNotification.notifyStart(filename, mimeType);
 
-      // 3. SPA BROWSER DOWNLOAD EXECUTION
       state.status = 'STARTED';
       this.updateState(state, options.onStateChange);
 
-      // Resolve full download URL
       const apiBase = api.defaults.baseURL || '/api';
       const cleanBase = apiBase.replace(/\/+$/, '');
       const downloadPath = prepData.download_url.startsWith('/') ? prepData.download_url : `/${prepData.download_url}`;
@@ -120,7 +169,6 @@ class DownloadManager {
 
   /**
    * Helper method for downloading client-generated Blobs (e.g. settings export, audit log CSV).
-   * Ensures client-generated files also use branded notifications, state machine, and SPA anchor trigger.
    */
   async downloadBlob(blob: Blob, filename: string, mimeType?: string): Promise<{ success: boolean; downloadId: string; error?: string }> {
     const safeFilename = sanitizeFilename(filename);
@@ -145,6 +193,30 @@ class DownloadManager {
       }
 
       await downloadNotification.notifyStart(safeFilename, effectiveMime);
+
+      if (isNativeMobile()) {
+        const { Filesystem, Directory } = await import('@capacitor/filesystem');
+        const base64Data = await blobToBase64(blob);
+
+        const writeResult = await Filesystem.writeFile({
+          path: safeFilename,
+          data: base64Data,
+          directory: Directory.Documents,
+          recursive: true,
+        });
+
+        state.status = 'COMPLETED';
+        state.localPath = writeResult.uri;
+        this.updateState(state);
+
+        await downloadNotification.notifySuccess(safeFilename);
+
+        setTimeout(() => {
+          shareOrOpenFile(writeResult.uri, safeFilename);
+        }, 300);
+
+        return { success: true, downloadId };
+      }
 
       state.status = 'STARTED';
       this.updateState(state);
