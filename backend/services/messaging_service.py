@@ -247,6 +247,17 @@ class MessagingService:
                 if user_or_student.get("type") == "UNKNOWN":
                     raise ValueError("You are not authorized to message this user.")
             
+        # 1.5. Ensure neither user has blocked the other
+        from backend.models import BlockedUser
+        is_blocked = db.query(BlockedUser).filter(
+            or_(
+                and_(BlockedUser.blocker_id == sender_id, BlockedUser.blocked_id == receiver_id),
+                and_(BlockedUser.blocker_id == receiver_id, BlockedUser.blocked_id == sender_id)
+            )
+        ).first()
+        if is_blocked:
+            raise ValueError("Cannot send message: User is blocked.")
+
         # 2. Get or create conversation
         conv = MessagingService.get_or_create_conversation(db, sender_id, receiver_id)
         
@@ -304,8 +315,8 @@ class MessagingService:
         message_payload["t3_fanout"] = msg.t3_fanout
         db.commit()
 
-        # WebSocket Broadcast for real-time delivery
-        manager.broadcast_sync({
+        # Secure WebSocket Dispatch: Only send to active participants
+        manager.send_to_users_sync([sender_id, receiver_id], {
             "type": "NEW_MESSAGE",
             "message": message_payload
         })
@@ -356,7 +367,10 @@ class MessagingService:
         db.commit()
 
         updated_payload = MessagingService._format_message_dict(db, msg, user_id)
-        manager.broadcast_sync({
+        conv = db.query(Conversation).filter_by(conversation_id=msg.conversation_id).first()
+        p1 = conv.participant_1_id if conv else msg.sender_id
+        p2 = conv.participant_2_id if conv else msg.receiver_id
+        manager.send_to_users_sync([p1, p2], {
             "type": "MESSAGE_EDITED",
             "message": updated_payload
         })
@@ -372,6 +386,10 @@ class MessagingService:
         if not msg:
             raise ValueError("Message not found")
 
+        conv = db.query(Conversation).filter_by(conversation_id=msg.conversation_id).first()
+        p1 = conv.participant_1_id if conv else msg.sender_id
+        p2 = conv.participant_2_id if conv else msg.receiver_id
+
         if mode == "FOR_EVERYONE":
             role = str(getattr(current_user, "role", "")).upper()
             if msg.sender_id != user_id and "ADMIN" not in role:
@@ -382,7 +400,7 @@ class MessagingService:
             db.commit()
 
             updated_payload = MessagingService._format_message_dict(db, msg, user_id)
-            manager.broadcast_sync({
+            manager.send_to_users_sync([p1, p2], {
                 "type": "MESSAGE_DELETED",
                 "messageId": message_id,
                 "conversationId": msg.conversation_id,
@@ -415,10 +433,15 @@ class MessagingService:
         if user_id not in (conv.participant_1_id, conv.participant_2_id):
             raise ValueError("Unauthorized access to delete conversation")
             
+        p1 = conv.participant_1_id
+        p2 = conv.participant_2_id
+        
+        # Cascade delete all messages in this conversation to prevent orphaned rows
+        db.query(Message).filter_by(conversation_id=conversation_id).delete()
         db.delete(conv)
         db.commit()
         
-        manager.broadcast_sync({
+        manager.send_to_users_sync([p1, p2], {
             "type": "CONVERSATION_DELETED",
             "conversationId": conversation_id
         })
@@ -535,7 +558,10 @@ class MessagingService:
         db.commit()
 
         updated_payload = MessagingService._format_message_dict(db, msg, user_id)
-        manager.broadcast_sync({
+        conv = db.query(Conversation).filter_by(conversation_id=msg.conversation_id).first()
+        p1 = conv.participant_1_id if conv else msg.sender_id
+        p2 = conv.participant_2_id if conv else msg.receiver_id
+        manager.send_to_users_sync([p1, p2], {
             "type": "MESSAGE_REACTION",
             "messageId": message_id,
             "conversationId": msg.conversation_id,
@@ -645,7 +671,7 @@ class MessagingService:
         db.commit()
 
         if updated_ids:
-            manager.broadcast_sync({
+            manager.send_to_users_sync([conv.participant_1_id, conv.participant_2_id], {
                 "type": "MESSAGE_STATUS_UPDATE",
                 "conversationId": conversation_id,
                 "status": "READ",

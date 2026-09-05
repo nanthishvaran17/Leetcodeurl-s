@@ -559,9 +559,6 @@ export const MessagesPage: React.FC = () => {
             conversations={conversationsWithTyping} 
             activeId={activeConversationId} 
             onSelect={(id) => {
-              if (window.innerWidth < 768) {
-                setShowConversationList(false);
-              }
               handleSelectConversation(id);
             }}
             onNewMessage={() => {

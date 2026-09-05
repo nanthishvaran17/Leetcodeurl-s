@@ -260,11 +260,11 @@ def report_typing_endpoint(
     req: TypingRequest,
     current_user: Any = Depends(get_current_active_user)
 ):
-    """Broadcasts a typing start/stop event over WebSockets."""
+    """Sends a typing start/stop event over WebSockets to conversation participants."""
     try:
         sender_id = MessagingService._get_user_id(current_user)
         from backend.websocket_manager import manager
-        manager.broadcast_sync({
+        manager.send_to_users_sync([sender_id, req.receiver_id], {
             "type": "TYPING_STATUS",
             "conversationId": req.conversation_id,
             "senderId": sender_id,
@@ -460,12 +460,31 @@ def download_attachment(
     db: Session = Depends(get_db),
     current_user: Any = Depends(get_current_active_user)
 ):
-    """Downloads or views a messaging attachment."""
+    """Downloads or views a messaging attachment with RBAC check."""
     try:
+        from backend.models import Conversation, Message
         file_record = db.query(NotificationFile).filter(NotificationFile.file_id == file_id).first()
         if not file_record:
             raise HTTPException(status_code=404, detail="File not found")
             
+        current_uid = MessagingService._get_user_id(current_user)
+        user_role = str(getattr(current_user, "role", "")).upper()
+
+        # Authorization: Must be uploader, an admin, or participant in the conversation with this attachment
+        is_uploader = file_record.uploaded_by == current_uid
+        is_admin = "ADMIN" in user_role
+        
+        is_conv_participant = False
+        if not is_uploader and not is_admin:
+            msg = db.query(Message).filter(Message.attachment_file_id == file_id).first()
+            if msg:
+                conv = db.query(Conversation).filter_by(conversation_id=msg.conversation_id).first()
+                if conv and current_uid in (conv.participant_1_id, conv.participant_2_id):
+                    is_conv_participant = True
+        
+        if not (is_uploader or is_admin or is_conv_participant):
+            raise HTTPException(status_code=403, detail="Unauthorized access to this attachment.")
+
         if not os.path.exists(file_record.storage_path):
             raise HTTPException(status_code=404, detail="File missing on disk")
             
@@ -495,6 +514,9 @@ class CreateSmartGroupRequest(BaseModel):
     rule_type: Optional[str] = None
     rule_criteria: Optional[dict] = None
     initial_member_ids: Optional[list] = None
+
+class AddGroupMembersRequest(BaseModel):
+    member_ids: list
 
 class AskInstitutionRequest(BaseModel):
     query: str
@@ -560,10 +582,64 @@ def get_smart_group_details_endpoint(
         details = InstitutionalIntelligenceService.get_group_details(db, current_user, group_id)
         return {"success": True, "group": details}
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=403, detail=str(e))
     except Exception as e:
         logger.error(f"Error fetching group details: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch group details.")
+
+
+@router.delete("/smart-groups/{group_id}")
+def delete_smart_group_endpoint(
+    group_id: str,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Deletes a smart group."""
+    try:
+        from backend.services.institutional_intelligence_service import InstitutionalIntelligenceService
+        result = InstitutionalIntelligenceService.delete_smart_group(db, current_user, group_id)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error deleting smart group: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete smart group.")
+
+
+@router.post("/smart-groups/{group_id}/members")
+def add_smart_group_members_endpoint(
+    group_id: str,
+    req: AddGroupMembersRequest,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Adds members to a smart group."""
+    try:
+        from backend.services.institutional_intelligence_service import InstitutionalIntelligenceService
+        return InstitutionalIntelligenceService.add_group_members(db, current_user, group_id, req.member_ids)
+    except ValueError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error adding group members: {e}")
+        raise HTTPException(status_code=500, detail="Failed to add members.")
+
+
+@router.delete("/smart-groups/{group_id}/members/{user_id}")
+def remove_smart_group_member_endpoint(
+    group_id: str,
+    user_id: str,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Removes a member from a smart group."""
+    try:
+        from backend.services.institutional_intelligence_service import InstitutionalIntelligenceService
+        return InstitutionalIntelligenceService.remove_group_member(db, current_user, group_id, user_id)
+    except ValueError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error removing group member: {e}")
+        raise HTTPException(status_code=500, detail="Failed to remove member.")
 
 
 @router.post("/ask-institution")

@@ -41,13 +41,14 @@ export const AskInstitutionPanel: React.FC<{
     endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  const handleSearch = async (queryText: string) => {
-    if (!queryText.trim()) return;
+  const handleSearch = async (queryText?: string) => {
+    const targetQuery = typeof queryText === 'string' ? queryText : query;
+    if (!targetQuery || !targetQuery.trim()) return;
     
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
-      content: queryText
+      content: targetQuery
     };
     
     // Maintain max history (last 10 messages)
@@ -61,7 +62,7 @@ export const AskInstitutionPanel: React.FC<{
       const res = await axios.post(
         getApiUrl('/messaging/ask-institution'),
         { 
-          query: queryText,
+          query: targetQuery,
           history: currentHistory.map(m => ({ role: m.role, text: m.content })) 
         },
         { headers: getAuthHeaders() }

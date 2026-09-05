@@ -101,6 +101,7 @@ verification_10_10_final_report.*
 .env*
 backend/storage/
 data/backups/
+data/attachments/
 data/leetcode_tracker.db
 reports/
 classes.txt

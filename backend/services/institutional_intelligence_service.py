@@ -186,10 +186,19 @@ class InstitutionalIntelligenceService:
 
     @staticmethod
     def get_group_details(db: Session, current_user: Any, group_id: str) -> Dict[str, Any]:
-        """Fetches detailed group metadata and member displays."""
+        """Fetches detailed group metadata and member displays with RBAC check."""
+        user_id = MessagingService._get_user_id(current_user)
+        user_role = str(getattr(current_user, "role", "Student")).upper()
+
         group = db.query(SmartGroup).filter_by(group_id=group_id).first()
         if not group:
             raise ValueError("Smart group not found")
+
+        # RBAC: Must be creator, an admin, or member of the group
+        if "ADMIN" not in user_role and group.created_by != user_id:
+            is_member = db.query(SmartGroupMember).filter_by(group_id=group_id, user_id=user_id).first()
+            if not is_member:
+                raise ValueError("Unauthorized: You are not a member of this smart group.")
 
         members = db.query(SmartGroupMember).filter_by(group_id=group_id).all()
         member_list = []
@@ -211,6 +220,85 @@ class InstitutionalIntelligenceService:
             "memberCount": len(member_list),
             "members": member_list
         }
+
+    @staticmethod
+    def delete_smart_group(db: Session, current_user: Any, group_id: str) -> Dict[str, Any]:
+        """Deletes a smart group and its memberships. Only creator or Admin can delete."""
+        user_id = MessagingService._get_user_id(current_user)
+        user_role = str(getattr(current_user, "role", "Student")).upper()
+
+        group = db.query(SmartGroup).filter_by(group_id=group_id).first()
+        if not group:
+            raise ValueError("Smart group not found")
+
+        if "ADMIN" not in user_role and group.created_by != user_id:
+            raise ValueError("Unauthorized: Only group owner or administrator can delete this group.")
+
+        db.query(SmartGroupMember).filter_by(group_id=group_id).delete()
+        db.delete(group)
+        db.commit()
+
+        InstitutionalIntelligenceService.log_audit_event(
+            db=db,
+            performed_by=user_id,
+            action_type="SMART_GROUP_DELETED",
+            target_type="GROUP",
+            target_id=group_id,
+            details={"name": group.name}
+        )
+        return {"success": True, "groupId": group_id}
+
+    @staticmethod
+    def add_group_members(db: Session, current_user: Any, group_id: str, new_member_ids: List[str]) -> Dict[str, Any]:
+        """Adds members to a smart group. Only creator or Admin can add."""
+        user_id = MessagingService._get_user_id(current_user)
+        user_role = str(getattr(current_user, "role", "Student")).upper()
+
+        group = db.query(SmartGroup).filter_by(group_id=group_id).first()
+        if not group:
+            raise ValueError("Smart group not found")
+
+        if "ADMIN" not in user_role and group.created_by != user_id:
+            raise ValueError("Unauthorized: Only group owner or administrator can add members.")
+
+        existing_ids = {m.user_id for m in db.query(SmartGroupMember).filter_by(group_id=group_id).all()}
+        added_count = 0
+        for mem_id in new_member_ids:
+            if mem_id and mem_id not in existing_ids:
+                db.add(SmartGroupMember(
+                    group_id=group_id,
+                    user_id=mem_id,
+                    role="STUDENT" if ("STUDENT" in mem_id or "@" in mem_id or mem_id.isalnum()) else "FACULTY",
+                    joined_at=datetime.datetime.utcnow()
+                ))
+                existing_ids.add(mem_id)
+                added_count += 1
+
+        db.commit()
+        return InstitutionalIntelligenceService.get_group_details(db, current_user, group_id)
+
+    @staticmethod
+    def remove_group_member(db: Session, current_user: Any, group_id: str, target_user_id: str) -> Dict[str, Any]:
+        """Removes a member from a smart group. Owner/Admin or self-leave."""
+        user_id = MessagingService._get_user_id(current_user)
+        user_role = str(getattr(current_user, "role", "Student")).upper()
+
+        group = db.query(SmartGroup).filter_by(group_id=group_id).first()
+        if not group:
+            raise ValueError("Smart group not found")
+
+        is_owner_or_admin = ("ADMIN" in user_role) or (group.created_by == user_id)
+        is_self = (user_id == target_user_id)
+
+        if not (is_owner_or_admin or is_self):
+            raise ValueError("Unauthorized: You do not have permission to remove this member.")
+
+        member_record = db.query(SmartGroupMember).filter_by(group_id=group_id, user_id=target_user_id).first()
+        if member_record:
+            db.delete(member_record)
+            db.commit()
+
+        return {"success": True, "groupId": group_id, "removedUserId": target_user_id}
 
     @staticmethod
     def get_user_smart_groups(db: Session, current_user: Any) -> List[Dict[str, Any]]:
