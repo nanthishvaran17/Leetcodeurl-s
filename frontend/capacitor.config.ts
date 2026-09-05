@@ -26,8 +26,9 @@ const config: CapacitorConfig = {
     }
   },
   server: {
+    url: 'https://leetcodeurl-s-3mig.onrender.com',
     androidScheme: 'https',
-    cleartext: true
+    cleartext: false
   }
 };
 
