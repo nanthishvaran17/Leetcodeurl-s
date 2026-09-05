@@ -14,6 +14,7 @@ interface StudentProfilePageProps {
 
 import { useNotification } from '../context/NotificationContext';
 import { triggerDownload } from '../utils/mobileDownload';
+import { downloadManager } from '../services/download/downloadManager';
 
 export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student, onBack }) => {
   const { notify } = useNotification();
@@ -58,35 +59,21 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       });
       const cleanReg = (student.reg_no || '').replace(/[^A-Za-z0-9]+/g, '').toUpperCase();
       const certId = res.data?.verification_id || `CERT-${cleanReg}-EXCELLENCE`;
+      const filename = `Certificate_${cleanReg || certId}.pdf`;
 
-      const response = await api.get(`/certificates/${encodeURIComponent(certId)}/download-pdf`, {
-        responseType: 'blob'
+      const dlResult = await downloadManager.download({
+        endpoint: `/certificates/${encodeURIComponent(certId)}/download-pdf`,
+        filename,
+        mimeType: 'application/pdf',
       });
-
-      if (response.data && response.data.type === 'application/json') {
-        const text = await response.data.text();
-        try {
-          const errJson = JSON.parse(text);
-          notify.error('Certificate Error', errJson.detail || 'Could not generate PDF.', { category: 'CERTIFICATE ENGINE' });
-          return;
-        } catch (e) {}
+      if (dlResult.success) {
+        notify.success('Certificate Downloaded', `Certificate ${filename} generated.`, { category: 'CERTIFICATE ENGINE' });
+      } else {
+        notify.error('Certificate Error', dlResult.error || 'Failed to generate certificate.', { category: 'CERTIFICATE ENGINE' });
       }
-
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      let filename = `Certificate_${cleanReg || certId}.pdf`;
-      const disposition = response.headers['content-disposition'] || response.headers['Content-Disposition'];
-      if (disposition && disposition.includes('filename=')) {
-        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
-        if (matches != null && matches[1]) {
-          filename = matches[1].replace(/['"]/g, '').trim();
-        }
-      }
-      await triggerDownload(blob, filename, 'application/pdf');
-      notify.success('Certificate Downloaded', `Certificate ${filename} generated.`, { category: 'CERTIFICATE ENGINE' });
     } catch (err: any) {
       console.error("Certificate error:", err);
-      const detailMsg = err.response?.data?.detail || err.message || "Failed to generate certificate.";
-      notify.error('Certificate Error', detailMsg, { category: 'CERTIFICATE ENGINE' });
+      notify.error('Certificate Error', err.message || "Failed to generate certificate.", { category: 'CERTIFICATE ENGINE' });
     } finally {
       setDownloadingCert(false);
     }
@@ -99,30 +86,18 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
     try {
       const cleanReg = (student.reg_no || '').replace(/[^A-Za-z0-9]+/g, '').toUpperCase();
       const targetId = cleanReg ? `CERT-${cleanReg}-FORENSIC` : `CERT-${student.id}-FORENSIC`;
-      const response = await api.get(`/certificates/${encodeURIComponent(targetId)}/download-forensic-pdf?student_id=${student.id}`, {
-        responseType: 'blob'
+      const filename = `Forensic_Audit_Report_${targetId}.pdf`;
+
+      const dlResult = await downloadManager.download({
+        endpoint: `/certificates/${encodeURIComponent(targetId)}/download-forensic-pdf?student_id=${student.id}`,
+        filename,
+        mimeType: 'application/pdf',
       });
-
-      if (response.data && response.data.type === 'application/json') {
-        const text = await response.data.text();
-        try {
-          const errJson = JSON.parse(text);
-          notify.error('Forensic Report Error', errJson.detail || 'Could not generate report.', { category: 'FORENSIC AUDIT' });
-          return;
-        } catch (e) {}
+      if (dlResult.success) {
+        notify.success('Forensic Report Downloaded', `Audit report ${filename} saved.`, { category: 'FORENSIC AUDIT' });
+      } else {
+        notify.error('Forensic Error', dlResult.error || 'Failed to download report.', { category: 'FORENSIC AUDIT' });
       }
-
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      let filename = `Forensic_Audit_Report_${targetId}.pdf`;
-      const disposition = response.headers['content-disposition'] || response.headers['Content-Disposition'];
-      if (disposition && disposition.includes('filename=')) {
-        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
-        if (matches != null && matches[1]) {
-          filename = matches[1].replace(/['"]/g, '').trim();
-        }
-      }
-      await triggerDownload(blob, filename, 'application/pdf');
-      notify.success('Forensic Report Downloaded', `Audit report ${filename} saved.`, { category: 'FORENSIC AUDIT' });
     } catch (err: any) {
       console.error("Forensic report error:", err);
       notify.error('Forensic Error', 'Failed to download Official LeetCode Contest Forensic Verification Audit Report.', { category: 'FORENSIC AUDIT' });

@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { requestPushPermissionAndGetToken } from '../services/firebasePush';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
+import { downloadManager } from '../services/download/downloadManager';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '';
 
@@ -256,7 +257,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          title: 'Contest Reminder 🔔',
+          title: 'Contest Reminder',
           message: 'Sunday LeetCode Contest starts in 30 minutes! Tap to view leaderboard.',
           route: '/weekly-contest',
           priority: 'high'
@@ -319,11 +320,15 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
   };
 
   const handleFileDownload = (fileId: string) => {
-    window.open(`${API_BASE_URL}/api/notifications/files/${fileId}/download?token=${token}`, '_blank');
+    downloadManager.download({
+      endpoint: `/notifications/files/${fileId}/download`,
+    });
   };
 
   const handleFilePreview = (fileId: string) => {
-    window.open(`${API_BASE_URL}/api/notifications/files/${fileId}/preview?token=${token}`, '_blank');
+    downloadManager.download({
+      endpoint: `/notifications/files/${fileId}/preview`,
+    });
   };
 
   return (

@@ -18,7 +18,7 @@ RESEND_COOLDOWN_SECONDS = 30
 
 def generate_secure_otp() -> str:
     """Generates a cryptographically secure 6-digit numeric OTP."""
-    return f"{secrets.randbelow(1000000):06d}"
+    return f"{100000 + secrets.randbelow(900000)}"
 
 
 def hash_email(email: str) -> str:

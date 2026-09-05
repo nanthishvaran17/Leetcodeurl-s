@@ -396,7 +396,7 @@ def broadcast_app_update_notification_endpoint(
 
 
 class TestPushRequest(BaseModel):
-    title: Optional[str] = "Contest Reminder 🔔"
+    title: Optional[str] = "Contest Reminder"
     message: Optional[str] = "Sunday LeetCode Contest starts in 30 minutes! Tap to view leaderboard."
     route: Optional[str] = "/weekly-contest"
     priority: Optional[str] = "high"
@@ -415,7 +415,7 @@ def send_test_push_notification_endpoint(
 
     result = NotificationService.emit_event(
         event_type="CONTEST_REMINDER",
-        title=req.title or "Contest Reminder 🔔",
+        title=req.title or "Contest Reminder",
         body=req.message or "Sunday LeetCode Contest starts in 30 minutes!",
         actor_user_id="System Engine",
         recipient_scope="INDIVIDUAL",

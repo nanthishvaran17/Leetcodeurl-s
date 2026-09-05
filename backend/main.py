@@ -28,7 +28,7 @@ from backend.routes import (
     audit, public, sync, history, risk, goals, system_health, weekly_contests,
     scheduled_reports, certificates, data_issues, faculty_assignments, institutional_dashboards,
     email_campaigns, bot_notifications, anti_cheat, placement_eligibility, gamification, accreditation,
-    deep_tech_intelligence, url_import, contest_integrity, notifications, messaging
+    deep_tech_intelligence, url_import, contest_integrity, notifications, messaging, downloads
 )
 from backend.routes import admin, email_reports, ai_assistant, leetcode, ai_control_center, intelligence
 from backend.routes import command_center, scheduler
@@ -442,13 +442,32 @@ async def ultra_fast_memory_cache_middleware(request, call_next):
     return response
 
 @app.middleware("http")
-async def add_performance_cache_headers(request, call_next):
+async def add_security_headers_and_performance_middleware(request, call_next):
     response = await call_next(request)
     path = request.url.path
+    
+    # 1. Standard Production Security Headers (Defense-in-Depth)
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://apis.google.com https://*.firebaseapp.com; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com data:; "
+        "img-src 'self' data: https: blob:; "
+        "connect-src 'self' https: wss: ws:; "
+        "frame-ancestors 'self';"
+    )
+
+    # 2. Performance Cache Control
     if path.startswith("/assets/") or path.endswith((".js", ".css", ".png", ".jpg", ".ico", ".svg", ".woff2")):
         response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     elif path.startswith("/api/public/") or path.startswith("/api/stats"):
         response.headers["Cache-Control"] = "public, max-age=60, s-maxage=60"
+        
     return response
 
 # Mount All API Routers
@@ -476,6 +495,8 @@ app.include_router(sessions.router)
 app.include_router(leaderboard.router)
 # analytics: prefix="/api/analytics" (self-prefixed)
 app.include_router(analytics.router)
+# downloads: prefix="/api/downloads" (self-prefixed)
+app.include_router(downloads.router)
 # reports: prefix="/api/reports" (self-prefixed)
 app.include_router(reports.router)
 # settings: prefix="/api/settings" (self-prefixed)

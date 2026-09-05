@@ -288,358 +288,357 @@ async def get_students(
 
     cache_key = f"students_list:{user_id}:{role_clean}:{dept_id}:{year_level}:{section_id}:{search}:{session_id}:{sort_by}:{min_solved}:{max_solved}:{verified_only}:{page}:{limit}:{paginated}"
     def _compute():
-        from backend.database import SessionLocal
-        with SessionLocal() as db:
-            query = db.query(Student).outerjoin(Student.stats).options(
-                joinedload(Student.department),
-                joinedload(Student.section),
-                joinedload(Student.stats),
-                joinedload(Student.lc_profile),
-                joinedload(Student.lc_activity)
-            ).filter(Student.is_active == True)
+        db = request_db
+        query = db.query(Student).outerjoin(Student.stats).options(
+            joinedload(Student.department),
+            joinedload(Student.section),
+            joinedload(Student.stats),
+            joinedload(Student.lc_profile),
+            joinedload(Student.lc_activity)
+        ).filter((Student.is_active == True) | (Student.is_active.is_(None)))
 
-            # Centralized Authorization Scope
-            if current_user:
-                query = apply_role_based_student_filter(query, current_user, db)
+        # Centralized Authorization Scope
+        if current_user:
+            query = apply_role_based_student_filter(query, current_user, db)
 
-            if dept_id:
-                query = query.filter(Student.department_id == dept_id)
-            if year_level and year_level.strip().upper() not in ['ALL', 'ALL YEARS', '']:
-                clean_yr = year_level.strip().upper().replace('YEAR', '').strip()
-                query = query.filter(func.upper(Student.year_level) == clean_yr)
+        if dept_id:
+            query = query.filter(Student.department_id == dept_id)
+        if year_level and year_level.strip().upper() not in ['ALL', 'ALL YEARS', '']:
+            clean_yr = year_level.strip().upper().replace('YEAR', '').strip()
+            query = query.filter(func.upper(Student.year_level) == clean_yr)
 
-            if section_id:
-                query = query.filter(Student.section_id == section_id)
+        if section_id:
+            query = query.filter(Student.section_id == section_id)
 
-            if min_solved is not None:
-                query = query.filter(LeetCodeProfileStats.total_solved >= min_solved)
-            if max_solved is not None:
-                query = query.filter(LeetCodeProfileStats.total_solved <= max_solved)
-            if verified_only:
-                query = query.filter(LeetCodeProfileStats.sync_status.in_(["success", "OK", "verified"]))
+        if min_solved is not None:
+            query = query.filter(LeetCodeProfileStats.total_solved >= min_solved)
+        if max_solved is not None:
+            query = query.filter(LeetCodeProfileStats.total_solved <= max_solved)
+        if verified_only:
+            query = query.filter(LeetCodeProfileStats.sync_status.in_(["success", "OK", "verified"]))
 
-            if search:
-                s_exact = search.strip()
-                s_prefix = f"{s_exact}%"
-                s_any = f"%{s_exact}%"
-                query = query.filter(
-                    (Student.reg_no.ilike(s_prefix)) |
-                    (Student.name.ilike(s_any)) |
-                    (Student.username.ilike(s_any))
-                )
+        if search:
+            s_exact = search.strip()
+            s_prefix = f"{s_exact}%"
+            s_any = f"%{s_exact}%"
+            query = query.filter(
+                (Student.reg_no.ilike(s_prefix)) |
+                (Student.name.ilike(s_any)) |
+                (Student.username.ilike(s_any))
+            )
 
-            # Server-side sorting
-            if sort_by == "solved_desc" or sort_by == "solved":
-                query = query.order_by(nullslast(desc(LeetCodeProfileStats.total_solved)), Student.name.asc())
-            elif sort_by == "solved_asc":
-                query = query.order_by(nullslast(asc(LeetCodeProfileStats.total_solved)), Student.name.asc())
-            elif sort_by == "name_desc":
-                query = query.order_by(Student.name.desc())
-            elif sort_by == "rating_desc" or sort_by == "rating":
-                query = query.order_by(nullslast(desc(LeetCodeProfileStats.contest_rating)), Student.name.asc())
-            elif sort_by == "streak_desc" or sort_by == "streak":
-                query = query.order_by(nullslast(desc(LeetCodeProfileStats.max_streak)), Student.name.asc())
-            else:
-                query = query.order_by(Student.name.asc())
+        # Count total scoped matching records
+        total_count = None
+        if paginated:
+            total_count = query.order_by(None).with_entities(func.count(Student.id)).scalar()
 
-            total_count = None
+        # Server-side sorting
+        if sort_by == "solved_desc" or sort_by == "solved":
+            query = query.order_by(nullslast(desc(LeetCodeProfileStats.total_solved)), Student.name.asc())
+        elif sort_by == "solved_asc":
+            query = query.order_by(nullslast(asc(LeetCodeProfileStats.total_solved)), Student.name.asc())
+        elif sort_by == "name_desc":
+            query = query.order_by(Student.name.desc())
+        elif sort_by == "rating_desc" or sort_by == "rating":
+            query = query.order_by(nullslast(desc(LeetCodeProfileStats.contest_rating)), Student.name.asc())
+        elif sort_by == "streak_desc" or sort_by == "streak":
+            query = query.order_by(nullslast(desc(LeetCodeProfileStats.max_streak)), Student.name.asc())
+        else:
+            query = query.order_by(Student.name.asc())
+
+        # Pagination if page and limit provided
+        if isinstance(page, int) and isinstance(limit, int) and page >= 1 and limit >= 1:
+            offset = (page - 1) * limit
+            students = query.offset(offset).limit(limit).all()
+        elif isinstance(limit, int) and limit >= 1:
+            students = query.limit(limit).all()
+        else:
+            students = query.all()
+
+        if not students:
             if paginated:
-                # Use with_entities to strip out heavy joinedloads and do a fast lightweight count
-                total_count = query.with_entities(func.count(Student.id)).scalar()
+                return StudentPaginatedOut(total=total_count or 0, items=[], page=page or 1, limit=limit or 50, total_pages=0)
+            return []
 
-            # Pagination if page and limit provided
-            if isinstance(page, int) and isinstance(limit, int) and page >= 1 and limit >= 1:
-                offset = (page - 1) * limit
-                students = query.offset(offset).limit(limit).all()
-            elif isinstance(limit, int) and limit >= 1:
-                students = query.limit(limit).all()
-            else:
-                students = query.all()
+        # Batch fetch all student progress in 1 single query
+        student_ids = [st.id for st in students]
+        progs = db.query(WeeklyStudentProgress).filter(
+            WeeklyStudentProgress.student_id.in_(student_ids)
+        ).all()
 
-            if not students:
-                if paginated:
-                    return StudentPaginatedOut(total=total_count or 0, items=[], page=page or 1, limit=limit or 50, total_pages=0)
-                return []
+        prog_map = {}
+        for p in progs:
+            if p.student_id not in prog_map or p.id > prog_map[p.student_id].id:
+                prog_map[p.student_id] = p
 
-            # Batch fetch all student progress in 1 single query
-            student_ids = [st.id for st in students]
-            progs = db.query(WeeklyStudentProgress).filter(
-                WeeklyStudentProgress.student_id.in_(student_ids)
-            ).all()
+        # Determine target session ID
+        from backend.models import WeeklyPublicResult, WeeklyVirtualResult, WeeklySession, LeetCodeContestRatingHistory
+        import re
 
-            prog_map = {}
-            for p in progs:
-                if p.student_id not in prog_map or p.id > prog_map[p.student_id].id:
-                    prog_map[p.student_id] = p
-
-            # Determine target session ID
-            from backend.models import WeeklyPublicResult, WeeklyVirtualResult, WeeklySession, LeetCodeContestRatingHistory
-            import re
-
-            target_session_id = session_id
-            target_session = None
-            if not target_session_id:
-                def _parse_session_date(d_str):
-                    if not d_str:
-                        return datetime.date.min
-                    try:
-                        parts = str(d_str).strip().split('.')
-                        if len(parts) == 3:
-                            return datetime.date(int(parts[2]), int(parts[1]), int(parts[0]))
-                    except Exception:
-                        pass
+        target_session_id = session_id
+        target_session = None
+        if not target_session_id:
+            def _parse_session_date(d_str):
+                if not d_str:
                     return datetime.date.min
+                try:
+                    parts = str(d_str).strip().split('.')
+                    if len(parts) == 3:
+                        return datetime.date(int(parts[2]), int(parts[1]), int(parts[0]))
+                except Exception:
+                    pass
+                return datetime.date.min
 
-                today = datetime.datetime.utcnow().date()
-                sessions = db.query(WeeklySession).all()
-                eligible = []
-                for s in sessions:
-                    s_date = _parse_session_date(s.session_date)
-                    if s_date <= today:
-                        if s.status in ["FINALIZED", "COMPLETED", "LIVE", "ACTIVE"]:
-                            eligible.append((s, s_date))
+            today = datetime.datetime.utcnow().date()
+            sessions = db.query(WeeklySession).all()
+            eligible = []
+            for s in sessions:
+                s_date = _parse_session_date(s.session_date)
+                if s_date <= today:
+                    if s.status in ["FINALIZED", "COMPLETED", "LIVE", "ACTIVE"]:
+                        eligible.append((s, s_date))
 
-                def _get_c_num(item):
-                    s = item[0]
-                    m = re.search(r'\d+', s.contest_name or '')
-                    return int(m.group(0)) if m else (s.id or 0)
+            def _get_c_num(item):
+                s = item[0]
+                m = re.search(r'\d+', s.contest_name or '')
+                return int(m.group(0)) if m else (s.id or 0)
 
-                eligible_sorted = sorted(eligible, key=_get_c_num, reverse=True)
-                target_session = eligible_sorted[0][0] if eligible_sorted else db.query(WeeklySession).filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED"])).order_by(WeeklySession.id.desc()).first()
-                if target_session:
-                    target_session_id = target_session.id
+            eligible_sorted = sorted(eligible, key=_get_c_num, reverse=True)
+            target_session = eligible_sorted[0][0] if eligible_sorted else db.query(WeeklySession).filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED"])).order_by(WeeklySession.id.desc()).first()
+            if target_session:
+                target_session_id = target_session.id
+        else:
+            target_session = db.query(WeeklySession).filter(WeeklySession.id == target_session_id).first()
+
+        c_num = None
+        target_contest_name = target_session.contest_name if (target_session and target_session.contest_name) else "Weekly Contest"
+        if target_session and target_session.contest_name:
+            m = re.search(r'\d+', target_session.contest_name)
+            if m:
+                c_num = int(m.group(0))
+
+        pub_map = {}
+        vir_map = {}
+        hist_map = {}
+        if target_session_id:
+            pub_results = db.query(WeeklyPublicResult).filter(
+                WeeklyPublicResult.session_id == target_session_id,
+                WeeklyPublicResult.student_id.in_(student_ids)
+            ).all()
+            for pr in pub_results:
+                pub_map[pr.student_id] = pr
+
+            vir_results = db.query(WeeklyVirtualResult).filter(
+                WeeklyVirtualResult.session_id == target_session_id,
+                WeeklyVirtualResult.student_id.in_(student_ids)
+            ).all()
+            for vr in vir_results:
+                vir_map[vr.student_id] = vr
+
+        if c_num:
+            hist_rows = db.query(LeetCodeContestRatingHistory).filter(
+                LeetCodeContestRatingHistory.contest_name.ilike(f"%{c_num}%"),
+                LeetCodeContestRatingHistory.student_id.in_(student_ids)
+            ).all()
+            for hr in hist_rows:
+                hist_map[hr.student_id] = hr
+
+        # Pre-compute canonical college ranks across all verified solvers
+        verified_solvers = [st for st in students if st.stats and st.stats.total_solved is not None and st.stats.sync_status in ("success", "verified")]
+        verified_solvers_sorted = sorted(verified_solvers, key=lambda x: (x.stats.total_solved or 0, x.stats.contest_rating or 0), reverse=True)
+        rank_map = {st.id: r + 1 for r, st in enumerate(verified_solvers_sorted)}
+
+        results = []
+        for st in students:
+            st_out = StudentListOut.model_validate(st)
+
+            # Rule 1 & 2: Canonical accuracy check — zero out fake/guessed data on invalid/pending profiles
+            is_verified = bool(st.stats and st.stats.sync_status in ("success", "verified") and st.stats.status == "verified" and st.stats.total_solved is not None)
+            is_invalid = bool(st.stats and (st.stats.sync_status == "invalid_username" or st.stats.status == "INVALID_USERNAME"))
+            is_pending = bool(not st.username or not str(st.username).strip() or (st.stats and (st.stats.sync_status == "pending_username" or st.stats.status == "PENDING_USERNAME")))
+
+            if is_invalid:
+                st_out.leetcode_url = None
+                if st_out.stats:
+                    st_out.stats.total_solved = None
+                    st_out.stats.easy_solved = None
+                    st_out.stats.medium_solved = None
+                    st_out.stats.hard_solved = None
+                    st_out.stats.contest_rating = None
+                    st_out.stats.contest_global_ranking = None
+                    st_out.stats.public_profile_ranking = None
+                    st_out.stats.status = "INVALID_USERNAME"
+                    st_out.stats.sync_status = "invalid_username"
+                    st_out.stats.validation_status = "invalid_username"
+            elif is_pending:
+                st_out.leetcode_url = None
+                if st_out.stats:
+                    st_out.stats.total_solved = None
+                    st_out.stats.easy_solved = None
+                    st_out.stats.medium_solved = None
+                    st_out.stats.hard_solved = None
+                    st_out.stats.contest_rating = None
+                    st_out.stats.contest_global_ranking = None
+                    st_out.stats.public_profile_ranking = None
+                    st_out.stats.status = "PENDING_USERNAME"
+                    st_out.stats.sync_status = "pending_username"
+                    st_out.stats.validation_status = "pending_username"
+
+            # Canonical fields from normalized tables if available
+            if st.lc_profile:
+                st_out.canonical_username = st.lc_profile.canonical_username if is_verified else None
+                st_out.profile_url = st.lc_profile.profile_url if is_verified else None
+                st_out.real_name = st.lc_profile.real_name if is_verified else None
+                st_out.avatar_url = st.lc_profile.avatar_url if is_verified else None
+                st_out.sync_state = st.lc_profile.sync_state
             else:
-                target_session = db.query(WeeklySession).filter(WeeklySession.id == target_session_id).first()
+                st_out.canonical_username = st.username if is_verified else None
+                st_out.profile_url = f"https://leetcode.com/u/{st.username}/" if (is_verified and st.username) else None
+                st_out.sync_state = "SYNCED" if is_verified else ("INVALID_USERNAME" if is_invalid else "PENDING_USERNAME")
 
-            c_num = None
-            target_contest_name = target_session.contest_name if (target_session and target_session.contest_name) else "Weekly Contest"
-            if target_session and target_session.contest_name:
-                m = re.search(r'\d+', target_session.contest_name)
-                if m:
-                    c_num = int(m.group(0))
+            if st.lc_activity and st.lc_activity.current_streak is not None:
+                st_out.streak_count = st.lc_activity.current_streak or 0
+                st_out.longest_streak = st.lc_activity.longest_streak or 0
+                st_out.total_active_days = st.lc_activity.total_active_days or 0
+            elif st.stats and st.stats.max_streak is not None:
+                st_out.streak_count = st.stats.max_streak
+                st_out.longest_streak = st.stats.max_streak
+                st_out.total_active_days = st.stats.active_days or 0
 
-            pub_map = {}
-            vir_map = {}
-            hist_map = {}
-            if target_session_id:
-                pub_results = db.query(WeeklyPublicResult).filter(
-                    WeeklyPublicResult.session_id == target_session_id,
-                    WeeklyPublicResult.student_id.in_(student_ids)
-                ).all()
-                for pr in pub_results:
-                    pub_map[pr.student_id] = pr
+            latest_prog = prog_map.get(st.id)
+            if latest_prog:
+                st_out.college_rank = latest_prog.college_rank if (latest_prog.college_rank and is_verified) else rank_map.get(st.id)
+                st_out.dept_rank = latest_prog.dept_rank if is_verified else None
+                st_out.year_rank = latest_prog.year_rank if is_verified else None
+                st_out.section_rank = latest_prog.section_rank if is_verified else None
+                st_out.weekly_progress = latest_prog.weekly_progress if is_verified else 0
+                if (st_out.streak_count is None or st_out.streak_count == 0) and latest_prog.streak_count:
+                    st_out.streak_count = latest_prog.streak_count if is_verified else 0
+                st_out.consistency_score = latest_prog.consistency_score if is_verified else 0.0
+                st_out.badge_list = latest_prog.badge_list or []
+            else:
+                st_out.college_rank = rank_map.get(st.id) if is_verified else None
 
-                vir_results = db.query(WeeklyVirtualResult).filter(
-                    WeeklyVirtualResult.session_id == target_session_id,
-                    WeeklyVirtualResult.student_id.in_(student_ids)
-                ).all()
-                for vr in vir_results:
-                    vir_map[vr.student_id] = vr
+            pub_res = pub_map.get(st.id)
+            vir_res = vir_map.get(st.id)
+            h_res = hist_map.get(st.id)
 
-            if c_num:
-                hist_rows = db.query(LeetCodeContestRatingHistory).filter(
-                    LeetCodeContestRatingHistory.contest_name.ilike(f"%{c_num}%"),
-                    LeetCodeContestRatingHistory.student_id.in_(student_ids)
-                ).all()
-                for hr in hist_rows:
-                    hist_map[hr.student_id] = hr
+            target_contest_name = target_session.contest_name if target_session else "Weekly Contest"
+            target_contest_date = target_session.session_date if target_session else None
 
-            # Pre-compute canonical college ranks across all verified solvers
-            verified_solvers = [st for st in students if st.stats and st.stats.total_solved is not None and st.stats.sync_status in ("success", "verified")]
-            verified_solvers_sorted = sorted(verified_solvers, key=lambda x: (x.stats.total_solved or 0, x.stats.contest_rating or 0), reverse=True)
-            rank_map = {st.id: r + 1 for r, st in enumerate(verified_solvers_sorted)}
-
-            results = []
-            for st in students:
-                st_out = StudentListOut.model_validate(st)
-
-                # Rule 1 & 2: Canonical accuracy check — zero out fake/guessed data on invalid/pending profiles
-                is_verified = bool(st.stats and st.stats.sync_status in ("success", "verified") and st.stats.status == "verified" and st.stats.total_solved is not None)
-                is_invalid = bool(st.stats and (st.stats.sync_status == "invalid_username" or st.stats.status == "INVALID_USERNAME"))
-                is_pending = bool(not st.username or not str(st.username).strip() or (st.stats and (st.stats.sync_status == "pending_username" or st.stats.status == "PENDING_USERNAME")))
-
-                if is_invalid:
-                    st_out.leetcode_url = None
-                    if st_out.stats:
-                        st_out.stats.total_solved = None
-                        st_out.stats.easy_solved = None
-                        st_out.stats.medium_solved = None
-                        st_out.stats.hard_solved = None
-                        st_out.stats.contest_rating = None
-                        st_out.stats.contest_global_ranking = None
-                        st_out.stats.public_profile_ranking = None
-                        st_out.stats.status = "INVALID_USERNAME"
-                        st_out.stats.sync_status = "invalid_username"
-                        st_out.stats.validation_status = "invalid_username"
-                elif is_pending:
-                    st_out.leetcode_url = None
-                    if st_out.stats:
-                        st_out.stats.total_solved = None
-                        st_out.stats.easy_solved = None
-                        st_out.stats.medium_solved = None
-                        st_out.stats.hard_solved = None
-                        st_out.stats.contest_rating = None
-                        st_out.stats.contest_global_ranking = None
-                        st_out.stats.public_profile_ranking = None
-                        st_out.stats.status = "PENDING_USERNAME"
-                        st_out.stats.sync_status = "pending_username"
-                        st_out.stats.validation_status = "pending_username"
-
-                # Canonical fields from normalized tables if available
-                if st.lc_profile:
-                    st_out.canonical_username = st.lc_profile.canonical_username if is_verified else None
-                    st_out.profile_url = st.lc_profile.profile_url if is_verified else None
-                    st_out.real_name = st.lc_profile.real_name if is_verified else None
-                    st_out.avatar_url = st.lc_profile.avatar_url if is_verified else None
-                    st_out.sync_state = st.lc_profile.sync_state
-                else:
-                    st_out.canonical_username = st.username if is_verified else None
-                    st_out.profile_url = f"https://leetcode.com/u/{st.username}/" if (is_verified and st.username) else None
-                    st_out.sync_state = "SYNCED" if is_verified else ("INVALID_USERNAME" if is_invalid else "PENDING_USERNAME")
-
-                if st.lc_activity and st.lc_activity.current_streak is not None:
-                    st_out.streak_count = st.lc_activity.current_streak or 0
-                    st_out.longest_streak = st.lc_activity.longest_streak or 0
-                    st_out.total_active_days = st.lc_activity.total_active_days or 0
-                elif st.stats and st.stats.max_streak is not None:
-                    st_out.streak_count = st.stats.max_streak
-                    st_out.longest_streak = st.stats.max_streak
-                    st_out.total_active_days = st.stats.active_days or 0
-
-                latest_prog = prog_map.get(st.id)
-                if latest_prog:
-                    st_out.college_rank = latest_prog.college_rank if (latest_prog.college_rank and is_verified) else rank_map.get(st.id)
-                    st_out.dept_rank = latest_prog.dept_rank if is_verified else None
-                    st_out.year_rank = latest_prog.year_rank if is_verified else None
-                    st_out.section_rank = latest_prog.section_rank if is_verified else None
-                    st_out.weekly_progress = latest_prog.weekly_progress if is_verified else 0
-                    if (st_out.streak_count is None or st_out.streak_count == 0) and latest_prog.streak_count:
-                        st_out.streak_count = latest_prog.streak_count if is_verified else 0
-                    st_out.consistency_score = latest_prog.consistency_score if is_verified else 0.0
-                    st_out.badge_list = latest_prog.badge_list or []
-                else:
-                    st_out.college_rank = rank_map.get(st.id) if is_verified else None
-
-                pub_res = pub_map.get(st.id)
-                vir_res = vir_map.get(st.id)
-                h_res = hist_map.get(st.id)
-
-                target_contest_name = target_session.contest_name if target_session else "Weekly Contest"
-                target_contest_date = target_session.session_date if target_session else None
-
-                if h_res and h_res.attended:
-                    tot_solved = h_res.problems_solved or 0
-                    st_out.overall_participation_mode = "PUBLIC"
-                    st_out.contest_status = "PUBLIC_ATTENDED"
-                    st_out.public_contest_result = ContestResultOut(
-                        contest_name=target_contest_name,
-                        contest_number=c_num,
-                        contest_date=target_contest_date,
-                        questions_solved=tot_solved,
-                        questions_total=4,
-                        score_display=f"{tot_solved} / 4",
-                        contest_rank=h_res.contest_rank,
-                        contest_rating=round(h_res.rating_after, 1) if h_res.rating_after else None,
-                        top_percentage=None,
-                        status="PUBLIC_ATTENDED",
-                        fetched_at=datetime.datetime.utcnow().isoformat()
-                    )
-                elif h_res and not h_res.attended and (h_res.problems_solved or 0) > 0:
-                    tot_solved = h_res.problems_solved or 0
-                    st_out.overall_participation_mode = "VIRTUAL"
-                    st_out.contest_status = "VIRTUAL_ATTENDED"
-                    st_out.public_contest_result = ContestResultOut(
-                        contest_name=target_contest_name,
-                        contest_number=c_num,
-                        contest_date=target_contest_date,
-                        questions_solved=tot_solved,
-                        questions_total=4,
-                        score_display=f"{tot_solved} / 4",
-                        contest_rank=None,
-                        contest_rating=None,
-                        top_percentage=None,
-                        status="VIRTUAL_ATTENDED",
-                        fetched_at=datetime.datetime.utcnow().isoformat()
-                    )
-                elif pub_res:
-                    tot_solved = pub_res.total_contest_solved or (pub_res.q1 + pub_res.q2 + pub_res.q3 + pub_res.q4)
-                    is_att = pub_res.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED")
-                    is_not_att = pub_res.participation_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED")
-                    score_disp = f"{tot_solved} / 4" if is_att else ("Not Attended" if is_not_att else "Data Unavailable")
-                    st_out.overall_participation_mode = "PUBLIC" if is_att else "NONE"
-                    st_out.contest_status = pub_res.participation_status or "NOT_ATTENDED"
-                    st_out.public_contest_result = ContestResultOut(
-                        contest_name=pub_res.session.contest_name if pub_res.session else target_contest_name,
-                        contest_number=c_num,
-                        contest_date=pub_res.session.session_date if pub_res.session else target_contest_date,
-                        questions_solved=tot_solved if is_att else 0,
-                        questions_total=4,
-                        score_display=score_disp,
-                        contest_rank=pub_res.contest_rank,
-                        contest_rating=pub_res.contest_rating,
-                        top_percentage=None,
-                        status=pub_res.participation_status or "NOT_ATTENDED",
-                        fetched_at=pub_res.last_fetched_at.isoformat() if pub_res.last_fetched_at else None
-                    )
-                else:
-                    has_uname = bool(st.username and st.username.strip())
-                    st_out.overall_participation_mode = "NONE"
-                    st_out.contest_status = "NOT_ATTENDED" if has_uname else "PENDING_USERNAME"
-                    st_out.public_contest_result = ContestResultOut(
-                        contest_name=target_contest_name,
-                        contest_number=c_num,
-                        contest_date=target_contest_date,
-                        questions_solved=0,
-                        questions_total=4,
-                        score_display="Not Attended" if has_uname else "Data Unavailable",
-                        contest_rank=None,
-                        contest_rating=None,
-                        top_percentage=None,
-                        status="NOT_ATTENDED" if has_uname else "UNKNOWN",
-                        fetched_at=None
-                    )
-
-                if vir_res:
-                    tot_solved_v = vir_res.total_contest_solved or (vir_res.q1 + vir_res.q2 + vir_res.q3 + vir_res.q4)
-                    st_out.virtual_contest_result = ContestResultOut(
-                        contest_name=vir_res.session.contest_name if vir_res.session else "Weekly Contest",
-                        contest_number=None,
-                        contest_date=vir_res.session.session_date if vir_res.session else None,
-                        questions_solved=tot_solved_v,
-                        questions_total=4,
-                        score_display=f"{tot_solved_v} / 4" if vir_res.participation_status in ("VIRTUAL_ATTENDED", "VIRTUAL") else "Not Attended",
-                        contest_rank=getattr(vir_res, 'contest_rank', None),
-                        contest_rating=getattr(vir_res, 'contest_rating', None),
-                        top_percentage=getattr(vir_res, 'top_percentage', None),
-                        status=vir_res.participation_status or "NO_VIRTUAL_RECORD",
-                        fetched_at=getattr(vir_res, 'completed_at', None).isoformat() if getattr(vir_res, 'completed_at', None) else None
-                    )
-                else:
-                    st_out.virtual_contest_result = ContestResultOut(
-                        contest_name="Weekly Contest",
-                        contest_number=None,
-                        contest_date=None,
-                        questions_solved=0,
-                        questions_total=4,
-                        score_display="Not Attended",
-                        contest_rank=None,
-                        contest_rating=None,
-                        top_percentage=None,
-                        status="NO_VIRTUAL_RECORD",
-                        fetched_at=None
-                    )
-
-                results.append(st_out)
-
-            if paginated:
-                return StudentPaginatedOut(
-                    total=total_count or 0,
-                    items=results,
-                    page=page or 1,
-                    limit=limit or 50,
-                    total_pages=((total_count or 0) + (limit or 50) - 1) // (limit or 50)
+            if h_res and h_res.attended:
+                tot_solved = h_res.problems_solved or 0
+                st_out.overall_participation_mode = "PUBLIC"
+                st_out.contest_status = "PUBLIC_ATTENDED"
+                st_out.public_contest_result = ContestResultOut(
+                    contest_name=target_contest_name,
+                    contest_number=c_num,
+                    contest_date=target_contest_date,
+                    questions_solved=tot_solved,
+                    questions_total=4,
+                    score_display=f"{tot_solved} / 4",
+                    contest_rank=h_res.contest_rank,
+                    contest_rating=round(h_res.rating_after, 1) if h_res.rating_after else None,
+                    top_percentage=None,
+                    status="PUBLIC_ATTENDED",
+                    fetched_at=datetime.datetime.utcnow().isoformat()
                 )
-            return results
+            elif h_res and not h_res.attended and (h_res.problems_solved or 0) > 0:
+                tot_solved = h_res.problems_solved or 0
+                st_out.overall_participation_mode = "VIRTUAL"
+                st_out.contest_status = "VIRTUAL_ATTENDED"
+                st_out.public_contest_result = ContestResultOut(
+                    contest_name=target_contest_name,
+                    contest_number=c_num,
+                    contest_date=target_contest_date,
+                    questions_solved=tot_solved,
+                    questions_total=4,
+                    score_display=f"{tot_solved} / 4",
+                    contest_rank=None,
+                    contest_rating=None,
+                    top_percentage=None,
+                    status="VIRTUAL_ATTENDED",
+                    fetched_at=datetime.datetime.utcnow().isoformat()
+                )
+            elif pub_res:
+                tot_solved = pub_res.total_contest_solved or (pub_res.q1 + pub_res.q2 + pub_res.q3 + pub_res.q4)
+                is_att = pub_res.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED")
+                is_not_att = pub_res.participation_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED")
+                score_disp = f"{tot_solved} / 4" if is_att else ("Not Attended" if is_not_att else "Data Unavailable")
+                st_out.overall_participation_mode = "PUBLIC" if is_att else "NONE"
+                st_out.contest_status = pub_res.participation_status or "NOT_ATTENDED"
+                st_out.public_contest_result = ContestResultOut(
+                    contest_name=pub_res.session.contest_name if pub_res.session else target_contest_name,
+                    contest_number=c_num,
+                    contest_date=pub_res.session.session_date if pub_res.session else target_contest_date,
+                    questions_solved=tot_solved if is_att else 0,
+                    questions_total=4,
+                    score_display=score_disp,
+                    contest_rank=pub_res.contest_rank,
+                    contest_rating=pub_res.contest_rating,
+                    top_percentage=None,
+                    status=pub_res.participation_status or "NOT_ATTENDED",
+                    fetched_at=pub_res.last_fetched_at.isoformat() if pub_res.last_fetched_at else None
+                )
+            else:
+                has_uname = bool(st.username and st.username.strip())
+                st_out.overall_participation_mode = "NONE"
+                st_out.contest_status = "NOT_ATTENDED" if has_uname else "PENDING_USERNAME"
+                st_out.public_contest_result = ContestResultOut(
+                    contest_name=target_contest_name,
+                    contest_number=c_num,
+                    contest_date=target_contest_date,
+                    questions_solved=0,
+                    questions_total=4,
+                    score_display="Not Attended" if has_uname else "Data Unavailable",
+                    contest_rank=None,
+                    contest_rating=None,
+                    top_percentage=None,
+                    status="NOT_ATTENDED" if has_uname else "UNKNOWN",
+                    fetched_at=None
+                )
+
+            if vir_res:
+                tot_solved_v = vir_res.total_contest_solved or (vir_res.q1 + vir_res.q2 + vir_res.q3 + vir_res.q4)
+                st_out.virtual_contest_result = ContestResultOut(
+                    contest_name=vir_res.session.contest_name if vir_res.session else "Weekly Contest",
+                    contest_number=None,
+                    contest_date=vir_res.session.session_date if vir_res.session else None,
+                    questions_solved=tot_solved_v,
+                    questions_total=4,
+                    score_display=f"{tot_solved_v} / 4" if vir_res.participation_status in ("VIRTUAL_ATTENDED", "VIRTUAL") else "Not Attended",
+                    contest_rank=getattr(vir_res, 'contest_rank', None),
+                    contest_rating=getattr(vir_res, 'contest_rating', None),
+                    top_percentage=getattr(vir_res, 'top_percentage', None),
+                    status=vir_res.participation_status or "NO_VIRTUAL_RECORD",
+                    fetched_at=getattr(vir_res, 'completed_at', None).isoformat() if getattr(vir_res, 'completed_at', None) else None
+                )
+            else:
+                st_out.virtual_contest_result = ContestResultOut(
+                    contest_name="Weekly Contest",
+                    contest_number=None,
+                    contest_date=None,
+                    questions_solved=0,
+                    questions_total=4,
+                    score_display="Not Attended",
+                    contest_rank=None,
+                    contest_rating=None,
+                    top_percentage=None,
+                    status="NO_VIRTUAL_RECORD",
+                    fetched_at=None
+                )
+
+            results.append(st_out)
+
+        if paginated:
+            return StudentPaginatedOut(
+                total=total_count or 0,
+                items=results,
+                page=page or 1,
+                limit=limit or 50,
+                total_pages=((total_count or 0) + (limit or 50) - 1) // (limit or 50)
+            )
+        return results
 
 
     if not current_user or role_clean in ("admin", "super admin", "super_admin", "hod"):

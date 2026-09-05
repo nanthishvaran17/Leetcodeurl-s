@@ -41,6 +41,7 @@ import {
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { triggerDownload } from '../utils/mobileDownload';
+import { downloadManager } from '../services/download/downloadManager';
 
 interface StudentIssue {
   id: number;
@@ -494,16 +495,18 @@ export const StudentDataIssuesPage: React.FC = () => {
         ...(searchQuery ? { search: searchQuery } : {})
       });
 
-      const response = await api.get(`/data-issues/export-excel?${params.toString()}`, {
-        responseType: 'blob'
+      const filename = `Student_Data_Issues_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      const res = await downloadManager.download({
+        endpoint: `/data-issues/export-excel?${params.toString()}`,
+        filename,
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       });
 
-      const blob = new Blob([response.data], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      });
-      const filename = `Student_Data_Issues_${new Date().toISOString().slice(0, 10)}.xlsx`;
-      await triggerDownload(blob, filename);
-      notify.success('Excel Downloaded', `Exported ${students.length} records to Excel.`, { category: 'EXPORT CENTER' });
+      if (res.success) {
+        notify.success('Excel Downloaded', `Exported records to Excel.`, { category: 'EXPORT CENTER' });
+      } else {
+        notify.error('Export Error', res.error || 'Failed to download Excel report.', { category: 'EXPORT CENTER' });
+      }
     } catch (err) {
       notify.error('Export Error', 'Failed to stream Excel report.', { category: 'EXPORT CENTER' });
     } finally {
@@ -522,14 +525,18 @@ export const StudentDataIssuesPage: React.FC = () => {
         ...(searchQuery ? { search: searchQuery } : {})
       });
 
-      const response = await api.get(`/data-issues/export-csv?${params.toString()}`, {
-        responseType: 'blob'
+      const filename = `Student_Data_Issues_${new Date().toISOString().slice(0, 10)}.csv`;
+      const res = await downloadManager.download({
+        endpoint: `/data-issues/export-csv?${params.toString()}`,
+        filename,
+        mimeType: 'text/csv',
       });
 
-      const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
-      const filename = `Student_Data_Issues_${new Date().toISOString().slice(0, 10)}.csv`;
-      await triggerDownload(blob, filename, 'text/csv;charset=utf-8;');
-      notify.success('CSV Downloaded', `Exported ${students.length} records to CSV.`, { category: 'EXPORT CENTER' });
+      if (res.success) {
+        notify.success('CSV Downloaded', `Exported records to CSV.`, { category: 'EXPORT CENTER' });
+      } else {
+        notify.error('Export Error', res.error || 'Failed to download CSV report.', { category: 'EXPORT CENTER' });
+      }
     } catch (err) {
       notify.error('Export Error', 'Failed to stream CSV report.', { category: 'EXPORT CENTER' });
     } finally {

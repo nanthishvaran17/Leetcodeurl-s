@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Activity, ShieldCheck, Mail, Database, Clock, RefreshCw, Calendar, Cpu, Layers } from 'lucide-react';
 import api, { getDataFreshness } from '../services/api';
 import { triggerDownload } from '../utils/mobileDownload';
+import { downloadManager } from '../services/download/downloadManager';
 
 interface AutomationStatusPanelProps {
   onTriggerSync?: () => void;
@@ -173,9 +174,12 @@ export const AutomationStatusPanel: React.FC<AutomationStatusPanelProps> = ({
         <div
           onClick={async () => {
             try {
-              const res = await api.get('/reports/21/excel', { responseType: 'blob' });
               const filename = `Nandha_LeetCode_College_Summary_${new Date().toISOString().slice(0, 10)}.xlsx`;
-              await triggerDownload(res.data, filename);
+              await downloadManager.download({
+                endpoint: '/reports/export-official-college-summary',
+                filename,
+                mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+              });
             } catch (e) {
               console.error('Report export error:', e);
             }

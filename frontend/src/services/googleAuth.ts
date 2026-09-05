@@ -1,4 +1,4 @@
-import { signInWithPopup, signInWithRedirect, getRedirectResult, UserCredential, GoogleAuthProvider } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, getRedirectResult, UserCredential } from 'firebase/auth';
 import { getOrInitAuth, createGoogleProvider } from './firebase';
 import api from './api';
 
@@ -67,10 +67,9 @@ export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
       throw new Error('Authentication service is initializing. Please try again.');
     }
 
-    // Always create a fresh provider instance to avoid argument corruption / duplicate scope accumulation
     const provider = createGoogleProvider();
 
-    // Step 1: Attempt Firebase Google Sign-In Popup first (Works reliably across Desktop & Mobile)
+    // Step 1: Attempt Firebase Google Sign-In Popup first
     let cred: UserCredential;
     try {
       cred = await signInWithPopup(auth, provider);
@@ -79,7 +78,7 @@ export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
       const errStr = String(popupErr?.message || popupErr?.code || popupErr || '');
       console.warn('[GOOGLE_POPUP_FAIL]', popupErr.code, popupErr.message);
 
-      // Handle popup blocked, argument error, or mobile environment restrictions with resilient redirect fallback
+      // Handle popup blocked, argument error, or mobile environment restrictions with redirect fallback
       if (
         popupErr?.code === 'auth/argument-error' ||
         popupErr?.code === 'auth/popup-blocked' ||
@@ -94,14 +93,14 @@ export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
           await signInWithRedirect(auth, redirectProvider);
           throw new Error('Redirecting to Google Sign-In...');
         } catch (redirectErr: any) {
+          if (redirectErr.message === 'Redirecting to Google Sign-In...') {
+            throw redirectErr;
+          }
           const rErrStr = String(redirectErr?.message || redirectErr?.code || '');
           if (rErrStr.includes('missing initial state') || rErrStr.includes('sessionStorage')) {
             throw new Error(
-              'Mobile browser storage restriction detected. Please sign in using institutional Email/Password or Secure OTP login.'
+              'Mobile browser storage restriction detected. Please sign in using Password or OTP login.'
             );
-          }
-          if (redirectErr.message === 'Redirecting to Google Sign-In...') {
-            throw redirectErr;
           }
           throw new Error('Unable to complete Google sign-in. Please use Password or OTP login.');
         }
@@ -112,7 +111,7 @@ export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
         popupErr.code === 'auth/web-storage-unsupported'
       ) {
         throw new Error(
-          'Mobile browser storage restriction detected. Please sign in using your institutional Email/Password or Secure OTP login.'
+          'Mobile browser storage restriction detected. Please sign in using Password or OTP login.'
         );
       } else if (popupErr.code === 'auth/popup-closed-by-user' || popupErr.code === 'auth/cancelled-popup-request') {
         throw new Error('Google sign-in was cancelled.');
@@ -147,11 +146,18 @@ export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
 
     return response.data;
   } catch (err: any) {
+    if (err.message === 'Redirecting to Google Sign-In...') {
+      throw err;
+    }
+    if (err.response?.status === 403) {
+      throw new Error(err.response?.data?.detail || 'Your Google account is authenticated, but is not registered with the institution. Please contact your administrator.');
+    }
     if (err.response?.data?.detail) {
       throw new Error(err.response.data.detail);
+    }
+    if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+      throw new Error('Unable to connect to authentication server. Please check your internet connection.');
     }
     throw new Error(err.message || 'Google authentication service is temporarily unavailable.');
   }
 };
-
-

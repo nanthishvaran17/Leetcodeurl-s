@@ -4,6 +4,7 @@ import {
   BarChart3, Users, Building, TrendingUp, Sparkles, 
   Layers, Award, Filter, RefreshCw
 } from "lucide-react";
+import { downloadManager } from "../services/download/downloadManager";
 
 interface AccreditationData {
   institution: string;
@@ -64,11 +65,12 @@ export const AccreditationStudioPage: React.FC = () => {
   }, []);
 
   const handleDownload = (format: "EXCEL" | "PDF") => {
-    setDownloading(true);
-    setTimeout(() => {
-      setDownloading(false);
-      window.open("/reports/LeetCode_Weekly_Report_23-08-2026.xlsx", "_blank");
-    }, 800);
+    const isPdf = format === "PDF";
+    downloadManager.download({
+      endpoint: isPdf ? '/reports/export-pdf' : '/reports/export-official-college-summary',
+      filename: isPdf ? 'Executive_PDF_Summary.pdf' : 'Nandha_College_Official_Weekly_Report.xlsx',
+      mimeType: isPdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
   };
 
   return (

@@ -121,6 +121,9 @@ def get_firestore_db():
     return initialize_firestore()
 
 
+get_firestore_client = get_firestore_db
+
+
 def get_circuit_breaker() -> FirestoreCircuitBreaker:
     """Returns the global Firestore circuit breaker instance."""
     return circuit_breaker

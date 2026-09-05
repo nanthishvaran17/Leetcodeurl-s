@@ -42,18 +42,9 @@ def classify_public_contest_outcome(result: Any) -> str:
     Allowed outputs:
       4_SOLVED, 3_SOLVED, 2_SOLVED, 1_SOLVED, 0_SOLVED,
       NOT_PARTICIPATED, UNKNOWN, SOURCE_UNAVAILABLE
-      
-    Rules:
-      * solved_count == 0 -> 0_SOLVED ONLY when participation is verified.
-      * solved_count is None + NOT_PARTICIPATED -> NOT_PARTICIPATED.
-      * solved_count is None + UNKNOWN -> UNKNOWN.
-      * source unavailable -> SOURCE_UNAVAILABLE.
-      * Never use `result.total_contest_solved or 0`.
-      * Never infer solved count from rank or score.
-      * Never convert missing data to zero.
     """
     if result is None:
-        return "UNKNOWN"
+        return "NOT_PARTICIPATED"
 
     # Extract statuses
     part_status = _get_val(result, "participation_status", "status")

@@ -109,7 +109,7 @@ class TestLiveReassignment:
                 db=db,
                 faculty_id=staff_b_id,
                 student_ids=[student_to_move],
-                assigned_by_id=1  # Simulate admin ID
+                assigned_by_id=staff_a_id  # Valid admin/staff ID
             )
 
             # Check assignment history

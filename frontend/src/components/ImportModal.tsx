@@ -5,6 +5,7 @@ import { useNotification } from '../context/NotificationContext';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import { useGlobalData } from '../context/GlobalDataContext';
 import { triggerDownload } from '../utils/mobileDownload';
+import { downloadManager } from '../services/download/downloadManager';
 
 interface ImportModalProps {
   isOpen: boolean;
@@ -192,11 +193,16 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
 
   const handleDownloadSample = async () => {
     try {
-      const response = await api.get('/students/sample-excel', {
-        responseType: 'blob'
+      const res = await downloadManager.download({
+        endpoint: '/students/sample-excel',
+        filename: 'Student_Import_Sample.xlsx',
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       });
-      await triggerDownload(new Blob([response.data]), 'Student_Import_Sample.xlsx');
-      notify.success('Sample Template Saved', 'Student_Import_Sample.xlsx downloaded.', { category: 'EXCEL IMPORT' });
+      if (res.success) {
+        notify.success('Sample Template Saved', 'Student_Import_Sample.xlsx downloaded.', { category: 'EXCEL IMPORT' });
+      } else {
+        notify.error('Download Error', res.error || 'Unable to download sample Excel template.', { category: 'EXCEL IMPORT' });
+      }
     } catch (err: any) {
       notify.error('Download Error', 'Unable to download sample Excel template.', { category: 'EXCEL IMPORT' });
     }

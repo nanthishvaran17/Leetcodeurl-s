@@ -9,6 +9,7 @@ import { ConfirmDeleteModal, DeleteItemInfo } from '../components/ConfirmDeleteM
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { downloadFromUrl } from '../utils/mobileDownload';
+import { downloadManager } from '../services/download/downloadManager';
 
 export const ReportsPage: React.FC = () => {
   const { notify } = useNotification();
@@ -116,42 +117,23 @@ export const ReportsPage: React.FC = () => {
     }
   };
   const downloadReportFile = async (endpoint: string, filename: string) => {
-    // Mark this file as downloading
     setDownloadingFiles(prev => ({ ...prev, [filename]: true }));
     setToastMessage(`Generating ${filename}...`);
 
-    // Use canonical getApiUrl helper to avoid duplicate /api/api prefixes
-    const fullUrl = getApiUrl(endpoint);
-
-    const result = await downloadFromUrl(
-      fullUrl,
+    const result = await downloadManager.download({
+      endpoint,
       filename,
-      () => token || localStorage.getItem('token')
-    );
+    });
 
     setDownloadingFiles(prev => ({ ...prev, [filename]: false }));
 
-    if (result.ok) {
+    if (result.success) {
       setToastMessage(`✓ ${filename} downloaded successfully.`);
       setTimeout(() => setToastMessage(null), 4000);
     } else {
-      const statusCode = result.status;
-      const errMsg = result.error || 'Failed to generate report.';
-
-      setToastMessage(errMsg);
+      setToastMessage(result.error || 'Failed to generate report.');
       setTimeout(() => setToastMessage(null), 5000);
-
-      if (statusCode === 401) {
-        notify.error('Authentication Required', 'Please sign in again.', { category: 'AUTH' });
-      } else if (statusCode === 403) {
-        notify.error('Access Denied', 'You do not have permission to generate this institutional report.', { category: 'SECURITY' });
-      } else if (statusCode === 404) {
-        notify.error('Not Found', 'Report resource not found.', { category: 'REPORTS' });
-      } else if (statusCode === 422) {
-        notify.error('Invalid Parameters', 'Invalid report parameters.', { category: 'REPORTS' });
-      } else {
-        notify.error('Download Failed', errMsg, { category: 'REPORTS' });
-      }
+      notify.error('Download Failed', result.error || 'Failed to generate report.', { category: 'REPORTS' });
     }
   };
 

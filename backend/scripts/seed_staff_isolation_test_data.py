@@ -162,9 +162,9 @@ def verify_isolation(db, staff_a: User, staff_b: User, staff_c: User):
     print(f"    Staff A assigned: {len(ids_a)} students")
     print(f"    Staff B assigned: {len(ids_b)} students")
     print(f"    Staff C assigned: {len(ids_c)} students")
-    print(f"    A∩B overlap:  {len(overlap_ab)} (expected: 0)")
-    print(f"    A∩C overlap:  {len(overlap_ac)} (expected: 0)")
-    print(f"    B∩C overlap:  {len(overlap_bc)} (expected: 0)")
+    print(f"    A AND B overlap:  {len(overlap_ab)} (expected: 0)")
+    print(f"    A AND C overlap:  {len(overlap_ac)} (expected: 0)")
+    print(f"    B AND C overlap:  {len(overlap_bc)} (expected: 0)")
 
     assert len(overlap_ab) == 0, f"ISOLATION FAILURE: Staff A and B share students: {overlap_ab}"
     assert len(overlap_ac) == 0, f"ISOLATION FAILURE: Staff A and C share students: {overlap_ac}"
@@ -173,7 +173,7 @@ def verify_isolation(db, staff_a: User, staff_b: User, staff_c: User):
     assert len(ids_b) == STUDENTS_PER_STAFF, f"Staff B has {len(ids_b)} students, expected {STUDENTS_PER_STAFF}"
     assert len(ids_c) == STUDENTS_PER_STAFF, f"Staff C has {len(ids_c)} students, expected {STUDENTS_PER_STAFF}"
 
-    print(f"\n  ✅ ISOLATION VERIFIED: Zero overlap. Each staff has exactly {STUDENTS_PER_STAFF} unique students.")
+    print(f"\n  [SUCCESS] ISOLATION VERIFIED: Zero overlap. Each staff has exactly {STUDENTS_PER_STAFF} unique students.")
     return ids_a, ids_b, ids_c
 
 
@@ -224,7 +224,7 @@ def seed_and_verify():
         output_path = os.path.join(os.path.dirname(__file__), "isolation_test_data.json")
         with open(output_path, "w") as f:
             json.dump(result, f, indent=2)
-        print(f"\n  ✓ Test data saved to: {output_path}")
+        print(f"\n  [SUCCESS] Test data saved to: {output_path}")
 
         return result
 

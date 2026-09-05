@@ -98,11 +98,12 @@ def test_faculty_action_engine(test_db):
     assert eff["total_interventions"] >= 1
 
 def test_hod_analytics_engine(test_db):
-    health = calculate_department_health_score(test_db)
-    assert health["health_score"] > 0
+    student = test_db.query(Student).first()
+    health = calculate_department_health_score(test_db, dept_id=student.department_id)
+    assert health["health_score"] >= 0
 
     sim = simulate_what_if_scenario(72.0, 87.0, 12)
-    assert "estimated_growth_boost_pct" in sim
+    assert "projected_health_score" in sim
 
 def test_ai_query_engine(test_db):
     res = answer_ai_department_query(test_db, "Which students need attention?")

@@ -11,6 +11,7 @@ interface ReportPreviewProps {
 
 import { useNotification } from '../context/NotificationContext';
 import { triggerDownload } from '../utils/mobileDownload';
+import { downloadManager } from '../services/download/downloadManager';
 
 export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose }) => {
   const { notify } = useNotification();
@@ -88,38 +89,22 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
   const downloadFile = async (format: string) => {
     try {
       const url = `/reports/${reportId}/${format}`;
-      const res = await api.get(url, { responseType: 'blob' });
       const ext = format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : format === 'zip' ? 'zip' : format;
+      const filename = `${report?.reportType || 'REPORT'}_${reportId}.${ext}`;
 
-      const contentDisposition = res.headers['content-disposition'];
-      let filename = `${report?.reportType || 'REPORT'}_${reportId}.${ext}`;
-      if (contentDisposition) {
-        const match = contentDisposition.match(/filename="?([^"]+)"?/);
-        if (match && match[1]) {
-          filename = match[1];
-        }
+      const res = await downloadManager.download({
+        endpoint: url,
+        filename,
+      });
+
+      if (res.success) {
+        notify.success('Report Downloaded', `${filename} generated successfully.`, { category: 'REPORT PREVIEW' });
+      } else {
+        notify.error('Download Failed', res.error || 'Failed to download report.', { category: 'REPORTS' });
       }
-
-      const rawContentType = res.headers['content-type'];
-      const contentType = rawContentType ? String(rawContentType) : undefined;
-      await triggerDownload(res.data, filename, contentType);
-      notify.success('Report Downloaded', `${filename} generated successfully.`, { category: 'REPORT PREVIEW' });
     } catch (err: any) {
       console.error(`Failed to download ${format} report:`, err);
-      const statusCode = err.response?.status;
-      if (statusCode === 401) {
-        notify.error('Authentication Required', 'Please sign in again.', { category: 'AUTH' });
-      } else if (statusCode === 403) {
-        notify.error('Access Denied', 'You do not have permission to generate this report.', { category: 'SECURITY' });
-      } else if (statusCode === 404) {
-        notify.error('Not Found', 'Report resource not found.', { category: 'REPORTS' });
-      } else if (statusCode === 422) {
-        notify.error('Invalid Parameters', 'Invalid report parameters.', { category: 'REPORTS' });
-      } else if (statusCode === 500) {
-        notify.error('Server Error', 'Report generation failed on the server.', { category: 'REPORTS' });
-      } else {
-        notify.error('Download Failed', `Failed to download ${format.toUpperCase()} report. Please try again.`, { category: 'REPORTS' });
-      }
+      notify.error('Download Failed', err.message || 'Failed to download report.', { category: 'REPORTS' });
     }
   };
 

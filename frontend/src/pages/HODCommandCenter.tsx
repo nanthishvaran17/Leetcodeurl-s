@@ -27,6 +27,7 @@ import { useNotification } from '../context/NotificationContext';
 import api from '../services/api';
 import { useGlobalWebSocket } from '../context/GlobalWebSocketProvider';
 import { triggerDownload } from '../utils/mobileDownload';
+import { downloadManager } from '../services/download/downloadManager';
 
 // ─── Shared Card Component ───────────────────────────────────────────────────
 
@@ -452,8 +453,14 @@ const ReportHubModal: React.FC<{
   const handleDownloadExcel = async () => {
     setDownloadingExcel(true);
     try {
-      const response = await api.get('/reports/export-official-college-summary', { responseType: 'blob' });
-      await triggerDownload(response.data, 'Nandha_College_Official_Weekly_Report.xlsx');
+      const res = await downloadManager.download({
+        endpoint: '/reports/export-official-college-summary',
+        filename: 'Nandha_College_Official_Weekly_Report.xlsx',
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      if (!res.success) {
+        alert(res.error || "Failed to download Excel report.");
+      }
     } catch (err) {
       console.error("Report download error:", err);
       alert("Failed to download Excel report.");

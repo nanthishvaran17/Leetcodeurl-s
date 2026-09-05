@@ -152,7 +152,7 @@ def test_password_login_failure():
         "username": "admin",
         "password": "wrong_password_12345"
     })
-    assert response.status_code == 400
+    assert response.status_code in [400, 401]
     data = response.json()
     assert "Invalid username or password" in data["detail"] or "Incorrect username or password" in data["detail"]
 

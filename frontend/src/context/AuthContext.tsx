@@ -1,129 +1,203 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { signOut as firebaseSignOut } from 'firebase/auth';
-import { auth, getOrInitAuth } from '../firebase';
-import api from '../services/api';
-
-
-export interface AuthUser {
-  uid: string;
-  name: string;
-  email: string;
-  photoURL?: string;
-  role: 'student' | 'staff' | 'admin' | 'Super Admin';
-  registerNo?: string | null;
-  department?: string | null;
-  department_id?: number | null;
-  year?: string | null;
-  section?: string | null;
-  leetcodeUsername?: string | null;
-  isProfileLinked: boolean;
-  id?: number;
-  username?: string;
-}
-
-interface AuthContextType {
-  user: AuthUser | null;
-  token: string | null;
-  loading: boolean;
-  authError: string | null;
-  login: (token: string, user: any) => void;
-  signInWithGoogle: () => Promise<void>;
-  sendOtp: (email: string) => Promise<any>;
-  verifyOtp: (email: string, otp: string) => Promise<any>;
-  logout: () => Promise<void>;
-  clearAuthError: () => void;
-  isAuthenticated: boolean;
-}
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { onAuthStateChanged, signOut as firebaseSignOut, User as FirebaseUser } from 'firebase/auth';
+import { auth, getOrInitAuth } from '../services/firebase';
+import api, { clearApiCache } from '../services/api';
+import { AuthState, AuthUser, AuthContextType } from '../services/auth/authTypes';
+import { checkGoogleRedirectResult } from '../services/googleAuth';
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(() => {
-    const saved = localStorage.getItem('user');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
   });
 
   const [token, setToken] = useState<string | null>(() => {
     return localStorage.getItem('token');
   });
 
-  const [loading, setLoading] = useState<boolean>(true);
+  const [authState, setAuthState] = useState<AuthState>(() => {
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? 'AUTHORIZED' : 'INITIALIZING';
+  });
+
   const [authError, setAuthError] = useState<string | null>(null);
+  const [authNotice, setAuthNotice] = useState<string | null>(null);
 
-  // Check HttpOnly Cookie Backend Session and Google Redirect Result on initial load
-  useEffect(() => {
-    let isMounted = true;
-    const checkBackendSession = async () => {
-      try {
-        // 1. Check for returning Google signInWithRedirect authentication
-        const { checkGoogleRedirectResult } = await import('../services/googleAuth');
-        const redirectRes = await checkGoogleRedirectResult();
-        if (redirectRes && redirectRes.user && isMounted) {
-          login('', redirectRes.user);
-          setLoading(false);
-          return;
-        }
-
-        // 2. Check HttpOnly session
-        const res = await api.get('/auth/session');
-        if (res.data && res.data.authenticated && res.data.user && isMounted) {
-          const u = res.data.user;
-          const formattedUser: AuthUser = {
-            uid: `admin_${u.id}`,
-            name: u.username || 'Admin User',
-            email: u.email || '',
-            role: u.role || 'Admin',
-            isProfileLinked: true,
-            id: u.id,
-            username: u.username
-          };
-          setUser(formattedUser);
-        }
-      } catch (_err) {
-        // Unauthenticated session - safe ignore
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    checkBackendSession();
-
-    return () => {
-      isMounted = false;
-    };
+  // Helper to clear error state
+  const clearAuthError = useCallback(() => {
+    setAuthError(null);
+    setAuthNotice(null);
   }, []);
 
-
-  // NOTE: We intentionally do NOT use onAuthStateChanged to assign application
-  // roles. Firebase auth state is for the Firebase layer only. Application roles
-  // and sessions are managed exclusively by the backend via /api/auth/google.
-  // This prevents the frontend-only role-assignment security vulnerability.
-
-
-
-
-  const login = (newToken: string, newUser: any) => {
+  // Standard login handler
+  const login = useCallback((newToken: string, newUser: any) => {
     if (newToken) {
       setToken(newToken);
       localStorage.setItem('token', newToken);
     }
     const formattedUser: AuthUser = {
-      uid: newUser.uid || `admin_${newUser.id || '1'}`,
+      uid: newUser.uid || `user_${newUser.id || '1'}`,
       name: newUser.username || newUser.name || 'User',
       email: newUser.email || '',
       role: newUser.role || 'student',
       isProfileLinked: newUser.isProfileLinked !== undefined ? newUser.isProfileLinked : true,
       id: newUser.id,
-      username: newUser.username
+      username: newUser.username,
+      department_id: newUser.department_id || null,
+      section_id: newUser.section_id || null
     };
     setUser(formattedUser);
     localStorage.setItem('user', JSON.stringify(formattedUser));
-  };
+    clearAuthError();
+    setAuthState('AUTHORIZED');
+  }, [clearAuthError]);
 
+  // Standard logout handler
+  const logout = useCallback(async () => {
+    setAuthState('AUTHENTICATING');
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('admin_user');
+    sessionStorage.clear();
+    clearApiCache();
 
+    try {
+      await api.post('/auth/logout');
+    } catch (_err) {
+      // Ignore API logout errors
+    }
+
+    try {
+      const activeAuth = auth || getOrInitAuth();
+      if (activeAuth) {
+        await firebaseSignOut(activeAuth);
+      }
+    } catch (_err) {
+      // Ignore Firebase signout errors
+    }
+
+    clearAuthError();
+    setAuthState('UNAUTHENTICATED');
+  }, [clearAuthError]);
+
+  // Handle global auth_logout event triggered by api.ts on expired refresh
+  useEffect(() => {
+    const handleGlobalLogout = () => {
+      logout();
+    };
+    window.addEventListener('auth_logout', handleGlobalLogout);
+    return () => window.removeEventListener('auth_logout', handleGlobalLogout);
+  }, [logout]);
+
+  // App Initialization & Firebase Auth State Lifecycle
+  useEffect(() => {
+    let isMounted = true;
+
+    const initializeAuthLifecycle = async () => {
+      try {
+        // 1. Check Google redirect result first (if returning from redirect flow)
+        const redirectRes = await checkGoogleRedirectResult();
+        if (redirectRes && redirectRes.user && isMounted) {
+          login('', redirectRes.user);
+          return;
+        }
+
+        // 2. Check HttpOnly server session endpoint
+        const res = await api.get('/auth/session');
+        if (res.data && res.data.authenticated && res.data.user && isMounted) {
+          const u = res.data.user;
+          const formattedUser: AuthUser = {
+            uid: `user_${u.id}`,
+            name: u.username || 'User',
+            email: u.email || '',
+            role: u.role || 'Admin',
+            isProfileLinked: true,
+            id: u.id,
+            username: u.username,
+            department_id: u.department_id || null
+          };
+          setUser(formattedUser);
+          localStorage.setItem('user', JSON.stringify(formattedUser));
+          setAuthState('AUTHORIZED');
+          return;
+        }
+
+        // 3. If stored user exists and session check didn't fail hard, keep authorized state
+        const storedUser = localStorage.getItem('user');
+        if (storedUser && isMounted) {
+          setAuthState('AUTHORIZED');
+          return;
+        }
+
+        if (isMounted) setAuthState('UNAUTHENTICATED');
+      } catch (_err) {
+        if (isMounted) {
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            setAuthState('AUTHORIZED');
+          } else {
+            setAuthState('UNAUTHENTICATED');
+          }
+        }
+      }
+    };
+
+    initializeAuthLifecycle();
+
+    // 4. Subscribe to Firebase Auth state listener for seamless Google sign-in
+    let unsubscribeFirebase: (() => void) | undefined;
+    try {
+      const activeAuth = auth || getOrInitAuth();
+      if (activeAuth) {
+        unsubscribeFirebase = onAuthStateChanged(activeAuth, async (fbUser: FirebaseUser | null) => {
+          if (!isMounted) return;
+          if (fbUser && fbUser.email) {
+            // Only perform backend verification if we don't already have an active authorized session
+            const storedUserStr = localStorage.getItem('user');
+            if (!storedUserStr) {
+              setAuthState('AUTHENTICATED_PENDING_BACKEND');
+              try {
+                const idToken = await fbUser.getIdToken(true);
+                const backendRes = await api.post('/auth/google', { id_token: idToken }, { timeout: 35000 });
+                if (backendRes.data && backendRes.data.authenticated && isMounted) {
+                  login('', backendRes.data.user);
+                }
+              } catch (err: any) {
+                if (isMounted) {
+                  console.warn('[FIREBASE_AUTH_BACKEND_REJECT]', err);
+                  // Sign out from Firebase if backend rejects
+                  try { await firebaseSignOut(activeAuth); } catch (_) {}
+                  const errMsg = err.response?.data?.detail || err.message || 'Your Google account is not registered with the institution.';
+                  setAuthError(errMsg);
+                  setAuthState('UNAUTHENTICATED');
+                }
+              }
+            }
+          }
+        });
+      }
+    } catch (_e) {
+      // Firebase lazy init fallback
+    }
+
+    return () => {
+      isMounted = false;
+      if (unsubscribeFirebase) unsubscribeFirebase();
+    };
+  }, [login]);
+
+  // Google Sign-In trigger
   const signInWithGoogle = async () => {
-    setAuthError(null);
-    setLoading(true);
+    clearAuthError();
+    setAuthState('AUTHENTICATING');
     try {
       const { authenticateWithGoogle } = await import('../services/googleAuth');
       const res = await authenticateWithGoogle();
@@ -131,66 +205,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login('', res.user);
       }
     } catch (error: any) {
-      setAuthError(error.message || 'Failed to sign in with Google.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-  const sendOtp = async (emailToUse: string) => {
-    setAuthError(null);
-    const res = await api.post('/auth/send-otp', { email: emailToUse });
-    return res.data;
-  };
-
-  const verifyOtp = async (emailToUse: string, otpCode: string) => {
-    setAuthError(null);
-    const res = await api.post('/auth/verify-otp', { email: emailToUse, otp: otpCode });
-    login(res.data.access_token, res.data.user);
-    return res.data;
-  };
-
-  const logout = async () => {
-    setLoading(true);
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('admin_user');
-    sessionStorage.clear();
-
-    try {
-      await api.post('/auth/logout');
-    } catch (_err) {
-      // Ignore API logout error
-    }
-    try {
-      const activeAuth = auth || getOrInitAuth();
-      if (activeAuth) {
-        await firebaseSignOut(activeAuth);
+      const msg = error.message || 'Failed to sign in with Google.';
+      if (msg === 'Redirecting to Google Sign-In...') {
+        // Redirecting, leave in authenticating state
+        return;
       }
-    } catch (_err) {
-      // Ignore firebase sign out error
+      setAuthError(msg);
+      setAuthState('AUTH_ERROR');
     }
-    setLoading(false);
   };
 
-  const clearAuthError = React.useCallback(() => setAuthError(null), []);
+  // OTP Send trigger
+  const sendOtp = async (emailToUse: string) => {
+    clearAuthError();
+    setAuthState('AUTHENTICATING');
+    try {
+      const res = await api.post('/auth/send-otp', { email: emailToUse });
+      setAuthState('UNAUTHENTICATED');
+      return res.data;
+    } catch (err: any) {
+      const msg = err.response?.data?.detail || err.message || 'Failed to send OTP code.';
+      setAuthError(msg);
+      setAuthState('AUTH_ERROR');
+      throw err;
+    }
+  };
 
-  const contextValue = React.useMemo(() => ({
+  // OTP Verify trigger
+  const verifyOtp = async (emailToUse: string, otpCode: string) => {
+    clearAuthError();
+    setAuthState('AUTHENTICATING');
+    try {
+      const res = await api.post('/auth/verify-otp', { email: emailToUse, otp: otpCode });
+      login(res.data.access_token, res.data.user);
+      return res.data;
+    } catch (err: any) {
+      const msg = err.response?.data?.detail || err.message || 'Invalid verification code.';
+      setAuthError(msg);
+      setAuthState('AUTH_ERROR');
+      throw err;
+    }
+  };
+
+  const contextValue = useMemo(() => ({
     user,
     token,
-    loading,
+    authState,
     authError,
+    authNotice,
     login,
     signInWithGoogle,
     sendOtp,
     verifyOtp,
     logout,
     clearAuthError,
-    isAuthenticated: !!user
-  }), [user, token, loading, authError, clearAuthError]);
+    isAuthenticated: authState === 'AUTHORIZED' || !!user
+  }), [user, token, authState, authError, authNotice, login, signInWithGoogle, sendOtp, verifyOtp, logout, clearAuthError]);
 
   return (
     <AuthContext.Provider value={contextValue}>

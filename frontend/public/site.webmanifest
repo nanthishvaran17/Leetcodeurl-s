@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Nandha LeetCode Intelligence",
-  "short_name": "NEC LeetCode",
+  "name": "LeetCode Tracker",
+  "short_name": "LeetCode Tracker",
   "description": "NEC 25 Years of Excellence — LeetCode Tracker & Intelligence System for Nandha Engineering College, Erode.",
   "start_url": "/?source=pwa",
   "scope": "/",

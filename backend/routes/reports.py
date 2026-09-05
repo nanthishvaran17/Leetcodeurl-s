@@ -172,19 +172,22 @@ def download_official_college_summary_excel(
 ):
     """Generates the 8-sheet official college Excel, scoped to the caller's authorization level."""
     try:
-        from backend.services.pregenerated_report_service import get_cached_report_info
-        info = get_cached_report_info(db, week_id="latest", file_type="official_summary")
-        if info.get("status") == "READY" and info.get("cache_id"):
-            from backend.models import ReportCache
-            cache_rec = db.query(ReportCache).filter(ReportCache.id == info["cache_id"]).first()
-            if cache_rec and cache_rec.storage_path and os.path.exists(cache_rec.storage_path):
-                with open(cache_rec.storage_path, "rb") as f:
-                    excel_bytes = f.read()
-                return Response(
-                    content=excel_bytes,
-                    media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    headers={"Content-Disposition": "attachment; filename=Nandha_College_Official_Weekly_Report.xlsx"}
-                )
+        role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
+        is_admin_role = role_clean in ("admin", "administrator", "super admin", "super_admin", "principal", "placement coordinator")
+        if is_admin_role:
+            from backend.services.pregenerated_report_service import get_cached_report_info
+            info = get_cached_report_info(db, week_id="latest", file_type="official_summary")
+            if info.get("status") == "READY" and info.get("cache_id"):
+                from backend.models import ReportCache
+                cache_rec = db.query(ReportCache).filter(ReportCache.id == info["cache_id"]).first()
+                if cache_rec and cache_rec.storage_path and os.path.exists(cache_rec.storage_path):
+                    with open(cache_rec.storage_path, "rb") as f:
+                        excel_bytes = f.read()
+                    return Response(
+                        content=excel_bytes,
+                        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        headers={"Content-Disposition": "attachment; filename=Nandha_College_Official_Weekly_Report.xlsx"}
+                    )
 
         excel_bytes = generate_8_sheet_excel_report(db, current_user=current_user)
         return Response(
@@ -202,21 +205,24 @@ def download_master_tracker_excel(
     current_user = Depends(require_security_access(resource_name="Export Master Tracker Excel", dept_scoped=True))
 ):
     try:
-        from backend.services.pregenerated_report_service import get_cached_report_info
-        info = get_cached_report_info(db, week_id="latest", file_type="master_tracker")
-        if info.get("status") == "READY" and info.get("cache_id"):
-            from backend.models import ReportCache
-            cache_rec = db.query(ReportCache).filter(ReportCache.id == info["cache_id"]).first()
-            if cache_rec and cache_rec.storage_path and os.path.exists(cache_rec.storage_path):
-                with open(cache_rec.storage_path, "rb") as f:
-                    excel_bytes = f.read()
-                return Response(
-                    content=excel_bytes,
-                    media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    headers={"Content-Disposition": "attachment; filename=Full_8_Sheet_Master_Tracker.xlsx"}
-                )
+        role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
+        is_admin_role = role_clean in ("admin", "administrator", "super admin", "super_admin", "principal", "placement coordinator")
+        if is_admin_role:
+            from backend.services.pregenerated_report_service import get_cached_report_info
+            info = get_cached_report_info(db, week_id="latest", file_type="master_tracker")
+            if info.get("status") == "READY" and info.get("cache_id"):
+                from backend.models import ReportCache
+                cache_rec = db.query(ReportCache).filter(ReportCache.id == info["cache_id"]).first()
+                if cache_rec and cache_rec.storage_path and os.path.exists(cache_rec.storage_path):
+                    with open(cache_rec.storage_path, "rb") as f:
+                        excel_bytes = f.read()
+                    return Response(
+                        content=excel_bytes,
+                        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        headers={"Content-Disposition": "attachment; filename=Full_8_Sheet_Master_Tracker.xlsx"}
+                    )
 
-        excel_bytes = generate_8_sheet_master_tracker(db)
+        excel_bytes = generate_8_sheet_master_tracker(db, current_user=current_user)
         return Response(
             content=excel_bytes,
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

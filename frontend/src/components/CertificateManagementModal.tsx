@@ -42,6 +42,7 @@ import api from '../services/api';
 import { syncCertificateToFirestoreWeb } from '../services/firebaseSync';
 import { useNotification } from '../context/NotificationContext';
 import { triggerDownload } from '../utils/mobileDownload';
+import { downloadManager } from '../services/download/downloadManager';
 
 interface CertificateRecord {
   id: number;
@@ -328,31 +329,17 @@ export const CertificateManagementModal: React.FC<{
     }
 
     try {
-      const response = await api.get(`/certificates/${encodeURIComponent(idToUse)}/download-pdf`, {
-        responseType: 'blob'
+      const filename = `Certificate_${cleanReg || idToUse}.pdf`;
+      const res = await downloadManager.download({
+        endpoint: `/certificates/${encodeURIComponent(idToUse)}/download-pdf`,
+        filename,
+        mimeType: 'application/pdf',
       });
-
-      if (response.data && response.data.type === 'application/json') {
-        const text = await response.data.text();
-        try {
-          const errJson = JSON.parse(text);
-          notify.error('Certificate Error', errJson.detail || 'Could not generate PDF.', { category: 'CREDENTIAL SYSTEM' });
-          return;
-        } catch (e) {}
+      if (res.success) {
+        notify.success('PDF Downloaded', `Official Credential ${filename} saved.`, { category: 'CREDENTIAL SYSTEM' });
+      } else {
+        notify.error('Download Failed', res.error || 'Failed to stream official certificate PDF.', { category: 'CREDENTIAL SYSTEM' });
       }
-
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      let filename = `Certificate_${cleanReg || idToUse}.pdf`;
-      const disposition = response.headers['content-disposition'] || response.headers['Content-Disposition'];
-      if (disposition && disposition.includes('filename=')) {
-        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
-        if (matches != null && matches[1]) {
-          filename = matches[1].replace(/['"]/g, '').trim();
-        }
-      }
-
-      await triggerDownload(blob, filename, 'application/pdf');
-      notify.success('PDF Downloaded', `Official Credential ${filename} saved.`, { category: 'CREDENTIAL SYSTEM' });
     } catch (err: any) {
       console.error("Download error:", err);
       notify.error('Download Failed', 'Failed to stream official certificate PDF.', { category: 'CREDENTIAL SYSTEM' });
@@ -367,22 +354,17 @@ export const CertificateManagementModal: React.FC<{
     }
 
     try {
-      const response = await api.get(`/certificates/${encodeURIComponent(idToUse)}/download-forensic-pdf`, {
-        responseType: 'blob'
+      const filename = `Forensic_Audit_Report_${idToUse}.pdf`;
+      const res = await downloadManager.download({
+        endpoint: `/certificates/${encodeURIComponent(idToUse)}/download-forensic-pdf`,
+        filename,
+        mimeType: 'application/pdf',
       });
-
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      let filename = `Forensic_Audit_Report_${idToUse}.pdf`;
-      const disposition = response.headers['content-disposition'] || response.headers['Content-Disposition'];
-      if (disposition && disposition.includes('filename=')) {
-        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
-        if (matches != null && matches[1]) {
-          filename = matches[1].replace(/['"]/g, '').trim();
-        }
+      if (res.success) {
+        notify.success('Audit Report Saved', `Forensic Audit Report ${filename} saved.`, { category: 'FORENSIC AUDIT' });
+      } else {
+        notify.error('Download Failed', res.error || 'Failed to generate Forensic Audit Report.', { category: 'FORENSIC AUDIT' });
       }
-
-      await triggerDownload(blob, filename, 'application/pdf');
-      notify.success('Audit Report Saved', `Forensic Audit Report ${filename} saved.`, { category: 'FORENSIC AUDIT' });
     } catch (err: any) {
       console.error("Forensic Download error:", err);
       notify.error('Download Failed', 'Failed to generate Forensic Audit Report.', { category: 'FORENSIC AUDIT' });
@@ -768,7 +750,6 @@ export const CertificateManagementModal: React.FC<{
                                         ? 'text-emerald-300 bg-emerald-500/20 border-emerald-400/40'
                                         : 'text-emerald-900 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-500/10 border-emerald-300 dark:border-emerald-500/30'
                                     }`}>
-                                      <span>⚡</span>
                                       <span>{st.stats?.total_solved ?? 0} Solved</span>
                                     </span>
                                     {st.stats?.contest_rating ? (
@@ -777,8 +758,7 @@ export const CertificateManagementModal: React.FC<{
                                           ? 'text-amber-300 bg-amber-500/20 border-amber-400/40'
                                           : 'text-amber-900 dark:text-amber-300 bg-amber-100 dark:bg-amber-500/10 border-amber-300 dark:border-amber-500/30'
                                       }`}>
-                                        <span>⭐</span>
-                                        <span>{st.stats.contest_rating.toFixed(1)} Rating</span>
+                                        <span>Rating {st.stats.contest_rating.toFixed(1)}</span>
                                       </span>
                                     ) : null}
                                   </div>
@@ -827,7 +807,6 @@ export const CertificateManagementModal: React.FC<{
                             <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 shadow-inner">
                               <span className="text-xs text-slate-300 block font-black uppercase tracking-wider">Solved Problems</span>
                               <span className="font-mono font-black text-emerald-400 text-base sm:text-xl flex items-center space-x-1.5 mt-0.5">
-                                <span>⚡</span>
                                 <span>{selectedStudent.stats?.total_solved ?? 0}</span>
                               </span>
                             </div>

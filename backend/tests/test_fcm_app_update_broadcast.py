@@ -12,7 +12,7 @@ def test_register_device_token_endpoint():
         mock_response.failure_count = 0
         mock_sub.return_value = mock_response
 
-        response = client.post("/bot-notifications/register-token", json={
+        response = client.post("/api/bot-notifications/register-token", json={
             "token": "test_android_fcm_token_999",
             "topic": "all_app_users",
             "platform": "android"

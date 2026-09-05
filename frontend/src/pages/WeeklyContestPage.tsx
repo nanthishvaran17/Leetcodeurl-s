@@ -14,6 +14,7 @@ import { PreviousWeekContestPanel } from '../components/PreviousWeekContestPanel
 import { useAuth } from '../context/AuthContext';
 import { useContestWebSocket, ContestWSEvent } from '../hooks/useContestWebSocket';
 import { triggerDownload } from '../utils/mobileDownload';
+import { downloadManager } from '../services/download/downloadManager';
 
 // Animated Count-Up component for headline stat numbers
 const AnimatedNumber: React.FC<{ value: number; suffix?: string; duration?: number }> = ({ value, suffix = '', duration = 600 }) => {
@@ -901,7 +902,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     }
   }, [editingStudent, deletingStudent, showPreviewModal, showEmailModal, isSavingStudent, isDeletingStudent]);
 
-  const downloadReportFile = (format: string) => {
+  const downloadReportFile = async (format: string) => {
     if (!selectedSessionId) {
       setNotification({
         isOpen: true,
@@ -926,33 +927,28 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     let filename = `NEC_Weekly_Contest_${contestNum}_PUBLIC`;
     filename += `.${ext}`;
 
-    api.get(url, { responseType: 'blob' }).then(async res => {
-      // Parse disposition filename if available
-      const disposition = res.headers['content-disposition'];
-      let serverFilename = filename;
-      if (disposition && disposition.includes('filename=')) {
-        const match = disposition.match(/filename=["']?([^"';]+)["']?/);
-        if (match && match[1]) serverFilename = match[1];
+    try {
+      const res = await downloadManager.download({
+        endpoint: url,
+        filename,
+      });
+      if (!res.success) {
+        setNotification({
+          isOpen: true,
+          type: 'error',
+          title: 'Excel Report Generation Failed',
+          message: res.error || 'Failed to generate Excel report.'
+        });
       }
-
-      await triggerDownload(res.data, serverFilename);
-    }).catch(async (err) => {
+    } catch (err: any) {
       console.error('Download failed:', err);
-      let errMsg = 'Failed to generate Excel report. Please verify that students match the active filters.';
-      if (err.response?.data instanceof Blob) {
-        try {
-          const text = await err.response.data.text();
-          const parsed = JSON.parse(text);
-          if (parsed.detail) errMsg = parsed.detail;
-        } catch (_e) { }
-      }
       setNotification({
         isOpen: true,
         type: 'error',
         title: 'Excel Report Generation Failed',
-        message: errMsg
+        message: err.message || 'Failed to generate Excel report.'
       });
-    });
+    }
   };
 
   const handleSendWeeklyEmail = async (isSafeTest: boolean = false) => {

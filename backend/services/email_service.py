@@ -1468,7 +1468,7 @@ def send_manual_report_email(
     </div>
 
     <p style="font-size: 13px; color: #475569;">
-        📎 <strong>Attached Documents ({len(attachments_bundle)} files):</strong>
+        <strong>Attached Documents ({len(attachments_bundle)} files):</strong>
         <ul style="margin: 6px 0 0 0; padding-left: 20px; font-size: 13px;">
             {attached_docs_html}
         </ul>

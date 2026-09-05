@@ -55,6 +55,7 @@ import {
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { triggerDownload } from '../utils/mobileDownload';
+import { downloadManager } from '../services/download/downloadManager';
 
 export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void }> = ({ onNavigateTab }) => {
   const { notify } = useNotification();
@@ -470,12 +471,17 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
     try {
       const studentQuery = forensicResult.student.reg_no || forensicResult.student.username || forensicResult.student.name;
       const sessionId = forensicResult.contest.sessionId;
-      const res = await api.get(`/settings/forensic-pdf?search=${encodeURIComponent(studentQuery)}&session_id=${sessionId}`, {
-        responseType: 'blob'
-      });
       const filename = `NEC_Forensic_Contest_Audit_${forensicResult.student.reg_no}_Session_${sessionId}.pdf`;
-      await triggerDownload(res.data, filename, 'application/pdf');
-      notify.success('Forensic PDF Downloaded', 'Official forensic contest verification report saved.', { category: 'FORENSIC AUDIT' });
+      const res = await downloadManager.download({
+        endpoint: `/settings/forensic-pdf?search=${encodeURIComponent(studentQuery)}&session_id=${sessionId}`,
+        filename,
+        mimeType: 'application/pdf',
+      });
+      if (res.success) {
+        notify.success('Forensic PDF Downloaded', 'Official forensic contest verification report saved.', { category: 'FORENSIC AUDIT' });
+      } else {
+        notify.error('Download Error', res.error || 'Failed to download official forensic audit PDF.', { category: 'FORENSIC AUDIT' });
+      }
     } catch (err: any) {
       console.error('PDF download error:', err);
       notify.error('Download Error', 'Failed to download official forensic audit PDF.', { category: 'FORENSIC AUDIT' });

@@ -4,6 +4,7 @@ import {
   ExternalLink, Eye, ArrowUpDown, ChevronRight, X, ShieldAlert, CheckCircle2
 } from 'lucide-react';
 import api from '../services/api';
+import { downloadManager } from '../services/download/downloadManager';
 
 export const Post930SolversView: React.FC = () => {
   const [data, setData] = useState<any>(null);
@@ -55,8 +56,11 @@ export const Post930SolversView: React.FC = () => {
     if (yearLevel) params.append('year_level', yearLevel);
     if (section) params.append('section', section);
 
-    const exportUrl = `${api.defaults.baseURL}/contests/post-930-solvers/export?${params.toString()}`;
-    window.open(exportUrl, '_blank');
+    downloadManager.download({
+      endpoint: `/contests/post-930-solvers/export?${params.toString()}`,
+      filename: `Post_930_Solvers_${data?.session_date || 'Report'}.xlsx`,
+      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
   };
 
   const studentsList = data?.students || [];

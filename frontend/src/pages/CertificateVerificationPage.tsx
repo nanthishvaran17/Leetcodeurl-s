@@ -22,6 +22,7 @@ import {
 import api from '../services/api';
 import { fetchCertificateFromFirestoreWeb } from '../services/firebaseSync';
 import { triggerDownload } from '../utils/mobileDownload';
+import { downloadManager } from '../services/download/downloadManager';
 
 interface CertificateVerificationData {
   status: 'VERIFIED' | 'REVOKED' | 'NOT_VERIFIED';
@@ -162,49 +163,23 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
         ? `/certificates/${encodeURIComponent(verificationId)}/download-forensic-pdf`
         : `/certificates/${encodeURIComponent(verificationId)}/download-pdf${queryStr}`;
 
-      const response = await api.get(downloadEndpoint, {
-        responseType: 'blob',
-        timeout: 60000
-      });
-
-      const blob = new Blob([response.data], { type: 'application/pdf' });
       const cleanStudentName = (data?.student_name || 'Student').replace(/[^A-Za-z0-9_]+/g, '_').toUpperCase();
-      let filename = isForensicDoc
+      const filename = isForensicDoc
         ? `${cleanStudentName}_${data?.register_no || ''}_Forensic_Audit_Report.pdf`
         : `${cleanStudentName}_${data?.register_no || ''}_Certificate.pdf`;
 
-      const disposition = response.headers['content-disposition'] || response.headers['Content-Disposition'];
-      if (disposition && disposition.includes('filename=')) {
-        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
-        if (matches != null && matches[1]) {
-          filename = matches[1].replace(/['"]/g, '').trim();
-        }
-      }
+      const dlResult = await downloadManager.download({
+        endpoint: downloadEndpoint,
+        filename,
+        mimeType: 'application/pdf',
+      });
 
-      await triggerDownload(blob, filename, 'application/pdf');
+      if (!dlResult.success) {
+        setDownloadError(dlResult.error || "Unable to download certificate PDF. Please verify your connection or try again.");
+      }
     } catch (err: any) {
       console.error("Certificate PDF Download error:", err);
-      let errorMsg = "Unable to download certificate PDF. Please verify your connection or try again.";
-      if (err.response) {
-        if (err.response.status === 404) {
-          errorMsg = "Certificate record not found in official institutional registry.";
-        } else if (err.response.status === 400) {
-          errorMsg = "Certificate record is revoked or mismatch detected.";
-        } else if (err.response.status === 500) {
-          errorMsg = "Institutional certificate generation encountered an issue. Please try again.";
-        } else if (err.response.data instanceof Blob) {
-          try {
-            const text = await err.response.data.text();
-            const parsed = JSON.parse(text);
-            if (parsed.detail) errorMsg = parsed.detail;
-          } catch (_) {}
-        } else if (err.response.data && err.response.data.detail) {
-          errorMsg = err.response.data.detail;
-        }
-      } else if (err.code === 'ECONNABORTED') {
-        errorMsg = "Connection timed out while generating certificate. Please retry.";
-      }
-      setDownloadError(errorMsg);
+      setDownloadError("Unable to download certificate PDF. Please verify your connection or try again.");
     } finally {
       setDownloading(false);
     }

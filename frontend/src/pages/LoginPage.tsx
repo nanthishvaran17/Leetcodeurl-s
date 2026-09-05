@@ -18,7 +18,7 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
-  const { login } = useAuth();
+  const { login, authError, clearAuthError, authState } = useAuth();
   
   const pageVariants: Variants = {
     initial: { opacity: 0, x: -15, filter: 'blur(4px)' },
@@ -493,7 +493,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
           </div>
 
           <AnimatePresence mode="wait">
-            {error && (
+            {(error || authError) && (
               <motion.div 
                 key="error"
                 initial={{ opacity: 0, height: 0, marginBottom: 0 }} 
@@ -503,7 +503,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                 style={{ overflow: 'hidden' }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <span>{error}</span>
+                <span>{error || authError}</span>
               </motion.div>
             )}
             
@@ -527,8 +527,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
             <motion.div key="login" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="view-wrapper">
               <div className="tabs">
                 <div className="tab-highlight" style={{ transform: authMode === 'otp' ? 'translateX(100%)' : 'translateX(0)' }}></div>
-                <button type="button" className={authMode === 'password' ? 'active' : ''} onClick={() => { setAuthMode('password'); setError(''); }}>Password</button>
-                <button type="button" className={authMode === 'otp' ? 'active' : ''} onClick={() => { setAuthMode('otp'); setError(''); }}>Secure OTP</button>
+                <button type="button" className={authMode === 'password' ? 'active' : ''} onClick={() => { setAuthMode('password'); setError(''); clearAuthError(); }}>Password</button>
+                <button type="button" className={authMode === 'otp' ? 'active' : ''} onClick={() => { setAuthMode('otp'); setError(''); clearAuthError(); }}>Secure OTP</button>
               </div>
 
               {authMode === 'password' ? (

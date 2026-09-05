@@ -19,7 +19,7 @@ interface GoogleSignInButtonProps {
 }
 
 export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSuccess, className = '' }) => {
-  const { user, login, logout, loading } = useAuth();
+  const { user, login, logout, authState } = useAuth();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -62,7 +62,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
         </div>
         <button
           onClick={logout}
-          disabled={loading}
+          disabled={authState === 'AUTHENTICATING'}
           className="p-2.5 rounded-xl text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 transition-all"
           title="Sign Out"
         >
@@ -88,7 +88,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
           {errorMsg.includes('Unauthorized Domain') && (
             <div className="p-3 rounded-xl bg-white dark:bg-navy-950 border border-rose-200 dark:border-rose-900 text-[11px] text-slate-700 dark:text-slate-300 space-y-1.5 shadow-sm">
               <p className="font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1">
-                <span>📋 1-Minute Fix in Firebase Console:</span>
+                <span>1-Minute Fix in Firebase Console:</span>
               </p>
               <ol className="list-decimal list-inside space-y-1 text-[10.5px] leading-snug">
                 <li>Go to <b className="text-slate-900 dark:text-white">Firebase Console</b> &rarr; Select project <b className="text-brand-600">leetcode-student-data</b></li>

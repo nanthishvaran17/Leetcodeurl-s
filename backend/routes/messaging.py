@@ -382,3 +382,133 @@ def download_attachment(
     except Exception as e:
         logger.error(f"Error serving attachment: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve file.")
+
+
+# =========================================================================
+# INSTITUTIONAL INTELLIGENCE & SMART GROUPS ENDPOINTS (PHASES 7-13)
+# =========================================================================
+
+class CreateSmartGroupRequest(BaseModel):
+    name: str
+    description: Optional[str] = None
+    group_type: str = "CUSTOM"
+    is_dynamic: bool = False
+    rule_type: Optional[str] = None
+    rule_criteria: Optional[dict] = None
+    initial_member_ids: Optional[list] = None
+
+class AskInstitutionRequest(BaseModel):
+    query: str
+
+class AnalyzeActionRequest(BaseModel):
+    content: str
+    receiver_id: str
+
+
+@router.get("/smart-groups")
+def get_smart_groups_endpoint(
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Returns all smart groups accessible to the current user."""
+    try:
+        from backend.services.institutional_intelligence_service import InstitutionalIntelligenceService
+        groups = InstitutionalIntelligenceService.get_user_smart_groups(db, current_user)
+        return {"success": True, "groups": groups}
+    except Exception as e:
+        logger.error(f"Error fetching smart groups: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch smart groups.")
+
+
+@router.post("/smart-groups")
+def create_smart_group_endpoint(
+    req: CreateSmartGroupRequest,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Creates a new manual or dynamic smart group."""
+    try:
+        from backend.services.institutional_intelligence_service import InstitutionalIntelligenceService
+        group_details = InstitutionalIntelligenceService.create_smart_group(
+            db=db,
+            current_user=current_user,
+            name=req.name,
+            description=req.description,
+            group_type=req.group_type,
+            is_dynamic=req.is_dynamic,
+            rule_type=req.rule_type,
+            rule_criteria=req.rule_criteria,
+            initial_member_ids=req.initial_member_ids
+        )
+        return {"success": True, "group": group_details}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error creating smart group: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create smart group.")
+
+
+@router.get("/smart-groups/{group_id}")
+def get_smart_group_details_endpoint(
+    group_id: str,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Returns detailed smart group info and members."""
+    try:
+        from backend.services.institutional_intelligence_service import InstitutionalIntelligenceService
+        details = InstitutionalIntelligenceService.get_group_details(db, current_user, group_id)
+        return {"success": True, "group": details}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error fetching group details: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch group details.")
+
+
+@router.post("/ask-institution")
+def ask_institution_endpoint(
+    req: AskInstitutionRequest,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Executes a natural language query against verified institutional DB with RBAC."""
+    try:
+        from backend.services.institutional_intelligence_service import InstitutionalIntelligenceService
+        response = InstitutionalIntelligenceService.ask_institution(db, current_user, req.query)
+        return {"success": True, "result": response}
+    except Exception as e:
+        logger.error(f"Error in ask institution: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process query.")
+
+
+@router.post("/action-proposal")
+def analyze_action_proposal_endpoint(
+    req: AnalyzeActionRequest,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Analyzes message text for actionable directives (Message -> Action workflow)."""
+    try:
+        from backend.services.institutional_intelligence_service import InstitutionalIntelligenceService
+        proposal = InstitutionalIntelligenceService.analyze_message_for_action(db, current_user, req.content, req.receiver_id)
+        return {"success": True, "proposal": proposal}
+    except Exception as e:
+        logger.error(f"Error analyzing action proposal: {e}")
+        raise HTTPException(status_code=500, detail="Failed to analyze proposal.")
+
+
+@router.get("/why-was-i-flagged")
+def why_was_i_flagged_endpoint(
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Provides objective, verified transparency on student standing."""
+    try:
+        from backend.services.institutional_intelligence_service import InstitutionalIntelligenceService
+        transparency = InstitutionalIntelligenceService.get_student_flag_transparency(db, current_user)
+        return {"success": True, "transparency": transparency}
+    except Exception as e:
+        logger.error(f"Error getting transparency info: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get transparency status.")
+

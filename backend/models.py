@@ -2642,3 +2642,82 @@ class SystemSetting(Base):
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
 
+class SmartGroup(Base):
+    """
+    Tracks institutional smart groups (academic, batch, contest, dynamic intervention groups).
+    """
+    __tablename__ = "smart_groups"
+    __table_args__ = ({"extend_existing": True},)
+
+    id = Column(Integer, primary_key=True, index=True)
+    group_id = Column(String(100), unique=True, index=True, nullable=False)
+    name = Column(String(200), nullable=False)
+    description = Column(Text, nullable=True)
+    group_type = Column(String(50), default="CUSTOM", index=True) # ACADEMIC, BATCH, CONTEST, FACULTY, MENTOR, PROJECT, PLACEMENT, INTERVENTION, CUSTOM
+    is_dynamic = Column(Boolean, default=False)
+    rule_type = Column(String(100), nullable=True) # e.g., INACTIVE_STUDENTS, LOW_CONTEST_RATING, DEPARTMENT_BATCH
+    rule_criteria = Column(Text, default="{}") # JSON string of filter rules
+    created_by = Column(String(150), index=True, nullable=False)
+    institution_id = Column(String(50), default="NEC", index=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    members = relationship("SmartGroupMember", back_populates="group", cascade="all, delete-orphan")
+
+
+class SmartGroupMember(Base):
+    """
+    Tracks group memberships with server-side RBAC roles.
+    """
+    __tablename__ = "smart_group_members"
+    __table_args__ = (
+        UniqueConstraint("group_id", "user_id", name="uix_smart_group_user"),
+        {"extend_existing": True},
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    group_id = Column(String(100), ForeignKey("smart_groups.group_id"), index=True, nullable=False)
+    user_id = Column(String(150), index=True, nullable=False)
+    role = Column(String(50), default="STUDENT", index=True) # OWNER, ADMIN, MODERATOR, FACULTY, MENTOR, STUDENT, VIEWER
+    joined_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    group = relationship("SmartGroup", back_populates="members")
+
+
+class InstitutionalAuditLog(Base):
+    """
+    Tracks auditable institutional events (announcements, assignments, exports, escalations).
+    """
+    __tablename__ = "institutional_audit_logs"
+    __table_args__ = ({"extend_existing": True},)
+
+    id = Column(Integer, primary_key=True, index=True)
+    audit_id = Column(String(100), unique=True, index=True, nullable=False)
+    action_type = Column(String(100), index=True, nullable=False) # e.g. ANNOUNCEMENT_SENT, ASSIGNMENT_CREATED, EVIDENCE_EXPORTED, ESCALATION_APPROVED
+    performed_by = Column(String(150), index=True, nullable=False)
+    target_type = Column(String(50), nullable=True) # e.g. STUDENT, GROUP, ASSIGNMENT, REPORT
+    target_id = Column(String(150), nullable=True)
+    details = Column(Text, default="{}") # JSON details (no sensitive tokens/passwords)
+    institution_id = Column(String(50), default="NEC", index=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+
+
+class LearningSignal(Base):
+    """
+    Tracks student learning difficulties and conceptual signals extracted from conversations.
+    """
+    __tablename__ = "learning_signals"
+    __table_args__ = ({"extend_existing": True},)
+
+    id = Column(Integer, primary_key=True, index=True)
+    signal_id = Column(String(100), unique=True, index=True, nullable=False)
+    student_id = Column(String(150), index=True, nullable=False)
+    topic = Column(String(100), index=True, nullable=False) # e.g. Dynamic Programming, Graphs, Bit Manipulation
+    source_message_id = Column(String(100), nullable=True)
+    difficulty_level = Column(String(50), default="NEEDS_SUPPORT") # NEEDS_SUPPORT, MODERATE, ADVANCED
+    supporting_evidence = Column(Text, default="{}") # JSON evidence
+    suggested_action = Column(Text, default="{}") # JSON actions
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+
+
+

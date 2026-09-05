@@ -16,6 +16,7 @@ import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { useGlobalData } from '../context/GlobalDataContext';
 import { triggerDownload } from '../utils/mobileDownload';
+import { downloadManager } from '../services/download/downloadManager';
 import { 
   useSummaryQuery, 
   useDepartmentsQuery, 
@@ -193,88 +194,39 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   };
 
   const handleGenerateReport = async () => {
-    const startTime = performance.now();
     setGeneratingReport(true);
     try {
-      // Step 1: Pre-flight lookup (< 50ms)
-      const sessionId = summary?.latest_session_id || summary?.current_session_id || 'latest';
-      const infoRes = await api.get('/reports/download-info', { params: { file_type: 'pdf', session_id: sessionId }, timeout: 4000 });
-      const downloadInfo = infoRes.data;
-
-      if (downloadInfo.status === 'READY' && downloadInfo.download_url) {
-        // Fast instant download path (< 200ms initiation)
-        const downloadUrl = downloadInfo.download_url.startsWith('http')
-          ? downloadInfo.download_url
-          : `${api.defaults.baseURL || '/api'}${downloadInfo.download_url.replace(/^\/api/, '')}`;
-
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = `NEC_Weekly_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        const duration = Math.round(performance.now() - startTime);
-        notify.success('✓ Weekly report downloaded', `Instant download initiated in ${duration}ms`, { category: 'REPORTS' });
-      } else {
-        // Non-blocking preparation state
-        notify.info('Preparing report...', downloadInfo.message || 'Background report generation in progress...', { category: 'REPORTS' });
-        
-        // Direct stream fallback if needed
-        const res = await api.get(`/reports/${sessionId}/pdf`, { responseType: 'blob', timeout: 20000 });
-        const filename = `NEC_Weekly_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
-        await triggerDownload(res.data, filename, 'application/pdf');
+      const filename = `NEC_Weekly_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
+      const res = await downloadManager.download({
+        endpoint: '/reports/export-pdf',
+        filename,
+        mimeType: 'application/pdf',
+      });
+      if (res.success) {
         notify.success('✓ Weekly report downloaded', 'Weekly PDF report generated and downloaded.', { category: 'REPORTS' });
+      } else {
+        notify.error('Unable to generate report', res.error || 'Please try again later.', { category: 'REPORTS' });
       }
     } catch (err: any) {
       console.error("Report generation failed", err);
-      const statusCode = err.response?.status;
-      if (statusCode === 401) {
-        notify.error('Authentication Required', 'Please sign in again.', { category: 'AUTH' });
-      } else if (statusCode === 403) {
-        notify.error('Access Denied', 'You do not have permission to generate this institutional report.', { category: 'SECURITY' });
-      } else if (statusCode === 404) {
-        notify.error('No Contest Data', 'No weekly contest session found to generate a report.', { category: 'REPORTS' });
-      } else {
-        notify.error('Unable to generate report', 'Please try again later.', { category: 'REPORTS' });
-      }
+      notify.error('Unable to generate report', 'Please try again later.', { category: 'REPORTS' });
     } finally {
       setGeneratingReport(false);
     }
   };
 
-
   const handleExportExcel = async () => {
-    const startTime = performance.now();
     notify.info('Preparing Excel Export', 'Fetching Weekly Contest statistics...', { category: 'REPORTS' });
-    try {
-      const sessionId = summary?.latest_session_id || summary?.current_session_id || 'latest';
-      const infoRes = await api.get('/reports/download-info', { params: { file_type: 'official_summary', session_id: sessionId }, timeout: 4000 });
-      const downloadInfo = infoRes.data;
-
-      if (downloadInfo.status === 'READY' && downloadInfo.download_url) {
-        const downloadUrl = downloadInfo.download_url.startsWith('http')
-          ? downloadInfo.download_url
-          : `${api.defaults.baseURL || '/api'}${downloadInfo.download_url.replace(/^\/api/, '')}`;
-
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = `NEC_Master_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        const duration = Math.round(performance.now() - startTime);
-        notify.success('✓ Weekly report downloaded', `Instant download initiated in ${duration}ms`, { category: 'REPORTS' });
-      } else {
-        const res = await api.get(`/reports/export-official-college-summary`, { responseType: 'blob', timeout: 20000 });
-        const filename = `NEC_Master_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
-        await triggerDownload(res.data, filename);
-        notify.success('✓ Weekly report downloaded', 'Weekly Contest workbook downloaded.', { category: 'REPORTS' });
-      }
-    } catch (err: any) {
-      console.error("Excel export failed", err);
-      notify.error('Unable to generate report', 'Please try again.', { category: 'REPORTS' });
+    const filename = `NEC_Master_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    const res = await downloadManager.download({
+      endpoint: '/reports/export-official-college-summary',
+      filename,
+      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    if (res.success) {
+      notify.success('✓ Weekly report downloaded', 'Weekly Contest workbook downloaded.', { category: 'REPORTS' });
+    } else {
+      notify.error('Unable to generate report', res.error || 'Please try again.', { category: 'REPORTS' });
     }
   };
 

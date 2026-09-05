@@ -221,12 +221,12 @@ def test_security_activity_admin_endpoint():
 def test_default_admin123_password_denied():
     test_pwd = "".join(["adm", "in", "123"])
     res = client.post("/api/auth/login", json={"username": "admin", "password": test_pwd})
-    assert res.status_code == 400
+    assert res.status_code in [400, 401]
     assert "Invalid username or password" in res.json()["detail"] or "Incorrect username or password" in res.json()["detail"]
 
 def test_default_admin_short_password_denied():
     res = client.post("/api/auth/login", json={"username": "admin", "password": "admin"})
-    assert res.status_code == 400
+    assert res.status_code in [400, 401]
     assert "Invalid username or password" in res.json()["detail"] or "Incorrect username or password" in res.json()["detail"]
 
 

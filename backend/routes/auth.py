@@ -751,7 +751,7 @@ def google_auth(payload: dict, request: Request, response: Response, db: Session
     VALID_ROLES = {
         "ADMIN", "SUPER ADMIN", "SUPER_ADMIN",
         "FACULTY", "STAFF", "INSTRUCTOR", "MENTOR",
-        "HOD", "PRINCIPAL"
+        "HOD", "PRINCIPAL", "STUDENT"
     }
     user_role_upper = (user.role or "").strip().upper()
     if user_role_upper not in VALID_ROLES:
@@ -834,15 +834,19 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
     ).first()
 
     if not user or not verify_password(clean_password, str(user.hashed_password or "")):
-        configured_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()
-        configured_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
-        configured_password = getattr(settings, "ADMIN_PASSWORD", "admin123").strip() or "admin123"
-
-        is_admin_user_match = (
-            clean_username.lower() == configured_username.lower() or
-            clean_username.lower() == configured_email.lower()
-        )
-        is_pass_match = (clean_password == configured_password)
+        allow_default_pwd = getattr(settings, "ALLOW_DEFAULT_ADMIN_PASSWORD", False)
+        if allow_default_pwd:
+            configured_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()
+            configured_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
+            configured_password = getattr(settings, "ADMIN_PASSWORD", "admin123").strip()
+            is_admin_user_match = (
+                clean_username.lower() == configured_username.lower() or
+                clean_username.lower() == configured_email.lower()
+            )
+            is_pass_match = (clean_password == configured_password)
+        else:
+            is_admin_user_match = False
+            is_pass_match = False
 
         if is_admin_user_match and is_pass_match:
             user = db.query(User).filter(
@@ -865,11 +869,11 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
                 db.commit()
         else:
             logger.warning(f"[ADMIN_LOGIN_FAILURE] Invalid credentials for username: {clean_username}")
-            raise HTTPException(status_code=400, detail="Invalid username or password.")
+            raise HTTPException(status_code=401, detail="Invalid username or password.")
 
     if not user.is_active:
         logger.warning(f"[ADMIN_LOGIN_FAILURE] Account deactivated for username: {clean_username}")
-        raise HTTPException(status_code=400, detail="Account is currently deactivated.")
+        raise HTTPException(status_code=403, detail="Account is currently deactivated.")
 
     # Ensure password is strictly encrypted with bcrypt in the database (auto-upgrades any plain/legacy passwords)
     if user.hashed_password and not (str(user.hashed_password).startswith("$2b$") or str(user.hashed_password).startswith("$2a$")):
@@ -893,6 +897,7 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
     try:
         refresh_token_value, session_id = create_server_admin_session(db, user, request, response)
     except Exception as e:
+        db.rollback()
         logger.error(f"[SESSION_CREATION_FAILED] Could not create server session: {e}")
 
     logger.info(f"[ADMIN_LOGIN_SUCCESS] Administrator {user.username} logged in successfully.")

@@ -143,7 +143,7 @@ export const StaffDashboardView: React.FC = () => {
             </div>
             <h1 className="text-2xl md:text-3xl font-black">Welcome, {user?.name || user?.username}</h1>
             <p className="text-xs text-slate-300 flex items-center gap-2">
-              <span>Restricted Portfolio • Monitoring {myStudents.length} Assigned Students</span>
+              <span>Restricted Portfolio • Monitoring {totalAssignedCount === 0 ? '0' : totalAssignedCount} Assigned Students</span>
               {lastSyncTime && (
                 <span className="font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                   Last Live Sync: {lastSyncTime} IST
@@ -207,11 +207,11 @@ export const StaffDashboardView: React.FC = () => {
           }`}
         >
           <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
-            <span>Assigned</span>
+            <span>MY ASSIGNED STUDENTS</span>
             <Users className="w-4 h-4 text-brand-500" />
           </div>
           <h3 className="text-2xl font-black text-slate-900 dark:text-white">
-            {totalAssignedCount} / {summary?.max_capacity || 30}
+            {totalAssignedCount === 0 ? 'No Students Assigned' : `${totalAssignedCount} Students`}
           </h3>
           <div className="flex items-center gap-1.5 mt-1">
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
@@ -221,7 +221,7 @@ export const StaffDashboardView: React.FC = () => {
                     ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
                     : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20')
             }`}>
-              {summary?.workload_status || (totalAssignedCount === (summary?.max_capacity || 30) ? 'AT CAPACITY' : 'WITHIN CAPACITY')}
+              {totalAssignedCount === 0 ? 'NO ASSIGNMENTS' : (summary?.workload_status || (totalAssignedCount === (summary?.max_capacity || 30) ? 'AT CAPACITY' : 'WITHIN CAPACITY'))}
             </span>
           </div>
         </div>

@@ -12,6 +12,7 @@ import { useNotification } from '../context/NotificationContext';
 import { StaffManagement } from '../components/admin/StaffManagement';
 import { AdminStaffAllocationPanel } from '../components/AdminStaffAllocationPanel';
 import { triggerDownload } from '../utils/mobileDownload';
+import { downloadManager } from '../services/download/downloadManager';
 
 export const SettingsPage: React.FC = () => {
   const { notify, confirmAction } = useNotification();
@@ -261,8 +262,11 @@ export const SettingsPage: React.FC = () => {
   };
 
   const handleDownloadBackup = (filename: string) => {
-    const baseApi = import.meta.env.VITE_API_URL || '';
-    window.open(`${baseApi}/api/settings/backups/${encodeURIComponent(filename)}/download`, '_blank');
+    downloadManager.download({
+      endpoint: `/settings/backups/${encodeURIComponent(filename)}/download`,
+      filename,
+      mimeType: 'application/x-sqlite3',
+    });
   };
 
   const handleRestoreBackup = (filename: string) => {
