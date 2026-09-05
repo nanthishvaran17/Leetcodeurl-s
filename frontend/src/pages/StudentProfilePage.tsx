@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, ExternalLink, Trophy, Flame, Award, Lightbulb, RefreshCw, FileText, Edit3 } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Trophy, Flame, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2 } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import api from '../services/api';
 import { SkillRadarChart } from '../components/SkillRadarChart';
@@ -17,10 +17,11 @@ import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
 
 export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student, onBack }) => {
-  const { notify } = useNotification();
+  const { notify, confirmAction } = useNotification();
   const [detail, setDetail] = useState<any>(student);
   const [insights, setInsights] = useState<any>(null);
   const [isLiveFetching, setIsLiveFetching] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [liveFetchError, setLiveFetchError] = useState<string | null>(null);
   const [showEditOverlay, setShowEditOverlay] = useState(false);
 
@@ -126,6 +127,34 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
     }
   };
 
+  const handleDelete = async () => {
+    const targetId = detail?.id || student?.id;
+    if (!targetId || isDeleting) return;
+    const targetName = detail?.name || student?.name || 'Student';
+    const targetReg = detail?.reg_no || student?.reg_no || '';
+
+    const confirmed = await confirmAction({
+      title: 'Deactivate Student Record?',
+      message: `Are you sure you want to deactivate the student record for "${targetName}" (${targetReg})?`,
+      confirmLabel: 'Deactivate Record',
+      category: 'STUDENT PROFILE',
+      variant: 'danger',
+    });
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      await api.delete(`/students/${targetId}?soft_delete=true`);
+      notify.success('Student Deactivated', `Student "${targetName}" deactivated successfully.`, { category: 'STUDENT PROFILE' });
+      window.dispatchEvent(new Event('refresh_dashboard_summary'));
+      onBack();
+    } catch (err: any) {
+      notify.error('Delete Failed', err.response?.data?.detail || 'Failed to deactivate student record.', { category: 'STUDENT PROFILE' });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const easy = detail?.stats?.easy_solved || 0;
   const medium = detail?.stats?.medium_solved || 0;
   const hard = detail?.stats?.hard_solved || 0;
@@ -205,6 +234,16 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             >
               <FileText className="w-3.5 h-3.5" />
               <span className="hidden lg:inline">Audit Report</span>
+            </button>
+
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="px-3 py-2 rounded-xl bg-rose-600/90 hover:bg-rose-600 text-white font-bold text-[10px] flex items-center space-x-1.5 shadow-md shadow-rose-600/30 transition-all hover:scale-105 disabled:opacity-50 cursor-pointer"
+              title="Deactivate Student"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span className="hidden lg:inline">{isDeleting ? 'Deactivating...' : 'Deactivate'}</span>
             </button>
 
           <button
@@ -392,6 +431,8 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         onClose={() => setShowEditOverlay(false)}
         onSaveSuccess={(updated) => {
           setDetail(updated);
+          fetchStudentDetail();
+          window.dispatchEvent(new Event('refresh_dashboard_summary'));
         }}
       />
     </div>

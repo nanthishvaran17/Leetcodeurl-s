@@ -164,6 +164,8 @@ def run_db_migrations():
             ("conversations", "last_message_at", "ALTER TABLE conversations ADD COLUMN IF NOT EXISTS last_message_at TIMESTAMP"),
             ("conversations", "unread_count_1", "ALTER TABLE conversations ADD COLUMN IF NOT EXISTS unread_count_1 INTEGER DEFAULT 0"),
             ("conversations", "unread_count_2", "ALTER TABLE conversations ADD COLUMN IF NOT EXISTS unread_count_2 INTEGER DEFAULT 0"),
+            ("conversations", "pinned_by_users", "ALTER TABLE conversations ADD COLUMN IF NOT EXISTS pinned_by_users TEXT DEFAULT '[]'"),
+            ("conversations", "archived_by_users", "ALTER TABLE conversations ADD COLUMN IF NOT EXISTS archived_by_users TEXT DEFAULT '[]'"),
             # ── messages table ───────────────────────────────────────────────
             ("messages", "delivered_at", "ALTER TABLE messages ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMP"),
             ("messages", "read_at", "ALTER TABLE messages ADD COLUMN IF NOT EXISTS read_at TIMESTAMP"),
@@ -421,6 +423,20 @@ def run_db_migrations():
             try:
                 cursor.execute(f"ALTER TABLE messages ADD COLUMN {col_name} {col_type};")
                 print(f"Added column '{col_name}' to messages.")
+            except Exception:
+                pass
+
+        conv_cols = [
+            ("pinned_by_users", "TEXT DEFAULT '[]'"),
+            ("archived_by_users", "TEXT DEFAULT '[]'"),
+            ("unread_count_1", "INTEGER DEFAULT 0"),
+            ("unread_count_2", "INTEGER DEFAULT 0"),
+            ("last_message_preview", "VARCHAR(255)"),
+            ("last_message_at", "DATETIME"),
+        ]
+        for col_name, col_type in conv_cols:
+            try:
+                cursor.execute(f"ALTER TABLE conversations ADD COLUMN {col_name} {col_type};")
             except Exception:
                 pass
 

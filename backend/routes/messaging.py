@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 import os
 import uuid
 import shutil
-from typing import Any, Optional
+from typing import Any, Optional, List, Dict, Union
 from pydantic import BaseModel
 
 from backend.database import get_db
@@ -150,7 +150,7 @@ def edit_message_endpoint(
 @router.delete("/messages/{message_id}")
 def delete_message_endpoint(
     message_id: str,
-    mode: str = Query("FOR_ME", regex="^(FOR_ME|FOR_EVERYONE)$"),
+    mode: str = Query("FOR_ME", pattern="^(FOR_ME|FOR_EVERYONE)$"),
     db: Session = Depends(get_db),
     current_user: Any = Depends(get_current_active_user)
 ):
@@ -188,7 +188,7 @@ def pin_conversation_endpoint(
 ):
     """Toggles pinning a conversation."""
     try:
-        return MessagingService.toggle_pin(db, current_user, conversation_id)
+        return _auto_migrate_and_retry(db, MessagingService.toggle_pin, db, current_user, conversation_id)
     except ValueError as e:
         raise HTTPException(status_code=403, detail=str(e))
     except Exception as e:
@@ -203,7 +203,7 @@ def archive_conversation_endpoint(
 ):
     """Toggles archiving a conversation."""
     try:
-        return MessagingService.toggle_archive(db, current_user, conversation_id)
+        return _auto_migrate_and_retry(db, MessagingService.toggle_archive, db, current_user, conversation_id)
     except ValueError as e:
         raise HTTPException(status_code=403, detail=str(e))
     except Exception as e:
@@ -218,7 +218,7 @@ def clear_conversation_endpoint(
 ):
     """Clears messages for the current user."""
     try:
-        return MessagingService.clear_chat(db, current_user, conversation_id)
+        return _auto_migrate_and_retry(db, MessagingService.clear_chat, db, current_user, conversation_id)
     except ValueError as e:
         raise HTTPException(status_code=403, detail=str(e))
     except Exception as e:
@@ -233,7 +233,7 @@ def block_user_endpoint(
 ):
     """Toggles blocking a user."""
     try:
-        return MessagingService.toggle_block_user(db, current_user, user_id)
+        return _auto_migrate_and_retry(db, MessagingService.toggle_block_user, db, current_user, user_id)
     except Exception as e:
         logger.error(f"Error blocking user: {e}")
         raise HTTPException(status_code=500, detail="Failed to block user.")
@@ -247,7 +247,7 @@ def toggle_reaction_endpoint(
 ):
     """Adds or toggles an emoji reaction on a message."""
     try:
-        result = MessagingService.toggle_reaction(db, current_user, message_id, req.emoji)
+        result = _auto_migrate_and_retry(db, MessagingService.toggle_reaction, db, current_user, message_id, req.emoji)
         return result
     except ValueError as e:
         raise HTTPException(status_code=403, detail=str(e))
@@ -284,7 +284,7 @@ def search_messages_endpoint(
 ):
     """Searches messages by keyword within user's conversations."""
     try:
-        results = MessagingService.search_messages(db, current_user, q)
+        results = _auto_migrate_and_retry(db, MessagingService.search_messages, db, current_user, q)
         return {"success": True, "results": results}
     except Exception as e:
         logger.error(f"Error searching messages: {e}")
@@ -298,20 +298,15 @@ def mark_conversation_unread_endpoint(
 ):
     """Explicitly marks a conversation as unread."""
     try:
-        user_id = MessagingService._get_user_id(current_user)
-        conv = db.query(Conversation).filter_by(conversation_id=conversation_id).first()
-        if conv:
-            if conv.participant_1_id == user_id:
-                conv.unread_count_1 = max(1, conv.unread_count_1)
-            elif conv.participant_2_id == user_id:
-                conv.unread_count_2 = max(1, conv.unread_count_2)
-            db.commit()
-        return {"success": True}
+        return _auto_migrate_and_retry(db, MessagingService.mark_conversation_unread, db, current_user, conversation_id)
+    except ValueError as e:
+        raise HTTPException(status_code=403, detail=str(e))
     except Exception as e:
         logger.error(f"Error marking as unread: {e}")
         raise HTTPException(status_code=500, detail="Failed to mark as unread.")
 
 @router.put("/conversations/{conversation_id}/read")
+@router.post("/conversations/{conversation_id}/read")
 def mark_conversation_read_endpoint(
     conversation_id: str,
     db: Session = Depends(get_db),
@@ -319,8 +314,10 @@ def mark_conversation_read_endpoint(
 ):
     """Explicitly marks a conversation as read."""
     try:
-        MessagingService.mark_as_read(db, current_user, conversation_id)
-        return {"success": True}
+        _auto_migrate_and_retry(db, MessagingService.mark_as_read, db, current_user, conversation_id)
+        return {"success": True, "unreadCount": 0, "conversationId": conversation_id}
+    except ValueError as e:
+        raise HTTPException(status_code=403, detail=str(e))
     except Exception as e:
         logger.error(f"Error marking as read: {e}")
         raise HTTPException(status_code=500, detail="Failed to mark as read.")

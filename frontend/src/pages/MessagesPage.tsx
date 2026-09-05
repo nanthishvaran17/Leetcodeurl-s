@@ -350,6 +350,9 @@ export const MessagesPage: React.FC = () => {
   };
 
   const handleDeleteConversation = async (conversationId: string) => {
+    if (conversationId.startsWith('system-')) {
+      return { success: true, conversationId };
+    }
     try {
       const res = await axios.delete(getApiUrl(`/messaging/conversations/${conversationId}`), { headers: getAuthHeaders() });
       if (res.data?.success) {
@@ -364,6 +367,9 @@ export const MessagesPage: React.FC = () => {
   };
 
   const handlePinConversation = async (conversationId: string) => {
+    if (conversationId.startsWith('system-')) {
+      return { success: true, is_pinned: true, conversationId };
+    }
     try {
       const res = await axios.post(getApiUrl(`/messaging/conversations/${conversationId}/pin`), {}, { headers: getAuthHeaders() });
       if (res.data?.success) {
@@ -374,10 +380,12 @@ export const MessagesPage: React.FC = () => {
   };
 
   const handleArchiveConversation = async (conversationId: string) => {
+    if (conversationId.startsWith('system-')) {
+      return { success: true, is_archived: false, conversationId };
+    }
     try {
       const res = await axios.post(getApiUrl(`/messaging/conversations/${conversationId}/archive`), {}, { headers: getAuthHeaders() });
       if (res.data?.success) {
-        // If the backend filters them out, we could refetch or just update state
         setConversations(prev => prev.map(c => c.conversationId === conversationId ? { ...c, isArchived: res.data.is_archived } : c));
       }
       return res.data;
@@ -385,10 +393,19 @@ export const MessagesPage: React.FC = () => {
   };
 
   const handleClearConversation = async (conversationId: string) => {
+    if (conversationId.startsWith('system-')) {
+      if (activeConversationId === conversationId) {
+        setMessages([]);
+      }
+      return { success: true, conversationId };
+    }
     try {
       const res = await axios.post(getApiUrl(`/messaging/conversations/${conversationId}/clear`), {}, { headers: getAuthHeaders() });
-      if (res.data?.success && activeConversationId === conversationId) {
-        setMessages([]);
+      if (res.data?.success) {
+        if (activeConversationId === conversationId) {
+          setMessages([]);
+        }
+        setConversations(prev => prev.map(c => c.conversationId === conversationId ? { ...c, lastMessagePreview: null } : c));
       }
       return res.data;
     } catch (err) { throw err; }
@@ -402,10 +419,26 @@ export const MessagesPage: React.FC = () => {
   };
 
   const handleMarkUnread = async (conversationId: string) => {
+    if (conversationId.startsWith('system-')) {
+      return { success: true, unreadCount: 1, conversationId };
+    }
     try {
       const res = await axios.post(getApiUrl(`/messaging/conversations/${conversationId}/unread`), {}, { headers: getAuthHeaders() });
       if (res.data?.success) {
-        setConversations(prev => prev.map(c => c.conversationId === conversationId ? { ...c, unreadCount: Math.max(1, c.unreadCount) } : c));
+        setConversations(prev => prev.map(c => c.conversationId === conversationId ? { ...c, unreadCount: res.data.unreadCount || Math.max(1, (c.unreadCount || 0) + 1) } : c));
+      }
+      return res.data;
+    } catch (err) { throw err; }
+  };
+
+  const handleMarkRead = async (conversationId: string) => {
+    if (conversationId.startsWith('system-')) {
+      return { success: true, unreadCount: 0, conversationId };
+    }
+    try {
+      const res = await axios.post(getApiUrl(`/messaging/conversations/${conversationId}/read`), {}, { headers: getAuthHeaders() });
+      if (res.data?.success) {
+        setConversations(prev => prev.map(c => c.conversationId === conversationId ? { ...c, unreadCount: 0 } : c));
       }
       return res.data;
     } catch (err) { throw err; }
@@ -572,6 +605,7 @@ export const MessagesPage: React.FC = () => {
             onClearConversation={handleClearConversation}
             onBlockUser={handleBlockUser}
             onMarkUnread={handleMarkUnread}
+            onMarkRead={handleMarkRead}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
           />

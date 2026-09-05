@@ -855,7 +855,7 @@ export const ChatWindow: React.FC<Props> = ({
         )}
 
         {/* Form Inputs */}
-        <form onSubmit={handleSendSubmit} className="flex items-end gap-2 sm:gap-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-1.5 shadow-sm focus-within:ring-4 focus-within:ring-indigo-500/10 focus-within:border-indigo-300 transition-all">
+        <form onSubmit={handleSendSubmit} className="flex items-center gap-2 sm:gap-3 bg-white dark:bg-navy-900 border-2 border-indigo-100/80 dark:border-navy-700/80 rounded-2xl p-1.5 sm:p-2 shadow-md focus-within:shadow-xl focus-within:ring-4 focus-within:ring-indigo-500/15 focus-within:border-indigo-500 transition-all">
           <input
             type="file"
             ref={fileInputRef}
@@ -866,7 +866,7 @@ export const ChatWindow: React.FC<Props> = ({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="p-3 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-all shrink-0 cursor-pointer mb-0.5"
+            className="p-2.5 text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-xl transition-all shrink-0 cursor-pointer"
             title="Attach File"
           >
             <Paperclip className="w-5 h-5" />
@@ -875,7 +875,7 @@ export const ChatWindow: React.FC<Props> = ({
           <button
             type="button"
             onClick={() => setShowEmojiPicker(prev => !prev)}
-            className="p-3 text-slate-400 hover:text-amber-500 hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-all shrink-0 cursor-pointer hidden sm:block mb-0.5"
+            className="p-2.5 text-slate-500 hover:text-amber-500 dark:text-slate-400 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-xl transition-all shrink-0 cursor-pointer hidden sm:block"
             title="Emoji Picker"
           >
             <Smile className="w-5 h-5" />
@@ -886,13 +886,13 @@ export const ChatWindow: React.FC<Props> = ({
             placeholder={editingMessage ? "Update message..." : "Type your message..."}
             value={inputText}
             onChange={handleInputChange}
-            className="flex-1 px-2 py-3.5 bg-transparent text-[14.5px] text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none font-medium min-w-0"
+            className="flex-1 px-3 py-2.5 bg-transparent text-sm sm:text-base text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none font-semibold min-w-0"
           />
 
           <button
             type="submit"
             disabled={(!inputText.trim() && !selectedFile) || isSending}
-            className="p-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white rounded-[14px] shadow-sm transition-all shrink-0 cursor-pointer active:scale-95 flex items-center justify-center min-w-[46px] min-h-[46px] mb-0.5"
+            className="p-3 bg-gradient-to-r from-indigo-600 via-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 disabled:from-slate-200 disabled:to-slate-200 dark:disabled:from-navy-800 dark:disabled:to-navy-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white rounded-xl shadow-md shadow-indigo-600/20 disabled:shadow-none transition-all shrink-0 cursor-pointer active:scale-95 flex items-center justify-center min-w-[44px] min-h-[44px]"
             title="Send Message"
           >
             {isSending ? (

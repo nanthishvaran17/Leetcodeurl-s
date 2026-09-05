@@ -881,12 +881,54 @@ def bulk_delete_students(
         for email, name in emails_to_notify:
             background_tasks.add_task(notify_student_archived, student_email=email, student_name=name)
             
+        for sid in req.student_ids:
+            connection_manager.broadcast_sync({
+                'type': 'STUDENT_DELETED',
+                'student_id': sid,
+                'version': 999
+            })
     else:
+        from backend.models import (
+            WeeklySessionSnapshot, MentorNote, StudentStatSnapshot, StudentContestSnapshot,
+            StudentContestParticipation, ContestParticipation, FacultyStudentAssignment,
+            LeetCodeAccount, LeetCodeActivity, LeetCodeContestRatingHistory,
+            WeeklyPublicResult, WeeklyVirtualResult, StudentAssignmentHistory,
+            StudentWeeklyTarget, StudentGoal, StudentRiskProfile, StudentSkillProfile,
+            StudentLearningPath, OfficialPublicParticipant, PreviousWeekParticipationRecord
+        )
         db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id.in_(req.student_ids)).delete(synchronize_session=False)
         db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(WeeklySessionSnapshot).filter(WeeklySessionSnapshot.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(MentorNote).filter(MentorNote.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(StudentStatSnapshot).filter(StudentStatSnapshot.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(StudentContestSnapshot).filter(StudentContestSnapshot.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(StudentContestParticipation).filter(StudentContestParticipation.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(ContestParticipation).filter(ContestParticipation.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(FacultyStudentAssignment).filter(FacultyStudentAssignment.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(LeetCodeAccount).filter(LeetCodeAccount.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(LeetCodeActivity).filter(LeetCodeActivity.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(LeetCodeContestRatingHistory).filter(LeetCodeContestRatingHistory.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(WeeklyPublicResult).filter(WeeklyPublicResult.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(StudentAssignmentHistory).filter(StudentAssignmentHistory.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(StudentWeeklyTarget).filter(StudentWeeklyTarget.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(StudentGoal).filter(StudentGoal.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(StudentRiskProfile).filter(StudentRiskProfile.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(StudentSkillProfile).filter(StudentSkillProfile.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(StudentLearningPath).filter(StudentLearningPath.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(OfficialPublicParticipant).filter(OfficialPublicParticipant.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        db.query(PreviousWeekParticipationRecord).filter(PreviousWeekParticipationRecord.student_id.in_(req.student_ids)).delete(synchronize_session=False)
+        
         db.query(Student).filter(Student.id.in_(req.student_ids)).delete(synchronize_session=False)
         action_name = "BULK_DELETE_STUDENTS"
         msg = f"Successfully deleted {count} student records."
+        
+        for sid in req.student_ids:
+            connection_manager.broadcast_sync({
+                'type': 'STUDENT_DELETED',
+                'student_id': sid,
+                'version': 999
+            })
 
     audit = AuditLog(
         user_id=current_user.id,
@@ -920,6 +962,7 @@ class StudentUpdateSchema(BaseModel):
     version: Optional[int] = None
     secondary_accounts: Optional[List[SecondaryAccountSchema]] = None
     institutional_email: Optional[str] = None
+    allocation: Optional[str] = None
 
 
 @router.patch("/{student_id}")
@@ -931,6 +974,7 @@ def update_student(
     db: Session = Depends(get_db),
     current_user=Depends(require_security_access(resource_name="Update Student", required_roles=["admin", "super admin", "hod", "faculty", "staff"]))
 ):
+    import re
     require_staff_student_access(db, current_user, student_id)
 
     student = db.query(Student).filter(Student.id == student_id).first()
@@ -949,31 +993,65 @@ def update_student(
     old_username = student.username
     changes_made = {}
 
-    if payload.reg_no and payload.reg_no.strip():
-        new_reg_no = payload.reg_no.strip().upper()
-        if student.reg_no != new_reg_no:
-            existing = db.query(Student).filter(Student.reg_no == new_reg_no, Student.id != student_id).first()
+    # Required field & format validations
+    if payload.name is not None:
+        clean_name = payload.name.strip()
+        if not clean_name:
+            raise HTTPException(status_code=400, detail="Student Full Name cannot be empty.")
+        if student.name != clean_name:
+            changes_made['name'] = clean_name
+            student.name = clean_name
+
+    if payload.reg_no is not None:
+        clean_reg_no = payload.reg_no.strip().upper()
+        if not clean_reg_no:
+            raise HTTPException(status_code=400, detail="Register number cannot be empty.")
+        if student.reg_no != clean_reg_no:
+            existing = db.query(Student).filter(Student.reg_no == clean_reg_no, Student.id != student_id).first()
             if existing:
-                raise HTTPException(status_code=400, detail=f"Student with Register No '{new_reg_no}' already exists.")
-            changes_made['reg_no'] = new_reg_no
-            student.reg_no = new_reg_no
+                raise HTTPException(status_code=400, detail=f"Student with Register No '{clean_reg_no}' already exists.")
+            changes_made['reg_no'] = clean_reg_no
+            student.reg_no = clean_reg_no
             student.email_status = "needs_verification"
 
-    if payload.name and payload.name.strip():
-        if student.name != payload.name.strip():
-            changes_made['name'] = payload.name.strip()
-            student.name = payload.name.strip()
+    EMAIL_REGEX = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+
+    if payload.email is not None:
+        clean_email = payload.email.strip().lower() if payload.email.strip() else None
+        if clean_email:
+            if not re.match(EMAIL_REGEX, clean_email):
+                raise HTTPException(status_code=400, detail=f"Invalid email format: '{clean_email}'.")
+        if student.email != clean_email:
+            changes_made['email'] = clean_email or "Removed"
+            student.email = clean_email
+
+    if payload.institutional_email is not None:
+        clean_inst_email = payload.institutional_email.strip().lower() if payload.institutional_email.strip() else None
+        if clean_inst_email:
+            if not re.match(EMAIL_REGEX, clean_inst_email):
+                raise HTTPException(status_code=400, detail=f"Invalid institutional email format: '{clean_inst_email}'.")
+            existing_inst = db.query(Student).filter(Student.institutional_email == clean_inst_email, Student.id != student_id).first()
+            if existing_inst:
+                raise HTTPException(status_code=400, detail=f"Student with institutional email '{clean_inst_email}' already exists.")
+        if student.institutional_email != clean_inst_email:
+            changes_made['institutional_email'] = clean_inst_email or "Removed"
+            student.institutional_email = clean_inst_email
+            if clean_inst_email:
+                student.email_status = "generated"
+
     if payload.department_id is not None:
         if student.department_id != payload.department_id:
             from backend.models import Department
             dept = db.query(Department).filter(Department.id == payload.department_id).first()
             changes_made['department'] = dept.name if dept else str(payload.department_id)
             student.department_id = payload.department_id
-    if payload.year_level and payload.year_level.strip():
-        new_yl = payload.year_level.strip().upper()
-        if student.year_level != new_yl:
-            changes_made['year_level'] = new_yl
-            student.year_level = new_yl
+
+    if payload.year_level is not None:
+        clean_yl = payload.year_level.strip().upper()
+        if clean_yl and student.year_level != clean_yl:
+            changes_made['year_level'] = clean_yl
+            student.year_level = clean_yl
+
     if payload.section_id is not None:
         if student.section_id != payload.section_id:
             student.section_id = payload.section_id
@@ -986,21 +1064,8 @@ def update_student(
         ).first()
         if matched_sec and student.section_id != matched_sec.id:
             student.section_id = matched_sec.id
-    if payload.email is not None:
-        new_email = payload.email.strip().lower() if payload.email else None
-        if student.email != new_email:
-            changes_made['email'] = new_email or "Removed"
-            student.email = new_email
-            
-    if payload.institutional_email is not None:
-        new_inst_email = payload.institutional_email.strip().lower() if payload.institutional_email else None
-        if student.institutional_email != new_inst_email:
-            changes_made['institutional_email'] = new_inst_email or "Removed"
-            student.institutional_email = new_inst_email
-            if new_inst_email:
-                student.email_status = "generated"
-            
-    if hasattr(payload, 'allocation') and payload.allocation is not None:
+
+    if payload.allocation is not None:
         new_allocation = payload.allocation.strip() if payload.allocation.strip() else None
         if student.allocation != new_allocation:
             changes_made['allocation'] = new_allocation or "None"
@@ -1070,7 +1135,7 @@ def update_student(
     db.commit()
     db.refresh(student)
     connection_manager.broadcast_sync({
-        'type': 'STUDENT_CREATED',
+        'type': 'STUDENT_UPDATED',
         'student_id': student.id,
         'version': getattr(student, 'version', 1)
     })
@@ -1178,10 +1243,45 @@ def delete_student(
             'version': 999
         })
     else:
-        db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id == student_id).delete()
-        db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == student_id).delete()
+        from backend.models import (
+            WeeklySessionSnapshot, MentorNote, StudentStatSnapshot, StudentContestSnapshot,
+            StudentContestParticipation, ContestParticipation, FacultyStudentAssignment,
+            LeetCodeAccount, LeetCodeActivity, LeetCodeContestRatingHistory,
+            WeeklyPublicResult, WeeklyVirtualResult, StudentAssignmentHistory,
+            StudentWeeklyTarget, StudentGoal, StudentRiskProfile, StudentSkillProfile,
+            StudentLearningPath, OfficialPublicParticipant, PreviousWeekParticipationRecord
+        )
+        db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id == student_id).delete(synchronize_session=False)
+        db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == student_id).delete(synchronize_session=False)
+        db.query(WeeklySessionSnapshot).filter(WeeklySessionSnapshot.student_id == student_id).delete(synchronize_session=False)
+        db.query(MentorNote).filter(MentorNote.student_id == student_id).delete(synchronize_session=False)
+        db.query(StudentStatSnapshot).filter(StudentStatSnapshot.student_id == student_id).delete(synchronize_session=False)
+        db.query(StudentContestSnapshot).filter(StudentContestSnapshot.student_id == student_id).delete(synchronize_session=False)
+        db.query(StudentContestParticipation).filter(StudentContestParticipation.student_id == student_id).delete(synchronize_session=False)
+        db.query(ContestParticipation).filter(ContestParticipation.student_id == student_id).delete(synchronize_session=False)
+        db.query(FacultyStudentAssignment).filter(FacultyStudentAssignment.student_id == student_id).delete(synchronize_session=False)
+        db.query(LeetCodeAccount).filter(LeetCodeAccount.student_id == student_id).delete(synchronize_session=False)
+        db.query(LeetCodeActivity).filter(LeetCodeActivity.student_id == student_id).delete(synchronize_session=False)
+        db.query(LeetCodeContestRatingHistory).filter(LeetCodeContestRatingHistory.student_id == student_id).delete(synchronize_session=False)
+        db.query(WeeklyPublicResult).filter(WeeklyPublicResult.student_id == student_id).delete(synchronize_session=False)
+        db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.student_id == student_id).delete(synchronize_session=False)
+        db.query(StudentAssignmentHistory).filter(StudentAssignmentHistory.student_id == student_id).delete(synchronize_session=False)
+        db.query(StudentWeeklyTarget).filter(StudentWeeklyTarget.student_id == student_id).delete(synchronize_session=False)
+        db.query(StudentGoal).filter(StudentGoal.student_id == student_id).delete(synchronize_session=False)
+        db.query(StudentRiskProfile).filter(StudentRiskProfile.student_id == student_id).delete(synchronize_session=False)
+        db.query(StudentSkillProfile).filter(StudentSkillProfile.student_id == student_id).delete(synchronize_session=False)
+        db.query(StudentLearningPath).filter(StudentLearningPath.student_id == student_id).delete(synchronize_session=False)
+        db.query(OfficialPublicParticipant).filter(OfficialPublicParticipant.student_id == student_id).delete(synchronize_session=False)
+        db.query(PreviousWeekParticipationRecord).filter(PreviousWeekParticipationRecord.student_id == student_id).delete(synchronize_session=False)
+
         db.delete(student)
         db.commit()
+        logger.info(f"[HARD_DELETE_STUDENT] Permanently deleted student record {reg_no} ({name}) with all cascading relations")
+        connection_manager.broadcast_sync({
+            'type': 'STUDENT_DELETED',
+            'student_id': student_id,
+            'version': 999
+        })
 
     # Sync status to Cloud Firestore
     try:

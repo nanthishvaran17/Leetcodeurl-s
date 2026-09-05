@@ -31,6 +31,48 @@ class MessagingService:
         return f"STAFF_{user_obj.id}" if hasattr(user_obj, "role") else str(user_obj.id)
 
     @staticmethod
+    def _get_all_user_identifiers(user_obj) -> set:
+        """Extracts all possible identifiers for a user object (email, username, reg_no, id, STAFF_id)."""
+        ids = set()
+        if not user_obj:
+            return ids
+        if isinstance(user_obj, str):
+            clean = user_obj.strip().lower()
+            ids.add(clean)
+            if clean.startswith("staff_"):
+                ids.add(clean.replace("staff_", ""))
+            return ids
+
+        if hasattr(user_obj, "email") and user_obj.email:
+            ids.add(str(user_obj.email).strip().lower())
+        if hasattr(user_obj, "username") and user_obj.username:
+            ids.add(str(user_obj.username).strip().lower())
+        if hasattr(user_obj, "reg_no") and user_obj.reg_no:
+            ids.add(str(user_obj.reg_no).strip().lower())
+            ids.add(str(user_obj.reg_no).strip().upper())
+        if hasattr(user_obj, "id") and user_obj.id:
+            ids.add(str(user_obj.id).strip().lower())
+            ids.add(f"staff_{user_obj.id}".lower())
+        return ids
+
+    @staticmethod
+    def _is_participant(conv: Conversation, user_obj) -> bool:
+        if not conv:
+            return False
+        user_ids = MessagingService._get_all_user_identifiers(user_obj)
+        p1 = str(conv.participant_1_id or "").strip().lower()
+        p2 = str(conv.participant_2_id or "").strip().lower()
+        return (p1 in user_ids) or (p2 in user_ids)
+
+    @staticmethod
+    def _is_user_p1(conv: Conversation, user_obj) -> bool:
+        if not conv:
+            return False
+        user_ids = MessagingService._get_all_user_identifiers(user_obj)
+        p1 = str(conv.participant_1_id or "").strip().lower()
+        return p1 in user_ids
+
+    @staticmethod
     def _is_user_online(db: Session, user_id_str: str) -> bool:
         """Robust helper checking if a user ID, email, username, or STAFF_ID has an active WebSocket connection."""
         if not user_id_str:
@@ -105,8 +147,10 @@ class MessagingService:
             except Exception:
                 deleted_by = []
 
-        if current_user_id and current_user_id in deleted_by:
-            return None # Hidden for this user
+        if current_user_id:
+            curr_clean = str(current_user_id).strip().lower()
+            if any(str(d).strip().lower() == curr_clean for d in deleted_by):
+                return None # Hidden for this user
 
         # Reactions map
         reactions_dict = {}
@@ -425,13 +469,9 @@ class MessagingService:
 
     @staticmethod
     def delete_conversation(db: Session, current_user, conversation_id: str) -> dict:
-        user_id = MessagingService._get_user_id(current_user)
         conv = db.query(Conversation).filter_by(conversation_id=conversation_id).first()
-        if not conv:
-            raise ValueError("Conversation not found")
-            
-        if user_id not in (conv.participant_1_id, conv.participant_2_id):
-            raise ValueError("Unauthorized access to delete conversation")
+        if not conv or not MessagingService._is_participant(conv, current_user):
+            raise ValueError("Conversation not found or unauthorized")
             
         p1 = conv.participant_1_id
         p2 = conv.participant_2_id
@@ -449,56 +489,72 @@ class MessagingService:
 
     @staticmethod
     def toggle_pin(db: Session, current_user, conversation_id: str) -> dict:
-        user_id = MessagingService._get_user_id(current_user)
         conv = db.query(Conversation).filter_by(conversation_id=conversation_id).first()
-        if not conv or user_id not in (conv.participant_1_id, conv.participant_2_id):
+        if not conv or not MessagingService._is_participant(conv, current_user):
             raise ValueError("Conversation not found or unauthorized")
+        
+        user_ids = MessagingService._get_all_user_identifiers(current_user)
+        canonical_id = MessagingService._get_user_id(current_user)
         
         pinned_by = []
         if conv.pinned_by_users:
             try:
                 pinned_by = json.loads(conv.pinned_by_users)
+                if not isinstance(pinned_by, list):
+                    pinned_by = []
             except Exception:
                 pinned_by = []
-        is_pinned = user_id in pinned_by
+                
+        is_pinned = any(str(p).strip().lower() in user_ids for p in pinned_by)
         if is_pinned:
-            pinned_by.remove(user_id)
+            pinned_by = [p for p in pinned_by if str(p).strip().lower() not in user_ids]
+            now_pinned = False
         else:
-            pinned_by.append(user_id)
+            pinned_by.append(canonical_id)
+            now_pinned = True
             
         conv.pinned_by_users = json.dumps(pinned_by)
         db.commit()
-        return {"success": True, "is_pinned": not is_pinned}
+        return {"success": True, "is_pinned": now_pinned, "conversationId": conversation_id}
 
     @staticmethod
     def toggle_archive(db: Session, current_user, conversation_id: str) -> dict:
-        user_id = MessagingService._get_user_id(current_user)
         conv = db.query(Conversation).filter_by(conversation_id=conversation_id).first()
-        if not conv or user_id not in (conv.participant_1_id, conv.participant_2_id):
+        if not conv or not MessagingService._is_participant(conv, current_user):
             raise ValueError("Conversation not found or unauthorized")
+        
+        user_ids = MessagingService._get_all_user_identifiers(current_user)
+        canonical_id = MessagingService._get_user_id(current_user)
         
         archived_by = []
         if conv.archived_by_users:
             try:
                 archived_by = json.loads(conv.archived_by_users)
+                if not isinstance(archived_by, list):
+                    archived_by = []
             except Exception:
                 archived_by = []
-        is_archived = user_id in archived_by
+                
+        is_archived = any(str(a).strip().lower() in user_ids for a in archived_by)
         if is_archived:
-            archived_by.remove(user_id)
+            archived_by = [a for a in archived_by if str(a).strip().lower() not in user_ids]
+            now_archived = False
         else:
-            archived_by.append(user_id)
+            archived_by.append(canonical_id)
+            now_archived = True
             
         conv.archived_by_users = json.dumps(archived_by)
         db.commit()
-        return {"success": True, "is_archived": not is_archived}
+        return {"success": True, "is_archived": now_archived, "conversationId": conversation_id}
 
     @staticmethod
     def clear_chat(db: Session, current_user, conversation_id: str) -> dict:
-        user_id = MessagingService._get_user_id(current_user)
         conv = db.query(Conversation).filter_by(conversation_id=conversation_id).first()
-        if not conv or user_id not in (conv.participant_1_id, conv.participant_2_id):
+        if not conv or not MessagingService._is_participant(conv, current_user):
             raise ValueError("Conversation not found or unauthorized")
+        
+        user_ids = MessagingService._get_all_user_identifiers(current_user)
+        canonical_id = MessagingService._get_user_id(current_user)
         
         messages = db.query(Message).filter_by(conversation_id=conversation_id).all()
         for msg in messages:
@@ -506,14 +562,15 @@ class MessagingService:
             if msg.deleted_by_users:
                 try:
                     deleted_by = json.loads(msg.deleted_by_users)
+                    if not isinstance(deleted_by, list):
+                        deleted_by = []
                 except Exception:
                     deleted_by = []
             
-            if user_id not in deleted_by:
-                deleted_by.append(user_id)
+            if not any(str(d).strip().lower() in user_ids for d in deleted_by):
+                deleted_by.append(canonical_id)
                 msg.deleted_by_users = json.dumps(deleted_by)
         
-        # Adjust last_message_preview if clearing? For simplicity just clear messages
         db.commit()
         return {"success": True, "conversationId": conversation_id}
 
@@ -571,15 +628,16 @@ class MessagingService:
 
     @staticmethod
     def get_conversations(db: Session, current_user) -> list:
-        user_id = MessagingService._get_user_id(current_user)
-        conversations = db.query(Conversation).filter(
-            or_(Conversation.participant_1_id == user_id, Conversation.participant_2_id == user_id)
-        ).order_by(desc(Conversation.last_message_at)).all()
+        user_ids = MessagingService._get_all_user_identifiers(current_user)
+        conversations = db.query(Conversation).all()
+        user_convs = [c for c in conversations if MessagingService._is_participant(c, current_user)]
+        user_convs.sort(key=lambda c: c.last_message_at or datetime.datetime.min, reverse=True)
         
         result = []
-        for c in conversations:
-            other_id = c.participant_2_id if c.participant_1_id == user_id else c.participant_1_id
-            unread = c.unread_count_1 if c.participant_1_id == user_id else c.unread_count_2
+        for c in user_convs:
+            is_p1 = MessagingService._is_user_p1(c, current_user)
+            other_id = c.participant_2_id if is_p1 else c.participant_1_id
+            unread = c.unread_count_1 if is_p1 else c.unread_count_2
             other_info = MessagingService._get_user_display(db, other_id)
             
             # Check online status of other_user via manager connections
@@ -590,6 +648,8 @@ class MessagingService:
             if c.pinned_by_users:
                 try:
                     pinned_by = json.loads(c.pinned_by_users)
+                    if not isinstance(pinned_by, list):
+                        pinned_by = []
                 except Exception:
                     pinned_by = []
             
@@ -597,37 +657,44 @@ class MessagingService:
             if c.archived_by_users:
                 try:
                     archived_by = json.loads(c.archived_by_users)
+                    if not isinstance(archived_by, list):
+                        archived_by = []
                 except Exception:
                     archived_by = []
+
+            is_pinned = any(str(p).strip().lower() in user_ids for p in pinned_by)
+            is_archived = any(str(a).strip().lower() in user_ids for a in archived_by)
 
             result.append({
                 "conversationId": c.conversation_id,
                 "otherUser": other_info,
                 "lastMessagePreview": c.last_message_preview,
                 "lastMessageAt": MessagingService._format_utc_iso(c.last_message_at),
-                "unreadCount": unread,
-                "isPinned": user_id in pinned_by,
-                "isArchived": user_id in archived_by
+                "unreadCount": unread or 0,
+                "isPinned": is_pinned,
+                "isArchived": is_archived
             })
         return result
 
     @staticmethod
     def get_messages(db: Session, current_user, conversation_id: str, limit: int = 50) -> list:
         user_id = MessagingService._get_user_id(current_user)
+        user_ids = MessagingService._get_all_user_identifiers(current_user)
         conv = db.query(Conversation).filter_by(conversation_id=conversation_id).first()
         if not conv:
             raise ValueError("Conversation not found")
             
-        if user_id not in (conv.participant_1_id, conv.participant_2_id):
+        if not MessagingService._is_participant(conv, current_user):
             raise ValueError("Unauthorized access to conversation")
             
         # Automatically mark pending received SENT messages as DELIVERED upon retrieval
-        pending_sent = db.query(Message).filter_by(conversation_id=conversation_id, receiver_id=user_id, status="SENT").all()
+        pending_sent = db.query(Message).filter_by(conversation_id=conversation_id, status="SENT").all()
         if pending_sent:
             now = datetime.datetime.utcnow()
             for m in pending_sent:
-                m.status = "DELIVERED"
-                m.delivered_at = now
+                if str(m.receiver_id).strip().lower() in user_ids:
+                    m.status = "DELIVERED"
+                    m.delivered_at = now
             db.commit()
 
         messages = db.query(Message).filter_by(conversation_id=conversation_id).order_by(desc(Message.created_at)).limit(limit).all()
@@ -641,13 +708,13 @@ class MessagingService:
 
     @staticmethod
     def mark_as_read(db: Session, current_user, conversation_id: str):
-        user_id = MessagingService._get_user_id(current_user)
         conv = db.query(Conversation).filter_by(conversation_id=conversation_id).first()
-        if not conv or user_id not in (conv.participant_1_id, conv.participant_2_id):
+        if not conv or not MessagingService._is_participant(conv, current_user):
             return
             
-        # Reset unread count
-        if conv.participant_1_id == user_id:
+        user_ids = MessagingService._get_all_user_identifiers(current_user)
+        is_p1 = MessagingService._is_user_p1(conv, current_user)
+        if is_p1:
             conv.unread_count_1 = 0
         else:
             conv.unread_count_2 = 0
@@ -655,18 +722,18 @@ class MessagingService:
         # Mark messages as read
         messages = db.query(Message).filter(
             Message.conversation_id == conversation_id,
-            Message.receiver_id == user_id,
             Message.status.in_(["SENT", "DELIVERED"])
         ).all()
         
         now = datetime.datetime.utcnow()
         updated_ids = []
         for m in messages:
-            m.status = "READ"
-            m.read_at = now
-            if not m.delivered_at:
-                m.delivered_at = now
-            updated_ids.append(m.message_id)
+            if str(m.receiver_id).strip().lower() in user_ids:
+                m.status = "READ"
+                m.read_at = now
+                if not m.delivered_at:
+                    m.delivered_at = now
+                updated_ids.append(m.message_id)
             
         db.commit()
 
@@ -678,6 +745,23 @@ class MessagingService:
                 "messageIds": updated_ids,
                 "readAt": MessagingService._format_utc_iso(now)
             })
+
+    @staticmethod
+    def mark_conversation_unread(db: Session, current_user, conversation_id: str) -> dict:
+        conv = db.query(Conversation).filter_by(conversation_id=conversation_id).first()
+        if not conv or not MessagingService._is_participant(conv, current_user):
+            raise ValueError("Conversation not found or unauthorized")
+        
+        is_p1 = MessagingService._is_user_p1(conv, current_user)
+        if is_p1:
+            conv.unread_count_1 = max(1, (conv.unread_count_1 or 0) + 1)
+            unread = conv.unread_count_1
+        else:
+            conv.unread_count_2 = max(1, (conv.unread_count_2 or 0) + 1)
+            unread = conv.unread_count_2
+            
+        db.commit()
+        return {"success": True, "unreadCount": unread, "conversationId": conversation_id}
 
     @staticmethod
     def search_messages(db: Session, current_user, query: str) -> list:

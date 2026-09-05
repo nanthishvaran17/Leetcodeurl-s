@@ -371,8 +371,31 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!student || !student.id) return;
-    if (!name.trim()) { setErrorMessage('Student Full Name is required.'); return; }
+    if (!student || !student.id || isSaving) return;
+
+    const trimmedName = name.trim();
+    const trimmedRegNo = regNo.trim().toUpperCase();
+
+    if (!trimmedName) {
+      setErrorMessage('Student Full Name is required.');
+      return;
+    }
+
+    if (!trimmedRegNo) {
+      setErrorMessage('Register Number is required.');
+      return;
+    }
+
+    const emailRegex = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+    if (email.trim() && !emailRegex.test(email.trim())) {
+      setErrorMessage('Please enter a valid personal email address (e.g. name@domain.com).');
+      return;
+    }
+
+    if (institutionalEmail.trim() && !emailRegex.test(institutionalEmail.trim())) {
+      setErrorMessage('Please enter a valid institutional email address (e.g. 7322...@nandhaengg.org).');
+      return;
+    }
 
     setIsSaving(true);
     setErrorMessage(null);
@@ -387,8 +410,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         });
 
       const payload = {
-        name: name.trim(),
-        reg_no: regNo.trim().toUpperCase(),
+        name: trimmedName,
+        reg_no: trimmedRegNo,
         department_id: deptId,
         year_level: yearLevel,
         section: section.trim(),
@@ -405,7 +428,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       const res = await api.patch(`/students/${studentId}`, payload);
       const updated = res.data;
 
-      notify.info('Student Record Updated', `Changes for ${name} saved successfully across the system.`, { category: 'STUDENT EDIT' });
+      notify.success('Student Record Updated', `Changes for ${trimmedName} saved successfully.`, { category: 'STUDENT EDIT' });
 
       localStorage.removeItem('nec_leetcode_students_cache');
       window.dispatchEvent(new Event('refresh_dashboard_summary'));
