@@ -1,18 +1,25 @@
-// In-memory buffer for the micro-batching window
+// In-memory buffer for micro-batching window
 let eventBuffer = new Map<string, any>();
 let socket: WebSocket | null = null;
 let pingInterval: any = null;
 let batchTimeout: any = null;
 let reconnectTimeout: any = null;
 let currentWsUrl: string = '';
+let retryCount: number = 0;
+let isIntentionallyClosed: boolean = false;
 
 const BATCH_WINDOW_MS = 50; // 50ms buffer window
 
-const connect = (wsUrl: string) => {
-  if (wsUrl) currentWsUrl = wsUrl;
+const connect = (wsUrl?: string) => {
+  if (wsUrl) {
+    currentWsUrl = wsUrl;
+  }
   const targetUrl = wsUrl || currentWsUrl;
   if (!targetUrl) return;
 
+  isIntentionallyClosed = false;
+
+  // 1. Idempotency Check: Avoid redundant connections if already OPEN or CONNECTING to the same URL
   if (socket) {
     if (socket.readyState === WebSocket.OPEN) {
       self.postMessage({ type: 'WS_STATUS', connected: true });
@@ -24,20 +31,26 @@ const connect = (wsUrl: string) => {
     try {
       socket.close();
     } catch (_) {}
+    socket = null;
   }
 
   try {
     socket = new WebSocket(targetUrl);
 
     socket.onopen = () => {
+      retryCount = 0;
       if (reconnectTimeout) {
         clearTimeout(reconnectTimeout);
         reconnectTimeout = null;
       }
+      
+      // Start 15s keepalive ping interval
       if (pingInterval) clearInterval(pingInterval);
       pingInterval = setInterval(() => {
         if (socket && socket.readyState === WebSocket.OPEN) {
-          socket.send('ping');
+          try {
+            socket.send('ping');
+          } catch (_) {}
         }
       }, 15000);
       
@@ -56,7 +69,7 @@ const connect = (wsUrl: string) => {
           return;
         }
 
-        // We buffer and deduplicate entity events that have an ID
+        // Buffer and deduplicate entity events that have an ID
         const entityId = data.entityId || data.student_id || data.staff_id || data.id;
         
         if (entityId) {
@@ -74,14 +87,24 @@ const connect = (wsUrl: string) => {
       }
     };
 
-    socket.onclose = () => {
-      if (pingInterval) clearInterval(pingInterval);
+    socket.onclose = (event) => {
+      if (pingInterval) {
+        clearInterval(pingInterval);
+        pingInterval = null;
+      }
+      
       self.postMessage({ type: 'WS_STATUS', connected: false });
       
-      // Fast 2-second auto-reconnect
-      if (reconnectTimeout) clearTimeout(reconnectTimeout);
-      if (currentWsUrl) {
-        reconnectTimeout = setTimeout(() => connect(currentWsUrl), 2000);
+      // Only schedule auto-reconnect if connection was not intentionally closed on logout
+      if (!isIntentionallyClosed && currentWsUrl) {
+        if (reconnectTimeout) clearTimeout(reconnectTimeout);
+        // Exponential backoff with jitter: 2s -> 4s -> 8s -> 15s max
+        const baseDelay = Math.min(15000, Math.pow(2, retryCount) * 1000 + 1000);
+        const jitter = Math.floor(Math.random() * 800);
+        const backoffMs = baseDelay + jitter;
+        retryCount++;
+        
+        reconnectTimeout = setTimeout(() => connect(currentWsUrl), backoffMs);
       }
     };
     
@@ -90,8 +113,9 @@ const connect = (wsUrl: string) => {
     };
   } catch (err) {
     console.error('Worker WS connect exception:', err);
-    if (reconnectTimeout) clearTimeout(reconnectTimeout);
-    if (currentWsUrl) {
+    self.postMessage({ type: 'WS_STATUS', connected: false });
+    if (!isIntentionallyClosed && currentWsUrl) {
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
       reconnectTimeout = setTimeout(() => connect(currentWsUrl), 3000);
     }
   }
@@ -103,7 +127,6 @@ const flushBatch = () => {
     return;
   }
   
-  // Extract values, clear buffer, and send to main thread in ONE message
   const updates = Array.from(eventBuffer.values());
   eventBuffer.clear();
   batchTimeout = null;
@@ -120,13 +143,27 @@ self.onmessage = (event: MessageEvent) => {
   if (type === 'CONNECT') {
     connect(payload?.wsUrl);
   } else if (type === 'DISCONNECT') {
-    if (reconnectTimeout) clearTimeout(reconnectTimeout);
-    if (pingInterval) clearInterval(pingInterval);
-    if (batchTimeout) clearTimeout(batchTimeout);
+    isIntentionallyClosed = true;
+    retryCount = 0;
+    if (reconnectTimeout) {
+      clearTimeout(reconnectTimeout);
+      reconnectTimeout = null;
+    }
+    if (pingInterval) {
+      clearInterval(pingInterval);
+      pingInterval = null;
+    }
+    if (batchTimeout) {
+      clearTimeout(batchTimeout);
+      batchTimeout = null;
+    }
     if (socket) {
-      socket.close();
+      try {
+        socket.close();
+      } catch (_) {}
       socket = null;
     }
+    eventBuffer.clear();
   } else if (type === 'SEND_MESSAGE') {
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(payload));
@@ -135,3 +172,4 @@ self.onmessage = (event: MessageEvent) => {
     }
   }
 };
+

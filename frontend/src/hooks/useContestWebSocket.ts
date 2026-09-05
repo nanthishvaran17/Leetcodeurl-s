@@ -100,7 +100,7 @@ export function useContestWebSocket(options: string | UseContestWebSocketOptions
     if (!targetId) return;
 
     try {
-      setStatus('RECONNECTING');
+      // Keep status as LIVE during initial handshake/reconnect grace period
       const wsUrl = getWsUrl();
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
