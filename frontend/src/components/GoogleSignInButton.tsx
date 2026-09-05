@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Loader2, LogOut, AlertCircle, Smartphone } from 'lucide-react';
+import { Loader2, LogOut, AlertCircle, ExternalLink, X, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { authenticateWithGoogle } from '../services/googleAuth';
 
@@ -22,9 +22,16 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
   const { user, login, logout, authState } = useAuth();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showMobileNotice, setShowMobileNotice] = useState(false);
 
   const handleSignIn = async () => {
     setErrorMsg('');
+
+    if (isNativeMobile()) {
+      setShowMobileNotice(true);
+      return;
+    }
+
     setIsSigningIn(true);
     try {
       const res = await authenticateWithGoogle();
@@ -36,6 +43,16 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
       setErrorMsg(err.message || 'Google sign-in could not be completed. Please try again.');
     } finally {
       setIsSigningIn(false);
+    }
+  };
+
+  const handleOpenBrowser = async () => {
+    setShowMobileNotice(false);
+    try {
+      const { Browser } = await import('@capacitor/browser');
+      await Browser.open({ url: 'https://leetcodeurl-s-roan.vercel.app' });
+    } catch {
+      window.open('https://leetcodeurl-s-roan.vercel.app', '_system');
     }
   };
 
@@ -75,6 +92,40 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
   // Render active Google Sign-In button on all platforms (web & mobile)
   return (
     <div className="space-y-3 w-full">
+      {showMobileNotice && (
+        <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-navy-900 border border-indigo-200 dark:border-indigo-800 text-slate-800 dark:text-slate-200 text-xs space-y-3 animate-fade-in shadow-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2 font-bold text-indigo-900 dark:text-indigo-200">
+              <ShieldAlert className="w-4 h-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
+              <span>Google Sign-In on Mobile</span>
+            </div>
+            <button onClick={() => setShowMobileNotice(false)} className="text-slate-400 hover:text-indigo-600 text-sm font-bold px-1.5 py-0.5 rounded-md">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <p className="text-[11.5px] leading-relaxed text-slate-600 dark:text-slate-300">
+            Google OAuth security policy requires Chrome Browser for Google Sign-In. You can either open the Web Portal in Chrome or use Password / Secure OTP login directly in this app.
+          </p>
+          <div className="flex flex-col gap-2 pt-1">
+            <button
+              type="button"
+              onClick={handleOpenBrowser}
+              className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs flex items-center justify-center space-x-2 shadow-sm transition-all"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>Open Web Portal in Chrome</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowMobileNotice(false)}
+              className="w-full py-2 px-4 rounded-xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 text-slate-700 dark:text-slate-300 font-bold text-[11px]"
+            >
+              Use Password / OTP Login Here
+            </button>
+          </div>
+        </div>
+      )}
+
       {errorMsg && (
         <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs space-y-2 animate-fade-in">
           <div className="flex items-center justify-between">
@@ -125,3 +176,4 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
     </div>
   );
 };
+
