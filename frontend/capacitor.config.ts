@@ -8,7 +8,7 @@ const config: CapacitorConfig = {
     SplashScreen: {
       launchShowDuration: 2000,
       launchAutoHide: true,
-      backgroundColor: "#ffffff",
+      backgroundColor: "#0f172a",
       androidSplashResourceName: "splash",
       androidScaleType: "CENTER_CROP",
       showSpinner: true,
@@ -25,8 +25,9 @@ const config: CapacitorConfig = {
       presentationOptions: ["badge", "sound", "alert"]
     }
   },
+  // NO server.url — app loads from bundled assets inside APK
+  // API calls use VITE_API_URL baked into the build
   server: {
-    url: 'https://leetcodeurl-s-3mig.onrender.com',
     androidScheme: 'https',
     cleartext: false
   }
