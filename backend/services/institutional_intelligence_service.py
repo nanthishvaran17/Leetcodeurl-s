@@ -245,13 +245,18 @@ class InstitutionalIntelligenceService:
     # =========================================================================
 
     @staticmethod
-    def ask_institution(db: Session, current_user: Any, query: str) -> Dict[str, Any]:
+    def ask_institution(db: Session, current_user: Any, query: str, history: Optional[List[dict]] = None) -> Dict[str, Any]:
         """
-        Processes natural language query using RBAC-enforced DB queries.
-        Returns Answer + Evidence Trace + Action Triggers.
+        Processes natural language query using a Two-Pass LLM with RBAC-enforced DB queries.
+        Pass 1: Intent Classification (Strictly no SQL).
+        Pass 2: Report Generation based on raw verified JSON.
         """
+        from backend.services.llm_service import LLMService
+        from backend.services.authorization_service import apply_role_based_student_filter
+        import json
+        
         user_role = str(getattr(current_user, "role", "Student")).upper()
-        dept_id = getattr(current_user, "department_id", None)
+        dept_name = current_user.department.name if getattr(current_user, 'department', None) else "Institutional"
         user_id = MessagingService._get_user_id(current_user)
 
         q_clean = query.strip().lower()
@@ -269,148 +274,136 @@ class InstitutionalIntelligenceService:
                     "dataConfidence": "VERIFIED"
                 }
 
-        # Faculty / HOD / Admin Queries
-        from backend.services.authorization_service import apply_role_based_student_filter
+        # PASS 1: INTENT CLASSIFICATION
+        intent_prompt = f"""
+        User Query: "{query}"
+        Classify the user's intent into ONE of the following JSON structures:
+        1. {{"intent": "INACTIVE_STUDENTS", "params": {{"days": 7}}}}
+        2. {{"intent": "CONTEST_MISSED", "params": {{}}}}
+        3. {{"intent": "TOP_PERFORMERS", "params": {{"limit": 10}}}}
+        4. {{"intent": "LEARNING_NEEDS", "params": {{}}}}
+        5. {{"intent": "GENERAL_SUMMARY", "params": {{}}}}
+        Output ONLY valid JSON. Do not include markdown blocks.
+        """
+        
+        intent_json_str = LLMService.generate_response(
+            prompt=intent_prompt,
+            system_context="You are an intent classifier. Output ONLY raw JSON with keys 'intent' and 'params'.",
+            history=history[-2:] if history else None, # only need immediate context for intent
+            max_tokens=150
+        )
+        
+        intent_data = {"intent": "GENERAL_SUMMARY", "params": {}}
+        if intent_json_str:
+            try:
+                clean_str = intent_json_str.strip().strip("```json").strip("```").strip()
+                parsed = json.loads(clean_str)
+                if isinstance(parsed, list) and len(parsed) > 0:
+                    parsed = parsed[0]
+                if isinstance(parsed, dict):
+                    intent_data = parsed
+            except Exception as e:
+                logger.error(f"Intent parsing failed: {e}. Fallback to General Summary.")
+                
+        intent = intent_data.get("intent", "GENERAL_SUMMARY")
+        params = intent_data.get("params", {})
+        if not isinstance(params, dict):
+            params = {}
+        
+        # EXECUTE RBAC-ENFORCED DB QUERY
+        raw_data = []
+        evidence = []
+        actions = []
+        
+        students_q = db.query(Student).filter(Student.is_active == True)
+        students_q = apply_role_based_student_filter(students_q, current_user, db)
+        all_students = students_q.all()
+        in_scope_count = len(all_students)
 
-        # 1. Inactive Students
-        if "inactive" in q_clean or "not submitted" in q_clean or "no submission" in q_clean:
-            cutoff = datetime.datetime.utcnow() - datetime.timedelta(days=7)
-            students_q = db.query(Student).filter(Student.is_active == True)
-            students_q = apply_role_based_student_filter(students_q, current_user, db)
-            
-            all_students = students_q.all()
+        if intent == "INACTIVE_STUDENTS":
+            days = int(params.get("days", 7))
+            cutoff = datetime.datetime.utcnow() - datetime.timedelta(days=days)
             inactive_students = []
             for s in all_students:
                 stats = db.query(LeetCodeProfileStats).filter_by(student_id=s.id).first()
                 if not stats or not stats.last_successful_sync or stats.last_successful_sync < cutoff or getattr(stats, 'active_days', 0) == 0:
-                    inactive_students.append(s)
+                    inactive_students.append({
+                        "name": s.name, "reg_no": s.reg_no, "department": s.department.code if s.department else "N/A"
+                    })
+            raw_data = inactive_students
+            evidence = [f"Checked {in_scope_count} students.", f"Found {len(inactive_students)} inactive for {days} days."]
+            actions = [{"label": f"View {len(inactive_students)} Inactive Students", "action": "VIEW_STUDENTS", "params": {"student_ids": [s["reg_no"] for s in inactive_students[:50]]}}]
 
-            count = len(inactive_students)
-            dept_name = current_user.department.name if getattr(current_user, 'department', None) else "Portfolio"
-
-            return {
-                "query": query,
-                "answer": f"{count} students in your authorized {dept_name} scope have zero verified submissions in the past 7 days.",
-                "total_in_scope": len(all_students),
-                "evidence": [
-                    f"Analyzed {len(all_students)} enrolled students in {dept_name} scope",
-                    f"Identified {count} students with no recorded LeetCode activity between {(cutoff).strftime('%Y-%m-%d')} and {datetime.date.today()}",
-                    "Verified against background automated sync logs"
-                ],
-                "actions": [
-                    {"label": f"View {count} Inactive Students", "action": "VIEW_STUDENTS", "params": {"student_ids": [s.reg_no for s in inactive_students[:50]]}},
-                    {"label": "Send Reminder Announcement", "action": "SEND_REMINDER", "params": {"target": "INACTIVE_STUDENTS", "student_ids": [s.reg_no for s in inactive_students[:50]]}},
-                    {"label": "Create Intervention Smart Group", "action": "CREATE_GROUP", "params": {"group_name": f"Intervention: Inactive ({datetime.date.today()})", "rule_type": "INACTIVE_STUDENTS", "rule_criteria": {"days": 7}}}
-                ],
-                "dataConfidence": "HIGH_VERIFIED"
-            }
-
-        # 2. Contest Missed / Participation
-        elif "missed" in q_clean or "contest" in q_clean or "session" in q_clean:
+        elif intent == "CONTEST_MISSED":
             latest_session = db.query(WeeklySession).order_by(desc(WeeklySession.id)).first()
             if not latest_session:
-                return {
-                    "query": query,
-                    "answer": "No active contest sessions found in system records.",
-                    "evidence": ["Checked weekly_sessions table; 0 sessions found"],
-                    "actions": [],
-                    "dataConfidence": "INSUFFICIENT_DATA"
-                }
+                raw_data = {"error": "No active contest sessions found."}
+            else:
+                results = db.query(WeeklyPublicResult).filter_by(session_id=latest_session.id).all()
+                participated_ids = {r.student_id for r in results if r.outcome in ("SOLVED_LIVE", "SOLVED_VIRTUAL", "PARTICIPATED")}
+                missed = [{"name": s.name, "reg_no": s.reg_no, "department": s.department.code if s.department else "N/A"} for s in all_students if s.id not in participated_ids]
+                raw_data = {"contest": latest_session.contest_name, "missed_students": missed}
+                evidence = [f"Session: {latest_session.contest_name}", f"Absentees: {len(missed)} out of {in_scope_count}"]
+                actions = [{"label": "Send Contest Follow-up", "action": "SEND_REMINDER", "params": {"target": "CONTEST_ABSENTEES"}}]
 
-            students_q = db.query(Student).filter(Student.is_active == True)
-            students_q = apply_role_based_student_filter(students_q, current_user, db)
-            all_students = students_q.all()
-
-            results = db.query(WeeklyPublicResult).filter_by(session_id=latest_session.id).all()
-            participated_ids = {r.student_id for r in results if r.outcome in ("SOLVED_LIVE", "SOLVED_VIRTUAL", "PARTICIPATED")}
-            
-            missed_students = [s for s in all_students if s.id not in participated_ids]
-            count = len(missed_students)
-
-            return {
-                "query": query,
-                "answer": f"{count} students in your authorized scope missed Weekly Session #{latest_session.week_number or latest_session.id} ({latest_session.contest_id or 'Contest'}).",
-                "total_in_scope": len(all_students),
-                "evidence": [
-                    f"Contest Session ID: {latest_session.session_code or latest_session.id}",
-                    f"Official participants: {latest_session.official_participants or len(participated_ids)}",
-                    f"Absentees identified: {count} students out of {len(all_students)}"
-                ],
-                "actions": [
-                    {"label": f"View {count} Absentees", "action": "VIEW_STUDENTS", "params": {"student_ids": [s.reg_no for s in missed_students[:50]]}},
-                    {"label": "Send Contest Follow-up", "action": "SEND_REMINDER", "params": {"target": "CONTEST_ABSENTEES", "student_ids": [s.reg_no for s in missed_students[:50]]}}
-                ],
-                "dataConfidence": "HIGH_VERIFIED"
-            }
-
-        # 3. Top Performers / Most Improved
-        elif "improved" in q_clean or "top" in q_clean or "best" in q_clean or "rating" in q_clean:
+        elif intent == "TOP_PERFORMERS":
+            limit = int(params.get("limit", 10))
             stats_q = db.query(LeetCodeProfileStats).join(Student, LeetCodeProfileStats.student_id == Student.id).filter(Student.is_active == True)
             stats_q = apply_role_based_student_filter(stats_q, current_user, db)
-
-            top_stats = stats_q.order_by(desc(LeetCodeProfileStats.source_total_solved)).limit(10).all()
-            
-            evidence_lines = []
-            for idx, st in enumerate(top_stats, 1):
+            top_stats = stats_q.order_by(desc(LeetCodeProfileStats.total_solved)).limit(limit).all()
+            top = []
+            for st in top_stats:
                 s = db.query(Student).filter_by(id=st.student_id).first()
                 if s:
-                    evidence_lines.append(f"{idx}. {s.name} ({s.reg_no}) — {st.source_total_solved or 0} problems solved (Rating: {st.contest_rating or 'N/A'})")
-
-            return {
-                "query": query,
-                "answer": f"Top {len(top_stats)} performing students identified in your authorized scope based on verified total problem count and contest rating.",
-                "evidence": evidence_lines,
-                "actions": [
-                    {"label": "Export Performance Roster", "action": "EXPORT_ANALYTICS", "params": {}}
-                ],
-                "dataConfidence": "HIGH_VERIFIED"
-            }
-
-        # 4. Difficult Topics / Learning Needs
-        elif "topic" in q_clean or "difficult" in q_clean or "weak" in q_clean or "help" in q_clean:
+                    top.append({"name": s.name, "reg_no": s.reg_no, "solved": st.total_solved, "rating": st.contest_rating})
+            raw_data = top
+            evidence = [f"Fetched top {len(top)} performers by problems solved."]
+            actions = [{"label": "Export Analytics", "action": "EXPORT_ANALYTICS", "params": {}}]
+            
+        elif intent == "LEARNING_NEEDS":
             signals = db.query(LearningSignal).order_by(desc(LearningSignal.created_at)).limit(20).all()
             topic_counts = {}
             for sig in signals:
                 topic_counts[sig.topic] = topic_counts.get(sig.topic, 0) + 1
-
-            topic_summary = [f"{t}: {c} student signals" for t, c in sorted(topic_counts.items(), key=lambda x: x[1], reverse=True)] or ["Dynamic Programming: 4 signals", "Graphs & Trees: 3 signals"]
-
-            return {
-                "query": query,
-                "answer": "Primary student learning difficulties identified from recent discussion signals.",
-                "evidence": topic_summary,
-                "actions": [
-                    {"label": "Create Focused Practice Assignment", "action": "CREATE_ASSIGNMENT_MODAL", "params": {"suggested_topic": "Dynamic Programming"}}
-                ],
-                "dataConfidence": "HIGH_VERIFIED"
-            }
-
-        # Fallback General Summary
-        students_q = db.query(Student).filter(Student.is_active == True)
-        students_q = apply_role_based_student_filter(students_q, current_user, db)
-        in_scope_students = students_q.all()
-        in_scope_count = len(in_scope_students)
-        total_staff = db.query(User).filter(User.is_active == True).count()
-
-        role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
-        if role_clean in ("staff", "faculty", "professor", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"):
-            answer_text = f"Mentoring intelligence active. Total assigned portfolio: {in_scope_count} students."
-        else:
-            answer_text = f"Institutional intelligence active. Total active roster: {in_scope_count} students, {total_staff} faculty/staff members."
-
-        return {
-            "query": query,
-            "answer": answer_text,
-            "total_in_scope": in_scope_count,
-            "evidence": [
-                f"Assigned student roster: {in_scope_count} students in scope",
-                "Database status: Verified & synchronized",
-                "RBAC context: Enforced server-side"
-            ],
-            "actions": [
+            raw_data = {"difficult_topics": [{"topic": t, "signals": c} for t, c in topic_counts.items()]}
+            evidence = ["Analyzed recent 20 learning signals"]
+            actions = [{"label": "Create Focused Practice Assignment", "action": "CREATE_ASSIGNMENT_MODAL", "params": {"suggested_topic": "Dynamic Programming"}}]
+            
+        else: # GENERAL_SUMMARY
+            raw_data = {"total_students_in_scope": in_scope_count, "role_context": user_role, "department_scope": dept_name}
+            evidence = ["Verified database summary snapshot."]
+            actions = [
                 {"label": "Ask about Inactive Students", "action": "RUN_QUERY", "params": {"query": "Who is inactive this week?"}},
                 {"label": "Ask about Contest Absentees", "action": "RUN_QUERY", "params": {"query": "Who missed the last contest?"}}
-            ],
+            ]
+
+        # PASS 2: REPORT GENERATION
+        report_prompt = f"""
+        User Query: "{query}"
+        
+        Raw Verified Data (JSON):
+        {json.dumps(raw_data)}
+        
+        Task: Generate a professional ChatGPT-style Markdown response.
+        - If there are multiple records, ALWAYS generate a Markdown table.
+        - Summarize the insights briefly.
+        - NEVER hallucinate names, numbers, or facts. Use strictly the JSON provided.
+        - If the JSON has an error or is empty, state clearly that data is unavailable.
+        - Ensure a professional, authoritative tone as the Institution Intelligence Assistant.
+        """
+        
+        final_markdown = LLMService.generate_response(
+            prompt=report_prompt,
+            system_context="You are a data analyst generating a beautiful markdown report from raw JSON. Prioritize readability.",
+            history=history,
+            max_tokens=2048
+        )
+        
+        return {
+            "query": query,
+            "answer": final_markdown or f"Data processed for {intent}. Records found: {len(raw_data) if isinstance(raw_data, list) else 1}",
+            "evidence": evidence,
+            "actions": actions,
             "dataConfidence": "HIGH_VERIFIED"
         }
 
@@ -431,7 +424,7 @@ class InstitutionalIntelligenceService:
             }
 
         stats = db.query(LeetCodeProfileStats).filter_by(student_id=student.id).first()
-        solved = stats.source_total_solved if stats else 0
+        solved = stats.total_solved if stats else 0
         rating = stats.contest_rating if stats else "Unrated"
 
         return {

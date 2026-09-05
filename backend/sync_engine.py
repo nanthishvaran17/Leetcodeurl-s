@@ -151,7 +151,7 @@ class SyncProgressTracker:
 
 sync_tracker = SyncProgressTracker()
 
-def capture_student_snapshot(student: Student, db: Session, run_id: Optional[str] = None) -> Optional[StudentStatSnapshot]:
+def capture_student_snapshot(student: Student, db: Session, run_id: Optional[str] = None, commit: bool = True) -> Optional[StudentStatSnapshot]:
     """
     Captures a historical snapshot of student stats and computes deltas relative to the latest snapshot.
     Only captures if student.stats exists and has valid total_solved count.
@@ -207,14 +207,15 @@ def capture_student_snapshot(student: Student, db: Session, run_id: Optional[str
             source=student.stats.source or "leetcode_public_profile"
         )
         db.add(snapshot)
-        db.commit()
-        db.refresh(snapshot)
+        if commit:
+            db.commit()
+            db.refresh(snapshot)
         return snapshot
     except Exception as e:
         logger.warning(f"Failed to capture snapshot for student {student.id}: {e}")
         return None
 
-def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Session) -> Student:
+def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Session, commit: bool = True) -> Student:
     """
     Updates student LeetCode statistics in database with strict identity verification
     and Old Data Fallback rule.
@@ -244,8 +245,9 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
         student.stats.contest_rating = None
         student.stats.error_message = "Awaiting valid LeetCode username assignment"
         student.stats.error_code = "PENDING_USERNAME"
-        db.commit()
-        db.refresh(student)
+        if commit:
+            db.commit()
+            db.refresh(student)
         return student
 
     # 1. Identity Mapping Verification
@@ -260,8 +262,9 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
         student.stats.error_message = err_msg
         student.stats.error_code = "IDENTITY_MISMATCH"
         student.stats.retry_count += 1
-        db.commit()
-        db.refresh(student)
+        if commit:
+            db.commit()
+            db.refresh(student)
         return student
 
     status = stats_dict.get("status")
@@ -285,18 +288,47 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
             student.stats.error_message = err_msg
             student.stats.error_code = "STATS_SUM_MISMATCH"
             student.stats.retry_count += 1
-            db.commit()
-            db.refresh(student)
+            if commit:
+                db.commit()
+                db.refresh(student)
             return student
 
     if is_success:
+        new_rating = stats_dict.get("contest_rating")
+        new_grank = stats_dict.get("contest_global_rank") or stats_dict.get("contest_global_ranking")
+        new_prank = stats_dict.get("leetcode_global_rank") or stats_dict.get("public_profile_ranking")
+        new_act = stats_dict.get("active_days")
+        new_streak = stats_dict.get("max_streak")
+
+        is_unchanged = (
+            student.stats.total_solved == tot and
+            student.stats.easy_solved == ez and
+            student.stats.medium_solved == med and
+            student.stats.hard_solved == hd and
+            student.stats.contest_rating == new_rating and
+            student.stats.contest_global_ranking == new_grank and
+            student.stats.public_profile_ranking == new_prank and
+            student.stats.active_days == new_act and
+            student.stats.max_streak == new_streak
+        )
+
+        if is_unchanged and student.stats.sync_status == "success":
+            now_utc = datetime.datetime.now(datetime.timezone.utc)
+            student.stats.last_verified_at = now_utc
+            student.stats.last_updated = now_utc
+            student.stats.fetch_duration = stats_dict.get("fetch_duration")
+            if commit:
+                db.commit()
+                db.refresh(student)
+            return student
+
         student.stats.total_solved = tot
         student.stats.easy_solved = ez
         student.stats.medium_solved = med
         student.stats.hard_solved = hd
-        student.stats.contest_rating = stats_dict.get("contest_rating")
-        student.stats.contest_global_ranking = stats_dict.get("contest_global_rank") or stats_dict.get("contest_global_ranking")
-        student.stats.public_profile_ranking = stats_dict.get("leetcode_global_rank") or stats_dict.get("public_profile_ranking")
+        student.stats.contest_rating = new_rating
+        student.stats.contest_global_ranking = new_grank
+        student.stats.public_profile_ranking = new_prank
         
         student.stats.active_days = stats_dict.get("active_days")
         student.stats.max_streak = stats_dict.get("max_streak")
@@ -393,12 +425,13 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
         student.stats.fetch_duration = stats_dict.get("fetch_duration")
 
     student.stats.last_updated = datetime.datetime.now(datetime.timezone.utc)
-    db.commit()
-    db.refresh(student)
+    if commit:
+        db.commit()
+        db.refresh(student)
 
     # Capture historical snapshot upon successful sync
     if is_success:
-        capture_student_snapshot(student, db, run_id=sync_tracker.run_id)
+        capture_student_snapshot(student, db, run_id=sync_tracker.run_id, commit=commit)
 
     return student
 
@@ -568,10 +601,13 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 5, per_
                         is_ok = stats.get("status") in ["success", "OK"]
                         is_mismatch = stats.get("status") == "MISMATCH"
 
-                        # Update student DB with Old Data Fallback rule
-                        updated_st = sync_single_student_db(st.id, stats, w_db)
+                        # Update student DB with Old Data Fallback rule (Deferred commit)
+                        updated_st = sync_single_student_db(st.id, stats, w_db, commit=False)
 
                         if is_ok:
+                            w_db.commit() # Commit the successful sync
+                            w_db.refresh(updated_st)
+                            
                             log_msg = f"[INFO] Success - {st.username or st.reg_no} (Solved: {stats.get('total_solved')}, Time: {stats.get('fetch_duration')}s)"
                             logger.info(log_msg)
                             sync_tracker.record_completed(True, log_msg, is_mismatch=False)
@@ -622,6 +658,7 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 5, per_
                             else:
                                 log_msg = f"[ERROR] Permanently Failed - {st.username or st.reg_no} after {max_retries} attempts ({err_detail})"
                                 logger.error(log_msg)
+                                w_db.commit() # Commit the failed status
                                 sync_tracker.record_completed(False, log_msg, is_mismatch=is_mismatch)
 
                     except Exception as ex:

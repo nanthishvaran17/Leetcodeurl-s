@@ -143,8 +143,10 @@ class MessagingService:
             "editedAt": MessagingService._format_utc_iso(m.edited_at),
             "isEdited": bool(m.is_edited),
             "isDeletedEveryone": bool(m.is_deleted_everyone),
+            "deletedByUsers": json.loads(m.deleted_by_users) if m.deleted_by_users else [],
             "replyToMessageId": m.reply_to_message_id,
             "replyToMessage": reply_to_data,
+            "clientMessageId": m.client_message_id,
             "reactions": reactions_dict,
             "attachmentFileId": m.attachment_file_id if not m.is_deleted_everyone else None,
             "createdAt": MessagingService._format_utc_iso(m.created_at)
@@ -222,8 +224,12 @@ class MessagingService:
         receiver_id: str, 
         content: str, 
         attachment_file_id: str = None,
-        reply_to_message_id: str = None
+        reply_to_message_id: str = None,
+        client_message_id: str = None,
+        t0_client_send: int = None
     ) -> Message:
+        import time
+        t1_server_receive = int(time.time() * 1000)
         sender_id = MessagingService._get_user_id(current_user)
         
         # 1. Ensure receiver is valid or conversation already exists
@@ -262,7 +268,10 @@ class MessagingService:
             status=initial_status,
             delivered_at=delivered_at_val,
             attachment_file_id=attachment_file_id,
-            reply_to_message_id=reply_to_message_id
+            reply_to_message_id=reply_to_message_id,
+            client_message_id=client_message_id,
+            t0_client_send=t0_client_send,
+            t1_server_receive=t1_server_receive
         )
         db.add(msg)
         
@@ -276,9 +285,24 @@ class MessagingService:
             conv.unread_count_2 = (conv.unread_count_2 or 0) + 1
             
         db.commit()
+        t2_auth_persist = int(time.time() * 1000)
+        
+        # We manually update these after commit to avoid another full DB flush if not strict,
+        # but for telemetry it's better to update and commit again or just flush. 
+        # Actually, let's just update and commit.
+        msg.t2_auth_persist = t2_auth_persist
+        
         db.refresh(msg)
         
         message_payload = MessagingService._format_message_dict(db, msg, sender_id)
+        # Pass telemetry data down to the payload
+        message_payload["t0_client_send"] = msg.t0_client_send
+        message_payload["t1_server_receive"] = msg.t1_server_receive
+        message_payload["t2_auth_persist"] = msg.t2_auth_persist
+
+        msg.t3_fanout = int(time.time() * 1000)
+        message_payload["t3_fanout"] = msg.t3_fanout
+        db.commit()
 
         # WebSocket Broadcast for real-time delivery
         manager.broadcast_sync({
@@ -382,6 +406,112 @@ class MessagingService:
             return {"success": True, "mode": "FOR_ME", "messageId": message_id}
 
     @staticmethod
+    def delete_conversation(db: Session, current_user, conversation_id: str) -> dict:
+        user_id = MessagingService._get_user_id(current_user)
+        conv = db.query(Conversation).filter_by(conversation_id=conversation_id).first()
+        if not conv:
+            raise ValueError("Conversation not found")
+            
+        if user_id not in (conv.participant_1_id, conv.participant_2_id):
+            raise ValueError("Unauthorized access to delete conversation")
+            
+        db.delete(conv)
+        db.commit()
+        
+        manager.broadcast_sync({
+            "type": "CONVERSATION_DELETED",
+            "conversationId": conversation_id
+        })
+        return {"success": True, "conversationId": conversation_id}
+
+    @staticmethod
+    def toggle_pin(db: Session, current_user, conversation_id: str) -> dict:
+        user_id = MessagingService._get_user_id(current_user)
+        conv = db.query(Conversation).filter_by(conversation_id=conversation_id).first()
+        if not conv or user_id not in (conv.participant_1_id, conv.participant_2_id):
+            raise ValueError("Conversation not found or unauthorized")
+        
+        pinned_by = []
+        if conv.pinned_by_users:
+            try:
+                pinned_by = json.loads(conv.pinned_by_users)
+            except Exception:
+                pinned_by = []
+        is_pinned = user_id in pinned_by
+        if is_pinned:
+            pinned_by.remove(user_id)
+        else:
+            pinned_by.append(user_id)
+            
+        conv.pinned_by_users = json.dumps(pinned_by)
+        db.commit()
+        return {"success": True, "is_pinned": not is_pinned}
+
+    @staticmethod
+    def toggle_archive(db: Session, current_user, conversation_id: str) -> dict:
+        user_id = MessagingService._get_user_id(current_user)
+        conv = db.query(Conversation).filter_by(conversation_id=conversation_id).first()
+        if not conv or user_id not in (conv.participant_1_id, conv.participant_2_id):
+            raise ValueError("Conversation not found or unauthorized")
+        
+        archived_by = []
+        if conv.archived_by_users:
+            try:
+                archived_by = json.loads(conv.archived_by_users)
+            except Exception:
+                archived_by = []
+        is_archived = user_id in archived_by
+        if is_archived:
+            archived_by.remove(user_id)
+        else:
+            archived_by.append(user_id)
+            
+        conv.archived_by_users = json.dumps(archived_by)
+        db.commit()
+        return {"success": True, "is_archived": not is_archived}
+
+    @staticmethod
+    def clear_chat(db: Session, current_user, conversation_id: str) -> dict:
+        user_id = MessagingService._get_user_id(current_user)
+        conv = db.query(Conversation).filter_by(conversation_id=conversation_id).first()
+        if not conv or user_id not in (conv.participant_1_id, conv.participant_2_id):
+            raise ValueError("Conversation not found or unauthorized")
+        
+        messages = db.query(Message).filter_by(conversation_id=conversation_id).all()
+        for msg in messages:
+            deleted_by = []
+            if msg.deleted_by_users:
+                try:
+                    deleted_by = json.loads(msg.deleted_by_users)
+                except Exception:
+                    deleted_by = []
+            
+            if user_id not in deleted_by:
+                deleted_by.append(user_id)
+                msg.deleted_by_users = json.dumps(deleted_by)
+        
+        # Adjust last_message_preview if clearing? For simplicity just clear messages
+        db.commit()
+        return {"success": True, "conversationId": conversation_id}
+
+    @staticmethod
+    def toggle_block_user(db: Session, current_user, target_user_id: str) -> dict:
+        user_id = MessagingService._get_user_id(current_user)
+        from backend.models import BlockedUser
+        
+        block_record = db.query(BlockedUser).filter_by(blocker_id=user_id, blocked_id=target_user_id).first()
+        is_blocked = False
+        if block_record:
+            db.delete(block_record)
+        else:
+            block_record = BlockedUser(blocker_id=user_id, blocked_id=target_user_id)
+            db.add(block_record)
+            is_blocked = True
+            
+        db.commit()
+        return {"success": True, "is_blocked": is_blocked}
+
+    @staticmethod
     def toggle_reaction(db: Session, current_user, message_id: str, emoji: str) -> dict:
         user_id = MessagingService._get_user_id(current_user)
         msg = db.query(Message).filter_by(message_id=message_id).first()
@@ -429,13 +559,29 @@ class MessagingService:
             # Check online status of other_user via manager connections
             is_online = MessagingService._is_user_online(db, other_id)
             other_info["isOnline"] = is_online
+            
+            pinned_by = []
+            if c.pinned_by_users:
+                try:
+                    pinned_by = json.loads(c.pinned_by_users)
+                except Exception:
+                    pinned_by = []
+            
+            archived_by = []
+            if c.archived_by_users:
+                try:
+                    archived_by = json.loads(c.archived_by_users)
+                except Exception:
+                    archived_by = []
 
             result.append({
                 "conversationId": c.conversation_id,
                 "otherUser": other_info,
                 "lastMessagePreview": c.last_message_preview,
                 "lastMessageAt": MessagingService._format_utc_iso(c.last_message_at),
-                "unreadCount": unread
+                "unreadCount": unread,
+                "isPinned": user_id in pinned_by,
+                "isArchived": user_id in archived_by
             })
         return result
 

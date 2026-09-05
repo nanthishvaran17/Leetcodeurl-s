@@ -57,9 +57,9 @@ export const RecipientSelector: React.FC<Props> = ({ onClose, onSelect }) => {
   }, []);
 
   const filtered = recipients.filter(r => 
-    r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.department.toLowerCase().includes(searchQuery.toLowerCase())
+    (r.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (r.role || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (r.department || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (

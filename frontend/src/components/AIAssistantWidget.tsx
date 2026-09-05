@@ -31,6 +31,10 @@ import {
   BookOpen,
   Code2,
   ChevronDown,
+  ShieldCheck,
+  TrendingUp,
+  TrendingDown,
+  Zap,
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -54,6 +58,17 @@ interface PendingAction {
   prompt?: string;
 }
 
+interface BriefCard {
+  type: 'SUCCESS' | 'WARNING' | 'ALERT' | 'INFO';
+  icon: string;
+  title: string;
+  body: string;
+  cta_label: string;
+  cta_query: string;
+  metric?: string;
+  trend?: 'UP' | 'DOWN' | 'STABLE' | null;
+}
+
 interface ChatMessage {
   id: string;
   sender: 'user' | 'ai';
@@ -72,6 +87,7 @@ interface ChatMessage {
   action_result?: any;
   timestamp: string;
   isError?: boolean;
+  isThinking?: boolean;
 }
 
 // --- Rich Text Renderer ---
@@ -302,14 +318,36 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
   });
   const [loadingTelemetry, setLoadingTelemetry] = useState(false);
 
-  const makeWelcomeMsg = (): ChatMessage => ({
-    id: 'welcome_1',
-    sender: 'ai',
-    text: 'Hello! I am the official Nandha Engineering College AI & Operations Copilot.\n\nI can analyze student LeetCode performance, execute database integrity audits, draft email alerts, and compare contest rankings in real time.',
-    source: 'NEC Institutional AI Engine',
-    dataStatus: 'VERIFIED',
-    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-  });
+  const [briefCards, setBriefCards] = useState<BriefCard[]>([]);
+  const [briefLoading, setBriefLoading] = useState(false);
+  const [briefDismissed, setBriefDismissed] = useState(false);
+
+  const makeWelcomeMsg = (): ChatMessage => {
+    let savedUser: any = null;
+    try { savedUser = JSON.parse(localStorage.getItem('user') || '{}'); } catch {}
+    const role = (savedUser?.role || '').toLowerCase();
+    const name = savedUser?.name || savedUser?.username || '';
+    const greeting = name ? `Hello, ${name}!` : 'Hello!';
+
+    let text = '';
+    if (role.includes('admin')) {
+      text = `${greeting} I've run an institution-wide intelligence scan. Your proactive brief is ready above — review sync health, contest status, and key alerts.`;
+    } else if (role === 'hod') {
+      text = `${greeting} I've prepared a department-wide intelligence snapshot for you. Review the brief cards above for active solver rates and performance highlights.`;
+    } else if (role === 'faculty' || role === 'staff' || role === 'cr') {
+      text = `${greeting} I've analysed your assigned students. Your personalised brief above highlights inactives, top performers, and contest data.`;
+    } else {
+      text = `${greeting} I am the official Nandha Engineering College AI & Operations Copilot.\n\nI can analyze student LeetCode performance, execute database integrity audits, draft email alerts, and compare contest rankings in real time.`;
+    }
+    return {
+      id: 'welcome_1',
+      sender: 'ai',
+      text,
+      source: 'NEC Institutional AI Engine',
+      dataStatus: 'VERIFIED',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+  };
 
   const [messages, setMessages] = useState<ChatMessage[]>([makeWelcomeMsg()]);
   const [input, setInput] = useState('');
@@ -331,6 +369,19 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
       console.warn('Telemetry fetch note:', err);
     } finally {
       setLoadingTelemetry(false);
+    }
+  }, []);
+
+  const fetchProactiveBrief = useCallback(async () => {
+    setBriefLoading(true);
+    setBriefDismissed(false);
+    try {
+      const res = await api.get('/ai/proactive-brief');
+      setBriefCards(res.data?.cards || []);
+    } catch {
+      // Silent — widget still works without brief
+    } finally {
+      setBriefLoading(false);
     }
   }, []);
 
@@ -380,6 +431,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
     if (isOpen) {
       scrollToBottom('instant');
       fetchTelemetry();
+      fetchProactiveBrief();
       setTimeout(() => inputRef.current?.focus(), 120);
     }
   }, [isOpen]);
@@ -479,51 +531,122 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
     if (!textToSend) setInput('');
     setLoading(true);
 
+    const isOpsQuery =
+      currentMode === 'operations' ||
+      /audit|mail|email|draft|compare|bug|absent|fetch|health|telemetry/i.test(queryText);
+
+    // Operations queries use the standard JSON endpoint (unchanged)
+    if (isOpsQuery) {
+      try {
+        const payload = { message: queryText, history: newHistory.slice(-4), context: { page: window.location.pathname, role: 'admin' } };
+        const res = await api.post('/ai/control/request', payload, { timeout: 20000 });
+        const aiMsg: ChatMessage = {
+          id: res.data.requestId || `ai_${Date.now()}`,
+          sender: 'ai',
+          text: res.data.answer || 'Processing completed.',
+          why: res.data.why,
+          evidence: res.data.evidence,
+          confidence: res.data.confidence || 'VERIFIED',
+          actionLabel: res.data.actionLabel,
+          actionTab: res.data.actionTab,
+          checked: res.data.checked,
+          task_plan: res.data.task_plan,
+          pending_action: res.data.pending_action,
+          source: res.data.source || 'Verified Institutional Database',
+          dataStatus: res.data.dataStatus || res.data.data_status || 'VERIFIED',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        };
+        setMessages((prev) => [...prev, aiMsg]);
+      } catch (err: any) {
+        setMessages((prev) => [...prev, {
+          id: `err_${Date.now()}`, sender: 'ai',
+          text: err.response?.data?.detail || 'The AI assistant is temporarily unavailable.',
+          source: 'System Diagnostic', dataStatus: 'DATA_UNAVAILABLE', isError: true,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }]);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // ── Institutional queries: use SSE streaming for zero-wait "thinking" indicator ──
+    const thinkingId = `thinking_${Date.now()}`;
+    const thinkingMsg: ChatMessage = {
+      id: thinkingId,
+      sender: 'ai',
+      text: '…',
+      isThinking: true,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+    setMessages((prev) => [...prev, thinkingMsg]);
+
     try {
-      const isOpsQuery =
-        currentMode === 'operations' ||
-        /audit|mail|email|draft|compare|bug|absent|fetch|health|telemetry/i.test(queryText);
+      const payload = { message: queryText, mode: currentMode, history: newHistory.slice(-6), context: { page: window.location.pathname, role: 'admin' } };
+      const token = localStorage.getItem('token');
+      const streamUrl = `${import.meta.env.VITE_API_URL || ''}/api/ai/assistant/stream`;
 
-      const endpoint = isOpsQuery ? '/ai/control/request' : '/ai/assistant';
-      const payload = isOpsQuery
-        ? { message: queryText, history: newHistory.slice(-4), context: { page: window.location.pathname, role: 'admin' } }
-        : { message: queryText, mode: currentMode, history: newHistory.slice(-6), context: { page: window.location.pathname, role: 'admin' } };
+      const response = await fetch(streamUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
 
-      const res = await api.post(endpoint, payload, { timeout: 20000 });
+      if (!response.body) throw new Error('No stream body');
 
-      const aiMsg: ChatMessage = {
-        id: res.data.requestId || `ai_${Date.now()}`,
-        sender: 'ai',
-        text: res.data.answer || 'Processing completed.',
-        why: res.data.why,
-        evidence: res.data.evidence,
-        confidence: res.data.confidence || 'VERIFIED',
-        actionLabel: res.data.actionLabel,
-        actionTab: res.data.actionTab,
-        checked: res.data.checked,
-        task_plan: res.data.task_plan,
-        pending_action: res.data.pending_action,
-        source: res.data.source || (isOpsQuery ? 'Verified Institutional Database' : 'NEC Institutional Intelligence Engine'),
-        dataStatus: res.data.dataStatus || res.data.data_status || 'VERIFIED',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
 
-      setMessages((prev) => [...prev, aiMsg]);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() ?? '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const event = JSON.parse(line.slice(6));
+            if (event.type === 'RESULT') {
+              const aiMsg: ChatMessage = {
+                id: event.requestId || `ai_${Date.now()}`,
+                sender: 'ai',
+                text: event.answer || 'Processing completed.',
+                why: event.why,
+                evidence: event.evidence,
+                confidence: event.confidence || 'VERIFIED',
+                actionLabel: event.actionLabel,
+                actionTab: event.actionTab,
+                source: event.source || 'NEC Institutional Intelligence Engine',
+                dataStatus: event.dataStatus || 'VERIFIED',
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              };
+              // Replace thinking bubble with real answer
+              setMessages((prev) => prev.map((m) => m.id === thinkingId ? aiMsg : m));
+            }
+          } catch {
+            // Malformed chunk — skip
+          }
+        }
+      }
     } catch (err: any) {
-      const errorMsg: ChatMessage = {
-        id: `err_${Date.now()}`,
-        sender: 'ai',
-        text: err.response?.data?.detail || 'The AI assistant is temporarily unavailable. Please try again in a moment.',
-        source: 'System Diagnostic',
-        dataStatus: 'DATA_UNAVAILABLE',
+      setMessages((prev) => prev.map((m) => m.id === thinkingId ? {
+        ...m,
+        text: 'The AI assistant is temporarily unavailable. Please try again.',
+        isThinking: false,
         isError: true,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-      setMessages((prev) => [...prev, errorMsg]);
+        dataStatus: 'DATA_UNAVAILABLE',
+      } : m));
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleConfirmAction = async (msgId: string, actionId: string) => {
     setConfirmingActionId(actionId);
@@ -714,6 +837,104 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
             ) : (
               /* MESSAGES AREA */
               <>
+                {/* ── PROACTIVE INTEL FEED ── */}
+                {!briefDismissed && (briefLoading || briefCards.length > 0) && (
+                  <div className="px-3 pt-2.5 pb-1 bg-slate-50 dark:bg-navy-900/70 border-b border-slate-200 dark:border-navy-800 shrink-0">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1.5">
+                        <Zap className="w-3 h-3 text-brand-500" />
+                        <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">
+                          Your Intelligence Brief
+                        </span>
+                        {briefLoading && <Loader2 className="w-2.5 h-2.5 text-brand-400 animate-spin" />}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setBriefDismissed(true)}
+                        aria-label="Dismiss brief"
+                        className="p-0.5 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                      {briefCards.map((card, idx) => {
+                        const borderColor =
+                          card.type === 'SUCCESS' ? 'border-l-emerald-400'
+                          : card.type === 'ALERT'   ? 'border-l-rose-500'
+                          : card.type === 'WARNING' ? 'border-l-amber-400'
+                          : 'border-l-brand-400';
+                        const bgColor =
+                          card.type === 'SUCCESS' ? 'bg-emerald-50 dark:bg-emerald-950/20'
+                          : card.type === 'ALERT'   ? 'bg-rose-50 dark:bg-rose-950/20'
+                          : card.type === 'WARNING' ? 'bg-amber-50 dark:bg-amber-950/20'
+                          : 'bg-white dark:bg-navy-900';
+                        const metricColor =
+                          card.type === 'SUCCESS' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
+                          : card.type === 'ALERT'   ? 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300'
+                          : card.type === 'WARNING' ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300'
+                          : 'bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300';
+                        const IconComp =
+                          card.icon === 'trophy'   ? Trophy
+                          : card.icon === 'users'   ? Users
+                          : card.icon === 'shield'  ? ShieldCheck
+                          : card.icon === 'activity'? Activity
+                          : card.icon === 'zap'     ? Zap
+                          : AlertTriangle;
+                        const iconColor =
+                          card.type === 'SUCCESS' ? 'text-emerald-500'
+                          : card.type === 'ALERT'   ? 'text-rose-500'
+                          : card.type === 'WARNING' ? 'text-amber-500'
+                          : 'text-brand-500';
+                        return (
+                          <motion.div
+                            key={idx}
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.22, delay: idx * 0.07, ease: 'easeOut' }}
+                            className={`shrink-0 w-[196px] rounded-xl border-l-[3px] border border-slate-200 dark:border-navy-700 p-2.5 flex flex-col gap-1.5 shadow-sm ${borderColor} ${bgColor}`}
+                          >
+                            <div className="flex items-start justify-between gap-1">
+                              <div className="flex items-center gap-1.5">
+                                <IconComp className={`w-3 h-3 shrink-0 ${iconColor}`} />
+                                <span className="text-[10.5px] font-bold text-slate-800 dark:text-white leading-tight line-clamp-1">
+                                  {card.title}
+                                </span>
+                              </div>
+                              {card.metric && (
+                                <span className={`shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${metricColor}`}>
+                                  {card.metric}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] leading-relaxed text-slate-600 dark:text-slate-400 line-clamp-2">
+                              {card.body}
+                            </p>
+                            <div className="flex items-center justify-between mt-auto pt-0.5">
+                              {card.trend && (
+                                <span className="flex items-center gap-0.5">
+                                  {card.trend === 'UP' && <TrendingUp className="w-2.5 h-2.5 text-emerald-500" />}
+                                  {card.trend === 'DOWN' && <TrendingDown className="w-2.5 h-2.5 text-rose-500" />}
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setBriefDismissed(true);
+                                  handleSend(card.cta_query);
+                                }}
+                                className="ml-auto text-[9.5px] font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer flex items-center gap-0.5 transition-colors"
+                              >
+                                {card.cta_label} <ChevronRight className="w-2.5 h-2.5" />
+                              </button>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 <div
                   ref={messagesContainerRef}
                   onScroll={handleScroll}
@@ -795,7 +1016,13 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                                     <span>Assistant Unavailable</span>
                                   </div>
                                 )}
-                                {msg.sender === 'user'
+                                {msg.isThinking ? (
+                                  <div className="flex items-center gap-1 py-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                                    <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                                    <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                                  </div>
+                                ) : msg.sender === 'user'
                                   ? <RichMessageText text={msg.text} isUser />
                                   : <RichMessageText text={msg.text} />
                                 }

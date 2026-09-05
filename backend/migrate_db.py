@@ -172,6 +172,11 @@ def run_db_migrations():
             ("messages", "is_deleted_everyone", "ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_deleted_everyone BOOLEAN DEFAULT FALSE"),
             ("messages", "deleted_by_users", "ALTER TABLE messages ADD COLUMN IF NOT EXISTS deleted_by_users TEXT DEFAULT '[]'"),
             ("messages", "reply_to_message_id", "ALTER TABLE messages ADD COLUMN IF NOT EXISTS reply_to_message_id VARCHAR(100)"),
+            ("messages", "client_message_id", "ALTER TABLE messages ADD COLUMN IF NOT EXISTS client_message_id VARCHAR(100)"),
+            ("messages", "t0_client_send", "ALTER TABLE messages ADD COLUMN IF NOT EXISTS t0_client_send BIGINT"),
+            ("messages", "t1_server_receive", "ALTER TABLE messages ADD COLUMN IF NOT EXISTS t1_server_receive BIGINT"),
+            ("messages", "t2_auth_persist", "ALTER TABLE messages ADD COLUMN IF NOT EXISTS t2_auth_persist BIGINT"),
+            ("messages", "t3_fanout", "ALTER TABLE messages ADD COLUMN IF NOT EXISTS t3_fanout BIGINT"),
             ("messages", "reactions", "ALTER TABLE messages ADD COLUMN IF NOT EXISTS reactions TEXT DEFAULT '{}'"),
             ("messages", "attachment_file_id", "ALTER TABLE messages ADD COLUMN IF NOT EXISTS attachment_file_id VARCHAR(100)"),
             # ── notification_files table ─────────────────────────────────────
@@ -402,6 +407,20 @@ def run_db_migrations():
             try:
                 cursor.execute(f"ALTER TABLE hod_snapshots ADD COLUMN {col_name} {col_type};")
                 print(f"Added column '{col_name}' to hod_snapshots.")
+            except Exception:
+                pass
+
+        messages_cols2 = [
+            ("client_message_id", "VARCHAR(100)"),
+            ("t0_client_send", "BIGINT"),
+            ("t1_server_receive", "BIGINT"),
+            ("t2_auth_persist", "BIGINT"),
+            ("t3_fanout", "BIGINT")
+        ]
+        for col_name, col_type in messages_cols2:
+            try:
+                cursor.execute(f"ALTER TABLE messages ADD COLUMN {col_name} {col_type};")
+                print(f"Added column '{col_name}' to messages.")
             except Exception:
                 pass
 

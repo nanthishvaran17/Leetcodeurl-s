@@ -20,6 +20,8 @@ class SendMessageRequest(BaseModel):
     receiver_id: str
     attachment_file_id: Optional[str] = None
     reply_to_message_id: Optional[str] = None
+    client_message_id: Optional[str] = None
+    t0_client_send: Optional[int] = None
 
 class EditMessageRequest(BaseModel):
     content: str
@@ -113,7 +115,9 @@ def send_message_endpoint(
             receiver_id=req.receiver_id,
             content=req.content,
             attachment_file_id=req.attachment_file_id,
-            reply_to_message_id=req.reply_to_message_id
+            reply_to_message_id=req.reply_to_message_id,
+            client_message_id=req.client_message_id,
+            t0_client_send=req.t0_client_send
         )
         msg_dict = MessagingService._format_message_dict(db, msg, MessagingService._get_user_id(current_user))
         return {
@@ -159,6 +163,80 @@ def delete_message_endpoint(
     except Exception as e:
         logger.error(f"Error deleting message: {e}")
         raise HTTPException(status_code=500, detail="Failed to delete message.")
+
+@router.delete("/conversations/{conversation_id}")
+def delete_conversation_endpoint(
+    conversation_id: str,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Deletes an entire conversation."""
+    try:
+        result = MessagingService.delete_conversation(db, current_user, conversation_id)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error deleting conversation: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete conversation.")
+
+@router.post("/conversations/{conversation_id}/pin")
+def pin_conversation_endpoint(
+    conversation_id: str,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Toggles pinning a conversation."""
+    try:
+        return MessagingService.toggle_pin(db, current_user, conversation_id)
+    except ValueError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error pinning conversation: {e}")
+        raise HTTPException(status_code=500, detail="Failed to pin conversation.")
+
+@router.post("/conversations/{conversation_id}/archive")
+def archive_conversation_endpoint(
+    conversation_id: str,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Toggles archiving a conversation."""
+    try:
+        return MessagingService.toggle_archive(db, current_user, conversation_id)
+    except ValueError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error archiving conversation: {e}")
+        raise HTTPException(status_code=500, detail="Failed to archive conversation.")
+
+@router.post("/conversations/{conversation_id}/clear")
+def clear_conversation_endpoint(
+    conversation_id: str,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Clears messages for the current user."""
+    try:
+        return MessagingService.clear_chat(db, current_user, conversation_id)
+    except ValueError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error clearing conversation: {e}")
+        raise HTTPException(status_code=500, detail="Failed to clear conversation.")
+
+@router.post("/profile/{user_id}/block")
+def block_user_endpoint(
+    user_id: str,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Toggles blocking a user."""
+    try:
+        return MessagingService.toggle_block_user(db, current_user, user_id)
+    except Exception as e:
+        logger.error(f"Error blocking user: {e}")
+        raise HTTPException(status_code=500, detail="Failed to block user.")
 
 @router.post("/messages/{message_id}/reactions")
 def toggle_reaction_endpoint(
@@ -211,6 +289,27 @@ def search_messages_endpoint(
     except Exception as e:
         logger.error(f"Error searching messages: {e}")
         raise HTTPException(status_code=500, detail="Failed to search messages.")
+
+@router.post("/conversations/{conversation_id}/unread")
+def mark_conversation_unread_endpoint(
+    conversation_id: str,
+    db: Session = Depends(get_db),
+    current_user: Any = Depends(get_current_active_user)
+):
+    """Explicitly marks a conversation as unread."""
+    try:
+        user_id = MessagingService._get_user_id(current_user)
+        conv = db.query(Conversation).filter_by(conversation_id=conversation_id).first()
+        if conv:
+            if conv.participant_1_id == user_id:
+                conv.unread_count_1 = max(1, conv.unread_count_1)
+            elif conv.participant_2_id == user_id:
+                conv.unread_count_2 = max(1, conv.unread_count_2)
+            db.commit()
+        return {"success": True}
+    except Exception as e:
+        logger.error(f"Error marking as unread: {e}")
+        raise HTTPException(status_code=500, detail="Failed to mark as unread.")
 
 @router.put("/conversations/{conversation_id}/read")
 def mark_conversation_read_endpoint(
@@ -399,6 +498,7 @@ class CreateSmartGroupRequest(BaseModel):
 
 class AskInstitutionRequest(BaseModel):
     query: str
+    history: Optional[List[dict]] = None
 
 class AnalyzeActionRequest(BaseModel):
     content: str
@@ -475,7 +575,7 @@ def ask_institution_endpoint(
     """Executes a natural language query against verified institutional DB with RBAC."""
     try:
         from backend.services.institutional_intelligence_service import InstitutionalIntelligenceService
-        response = InstitutionalIntelligenceService.ask_institution(db, current_user, req.query)
+        response = InstitutionalIntelligenceService.ask_institution(db, current_user, req.query, req.history)
         return {"success": True, "result": response}
     except Exception as e:
         logger.error(f"Error in ask institution: {e}")

@@ -91,7 +91,6 @@ export async function validateFileBlob(blob: Blob, mimeType?: string): Promise<{
     return { valid: false, error: 'Downloaded file is 0 bytes.' };
   }
 
-  // Check if blob is a JSON error payload
   if (blob.type.includes('application/json') || mimeType?.includes('json')) {
     try {
       const text = await blob.text();
@@ -99,6 +98,18 @@ export async function validateFileBlob(blob: Blob, mimeType?: string): Promise<{
         const parsed = JSON.parse(text);
         const detail = parsed.detail || parsed.error || 'Server returned an error response.';
         return { valid: false, error: detail };
+      }
+    } catch {
+      /* ignore parse error */
+    }
+  }
+
+  // Reject HTML payloads masking as files (e.g. 504 Gateway Timeout proxy pages)
+  if (blob.type.includes('text/html') || mimeType?.includes('html')) {
+    try {
+      const text = await blob.text();
+      if (text.toLowerCase().includes('504 gateway time-out') || text.toLowerCase().includes('502 bad gateway') || text.toLowerCase().includes('<html')) {
+        return { valid: false, error: 'Server returned an HTML error page. The request may have timed out.' };
       }
     } catch {
       /* ignore parse error */
@@ -123,10 +134,10 @@ export async function triggerBrowserAnchorDownload(url: string, filename: string
 
   document.body.appendChild(anchor);
 
-  // Small delay for WebKit engine readiness
-  await new Promise<void>((resolve) => setTimeout(resolve, 50));
+  // Execute click immediately. Delaying this click blocks it from being considered a user-triggered event by the browser.
   anchor.click();
 
+  // Remove anchor after a small delay
   setTimeout(() => {
     if (document.body.contains(anchor)) {
       document.body.removeChild(anchor);

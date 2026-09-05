@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, ForeignKey, Text, JSON, UniqueConstraint, Index
+from sqlalchemy import Column, Integer, BigInteger, String, Boolean, DateTime, Float, ForeignKey, Text, JSON, UniqueConstraint, Index
 from sqlalchemy.orm import relationship, backref
 from backend.database import Base
 
@@ -2565,7 +2565,26 @@ class Conversation(Base):
     unread_count_1 = Column(Integer, default=0)
     unread_count_2 = Column(Integer, default=0)
 
+    pinned_by_users = Column(Text, default="[]")
+    archived_by_users = Column(Text, default="[]")
+
     messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
+
+
+class BlockedUser(Base):
+    """
+    Tracks blocked users. Blocker blocks Blocked.
+    """
+    __tablename__ = "blocked_users"
+    __table_args__ = (
+        UniqueConstraint("blocker_id", "blocked_id", name="uix_blocked_users"),
+        {"extend_existing": True},
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    blocker_id = Column(String(150), index=True, nullable=False)
+    blocked_id = Column(String(150), index=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 
 class Message(Base):
@@ -2581,6 +2600,7 @@ class Message(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     message_id = Column(String(100), unique=True, index=True, nullable=False)
+    client_message_id = Column(String(100), nullable=True, index=True)
     conversation_id = Column(String(100), ForeignKey("conversations.conversation_id"), index=True, nullable=False)
     
     sender_id = Column(String(150), index=True, nullable=False)
@@ -2600,6 +2620,12 @@ class Message(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
     
     attachment_file_id = Column(String(100), nullable=True) # Optional reference to NotificationFile
+
+    # Latency Telemetry (Unix timestamps in milliseconds)
+    t0_client_send = Column(BigInteger, nullable=True)
+    t1_server_receive = Column(BigInteger, nullable=True)
+    t2_auth_persist = Column(BigInteger, nullable=True)
+    t3_fanout = Column(BigInteger, nullable=True)
 
     conversation = relationship("Conversation", back_populates="messages")
 

@@ -89,7 +89,7 @@ export const SmartGroupModal: React.FC<{
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Intervention: Inactive Week 35"
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
+              className="w-full bg-slate-900/50 hover:bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
             />
           </div>
 
@@ -100,7 +100,7 @@ export const SmartGroupModal: React.FC<{
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Targeted intervention group for students needing practice follow-up..."
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
+              className="w-full bg-slate-900/50 hover:bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
             />
           </div>
 
@@ -110,7 +110,8 @@ export const SmartGroupModal: React.FC<{
               <select
                 value={groupType}
                 onChange={(e) => setGroupType(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
+                className="w-full bg-slate-900/50 hover:bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer appearance-none"
+                style={{ backgroundImage: 'url("data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3e%3c/svg%3e")', backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em', paddingRight: '2.5rem' }}
               >
                 <option value="INTERVENTION">Intervention</option>
                 <option value="ACADEMIC">Academic</option>
@@ -137,7 +138,7 @@ export const SmartGroupModal: React.FC<{
           </div>
 
           {isDynamic && (
-            <div className="bg-slate-800/80 border border-slate-700 rounded-lg p-3 space-y-3">
+            <div className="bg-indigo-950/20 border border-indigo-500/20 rounded-xl p-4 space-y-4">
               <div className="flex items-center space-x-1.5 text-xs font-semibold text-indigo-400">
                 <Sparkles className="w-4 h-4" />
                 <span>Dynamic Criteria Rules</span>
@@ -147,7 +148,8 @@ export const SmartGroupModal: React.FC<{
                 <select
                   value={ruleType}
                   onChange={(e) => setRuleType(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-white"
+                  className="w-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer appearance-none"
+                  style={{ backgroundImage: 'url("data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3e%3c/svg%3e")', backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em', paddingRight: '2rem' }}
                 >
                   <option value="INACTIVE_STUDENTS">Students with zero submissions in X days</option>
                   <option value="MISSED_CONTEST">Students who missed latest contest session</option>
@@ -164,7 +166,7 @@ export const SmartGroupModal: React.FC<{
                     max={30}
                     value={days}
                     onChange={(e) => setDays(Number(e.target.value))}
-                    className="w-24 bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-xs text-white"
+                    className="w-24 bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                   />
                 </div>
               )}
@@ -175,14 +177,14 @@ export const SmartGroupModal: React.FC<{
             <button
               type="button"
               onClick={onClose}
-              className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-xs font-medium transition"
+              className="bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || !name.trim()}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg text-xs font-medium transition"
+              className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md shadow-indigo-500/20 active:scale-95"
             >
               {loading ? 'Creating...' : 'Create Smart Group'}
             </button>

@@ -91,8 +91,8 @@ export const AppUpdateNotifier: React.FC = () => {
   if (!updateAvailable) return null;
 
   return (
-    <div className="fixed top-5 right-5 z-[9999] max-w-md w-full px-4 animate-slide-down">
-      <div className="bg-gradient-to-r from-slate-950 via-navy-950 to-indigo-950 text-white rounded-3xl p-5 shadow-2xl border border-brand-500/40 backdrop-blur-xl relative overflow-hidden">
+    <div className="fixed top-safe mt-4 left-1/2 transform -translate-x-1/2 z-[9999] max-w-md w-full px-4 sm:w-auto min-w-[320px] animate-slide-down pointer-events-none">
+      <div className="bg-gradient-to-r from-slate-950 via-navy-950 to-indigo-950 text-white rounded-3xl p-5 shadow-2xl border border-brand-500/40 backdrop-blur-xl relative overflow-hidden pointer-events-auto">
         {/* Glow accent decoration */}
         <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-brand-500/20 rounded-full blur-xl pointer-events-none" />
         

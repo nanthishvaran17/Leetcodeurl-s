@@ -10,6 +10,25 @@ from backend.logger import logger
 # In-memory cache: username -> { "timestamp": float, "data": dict }
 _profile_cache: Dict[str, Dict[str, Any]] = {}
 
+# Single-flight request deduplication
+_in_flight_requests: Dict[str, asyncio.Future] = {}
+
+# Global persistent HTTP connection pool
+_global_client: Optional[httpx.AsyncClient] = None
+
+def get_httpx_client(req_timeout: float = 10.0) -> httpx.AsyncClient:
+    global _global_client
+    if _global_client is None:
+        timeout_cfg = httpx.Timeout(
+            connect=settings.LEETCODE_CONNECT_TIMEOUT, 
+            read=req_timeout, 
+            write=settings.LEETCODE_CONNECT_TIMEOUT, 
+            pool=settings.LEETCODE_CONNECT_TIMEOUT
+        )
+        limits_cfg = httpx.Limits(max_keepalive_connections=settings.LEETCODE_MAX_CONCURRENCY, max_connections=settings.LEETCODE_MAX_CONCURRENCY * 2)
+        _global_client = httpx.AsyncClient(timeout=timeout_cfg, limits=limits_cfg, follow_redirects=True, http2=False)
+    return _global_client
+
 class CircuitBreaker:
     def __init__(self, failure_threshold: int = 15, recovery_timeout: float = 60.0):
         self.state = "CLOSED"
@@ -235,6 +254,8 @@ def fetch_leetcode_profile_sync(
         )
     )
 
+_in_flight_requests = {}
+
 async def fetch_leetcode_profile(
     url_or_username: Optional[str],
     force_refresh: bool = False,
@@ -242,45 +263,48 @@ async def fetch_leetcode_profile(
     max_retries: Optional[int] = None
 ) -> Dict[str, Any]:
     """
+    Core function to fetch and parse LeetCode profile, stats, and contest data.
+    Uses robust identity matching (Rule 4).
+    Implements single-flight request deduplication.
+    """
+    username, std_url, status = extract_leetcode_username(url_or_username)
+    if not username:
+        return {
+            "username": url_or_username,
+            "profile_url": None,
+            "total_solved": None,
+            "status": status,
+            "sync_status": "failed",
+            "validation_status": "failed",
+            "error": f"Invalid format ({status})",
+            "error_message": f"Invalid format ({status})",
+            "fetch_duration": 0
+        }
+
+    # Single-flight deduplication
+    global _in_flight_requests
+    if username in _in_flight_requests:
+        logger.info(f"[SINGLE-FLIGHT] Coalescing request for '{username}'")
+        return await _in_flight_requests[username]
+
+    fut = asyncio.Future()
+    _in_flight_requests[username] = fut
+    try:
+        res = await _fetch_leetcode_profile_impl(username, std_url, force_refresh, max_retries or 3, timeout or 10.0)
+        fut.set_result(res)
+        return res
+    except Exception as e:
+        fut.set_exception(e)
+        raise
+    finally:
+        _in_flight_requests.pop(username, None)
+
+async def _fetch_leetcode_profile_impl(username: str, std_url: str, force_refresh: bool, retries: int, req_timeout: float) -> Dict[str, Any]:
+    """
     Fetches publicly available LeetCode profile statistics cleanly and safely.
     Strictly distinguishes Public Profile stats, Official Contest participation, and Virtual Contest participation.
     """
     start_time = time.time()
-    req_timeout = timeout or settings.LEETCODE_READ_TIMEOUT
-    retries = max_retries or settings.LEETCODE_MAX_RETRIES
-
-    username, profile_url, url_status = extract_leetcode_username(url_or_username)
-    if url_status != "OK" or not username:
-        duration = round(time.time() - start_time, 3)
-        err_msg = f"Invalid or missing profile URL: {url_status}"
-        return {
-            "username": username,
-            "profile_url": profile_url or (str(url_or_username) if url_or_username else ""),
-            "total_solved":   None,  # Not fetched — never claim fake zero
-            "easy_solved":    None,
-            "medium_solved":  None,
-            "hard_solved":    None,
-            "contest_rating":         None,
-            "contest_global_rank":     None,
-            "contest_global_ranking":  None,
-            "leetcode_global_rank":    None,
-            "public_profile_ranking":  None,
-            "active_days":             None,
-            "max_streak":              None,
-            "recent_accepted":         None,
-            "recent_contest_name":     None,
-            "recent_contest_score":    None,
-            "recent_contest_type":     "UNKNOWN",
-            "contest_participations":  [],
-            "status": url_status,  # MISSING LINK or INVALID LINK
-            "sync_status": "failed",
-            "validation_status": "pending",
-            "error": err_msg,
-            "error_message": err_msg,
-            "fetch_duration": duration
-        }
-    
-    # Normalise username to lower-case so cache keys are always consistent
     username = username.lower()
 
     # Check in-memory cache
@@ -317,16 +341,10 @@ async def fetch_leetcode_profile(
     matched_user = None
     last_error_detail = ""
 
-    # Fine-grained timeouts
-    timeout_cfg = httpx.Timeout(
-        connect=settings.LEETCODE_CONNECT_TIMEOUT, 
-        read=req_timeout, 
-        write=settings.LEETCODE_CONNECT_TIMEOUT, 
-        pool=settings.LEETCODE_CONNECT_TIMEOUT
-    )
-    limits_cfg = httpx.Limits(max_keepalive_connections=settings.LEETCODE_MAX_CONCURRENCY, max_connections=settings.LEETCODE_MAX_CONCURRENCY * 2)
+    # Fine-grained timeouts handled by global client
+    client = get_httpx_client(req_timeout)
 
-    async with httpx.AsyncClient(timeout=timeout_cfg, limits=limits_cfg, follow_redirects=True, http2=False) as client:
+    try:
         # 1. Fetch Profile & Submission Stats
         payload_profile = {
             "query": USER_PROFILE_QUERY,
@@ -385,8 +403,8 @@ async def fetch_leetcode_profile(
 
             result = {
                 "username": username,
-                "profile_url": None,  # Rule 2 & 15: profile_url = null when verification fails
-                "total_solved": None,  # Rule 6: Never claim fake zero
+                "profile_url": None,
+                "total_solved": None,
                 "easy_solved": None,
                 "medium_solved": None,
                 "hard_solved": None,
@@ -468,7 +486,7 @@ async def fetch_leetcode_profile(
         active_days = user_calendar.get("totalActiveDays")
         max_streak = user_calendar.get("streak")
 
-        # 2. Fetch Contest Ranking & Detailed Contest History
+        # 2. Fetch Contest Ranking & History (Phase B)
         contest_rating = None
         contest_global_ranking = None
         recent_contest_name = None
@@ -597,6 +615,15 @@ async def fetch_leetcode_profile(
         _profile_cache[username] = {"timestamp": now, "data": result}
         return result
 
+    except Exception as exc:
+        logger.error(f"Unexpected error in fetch_public_profile for {username}: {exc}")
+        return {
+            "username": username,
+            "status": "FETCH_FAILED",
+            "sync_status": "fetch_failed",
+            "error_message": str(exc),
+            "fetch_duration": 0.0
+        }
 
 # ─────────────────────────────────────────────────────────────────────────────
 # NEW GRAPHQL QUERIES (Phase C, D, E)

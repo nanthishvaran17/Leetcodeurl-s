@@ -94,13 +94,16 @@ export interface Message {
   };
   reactions?: Record<string, string>;
   attachmentFileId?: string;
+  localMediaUrl?: string;
+  isUploading?: boolean;
+  fileMimeType?: string;
 }
 
 interface Props {
   conversation: Conversation | null;
   messages: Message[];
   currentUserId: string;
-  onSend: (content: string, attachmentFileId?: string, replyToMessageId?: string) => Promise<void>;
+  onSend: (content: string, attachmentFile?: File, replyToMessageId?: string) => void | Promise<void>;
   onEditMessage: (messageId: string, newContent: string) => Promise<void>;
   onDeleteMessage: (messageId: string, mode: 'FOR_ME' | 'FOR_EVERYONE') => Promise<void>;
   onToggleReaction: (messageId: string, emoji: string) => Promise<void>;
@@ -155,6 +158,19 @@ export const ChatWindow: React.FC<Props> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // For media preview
+  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (selectedFile && (selectedFile.type.startsWith('image/') || selectedFile.type.startsWith('video/'))) {
+      const url = URL.createObjectURL(selectedFile);
+      setLocalPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setLocalPreviewUrl(null);
+    }
+  }, [selectedFile]);
+
   // Active Menu / Context state
   const [activeMenuMessageId, setActiveMenuMessageId] = useState<string | null>(null);
   const [replyingToMessage, setReplyingToMessage] = useState<Message | null>(null);
@@ -190,12 +206,18 @@ export const ChatWindow: React.FC<Props> = ({
 
   if (!conversation) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-slate-50/50 dark:bg-navy-950/50 h-full p-6 text-center">
-        <div className="w-20 h-20 bg-brand-50 dark:bg-brand-900/20 rounded-[2rem] flex items-center justify-center mb-6 shadow-sm border border-brand-100 dark:border-brand-800/30">
-          <Send className="w-8 h-8 text-brand-500 ml-1" />
+      <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 dark:bg-[#060B14] h-full p-6 text-center relative overflow-hidden">
+        {/* Subtle background glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-50 rounded-full blur-[80px] pointer-events-none"></div>
+        
+        <div className="w-24 h-24 bg-white dark:bg-slate-900 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 border border-slate-200 dark:border-slate-800 relative z-10 group">
+          <div className="absolute inset-0 bg-indigo-50 rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          <Send className="w-10 h-10 text-indigo-500 ml-1.5 opacity-90 group-hover:scale-110 transition-transform duration-500 relative z-10" />
         </div>
-        <h3 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">Institutional Connect</h3>
-        <p className="text-slate-500 dark:text-slate-400 mt-3 text-sm max-w-xs leading-relaxed font-medium">
+        <h3 className="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight relative z-10">
+          Institutional Connect
+        </h3>
+        <p className="text-slate-500 mt-4 text-[15px] max-w-sm leading-relaxed font-medium relative z-10">
           Select a conversation from your secure inbox or start a new message to connect with faculty and peers.
         </p>
       </div>
@@ -234,31 +256,19 @@ export const ChatWindow: React.FC<Props> = ({
     setEditingMessage(null);
     setShowEmojiPicker(false);
     
-    setIsSending(true);
+    if (isEdit) {
+      setIsSending(true);
+    }
+
     try {
       if (isEdit && editMsgId) {
         // Edit mode
         await onEditMessage(editMsgId, textToSend);
       } else {
-        // Normal send or Reply mode
-        let attachmentFileId = undefined;
-        if (fileToSend) {
-          const formData = new FormData();
-          formData.append('file', fileToSend);
-          const res = await axios.post(getApiUrl('/messaging/upload'), formData, {
-            headers: {
-              ...getAuthHeaders(),
-              'Content-Type': 'multipart/form-data'
-            }
-          });
-          if (res.data?.success) {
-            attachmentFileId = res.data.file_id;
-          }
-        }
-
+        // Normal send or Reply mode - zero blocking
         await onSend(
           textToSend,
-          attachmentFileId,
+          fileToSend || undefined,
           replyMsg ? replyMsg.messageId : undefined
         );
       }
@@ -437,7 +447,7 @@ export const ChatWindow: React.FC<Props> = ({
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 custom-scrollbar relative z-10"
+        className="flex-1 overflow-y-auto px-4 md:px-8 lg:px-12 py-6 flex flex-col custom-scrollbar relative z-10"
       >
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
@@ -455,6 +465,7 @@ export const ChatWindow: React.FC<Props> = ({
           messages.map((msg, idx) => {
             const isMe = msg.senderId === currentUserId;
             const isMenuOpen = activeMenuMessageId === msg.messageId;
+            const prevMsg = idx > 0 ? messages[idx - 1] : null;
 
             // Date separator check
             let showDateHeader = false;
@@ -464,6 +475,10 @@ export const ChatWindow: React.FC<Props> = ({
               const currDate = parseSafeDate(msg.createdAt).toDateString();
               if (prevDate !== currDate) showDateHeader = true;
             }
+
+            // Dynamic Margin for natural grouping
+            const isSameSenderAsPrev = prevMsg && prevMsg.senderId === msg.senderId;
+            const marginTopClass = showDateHeader ? 'mt-6' : (isSameSenderAsPrev ? 'mt-1' : 'mt-5');
 
             // Reactions count
             const reactionsMap = msg.reactions || {};
@@ -475,8 +490,8 @@ export const ChatWindow: React.FC<Props> = ({
             return (
               <React.Fragment key={msg.messageId}>
                 {showDateHeader && (
-                  <div className="flex justify-center my-4">
-                    <span className="text-[11px] font-extrabold uppercase tracking-wider bg-slate-200/60 dark:bg-navy-900/90 text-slate-500 dark:text-slate-400 px-3 py-1 rounded-full shadow-xs">
+                  <div className="flex justify-center my-6">
+                    <span className="text-[10px] font-bold uppercase tracking-widest bg-white border border-slate-200 text-slate-400 px-4 py-1.5 rounded-full shadow-sm">
                       {formatHeaderDate(msg.createdAt)}
                     </span>
                   </div>
@@ -485,8 +500,9 @@ export const ChatWindow: React.FC<Props> = ({
                 <div
                   id={`msg-${msg.messageId}`}
                   className={clsx(
-                    "flex flex-col max-w-[88%] sm:max-w-[78%] md:max-w-[70%] group relative transition-all duration-200",
-                    isMe ? "ml-auto items-end" : "mr-auto items-start"
+                    "flex flex-col w-full max-w-[85%] sm:max-w-[75%] md:max-w-[65%] group relative transition-all duration-200",
+                    isMe ? "ml-auto items-end" : "mr-auto items-start",
+                    marginTopClass
                   )}
                 >
                   {/* Message Bubble Container */}
@@ -520,26 +536,57 @@ export const ChatWindow: React.FC<Props> = ({
                       </div>
                     )}
 
-                    {/* Attachment Render */}
-                    {msg.attachmentFileId && !msg.isDeletedEveryone && (
-                      <div className="mb-2">
-                        <a
-                          href={`${getApiUrl(`/messaging/attachments/${msg.attachmentFileId}`)}?token=${localStorage.getItem('token')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={clsx(
-                            "flex items-center gap-2.5 p-2.5 rounded-xl transition-all cursor-pointer border",
-                            isMe
-                              ? "bg-brand-700/50 hover:bg-brand-700/70 border-white/20 text-white"
-                              : "bg-slate-100 dark:bg-slate-800/60 hover:bg-slate-200 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200"
-                          )}
-                        >
-                          <FileText className="w-4 h-4 shrink-0 text-emerald-400" />
-                          <span className="text-xs font-bold truncate underline underline-offset-2 flex-1">
-                            Attachment File
-                          </span>
-                          <Download className="w-3.5 h-3.5 shrink-0 opacity-80" />
-                        </a>
+                    {/* Attachment / Media Render */}
+                    {(msg.attachmentFileId || msg.localMediaUrl) && !msg.isDeletedEveryone && (
+                      <div className={clsx("min-w-[200px]", msg.content ? "mb-2" : "")}>
+                        {msg.localMediaUrl || (msg.fileMimeType && (msg.fileMimeType.startsWith('image/') || msg.fileMimeType.startsWith('video/'))) ? (
+                          <div className="relative group/media overflow-hidden rounded-xl border border-slate-200/50 bg-black/5 dark:bg-white/5">
+                            {msg.fileMimeType?.startsWith('video/') ? (
+                              <video src={msg.localMediaUrl || `${getApiUrl(`/messaging/attachments/${msg.attachmentFileId}`)}?token=${localStorage.getItem('token')}`} controls className="w-full max-h-64 object-contain rounded-xl" />
+                            ) : (
+                              <img src={msg.localMediaUrl || `${getApiUrl(`/messaging/attachments/${msg.attachmentFileId}`)}?token=${localStorage.getItem('token')}`} alt="Media" className="w-full max-h-64 object-cover rounded-xl" />
+                            )}
+                            
+                            {/* Uploading Overlay */}
+                            {msg.isUploading && (
+                              <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center rounded-xl transition-all">
+                                <Loader2 className="w-8 h-8 text-white animate-spin mb-2 drop-shadow-md" />
+                                <span className="text-white text-xs font-bold tracking-wide drop-shadow-md">Uploading...</span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <a
+                            href={msg.isUploading ? "#" : `${getApiUrl(`/messaging/attachments/${msg.attachmentFileId}`)}?token=${localStorage.getItem('token')}`}
+                            target={msg.isUploading ? "_self" : "_blank"}
+                            rel="noopener noreferrer"
+                            className={clsx(
+                              "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all border",
+                              msg.isUploading ? "cursor-wait opacity-80" : "cursor-pointer",
+                              isMe
+                                ? "bg-white/15 hover:bg-white/25 border-white/20 text-white shadow-sm"
+                                : "bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-800 shadow-sm"
+                            )}
+                          >
+                            <div className={clsx("p-2 rounded-lg shrink-0", isMe ? "bg-white/20" : "bg-white shadow-sm border border-slate-200/60")}>
+                              {msg.isUploading ? (
+                                <Loader2 className={clsx("w-4 h-4 animate-spin", isMe ? "text-white" : "text-brand-500")} />
+                              ) : (
+                                <FileText className={clsx("w-4 h-4", isMe ? "text-white" : "text-indigo-500")} />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0 pr-2">
+                              <div className="text-[13px] font-bold truncate leading-snug">
+                                {msg.isUploading ? "Uploading File..." : "Attachment File"}
+                              </div>
+                            </div>
+                            {!msg.isUploading && (
+                              <div className={clsx("p-2 rounded-lg shrink-0 transition-colors border", isMe ? "border-white/20 hover:bg-white/20" : "border-slate-200 bg-white hover:bg-slate-50")}>
+                                <Download className="w-4 h-4 opacity-80" />
+                              </div>
+                            )}
+                          </a>
+                        )}
                       </div>
                     )}
 
@@ -719,25 +766,27 @@ export const ChatWindow: React.FC<Props> = ({
       )}
 
       {/* Input Composer Zone */}
-      <div className="p-3 md:p-4 border-t border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-navy-950 shrink-0 relative z-20">
+      <div className="p-3 md:p-4 lg:p-5 border-t border-slate-200 dark:border-slate-800/50 bg-white dark:bg-[#0B1120] shrink-0 relative z-20 pb-4 md:pb-5">
 
         {/* Replying Preview Banner */}
         {replyingToMessage && (
-          <div className="mb-2 p-2.5 bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-900/40 rounded-xl flex items-center justify-between text-xs animate-in fade-in">
-            <div className="flex items-center gap-2 min-w-0">
-              <Reply className="w-4 h-4 text-brand-500 shrink-0" />
+          <div className="mb-3 p-3 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-between text-xs animate-in fade-in shadow-sm">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-1.5 bg-indigo-100 text-indigo-600 rounded-lg">
+                <Reply className="w-4 h-4 shrink-0" />
+              </div>
               <div className="min-w-0">
-                <span className="font-extrabold text-brand-700 dark:text-brand-300">
+                <span className="font-extrabold text-indigo-900">
                   Replying to {replyingToMessage.senderId === currentUserId ? 'yourself' : conversation.otherUser.name}
                 </span>
-                <p className="truncate text-slate-500 dark:text-slate-400 font-medium">
+                <p className="truncate text-slate-600 font-medium mt-0.5">
                   {replyingToMessage.content}
                 </p>
               </div>
             </div>
             <button
               onClick={() => setReplyingToMessage(null)}
-              className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md cursor-pointer"
+              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-indigo-100 rounded-lg cursor-pointer transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -746,16 +795,18 @@ export const ChatWindow: React.FC<Props> = ({
 
         {/* Editing Mode Banner */}
         {editingMessage && (
-          <div className="mb-2 p-2.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/40 rounded-xl flex items-center justify-between text-xs animate-in fade-in">
-            <div className="flex items-center gap-2 min-w-0">
-              <Edit2 className="w-4 h-4 text-amber-500 shrink-0" />
-              <span className="font-extrabold text-amber-700 dark:text-amber-300">
+          <div className="mb-3 p-3 bg-amber-50 border border-amber-100 rounded-xl flex items-center justify-between text-xs animate-in fade-in shadow-sm">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-1.5 bg-amber-100 text-amber-600 rounded-lg">
+                <Edit2 className="w-4 h-4 shrink-0" />
+              </div>
+              <span className="font-extrabold text-amber-900">
                 Editing message...
               </span>
             </div>
             <button
               onClick={handleCancelEdit}
-              className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md cursor-pointer"
+              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-amber-100 rounded-lg cursor-pointer transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -764,16 +815,28 @@ export const ChatWindow: React.FC<Props> = ({
 
         {/* Selected File Preview Banner */}
         {selectedFile && (
-          <div className="mb-2 p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 min-w-0">
-              <Paperclip className="w-4 h-4 text-emerald-500 shrink-0" />
-              <span className="truncate font-bold text-slate-700 dark:text-slate-300">
-                {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+          <div className="mb-3 p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs shadow-sm">
+            <div className="flex items-center gap-3 min-w-0">
+              {localPreviewUrl ? (
+                <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-white">
+                  {selectedFile.type.startsWith('video/') ? (
+                    <video src={localPreviewUrl} className="w-full h-full object-cover" />
+                  ) : (
+                    <img src={localPreviewUrl} alt="Preview" className="w-full h-full object-cover" />
+                  )}
+                </div>
+              ) : (
+                <div className="p-1.5 bg-white shadow-sm rounded-lg border border-slate-200 shrink-0">
+                  <Paperclip className="w-4 h-4 text-emerald-500" />
+                </div>
+              )}
+              <span className="truncate font-bold text-slate-700">
+                {selectedFile.name} <span className="text-slate-400 font-medium ml-1">({(selectedFile.size / 1024).toFixed(1)} KB)</span>
               </span>
             </div>
             <button
               onClick={() => setSelectedFile(null)}
-              className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md cursor-pointer"
+              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -782,8 +845,8 @@ export const ChatWindow: React.FC<Props> = ({
 
         {/* Emoji Picker Popup (Lazy Loaded) */}
         {showEmojiPicker && (
-          <div className="absolute bottom-full right-4 mb-2 z-50 shadow-2xl rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
-            <React.Suspense fallback={<div className="p-4 text-xs font-bold text-slate-400 bg-white dark:bg-navy-900 animate-pulse">Loading Emojis...</div>}>
+          <div className="absolute bottom-full right-4 mb-4 z-50 shadow-2xl rounded-2xl overflow-hidden border border-slate-200">
+            <React.Suspense fallback={<div className="p-4 text-xs font-bold text-slate-400 bg-white animate-pulse">Loading Emojis...</div>}>
               <LazyEmojiPicker
                 onEmojiClick={(data) => setInputText(prev => prev + data.emoji)}
               />
@@ -792,7 +855,7 @@ export const ChatWindow: React.FC<Props> = ({
         )}
 
         {/* Form Inputs */}
-        <form onSubmit={handleSendSubmit} className="flex items-center gap-2">
+        <form onSubmit={handleSendSubmit} className="flex items-end gap-2 sm:gap-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-1.5 shadow-sm focus-within:ring-4 focus-within:ring-indigo-500/10 focus-within:border-indigo-300 transition-all">
           <input
             type="file"
             ref={fileInputRef}
@@ -803,7 +866,7 @@ export const ChatWindow: React.FC<Props> = ({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="p-2.5 text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors shrink-0 cursor-pointer"
+            className="p-3 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-all shrink-0 cursor-pointer mb-0.5"
             title="Attach File"
           >
             <Paperclip className="w-5 h-5" />
@@ -812,7 +875,7 @@ export const ChatWindow: React.FC<Props> = ({
           <button
             type="button"
             onClick={() => setShowEmojiPicker(prev => !prev)}
-            className="p-2.5 text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors shrink-0 cursor-pointer"
+            className="p-3 text-slate-400 hover:text-amber-500 hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-all shrink-0 cursor-pointer hidden sm:block mb-0.5"
             title="Emoji Picker"
           >
             <Smile className="w-5 h-5" />
@@ -823,13 +886,13 @@ export const ChatWindow: React.FC<Props> = ({
             placeholder={editingMessage ? "Update message..." : "Type your message..."}
             value={inputText}
             onChange={handleInputChange}
-            className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-[#151b23] border border-slate-200/70 dark:border-slate-800 rounded-xl text-[14px] text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all font-medium"
+            className="flex-1 px-2 py-3.5 bg-transparent text-[14.5px] text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none font-medium min-w-0"
           />
 
           <button
             type="submit"
             disabled={(!inputText.trim() && !selectedFile) || isSending}
-            className="p-2.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white rounded-xl shadow-md transition-all shrink-0 cursor-pointer active:scale-95 flex items-center justify-center min-w-[42px] min-h-[42px]"
+            className="p-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white rounded-[14px] shadow-sm transition-all shrink-0 cursor-pointer active:scale-95 flex items-center justify-center min-w-[46px] min-h-[46px] mb-0.5"
             title="Send Message"
           >
             {isSending ? (

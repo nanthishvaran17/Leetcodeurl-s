@@ -50,8 +50,21 @@ class DownloadManager {
 
     this.updateState(state, options.onStateChange);
 
-    // 2. INSTANT TOKEN REUSE: Retrieve cached token without network roundtrip to Firebase
-    const token = localStorage.getItem('token') || '';
+    // 2. SECURE TOKEN VERIFICATION: Verify and refresh token securely if needed
+    let token = localStorage.getItem('token') || '';
+    try {
+      const { auth } = await import('../firebase');
+      if (auth && auth.currentUser) {
+        // getIdToken(false) returns cached token instantly if valid, or securely refreshes if expired
+        const fbToken = await auth.currentUser.getIdToken();
+        if (fbToken) {
+          token = fbToken;
+          localStorage.setItem('token', fbToken);
+        }
+      }
+    } catch (tokenErr) {
+      console.warn('[DownloadManager] Token refresh failed. Proceeding with fallback handling.');
+    }
 
     // Construct target URL
     const apiBase = api.defaults.baseURL || '/api';
@@ -89,6 +102,12 @@ class DownloadManager {
           headers,
           recursive: true,
         });
+
+        // Some Capacitor versions do not throw on 401 HTTP response, so we must verify the file or fall back
+        // If it's a 401 error, fallback to Axios which correctly handles the 401 token refresh loop
+        if (downloadRes.path && (downloadRes.path.endsWith('.json') || downloadRes.path.includes('unauthorized'))) {
+           throw new Error('Possible 401 Error in native download, falling back to Axios');
+        }
 
         const totalMs = Math.round(performance.now() - startTime);
         console.log(`[FAST_DOWNLOAD] Completed natively in ${totalMs}ms -> ${downloadRes.path || ''}`);
@@ -137,7 +156,7 @@ class DownloadManager {
       const blobUrl = URL.createObjectURL(blob);
       await triggerBrowserAnchorDownload(blobUrl, filename);
 
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
 
       const totalMs = Math.round(performance.now() - startTime);
       console.log(`[FAST_DOWNLOAD] Web download completed in ${totalMs}ms`);
@@ -147,7 +166,7 @@ class DownloadManager {
 
       return { success: true, downloadId };
     } catch (err: any) {
-      return this.handleDownloadError(err, state, filename, options.onStateChange);
+      return await this.handleDownloadError(err, state, filename, options.onStateChange);
     }
   }
 
@@ -198,7 +217,7 @@ class DownloadManager {
 
       return { success: true, downloadId: state.downloadId };
     } catch (err: any) {
-      return this.handleDownloadError(err, state, filename, onStateChange);
+      return await this.handleDownloadError(err, state, filename, onStateChange);
     }
   }
 
@@ -265,28 +284,39 @@ class DownloadManager {
 
       setTimeout(() => {
         URL.revokeObjectURL(blobUrl);
-      }, 5000);
+      }, 60000);
 
       state.status = 'COMPLETED';
       this.updateState(state);
 
       return { success: true, downloadId };
     } catch (err: any) {
-      return this.handleDownloadError(err, state, safeFilename);
+      return await this.handleDownloadError(err, state, safeFilename);
     }
   }
 
-  private handleDownloadError(
+  private async handleDownloadError(
     err: any,
     state: DownloadState,
     filename: string,
     onStateChange?: (state: DownloadState) => void
-  ): { success: boolean; downloadId: string; error: string } {
+  ): Promise<{ success: boolean; downloadId: string; error: string }> {
     let status: DownloadStatus = 'FAILED';
     let errorMessage = 'Unable to download the file. Please try again.';
 
     const httpStatus = err?.response?.status;
-    const detail = err?.response?.data?.detail || err?.message;
+    let detail = err?.response?.data?.detail || err?.message;
+
+    // Axios returns a Blob for error responses if responseType is 'blob'
+    if (err?.response?.data && err.response.data instanceof Blob) {
+      try {
+        const text = await err.response.data.text();
+        const parsed = JSON.parse(text);
+        detail = parsed.detail || parsed.error || detail;
+      } catch {
+        // Ignore parse errors
+      }
+    }
 
     if (httpStatus === 401) {
       status = 'UNAUTHORIZED';
