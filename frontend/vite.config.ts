@@ -35,6 +35,7 @@ export default defineConfig({
     },
   },
   build: {
+    target: 'es2022',
     chunkSizeWarningLimit: 600,
     // Disable sourcemaps in production for smaller output & faster builds
     sourcemap: false,
