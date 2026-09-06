@@ -243,7 +243,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="College LeetCode Weekly Tracker API",
     description="Backend API for LeetCode weekly tracking, analytics, leaderboards, Excel/PDF reporting and notifications.",
-    version="2.0.0",
+    version="2.2.0",
     default_response_class=JSONResponse,
     lifespan=lifespan
 )
@@ -266,7 +266,7 @@ def health_check():
     return {
         "status": "healthy",
         "service": "College LeetCode Weekly Tracker API",
-        "version": "2.0.0"
+        "version": "2.2.0"
     }
 
 @app.api_route("/ready", methods=["GET", "HEAD"])
@@ -283,7 +283,7 @@ def readiness_check(response: Response):
             "status": "ready",
             "database": "connected",
             "service": "College LeetCode Weekly Tracker API",
-            "version": "2.0.0"
+            "version": "2.2.0"
         }
     except Exception as exc:
         response.status_code = 503
@@ -291,7 +291,7 @@ def readiness_check(response: Response):
             "status": "not_ready",
             "database": "unreachable",
             "error": str(exc),
-            "version": "2.0.0"
+            "version": "2.2.0"
         }
 
 @app.api_route("/health/deep", methods=["GET"])

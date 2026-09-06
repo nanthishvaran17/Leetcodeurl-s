@@ -4,7 +4,7 @@ import { snapshotSyncService, SnapshotVersionInfo } from '../services/snapshotSy
 
 const APP_BUILD_VERSION_KEY = 'nec_app_build_version';
 // Current app deployment revision timestamp
-const CURRENT_BUILD_TIMESTAMP = '2026-09-04-v2.0.1-fixed';
+const CURRENT_BUILD_TIMESTAMP = '2026-09-06-v2.2.0-fixed';
 
 export const AppUpdateNotifier: React.FC = () => {
   const [updateAvailable, setUpdateAvailable] = useState<boolean>(false);
@@ -36,7 +36,7 @@ export const AppUpdateNotifier: React.FC = () => {
       setUpdateInfo({
         title: 'New App Version Available!',
         detail: 'A new frontend update has been deployed. Reload to load the latest features.',
-        version: 'v2.0.1'
+        version: 'v2.2.0'
       });
       setUpdateAvailable(true);
     };
@@ -117,7 +117,7 @@ export const AppUpdateNotifier: React.FC = () => {
                 {updateInfo?.title || 'System Update Available!'}
               </h4>
               <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold">
-                {updateInfo?.version || 'v2.0.1'}
+                {updateInfo?.version || 'v2.2.0'}
               </span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed font-medium">

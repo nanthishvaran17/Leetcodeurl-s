@@ -57,7 +57,7 @@ class AnnouncementCreateRequest(BaseModel):
 class AppUpdateBroadcastRequest(BaseModel):
     title: str = "New App Version Available"
     message: str = "A new version of the Nandha LeetCode Tracker App is now available. Please update for the latest features."
-    version: str = "2.1.0"
+    version: str = "2.2.0"
     is_mandatory: bool = False
     action_route: str = "/dashboard"
 
