@@ -170,6 +170,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
 
     try {
       const res = await api.post('/auth/login', { username: cleanUser, password: cleanPass }, { timeout: 30000 });
+      console.log('[LOGIN] Response status:', res.status, 'data:', res.data);
       if (res.data && res.data.access_token) {
         setSuccessMsg('Authentication verified. Directing to workspace...');
         login(res.data.access_token, res.data.user);
@@ -179,8 +180,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         return;
       }
     } catch (err: any) {
+      const status = err?.response?.status;
+      const detail = err?.response?.data?.detail;
+      const errMsg = err?.message || 'unknown';
+      console.error('[LOGIN_ERROR] status:', status, 'detail:', detail, 'message:', errMsg, 'full:', err);
       triggerShake();
-      setError(err.response?.data?.detail || 'Invalid email/username or password. Please check your credentials.');
+      // Show the actual API detail if available, otherwise show specific network error
+      if (detail) {
+        setError(detail);
+      } else if (status === 0 || !err.response) {
+        setError(`Network error — server may be starting up. Please wait 10 seconds and try again. (${errMsg})`);
+      } else {
+        setError(`Login failed (HTTP ${status || 'unknown'}). Please try again.`);
+      }
     } finally {
       setLoading(false);
       setAuthStatusText('');
