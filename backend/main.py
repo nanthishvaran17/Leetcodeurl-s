@@ -349,14 +349,19 @@ app.add_middleware(
 # ULTRA-FAST SUB-MILLISECOND IN-MEMORY API RESPONSE CACHE
 # =====================================================================
 _API_MEMORY_CACHE: dict = {}
-_MAX_CACHE_ENTRIES = 300
+_MAX_CACHE_ENTRIES = 500
 _CACHE_TTL_MAP: dict = {
     "/api/public/stats": 120,
+    "/api/public/leaderboard": 60,
     "/api/sessions/dashboard-summary": 60,
+    "/api/students": 60,
+    "/api/students/leaderboard-fast": 60,
+    "/api/departments": 300,
     "/api/analytics/department-comparison": 120,
     "/api/analytics/data-quality": 120,
-    "/api/students/leaderboard-fast": 60,
     "/api/weekly-contests/active-contest": 30,
+    "/api/placement-eligibility/students": 120,
+    "/api/gamification/leaderboard": 60,
 }
 
 def purge_api_memory_cache():

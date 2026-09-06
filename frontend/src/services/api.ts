@@ -65,15 +65,38 @@ export const getCachedData = (key: string, url?: string) => {
   if (cached && Date.now() - cached.timestamp < ttl) {
     return cached.data;
   }
+  try {
+    const sessionItem = sessionStorage.getItem(`swr_${key}`);
+    if (sessionItem) {
+      const parsed = JSON.parse(sessionItem);
+      if (parsed && Date.now() - parsed.timestamp < ttl) {
+        responseCache.set(key, parsed);
+        return parsed.data;
+      }
+    }
+  } catch (_e) {}
   return null;
 };
 
 export const setCachedData = (key: string, data: any) => {
-  responseCache.set(key, { timestamp: Date.now(), data });
+  const entry = { timestamp: Date.now(), data };
+  responseCache.set(key, entry);
+  try {
+    // Persist small-to-medium JSON in sessionStorage for instant sub-millisecond tab restores
+    const serialized = JSON.stringify(entry);
+    if (serialized.length < 500_000) {
+      sessionStorage.setItem(`swr_${key}`, serialized);
+    }
+  } catch (_e) {}
 };
 
 export const clearApiCache = () => {
   responseCache.clear();
+  try {
+    Object.keys(sessionStorage).forEach(k => {
+      if (k.startsWith('swr_')) sessionStorage.removeItem(k);
+    });
+  } catch (_e) {}
 };
 
 export const getRequestKey = (url: string, config?: any): string => {
@@ -89,27 +112,23 @@ export const getRequestKey = (url: string, config?: any): string => {
   return `get:${userScope}:${url}:${params}`;
 };
 
-api.interceptors.request.use(async (config) => {
-  let token = localStorage.getItem('token');
-
-  // If Firebase currentUser exists, ensure we fetch/refresh the latest ID Token
-  if (auth && auth.currentUser) {
-    try {
-      const fbToken = await auth.currentUser.getIdToken();
-      if (fbToken) {
-        token = fbToken;
-        localStorage.setItem('token', fbToken);
-      }
-    } catch (_err) {
-      // Ignore token refresh errors and fallback to stored token
-    }
-  }
-
+// Synchronous sub-millisecond request header dispatch
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
+
+// Periodic background keep-alive ping to prevent Render free-tier cold starts
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    if (document.visibilityState === 'visible') {
+      originalGet.call(api, '/health').catch(() => {});
+    }
+  }, 8 * 60 * 1000); // Ping every 8 minutes
+}
 
 // ------------------------------------------------------------------
 // AUTHENTICATION & SILENT REFRESH ARCHITECTURE
