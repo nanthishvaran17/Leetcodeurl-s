@@ -105,15 +105,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const initializeAuthLifecycle = async () => {
       try {
         // 1. Check Google redirect result first (if returning from redirect flow on Mobile Web)
-        if (sessionStorage.getItem('nec_mobile_google_redirect') || window.location.search.includes('state=')) {
+        const isMobileRedirect = !!(
+          sessionStorage.getItem('nec_mobile_google_redirect') ||
+          (typeof window !== 'undefined' && (window.location.search.includes('state=') || window.location.search.includes('code=')))
+        );
+
+        if (isMobileRedirect) {
+          console.log('[MOBILE AUTH] Returning from mobile Google redirect flow');
+          setAuthState('AUTHENTICATING');
           isVerifyingRef.current = true;
-          const redirectRes = await checkGoogleRedirectResult();
-          if (redirectRes && redirectRes.user && isMounted) {
-            login(redirectRes.access_token || '', redirectRes.user);
+          try {
+            const redirectRes = await checkGoogleRedirectResult();
+            if (redirectRes && redirectRes.user && isMounted) {
+              login(redirectRes.access_token || '', redirectRes.user);
+              isVerifyingRef.current = false;
+              return;
+            }
+          } catch (redirectErr: any) {
+            if (isMounted) {
+              const errMsg = redirectErr.response?.data?.detail || redirectErr.message || 'Google sign-in could not be completed. Please try again.';
+              console.error('[MOBILE AUTH] Redirect auth failed:', errMsg);
+              setAuthError(errMsg);
+              setAuthState('AUTH_ERROR');
+              isVerifyingRef.current = false;
+              return;
+            }
+          } finally {
+            sessionStorage.removeItem('nec_mobile_google_redirect');
             isVerifyingRef.current = false;
-            return;
           }
-          isVerifyingRef.current = false;
         }
 
         // 2. Check HttpOnly server session endpoint if token or storedUser exists
@@ -176,18 +196,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               isVerifyingRef.current = true;
               setAuthState('AUTHENTICATED_PENDING_BACKEND');
               try {
+                console.log('[MOBILE AUTH] Firebase auth state listener triggered');
+                console.log('[MOBILE AUTH] ID token obtained');
+                console.log('[MOBILE AUTH] Backend session requested');
                 const idToken = await fbUser.getIdToken(true);
                 const backendRes = await api.post('/auth/google', { id_token: idToken }, { timeout: 35000 });
                 if (backendRes.data && backendRes.data.authenticated && isMounted) {
+                  console.log('[MOBILE AUTH] Backend session created');
+                  console.log('[MOBILE AUTH] Auth state updated');
+                  console.log('[MOBILE AUTH] Redirecting to dashboard');
+                  console.log('[MOBILE AUTH] Login completed');
                   login(backendRes.data.access_token || '', backendRes.data.user);
                 }
               } catch (err: any) {
                 if (isMounted) {
-                  console.warn('[FIREBASE_AUTH_BACKEND_REJECT]', err);
+                  console.warn('[MOBILE AUTH] Backend verification failed:', err);
                   try { await firebaseSignOut(activeAuth); } catch (_) {}
-                  const errMsg = err.response?.data?.detail || err.message || 'Your Google account is not registered with the institution.';
+                  const errMsg = err.response?.data?.detail || err.message || 'Google sign-in could not be completed. Please try again.';
                   setAuthError(errMsg);
-                  setAuthState('UNAUTHENTICATED');
+                  setAuthState('AUTH_ERROR');
                 }
               } finally {
                 isVerifyingRef.current = false;
@@ -205,6 +232,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (unsubscribeFirebase) unsubscribeFirebase();
     };
   }, [login]);
+
+  // Safety Timeout: 15s maximum wait for loading states to prevent permanent loading spinners
+  useEffect(() => {
+    if (authState === 'AUTHENTICATING' || authState === 'AUTHENTICATED_PENDING_BACKEND') {
+      const timeout = setTimeout(() => {
+        if (authState === 'AUTHENTICATING' || authState === 'AUTHENTICATED_PENDING_BACKEND') {
+          console.warn('[MOBILE AUTH] Auth process timed out after 15s. Resetting state.');
+          isVerifyingRef.current = false;
+          setAuthError('Google sign-in could not be completed. Please try again.');
+          setAuthState('AUTH_ERROR');
+        }
+      }, 15000);
+      return () => clearTimeout(timeout);
+    }
+  }, [authState]);
 
   // Google Sign-In trigger
   const signInWithGoogle = async () => {

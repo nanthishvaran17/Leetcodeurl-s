@@ -37,29 +37,49 @@ export const isMobileBrowser = (): boolean => {
 
 let redirectCheckPromise: Promise<GoogleAuthResult | null> | null = null;
 
-/**
- * Safely checks if the user is returning from a Google signInWithRedirect flow on Mobile Web / Browser.
- */
 export const checkGoogleRedirectResult = async (): Promise<GoogleAuthResult | null> => {
   if (redirectCheckPromise) return redirectCheckPromise;
 
   redirectCheckPromise = (async () => {
+    console.log('[MOBILE AUTH] Checking redirect result from Firebase Auth...');
     try {
       const auth = getOrInitAuth();
-      console.log('[MOBILE AUTH] Checking redirect result from Firebase Auth...');
-      const cred = await getRedirectResult(auth);
       
-      if (cred && cred.user && cred.user.email) {
+      // 1. Try Firebase getRedirectResult
+      let cred = await getRedirectResult(auth).catch((e) => {
+        console.warn('[MOBILE AUTH] getRedirectResult note:', e?.message || e);
+        return null;
+      });
+
+      // 2. Fallback to auth.currentUser if getRedirectResult returned null but user is logged into Firebase
+      let targetUser = cred?.user || auth.currentUser;
+
+      if (!targetUser) {
+        // Wait up to 2 seconds for auth.currentUser to populate from Firebase redirect storage
+        await new Promise<void>((resolve) => {
+          const timeout = setTimeout(() => resolve(), 2000);
+          const unsubscribe = auth.onAuthStateChanged((u) => {
+            if (u) {
+              targetUser = u;
+              clearTimeout(timeout);
+              unsubscribe();
+              resolve();
+            }
+          });
+        });
+      }
+
+      if (targetUser && targetUser.email) {
         console.log('[MOBILE AUTH] OAuth callback received');
         console.log('[MOBILE AUTH] Firebase result received');
         console.log('[MOBILE AUTH] Firebase user verified');
-        
-        const idToken = await cred.user.getIdToken(true);
+
+        const idToken = await targetUser.getIdToken(true);
         console.log('[MOBILE AUTH] ID token obtained');
-        
+
         console.log('[MOBILE AUTH] Backend session requested');
         const response = await api.post('/auth/google', { id_token: idToken }, { timeout: 35000 });
-        
+
         if (response.data && response.data.authenticated) {
           console.log('[MOBILE AUTH] Backend session created');
           console.log('[MOBILE AUTH] Auth state updated');
@@ -69,6 +89,9 @@ export const checkGoogleRedirectResult = async (): Promise<GoogleAuthResult | nu
           return response.data;
         }
       }
+
+      sessionStorage.removeItem('nec_mobile_google_redirect');
+      return null;
     } catch (err: any) {
       sessionStorage.removeItem('nec_mobile_google_redirect');
       const errStr = String(err?.message || err?.code || err || '');
@@ -83,15 +106,15 @@ export const checkGoogleRedirectResult = async (): Promise<GoogleAuthResult | nu
           const cleanUrl = window.location.origin + window.location.pathname;
           window.history.replaceState({}, document.title, cleanUrl);
         }
-      } else {
-        console.warn('[MOBILE AUTH] Redirect check note:', err);
+        return null;
       }
+      console.error('[MOBILE AUTH] Redirect check failed:', errStr);
+      throw err;
     } finally {
       setTimeout(() => {
         redirectCheckPromise = null;
-      }, 2000);
+      }, 1500);
     }
-    return null;
   })();
 
   return redirectCheckPromise;

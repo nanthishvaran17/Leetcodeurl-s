@@ -9,13 +9,17 @@ interface GoogleSignInButtonProps {
 }
 
 export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSuccess, className = '' }) => {
-  const { user, login, logout, authState } = useAuth();
+  const { user, login, logout, authState, authError, clearAuthError } = useAuth();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  const activeError = errorMsg || authError;
+  const isAuthLoading = isSigningIn || authState === 'AUTHENTICATING' || authState === 'AUTHENTICATED_PENDING_BACKEND';
+
   const handleSignIn = async () => {
-    if (isSigningIn) return;
+    if (isAuthLoading) return;
     setErrorMsg('');
+    clearAuthError();
     setIsSigningIn(true);
 
     try {
@@ -29,11 +33,22 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
       if (msg === 'Google sign-in was cancelled.' || msg.toLowerCase().includes('cancel')) {
         setErrorMsg('Google sign-in was cancelled.');
       } else {
-        setErrorMsg('Google sign-in could not be completed. Please try again.');
+        setErrorMsg(msg);
       }
     } finally {
       setIsSigningIn(false);
     }
+  };
+
+  const handleRetry = () => {
+    setErrorMsg('');
+    clearAuthError();
+    handleSignIn();
+  };
+
+  const handleBackToSignIn = () => {
+    setErrorMsg('');
+    clearAuthError();
   };
 
   if (user) {
@@ -59,7 +74,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
         </div>
         <button
           onClick={logout}
-          disabled={authState === 'AUTHENTICATING'}
+          disabled={isAuthLoading}
           className="p-2.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
           title="Sign Out"
         >
@@ -71,36 +86,56 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
 
   return (
     <div className="w-full space-y-2.5">
-      {errorMsg && (
-        <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs space-y-1 animate-fade-in">
+      {activeError && (
+        <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs space-y-2 animate-fade-in shadow-sm">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 font-semibold">
+            <div className="flex items-center space-x-2 font-bold text-rose-800 dark:text-rose-200">
               <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
               <span>Authentication Notice</span>
             </div>
             <button
               type="button"
-              onClick={() => setErrorMsg('')}
+              onClick={handleBackToSignIn}
               className="text-slate-400 hover:text-rose-600 text-xs font-bold p-1 rounded-md hover:bg-rose-100 dark:hover:bg-rose-900/40 min-h-[32px] min-w-[32px] flex items-center justify-center cursor-pointer"
               aria-label="Dismiss notice"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
-          <p className="text-[12px] leading-relaxed">{errorMsg}</p>
+          <p className="text-[12px] leading-relaxed text-rose-700 dark:text-rose-300">{activeError}</p>
+          <div className="flex items-center space-x-2 pt-1">
+            <button
+              type="button"
+              onClick={handleRetry}
+              className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs transition-colors shadow-sm cursor-pointer"
+            >
+              Try Again
+            </button>
+            <button
+              type="button"
+              onClick={handleBackToSignIn}
+              className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs transition-colors cursor-pointer"
+            >
+              Back to Sign In
+            </button>
+          </div>
         </div>
       )}
 
       <button
         type="button"
         onClick={handleSignIn}
-        disabled={isSigningIn}
-        className={`google-signin-btn hover:bg-slate-50 dark:hover:bg-slate-800/60 active:scale-[0.99] ${isSigningIn ? 'opacity-70' : ''} ${className}`}
+        disabled={isAuthLoading}
+        className={`google-signin-btn hover:bg-slate-50 dark:hover:bg-slate-800/60 active:scale-[0.99] ${isAuthLoading ? 'opacity-70 cursor-not-allowed' : ''} ${className}`}
       >
-        {isSigningIn ? (
+        {isAuthLoading ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin text-blue-600 shrink-0" />
-            <span>Connecting to Google...</span>
+            <span>
+              {authState === 'AUTHENTICATED_PENDING_BACKEND'
+                ? 'Authorizing Session...'
+                : 'Authenticating through Google...'}
+            </span>
           </>
         ) : (
           <>
