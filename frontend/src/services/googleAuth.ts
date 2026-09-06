@@ -363,14 +363,41 @@ export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
   const authInstance = getOrInitAuth();
   const provider = createGoogleProvider();
 
-  // Mobile Web Browser Flow: Use Redirect Flow to avoid mobile popup isolation / ITP blocks
+  // Mobile Web Browser Flow: Try direct popup flow first (allowed in touch/click event handlers)
   if (isMobileBrowser()) {
     console.log('[MOBILE AUTH] Login initiated');
-    console.log('[MOBILE AUTH] Google authentication started');
-    console.log('[MOBILE AUTH] Redirect initiated');
-    sessionStorage.setItem('nec_mobile_google_redirect', '1');
-    await signInWithRedirect(authInstance, provider);
-    return new Promise(() => {}); // Page will redirect
+    console.log('[MOBILE AUTH] Google authentication started (Mobile Web)');
+    try {
+      console.log('[MOBILE AUTH] Attempting mobile popup authentication...');
+      const cred = await signInWithPopup(authInstance, provider);
+      if (cred && cred.user) {
+        console.log('[MOBILE AUTH] OAuth callback received');
+        console.log('[MOBILE AUTH] Firebase result received');
+        console.log('[MOBILE AUTH] Firebase user verified');
+        const idToken = await cred.user.getIdToken(true);
+        console.log('[MOBILE AUTH] ID token obtained');
+        console.log('[MOBILE AUTH] Backend session requested');
+        const response = await api.post('/auth/google', { id_token: idToken }, { timeout: 35000 });
+        if (response.data && response.data.authenticated) {
+          console.log('[MOBILE AUTH] Backend session created');
+          console.log('[MOBILE AUTH] Auth state updated');
+          console.log('[MOBILE AUTH] Redirecting to dashboard');
+          console.log('[MOBILE AUTH] Login completed');
+          return response.data;
+        }
+      }
+    } catch (popupErr: any) {
+      const code = popupErr?.code || '';
+      console.warn('[MOBILE AUTH] Mobile popup note:', code || popupErr?.message);
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+        throw new Error('Google sign-in was cancelled.');
+      }
+      // If popup was blocked or unsupported, fallback to redirect flow
+      console.log('[MOBILE AUTH] Popup blocked or unhandled; initiating robust redirect flow...');
+      sessionStorage.setItem('nec_mobile_google_redirect', '1');
+      await signInWithRedirect(authInstance, provider);
+      return new Promise(() => {}); // Page will redirect
+    }
   }
 
   // Desktop Web Browser Flow: Existing Working Popup Flow (PRESERVED 100% UNCHANGED)
