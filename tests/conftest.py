@@ -6,8 +6,14 @@ import pytest
 from sqlalchemy.orm import Session
 from fastapi.testclient import TestClient
 
-from backend.database import SessionLocal
+from backend.database import SessionLocal, run_migrations
 from backend.main import app
+
+
+@pytest.fixture(scope="session", autouse=True)
+def ensure_test_schema() -> None:
+    """Ensure SQLite test schema exists before any tests execute."""
+    run_migrations()
 
 
 @pytest.fixture(scope="function")

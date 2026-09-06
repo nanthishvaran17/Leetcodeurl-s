@@ -116,8 +116,7 @@ async def get_leaderboard_fast(
 
             if not students:
                 empty_bytes = b'[]'
-                from starlette.responses import Response
-                return Response(content=empty_bytes, media_type="application/json")
+                return empty_bytes
 
             student_ids = [st.id for st in students]
 
@@ -1717,4 +1716,3 @@ def bulk_generate_emails(
         "error_count": error_count,
         "message": f"Successfully generated {generated_count} institutional emails."
     }
-
