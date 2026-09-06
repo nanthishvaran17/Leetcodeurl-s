@@ -88,7 +88,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
 
   const downloadFile = async (format: string) => {
     try {
-      const url = `/reports/${reportId}/${format}`;
+      const activeParam = activeFilter ? `?attendance=${encodeURIComponent(activeFilter)}` : '';
+      const url = `/reports/${reportId}/${format}${activeParam}`;
       const ext = format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : format === 'zip' ? 'zip' : format;
       const filename = `${report?.reportType || 'REPORT'}_${reportId}.${ext}`;
 

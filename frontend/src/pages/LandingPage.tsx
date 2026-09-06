@@ -540,7 +540,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="flex items-center justify-between px-2">
           <div className="flex items-center space-x-2">
             <span className="text-xs font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider">
-              {summaryData?.is_session_live ? '⚡ Live Sunday Monitoring Session' : '⏱️ Next Sunday Session Timer'}
+              {summaryData?.is_session_live ? 'Live Sunday Monitoring Session' : 'Next Sunday Session Timer'}
             </span>
           </div>
           <span className="text-xs font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 px-2.5 py-0.5 rounded-full border border-brand-200/60 dark:border-brand-500/30">

@@ -1,9 +1,10 @@
-import { signInWithPopup, signInWithRedirect, getRedirectResult, UserCredential } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider } from 'firebase/auth';
 import { getOrInitAuth, createGoogleProvider } from './firebase';
 import api from './api';
 
 export interface GoogleAuthResult {
   authenticated: boolean;
+  access_token?: string;
   user: {
     id: number;
     username: string;
@@ -14,11 +15,20 @@ export interface GoogleAuthResult {
   };
 }
 
+/** Check whether running inside native Android/iOS Capacitor container */
+export const isNativeMobile = (): boolean => {
+  try {
+    // @ts-ignore — window.Capacitor is injected by native runtime bridge
+    return !!(window?.Capacitor?.isNativePlatform?.());
+  } catch {
+    return false;
+  }
+};
+
 let redirectCheckPromise: Promise<GoogleAuthResult | null> | null = null;
 
 /**
- * Safely checks if the user is returning from a Google signInWithRedirect flow.
- * Handles storage-partitioning ('missing initial state') gracefully without crashing the app.
+ * Safely checks if the user is returning from a Google signInWithRedirect flow on Web.
  */
 export const checkGoogleRedirectResult = async (): Promise<GoogleAuthResult | null> => {
   if (redirectCheckPromise) return redirectCheckPromise;
@@ -43,7 +53,7 @@ export const checkGoogleRedirectResult = async (): Promise<GoogleAuthResult | nu
         err?.code === 'auth/missing-initial-state' ||
         err?.code === 'auth/web-storage-unsupported'
       ) {
-        console.warn('[GOOGLE_REDIRECT_STORAGE_PARTITIONED] Handled missing initial state gracefully:', errStr);
+        console.warn('[GOOGLE_REDIRECT_STORAGE_PARTITIONED] Handled missing initial state gracefully');
         if (typeof window !== 'undefined' && window.history && window.location.search.includes('state=')) {
           const cleanUrl = window.location.origin + window.location.pathname;
           window.history.replaceState({}, document.title, cleanUrl);
@@ -58,106 +68,241 @@ export const checkGoogleRedirectResult = async (): Promise<GoogleAuthResult | nu
   return redirectCheckPromise;
 };
 
-export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
-  console.log('[GOOGLE_AUTH_STARTED] Initiating Google Sign-In...');
+// ========================================================
+// PKCE (RFC 7636) Cryptographic Utilities
+// ========================================================
+function generateRandomString(length: number = 64): string {
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+  const array = new Uint8Array(length);
+  if (typeof window !== 'undefined' && window.crypto && window.crypto.getRandomValues) {
+    window.crypto.getRandomValues(array);
+    return Array.from(array, byte => possible[byte % possible.length]).join('');
+  }
+  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+}
+
+function base64UrlEncode(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
+async function generateCodeChallenge(codeVerifier: string): Promise<string> {
+  if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(codeVerifier);
+    const digest = await window.crypto.subtle.digest('SHA-256', data);
+    return base64UrlEncode(digest);
+  }
+  // Fallback
+  return codeVerifier;
+}
+
+// Active in-flight PKCE session
+interface ActivePkceSession {
+  code_verifier: string;
+  state: string;
+  timestamp: number;
+  resolve?: (res: GoogleAuthResult) => void;
+  reject?: (err: Error) => void;
+}
+
+let activePkceSession: ActivePkceSession | null = null;
+let isProcessingCallback = false;
+
+/**
+ * Authoritative Single Handler for Native OAuth Callbacks.
+ * Validates State + Exchanges PKCE Authorization Code via Secure Backend HTTPS API.
+ */
+export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuthResult | null> => {
+  if (!urlStr || !urlStr.includes('oauth-callback')) {
+    return null;
+  }
+
+  if (isProcessingCallback) {
+    console.log('[OAUTH_CALLBACK] Already processing callback in flight, ignoring duplicate event.');
+    return null;
+  }
+
+  isProcessingCallback = true;
+  console.log('[OAUTH_CALLBACK_START] Processing PKCE authorization code callback...');
 
   try {
-    const auth = getOrInitAuth();
-    if (!auth) {
-      throw new Error('Authentication service is initializing. Please try again.');
+    const { Browser } = await import('@capacitor/browser');
+    await Browser.close().catch(() => {});
+  } catch (_e) {}
+
+  try {
+    const cleanUrlStr = urlStr
+      .replace(/^org\.nandhaengg\.leetcodesync:\/\//, 'https://dummy.local/')
+      .replace(/^leetcodesync:\/\//, 'https://dummy.local/');
+
+    const parsed = new URL(cleanUrlStr);
+    const errorParam = parsed.searchParams.get('error');
+    const codeParam = parsed.searchParams.get('code');
+    const stateParam = parsed.searchParams.get('state');
+
+    if (errorParam) {
+      const errMsg = errorParam.toLowerCase().includes('cancel')
+        ? 'Google sign-in was cancelled.'
+        : errorParam;
+      if (activePkceSession?.reject) {
+        activePkceSession.reject(new Error(errMsg));
+      }
+      activePkceSession = null;
+      throw new Error(errMsg);
     }
 
-    const provider = createGoogleProvider();
+    if (!codeParam) {
+      throw new Error('No authorization code returned in callback.');
+    }
 
-    // Step 1: Attempt Firebase Google Sign-In Popup first
-    let cred: UserCredential;
-    try {
-      cred = await signInWithPopup(auth, provider);
-      console.log('[GOOGLE_POPUP_SUCCESS] Firebase Google popup authenticated successfully.');
-    } catch (popupErr: any) {
-      const errStr = String(popupErr?.message || popupErr?.code || popupErr || '');
-      console.warn('[GOOGLE_POPUP_FAIL]', popupErr.code, popupErr.message);
-
-      // Handle popup blocked, argument error, or mobile environment restrictions with redirect fallback
-      if (
-        popupErr?.code === 'auth/argument-error' ||
-        popupErr?.code === 'auth/popup-blocked' ||
-        popupErr?.code === 'auth/operation-not-supported-in-this-environment' ||
-        errStr.includes('argument-error') ||
-        errStr.includes('popup-blocked') ||
-        errStr.includes('popup')
-      ) {
-        console.warn('[GOOGLE_REDIRECT_FALLBACK] Attempting Google Sign-In redirect fallback...');
-        try {
-          const redirectProvider = createGoogleProvider();
-          await signInWithRedirect(auth, redirectProvider);
-          throw new Error('Redirecting to Google Sign-In...');
-        } catch (redirectErr: any) {
-          if (redirectErr.message === 'Redirecting to Google Sign-In...') {
-            throw redirectErr;
-          }
-          const rErrStr = String(redirectErr?.message || redirectErr?.code || '');
-          if (rErrStr.includes('missing initial state') || rErrStr.includes('sessionStorage')) {
-            throw new Error(
-              'Mobile browser storage restriction detected. Please sign in using Password or OTP login.'
-            );
-          }
-          throw new Error('Unable to complete Google sign-in. Please use Password or OTP login.');
-        }
-      } else if (
-        errStr.includes('missing initial state') ||
-        errStr.includes('sessionStorage') ||
-        popupErr.code === 'auth/missing-initial-state' ||
-        popupErr.code === 'auth/web-storage-unsupported'
-      ) {
-        throw new Error(
-          'Mobile browser storage restriction detected. Please sign in using Password or OTP login.'
-        );
-      } else if (popupErr.code === 'auth/popup-closed-by-user' || popupErr.code === 'auth/cancelled-popup-request') {
-        throw new Error('Google sign-in was cancelled.');
-      } else if (popupErr.code === 'auth/unauthorized-domain' || errStr.includes('unauthorized-domain')) {
-        const currentHost = typeof window !== 'undefined' ? window.location.hostname : 'this domain';
-        throw new Error(
-          `Unauthorized Domain: "${currentHost}" is not authorized in Firebase Console. Add "${currentHost}" under Firebase Console -> Authentication -> Settings -> Authorized Domains.`
-        );
-      } else if (popupErr.code === 'auth/account-exists-with-different-credential') {
-        throw new Error('Please sign in using your existing authentication method for this account.');
-      } else {
-        throw new Error('Google sign-in was unable to complete on this mobile browser. Please try again or use Email/OTP login.');
+    // Validate State
+    if (activePkceSession && activePkceSession.state && stateParam) {
+      if (activePkceSession.state !== stateParam) {
+        throw new Error('OAuth State verification failed (possible CSRF attempt).');
       }
     }
 
-    const firebaseUser = cred.user;
-    if (!firebaseUser || !firebaseUser.email) {
-      throw new Error('Google account must have a valid email address.');
+    const codeVerifier = activePkceSession?.code_verifier || '';
+
+    // Securely exchange code + code_verifier via HTTPS backend endpoint
+    const res = await api.post('/auth/google/exchange-code', {
+      code: codeParam,
+      code_verifier: codeVerifier,
+      state: stateParam || ''
+    }, { timeout: 35000 });
+
+    if (res.data && res.data.authenticated && res.data.user) {
+      const result: GoogleAuthResult = {
+        authenticated: true,
+        access_token: res.data.access_token || '',
+        user: res.data.user
+      };
+
+      if (activePkceSession?.resolve) {
+        activePkceSession.resolve(result);
+      }
+      activePkceSession = null;
+      return result;
     }
 
-    // Step 2: Retrieve Firebase ID Token
-    const idToken = await firebaseUser.getIdToken(true);
-    console.log('[GOOGLE_TOKEN_RECEIVED] Firebase ID token retrieved successfully.');
+    throw new Error('Unable to establish authenticated session with institutional server.');
+  } catch (err: any) {
+    if (activePkceSession?.reject) {
+      activePkceSession.reject(err);
+    }
+    activePkceSession = null;
+    throw err;
+  } finally {
+    setTimeout(() => {
+      isProcessingCallback = false;
+    }, 500);
+  }
+};
 
-    // Step 3: Backend verification & role authorization
-    console.log('[GOOGLE_BACKEND_REQUEST] Posting ID token to backend /api/auth/google...');
+/**
+ * Native Android Mobile Google Sign-In using Chrome Custom Tab + PKCE (RFC 7636).
+ * Zero tokens, passwords, or credentials are ever transmitted via URL parameters.
+ */
+const authenticateWithGoogleMobile = async (): Promise<GoogleAuthResult> => {
+  console.log('[GOOGLE_MOBILE_AUTH_STARTED] Initializing PKCE Authorization Code Flow...');
+
+  const { Browser } = await import('@capacitor/browser');
+
+  const scheme = 'org.nandhaengg.leetcodesync';
+  let bridgeBase = 'https://leetcodeurl-s-roan.vercel.app';
+  if (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost')) {
+    bridgeBase = window.location.origin;
+  }
+
+  const apiBase = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_API_URL || import.meta.env?.VITE_API_BASE_URL)) || 'https://leetcodeurl-s-roan.vercel.app/api';
+
+  // 1. Generate PKCE parameters
+  const codeVerifier = generateRandomString(64);
+  const codeChallenge = await generateCodeChallenge(codeVerifier);
+  const state = generateRandomString(32);
+
+  const authUrl = `${bridgeBase}/mobile-auth.html?scheme=${scheme}&code_challenge=${encodeURIComponent(codeChallenge)}&state=${encodeURIComponent(state)}&api_base=${encodeURIComponent(apiBase)}`;
+
+  return new Promise<GoogleAuthResult>((resolve, reject) => {
+    activePkceSession = {
+      code_verifier: codeVerifier,
+      state: state,
+      timestamp: Date.now(),
+      resolve,
+      reject
+    };
+
+    // Listen for browser closed / dismissed by user
+    let browserFinishedListener: any = null;
+    Browser.addListener('browserFinished', () => {
+      setTimeout(() => {
+        if (activePkceSession) {
+          activePkceSession.reject?.(new Error('Google sign-in was cancelled.'));
+          activePkceSession = null;
+        }
+      }, 600);
+    }).then(handle => {
+      browserFinishedListener = handle;
+    });
+
+    // Launch Chrome Custom Tab
+    Browser.open({ url: authUrl, windowName: '_self' }).catch((_err) => {
+      if (activePkceSession) {
+        activePkceSession.reject?.(new Error('Unable to open browser for Google authentication.'));
+        activePkceSession = null;
+      }
+    });
+  });
+};
+
+/**
+ * Universal Google Sign-In Entrypoint.
+ * Automatically delegates to Chrome Custom Tab on Native Mobile and Firebase Auth on Web.
+ */
+export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
+  if (isNativeMobile()) {
+    return authenticateWithGoogleMobile();
+  }
+
+  // Web Browser Flow via Firebase Auth
+  const authInstance = getOrInitAuth();
+  const provider = createGoogleProvider();
+
+  try {
+    const cred = await signInWithPopup(authInstance, provider);
+    if (!cred || !cred.user) throw new Error('No user profile returned from Google.');
+
+    const idToken = await cred.user.getIdToken(true);
     const response = await api.post('/auth/google', { id_token: idToken }, { timeout: 35000 });
-
-    if (!response.data || !response.data.authenticated) {
-      throw new Error('Please sign in using your authorized institutional Google account.');
-    }
-
     return response.data;
   } catch (err: any) {
-    if (err.message === 'Redirecting to Google Sign-In...') {
-      throw err;
+    const code = err?.code || '';
+    if (code === 'auth/popup-blocked') {
+      await signInWithRedirect(authInstance, provider);
+      return new Promise(() => {}); // Page will redirect
     }
-    if (err.response?.status === 403) {
-      throw new Error(err.response?.data?.detail || 'Your Google account is authenticated, but is not registered with the institution. Please contact your administrator.');
+    if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+      throw new Error('Google sign-in was cancelled.');
     }
-    if (err.response?.data?.detail) {
-      throw new Error(err.response.data.detail);
+    if (code === 'auth/argument-error') {
+      console.warn('[FIREBASE_ARGUMENT_ERROR] Retrying with fresh provider instance...');
+      const fallbackProvider = new GoogleAuthProvider();
+      fallbackProvider.setCustomParameters({ prompt: 'select_account' });
+      const cred = await signInWithPopup(authInstance, fallbackProvider);
+      if (cred && cred.user) {
+        const idToken = await cred.user.getIdToken(true);
+        const response = await api.post('/auth/google', { id_token: idToken }, { timeout: 35000 });
+        return response.data;
+      }
     }
-    if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
-      throw new Error('Unable to connect to authentication server. Please check your internet connection.');
-    }
-    throw new Error(err.message || 'Google authentication service is temporarily unavailable.');
+    throw err;
   }
 };

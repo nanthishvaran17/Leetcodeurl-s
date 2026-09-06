@@ -373,8 +373,13 @@ export const ChatWindow: React.FC<Props> = ({
                 <span>typing...</span>
               </p>
             ) : (
-              <p className="text-xs text-slate-400 font-medium">
-                {conversation.otherUser.department} • {conversation.otherUser.isOnline ? '🟢 Online' : 'Offline'}
+              <p className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
+                <span>{conversation.otherUser.department}</span>
+                <span>•</span>
+                <span className="flex items-center gap-1">
+                  {conversation.otherUser.isOnline && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />}
+                  {conversation.otherUser.isOnline ? 'Online' : 'Offline'}
+                </span>
               </p>
             )}
           </div>

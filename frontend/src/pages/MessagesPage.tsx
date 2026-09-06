@@ -492,7 +492,7 @@ export const MessagesPage: React.FC = () => {
       setForwardingMessage(null);
       try {
         const res = await axios.post(getApiUrl('/messaging/messages'), {
-          content: `↪️ Forwarded: ${targetMsg.content}`,
+          content: `Forwarded: ${targetMsg.content}`,
           receiver_id: recipientId,
           attachment_file_id: targetMsg.attachmentFileId
         }, { headers: getAuthHeaders() });

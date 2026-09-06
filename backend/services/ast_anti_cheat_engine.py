@@ -107,7 +107,7 @@ class ASTAntiCheatEngine:
             "risk_level": risk_level,
             "method": method,
             "structural_nodes_analyzed": len(ast_a or tok_a if 'tok_a' in locals() else []),
-            "verdict": "🔴 CHEATING DETECTED (AST Structure Match)" if is_plagiarized else "🟢 GENUINE SUBMISSION"
+            "verdict": " CHEATING DETECTED (AST Structure Match)" if is_plagiarized else " GENUINE SUBMISSION"
         }
 
     @staticmethod
@@ -126,7 +126,7 @@ class ASTAntiCheatEngine:
             "paste_events": paste_events,
             "is_paste_burst": is_paste_burst,
             "keystroke_anomaly": is_paste_burst,
-            "flag": "🔴 COPY_PASTE_BURST_FLAGGED" if is_paste_burst else "🟢 NORMAL_TYPING_CADENCE"
+            "flag": " COPY_PASTE_BURST_FLAGGED" if is_paste_burst else " NORMAL_TYPING_CADENCE"
         }
 
 

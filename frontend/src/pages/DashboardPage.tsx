@@ -193,12 +193,28 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     }
   };
 
+  const { department, academicYear, attendanceStatus, searchQuery, isFilteringActive } = useFilters();
+  const filteredStudents = useFilteredStudents();
+
+  const getFilterQueryParams = () => {
+    const params = new URLSearchParams();
+    if (department && department !== 'ALL') params.append('department', department);
+    if (academicYear && academicYear !== 'ALL') params.append('year', academicYear);
+    if (attendanceStatus && attendanceStatus !== 'ALL') params.append('attendance', attendanceStatus);
+    if (searchQuery && searchQuery.trim()) params.append('search', searchQuery.trim());
+    const qs = params.toString();
+    return qs ? `?${qs}` : '';
+  };
+
   const handleGenerateReport = async () => {
     setGeneratingReport(true);
     try {
-      const filename = `NEC_Weekly_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
+      const qParam = getFilterQueryParams();
+      const deptSlug = department && department !== 'ALL' ? `_${department}` : '';
+      const yearSlug = academicYear && academicYear !== 'ALL' ? `_${academicYear}Yr` : '';
+      const filename = `NEC_Weekly_Report${deptSlug}${yearSlug}_${new Date().toISOString().slice(0, 10)}.pdf`;
       const res = await downloadManager.download({
-        endpoint: '/reports/export-pdf',
+        endpoint: `/reports/export-pdf${qParam}`,
         filename,
         mimeType: 'application/pdf',
       });
@@ -216,10 +232,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   };
 
   const handleExportExcel = async () => {
-    notify.info('Preparing Excel Export', 'Fetching Weekly Contest statistics...', { category: 'REPORTS' });
-    const filename = `NEC_Master_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    notify.info('Preparing Excel Export', 'Fetching filtered student performance statistics...', { category: 'REPORTS' });
+    const qParam = getFilterQueryParams();
+    const deptSlug = department && department !== 'ALL' ? `_${department}` : '';
+    const yearSlug = academicYear && academicYear !== 'ALL' ? `_${academicYear}Yr` : '';
+    const filename = `NEC_Master_Report${deptSlug}${yearSlug}_${new Date().toISOString().slice(0, 10)}.xlsx`;
     const res = await downloadManager.download({
-      endpoint: '/reports/export-official-college-summary',
+      endpoint: `/reports/export-official-college-summary${qParam}`,
       filename,
       mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     });
@@ -229,9 +248,6 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       notify.error('Unable to generate report', res.error || 'Please try again.', { category: 'REPORTS' });
     }
   };
-
-  const filteredStudents = useFilteredStudents();
-  const { isFilteringActive } = useFilters();
 
   // Dynamic Derived Metrics from Active Filter Scope
   const totalStudents = filteredStudents.length;

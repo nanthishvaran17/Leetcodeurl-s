@@ -91,7 +91,7 @@ class NotificationOutboxWorker:
 
                 elif evt.channel in ["FCM_PUSH", "FIRESTORE"]:
                     res = NotificationService.send_targeted_notification(
-                        title=evt.payload.get("title", "⚠️ Dual-ID Review Required"),
+                        title=evt.payload.get("title", " Dual-ID Review Required"),
                         message=evt.payload.get("message", ""),
                         notification_type="SYSTEM",
                         priority="HIGH",

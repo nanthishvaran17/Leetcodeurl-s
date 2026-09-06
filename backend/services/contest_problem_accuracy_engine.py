@@ -284,23 +284,23 @@ class ContestProblemAccuracyEngine:
         # Performance Tier Classification
         if solved_count == 4:
             tier = "4/4"
-            tier_display = "🏆 4/4 Perfect"
+            tier_display = "4/4 Perfect"
             tier_highlight = "Verified all 4 official problems"
         elif solved_count == 3:
             tier = "3/4"
-            tier_display = "🥇 3/4"
+            tier_display = "3/4 Solved"
             tier_highlight = "Verified 3 official problems"
         elif solved_count == 2:
             tier = "2/4"
-            tier_display = "🥈 2/4"
+            tier_display = "2/4 Solved"
             tier_highlight = "Verified 2 official problems"
         elif solved_count == 1:
             tier = "1/4"
-            tier_display = "🥉 1/4"
+            tier_display = "1/4 Solved"
             tier_highlight = "Verified 1 official problem"
         else:
             tier = "0/4"
-            tier_display = "⚪ 0/4"
+            tier_display = "0/4 Solved"
             tier_highlight = "No verified accepted solution"
 
         # Theoretical Score from Binary Problem Solves
@@ -492,11 +492,11 @@ class ContestProblemAccuracyEngine:
         pct_n0 = round((n0 / evaluated_count * 100), 1) if evaluated_count > 0 else 0.0
 
         performance_table = [
-            {"tier": "🏆 4/4 Perfect", "solved": "4 / 4", "count": n4, "pct": pct_n4, "highlight": f"{n4} students verified all 4 official problems"},
-            {"tier": "🥇 3/4", "solved": "3 / 4", "count": n3, "pct": pct_n3, "highlight": f"{n3} students verified 3 official problems"},
-            {"tier": "🥈 2/4", "solved": "2 / 4", "count": n2, "pct": pct_n2, "highlight": f"{n2} students verified 2 official problems"},
-            {"tier": "🥉 1/4", "solved": "1 / 4", "count": n1, "pct": pct_n1, "highlight": f"{n1} students verified 1 official problem"},
-            {"tier": "⚪ 0/4", "solved": "0 / 4", "count": n0, "pct": pct_n0, "highlight": f"{n0} students with no verified accepted solution"},
+            {"tier": "4/4 Perfect", "solved": "4 / 4", "count": n4, "pct": pct_n4, "highlight": f"{n4} students verified all 4 official problems"},
+            {"tier": "3/4 Solved", "solved": "3 / 4", "count": n3, "pct": pct_n3, "highlight": f"{n3} students verified 3 official problems"},
+            {"tier": "2/4 Solved", "solved": "2 / 4", "count": n2, "pct": pct_n2, "highlight": f"{n2} students verified 2 official problems"},
+            {"tier": "1/4 Solved", "solved": "1 / 4", "count": n1, "pct": pct_n1, "highlight": f"{n1} students verified 1 official problem"},
+            {"tier": "0/4 Solved", "solved": "0 / 4", "count": n0, "pct": pct_n0, "highlight": f"{n0} students with no verified accepted solution"},
         ]
 
         return {

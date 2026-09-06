@@ -98,7 +98,7 @@ export const App: React.FC = () => {
     return <CertificateVerificationPage verificationId={certId} />;
   }
 
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, login } = useAuth();
   
   // Initialize Native Android Capacitor Push (if applicable)
   useCapacitorPush();
@@ -172,6 +172,39 @@ export const App: React.FC = () => {
   useEffect(() => {
     initPushNotifications();
   }, []);
+
+  // Handle Global Native Deep Link URLs (including Google OAuth callback)
+  useEffect(() => {
+    let urlListenerHandle: any = null;
+    const initDeepLinkListener = async () => {
+      try {
+        urlListenerHandle = await CapacitorApp.addListener('appUrlOpen', async (data: { url: string }) => {
+          const urlStr = data?.url || '';
+          if (urlStr.includes('oauth-callback')) {
+            try {
+              const { handleOAuthCallbackUrl } = await import('./services/googleAuth');
+              const authResult = await handleOAuthCallbackUrl(urlStr);
+              if (authResult && authResult.authenticated && authResult.user) {
+                login(authResult.access_token || '', authResult.user);
+                setShowLoginModal(false);
+                setActiveTab('dashboard');
+              }
+            } catch (err) {
+              console.warn('[DEEP_LINK_AUTH_ERR]', err);
+            }
+          }
+        });
+      } catch (_e) {}
+    };
+
+    initDeepLinkListener();
+
+    return () => {
+      if (urlListenerHandle) {
+        urlListenerHandle.remove();
+      }
+    };
+  }, [login]);
 
   // Handle Capacitor Android Hardware Back Button
   useEffect(() => {

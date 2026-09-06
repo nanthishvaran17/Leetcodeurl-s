@@ -320,11 +320,10 @@ class AIControlEngine:
             f"**Summary of Key Findings:**\n"
         )
         if not issues:
-            answer += "✅ Database integrity is 100% healthy! Zero anomalies or bugs detected."
+            answer += "Database integrity is 100% healthy. Zero anomalies or bugs detected."
         else:
             for item in issues[:10]:
-                sev_icon = "🔴" if item["severity"] == "CRITICAL" else ("🟡" if item["severity"] == "WARNING" else "🔵")
-                answer += f"{sev_icon} **[{item['severity']}]** {item['entity']} — {item['description']}\n"
+                answer += f"• **[{item['severity']}]** {item['entity']} — {item['description']}\n"
             if len(issues) > 10:
                 answer += f"\n*(Showing top 10 of {len(issues)} audit items. View Data Quality Board for full log)*"
 
@@ -373,7 +372,7 @@ class AIControlEngine:
         
         table_rows = []
         for rank, s in enumerate(top_students, start=1):
-            badge = "🥇" if rank == 1 else ("🥈" if rank == 2 else ("🥉" if rank == 3 else f"#{rank}"))
+            badge = f"#{rank}"
             dept = s.department.code if s.department else "CSE"
             solved = s.stats.total_solved if s.stats else 0
             rating = s.stats.contest_rating if (s.stats and s.stats.contest_rating) else "Unrated"
@@ -421,7 +420,7 @@ class AIControlEngine:
         for i, s in enumerate(low_solvers, start=1):
             solved = s.stats.total_solved if (s.stats and s.stats.total_solved is not None) else 0
             dept = s.department.code if s.department else "CSE"
-            answer += f"{i}. 🔴 **{s.name}** (`{s.reg_no}`) — **{solved} Solved** | Dept: {dept} • Yr {s.year_level}\n"
+            answer += f"{i}. **{s.name}** (`{s.reg_no}`) — **{solved} Solved** | Dept: {dept} • Yr {s.year_level}\n"
             rows.append({
                 "name": s.name,
                 "reg_no": s.reg_no,
@@ -430,7 +429,7 @@ class AIControlEngine:
                 "solved": solved
             })
 
-        answer += f"\n💡 *Recommendation*: Prepare an official warning email draft to alert these students."
+        answer += f"\n*Recommendation*: Prepare an official warning email draft to alert these students."
 
         return {
             "answer": answer,
@@ -695,7 +694,7 @@ class AIControlEngine:
             f"• **LeetCode Username**: `@{st.username or 'Unlinked'}`\n"
             f"• **Total Solved**: **{solved}** (Easy: {easy}, Medium: {med}, Hard: {hard})\n"
             f"• **Contest Rating**: **{rating}** | **Global Profile Rank**: {rank}\n"
-            f"• **Sync Status**: 🟢 Verified & Active"
+            f"• **Sync Status**: Verified & Active"
         )
 
         return {
@@ -746,7 +745,7 @@ class AIControlEngine:
 
         answer = (
             f"**System & Data Sync Telemetry Health:**\n\n"
-            f"• **Database State**: 🟢 HEALTHY (Production SQLite)\n"
+            f"• **Database State**: HEALTHY (Production Database)\n"
             f"• **Last Successful Fetch**: **{last_str}** ({ago_str})\n"
             f"• **Verified Sync Profiles**: **{verified_count} / {total_students}** (100% Success Rate for linked profiles)\n"
             f"• **Pending Username Profiles**: **{pending_count}**\n"

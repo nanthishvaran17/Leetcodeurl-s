@@ -3,9 +3,9 @@ bot_notification_service.py — Production Automated WhatsApp & Telegram Bot Sys
 
 Features:
 1. Automated Sunday Weekly Contest Broadcasts:
-   - "வணக்கம் [Student Name], 오늘의 LeetCode Weekly Contest Rank: 12/425, Solved: 3/4. வாழ்த்துகள்!"
+   - "வணக்கம் [Student Name], LeetCode Weekly Contest Rank: 12/425, Solved: 3/4. வாழ்த்துகள்!"
 2. Streak Saver Reminders:
-   - "⚠️ Warning: Streak alert! Today's Daily Problem is pending. Log in to keep your streak!"
+   - " Warning: Streak alert! Today's Daily Problem is pending. Log in to keep your streak!"
 3. Faculty Daily Mentoring Summary:
    - "வணக்கம் [Faculty], [X]/20 mentees active today. [Y] require mentoring attention."
 4. Dual-Channel Engine:
@@ -47,13 +47,13 @@ class BotNotificationService:
     ) -> str:
         """Formats Tamil + English personalized weekly contest summary for students."""
         greeting = f"வணக்கம் {student_name} ({reg_no}),"
-        performance = f"இன்றைய LeetCode Weekly Contest முடிவுகள்:\n🏆 Rank: {rank}/{total_students}\n✅ Solved: {solved}/{total_problems} Questions"
+        performance = f"இன்றைய LeetCode Weekly Contest முடிவுகள்:\n Rank: {rank}/{total_students}\n Solved: {solved}/{total_problems} Questions"
         if solved >= 3:
-            cheer = "🔥 அருமையான செயல்திறன்! வாழ்த்துகள்!"
+            cheer = " அருமையான செயல்திறன்! வாழ்த்துகள்!"
         elif solved >= 1:
             cheer = "நன்று! அடுத்த போட்டியில் மேலும் முன்னேற வாழ்த்துகள்!"
         else:
-            cheer = "💡 அடுத்த வாரம் நிச்சயம் சிறப்பாகச் செய்யலாம்! தொடர்ந்து பயிற்சி பெறவும்."
+            cheer = " அடுத்த வாரம் நிச்சயம் சிறப்பாகச் செய்யலாம்! தொடர்ந்து பயிற்சி பெறவும்."
         
         return f"{greeting}\n\n{performance}\n\n{cheer}\n\n— Nandha LeetCode Intelligence Platform"
 
@@ -65,11 +65,11 @@ class BotNotificationService:
     ) -> str:
         """Formats daily streak protector warning."""
         return (
-            f"⚠️ STREAK WARNING: வணக்கம் {student_name}!\n\n"
-            f"நீங்கள் தொடர்ந்து 🔥 {current_streak} நாட்கள் LeetCode பயிற்சி செய்துள்ளீர்கள்!\n"
+            f" STREAK WARNING: வணக்கம் {student_name}!\n\n"
+            f"நீங்கள் தொடர்ந்து {current_streak} நாட்கள் LeetCode பயிற்சி செய்துள்ளீர்கள்!\n"
             f"இன்றைய Daily Problem-ஐ இன்னும் முடிக்கவில்லை.\n"
             f"உங்கள் Streak-ஐ காப்பாற்ற உடனடியாக லாக் இன் செய்து முடிக்கவும்:\n"
-            f"👉 https://leetcode.com/problemset/\n\n"
+            f" https://leetcode.com/problemset/\n\n"
             f"— Nandha LeetCode Intelligence"
         )
 
@@ -82,12 +82,12 @@ class BotNotificationService:
         at_risk_names: List[str]
     ) -> str:
         """Formats faculty daily 1:20 mentoring digest."""
-        at_risk_str = "\n".join([f"  • {name}" for name in at_risk_names]) if at_risk_names else "  • இல்லை (அனைவரும் சுறுசுறுப்பாக உள்ளனர்)"
+        at_risk_str = "\n".join([f" • {name}" for name in at_risk_names]) if at_risk_names else " • இல்லை (அனைவரும் சுறுசுறுப்பாக உள்ளனர்)"
         return (
-            f"📊 FACULTY DAILY DIGEST: வணக்கம் {faculty_name},\n\n"
+            f" FACULTY DAILY DIGEST: வணக்கம் {faculty_name},\n\n"
             f"உங்கள் 1:20 வழிகாட்டுதலில் உள்ள {total_mentees} மாணவர்களில்:\n"
-            f"✅ இன்று பயிற்சி செய்தவர்கள்: {active_count}/{total_mentees}\n"
-            f"⚠️ உடனடி கவனம் தேவைப்படுவோர் ({len(at_risk_names)}):\n{at_risk_str}\n\n"
+            f" இன்று பயிற்சி செய்தவர்கள்: {active_count}/{total_mentees}\n"
+            f" உடனடி கவனம் தேவைப்படுவோர் ({len(at_risk_names)}):\n{at_risk_str}\n\n"
             f"Dashboard: https://leetcodeurls.netlify.app/faculty-actions\n"
             f"— Nandha LeetCode Intelligence"
         )

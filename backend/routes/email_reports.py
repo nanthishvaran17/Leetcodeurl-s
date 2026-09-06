@@ -79,7 +79,7 @@ def send_provider_test_email(payload: TestEmailSchema):
     title = "Email Delivery Verification"
     content = f"""
     <p style="margin-top: 0;">This is a verified test dispatch from the <strong>Nandha Engineering College LeetCode system</strong>.</p>
-    <p style="color: #16a34a; font-weight: bold;">🟢 Active Provider: {provider_name} verified successfully!</p>
+    <p style="color: #16a34a; font-weight: bold;">Active Provider: {provider_name} verified successfully!</p>
     
     <table class="data-table" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%;">
         <tr>
@@ -98,9 +98,9 @@ def send_provider_test_email(payload: TestEmailSchema):
     success, err_msg = send_email(payload.recipient, subject, body_html)
 
     if success:
-        return {"success": True, "message": f"🟢 {provider_name} TEST SUCCESS", "provider": provider_info["provider"]}
+        return {"success": True, "message": f"{provider_name} TEST SUCCESS", "provider": provider_info["provider"]}
     else:
-        return {"success": False, "message": f"🔴 {provider_name} TEST FAILED", "error": err_msg or "Unknown email delivery error.", "provider": provider_info["provider"]}
+        return {"success": False, "message": f"{provider_name} TEST FAILED", "error": err_msg or "Unknown email delivery error.", "provider": provider_info["provider"]}
 
 
 @router.get("/recipients")

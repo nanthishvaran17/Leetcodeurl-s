@@ -7,14 +7,14 @@ derived from fast indexed DB queries on existing models.
 
 Returned card structure:
   {
-    "type":     "SUCCESS" | "WARNING" | "ALERT" | "INFO",
-    "icon":     "shield" | "users" | "trophy" | "alert" | "activity" | "zap",
-    "title":    str,
-    "body":     str,
+    "type": "SUCCESS" | "WARNING" | "ALERT" | "INFO",
+    "icon": "shield" | "users" | "trophy" | "alert" | "activity" | "zap",
+    "title": str,
+    "body": str,
     "cta_label": str,
     "cta_query": str,
-    "metric":   str | None,   e.g. "3 / 45"
-    "trend":    "UP" | "DOWN" | "STABLE" | None
+    "metric": str | None, e.g. "3 / 45"
+    "trend": "UP" | "DOWN" | "STABLE" | None
   }
 """
 
@@ -36,8 +36,8 @@ class ProactiveIntelService:
     @staticmethod
     def generate_brief(db: Session, user: Optional[Any] = None) -> List[Dict[str, Any]]:
         """
-        Entry point.  Returns up to 6 BriefCards appropriate for the
-        caller's role.  All failures are silently swallowed so the widget
+        Entry point. Returns up to 6 BriefCards appropriate for the
+        caller's role. All failures are silently swallowed so the widget
         never breaks due to an intelligence query error.
         """
         role = ""
@@ -59,11 +59,11 @@ class ProactiveIntelService:
         except Exception as exc:
             logger.warning("[ProactiveIntel] generate_brief error: %s", exc)
 
-        return cards[:6]  # Cap at 6 cards maximum
+        return cards[:6] # Cap at 6 cards maximum
 
-    # ─────────────────────────────────────────────────────────────────────────
+    # 
     # Admin Brief
-    # ─────────────────────────────────────────────────────────────────────────
+    # 
     @staticmethod
     def _admin_brief(db: Session, user: Any) -> List[Dict[str, Any]]:
         from backend.models import (
@@ -73,7 +73,7 @@ class ProactiveIntelService:
 
         cards: List[Dict[str, Any]] = []
 
-        # ── Card 1: Student sync health ──────────────────────────────────────
+        # Card 1: Student sync health 
         try:
             total = db.query(func.count(Student.id)).filter(
                 (Student.is_active == True) | (Student.is_active.is_(None))
@@ -104,7 +104,7 @@ class ProactiveIntelService:
         except Exception as e:
             logger.debug("[ProactiveIntel] admin card 1 error: %s", e)
 
-        # ── Card 2: Contest session status ───────────────────────────────────
+        # Card 2: Contest session status 
         try:
             latest_sess = db.query(WeeklySession).order_by(
                 WeeklySession.id.desc()
@@ -130,7 +130,7 @@ class ProactiveIntelService:
         except Exception as e:
             logger.debug("[ProactiveIntel] admin card 2 error: %s", e)
 
-        # ── Card 3: Top performer spotlight ─────────────────────────────────
+        # Card 3: Top performer spotlight 
         try:
             from backend.models import Department
             from sqlalchemy.orm import joinedload
@@ -145,7 +145,7 @@ class ProactiveIntelService:
                 cards.append({
                     "type": "SUCCESS",
                     "icon": "trophy",
-                    "title": "🏆 Top Performer",
+                    "title": " Top Performer",
                     "body": f"{top.name} ({dept}) leads with {top.stats.total_solved} problems solved.",
                     "cta_label": "View full leaderboard",
                     "cta_query": "Who are the top 10 college solvers overall?",
@@ -155,7 +155,7 @@ class ProactiveIntelService:
         except Exception as e:
             logger.debug("[ProactiveIntel] admin card 3 error: %s", e)
 
-        # ── Card 4: Low solver alert ─────────────────────────────────────────
+        # Card 4: Low solver alert 
         try:
             zero_solvers = db.query(func.count(LeetCodeProfileStats.id)).filter(
                 LeetCodeProfileStats.total_solved == 0
@@ -175,7 +175,7 @@ class ProactiveIntelService:
         except Exception as e:
             logger.debug("[ProactiveIntel] admin card 4 error: %s", e)
 
-        # ── Card 5: System health snapshot ───────────────────────────────────
+        # Card 5: System health snapshot 
         try:
             last_sync_row = db.query(LeetCodeProfileStats.last_verified_at).order_by(
                 LeetCodeProfileStats.last_verified_at.desc()
@@ -202,9 +202,9 @@ class ProactiveIntelService:
 
         return cards
 
-    # ─────────────────────────────────────────────────────────────────────────
+    # 
     # Faculty Brief
-    # ─────────────────────────────────────────────────────────────────────────
+    # 
     @staticmethod
     def _faculty_brief(db: Session, user: Any) -> List[Dict[str, Any]]:
         from backend.models import (
@@ -215,7 +215,7 @@ class ProactiveIntelService:
         cards: List[Dict[str, Any]] = []
         faculty_id = getattr(user, "id", None)
 
-        # ── Card 1: Assigned student overview ────────────────────────────────
+        # Card 1: Assigned student overview 
         assigned_student_ids: List[int] = []
         try:
             assignments = db.query(FacultyStudentAssignment).filter(
@@ -238,7 +238,7 @@ class ProactiveIntelService:
         except Exception as e:
             logger.debug("[ProactiveIntel] faculty card 1 error: %s", e)
 
-        # ── Card 2: Inactive assigned students (0 or very few solved) ────────
+        # Card 2: Inactive assigned students (0 or very few solved) 
         try:
             if assigned_student_ids:
                 inactive = db.query(func.count(LeetCodeProfileStats.id)).filter(
@@ -260,7 +260,7 @@ class ProactiveIntelService:
         except Exception as e:
             logger.debug("[ProactiveIntel] faculty card 2 error: %s", e)
 
-        # ── Card 3: Top performer in your group ──────────────────────────────
+        # Card 3: Top performer in your group 
         try:
             if assigned_student_ids:
                 top_row = db.query(Student, LeetCodeProfileStats).join(
@@ -284,7 +284,7 @@ class ProactiveIntelService:
         except Exception as e:
             logger.debug("[ProactiveIntel] faculty card 3 error: %s", e)
 
-        # ── Card 4: Fallback if no assignments ───────────────────────────────
+        # Card 4: Fallback if no assignments 
         if not cards:
             try:
                 total = db.query(func.count(Student.id)).filter(
@@ -305,9 +305,9 @@ class ProactiveIntelService:
 
         return cards
 
-    # ─────────────────────────────────────────────────────────────────────────
+    # 
     # HOD Brief
-    # ─────────────────────────────────────────────────────────────────────────
+    # 
     @staticmethod
     def _hod_brief(db: Session, user: Any) -> List[Dict[str, Any]]:
         from backend.models import (
@@ -318,7 +318,7 @@ class ProactiveIntelService:
         cards: List[Dict[str, Any]] = []
         dept_id = getattr(user, "department_id", None)
 
-        # ── Card 1: Department active solver % ───────────────────────────────
+        # Card 1: Department active solver % 
         try:
             dept_query = db.query(Student).filter(
                 (Student.is_active == True) | (Student.is_active.is_(None))
@@ -353,7 +353,7 @@ class ProactiveIntelService:
         except Exception as e:
             logger.debug("[ProactiveIntel] hod card 1 error: %s", e)
 
-        # ── Card 2: Latest contest ───────────────────────────────────────────
+        # Card 2: Latest contest 
         try:
             sess = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
             if sess:
@@ -370,7 +370,7 @@ class ProactiveIntelService:
         except Exception as e:
             logger.debug("[ProactiveIntel] hod card 2 error: %s", e)
 
-        # ── Card 3: Low solver alert ─────────────────────────────────────────
+        # Card 3: Low solver alert 
         try:
             if dept_id:
                 ids_q = [s.id for s in db.query(Student).filter(
@@ -397,9 +397,9 @@ class ProactiveIntelService:
 
         return cards
 
-    # ─────────────────────────────────────────────────────────────────────────
+    # 
     # Default Brief (Student / Viewer / No Auth)
-    # ─────────────────────────────────────────────────────────────────────────
+    # 
     @staticmethod
     def _default_brief(db: Session) -> List[Dict[str, Any]]:
         from backend.models import Student, LeetCodeProfileStats

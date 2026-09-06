@@ -10,14 +10,7 @@ import { triggerNativeStatusBarNotification } from '../pushNotifications';
 export const APP_NOTIFICATION_TITLE = 'LeetCode Tracker';
 
 export function getFileEmoji(filename: string, mimeType?: string): string {
-  const ext = filename.split('.').pop()?.toLowerCase() || '';
-  if (ext === 'pdf' || mimeType?.includes('pdf')) return '📄';
-  if (ext === 'xlsx' || ext === 'xls' || mimeType?.includes('spreadsheet')) return '📊';
-  if (ext === 'csv' || mimeType?.includes('csv')) return '📈';
-  if (ext === 'zip' || mimeType?.includes('zip')) return '📁';
-  if (filename.toLowerCase().includes('certificat') || filename.toLowerCase().includes('forensic')) return '📜';
-  if (ext === 'docx' || ext === 'doc' || mimeType?.includes('word')) return '📝';
-  return '📦';
+  return '';
 }
 
 class DownloadNotificationService {
@@ -73,51 +66,35 @@ class DownloadNotificationService {
 
   /**
    * Download Started Notification
-   * Example:
-   * LeetCode Tracker
-   * 📄 Weekly_Report.pdf
-   * Download started…
    */
   async notifyStart(filename: string, mimeType?: string): Promise<void> {
-    const emoji = getFileEmoji(filename, mimeType);
-    const body = `${emoji} ${filename}\nDownload started…`;
+    const body = `${filename}\nDownload started…`;
     await this.show(body);
   }
 
   /**
    * Download Completed Notification
-   * Example:
-   * LeetCode Tracker
-   * ✅ Weekly_Report.pdf
-   * Download completed
    */
   async notifySuccess(filename: string): Promise<void> {
-    const body = `✅ ${filename}\nDownload completed`;
+    const body = `${filename}\nDownload completed`;
     await this.show(body);
   }
 
   /**
    * Download Failed Notification
-   * Example:
-   * LeetCode Tracker
-   * ❌ Weekly_Report.pdf
-   * Download failed.
    */
   async notifyFailure(filename: string, reason?: string): Promise<void> {
-    const body = `❌ ${filename}\n${reason || 'Download failed.'}`;
+    const body = `${filename}\n${reason || 'Download failed.'}`;
     await this.show(body);
   }
 
   /**
    * Permission Error Notification
-   * Example:
-   * LeetCode Tracker
-   * 🔒 You don't have permission to download this file.
    */
   async notifyPermissionDenied(filename?: string): Promise<void> {
     const body = filename
-      ? `🔒 You don't have permission to download ${filename}.`
-      : `🔒 You don't have permission to download this file.`;
+      ? `Permission Denied: You do not have permission to download ${filename}.`
+      : `Permission Denied: You do not have permission to download this file.`;
     await this.show(body);
   }
 
@@ -126,8 +103,8 @@ class DownloadNotificationService {
    */
   async notifyExpired(filename?: string): Promise<void> {
     const body = filename
-      ? `⏱️ ${filename}\nDownload link expired. Please try again.`
-      : `⏱️ Download link expired. Please try again.`;
+      ? `${filename}\nDownload link expired. Please try again.`
+      : `Download link expired. Please try again.`;
     await this.show(body);
   }
 }

@@ -23,10 +23,16 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
     raw_students = base_query.all()
     data_quality = validate_data_quality(raw_students)
 
+    cfg_filters = config.filters or {}
     students = fetch_normalized_students(
         db,
         dept_filter=config.department,
         year_filter=config.year,
+        section_filter=cfg_filters.get("section", "ALL"),
+        batch_filter=cfg_filters.get("batch", "ALL"),
+        status_filter=cfg_filters.get("status") or cfg_filters.get("attendanceStatus") or "ALL",
+        search_query=cfg_filters.get("search") or cfg_filters.get("searchQuery") or cfg_filters.get("query"),
+        performance_range=cfg_filters.get("performanceRange") or cfg_filters.get("range") or "ALL",
         current_user=current_user
     )
 

@@ -137,32 +137,52 @@ export const ReportsPage: React.FC = () => {
     }
   };
 
+  const getActiveFilterQueryParams = (extraParams?: Record<string, string>) => {
+    const params = new URLSearchParams();
+    if (selectedDept && selectedDept !== 'ALL') params.append('department', selectedDept);
+    if (selectedYear && selectedYear !== 'ALL') params.append('year', selectedYear);
+    if (extraParams) {
+      Object.entries(extraParams).forEach(([k, v]) => {
+        if (v && v !== 'ALL') params.append(k, v);
+      });
+    }
+    const qs = params.toString();
+    return qs ? `?${qs}` : '';
+  };
+
   const handleDownloadOfficialSummary = () => {
-    downloadReportFile('/reports/export-official-college-summary', 'Nandha_College_Official_Weekly_Report.xlsx');
+    const q = getActiveFilterQueryParams();
+    downloadReportFile(`/reports/export-official-college-summary${q}`, 'Nandha_College_Official_Weekly_Report.xlsx');
   };
 
   const handleDownloadStudentDetail = () => {
-    downloadReportFile('/reports/export-student-performance-detail', 'Nandha_Student_Performance_Detail.xlsx');
+    const q = getActiveFilterQueryParams();
+    downloadReportFile(`/reports/export-student-performance-detail${q}`, 'Nandha_Student_Performance_Detail.xlsx');
   };
 
   const handleDownloadMatrix2028 = () => {
-    downloadReportFile('/reports/export-weekly-contest-matrix?batch=2028', 'Batch_2028_Contest_Matrix.xlsx');
+    const q = getActiveFilterQueryParams({ batch: '2028' });
+    downloadReportFile(`/reports/export-weekly-contest-matrix${q}`, 'Batch_2028_Contest_Matrix.xlsx');
   };
 
   const handleDownloadMatrix2029 = () => {
-    downloadReportFile('/reports/export-weekly-contest-matrix?batch=2029', 'Batch_2029_Contest_Matrix.xlsx');
+    const q = getActiveFilterQueryParams({ batch: '2029' });
+    downloadReportFile(`/reports/export-weekly-contest-matrix${q}`, 'Batch_2029_Contest_Matrix.xlsx');
   };
 
   const handleDownloadMasterTracker = () => {
-    downloadReportFile('/reports/export-master-tracker', 'Full_8_Sheet_Master_Tracker.xlsx');
+    const q = getActiveFilterQueryParams();
+    downloadReportFile(`/reports/export-master-tracker${q}`, 'Full_8_Sheet_Master_Tracker.xlsx');
   };
 
   const handleDownloadPDF = () => {
-    downloadReportFile('/reports/export-pdf', 'Executive_PDF_Summary.pdf');
+    const q = getActiveFilterQueryParams();
+    downloadReportFile(`/reports/export-pdf${q}`, 'Executive_PDF_Summary.pdf');
   };
 
   const handleDownloadWord = () => {
-    downloadReportFile('/reports/export-word', 'Executive_Word_Summary.docx');
+    const q = getActiveFilterQueryParams();
+    downloadReportFile(`/reports/export-word${q}`, 'Executive_Word_Summary.docx');
   };
 
   const [recipientInput, setRecipientInput] = useState<string>("nanthishvaran17@gmail.com");
@@ -223,7 +243,8 @@ export const ReportsPage: React.FC = () => {
   };
 
   const handleDownloadCSV = () => {
-    downloadReportFile('/reports/export-csv', 'LeetCode_Student_Performance_Report.csv');
+    const q = getActiveFilterQueryParams();
+    downloadReportFile(`/reports/export-csv${q}`, 'LeetCode_Student_Performance_Report.csv');
   };
 
   const reportCards = [

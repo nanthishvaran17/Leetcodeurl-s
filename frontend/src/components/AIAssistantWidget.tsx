@@ -456,12 +456,12 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
   }, [messages]);
 
   const quickActionsOps = [
-    { label: '🔍 DB Audit', query: 'Check the entire database for bugs, duplicate usernames, and unverified profiles' },
-    { label: '✉️ Warning Email', query: 'mail panu low solvers-ukku' },
-    { label: '📊 514 vs 515', query: 'Compare Contest 514 and Contest 515 performance' },
-    { label: '⚠️ Absentees', query: 'Find absent students in the latest Weekly Contest' },
-    { label: '🏆 Top 10', query: 'Who are the top 10 college solvers overall?' },
-    { label: '📑 HOD Report', query: 'Generate HOD weekly summary report' },
+    { label: 'DB Audit', query: 'Check the entire database for bugs, duplicate usernames, and unverified profiles' },
+    { label: 'Warning Email', query: 'mail panu low solvers-ukku' },
+    { label: '514 vs 515', query: 'Compare Contest 514 and Contest 515 performance' },
+    { label: 'Absentees', query: 'Find absent students in the latest Weekly Contest' },
+    { label: 'Top 10', query: 'Who are the top 10 college solvers overall?' },
+    { label: 'HOD Report', query: 'Generate HOD weekly summary report' },
   ];
 
   const launcherCategories = [

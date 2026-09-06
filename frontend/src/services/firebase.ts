@@ -1,13 +1,8 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import {
   getAuth,
-  initializeAuth,
   GoogleAuthProvider,
-  Auth,
-  indexedDBLocalPersistence,
-  browserLocalPersistence,
-  browserSessionPersistence,
-  setPersistence
+  Auth
 } from 'firebase/auth';
 
 // Read configuration from Vite environment variables with authoritative institutional fallbacks
@@ -29,58 +24,43 @@ let authInstance: Auth | null = null;
 let dbInstance: any = null;
 let storageInstance: any = null;
 
-const createAuthInstance = (app: FirebaseApp): Auth => {
-  try {
-    // initializeAuth with indexedDBLocalPersistence primary, browserLocalPersistence fallback
-    return initializeAuth(app, {
-      persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence]
-    });
-  } catch (_e) {
-    // If initializeAuth fails because app is already initialized, get standard auth and set persistence
-    const a = getAuth(app);
-    setPersistence(a, indexedDBLocalPersistence)
-      .catch(() => setPersistence(a, browserLocalPersistence))
-      .catch(() => {});
-    return a;
+export const getOrInitApp = (): FirebaseApp => {
+  if (!appInstance) {
+    appInstance = !getApps().length ? initializeApp(firebaseConfig) : getApp();
   }
+  return appInstance;
+};
+
+export const getOrInitAuth = (): Auth => {
+  if (!authInstance) {
+    const app = getOrInitApp();
+    authInstance = getAuth(app);
+  }
+  return authInstance;
 };
 
 if (isFirebaseConfigured()) {
   try {
     appInstance = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    authInstance = createAuthInstance(appInstance);
+    authInstance = getAuth(appInstance);
   } catch (err) {
     console.warn("Firebase lazy initialization mode active:", err);
   }
 }
 
-export const getOrInitAuth = (): Auth => {
-  if (authInstance) return authInstance;
-  if (!isFirebaseConfigured()) {
-    throw new Error("auth/invalid-api-key: Please paste your VITE_FIREBASE_API_KEY into frontend/.env");
-  }
-  appInstance = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-  authInstance = createAuthInstance(appInstance);
-  return authInstance;
-};
-
 export const getOrInitDbAsync = async (): Promise<any> => {
   if (dbInstance) return dbInstance;
-  if (!appInstance) {
-    getOrInitAuth();
-  }
+  const app = getOrInitApp();
   const { getFirestore } = await import('firebase/firestore');
-  dbInstance = getFirestore(appInstance!);
+  dbInstance = getFirestore(app);
   return dbInstance;
 };
 
 export const getOrInitStorageAsync = async (): Promise<any> => {
   if (storageInstance) return storageInstance;
-  if (!appInstance) {
-    getOrInitAuth();
-  }
+  const app = getOrInitApp();
   const { getStorage } = await import('firebase/storage');
-  storageInstance = getStorage(appInstance!);
+  storageInstance = getStorage(app);
   return storageInstance;
 };
 
@@ -95,5 +75,3 @@ export const createGoogleProvider = (): GoogleAuthProvider => {
 export const googleProvider = createGoogleProvider();
 
 export default appInstance;
-
-

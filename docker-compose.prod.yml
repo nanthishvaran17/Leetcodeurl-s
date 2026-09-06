@@ -1,0 +1,127 @@
+version: '3.8'
+
+services:
+  # ── PostgreSQL Database (Self-Hosted, Always Free, Internal Only) ───────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: nec_leetcode_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-nec_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeThisSecurePostgresPassword2026!}
+      POSTGRES_DB: ${POSTGRES_DB:-nec_leetcode_prod}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    # Bind ONLY to internal Docker network (NOT exposed to public internet)
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nec_admin} -d ${POSTGRES_DB:-nec_leetcode_prod}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal_net
+
+  # ── FastAPI Backend API & WebSocket Server ──────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nec_leetcode_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - ENVIRONMENT=production
+      - PORT=8000
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-nec_admin}:${POSTGRES_PASSWORD:-ChangeThisSecurePostgresPassword2026!}@postgres:5432/${POSTGRES_DB:-nec_leetcode_prod}
+      - SECRET_KEY=${SECRET_KEY:-nec-super-secret-production-key-2026}
+      - OTP_HMAC_SECRET=${OTP_HMAC_SECRET:-nec-leetcode-otp-secret-key-2026}
+      - FRONTEND_ORIGIN=${FRONTEND_ORIGIN:-https://leetcodeurl-s-roan.vercel.app}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://leetcodeurl-s-roan.vercel.app}
+      - PRODUCTION_DOMAIN=${PRODUCTION_DOMAIN:-api.nandhaengg.org}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-nanthishvaran17@gmail.com}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - LEETCODE_MAX_CONCURRENCY=15
+      - LEETCODE_CONNECT_TIMEOUT=10.0
+      - LEETCODE_READ_TIMEOUT=20.0
+      - LEETCODE_MAX_RETRIES=3
+    volumes:
+      - backend_data:/app/data
+      - backend_reports:/app/reports
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - internal_net
+
+  # ── Independent Background Sync Worker (Fault-Isolated, Controlled Pool) ─────
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nec_leetcode_sync_worker
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    command: ["python", "-m", "backend.scripts.run_background_sync"]
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-nec_admin}:${POSTGRES_PASSWORD:-ChangeThisSecurePostgresPassword2026!}@postgres:5432/${POSTGRES_DB:-nec_leetcode_prod}
+      - SECRET_KEY=${SECRET_KEY:-nec-super-secret-production-key-2026}
+      - LEETCODE_MAX_CONCURRENCY=8
+      - LEETCODE_CONNECT_TIMEOUT=10.0
+      - LEETCODE_READ_TIMEOUT=20.0
+    volumes:
+      - backend_data:/app/data
+      - backend_reports:/app/reports
+    networks:
+      - internal_net
+
+  # ── Nginx Reverse Proxy (SSL, WebSocket Upgrade, Security Headers) ───────────
+  nginx:
+    image: nginx:alpine
+    container_name: nec_leetcode_nginx
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
+    networks:
+      - internal_net
+
+  # ── Automated SSL Certbot (Let's Encrypt Free TLS) ───────────────────────────
+  certbot:
+    image: certbot/certbot
+    container_name: nec_leetcode_certbot
+    restart: unless-stopped
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+volumes:
+  postgres_data:
+  backend_data:
+  backend_reports:
+
+networks:
+  internal_net:
+    driver: bridge

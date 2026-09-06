@@ -1140,7 +1140,7 @@ def sync_single_historical_session(db: Session, session_id: int):
     session.virtual_participants = virtual_cnt
     session.not_participated = not_attended_cnt
     session.failed_verification = data_errors_cnt
-    session.sync_status = "🟢 Verified" if reconciliation_passed else "🔴 Reconciliation Error"
+    session.sync_status = "Verified" if reconciliation_passed else "Reconciliation Error"
     session.last_synced = now_dt
     session.status = "FINALIZED"
     session.completed_at = now_dt

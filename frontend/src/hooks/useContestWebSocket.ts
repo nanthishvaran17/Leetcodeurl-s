@@ -152,6 +152,40 @@ export function useContestWebSocket(options: string | UseContestWebSocketOptions
 
           if (data.type === 'BATCH_UPDATES' && Array.isArray(data.events)) {
             if (onBatchUpdateRef.current) onBatchUpdateRef.current(data.events);
+            setLastSyncAt(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }));
+            return;
+          }
+
+          // Single student live event handler (Incremental Live Update Rule)
+          if (
+            data.type === 'CONTEST_RESULT_UPDATED' || 
+            data.type === 'STUDENT_LEETCODE_UPDATE' || 
+            data.type === 'STUDENT_UPDATED' || 
+            data.type === 'LIVE_STUDENT_UPDATE' ||
+            data.type === 'QUESTION_SOLVED'
+          ) {
+            const singleEvt: ContestWSEvent = {
+              studentId: data.student_id ?? data.studentId ?? data.id,
+              regNo: data.reg_no ?? data.registration_number ?? data.regNo,
+              studentName: data.name ?? data.student_name ?? data.studentName,
+              username: data.username ?? data.leetcode_username,
+              contestId: data.contest_id ?? data.contestId,
+              sessionId: data.session_id ?? data.sessionId,
+              q1: data.q1 ?? (data.changes?.q1),
+              q2: data.q2 ?? (data.changes?.q2),
+              q3: data.q3 ?? (data.changes?.q3),
+              q4: data.q4 ?? (data.changes?.q4),
+              solvedCount: data.solved_count ?? data.solvedCount ?? data.solved ?? data.changes?.stats?.total_solved ?? data.total_contest_solved,
+              officialRank: data.official_rank ?? data.rank ?? data.officialRank,
+              finishTime: data.finish_time ?? data.finishTime,
+              participationStatus: data.participation_status ?? data.participationStatus ?? data.contestStatus,
+              timestamp: data.timestamp ?? data.updatedAt ?? data.updated_at
+            };
+
+            if (onBatchUpdateRef.current) {
+              onBatchUpdateRef.current([singleEvt]);
+            }
+            setLastSyncAt(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }));
             return;
           }
 

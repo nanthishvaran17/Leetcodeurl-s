@@ -816,6 +816,160 @@ def google_auth(payload: dict, request: Request, response: Response, db: Session
     }
 
 
+# In-memory ephemeral PKCE authorization codes store: code -> { user_id, code_challenge, state, expires_at }
+_PKCE_AUTH_CODES = {}
+
+class CreateGoogleAuthCodeRequest(BaseModel):
+    id_token: str
+    code_challenge: str
+    state: str
+
+class ExchangeGoogleAuthCodeRequest(BaseModel):
+    code: str
+    code_verifier: str
+    state: str
+
+@router.post("/google/create-code")
+def create_google_auth_code(payload: CreateGoogleAuthCodeRequest, request: Request, db: Session = Depends(get_db)):
+    """
+    Creates an ephemeral single-use PKCE Authorization Code after validating Google ID Token.
+    Returns the authorization code and state string without leaking tokens into custom URL schemes.
+    """
+    validate_csrf_origin(request)
+    id_token = (payload.id_token or "").strip()
+    code_challenge = (payload.code_challenge or "").strip()
+    state = (payload.state or "").strip()
+
+    if not id_token or not code_challenge or not state:
+        raise HTTPException(status_code=400, detail="Missing required PKCE authorization parameters.")
+
+    # 1. Verify Google ID token
+    decoded_token = None
+    try:
+        from backend.services.firestore_service import initialize_firestore
+        initialize_firestore()
+        from firebase_admin import auth as firebase_auth
+        decoded_token = firebase_auth.verify_id_token(id_token)
+    except Exception as _fa_err:
+        try:
+            from google.oauth2 import id_token as google_id_token
+            from google.auth.transport import requests as google_requests
+            request_adapter = google_requests.Request()
+            decoded_token = google_id_token.verify_firebase_token(
+                id_token,
+                request_adapter,
+                audience="leetcode-student-data"
+            )
+        except Exception:
+            raise HTTPException(status_code=401, detail="Unable to verify your Google account.")
+
+    if not decoded_token:
+        raise HTTPException(status_code=401, detail="Empty token payload after Google verification.")
+
+    verified_email = (decoded_token.get("email") or "").strip().lower()
+    if not verified_email:
+        raise HTTPException(status_code=400, detail="Google account must have a valid email.")
+
+    user = db.query(User).filter(User.email.ilike(verified_email)).first()
+    if not user:
+        raise HTTPException(status_code=403, detail="Your Google account is not registered with the institution.")
+
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Your account is currently deactivated.")
+
+    # Clean expired codes
+    now = _utcnow()
+    expired_keys = [k for k, v in _PKCE_AUTH_CODES.items() if v["expires_at"] < now]
+    for k in expired_keys:
+        _PKCE_AUTH_CODES.pop(k, None)
+
+    # 2. Generate cryptographically random single-use code valid for 60 seconds
+    auth_code = f"authcode_{secrets.token_urlsafe(32)}"
+    _PKCE_AUTH_CODES[auth_code] = {
+        "user_id": user.id,
+        "code_challenge": code_challenge,
+        "state": state,
+        "expires_at": now + datetime.timedelta(seconds=60)
+    }
+
+    return {
+        "success": True,
+        "code": auth_code,
+        "state": state
+    }
+
+@router.post("/google/exchange-code")
+def exchange_google_auth_code(payload: ExchangeGoogleAuthCodeRequest, request: Request, response: Response, db: Session = Depends(get_db)):
+    """
+    Exchanges a single-use PKCE Authorization Code + Code Verifier for an authenticated JWT session.
+    Validates SHA-256(code_verifier) == code_challenge and state match.
+    """
+    code = (payload.code or "").strip()
+    code_verifier = (payload.code_verifier or "").strip()
+    state = (payload.state or "").strip()
+
+    if not code or not code_verifier or not state:
+        raise HTTPException(status_code=400, detail="Invalid authorization code exchange request.")
+
+    # Retrieve and immediately remove code to prevent replay attacks
+    auth_entry = _PKCE_AUTH_CODES.pop(code, None)
+    if not auth_entry:
+        raise HTTPException(status_code=401, detail="Invalid or expired authorization code.")
+
+    if auth_entry["expires_at"] < _utcnow():
+        raise HTTPException(status_code=401, detail="Authorization code has expired.")
+
+    if auth_entry["state"] != state:
+        raise HTTPException(status_code=401, detail="State parameter verification failed.")
+
+    # Verify PKCE challenge: Base64URL(SHA256(code_verifier))
+    import base64
+    digest = hashlib.sha256(code_verifier.encode('ascii')).digest()
+    computed_challenge = base64.urlsafe_b64encode(digest).decode('ascii').rstrip('=')
+    
+    # Check challenge match (supporting base64url with or without padding)
+    expected_challenge = auth_entry["code_challenge"].rstrip('=')
+    if computed_challenge != expected_challenge:
+        logger.warning("[PKCE_VERIFICATION_FAILURE] Code verifier does not match challenge.")
+        raise HTTPException(status_code=401, detail="PKCE verification failed.")
+
+    user = db.query(User).filter(User.id == auth_entry["user_id"]).first()
+    if not user or not user.is_active:
+        raise HTTPException(status_code=403, detail="User account is inactive or not found.")
+
+    try:
+        setattr(user, "last_login", _utcnow())
+        db.commit()
+    except Exception:
+        db.rollback()
+
+    session_id = None
+    refresh_token_value = None
+    try:
+        refresh_token_value, session_id = create_server_admin_session(db, user, request, response)
+    except Exception:
+        pass
+
+    access_token = create_access_token(data={"sub": user.username, "role": user.role, "email": user.email, "user_id": user.id})
+
+    return {
+        "authenticated": True,
+        "success": True,
+        "access_token": access_token,
+        "refresh_token": refresh_token_value,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "role": user.role,
+            "department_id": user.department_id,
+            "section_id": user.section_id
+        }
+    }
+
+
+
 @router.post("/login")
 def login(login_data: UserLogin, request: Request, response: Response, db: Session = Depends(get_db)):
     validate_csrf_origin(request)

@@ -134,26 +134,39 @@ def trigger_virtual_contest_workflow_endpoint(
 
 @router.get("/export-student-performance-detail")
 def download_student_performance_detail_excel(
+    dept_id: Optional[int] = None,
+    department: Optional[str] = Query("ALL"),
+    dept: Optional[str] = Query("ALL"),
+    year: Optional[str] = Query("ALL"),
+    year_level: Optional[str] = Query("ALL"),
+    batch: Optional[str] = Query("ALL"),
+    attendance: Optional[str] = Query("ALL"),
+    status: Optional[str] = Query("ALL"),
+    search: Optional[str] = Query(""),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export Student Performance Detail Excel", dept_scoped=True))
 ):
-    """Generates the student performance detail Excel, scoped to the caller's authorization level."""
+    """Generates the student performance detail Excel, strictly scoped to caller's active filters."""
     try:
-        from backend.services.pregenerated_report_service import get_cached_report_info
-        info = get_cached_report_info(db, week_id="latest", file_type="student_detail")
-        if info.get("status") == "READY" and info.get("cache_id"):
-            from backend.models import ReportCache
-            cache_rec = db.query(ReportCache).filter(ReportCache.id == info["cache_id"]).first()
-            if cache_rec and cache_rec.storage_path and os.path.exists(cache_rec.storage_path):
-                with open(cache_rec.storage_path, "rb") as f:
-                    excel_bytes = f.read()
-                return Response(
-                    content=excel_bytes,
-                    media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    headers={"Content-Disposition": "attachment; filename=Nandha_Student_Performance_Detail.xlsx"}
-                )
+        eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
+        eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+        eff_batch = batch or "ALL"
+        eff_status = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
+        eff_search = (search or "").strip()
 
-        excel_bytes = generate_student_performance_detail_excel(db, current_user=current_user)
+        if dept_id:
+            d_obj = db.query(Department).filter(Department.id == dept_id).first()
+            if d_obj:
+                eff_dept = d_obj.code or d_obj.name
+
+        config = ReportConfig(
+            report_type="STUDENT_PERFORMANCE",
+            department=eff_dept,
+            year=eff_year,
+            filters={"search": eff_search, "batch": eff_batch, "status": eff_status}
+        )
+        dataset = build_universal_report(db, config, current_user=current_user)
+        excel_bytes = export_excel_from_dataset(dataset)
         return Response(
             content=excel_bytes,
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -167,29 +180,39 @@ def download_student_performance_detail_excel(
 @router.get("/export/excel")
 @router.get("/export-official-college-summary")
 def download_official_college_summary_excel(
+    dept_id: Optional[int] = None,
+    department: Optional[str] = Query("ALL"),
+    dept: Optional[str] = Query("ALL"),
+    year: Optional[str] = Query("ALL"),
+    year_level: Optional[str] = Query("ALL"),
+    batch: Optional[str] = Query("ALL"),
+    attendance: Optional[str] = Query("ALL"),
+    status: Optional[str] = Query("ALL"),
+    search: Optional[str] = Query(""),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export Excel Summary Report", dept_scoped=True))
 ):
-    """Generates the 8-sheet official college Excel, scoped to the caller's authorization level."""
+    """Generates the official college Excel, strictly matching caller's active filters."""
     try:
-        role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
-        is_admin_role = role_clean in ("admin", "administrator", "super admin", "super_admin", "principal", "placement coordinator")
-        if is_admin_role:
-            from backend.services.pregenerated_report_service import get_cached_report_info
-            info = get_cached_report_info(db, week_id="latest", file_type="official_summary")
-            if info.get("status") == "READY" and info.get("cache_id"):
-                from backend.models import ReportCache
-                cache_rec = db.query(ReportCache).filter(ReportCache.id == info["cache_id"]).first()
-                if cache_rec and cache_rec.storage_path and os.path.exists(cache_rec.storage_path):
-                    with open(cache_rec.storage_path, "rb") as f:
-                        excel_bytes = f.read()
-                    return Response(
-                        content=excel_bytes,
-                        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        headers={"Content-Disposition": "attachment; filename=Nandha_College_Official_Weekly_Report.xlsx"}
-                    )
+        eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
+        eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+        eff_batch = batch or "ALL"
+        eff_status = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
+        eff_search = (search or "").strip()
 
-        excel_bytes = generate_8_sheet_excel_report(db, current_user=current_user)
+        if dept_id:
+            d_obj = db.query(Department).filter(Department.id == dept_id).first()
+            if d_obj:
+                eff_dept = d_obj.code or d_obj.name
+
+        config = ReportConfig(
+            report_type="STUDENT_PERFORMANCE",
+            department=eff_dept,
+            year=eff_year,
+            filters={"search": eff_search, "batch": eff_batch, "status": eff_status}
+        )
+        dataset = build_universal_report(db, config, current_user=current_user)
+        excel_bytes = export_excel_from_dataset(dataset)
         return Response(
             content=excel_bytes,
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -201,28 +224,33 @@ def download_official_college_summary_excel(
 
 @router.get("/export-master-tracker")
 def download_master_tracker_excel(
+    dept_id: Optional[int] = None,
+    department: Optional[str] = Query("ALL"),
+    dept: Optional[str] = Query("ALL"),
+    year: Optional[str] = Query("ALL"),
+    year_level: Optional[str] = Query("ALL"),
+    batch: Optional[str] = Query("ALL"),
+    attendance: Optional[str] = Query("ALL"),
+    status: Optional[str] = Query("ALL"),
+    search: Optional[str] = Query(""),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export Master Tracker Excel", dept_scoped=True))
 ):
     try:
-        role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
-        is_admin_role = role_clean in ("admin", "administrator", "super admin", "super_admin", "principal", "placement coordinator")
-        if is_admin_role:
-            from backend.services.pregenerated_report_service import get_cached_report_info
-            info = get_cached_report_info(db, week_id="latest", file_type="master_tracker")
-            if info.get("status") == "READY" and info.get("cache_id"):
-                from backend.models import ReportCache
-                cache_rec = db.query(ReportCache).filter(ReportCache.id == info["cache_id"]).first()
-                if cache_rec and cache_rec.storage_path and os.path.exists(cache_rec.storage_path):
-                    with open(cache_rec.storage_path, "rb") as f:
-                        excel_bytes = f.read()
-                    return Response(
-                        content=excel_bytes,
-                        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        headers={"Content-Disposition": "attachment; filename=Full_8_Sheet_Master_Tracker.xlsx"}
-                    )
+        eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
+        eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+        eff_batch = batch or "ALL"
+        eff_status = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
+        eff_search = (search or "").strip()
 
-        excel_bytes = generate_8_sheet_master_tracker(db, current_user=current_user)
+        config = ReportConfig(
+            report_type="STUDENT_PERFORMANCE",
+            department=eff_dept,
+            year=eff_year,
+            filters={"search": eff_search, "batch": eff_batch, "status": eff_status}
+        )
+        dataset = build_universal_report(db, config, current_user=current_user)
+        excel_bytes = export_excel_from_dataset(dataset)
         return Response(
             content=excel_bytes,
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -230,12 +258,15 @@ def download_master_tracker_excel(
         )
     except Exception as e:
         logger.error(f"[EXPORT ERROR] /export-master-tracker: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to generate 8-Sheet Master Tracker Excel: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate Master Tracker Excel: {str(e)}")
 
 @router.get("/export-weekly-contest-matrix")
 def download_weekly_contest_matrix_excel(
     batch: str = Query("2028"),
     dept_id: Optional[int] = Query(None),
+    dept: Optional[str] = Query("ALL"),
+    department: Optional[str] = Query("ALL"),
+    year: Optional[str] = Query("ALL"),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export Contest Matrix Excel", dept_scoped=True))
 ):
@@ -277,26 +308,37 @@ def download_last_week_matrix(
 @router.get("/export-pdf")
 def download_pdf_report(
     dept_id: Optional[int] = None, 
+    department: Optional[str] = Query("ALL"),
+    dept: Optional[str] = Query("ALL"),
+    year: Optional[str] = Query("ALL"),
+    year_level: Optional[str] = Query("ALL"),
+    batch: Optional[str] = Query("ALL"),
+    attendance: Optional[str] = Query("ALL"),
+    status: Optional[str] = Query("ALL"),
+    search: Optional[str] = Query(""),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export PDF Report", dept_scoped=True))
 ):
     try:
-        if not dept_id:
-            from backend.services.pregenerated_report_service import get_cached_report_info
-            info = get_cached_report_info(db, week_id="latest", file_type="pdf")
-            if info.get("status") == "READY" and info.get("cache_id"):
-                from backend.models import ReportCache
-                cache_rec = db.query(ReportCache).filter(ReportCache.id == info["cache_id"]).first()
-                if cache_rec and cache_rec.storage_path and os.path.exists(cache_rec.storage_path):
-                    with open(cache_rec.storage_path, "rb") as f:
-                        pdf_bytes = f.read()
-                    return Response(
-                        content=pdf_bytes,
-                        media_type="application/pdf",
-                        headers={"Content-Disposition": "attachment; filename=LeetCode_Weekly_Performance_Summary.pdf"}
-                    )
+        eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
+        eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+        eff_batch = batch or "ALL"
+        eff_status = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
+        eff_search = (search or "").strip()
 
-        pdf_bytes = generate_pdf_summary_report(db, dept_id=dept_id, current_user=current_user)
+        if dept_id:
+            d_obj = db.query(Department).filter(Department.id == dept_id).first()
+            if d_obj:
+                eff_dept = d_obj.code or d_obj.name
+
+        config = ReportConfig(
+            report_type="STUDENT_PERFORMANCE",
+            department=eff_dept,
+            year=eff_year,
+            filters={"search": eff_search, "batch": eff_batch, "status": eff_status}
+        )
+        dataset = build_universal_report(db, config, current_user=current_user)
+        pdf_bytes = export_pdf_from_dataset(dataset)
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
@@ -306,86 +348,91 @@ def download_pdf_report(
         logger.error(f"[EXPORT ERROR] /export-pdf: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to generate PDF Report: {str(e)}")
 
-
-from backend.word_generator import generate_word_report
-
 @router.get("/export-word")
 def download_word_report(
     dept_id: Optional[int] = None, 
+    department: Optional[str] = Query("ALL"),
+    dept: Optional[str] = Query("ALL"),
+    year: Optional[str] = Query("ALL"),
+    year_level: Optional[str] = Query("ALL"),
+    batch: Optional[str] = Query("ALL"),
+    attendance: Optional[str] = Query("ALL"),
+    status: Optional[str] = Query("ALL"),
+    search: Optional[str] = Query(""),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export Word Report", dept_scoped=True))
 ):
-    word_bytes = generate_word_report(db, dept_id=dept_id, current_user=current_user)
-    return Response(
-        content=word_bytes,
-        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={"Content-Disposition": "attachment; filename=LeetCode_Weekly_Performance_Summary.docx"}
-    )
+    try:
+        eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
+        eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+        eff_batch = batch or "ALL"
+        eff_status = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
+        eff_search = (search or "").strip()
+
+        if dept_id:
+            d_obj = db.query(Department).filter(Department.id == dept_id).first()
+            if d_obj:
+                eff_dept = d_obj.code or d_obj.name
+
+        config = ReportConfig(
+            report_type="STUDENT_PERFORMANCE",
+            department=eff_dept,
+            year=eff_year,
+            filters={"search": eff_search, "batch": eff_batch, "status": eff_status}
+        )
+        dataset = build_universal_report(db, config, current_user=current_user)
+        word_bytes = export_word_from_dataset(dataset)
+        return Response(
+            content=word_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": "attachment; filename=LeetCode_Weekly_Performance_Summary.docx"}
+        )
+    except Exception as e:
+        logger.error(f"[EXPORT ERROR] /export-word: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to generate Word Report: {str(e)}")
 
 @router.get("/export-csv")
 def download_csv_report(
     dept_id: Optional[int] = None, 
-    year_level: Optional[str] = None, 
+    department: Optional[str] = Query("ALL"),
+    dept: Optional[str] = Query("ALL"),
+    year: Optional[str] = Query("ALL"),
+    year_level: Optional[str] = Query("ALL"), 
+    batch: Optional[str] = Query("ALL"),
+    attendance: Optional[str] = Query("ALL"),
+    status: Optional[str] = Query("ALL"),
+    search: Optional[str] = Query(""),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export CSV Report", dept_scoped=True))
 ):
-    query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
-    query = apply_role_based_student_filter(query, current_user, db)
-    
-    if dept_id:
-        query = query.filter(Student.department_id == dept_id)
-    if year_level and year_level.upper() != 'ALL':
-        query = query.filter(Student.year_level == year_level.upper())
-        
-    students = query.all()
-    
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow([
-        "S.No", "Register No", "Student Name", "Department", "Batch", "Year",
-        "Institutional Email", "LeetCode Profile Link", "Username", 
-        "Easy Solved", "Medium Solved", "Hard Solved", "Total Solved", 
-        "Contest Rating", "Global Rank", "Validation Status"
-    ])
-    
-    sorted_students = sorted(students, key=lambda s: (s.stats.total_solved or 0) if s.stats else 0, reverse=True)
-    for idx, s in enumerate(sorted_students, start=1):
-        st = s.stats
-        is_verified = bool(st and (st.sync_status in ("success", "OK", "verified", "stale") or st.status == "verified" or st.total_solved is not None))
-        
-        easy = st.easy_solved if st and st.easy_solved is not None else (0 if st else None)
-        medium = st.medium_solved if st and st.medium_solved is not None else (0 if st else None)
-        hard = st.hard_solved if st and st.hard_solved is not None else (0 if st else None)
-        total_solved = st.total_solved if st and st.total_solved is not None else (0 if st else None)
-        
-        batch = getattr(s, 'batch', "")
-        inst_email = getattr(s, 'institutional_email', "")
-        
-        writer.writerow([
-            idx,
-            s.reg_no,
-            s.name,
-            s.department.code if s.department else "",
-            batch,
-            s.year_level,
-            inst_email,
-            s.leetcode_url or "",
-            s.username or "",
-            easy if easy is not None else "",
-            medium if medium is not None else "",
-            hard if hard is not None else "",
-            total_solved if total_solved is not None else "",
-            round(st.contest_rating, 1) if (st and st.contest_rating is not None) else "",
-            st.contest_global_ranking if (st and st.contest_global_ranking is not None) else "",
-            "VERIFIED" if is_verified else "UNVERIFIED"
-        ])
-        
-    csv_bytes = output.getvalue().encode('utf-8-sig') # UTF-8 BOM for Excel compatibility
-    return Response(
-        content=csv_bytes,
-        media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=LeetCode_Student_Performance_Report.csv"}
-    )
+    try:
+        eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
+        eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+        eff_batch = batch or "ALL"
+        eff_status = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
+        eff_search = (search or "").strip()
+
+        if dept_id:
+            d_obj = db.query(Department).filter(Department.id == dept_id).first()
+            if d_obj:
+                eff_dept = d_obj.code or d_obj.name
+
+        config = ReportConfig(
+            report_type="STUDENT_PERFORMANCE",
+            department=eff_dept,
+            year=eff_year,
+            filters={"search": eff_search, "batch": eff_batch, "status": eff_status}
+        )
+        dataset = build_universal_report(db, config, current_user=current_user)
+        csv_bytes = export_csv_from_dataset(dataset)
+        return Response(
+            content=csv_bytes,
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=LeetCode_Student_Performance_Report.csv"}
+        )
+    except Exception as e:
+        logger.error(f"[EXPORT ERROR] /export-csv: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to generate CSV Report: {str(e)}")
 
 @router.get("/{report_id}/preview")
 def get_report_preview(
@@ -406,69 +453,81 @@ def download_session_report_by_format(
     session_id: str,
     format: str,
     dept: Optional[str] = Query("ALL"),
+    department: Optional[str] = Query("ALL"),
     year: Optional[str] = Query("ALL"),
+    year_level: Optional[str] = Query("ALL"),
     attendance: Optional[str] = Query("ALL"),
+    status: Optional[str] = Query("ALL"),
+    search: Optional[str] = Query(""),
+    batch: Optional[str] = Query("ALL"),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Download Session Report", dept_scoped=True))
 ):
     """
     Downloads contest performance reports for a specific session_id in the requested format (excel/pdf/word/csv/zip).
-    Handles string or numeric session_id (e.g. '21', '1', 'current', 'latest').
+    Strictly applies all query filters (dept, year, attendance/status, search, batch).
     """
     fmt = format.lower().strip()
     try:
-        from backend.models import WeeklySession
-        import re
+        eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
+        eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+        eff_att = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
+        eff_search = (search or "").strip()
+        eff_batch = batch or "ALL"
 
-        session_obj = None
-        if session_id in ("current", "latest", "active"):
-            session_obj = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
-        elif session_id.isdigit():
-            session_obj = db.query(WeeklySession).filter(WeeklySession.id == int(session_id)).first()
-        else:
-            session_obj = db.query(WeeklySession).filter(WeeklySession.session_code == session_id).first()
-
-        if not session_obj:
-            session_obj = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
-
-        c_name = session_obj.contest_name if session_obj else "Weekly Contest"
-        c_num_m = re.search(r'\d+', c_name)
-        c_num = c_num_m.group(0) if c_num_m else (session_obj.id if session_obj else "1")
+        dataset, r_filename = _get_dataset_for_id(
+            report_id=session_id,
+            db=db,
+            dept=eff_dept,
+            year=eff_year,
+            attendance=eff_att,
+            search=eff_search,
+            status=eff_att,
+            batch=eff_batch,
+            current_user=current_user
+        )
 
         if fmt in ("excel", "xlsx"):
-            excel_bytes = generate_8_sheet_excel_report(db, current_user=current_user)
-            filename = f"NEC_Weekly_Contest_{c_num}_Official_Report.xlsx"
+            excel_bytes = export_excel_from_dataset(dataset)
             return Response(
                 content=excel_bytes,
                 media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+                headers={"Content-Disposition": f'attachment; filename="{r_filename}.xlsx"'}
             )
         elif fmt == "pdf":
-            pdf_bytes = generate_pdf_summary_report(db, current_user=current_user)
-            filename = f"NEC_Weekly_Contest_{c_num}_Summary.pdf"
+            pdf_bytes = export_pdf_from_dataset(dataset)
             return Response(
                 content=pdf_bytes,
                 media_type="application/pdf",
-                headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+                headers={"Content-Disposition": f'attachment; filename="{r_filename}.pdf"'}
             )
         elif fmt in ("word", "docx"):
-            from backend.word_generator import generate_word_report
-            word_bytes = generate_word_report(db, current_user=current_user)
-            filename = f"NEC_Weekly_Contest_{c_num}_Summary.docx"
+            word_bytes = export_word_from_dataset(dataset)
             return Response(
                 content=word_bytes,
                 media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+                headers={"Content-Disposition": f'attachment; filename="{r_filename}.docx"'}
             )
         elif fmt == "csv":
-            return download_csv_report(dept_id=None, year_level=year, db=db, current_user=current_user)
+            csv_bytes = export_csv_from_dataset(dataset)
+            return Response(
+                content=csv_bytes,
+                media_type="text/csv",
+                headers={"Content-Disposition": f'attachment; filename="{r_filename}.csv"'}
+            )
+        elif fmt == "zip":
+            zip_bytes = export_zip_bundle_from_dataset(dataset)
+            return Response(
+                content=zip_bytes,
+                media_type="application/zip",
+                headers={"Content-Disposition": f'attachment; filename="{r_filename}.zip"'}
+            )
         else:
-            excel_bytes = generate_8_sheet_excel_report(db, current_user=current_user)
-            filename = f"NEC_Weekly_Contest_{c_num}_Official_Report.xlsx"
+            excel_bytes = export_excel_from_dataset(dataset)
             return Response(
                 content=excel_bytes,
                 media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+                headers={"Content-Disposition": f'attachment; filename="{r_filename}.xlsx"'}
             )
     except Exception as e:
         logger.error(f"[EXPORT ERROR] /{session_id}/{format}: {e}", exc_info=True)
@@ -602,16 +661,37 @@ def get_contest_filename_base(contest_name: str, session_date: str = None, dept:
 
     return f"NEC_{contest_seg}_{dept_seg}_{year_seg}_{date_seg}"
 
-def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: str = "ALL", attendance: str = "ALL"):
-    # First check ReportHistory
+def _get_dataset_for_id(
+    report_id: str, 
+    db: Session, 
+    dept: str = "ALL", 
+    year: str = "ALL", 
+    attendance: str = "ALL",
+    search: str = "",
+    status: str = "ALL",
+    batch: str = "ALL",
+    current_user: Optional[Any] = None
+):
+    # Consolidate status/attendance if passed
+    effective_att = attendance
+    if (not effective_att or effective_att.upper() == "ALL") and status and status.upper() != "ALL":
+        effective_att = status
+
+    has_active_filters = not (
+        (dept in ("ALL", "", None)) and 
+        (year in ("ALL", "", None)) and 
+        (effective_att in ("ALL", "", None)) and
+        (not search or not search.strip()) and
+        (batch in ("ALL", "", None))
+    )
+
+    # First check ReportHistory if completely unfiltered
     report = db.query(ReportHistory).filter(ReportHistory.report_id == report_id).first()
-    # If filters are applied, we must NOT use the raw cached report directly, 
-    # we need to build the canonical dataset and apply the slicing filters below.
-    if report and dept == "ALL" and year == "ALL" and attendance == "ALL":
+    if report and not has_active_filters:
         dataset = report.dataset
         contest_name = dataset.get("contestName") or dataset.get("title") or "Weekly Contest"
         session_date = dataset.get("sessionDate") or dataset.get("session_date")
-        r_filename = get_contest_filename_base(contest_name, session_date=session_date, dept=dept, year=year, attendance=attendance)
+        r_filename = get_contest_filename_base(contest_name, session_date=session_date, dept=dept, year=year, attendance=effective_att)
     else:
         dataset = None
 
@@ -650,11 +730,9 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
 
             contest_name = ws.contest_name or f"Weekly Contest {session_id}"
             session_date = ws.session_date or ""
-            r_filename = get_contest_filename_base(contest_name, dept=dept, year=year, attendance=attendance)
+            r_filename = get_contest_filename_base(contest_name, dept=dept, year=year, attendance=effective_att)
 
             from backend.services.canonical_contest_engine import build_canonical_contest_dataset
-            # Always pull the full authoritative 1,450-student dataset for metrics,
-            # then slice to the caller's active filter scope for the export rows.
             canonical_data = build_canonical_contest_dataset(
                 session_id=session_id,
                 db=db,
@@ -664,17 +742,13 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
             )
 
             all_raw_rows = canonical_data.get("rows", [])
-            matrix_metrics = canonical_data.get("metrics", {})
 
-            # ── Apply caller's active filter (dept / year / attendance) ──────
-            # Canonical dept values used in DB: CSE, IT, AIDS, CSE(CS), CSE(IOT),
-            # ECE, EEE, MECH, CIVIL, AGRI, BME
+            # ── Apply caller's active filters ──────
             DEPT_CANONICAL_MAP = {
-                # canonical_db_value : [accepted frontend filter strings]
                 "CSE(CS)":  ["CSE(CS)", "CYBER SECURITY", "CYBER", "CSE(CYBER", "CSE (CYBER", "(CS)"],
                 "CSE(IOT)": ["CSE(IOT)", "IOT", "CSE(IOT", "CSE (IOT", "(IOT)"],
                 "AIDS":     ["AIDS", "AI&DS", "AI DS", "ARTIFICIAL INTELLIGENCE"],
-                "CSE":      ["CSE"],           # exact only – never match CSE(CS) or CSE(IOT)
+                "CSE":      ["CSE"],
                 "IT":       ["IT", "INFORMATION TECHNOLOGY"],
                 "ECE":      ["ECE", "ELECTRONICS", "ELECTRICAL AND COMMUNICATION"],
                 "EEE":      ["EEE", "ELECTRICAL AND ELECTRONICS"],
@@ -685,7 +759,6 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
             }
 
             def _resolve_canonical(s: str) -> str:
-                """Map any dept string to its canonical DB key."""
                 su = s.upper().strip()
                 for canonical, aliases in DEPT_CANONICAL_MAP.items():
                     if su == canonical:
@@ -708,6 +781,7 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
                 if fy in ("II", "2", "2ND", "II YEAR"):   return ry in ("II", "2")
                 if fy in ("III", "3", "3RD", "III YEAR"): return ry in ("III", "3")
                 if fy in ("IV", "4", "4TH", "IV YEAR"):   return ry in ("IV", "4")
+                if fy in ("I", "1", "1ST", "I YEAR"):     return ry in ("I", "1")
                 return fy == ry
 
             def _att_match(row_status: str, filter_att: str) -> bool:
@@ -725,16 +799,35 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
                 if fa in ("VIRTUAL", "VIRTUAL_ATTENDED"):
                     return rs in ("VIRTUAL", "VIRTUAL_ATTENDED")
                     
-                if fa in ("NOT_ATTENDED", "NOT ATTENDED", "ABSENT", "PUBLIC_NOT_ATTENDED"):
-                    return rs in ("NOT_ATTENDED", "NO_EVIDENCE")
+                if fa in ("NOT_ATTENDED", "NOT ATTENDED", "ABSENT", "PUBLIC_NOT_ATTENDED", "NO_EVIDENCE"):
+                    return rs in ("NOT_ATTENDED", "NO_EVIDENCE", "ABSENT", "PUBLIC_NOT_ATTENDED")
                     
-                return True
+                return rs == fa
+
+            def _search_match(row: dict, query: str) -> bool:
+                if not query or not query.strip():
+                    return True
+                q = query.lower().strip()
+                return (
+                    q in str(row.get("name", "")).lower() or
+                    q in str(row.get("reg_no", "")).lower() or
+                    q in str(row.get("username", "")).lower() or
+                    q in str(row.get("email", "")).lower() or
+                    q in str(row.get("department", "")).lower()
+                )
+
+            def _batch_match(row_batch: str, filter_batch: str) -> bool:
+                if not filter_batch or filter_batch.upper().strip() in ("ALL", ""):
+                    return True
+                return str(row_batch).upper().strip() == str(filter_batch).upper().strip()
 
             raw_rows = [
                 r for r in all_raw_rows
-                if _dept_match(r.get("dept", ""), dept)
-                and _year_match(r.get("year", ""), year)
-                and _att_match(r.get("status", ""), attendance)
+                if _dept_match(r.get("dept", r.get("department", "")), dept)
+                and _year_match(r.get("year", r.get("academic_year", "")), year)
+                and _att_match(r.get("status", ""), effective_att)
+                and _search_match(r, search)
+                and _batch_match(r.get("batch", ""), batch)
             ]
 
             all_students = []
@@ -742,11 +835,11 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
 
             for r in raw_rows:
                 status_str = r.get("status", "NOT_ATTENDED")
-                attended = status_str in ("PUBLIC", "VIRTUAL")
+                attended = status_str in ("PUBLIC", "VIRTUAL", "PUBLIC_ATTENDED", "VIRTUAL_ATTENDED", "ATTENDED")
                 v_q1 = r.get("q1")
                 v_q2 = r.get("q2")
                 v_q3 = r.get("q3")
-                r.get("q4")
+                v_q4 = r.get("q4")
                 solved_val = r.get("total_solved")
                 rank_val = r.get("rank")
                 rating_val = r.get("rating")
@@ -755,14 +848,14 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
                 entry = {
                     "reg_no": r.get("reg_no", ""),
                     "name": r.get("name", ""),
-                    "dept": r.get("dept", ""),
-                    "year": r.get("year", ""),
+                    "dept": r.get("dept", r.get("department", "")),
+                    "year": r.get("year", r.get("academic_year", "")),
                     "username": r.get("username", ""),
                     "profile_rank": r.get("profile_rank", "—"),
                     "easy": v_q1 if (v_q1 is not None) else 0,
                     "medium": v_q2 if (v_q2 is not None) else 0,
                     "hard": v_q3 if (v_q3 is not None) else 0,
-                    "total_solved": solved_val if (attended and solved_val is not None) else None,
+                    "total_solved": solved_val if (attended and solved_val is not None) else (0 if attended else None),
                     "status": status_str,
                     "rank": rank_val if attended else "—",
                     "score": score_val if attended else 0,
@@ -773,6 +866,20 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
                     top_students.append(entry)
 
             top_students.sort(key=lambda x: float(x.get("score") or 0), reverse=True)
+
+            # Recalculate metrics dynamically based on active filter scope
+            tot_count = len(raw_rows)
+            off_count = sum(1 for r in raw_rows if str(r.get("status", "")).upper() in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"))
+            virt_count = sum(1 for r in raw_rows if str(r.get("status", "")).upper() in ("VIRTUAL", "VIRTUAL_ATTENDED"))
+            not_count = sum(1 for r in raw_rows if str(r.get("status", "")).upper() in ("NOT_ATTENDED", "NO_EVIDENCE", "ABSENT", "PUBLIC_NOT_ATTENDED"))
+            err_count = sum(1 for r in raw_rows if str(r.get("status", "")).upper() in ("USERNAME_NOT_FOUND", "INVALID_USERNAME", "PENDING_USERNAME", "UNLINKED", "ERROR", "DATA_ERROR"))
+            
+            q4_count = sum(1 for r in raw_rows if (r.get("total_solved") == 4 or r.get("q4") is not None and r.get("q4") != ""))
+            q3_count = sum(1 for r in raw_rows if r.get("total_solved") == 3)
+            q2_count = sum(1 for r in raw_rows if r.get("total_solved") == 2)
+            q1_count = sum(1 for r in raw_rows if r.get("total_solved") == 1)
+            
+            p_rate = round(((off_count + virt_count) / tot_count * 100), 1) if tot_count > 0 else 0.0
 
             dataset = {
                 "report_id": f"Session_{session_id}",
@@ -792,36 +899,42 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
                 "istWindow": "08:00 AM – 09:30 AM IST",
                 "deptFilter": dept or "ALL",
                 "yearFilter": year or "ALL",
-                "attendanceFilter": attendance or "ALL",
+                "attendanceFilter": effective_att or "ALL",
+                "searchFilter": search or "",
                 "metrics": {
-                    "totalStudents": matrix_metrics.get("totalStudents", len(raw_rows)),
-                    "officialAttended": matrix_metrics.get("officialAttended", 0),
-                    "notAttended": matrix_metrics.get("notAttended", 0),
-                    "virtualAttended": matrix_metrics.get("virtualAttended", 0),
-                    "dataErrors": matrix_metrics.get("errors", 0),
+                    "totalStudents": tot_count,
+                    "officialAttended": off_count,
+                    "notAttended": not_count,
+                    "virtualAttended": virt_count,
+                    "dataErrors": err_count,
                     "contestName": contest_name,
                     "sessionDate": session_date,
-                    "participationRate": f"{matrix_metrics.get('participationPercentage', 0)}%",
-                    "4 Q Solved": matrix_metrics.get("q4Count", 0),
-                    "3 Q Solved": matrix_metrics.get("q3Count", 0),
-                    "2 Q Solved": matrix_metrics.get("q2Count", 0),
-                    "1 Q Solved": matrix_metrics.get("q1Count", 0),
+                    "participationRate": f"{p_rate}%",
+                    "4 Q Solved": q4_count,
+                    "3 Q Solved": q3_count,
+                    "2 Q Solved": q2_count,
+                    "1 Q Solved": q1_count,
                 },
                 "distribution": {},
                 "allStudents": all_students,
                 "topStudents": top_students[:50],
                 "data_quality": {
-                    "total_students": matrix_metrics.get("totalStudents", len(raw_rows)),
-                    "valid_count": matrix_metrics.get("officialAttended", 0) + matrix_metrics.get("virtualAttended", 0),
-                    "unverified_count": matrix_metrics.get("notAttended", 0),
-                    "error_count": matrix_metrics.get("errors", 0),
+                    "total_students": tot_count,
+                    "valid_count": off_count + virt_count,
+                    "unverified_count": not_count,
+                    "error_count": err_count,
                     "warnings": []
                 },
                 "rows": raw_rows,
                 "all_rows": raw_rows,
                 "departmentStats": canonical_data.get("departmentStats", {}),
                 "yearStats": canonical_data.get("yearStats", {}),
-                "statusCounts": canonical_data.get("statusCounts", {}),
+                "statusCounts": {
+                    "PUBLIC": off_count,
+                    "VIRTUAL": virt_count,
+                    "NOT_ATTENDED": not_count,
+                    "DATA_ERROR": err_count
+                },
                 "dataQualityIssues": canonical_data.get("dataQualityIssues", []),
                 "reconciliation": canonical_data.get("reconciliation", {})
             }
@@ -839,13 +952,33 @@ def _get_dataset_for_id(report_id: str, db: Session, dept: str = "ALL", year: st
 def download_universal_excel(
     report_id: str, 
     dept: str = "ALL", 
+    department: Optional[str] = None,
     year: str = "ALL", 
+    year_level: Optional[str] = None,
     attendance: str = "ALL", 
+    status: Optional[str] = None,
+    search: str = "",
+    searchQuery: Optional[str] = None,
+    batch: str = "ALL",
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Download Report Excel", dept_scoped=True))
 ):
     try:
-        dataset, r_filename = _get_dataset_for_id(report_id, db, dept=dept, year=year, attendance=attendance)
+        eff_dept = department if (department and department != "ALL") else dept
+        eff_year = year_level if (year_level and year_level != "ALL") else year
+        eff_att = status if (status and status != "ALL") else attendance
+        eff_search = searchQuery if (searchQuery and searchQuery.strip()) else search
+
+        dataset, r_filename = _get_dataset_for_id(
+            report_id, db, 
+            dept=eff_dept, 
+            year=eff_year, 
+            attendance=eff_att,
+            search=eff_search,
+            status=status or "ALL",
+            batch=batch,
+            current_user=current_user
+        )
         excel_bytes = export_excel_from_dataset(dataset)
         
         # Validate Excel workbook
@@ -870,13 +1003,33 @@ def download_universal_excel(
 def download_universal_pdf(
     report_id: str, 
     dept: str = "ALL", 
+    department: Optional[str] = None,
     year: str = "ALL", 
+    year_level: Optional[str] = None,
     attendance: str = "ALL", 
+    status: Optional[str] = None,
+    search: str = "",
+    searchQuery: Optional[str] = None,
+    batch: str = "ALL",
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Download Report PDF", dept_scoped=True))
 ):
     try:
-        dataset, r_filename = _get_dataset_for_id(report_id, db, dept=dept, year=year, attendance=attendance)
+        eff_dept = department if (department and department != "ALL") else dept
+        eff_year = year_level if (year_level and year_level != "ALL") else year
+        eff_att = status if (status and status != "ALL") else attendance
+        eff_search = searchQuery if (searchQuery and searchQuery.strip()) else search
+
+        dataset, r_filename = _get_dataset_for_id(
+            report_id, db, 
+            dept=eff_dept, 
+            year=eff_year, 
+            attendance=eff_att,
+            search=eff_search,
+            status=status or "ALL",
+            batch=batch,
+            current_user=current_user
+        )
         pdf_bytes = export_pdf_from_dataset(dataset)
         return Response(
             content=pdf_bytes,
@@ -891,12 +1044,32 @@ def download_universal_pdf(
 def download_universal_word(
     report_id: str, 
     dept: str = "ALL", 
+    department: Optional[str] = None,
     year: str = "ALL", 
+    year_level: Optional[str] = None,
     attendance: str = "ALL", 
+    status: Optional[str] = None,
+    search: str = "",
+    searchQuery: Optional[str] = None,
+    batch: str = "ALL",
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Download Report Word", dept_scoped=True))
 ):
-    dataset, r_filename = _get_dataset_for_id(report_id, db, dept=dept, year=year, attendance=attendance)
+    eff_dept = department if (department and department != "ALL") else dept
+    eff_year = year_level if (year_level and year_level != "ALL") else year
+    eff_att = status if (status and status != "ALL") else attendance
+    eff_search = searchQuery if (searchQuery and searchQuery.strip()) else search
+
+    dataset, r_filename = _get_dataset_for_id(
+        report_id, db, 
+        dept=eff_dept, 
+        year=eff_year, 
+        attendance=eff_att,
+        search=eff_search,
+        status=status or "ALL",
+        batch=batch,
+        current_user=current_user
+    )
     word_bytes = export_word_from_dataset(dataset)
     return Response(
         content=word_bytes,
@@ -908,12 +1081,32 @@ def download_universal_word(
 def download_universal_csv_by_id(
     report_id: str, 
     dept: str = "ALL", 
+    department: Optional[str] = None,
     year: str = "ALL", 
+    year_level: Optional[str] = None,
     attendance: str = "ALL", 
+    status: Optional[str] = None,
+    search: str = "",
+    searchQuery: Optional[str] = None,
+    batch: str = "ALL",
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Download Report CSV", dept_scoped=True))
 ):
-    dataset, r_filename = _get_dataset_for_id(report_id, db, dept=dept, year=year, attendance=attendance)
+    eff_dept = department if (department and department != "ALL") else dept
+    eff_year = year_level if (year_level and year_level != "ALL") else year
+    eff_att = status if (status and status != "ALL") else attendance
+    eff_search = searchQuery if (searchQuery and searchQuery.strip()) else search
+
+    dataset, r_filename = _get_dataset_for_id(
+        report_id, db, 
+        dept=eff_dept, 
+        year=eff_year, 
+        attendance=eff_att,
+        search=eff_search,
+        status=status or "ALL",
+        batch=batch,
+        current_user=current_user
+    )
     csv_bytes = export_csv_from_dataset(dataset)
     return Response(
         content=csv_bytes,
@@ -925,12 +1118,32 @@ def download_universal_csv_by_id(
 def download_universal_zip_by_id(
     report_id: str, 
     dept: str = "ALL", 
+    department: Optional[str] = None,
     year: str = "ALL", 
+    year_level: Optional[str] = None,
     attendance: str = "ALL", 
+    status: Optional[str] = None,
+    search: str = "",
+    searchQuery: Optional[str] = None,
+    batch: str = "ALL",
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Download Report ZIP", dept_scoped=True))
 ):
-    dataset, r_filename = _get_dataset_for_id(report_id, db, dept=dept, year=year, attendance=attendance)
+    eff_dept = department if (department and department != "ALL") else dept
+    eff_year = year_level if (year_level and year_level != "ALL") else year
+    eff_att = status if (status and status != "ALL") else attendance
+    eff_search = searchQuery if (searchQuery and searchQuery.strip()) else search
+
+    dataset, r_filename = _get_dataset_for_id(
+        report_id, db, 
+        dept=eff_dept, 
+        year=eff_year, 
+        attendance=eff_att,
+        search=eff_search,
+        status=status or "ALL",
+        batch=batch,
+        current_user=current_user
+    )
     zip_bytes = export_zip_bundle_from_dataset(dataset)
     return Response(
         content=zip_bytes,

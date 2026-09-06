@@ -520,9 +520,9 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                   <div className="space-y-1 relative">
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center justify-between">
                       <span>Institutional Email <span className="text-rose-500">*</span></span>
-                      {emailStatus === 'generated' && <span className="text-[10px] text-emerald-500 flex items-center gap-1">✓ ASSIGNED</span>}
-                      {emailStatus === 'needs_verification' && <span className="text-[10px] text-amber-500 flex items-center gap-1">⚠ NEEDS VERIFICATION</span>}
-                      {emailStatus === 'error' && <span className="text-[10px] text-rose-500 flex items-center gap-1">⚠ ERROR</span>}
+                      {emailStatus === 'generated' && <span className="text-[10px] text-emerald-500 font-bold">ASSIGNED</span>}
+                      {emailStatus === 'needs_verification' && <span className="text-[10px] text-amber-500 font-bold">NEEDS VERIFICATION</span>}
+                      {emailStatus === 'error' && <span className="text-[10px] text-rose-500 font-bold">ERROR</span>}
                     </label>
                     <div className="relative flex items-center gap-2">
                       <input type="email" value={institutionalEmail} readOnly placeholder="Auto-generated from Register Number" className="w-full h-10 px-3.5 text-xs font-mono bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-2xl text-slate-700 dark:text-slate-300 font-bold outline-none shadow-sm cursor-not-allowed" />

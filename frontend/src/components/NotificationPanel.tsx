@@ -379,8 +379,9 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5 min-w-0">
                   <Smartphone className="w-3.5 h-3.5 text-brand-400 shrink-0" />
-                  <span className="font-bold text-[11px] truncate">
-                    {pushPermState === 'granted' ? '🟢 OS Push: Enabled' : '🔴 OS Push: Disabled'}
+                  <span className="font-bold text-[11px] truncate flex items-center gap-1.5">
+                    <span className={`w-2 h-2 rounded-full ${pushPermState === 'granted' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                    {pushPermState === 'granted' ? 'OS Push: Enabled' : 'OS Push: Disabled'}
                   </span>
                 </div>
 

@@ -143,7 +143,7 @@ class LiveSyncTracker:
         if len(self.recent_completed) > 15:
             self.recent_completed.pop()
 
-        log_symbol = "✓" if status.upper() in ("SUCCESS", "VERIFIED", "PROFILE_VERIFIED", "SYNCED") else "✕"
+        log_symbol = "" if status.upper() in ("SUCCESS", "VERIFIED", "PROFILE_VERIFIED", "SYNCED") else ""
         solved_str = f" — {total_solved} solved" if total_solved is not None else f" — {status.upper()}"
         self.recent_logs.append(f"{log_symbol} {student_name} ({username or 'no_user'}){solved_str}")
         if len(self.recent_logs) > 50:
@@ -555,7 +555,7 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
     Enforces SINGLE SOURCE OF TRUTH & RACE CONDITION PROTECTION.
     Returns (is_success, is_partial, is_error).
     """
-    # ── Race Condition & Deletion Protection ───────────────────────────────────
+    # Race Condition & Deletion Protection 
     curr_student = db.query(Student).filter(Student.id == student.id).first()
     if not curr_student or not curr_student.is_active:
         logger.warning(f"[RACE_PROTECTION] Discarding sync result for student_id={student.id}: Student is inactive or deleted.")
@@ -1122,5 +1122,5 @@ def get_system_freshness(db: Session) -> Dict[str, Any]:
         "last_successful_sync": latest_sync.isoformat() if latest_sync else None,
         "is_sync_running": running_job is not None,
         "running_job_id": running_job.job_id if running_job else None,
-        "freshness_badge": f"🟢 {verified_count}/{total_count} Verified | ⚠️ {needs_attention} Need Attention"
+        "freshness_badge": f" {verified_count}/{total_count} Verified | {needs_attention} Need Attention"
     }
