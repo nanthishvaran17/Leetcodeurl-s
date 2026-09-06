@@ -3,6 +3,7 @@ import csv
 import io
 import datetime
 from fastapi import APIRouter, Depends, Response, HTTPException, Query
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import Optional, Dict, Any
 from pydantic import BaseModel
@@ -158,7 +159,6 @@ def trigger_virtual_contest_workflow_endpoint(
     return result
 
 def _serve_cached_report(res: dict, db: Session, fallback_filename: str, default_mime: str) -> FileResponse:
-    from fastapi.responses import FileResponse
     from backend.models import ReportCache
 
     cache_id = res.get("cache_id") if res else None
