@@ -263,25 +263,19 @@ export const App: React.FC = () => {
     }
   };
 
-  // Intelligent Background Route & Data Pre-fetching on Idle
+  // Intelligent Background Route & Data Pre-fetching on Idle (authenticated users only)
   useEffect(() => {
+    if (!user) return;
     const prefetchLikelyRoutes = () => {
       if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
         (window as any).requestIdleCallback(() => {
           import('./pages/DashboardPage');
           import('./pages/StudentMasterPage');
-          import('./pages/ReportsPage');
-          import('./pages/DepartmentDashboard');
         });
-      } else {
-        setTimeout(() => {
-          import('./pages/DashboardPage');
-          import('./pages/StudentMasterPage');
-        }, 2000);
       }
     };
     prefetchLikelyRoutes();
-  }, []);
+  }, [user]);
 
   const triggerCloudSync = async () => {
     try {

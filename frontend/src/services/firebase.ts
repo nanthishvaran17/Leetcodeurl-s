@@ -72,6 +72,20 @@ export const createGoogleProvider = (): GoogleAuthProvider => {
   return provider;
 };
 
-export const googleProvider = createGoogleProvider();
+let _googleProviderInstance: GoogleAuthProvider | null = null;
+export const getGoogleProvider = (): GoogleAuthProvider => {
+  if (!_googleProviderInstance) {
+    _googleProviderInstance = createGoogleProvider();
+  }
+  return _googleProviderInstance;
+};
+
+export const googleProvider = new Proxy({} as GoogleAuthProvider, {
+  get(_target, prop) {
+    const provider = getGoogleProvider();
+    const val = (provider as any)[prop];
+    return typeof val === 'function' ? val.bind(provider) : val;
+  }
+});
 
 export default appInstance;

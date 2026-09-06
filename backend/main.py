@@ -380,6 +380,19 @@ def _cleanup_expired_cache_entries(now: float):
             for k in sorted_keys[:60]:
                 _API_MEMORY_CACHE.pop(k, None)
 
+def _add_cors_headers_to_response(request, response_headers) -> None:
+    """Attaches origin-specific CORS headers to response headers dict or MutableHeaders."""
+    origin = request.headers.get("origin")
+    if origin:
+        import re
+        allowed_regex = r"https://.*\.netlify\.app|https://.*\.web\.app|https://.*\.firebaseapp\.com|https://.*\.vercel\.app|https://.*\.pages\.dev|https://.*\.loca\.lt"
+        if origin in origins or re.match(allowed_regex, origin):
+            response_headers["Access-Control-Allow-Origin"] = origin
+            response_headers["Access-Control-Allow-Credentials"] = "true"
+            response_headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+            response_headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept, Origin, User-Agent, DNT, Cache-Control, X-Mx-ReqToken, X-Requested-With"
+            response_headers["Access-Control-Expose-Headers"] = "Content-Disposition, Content-Length, Content-Type, X-Cache"
+
 @app.middleware("http")
 async def ultra_fast_memory_cache_middleware(request, call_next):
     method = request.method
@@ -388,7 +401,14 @@ async def ultra_fast_memory_cache_middleware(request, call_next):
     # Invalidate cache on mutations
     if method in ("POST", "PUT", "DELETE", "PATCH"):
         purge_api_memory_cache()
-        return await call_next(request)
+        response = await call_next(request)
+        _add_cors_headers_to_response(request, response.headers)
+        return response
+
+    if method == "OPTIONS":
+        response = await call_next(request)
+        _add_cors_headers_to_response(request, response.headers)
+        return response
 
     # Serve cached responses in < 1ms for high-frequency GET queries with parameter & role isolation
     if method == "GET" and path in _CACHE_TTL_MAP:
@@ -402,14 +422,16 @@ async def ultra_fast_memory_cache_middleware(request, call_next):
         if cached_item and now < cached_item["expires_at"]:
             record_cache_hit()
             from fastapi.responses import Response as FastResponse
+            res_headers = {
+                "Content-Type": cached_item["content_type"],
+                "X-Cache": "HIT-FASTAPI-RAM",
+                "Cache-Control": f"private, max-age={_CACHE_TTL_MAP[path]}"
+            }
+            _add_cors_headers_to_response(request, res_headers)
             return FastResponse(
                 content=cached_item["body"],
                 status_code=cached_item["status"],
-                headers={
-                    "Content-Type": cached_item["content_type"],
-                    "X-Cache": "HIT-FASTAPI-RAM",
-                    "Cache-Control": f"private, max-age={_CACHE_TTL_MAP[path]}"
-                }
+                headers=res_headers
             )
         else:
             record_cache_miss()
@@ -436,14 +458,17 @@ async def ultra_fast_memory_cache_middleware(request, call_next):
                 "expires_at": now + _CACHE_TTL_MAP[path]
             }
             from fastapi.responses import Response as FastResponse
+            res_headers = dict(response.headers)
+            _add_cors_headers_to_response(request, res_headers)
             return FastResponse(
                 content=full_body,
                 status_code=response.status_code,
-                headers=dict(response.headers)
+                headers=res_headers
             )
         except Exception:
             pass
 
+    _add_cors_headers_to_response(request, response.headers)
     return response
 
 @app.middleware("http")
@@ -457,6 +482,7 @@ async def add_security_headers_and_performance_middleware(request, call_next):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()"
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    _add_cors_headers_to_response(request, response.headers)
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://apis.google.com https://*.firebaseapp.com; "
