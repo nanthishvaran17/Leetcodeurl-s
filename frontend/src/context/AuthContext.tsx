@@ -3,7 +3,7 @@ import { onAuthStateChanged, signOut as firebaseSignOut, User as FirebaseUser } 
 import { auth, getOrInitAuth } from '../services/firebase';
 import api, { clearApiCache } from '../services/api';
 import { AuthState, AuthUser, AuthContextType } from '../services/auth/authTypes';
-import { checkGoogleRedirectResult, isMobileBrowser } from '../services/googleAuth';
+import { isMobileBrowser } from '../services/googleAuth';
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -104,6 +104,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const initializeAuthLifecycle = async () => {
       try {
+        console.log('[AUTH] Starting auth initialization lifecycle');
+        const authInstance = getOrInitAuth();
+
         // 1. Check Google redirect result first (if returning from redirect flow on Mobile Web)
         const isMobileRedirect = !!(
           sessionStorage.getItem('nec_mobile_google_redirect') ||
@@ -113,26 +116,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isMobileRedirect) {
           console.log('[MOBILE AUTH] Returning from mobile Google redirect flow');
           setAuthState('AUTHENTICATING');
-          isVerifyingRef.current = true;
+          
           try {
-            const redirectRes = await checkGoogleRedirectResult();
-            if (redirectRes && redirectRes.user && isMounted) {
-              login(redirectRes.access_token || '', redirectRes.user);
-              isVerifyingRef.current = false;
-              return;
+            // Give Firebase SDK a chance to process the OAuth redirect URL
+            const { getRedirectResult } = await import('firebase/auth');
+            await getRedirectResult(authInstance).catch((e) => {
+              const errStr = String(e?.message || e?.code || e || '');
+              if (errStr.includes('missing initial state') || errStr.includes('sessionStorage')) {
+                console.warn('[MOBILE AUTH] Handled missing initial state gracefully');
+                if (typeof window !== 'undefined' && window.history && window.location.search.includes('state=')) {
+                  const cleanUrl = window.location.origin + window.location.pathname;
+                  window.history.replaceState({}, document.title, cleanUrl);
+                }
+              } else {
+                console.warn('[MOBILE AUTH] getRedirectResult note:', e?.message || e);
+              }
+            });
+            console.log('[MOBILE AUTH] getRedirectResult check completed. Waiting for auth.currentUser restoration...');
+
+            // If Firebase successfully authenticates, onAuthStateChanged will fire.
+            // We wait up to 3 seconds for it to populate auth.currentUser before giving up.
+            let resolvedUser = authInstance.currentUser;
+            if (!resolvedUser) {
+              await new Promise<void>((resolve) => {
+                const timeout = setTimeout(() => resolve(), 3000);
+                const unsubscribe = onAuthStateChanged(authInstance, (u) => {
+                  if (u) {
+                    resolvedUser = u;
+                    clearTimeout(timeout);
+                    unsubscribe();
+                    resolve();
+                  }
+                });
+              });
             }
+
+            if (resolvedUser && resolvedUser.email) {
+              console.log('[MOBILE AUTH] Current user restored during redirect check! Deferring to onAuthStateChanged listener for token exchange.');
+              // We do NOT return here, nor do we set UNAUTHENTICATED.
+              // We just let the global onAuthStateChanged listener (registered below) handle the token exchange.
+              sessionStorage.removeItem('nec_mobile_google_redirect');
+              return; // Exit lifecycle, let onAuthStateChanged handle the rest
+            } else {
+              console.warn('[MOBILE AUTH] No user restored after redirect. Falling back to local session.');
+            }
+
           } catch (redirectErr: any) {
-            if (isMounted) {
-              const errMsg = redirectErr.response?.data?.detail || redirectErr.message || 'Google sign-in could not be completed. Please try again.';
-              console.error('[MOBILE AUTH] Redirect auth failed:', errMsg);
-              setAuthError(errMsg);
-              setAuthState('AUTH_ERROR');
-              isVerifyingRef.current = false;
-              return;
-            }
+            console.warn('[MOBILE AUTH] Redirect flow encountered an error:', redirectErr);
           } finally {
             sessionStorage.removeItem('nec_mobile_google_redirect');
-            isVerifyingRef.current = false;
           }
         }
 
@@ -166,6 +198,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
 
+        // Only set unauthenticated if we tried everything and failed
         if (isMounted) setAuthState('UNAUTHENTICATED');
       } catch (_err) {
         if (isMounted) {
