@@ -85,40 +85,21 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
   }
 
   return (
-    <div className="w-full space-y-2.5">
+    <div className="w-full relative">
       {activeError && (
-        <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs space-y-2 animate-fade-in shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 font-bold text-rose-800 dark:text-rose-200">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
-              <span>Authentication Notice</span>
-            </div>
-            <button
-              type="button"
-              onClick={handleBackToSignIn}
-              className="text-slate-400 hover:text-rose-600 text-xs font-bold p-1 rounded-md hover:bg-rose-100 dark:hover:bg-rose-900/40 min-h-[32px] min-w-[32px] flex items-center justify-center cursor-pointer"
-              aria-label="Dismiss notice"
-            >
-              <X className="w-4 h-4" />
-            </button>
+        <div className="absolute bottom-[calc(100%+8px)] left-0 right-0 z-50 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/95 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs shadow-xl backdrop-blur-md animate-fade-in flex items-center justify-between">
+          <div className="flex items-center space-x-2 min-w-0 pr-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+            <span className="text-[12px] font-medium truncate">{activeError}</span>
           </div>
-          <p className="text-[12px] leading-relaxed text-rose-700 dark:text-rose-300">{activeError}</p>
-          <div className="flex items-center space-x-2 pt-1">
-            <button
-              type="button"
-              onClick={handleRetry}
-              className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs transition-colors shadow-sm cursor-pointer"
-            >
-              Try Again
-            </button>
-            <button
-              type="button"
-              onClick={handleBackToSignIn}
-              className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs transition-colors cursor-pointer"
-            >
-              Back to Sign In
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleBackToSignIn}
+            className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-300 p-1 rounded-md shrink-0 cursor-pointer"
+            aria-label="Dismiss notice"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 

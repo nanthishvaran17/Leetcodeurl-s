@@ -514,28 +514,44 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
             {(error || authError) && (
               <motion.div
                 key="error"
-                initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                animate={{ opacity: 1, height: 'auto', marginBottom: 16 }}
-                exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
                 className="error-banner"
                 role="alert"
               >
                 <AlertCircle size={18} className="shrink-0" />
-                <span>{error || authError}</span>
+                <span className="flex-1 min-w-0">{error || authError}</span>
+                <button
+                  type="button"
+                  onClick={() => { setError(''); clearAuthError(); }}
+                  className="banner-close-btn"
+                  aria-label="Dismiss error"
+                >
+                  <X size={16} />
+                </button>
               </motion.div>
             )}
             
             {successMsg && (
               <motion.div
                 key="success"
-                initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                animate={{ opacity: 1, height: 'auto', marginBottom: 16 }}
-                exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
                 className="success-banner"
                 role="status"
               >
                 <CheckCircle2 size={18} className="shrink-0" />
-                <span>{successMsg}</span>
+                <span className="flex-1 min-w-0">{successMsg}</span>
+                <button
+                  type="button"
+                  onClick={() => setSuccessMsg('')}
+                  className="banner-close-btn"
+                  aria-label="Dismiss success message"
+                >
+                  <X size={16} />
+                </button>
               </motion.div>
             )}
           </AnimatePresence>
