@@ -7,18 +7,27 @@ from typing import Dict, Any, Tuple, Optional, List
 from backend.config import settings
 from backend.logger import logger
 
+import threading
+
 # In-memory cache: username -> { "timestamp": float, "data": dict }
 _profile_cache: Dict[str, Dict[str, Any]] = {}
 
 # Single-flight request deduplication
 _in_flight_requests: Dict[str, asyncio.Future] = {}
 
-# Global persistent HTTP connection pool
-_global_client: Optional[httpx.AsyncClient] = None
+# Thread-local HTTP connection storage to avoid cross-loop/cross-thread Event binding errors
+_client_local = threading.local()
 
 def get_httpx_client(req_timeout: float = 10.0) -> httpx.AsyncClient:
-    global _global_client
-    if _global_client is None:
+    try:
+        current_loop = asyncio.get_running_loop()
+    except RuntimeError:
+        current_loop = None
+
+    client = getattr(_client_local, "client", None)
+    cached_loop = getattr(_client_local, "loop", None)
+
+    if client is None or client.is_closed or cached_loop != current_loop:
         timeout_cfg = httpx.Timeout(
             connect=settings.LEETCODE_CONNECT_TIMEOUT, 
             read=req_timeout, 
@@ -26,8 +35,10 @@ def get_httpx_client(req_timeout: float = 10.0) -> httpx.AsyncClient:
             pool=settings.LEETCODE_CONNECT_TIMEOUT
         )
         limits_cfg = httpx.Limits(max_keepalive_connections=settings.LEETCODE_MAX_CONCURRENCY, max_connections=settings.LEETCODE_MAX_CONCURRENCY * 2)
-        _global_client = httpx.AsyncClient(timeout=timeout_cfg, limits=limits_cfg, follow_redirects=True, http2=False)
-    return _global_client
+        client = httpx.AsyncClient(timeout=timeout_cfg, limits=limits_cfg, follow_redirects=True, http2=False)
+        _client_local.client = client
+        _client_local.loop = current_loop
+    return client
 
 class CircuitBreaker:
     def __init__(self, failure_threshold: int = 15, recovery_timeout: float = 60.0):
@@ -36,10 +47,10 @@ class CircuitBreaker:
         self.last_failure_time = 0.0
         self.failure_threshold = failure_threshold
         self.recovery_timeout = recovery_timeout
-        self._lock = asyncio.Lock()
+        self._lock = threading.Lock()
 
     async def check(self) -> bool:
-        async with self._lock:
+        with self._lock:
             if self.state == "OPEN":
                 if time.time() - self.last_failure_time > self.recovery_timeout:
                     self.state = "HALF_OPEN"
@@ -48,14 +59,14 @@ class CircuitBreaker:
             return True
 
     async def record_success(self):
-        async with self._lock:
+        with self._lock:
             if self.state != "CLOSED":
                 logger.info(f"[CIRCUIT_BREAKER] State recovered to CLOSED.")
             self.state = "CLOSED"
             self.failure_count = 0
 
     async def record_failure(self):
-        async with self._lock:
+        with self._lock:
             self.failure_count += 1
             self.last_failure_time = time.time()
             if self.state == "CLOSED" and self.failure_count >= self.failure_threshold:

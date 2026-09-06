@@ -981,14 +981,8 @@ def update_student(
     if not student:
         raise HTTPException(status_code=404, detail="Student record not found.")
 
-    if hasattr(payload, 'version') and payload.version is not None:
-        current_version = getattr(student, 'version', 1)
-        if current_version != payload.version:
-            raise HTTPException(
-                status_code=409,
-                detail="Conflict: This student record was recently modified by another user. Please refresh and try again."
-            )
-        student.version = current_version + 1
+    current_version = getattr(student, 'version', 1) or 1
+    student.version = current_version + 1
 
     old_username = student.username
     changes_made = {}
