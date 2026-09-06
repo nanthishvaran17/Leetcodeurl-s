@@ -392,37 +392,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
   return (
     <div className="login-page-container">
       {/* ========================================================
-          MOBILE HERO / HEADER: Official Nandha Campus Image
+          MOBILE HERO / HEADER: Official Floating Institutional Branding
           ======================================================== */}
-      <header className="mobile-header hide-on-desktop" role="banner">
-        <div className="mobile-header-bg">
-          <picture>
-            <source
-              type="image/webp"
-              srcSet="/nandha_gate_bg_mobile.webp 480w, /nandha_gate_bg.webp 840w"
-              sizes="100vw"
-            />
-            <img
-              src="/nandha_gate_bg_mobile.webp"
-              alt="Nandha Engineering College Main Campus"
-              className="mobile-header-img"
-              loading="eager"
-              fetchPriority="high"
-              width="480"
-              height="130"
-            />
-          </picture>
-          <div className="mobile-header-overlay" />
+      <div className="mobile-top-branding hide-on-desktop" role="banner">
+        <div className="mobile-jubilee-badge">
+          <img
+            src="/nec_25_logo.png"
+            alt="25 NEC Silver Jubilee"
+            className="mobile-jubilee-img"
+            onError={(e) => {
+              // Fallback to CollegeLogo if image fails
+              (e.target as HTMLElement).style.display = 'none';
+            }}
+          />
         </div>
-        
-        <div className="mobile-header-content">
-          <CollegeLogo className="mobile-brand-mark" size={44} />
-          <h2 className="mobile-eyebrow">NANDHA ENGINEERING COLLEGE</h2>
-          <span className="mobile-location">ERODE · TAMIL NADU</span>
-          <h1 className="mobile-name">Nandha LeetCode Intelligence</h1>
-          <p className="mobile-sub">Academic Performance & Forensic Portal</p>
-        </div>
-      </header>
+        <span className="mobile-eyebrow">INSTITUTIONAL PORTAL</span>
+        <h1 className="mobile-title">Nandha LeetCode Intelligence</h1>
+        <p className="mobile-subtitle">Nandha Engineering College (Autonomous) · Erode</p>
+      </div>
 
       {/* Main Login Frame / Card */}
       <main className="login-frame" role="main">
@@ -484,29 +471,29 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         </div>
 
         {/* ========================================================
-            RIGHT LOGIN PANEL (Mobile White Card Surface)
+            RIGHT LOGIN PANEL (Frosted Glass Card Surface)
             ======================================================== */}
         <div className={`panel-right ${isShaking ? 'shake-anim' : ''}`}>
-          <div className="top-bar">
-            <button
-              className="theme-toggle"
-              onClick={toggleTheme}
-              aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
-            >
-              {isDarkMode ? (
-                <Sun size={18} strokeWidth={2} />
-              ) : (
-                <Moon size={18} strokeWidth={2} />
-              )}
-            </button>
-          </div>
-
           <div className="form-head">
-            <h2>
-              {currentView === 'help'
-                ? 'Institutional Help Desk'
-                : (currentView === 'forgot_password' ? 'Reset Workspace Password' : 'Sign in to your workspace')}
-            </h2>
+            <div className="form-head-title-row">
+              <h2>
+                {currentView === 'help'
+                  ? 'Institutional Help Desk'
+                  : (currentView === 'forgot_password' ? 'Reset Workspace Password' : 'Sign in to your workspace')}
+              </h2>
+              <button
+                type="button"
+                className="theme-toggle"
+                onClick={toggleTheme}
+                aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {isDarkMode ? (
+                  <Sun size={18} strokeWidth={2} />
+                ) : (
+                  <Moon size={18} strokeWidth={2} />
+                )}
+              </button>
+            </div>
             <p>
               {currentView === 'help'
                 ? 'Support for authorized personnel, faculty, and enrolled students.'
@@ -585,13 +572,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                     <div className="field">
                       <label htmlFor="userId">Institutional Email or User ID</label>
                       <div className="input-wrap">
-                        <User className="input-icon" size={19} aria-hidden="true" />
+                        <Mail className="input-icon" size={19} aria-hidden="true" />
                         <input
                           id="userId"
                           type="text"
                           value={username}
                           onChange={(e) => setUsername(e.target.value)}
-                          placeholder="id, username or faculty@nandhaengg.org"
+                          placeholder="username or email@nandha.org"
                           autoComplete="username"
                           autoCapitalize="none"
                           spellCheck={false}

@@ -664,7 +664,8 @@ def start_scheduler():
         contest_discovery_job,
         IntervalTrigger(minutes=5, timezone=IST),
         id='contest_discovery',
-        replace_existing=True
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=300
     )
 
     # Job: Hourly Verification Worker
@@ -672,7 +673,8 @@ def start_scheduler():
         hourly_verification_job,
         IntervalTrigger(hours=1, timezone=IST),
         id='verification_worker',
-        replace_existing=True
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=3600
     )
 
     # Job: Daily Rating Updater (2:00 AM IST)
@@ -680,7 +682,8 @@ def start_scheduler():
         daily_rating_update_job,
         CronTrigger(hour=2, minute=0, timezone=IST),
         id='rating_updater',
-        replace_existing=True
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=3600
     )
 
     # ── DAILY AUTOMATIC NOTIFICATION ENGINE JOBS (Asia/Kolkata IST) ──

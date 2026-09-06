@@ -202,13 +202,20 @@ def get_session_live_telemetry(
             from backend.services.faculty_assignment_service import faculty_assignment_service
             assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, current_user.id)
             if assigned_ids:
-                # Filter leaderboard
+                # Filter leaderboard & top performers for faculty mentorship scope
                 telemetry["topLeaderboard"] = [
                     row for row in telemetry.get("topLeaderboard", [])
                     if row.get("student_id") in assigned_ids
                 ]
+                if "metrics" in telemetry and isinstance(telemetry["metrics"], dict):
+                    telemetry["metrics"]["topPerformers"] = [
+                        row for row in telemetry["metrics"].get("topPerformers", [])
+                        if row.get("student_id") in assigned_ids
+                    ]
             else:
                 telemetry["topLeaderboard"] = []
+                if "metrics" in telemetry and isinstance(telemetry["metrics"], dict):
+                    telemetry["metrics"]["topPerformers"] = []
 
     return telemetry
 
@@ -2451,6 +2458,202 @@ def get_public_participants_audits(
         }
         for a in audits
     ]
+
+
+@router.get("/sessions/{session_id}/participants")
+def get_contest_participants(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    """
+    Returns normalized, evidence-verified contest participants broken down into:
+    - LIVE (verified live contest participation)
+    - VIRTUAL (verified virtual contest participation with explicit metadata)
+    - NONE (verified non-participation)
+    - UNKNOWN (unverified participation mode; verified = False)
+
+    Separates contest-level Virtual availability (contestModeAvailable = True) from user-level participationMode.
+    """
+    session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+    if not session:
+        # Try finding by session_code or contest_id if string passed
+        session = db.query(WeeklySession).filter(
+            (WeeklySession.session_code == str(session_id)) | (WeeklySession.contest_id == str(session_id))
+        ).first()
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Contest session not found.")
+
+    # Fetch active students
+    students = db.query(Student).filter(Student.is_active == True).all()
+
+    # Fetch results for this session
+    public_results = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session.id).all()
+    public_map = {r.student_id: r for r in public_results}
+
+    # Fetch previous week records if available
+    from backend.models import PreviousWeekParticipationRecord
+    pw_records = db.query(PreviousWeekParticipationRecord).filter(
+        PreviousWeekParticipationRecord.session_id == session.id,
+        PreviousWeekParticipationRecord.is_active_version == True
+    ).all()
+    pw_map = {p.student_id: p for p in pw_records}
+
+    live_list = []
+    virtual_list = []
+    none_list = []
+    unknown_list = []
+
+    contest_id_str = session.contest_id or f"contest-{session.id}"
+    contest_name_str = session.contest_name or f"Weekly Contest {session.week_number}"
+
+    for st in students:
+        username = (st.username or "").strip().lower()
+        display_name = st.name or username or f"Student {st.id}"
+        pr = public_map.get(st.id)
+        pw = pw_map.get(st.id)
+
+        # Default classification
+        mode = "UNKNOWN"
+        verified = False
+        solved_count = 0
+        score = None
+        ranking = None
+        finish_time = None
+        source = "unverified"
+
+        if pr:
+            solved_count = pr.total_contest_solved or 0
+            score = pr.contest_score
+            ranking = pr.contest_rank
+            
+            p_stat = (pr.participation_status or "").upper()
+            
+            if p_stat in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "LIVE"):
+                mode = "LIVE"
+                verified = True
+                source = "official_leetcode_leaderboard"
+            elif p_stat in ("VIRTUAL", "VIRTUAL_ATTENDED"):
+                # Require explicit verification evidence for VIRTUAL
+                is_explicit_virtual = False
+                if pr.verification_evidence and "explicit_virtual" in pr.verification_evidence.lower():
+                    is_explicit_virtual = True
+                elif pr.confidence in ("VERIFIED", "HIGH", "VERY_HIGH") and pr.state in ("VALIDATED", "CLASSIFIED"):
+                    is_explicit_virtual = True
+                
+                if is_explicit_virtual:
+                    mode = "VIRTUAL"
+                    verified = True
+                    source = "explicit_virtual_metadata"
+                else:
+                    # Unverified virtual attempt -> UNKNOWN (Do NOT fake VIRTUAL!)
+                    mode = "UNKNOWN"
+                    verified = False
+                    source = "unverified_virtual_inference"
+            elif p_stat in ("NOT_PARTICIPATED", "PUBLIC_NOT_ATTENDED", "NONE"):
+                mode = "NONE"
+                verified = True
+                source = "official_absence_record"
+            else:
+                mode = "UNKNOWN"
+                verified = False
+                source = pr.data_fetch_status or "unverified"
+
+        elif pw:
+            solved_count = pw.problems_solved or 0
+            score = pw.official_score
+            ranking = pw.official_rank
+            finish_time = pw.finish_time
+            p_type = (pw.participation_type or "").upper()
+
+            if p_type in ("PUBLIC", "LIVE"):
+                mode = "LIVE"
+                verified = True
+                source = pw.source or "official_leetcode_leaderboard"
+            elif p_type == "VIRTUAL":
+                if pw.verification_status == "VERIFIED":
+                    mode = "VIRTUAL"
+                    verified = True
+                    source = pw.source or "leetcode_contest_history"
+                else:
+                    mode = "UNKNOWN"
+                    verified = False
+                    source = "unverified_virtual_history"
+            elif p_type in ("NOT_PARTICIPATED", "NONE"):
+                mode = "NONE"
+                verified = True
+                source = pw.source or "leetcode_contest_history"
+            else:
+                mode = "UNKNOWN"
+                verified = False
+                source = "unverified_status"
+        else:
+            if not username:
+                mode = "UNKNOWN"
+                verified = False
+                source = "missing_leetcode_username"
+            else:
+                mode = "NONE"
+                verified = True
+                source = "roster_reconciliation"
+
+        # Guarantee consistency rules:
+        # If UNKNOWN, verified MUST be false
+        if mode == "UNKNOWN":
+            verified = False
+
+        record = {
+            "username": username,
+            "displayName": display_name,
+            "contestId": contest_id_str,
+            "contestName": contest_name_str,
+            "participationMode": mode,
+            "solvedCount": solved_count,
+            "score": score,
+            "ranking": ranking,
+            "finishTime": finish_time,
+            "source": source,
+            "verified": verified,
+            "contestModeAvailable": True,
+            "regNo": st.reg_no,
+            "dept": st.department.name if st.department else "CSE",
+            "year": st.year_level or "III"
+        }
+
+        if mode == "LIVE":
+            live_list.append(record)
+        elif mode == "VIRTUAL":
+            virtual_list.append(record)
+        elif mode == "NONE":
+            none_list.append(record)
+        else:
+            unknown_list.append(record)
+
+    return {
+        "contest": {
+            "id": contest_id_str,
+            "name": contest_name_str,
+            "contestModeAvailable": True,
+            "sessionId": session.id,
+            "sessionCode": session.session_code,
+            "sessionDate": session.session_date
+        },
+        "participants": {
+            "live": live_list,
+            "virtual": virtual_list,
+            "none": none_list,
+            "unknown": unknown_list
+        },
+        "summary": {
+            "total": len(students),
+            "liveCount": len(live_list),
+            "virtualCount": len(virtual_list),
+            "noneCount": len(none_list),
+            "unknownCount": len(unknown_list)
+        }
+    }
+
 
 
 # ─── SUNDAY LIVE CONTEST INGESTION ENDPOINTS ──────────────────────────────────

@@ -31,6 +31,17 @@ export default defineConfig({
         ws: true,
         changeOrigin: true,
         secure: false,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err) => {
+            // Gracefully handle client socket resets & disconnects during HMR / navigation
+            if (err?.code === 'ECONNRESET' || err?.code === 'ECONNABORTED') return;
+          });
+          proxy.on('proxyReqWs', (_proxyReq, _req, socket) => {
+            socket.on('error', (_err) => {
+              // Suppress socket error noise on dev server terminal
+            });
+          });
+        },
       },
     },
   },

@@ -255,8 +255,14 @@ class DownloadManager {
     filename: string,
     onStateChange?: (state: DownloadState) => void
   ): Promise<{ success: boolean; downloadId: string; error: string }> {
-    // 1. Log real error for debugging
-    console.error(`[DownloadManager] Download failed for ${filename}:`, err);
+    // 1. Log real error with stack trace & status code for debugging
+    console.error(`[DownloadManager Debug] Download failed for ${filename}:`, {
+      status: err?.response?.status,
+      statusText: err?.response?.statusText,
+      data: err?.response?.data,
+      message: err?.message,
+      err,
+    });
 
     let status: DownloadStatus = 'FAILED';
     let errorMessage = 'Unable to generate report. Please try again.';
@@ -274,6 +280,21 @@ class DownloadManager {
         // Ignore parse errors
       }
     }
+
+    const isRawTechnicalError = (msg?: string) => {
+      if (!msg) return true;
+      const lower = String(msg).toLowerCase();
+      return (
+        lower.includes('500') ||
+        lower.includes('status code') ||
+        lower.includes('request failed') ||
+        lower.includes('internal server error') ||
+        lower.includes('exception') ||
+        lower.includes('traceback') ||
+        lower.includes('none_type') ||
+        lower.includes('attributeerror')
+      );
+    };
 
     if (httpStatus === 401) {
       status = 'UNAUTHORIZED';
@@ -297,7 +318,7 @@ class DownloadManager {
       await downloadNotification.notifyFailure(filename, errorMessage);
     } else if (httpStatus >= 500) {
       status = 'FAILED';
-      errorMessage = detail || 'Unable to generate report due to a server error.';
+      errorMessage = 'Unable to generate report. Please try again.';
       await downloadNotification.notifyFailure(filename, errorMessage);
     } else if (err?.code === 'ERR_NETWORK' || (typeof window !== 'undefined' && !window.navigator.onLine)) {
       status = 'FAILED';
@@ -305,7 +326,7 @@ class DownloadManager {
       await downloadNotification.notifyFailure(filename, errorMessage);
     } else {
       status = 'FAILED';
-      errorMessage = detail || errorMessage;
+      errorMessage = !isRawTechnicalError(detail) ? detail : 'Unable to generate report. Please try again.';
       await downloadNotification.notifyFailure(filename, errorMessage);
     }
 

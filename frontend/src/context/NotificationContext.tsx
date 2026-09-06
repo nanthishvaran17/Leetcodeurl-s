@@ -10,6 +10,7 @@ export interface ToastOptions {
   duration?: number; // in ms; default 4500 (0 = infinite / manual close)
   actionLabel?: string;
   onAction?: () => void;
+  onClose?: () => void;
 }
 
 export interface ToastNotification extends ToastOptions {
@@ -38,6 +39,7 @@ interface NotificationContextType {
     ai: (title: string, description?: string, options?: Omit<ToastOptions, 'title' | 'description'>) => string;
     loading: (title: string, description?: string, options?: Omit<ToastOptions, 'title' | 'description'>) => string;
     dismiss: (id: string) => void;
+    dismissCategory: (category: string) => void;
     update: (id: string, options: Partial<ToastOptions> & { type?: NotificationType }) => void;
   };
   confirmAction: (options: ConfirmOptions) => Promise<boolean>;
@@ -69,12 +71,39 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   });
 
   const dismissToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+    setToasts((prev) => {
+      const target = prev.find((t) => t.id === id);
+      if (target?.onClose) {
+        try {
+          target.onClose();
+        } catch (err) {
+          console.error('[NotificationContext] Toast onClose callback error:', err);
+        }
+      }
+      return prev.filter((t) => t.id !== id);
+    });
+  }, []);
+
+  const dismissCategory = useCallback((category: string) => {
+    if (!category) return;
+    setToasts((prev) => {
+      prev.forEach((t) => {
+        if (t.category === category && t.onClose) {
+          try {
+            t.onClose();
+          } catch (err) {
+            console.error('[NotificationContext] Category toast onClose error:', err);
+          }
+        }
+      });
+      return prev.filter((t) => t.category !== category);
+    });
   }, []);
 
   const addToast = useCallback((type: NotificationType, title: string, description?: string, options?: Omit<ToastOptions, 'title' | 'description'>): string => {
     const now = Date.now();
-    const dedupKey = `${type}:${title}:${description || ''}`;
+    const category = options?.category;
+    const dedupKey = `${type}:${category || ''}:${title}:${description || ''}`;
     const lastTime = recentToastsRef.current.get(dedupKey);
 
     if (lastTime && now - lastTime < DEDUPLICATION_WINDOW_MS) {
@@ -96,16 +125,19 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       type,
       title,
       description,
-      category: options?.category,
-      duration: options?.duration !== undefined ? options.duration : type === 'loading' ? 0 : type === 'error' ? 6500 : 4500,
+      category,
+      duration: options?.duration !== undefined ? options.duration : type === 'loading' ? 0 : type === 'error' ? 5000 : 4500,
       actionLabel: options?.actionLabel,
       onAction: options?.onAction,
+      onClose: options?.onClose,
       timestamp,
       createdAt: now,
     };
 
     setToasts((prev) => {
-      const filtered = prev.length >= 4 ? prev.slice(prev.length - 3) : prev;
+      // If category is specified (e.g. REPORTS), replace existing toast with same category to prevent duplicates
+      const base = category ? prev.filter((t) => t.category !== category) : prev;
+      const filtered = base.length >= 4 ? base.slice(base.length - 3) : base;
       return [...filtered, newToast];
     });
 
@@ -163,8 +195,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     };
   }, [addToast]);
 
-  // Memoize notify object — its callbacks are already useCallback-stable,
-  // so this object only changes if one of the callbacks changes (rarely/never).
   const notify = useMemo(() => ({
     success: (title: string, description?: string, options?: Omit<ToastOptions, 'title' | 'description'>) =>
       addToast('success', title, description, options),
@@ -179,8 +209,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     loading: (title: string, description?: string, options?: Omit<ToastOptions, 'title' | 'description'>) =>
       addToast('loading', title, description, options),
     dismiss: dismissToast,
+    dismissCategory: dismissCategory,
     update: updateToast,
-  }), [addToast, dismissToast, updateToast]);
+  }), [addToast, dismissToast, dismissCategory, updateToast]);
 
   const ctxValue = useMemo(() => ({
     toasts,

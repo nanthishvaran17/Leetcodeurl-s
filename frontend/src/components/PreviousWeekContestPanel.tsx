@@ -367,6 +367,10 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
               <span>{summary?.publish_status === 'PUBLISHED' ? 'VERIFIED CONTEST DATASET' : 'INSPECTING'}</span>
             </span>
+            <span className="px-2.5 py-0.5 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30 text-[11px] font-mono font-bold flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-purple-400" />
+              <span>Virtual Mode Available</span>
+            </span>
             <span className="text-xs text-slate-300 font-mono font-bold">
               Target: {summary?.target_date_ist || '06.09.2026'}
             </span>
@@ -667,7 +671,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                     <td className="py-3.5 px-4 text-center">
                       {isPublic && (
                         <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                          ATTENDED
+                          LIVE
                         </span>
                       )}
                       {isVirtual && (
@@ -677,17 +681,12 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                       )}
                       {isAbsent && (
                         <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-                          ABSENT
+                          NOT PARTICIPATED
                         </span>
                       )}
-                      {isMissingHandle && (
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/20">
-                          NO HANDLE
-                        </span>
-                      )}
-                      {isPending && (
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                          PENDING
+                      {(isMissingHandle || isPending) && (
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20" title="Participation mode could not be verified from available LeetCode data">
+                          MODE UNAVAILABLE
                         </span>
                       )}
                     </td>

@@ -136,10 +136,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
 
-        // 2. Check HttpOnly server session endpoint if token or storedUser exists
+        // 2. Check HttpOnly server session endpoint if token exists
         const storedToken = localStorage.getItem('token');
-        const existingStoredUser = localStorage.getItem('user');
-        if (storedToken || existingStoredUser) {
+        if (storedToken && storedToken.trim() !== '') {
           const res = await api.get('/auth/session').catch(() => null);
           if (res && res.data && res.data.authenticated && res.data.user && isMounted) {
             const u = res.data.user;

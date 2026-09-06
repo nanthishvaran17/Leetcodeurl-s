@@ -37,14 +37,15 @@ async def test_clear_not_attended(classifier):
     assert result.confidence == ConfidenceLevel.HIGH
 
 @pytest.mark.asyncio
-async def test_smart_virtual_inference(classifier):
-    # attended=false but solved>0 should be inferred VIRTUAL
+async def test_unverified_post_contest_solves_return_unknown(classifier):
+    # attended=false but solved>0 without explicit virtual_contest flag MUST be UNKNOWN
     history_ev = UserContestHistoryEntry(contest_slug="weekly-contest-400", contest_title="Weekly Contest 400", attended=False, virtual_contest=False, problems_solved=4)
     
     result = await classifier.classify("test_user", "weekly-contest-400", history_evidence=history_ev)
     
-    assert result.participation_type == ParticipationType.VIRTUAL
-    assert result.confidence == ConfidenceLevel.MODERATE
+    assert result.participation_type == ParticipationType.UNKNOWN
+    assert result.verified is False
+
 
 @pytest.mark.asyncio
 async def test_conflict_resolution_leaderboard_wins(classifier):

@@ -1,8 +1,17 @@
 # Nandha Engineering College — LeetCode Intelligence Platform
 
-> Official LeetCode Tracking, Analytics, Leaderboard & Automated Reporting System for Nandha Engineering College (NEC), Erode, Tamil Nadu, India.
+> Official LeetCode Tracking, Analytics, Leaderboard & Automated Reporting Platform for Nandha Engineering College (Autonomous), Erode, Tamil Nadu, India.
 
-## Key Resources
-- [Main Landing Page](https://leetcodeurl-s-roan.vercel.app/): Overview of institutional coding performance and 25 years of engineering excellence.
-- [Public Leaderboard](https://leetcodeurl-s-roan.vercel.app/public-leaderboard): Real-time ranking of 273+ institutional student coders.
-- [Portal Login](https://leetcodeurl-s-roan.vercel.app/login): Authenticated access for Staff, HOD, Principal, Admin, and Students.
+## System Overview
+Nandha LeetCode Intelligence is an institutional platform designed to track, benchmark, and report real-time competitive programming performance for 273+ engineering students across departments.
+
+## Core Features & Resources
+- [Main Landing Page](https://leetcodeurl-s-roan.vercel.app/): Overview of institutional coding metrics, 25 years of engineering excellence, and student achievement showcases.
+- [Public Leaderboard](https://leetcodeurl-s-roan.vercel.app/public-leaderboard): Live public ranking of top student coders filtered by department, batch, and contest performance.
+- [Institutional Login Portal](https://leetcodeurl-s-roan.vercel.app/login): Authenticated portal access for Students, Faculty Mentors, HODs, and Administrators.
+- [API Documentation](https://leetcodeurl-s-3mig.onrender.com/docs): Interactive OpenAPI / Swagger documentation for backend endpoints.
+
+## Technology Stack
+- Frontend: React 18, TypeScript, Tailwind CSS, Vite, TanStack Query
+- Backend: FastAPI, Python 3.11, SQLite, Async HTTP engines
+- Deployment: Vercel Edge Network (Frontend), Render (Backend)

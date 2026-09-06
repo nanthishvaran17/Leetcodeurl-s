@@ -28,7 +28,8 @@ from backend.services.leetcode_adapter import (
 class ParticipationType:
     LIVE = "LIVE"
     VIRTUAL = "VIRTUAL"
-    NOT_ATTENDED = "NOT_ATTENDED"
+    NONE = "NONE"
+    NOT_ATTENDED = "NONE"  # Backward-compat alias
     UNKNOWN = "UNKNOWN"
     CONFLICT = "CONFLICT"
 
@@ -46,7 +47,7 @@ class ConfidenceLevel:
 
 @dataclass
 class ClassificationResult:
-    # 5 User-Facing States
+    # 5 User-Facing States: LIVE | VIRTUAL | NONE | UNKNOWN | CONFLICT
     participation_type: str
     
     # Confidence Scoring
@@ -70,6 +71,52 @@ class ClassificationResult:
     # System metadata
     reconciled_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
 
+    @property
+    def verified(self) -> bool:
+        """
+        True ONLY when participation mode is supported by explicit, high-confidence evidence.
+        UNKNOWN or CONFLICT or unverified states MUST have verified = False.
+        """
+        if self.participation_type in (ParticipationType.UNKNOWN, ParticipationType.CONFLICT):
+            return False
+        return self.confidence in (ConfidenceLevel.VERY_HIGH, ConfidenceLevel.HIGH)
+
+    def to_normalized_dict(
+        self,
+        username: str,
+        display_name: str,
+        contest_id: str,
+        contest_name: str,
+        contest_mode_available: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Standard normalized participation model adhering strictly to Section 4 requirement.
+        """
+        # Ensure participationMode strictly adheres to: LIVE | VIRTUAL | NONE | UNKNOWN
+        mode = self.participation_type
+        if mode == "NOT_ATTENDED":
+            mode = "NONE"
+        elif mode == "CONFLICT":
+            mode = "UNKNOWN"
+
+        # If UNKNOWN, verified MUST be false
+        is_verified = self.verified if mode != "UNKNOWN" else False
+
+        return {
+            "username": (username or "").strip().lower(),
+            "displayName": display_name or username,
+            "contestId": contest_id,
+            "contestName": contest_name,
+            "participationMode": mode,
+            "solvedCount": self.solved_count if self.solved_count is not None else 0,
+            "score": self.score,
+            "ranking": self.rank,
+            "finishTime": self.finish_time,
+            "source": self.raw_evidence_chain.get("source", "official_leetcode_adapter"),
+            "verified": is_verified,
+            "contestModeAvailable": contest_mode_available
+        }
+
     # ── Backward-compat property aliases (tests & legacy callers) ──────────────
 
     @property
@@ -80,13 +127,14 @@ class ClassificationResult:
         VIRTUAL   → 'VIRTUAL'
         CONFLICT  → 'NOT_VERIFIED'
         UNKNOWN   → 'NOT_VERIFIED'
-        NOT_ATTENDED → 'NOT_VERIFIED'
+        NONE      → 'NOT_VERIFIED'
         """
         _map = {
             "LIVE": "ACTUAL",
             "VIRTUAL": "VIRTUAL",
             "CONFLICT": "NOT_VERIFIED",
             "UNKNOWN": "NOT_VERIFIED",
+            "NONE": "NOT_VERIFIED",
             "NOT_ATTENDED": "NOT_VERIFIED",
         }
         return _map.get(self.participation_type, self.participation_type)
@@ -100,6 +148,7 @@ class ClassificationResult:
             "VIRTUAL": "VIRTUAL",
             "NOT_VERIFIED": "UNKNOWN",
             "CONFLICT": "CONFLICT",
+            "NONE": "NONE"
         }
         self.participation_type = _reverse.get(value, value)
 
@@ -111,7 +160,6 @@ class ClassificationResult:
         if pt == "CONFLICT":
             return "CONFLICT"
         if pt == "UNKNOWN":
-            # No evidence found — legacy tests expect PENDING
             return "PENDING"
         if conf in ("VERY_HIGH", "HIGH"):
             return "VERIFIED"
@@ -119,7 +167,6 @@ class ClassificationResult:
             return "PENDING"
         if conf in ("MODERATE",):
             return "PARTIALLY_VERIFIED"
-        # LOW confidence or edge cases (attended=false, score=0, etc.)
         return "INSUFFICIENT_EVIDENCE"
 
     @property
@@ -143,9 +190,8 @@ class ClassificationResult:
             "finish_time": self.finish_time,
             "questions": self.questions,
             "reconciled_at": self.reconciled_at,
+            "verified": self.verified,
         }
-
-
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -155,6 +201,7 @@ class ClassificationResult:
 class ParticipationClassifier:
     """
     Evidence-based classification engine for LeetCode contest participation.
+    Strictly forbids inferring VIRTUAL participation without explicit metadata.
     """
 
     def __init__(self, adapter: Optional[LeetCodeAdapter] = None):
@@ -170,7 +217,7 @@ class ParticipationClassifier:
         profile_data: Optional[UserProfile] = None,
     ) -> ClassificationResult:
         """
-        Main classification workflow adhering strictly to the multi-tier evidence flow.
+        Main classification workflow adhering strictly to explicit evidence criteria.
         """
         uname = (username or "").strip().lower()
         slug = (contest_slug or "").strip().lower()
@@ -202,11 +249,8 @@ class ParticipationClassifier:
 
         # 1. CONFLICT DETECTION
         if has_live_signal and has_virtual_signal:
-            # Handle minor false conflicts (e.g., Profile says Not Attended + Solved > 0, but Leaderboard says LIVE)
-            # If Leaderboard explicitly says LIVE, and history says VIRTUAL implicitly (attended=False, solved>0), Leaderboard wins.
             if c_is_live and h_is_virtual and getattr(h_ev, "attended", None) is False:
                 evidence_trace.append("RESOLVED CONFLICT: Official leaderboard LIVE overrides profile implicit virtual inference.")
-                pass # Continue to LIVE resolution
             else:
                 evidence_trace.append(f"CONFLICT DETECTED: Sources materially disagree. LIVE Signals: {c_live_proof} {h_live_proof}. VIRTUAL Signals: {c_virt_proof} {h_virt_proof} {v_virt_proof}")
                 return ClassificationResult(
@@ -255,16 +299,13 @@ class ParticipationClassifier:
 
         # 4. TIER C: EXPLICIT VIRTUAL EVIDENCE
         if v_is_virtual or c_is_virtual or (h_is_virtual and getattr(h_ev, "virtual_contest", False)):
-            evidence_trace.append("✓ Strong VIRTUAL evidence: Explicit virtual flag detected.")
-            v_ev or c_ev or h_ev
-            
-            # Use data from the most relevant source
+            evidence_trace.append("✓ Strong VIRTUAL evidence: Explicit virtual flag confirmed.")
             metrics_src = v_ev if v_ev else (h_ev if h_ev else c_ev)
             
             return ClassificationResult(
                 participation_type=ParticipationType.VIRTUAL,
                 confidence=ConfidenceLevel.HIGH,
-                classification_reason="Explicit virtual participation flag confirmed.",
+                classification_reason="Explicit virtual participation flag confirmed by LeetCode metadata.",
                 evidence_summary=evidence_trace,
                 rank=getattr(metrics_src, "rank", None),
                 score=getattr(metrics_src, "score", None) if not isinstance(metrics_src, UserContestHistoryEntry) else None,
@@ -273,24 +314,24 @@ class ParticipationClassifier:
                 raw_evidence_chain=raw_chain
             )
 
-        # 5. TIER D: SMART VIRTUAL INFERENCE
-        if h_is_virtual and getattr(h_ev, "attended", None) is False:
-            evidence_trace.append("✓ Inferred VIRTUAL evidence: Profile indicates attended=false but problems_solved > 0.")
+        # 5. UNVERIFIED POST-CONTEST SOLVES (Must be UNKNOWN, NEVER VIRTUAL)
+        if h_ev and getattr(h_ev, "attended", None) is False and getattr(h_ev, "problems_solved", 0) > 0:
+            evidence_trace.append("? Unverified Virtual Signal: Profile indicates attended=false with positive solved count, but lacks explicit virtual metadata.")
             return ClassificationResult(
-                participation_type=ParticipationType.VIRTUAL,
-                confidence=ConfidenceLevel.MODERATE,
-                classification_reason="Inferred virtual participation based on positive solved count despite not attending live.",
+                participation_type=ParticipationType.UNKNOWN,
+                confidence=ConfidenceLevel.LOW,
+                classification_reason="Participation mode cannot be verified without explicit virtual contest metadata.",
                 evidence_summary=evidence_trace,
-                rank=h_ev.rank,
+                rank=getattr(h_ev, "rank", None),
                 solved_count=h_ev.problems_solved,
                 raw_evidence_chain=raw_chain
             )
 
-        # 6. RELIABLE NOT_ATTENDED
+        # 6. RELIABLE NONE (NOT_ATTENDED)
         if h_ev and getattr(h_ev, "attended", None) is False and getattr(h_ev, "problems_solved", 0) == 0:
-            evidence_trace.append("✓ Reliable NOT_ATTENDED evidence: Profile explicitly marks attended=false and 0 problems solved.")
+            evidence_trace.append("✓ Reliable NONE evidence: Profile explicitly marks attended=false and 0 problems solved.")
             return ClassificationResult(
-                participation_type=ParticipationType.NOT_ATTENDED,
+                participation_type=ParticipationType.NONE,
                 confidence=ConfidenceLevel.HIGH,
                 classification_reason="Profile confirms zero participation for this contest.",
                 evidence_summary=evidence_trace,
@@ -303,7 +344,7 @@ class ParticipationClassifier:
         return ClassificationResult(
             participation_type=ParticipationType.UNKNOWN,
             confidence=ConfidenceLevel.LOW,
-            classification_reason="No reliable LeetCode evidence found to determine status.",
+            classification_reason="Participation mode could not be verified.",
             evidence_summary=evidence_trace,
             raw_evidence_chain=raw_chain
         )
@@ -356,7 +397,6 @@ class ParticipationClassifier:
             if ev.is_virtual or ev.is_explicit_virtual:
                 return False, ""
             if ev.source in ["contest_ranking", "contest_participation", "final_contest"]:
-                # Must have positive submission proof to be strongly LIVE
                 has_submissions = (
                     (ev.submission_count is not None and ev.submission_count > 0)
                     or (ev.attempt_count is not None and ev.attempt_count > 0)
@@ -374,6 +414,9 @@ class ParticipationClassifier:
         return False, ""
 
     def _is_virtual_signal(self, ev: Any, src_name: str) -> tuple[bool, str]:
+        """
+        Returns True ONLY when explicit virtual flags are present.
+        """
         if not ev:
             return False, ""
         if isinstance(ev, UserContestResult):
@@ -381,7 +424,6 @@ class ParticipationClassifier:
                 return True, f"[{src_name}: Explicit Virtual Flag]"
         elif isinstance(ev, UserContestHistoryEntry):
             if ev.virtual_contest is True:
-                return True, f"[{src_name}: Profile Virtual Flag]"
-            if ev.attended is False and ev.problems_solved > 0:
-                return True, f"[{src_name}: Inferred Virtual (Solved > 0)]"
+                return True, f"[{src_name}: Explicit Profile Virtual Flag]"
         return False, ""
+

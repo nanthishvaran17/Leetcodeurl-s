@@ -116,9 +116,13 @@ export const ReportsPage: React.FC = () => {
       setIsDeletingSnapshot(false);
     }
   };
+  const [reportError, setReportError] = useState<string | null>(null);
+
   const downloadReportFile = async (endpoint: string, filename: string) => {
+    // 1. Clear previous error state & previous report toasts before starting new request
+    setReportError(null);
+    notify.dismissCategory('REPORTS');
     setDownloadingFiles(prev => ({ ...prev, [filename]: true }));
-    setToastMessage(`Generating ${filename}...`);
 
     const result = await downloadManager.download({
       endpoint,
@@ -128,12 +132,20 @@ export const ReportsPage: React.FC = () => {
     setDownloadingFiles(prev => ({ ...prev, [filename]: false }));
 
     if (result.success) {
-      setToastMessage(`✓ ${filename} downloaded successfully.`);
-      setTimeout(() => setToastMessage(null), 4000);
+      setReportError(null);
+      notify.dismissCategory('REPORTS');
+      notify.success('Report Downloaded', `${filename} downloaded successfully.`, { category: 'REPORTS' });
     } else {
-      setToastMessage(result.error || 'Failed to generate report.');
-      setTimeout(() => setToastMessage(null), 5000);
-      notify.error('Download Failed', result.error || 'Failed to generate report.', { category: 'REPORTS' });
+      const userFacingMsg = result.error && !result.error.includes('500') && !result.error.includes('status code')
+        ? result.error
+        : 'Please try again.';
+
+      setReportError(userFacingMsg);
+      notify.error('Unable to generate report', userFacingMsg, {
+        category: 'REPORTS',
+        duration: 5000,
+        onClose: () => setReportError(null),
+      });
     }
   };
 
@@ -205,7 +217,9 @@ export const ReportsPage: React.FC = () => {
 
   const handleGenerateUniversalReport = async (overrideType?: string, overrideFilters?: any) => {
     setIsGeneratingUniversal(true);
-    notify.info('Generating Universal Report', 'Processing custom filters...', { category: 'UNIVERSAL REPORT' });
+    setReportError(null);
+    notify.dismissCategory('REPORTS');
+
     try {
       const reportType = overrideType || selectedReportType;
       const department = overrideFilters?.department || selectedDept;
@@ -220,23 +234,26 @@ export const ReportsPage: React.FC = () => {
         filters: overrideFilters || {}
       });
       setActiveUniversalPreviewId(res.data.reportId || res.data.report_id);
-      notify.success('Report Ready', 'Universal report generated successfully.', { category: 'UNIVERSAL REPORT' });
+      notify.success('Report Ready', 'Universal report generated successfully.', { category: 'REPORTS' });
     } catch (err: any) {
       const statusCode = err.response?.status;
-      const detailMsg = err.response?.data?.detail;
+      let userFacingMsg = 'Please try again.';
       if (statusCode === 401) {
-        notify.error('Authentication Required', 'Please sign in again.', { category: 'AUTH' });
+        userFacingMsg = 'Please sign in again.';
       } else if (statusCode === 403) {
-        notify.error('Access Denied', 'You do not have permission to generate this institutional report.', { category: 'SECURITY' });
+        userFacingMsg = 'You do not have permission to generate this institutional report.';
       } else if (statusCode === 404) {
-        notify.error('Not Found', 'Report resource not found.', { category: 'REPORTS' });
+        userFacingMsg = 'Report resource not found.';
       } else if (statusCode === 422) {
-        notify.error('Invalid Parameters', 'Invalid report parameters.', { category: 'REPORTS' });
-      } else if (statusCode === 500) {
-        notify.error('Server Error', 'Report generation failed on the server.', { category: 'REPORTS' });
-      } else {
-        notify.error('Report Error', detailMsg || "Failed to generate report.", { category: 'REPORTS' });
+        userFacingMsg = 'Invalid report parameters.';
       }
+
+      setReportError(userFacingMsg);
+      notify.error('Unable to generate report', userFacingMsg, {
+        category: 'REPORTS',
+        duration: 5000,
+        onClose: () => setReportError(null),
+      });
     } finally {
       setIsGeneratingUniversal(false);
     }

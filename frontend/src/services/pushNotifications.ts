@@ -102,22 +102,41 @@ export const initPushNotifications = async (): Promise<void> => {
     await PushNotifications.removeAllListeners();
     await LocalNotifications.removeAllListeners();
 
-    // Registration Success
+    // Registration Success with token deduplication & idempotency guard
+    let lastRegisteredToken: string | null = sessionStorage.getItem('fcm_registered_token');
+    let isRegisteringToken: Promise<void> | null = null;
+
     await PushNotifications.addListener('registration', async (token: Token) => {
       console.log('[FCM] Device Token received:', token.value);
       
-      try {
-        const prodUrl = import.meta.env.VITE_API_URL || 'https://leetcodeurl-s-3mig.onrender.com';
-        await axios.post(`${prodUrl}/api/bot-notifications/register-token`, {
-          token: token.value,
-          topic: 'all_app_users',
-          platform: 'android'
-        }, { timeout: 5000 }).catch(err => {
-          console.warn('[FCM] Backend token registration note:', err.message);
-        });
-      } catch (err) {
-        console.warn('[FCM] Error registering token with backend:', err);
+      if (lastRegisteredToken === token.value) {
+        console.log('[FCM] Token already registered with backend for this session. Skipping duplicate POST call.');
+        return;
       }
+
+      if (isRegisteringToken) {
+        return isRegisteringToken;
+      }
+
+      isRegisteringToken = (async () => {
+        try {
+          const prodUrl = import.meta.env.VITE_API_URL || 'https://leetcodeurl-s-3mig.onrender.com';
+          await axios.post(`${prodUrl}/api/bot-notifications/register-token`, {
+            token: token.value,
+            topic: 'all_app_users',
+            platform: 'android'
+          }, { timeout: 5000 });
+          lastRegisteredToken = token.value;
+          sessionStorage.setItem('fcm_registered_token', token.value);
+          console.log('[FCM] Device token registered successfully with backend.');
+        } catch (err: any) {
+          console.warn('[FCM] Backend token registration note:', err?.message || err);
+        } finally {
+          isRegisteringToken = null;
+        }
+      })();
+
+      return isRegisteringToken;
     });
 
     // Registration Error

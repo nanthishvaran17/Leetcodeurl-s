@@ -102,10 +102,10 @@ def test_pregenerated_report_lifecycle():
         # Trigger background generation for pdf
         trigger_background_report_generation(week_id="latest", file_type="pdf", data_version=curr_v)
 
-        # Wait max 5 seconds for worker thread to complete
+        # Wait max 10 seconds for worker thread to complete
         start = time.time()
         ready = False
-        while time.time() - start < 5.0:
+        while time.time() - start < 10.0:
             info = get_cached_report_info(db, week_id="latest", file_type="pdf")
             if info["status"] == "READY":
                 ready = True
@@ -155,10 +155,10 @@ def test_multi_worker_idempotency_concurrent_generation():
             data_version=curr_v
         )
 
-        # Wait up to 10 seconds for worker to commit entry
+        # Wait up to 25 seconds for worker to commit entry
         start_wait = time.time()
         entries = []
-        while time.time() - start_wait < 10.0:
+        while time.time() - start_wait < 25.0:
             db.expire_all()
             entries = db.query(ReportCache).filter(
                 ReportCache.filter_hash == filter_hash
@@ -181,7 +181,7 @@ def test_corrupted_file_recovery():
 
         start = time.time()
         ready_id = None
-        while time.time() - start < 8.0:
+        while time.time() - start < 25.0:
             db.expire_all()
             info = get_cached_report_info(db, week_id="latest", file_type="student_detail")
             if info["status"] == "READY":

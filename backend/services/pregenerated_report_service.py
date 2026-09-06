@@ -12,6 +12,7 @@ import hashlib
 import datetime
 import threading
 from typing import Dict, Any, Optional, Tuple, List
+from sqlalchemy import or_, and_
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
@@ -356,12 +357,14 @@ def _build_and_store_report_sync(
     safe_file_type = f"{report_type}_{format}_{filter_hash[:8]}"
 
     cache_entry = db.query(ReportCache).filter(
-        (ReportCache.filter_hash == filter_hash) |
-        (
-            (ReportCache.institution_id == institution_id) &
-            (ReportCache.week_id == safe_week_id) &
-            (ReportCache.file_type == safe_file_type) &
-            (ReportCache.data_version == data_version)
+        or_(
+            ReportCache.filter_hash == filter_hash,
+            and_(
+                ReportCache.institution_id == institution_id,
+                ReportCache.week_id == safe_week_id,
+                ReportCache.file_type == safe_file_type,
+                ReportCache.data_version == data_version
+            )
         )
     ).first()
 

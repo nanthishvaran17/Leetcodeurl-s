@@ -2638,7 +2638,7 @@ class ReportCache(Base):
     __tablename__ = "report_cache"
     __table_args__ = (
         Index("ix_report_cache_lookup", "institution_id", "week_id", "file_type", "status"),
-        Index("ix_report_cache_filter_hash", "filter_hash", "status", "data_version"),
+        Index("ix_report_cache_filter_hash_composite", "filter_hash", "status", "data_version"),
         {"extend_existing": True},
     )
 

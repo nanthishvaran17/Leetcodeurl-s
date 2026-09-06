@@ -153,11 +153,15 @@ const ToastItem: React.FC<{ toast: ToastNotification; onDismiss: (id: string) =>
 
         <button
           type="button"
-          onClick={() => onDismiss(toast.id)}
-          className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors shrink-0 cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDismiss(toast.id);
+          }}
+          className="p-2 sm:p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition-colors shrink-0 cursor-pointer active:scale-95"
           title="Dismiss notification"
+          aria-label="Dismiss notification"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="w-4 h-4" />
         </button>
       </div>
 
@@ -201,7 +205,7 @@ export const NotificationCenter: React.FC = () => {
     <>
       {/* Toast Notification Stack Container */}
       <div
-        className="fixed top-16 sm:top-20 right-3 sm:right-6 z-[100000] flex flex-col space-y-3 w-[calc(100vw-24px)] sm:w-96 pointer-events-none"
+        className="fixed top-[calc(env(safe-area-inset-top,0px)+4rem)] sm:top-20 right-3 sm:right-6 z-[100000] flex flex-col space-y-3 w-[calc(100vw-24px)] sm:w-96 pointer-events-none"
         aria-live="polite"
         aria-atomic="true"
       >

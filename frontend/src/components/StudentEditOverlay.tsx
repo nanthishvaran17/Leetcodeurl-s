@@ -438,22 +438,22 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-0 sm:p-4 md:p-6 bg-slate-950/80 backdrop-blur-sm overflow-hidden"
+      className="fixed inset-0 z-[999999] flex items-center justify-center p-0 sm:p-4 md:p-6 bg-slate-950/85 backdrop-blur-md overflow-hidden"
       onClick={(e) => { if (e.target === e.currentTarget && !isSaving) handleAttemptClose(); }}
     >
       {/* Responsive Modal Card: 100dvh on mobile, floating max-w-xl on desktop */}
       <div
-        className="w-full h-[100dvh] sm:h-auto sm:max-h-[88dvh] max-w-xl bg-white dark:bg-navy-950 sm:rounded-3xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-slate-100 antialiased overflow-hidden flex flex-col z-[100000]"
+        className="w-full h-[100dvh] sm:h-auto sm:max-h-[88dvh] max-w-xl bg-white dark:bg-navy-950 sm:rounded-3xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-slate-100 antialiased overflow-hidden flex flex-col z-[1000000] relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Fixed Header */}
-        <div className="px-4 py-3 sm:px-6 sm:py-3.5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-slate-800 shrink-0 z-20">
+        <div className="px-4 py-3.5 sm:px-6 sm:py-4 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-slate-800 shrink-0 z-20 shadow-md">
           <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
-            <div className="p-1.5 sm:p-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 shrink-0">
+            <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 shrink-0">
               <Edit3 className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div className="min-w-0">
-              <h3 className="text-sm sm:text-base font-bold text-white tracking-tight truncate">EDIT STUDENT RECORD</h3>
+              <h3 className="text-sm sm:text-base font-black text-white tracking-tight truncate">EDIT STUDENT RECORD</h3>
               <p className="text-[11px] sm:text-xs text-slate-300 font-mono font-medium truncate">
                 <span>{student.reg_no || student.register_number || 'ID: ' + student.id}</span>
                 {name && <span className="text-slate-400 font-sans"> · {name}</span>}
@@ -471,8 +471,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         </div>
 
         {/* Scrollable Form Content */}
-        <form id="edit-student-form" onSubmit={handleSave} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3.5 sm:p-6 space-y-4 sm:space-y-5 pb-6">
+        <form id="edit-student-form" onSubmit={handleSave} className="flex flex-col flex-1 min-h-0 overflow-hidden relative">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-5 pb-32 sm:pb-12">
             {errorMessage && (
               <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center space-x-2 animate-shake">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -703,21 +703,21 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
 
           {/* Dedicated Fixed Bottom Action Bar: Always visible from any scroll position */}
           <div
-            className="px-4 py-3 sm:px-6 sm:py-3.5 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0 z-30 shadow-lg gap-3"
-            style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+            className="sticky bottom-0 left-0 right-0 px-4 py-3.5 sm:px-6 sm:py-4 bg-slate-50/95 dark:bg-navy-950/95 backdrop-blur-md border-t border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0 z-50 shadow-2xl gap-3 w-full"
+            style={{ paddingBottom: 'calc(0.85rem + env(safe-area-inset-bottom, 0px))' }}
           >
             <button
               type="button"
               onClick={handleAttemptClose}
               disabled={isSaving}
-              className="flex-1 sm:flex-initial px-4 py-2.5 sm:px-6 sm:py-2.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 active:scale-95 transition-all cursor-pointer min-h-[46px] flex items-center justify-center"
+              className="flex-1 sm:flex-initial px-4 py-3 sm:px-6 sm:py-2.5 rounded-xl sm:rounded-2xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 active:scale-95 transition-all cursor-pointer min-h-[48px] flex items-center justify-center shadow-xs"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="flex-1 sm:flex-initial px-5 py-2.5 sm:px-7 sm:py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 active:scale-95 text-white text-xs sm:text-sm font-black shadow-md flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer transition-all min-h-[46px]"
+              className="flex-1 sm:flex-initial px-5 py-3 sm:px-7 sm:py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 active:scale-95 text-white text-xs sm:text-sm font-black shadow-lg flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer transition-all min-h-[48px]"
             >
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               <span>{isSaving ? 'Saving...' : 'Save Changes'}</span>

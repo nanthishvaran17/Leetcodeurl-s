@@ -63,7 +63,18 @@ class PreviousWeekAnalyzer:
                 start_time="08:00",
                 end_time="09:30",
                 status="FINALIZED",
-                total_students=db.query(Student).filter(Student.is_active == True).count()
+                total_students=db.query(Student).filter(
+                    Student.is_active == True,
+                    ~Student.name.ilike("%test%"),
+                    ~Student.name.ilike("%demo%"),
+                    ~Student.name.ilike("%solver%"),
+                    ~Student.name.ilike("%rbac%"),
+                    ~Student.reg_no.ilike("%test%"),
+                    ~Student.reg_no.ilike("%concur%"),
+                    ~Student.reg_no.ilike("%notif%"),
+                    ~Student.reg_no.ilike("%p930%"),
+                    ~Student.reg_no.ilike("%stubeta%")
+                ).count()
             )
             db.add(session)
             db.commit()
@@ -190,7 +201,18 @@ class PreviousWeekAnalyzer:
                 }
 
             # Step 2: Exact Username Matching for PUBLIC
-            students = db.query(Student).filter(Student.is_active == True).all()
+            students = db.query(Student).filter(
+                Student.is_active == True,
+                ~Student.name.ilike("%test%"),
+                ~Student.name.ilike("%demo%"),
+                ~Student.name.ilike("%solver%"),
+                ~Student.name.ilike("%rbac%"),
+                ~Student.reg_no.ilike("%test%"),
+                ~Student.reg_no.ilike("%concur%"),
+                ~Student.reg_no.ilike("%notif%"),
+                ~Student.reg_no.ilike("%p930%"),
+                ~Student.reg_no.ilike("%stubeta%")
+            ).all()
             leaderboard_map = {
                 entry.get("normalized_username", entry.get("user_slug") or entry.get("username", "").strip().lower()): entry
                 for entry in leaderboard_entries if entry.get("user_slug") or entry.get("username")

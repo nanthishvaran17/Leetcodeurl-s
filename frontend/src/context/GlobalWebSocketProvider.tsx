@@ -137,14 +137,15 @@ export const GlobalWebSocketProvider: React.FC<{ children: React.ReactNode }> = 
 
       worker.postMessage({ type: 'CONNECT', payload: { wsUrl } });
 
+      let resumeDebounceTimer: any = null;
       const handleResume = () => {
-        if (document.visibilityState === 'visible' && workerRef.current && isConnected) {
-          // Socket is already open & live, no need to post redundant CONNECT
-          return;
-        }
-        if (document.visibilityState === 'visible' && workerRef.current) {
-          workerRef.current.postMessage({ type: 'CONNECT', payload: { wsUrl } });
-        }
+        if (document.visibilityState !== 'visible' || !workerRef.current) return;
+        if (resumeDebounceTimer) clearTimeout(resumeDebounceTimer);
+        resumeDebounceTimer = setTimeout(() => {
+          if (document.visibilityState === 'visible' && workerRef.current && !isConnected) {
+            workerRef.current.postMessage({ type: 'CONNECT', payload: { wsUrl } });
+          }
+        }, 150);
       };
 
       document.addEventListener('visibilitychange', handleResume);
@@ -152,6 +153,7 @@ export const GlobalWebSocketProvider: React.FC<{ children: React.ReactNode }> = 
 
       return () => {
         isMounted = false;
+        if (resumeDebounceTimer) clearTimeout(resumeDebounceTimer);
         if (gracePeriodTimerRef.current) {
           clearTimeout(gracePeriodTimerRef.current);
           gracePeriodTimerRef.current = null;

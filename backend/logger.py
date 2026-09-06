@@ -37,14 +37,12 @@ formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] [%(name)s]: %(messa
 sensitive_filter = SensitiveDataFilter()
 
 if not logger.handlers:
-    # Console Handler (always available)
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
     console_handler.setLevel(logging.INFO)
     console_handler.addFilter(sensitive_filter)
     logger.addHandler(console_handler)
 
-    # File Handler (optional - may fail on read-only filesystems like Vercel)
     try:
         os.makedirs(LOG_DIR, exist_ok=True)
         file_handler = RotatingFileHandler(LOG_FILE, maxBytes=10*1024*1024, backupCount=5, encoding="utf-8")
@@ -53,4 +51,15 @@ if not logger.handlers:
         file_handler.addFilter(sensitive_filter)
         logger.addHandler(file_handler)
     except Exception:
-        pass  # Fallback: console-only logging on read-only environments (Vercel, etc.)
+        pass
+
+# Attach filter to Uvicorn access/error loggers and root logger for 100% credential redaction
+def setup_logging_security():
+    for name in ("", "uvicorn", "uvicorn.access", "uvicorn.error", "fastapi", "leetcode_tracker"):
+        l = logging.getLogger(name)
+        for handler in l.handlers:
+            handler.addFilter(sensitive_filter)
+        l.addFilter(sensitive_filter)
+
+setup_logging_security()
+
