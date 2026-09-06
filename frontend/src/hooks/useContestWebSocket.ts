@@ -74,6 +74,12 @@ export function useContestWebSocket(options: string | UseContestWebSocketOptions
   const onBatchUpdate = typeof options === 'object' ? options?.onBatchUpdate : undefined;
   const onSyncCompleted = typeof options === 'object' ? options?.onSyncCompleted : undefined;
 
+  const onBatchUpdateRef = useRef(onBatchUpdate);
+  onBatchUpdateRef.current = onBatchUpdate;
+
+  const onSyncCompletedRef = useRef(onSyncCompleted);
+  onSyncCompletedRef.current = onSyncCompleted;
+
   const [status, setStatus] = useState<ConnectionStatus>('OFFLINE');
   const [syncState, setSyncState] = useState<string>('IDLE');
   const [initialProgress, setInitialProgress] = useState<{ processed: number; total: number; percent: number } | null>(null);
@@ -84,10 +90,10 @@ export function useContestWebSocket(options: string | UseContestWebSocketOptions
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<any>(null);
+  const pingIntervalRef = useRef<any>(null);
   const retryCountRef = useRef<number>(0);
   const lastVersionRef = useRef<number>(0);
   const processedEventsRef = useRef<Set<string>>(new Set());
-  // Track the session ID we have subscribed to (used for reconnect SUBSCRIBE)
   const subscribedSessionRef = useRef<number | null>(null);
 
   const getWsUrl = useCallback(() => {
@@ -97,10 +103,14 @@ export function useContestWebSocket(options: string | UseContestWebSocketOptions
   }, [targetId]);
 
   const connect = useCallback(() => {
-    if (!targetId) return;
+    if (!targetId || targetId === 'null' || targetId === 'undefined') return;
+
+    // Avoid creating duplicate sockets if one is already connecting or connected
+    if (wsRef.current && (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING)) {
+      return;
+    }
 
     try {
-      // Keep status as LIVE during initial handshake/reconnect grace period
       const wsUrl = getWsUrl();
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
@@ -123,6 +133,14 @@ export function useContestWebSocket(options: string | UseContestWebSocketOptions
         } else {
           ws.send(JSON.stringify({ type: 'GET_SNAPSHOT' }));
         }
+
+        // Heartbeat keep-alive
+        if (pingIntervalRef.current) clearInterval(pingIntervalRef.current);
+        pingIntervalRef.current = setInterval(() => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send('ping');
+          }
+        }, 20000);
       };
 
       ws.onmessage = (event) => {
@@ -133,12 +151,12 @@ export function useContestWebSocket(options: string | UseContestWebSocketOptions
           if (!data) return;
 
           if (data.type === 'BATCH_UPDATES' && Array.isArray(data.events)) {
-            if (onBatchUpdate) onBatchUpdate(data.events);
+            if (onBatchUpdateRef.current) onBatchUpdateRef.current(data.events);
             return;
           }
 
           if (data.type === 'SYNC_COMPLETED') {
-            if (onSyncCompleted) onSyncCompleted(data);
+            if (onSyncCompletedRef.current) onSyncCompletedRef.current(data);
             return;
           }
 
@@ -195,11 +213,9 @@ export function useContestWebSocket(options: string | UseContestWebSocketOptions
               });
             }
           } else if (data.type === 'VIRTUAL_RESULT_UPDATED' || data.type === 'VIRTUAL_ATTEMPT_STARTED') {
-            // Forward virtual events to LiveEventRouter via DOM event bus
             setLastSyncAt(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }));
             window.dispatchEvent(new CustomEvent('ws_virtual_event', { detail: data }));
           } else if (data.type === 'SUBSCRIBED') {
-            // Acknowledge subscription confirmation
             if (import.meta.env.DEV) {
               console.log('[WS_SUBSCRIBED] session_id=', data.session_id);
             }
@@ -210,6 +226,10 @@ export function useContestWebSocket(options: string | UseContestWebSocketOptions
       };
 
       ws.onclose = () => {
+        if (pingIntervalRef.current) {
+          clearInterval(pingIntervalRef.current);
+          pingIntervalRef.current = null;
+        }
         setStatus('OFFLINE');
         wsRef.current = null;
         
@@ -227,7 +247,7 @@ export function useContestWebSocket(options: string | UseContestWebSocketOptions
     } catch (e) {
       setStatus('OFFLINE');
     }
-  }, [targetId, getWsUrl, onBatchUpdate, onSyncCompleted]);
+  }, [targetId, getWsUrl]);
 
   // Public method to subscribe to a session's events at runtime
   const subscribeSession = useCallback((sessionId: number) => {
@@ -265,8 +285,12 @@ export function useContestWebSocket(options: string | UseContestWebSocketOptions
     return () => {
       document.removeEventListener('visibilitychange', handleResume);
       window.removeEventListener('focus', handleResume);
+      if (pingIntervalRef.current) clearInterval(pingIntervalRef.current);
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
-      if (wsRef.current) wsRef.current.close();
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
     };
   }, [connect]);
 

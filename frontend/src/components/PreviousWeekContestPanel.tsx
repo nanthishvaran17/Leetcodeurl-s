@@ -169,12 +169,9 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedDeptFilter, setSelectedDeptFilter] = useState<string>('ALL');
 
-  // Realtime WebSocket State
-  const [wsConnected, setWsConnected] = useState<boolean>(false);
-  const [lastLiveUpdate, setLastLiveUpdate] = useState<string>(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }));
 
   // Hook up live websocket updates in a batched way
-  useContestWebSocket({
+  const { status: wsStatus, lastSyncAt, wsRef } = useContestWebSocket({
     sessionId: sessionId || null,
     onBatchUpdate: (events: any[]) => {
       setRecords(prev => {
@@ -293,109 +290,11 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         }));
         setRecords(mappedRecords);
       }
-      setLastLiveUpdate(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }));
     } catch (err: any) {
       setError(err?.response?.data?.detail || err?.message || 'Failed to load Previous Week Contest data.');
     } finally {
       setLoading(false);
       setSyncing(false);
-    }
-  };
-
-  // ─── WebSocket Ingestion Subscription ────────────────────────────────────────
-  const connectWebSocket = () => {
-    try {
-      const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
-      let wsUrl = '';
-      if (envUrl) {
-        const targetHost = envUrl.replace(/^https?:\/\//, '').replace(/\/api\/?$/, '').replace(/\/+$/, '');
-        const wsProtocol = envUrl.startsWith('https') ? 'wss:' : 'ws:';
-        wsUrl = `${wsProtocol}//${targetHost}/ws/leaderboard`;
-      } else {
-        const isHttps = window.location.protocol === 'https:';
-        const wsProtocol = isHttps ? 'wss:' : 'ws:';
-        const wsHost = window.location.host;
-        wsUrl = `${wsProtocol}//${wsHost}/ws/leaderboard`;
-      }
-
-      const socket = new WebSocket(wsUrl);
-      socketRef.current = socket;
-
-      socket.onopen = () => {
-        setWsConnected(true);
-      };
-
-      socket.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          
-          // Case 1: Targeted Student Question Solve Event
-          if (data.type === 'CONTEST_RESULT_UPDATED') {
-            const sid = data.studentId || data.student_id;
-            const regNo = data.regNo || data.reg_no;
-            const uname = (data.username || data.leetcode_username || '').toLowerCase();
-
-            setRecords(prevRecords => {
-              const idx = prevRecords.findIndex(r => 
-                (sid && r.student_id === sid) ||
-                (regNo && r.reg_no === regNo) ||
-                (uname && (r.leetcode_username || '').toLowerCase() === uname)
-              );
-
-              if (idx !== -1) {
-                const updated = [...prevRecords];
-                updated[idx] = {
-                  ...updated[idx],
-                  q1: data.q1 !== undefined ? data.q1 : updated[idx].q1,
-                  q2: data.q2 !== undefined ? data.q2 : updated[idx].q2,
-                  q3: data.q3 !== undefined ? data.q3 : updated[idx].q3,
-                  q4: data.q4 !== undefined ? data.q4 : updated[idx].q4,
-                  problems_solved: data.solvedCount !== undefined ? data.solvedCount : (data.problems_solved !== undefined ? data.problems_solved : updated[idx].problems_solved),
-                  official_rank: data.officialRank !== undefined ? data.officialRank : updated[idx].official_rank,
-                  finish_time: data.finishTime || updated[idx].finish_time,
-                  participation_type: (data.participationStatus || data.participation_type) ? (
-                    ((data.participationStatus || data.participation_type) === 'PUBLIC_ATTENDED' || (data.participationStatus || data.participation_type) === 'PUBLIC') ? 'PUBLIC'
-                    : ((data.participationStatus || data.participation_type) === 'VIRTUAL_ATTENDED' || (data.participationStatus || data.participation_type) === 'VIRTUAL') ? 'VIRTUAL'
-                    : ((data.participationStatus || data.participation_type) === 'NOT_ATTENDED' || (data.participationStatus || data.participation_type) === 'PUBLIC_NOT_ATTENDED') ? 'NOT_PARTICIPATED'
-                    : ((data.participationStatus || data.participation_type) === 'PENDING') ? 'NOT_VERIFIED'
-                    : ((data.participationStatus || data.participation_type) === 'UNKNOWN' || (data.participationStatus || data.participation_type) === 'USERNAME_NOT_FOUND' || (data.participationStatus || data.participation_type) === 'DATA_ERROR' || (data.participationStatus || data.participation_type) === 'SOURCE_ERROR') ? 'MISSING_LEETCODE_USERNAME'
-                    : (data.participationStatus || data.participation_type)
-                  ) : updated[idx].participation_type,
-                  verification_status: 'VERIFIED'
-                };
-                return updated;
-              }
-              return prevRecords;
-            });
-
-            setLastLiveUpdate(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }));
-          }
-
-          // Case 2: Live Summary Metric Updates
-          if (data.type === 'CONTEST_SUMMARY_UPDATED' && data.metrics) {
-            setSummary(prev => prev ? {
-              ...prev,
-              metrics: {
-                ...prev.metrics,
-                ...data.metrics
-              }
-            } : null);
-            setLastLiveUpdate(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }));
-          }
-        } catch (e) {
-          // Ignore non-JSON pings
-        }
-      };
-
-      socket.onerror = () => {
-        setWsConnected(false);
-      };
-
-      socket.onclose = () => {
-        setWsConnected(false);
-      };
-    } catch (e) {
-      setWsConnected(false);
     }
   };
 
@@ -409,21 +308,6 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
-
-  useEffect(() => {
-    connectWebSocket();
-
-    const pingInterval = setInterval(() => {
-      if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-        socketRef.current.send('ping');
-      }
-    }, 25000);
-
-    return () => {
-      clearInterval(pingInterval);
-      if (socketRef.current) socketRef.current.close();
-    };
-  }, []);
 
   const handleSimulateStep = async (studentId: number, currentSolved: number) => {
     try {
@@ -501,7 +385,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
             <span className="text-xs text-indigo-300 font-mono font-bold">
               Target: {summary?.target_date_ist}
             </span>
-            {wsConnected ? (
+            {wsStatus === 'LIVE' ? (
               <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[11px] font-mono font-bold flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 <span>LIVE SYNC ACTIVE</span>
@@ -537,14 +421,14 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       </div>
 
       {/* Disconnection Warning Pill */}
-      {!wsConnected && (
+      {wsStatus !== 'LIVE' && (
         <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 shrink-0" />
-            <span>Live WebSocket connection interrupted • Last valid update: {lastLiveUpdate}</span>
+            <span>Live WebSocket connection interrupted • Last valid update: {lastSyncAt || 'Recent'}</span>
           </div>
           <button
-            onClick={connectWebSocket}
+            onClick={() => fetchPreviousWeekData(true)}
             className="px-3 py-1 rounded-xl bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition"
           >
             Reconnect Live Stream
