@@ -330,14 +330,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   const fetchFilteredStudents = async () => {
     try {
-      const ts = Date.now();
-      const res = await api.get(`/students/leaderboard-fast?_t=${ts}`);
+      const res = await api.get('/students/leaderboard-fast');
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setStudents(res.data);
         saveCachedStudents(res.data);
         return;
       }
-      const res2 = await api.get(`/students?_t=${ts}`);
+      const res2 = await api.get('/students');
       if (res2.data && Array.isArray(res2.data) && res2.data.length > 0) {
         setStudents(res2.data);
         saveCachedStudents(res2.data);

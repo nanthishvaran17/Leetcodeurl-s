@@ -253,7 +253,7 @@ export const App: React.FC = () => {
 
   const fetchSummary = async () => {
     try {
-      const res = await api.get(`/sessions/dashboard-summary?_t=${Date.now()}`);
+      const res = await api.get('/sessions/dashboard-summary');
       if (res.data) {
         setSummaryData(res.data);
         saveCachedSummary(res.data);
@@ -262,6 +262,26 @@ export const App: React.FC = () => {
       console.error(err);
     }
   };
+
+  // Intelligent Background Route & Data Pre-fetching on Idle
+  useEffect(() => {
+    const prefetchLikelyRoutes = () => {
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(() => {
+          import('./pages/DashboardPage');
+          import('./pages/StudentMasterPage');
+          import('./pages/ReportsPage');
+          import('./pages/DepartmentDashboard');
+        });
+      } else {
+        setTimeout(() => {
+          import('./pages/DashboardPage');
+          import('./pages/StudentMasterPage');
+        }, 2000);
+      }
+    };
+    prefetchLikelyRoutes();
+  }, []);
 
   const triggerCloudSync = async () => {
     try {

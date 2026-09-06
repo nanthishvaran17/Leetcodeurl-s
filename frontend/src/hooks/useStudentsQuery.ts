@@ -2,7 +2,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { studentLiveStore } from '../stores/studentLiveStore';
 import api from '../services/api';
-import { StudentData } from '../components/LeaderboardTable';
+import { getCachedStudents, saveCachedStudents } from '../data/canonicalRoster';
+import { StudentEntity } from '../types/student';
 
 function parseUtcTime(timeStr?: string | null): number {
   if (!timeStr) return 0;
@@ -12,13 +13,17 @@ function parseUtcTime(timeStr?: string | null): number {
 export const useStudentsQuery = () => {
   const queryClient = useQueryClient();
 
-  const query = useQuery<StudentData[]>({
+  const query = useQuery<StudentEntity[]>({
     queryKey: ['students', 'canonical'],
+    initialData: () => getCachedStudents() as StudentEntity[],
     queryFn: async () => {
       const res = await api.get('/students/leaderboard-fast');
       const data = Array.isArray(res.data) ? res.data : [];
+      if (data.length > 0) {
+        saveCachedStudents(data);
+      }
       
-      const currentCache = queryClient.getQueryData<StudentData[]>(['students', 'canonical']) || [];
+      const currentCache = queryClient.getQueryData<StudentEntity[]>(['students', 'canonical']) || [];
       const cacheMap = new Map(currentCache.map(s => [String(s.id), s]));
 
       const merged = data.map(serverStudent => {
