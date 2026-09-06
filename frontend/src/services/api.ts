@@ -1,19 +1,38 @@
 import axios from 'axios';
 import { auth } from '../firebase';
 
-// Smart API Base URL Resolution for Local Development vs Production Hosting
+// Authoritative Production Backend Base URL
+const PRODUCTION_BACKEND_URL = 'https://leetcodeurl-s-3mig.onrender.com';
+
+// Smart API Base URL Resolution for Local Development vs Native Mobile (Capacitor/Android) vs Production Hosting
 const getApiBaseUrl = () => {
-  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-    return '/api';
-  }
+  // Check if running inside native mobile app container (Capacitor Android / iOS)
+  const isNative = typeof window !== 'undefined' && (
+    !!(window as any).Capacitor?.isNativePlatform?.() ||
+    window.location.protocol === 'capacitor:' ||
+    window.location.origin.includes('capacitor://') ||
+    window.location.origin.includes('ionic://')
+  );
+
   const envUrl = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_API_URL || import.meta.env?.VITE_API_BASE_URL));
-  if (envUrl) {
-    const cleanUrl = envUrl.replace(/\/+$/, '');
+  const targetBaseUrl = envUrl || PRODUCTION_BACKEND_URL;
+
+  // Native Android/iOS Capacitor app MUST always use full production HTTPS endpoint
+  if (isNative) {
+    const cleanUrl = targetBaseUrl.replace(/\/+$/, '');
     return cleanUrl.endsWith('/api') ? cleanUrl : `${cleanUrl}/api`;
   }
 
-  // Fallback ONLY if env is somehow completely missing
-  return '/api';
+  // Web Browser local development (Vite dev server running on port 3000, 5173, etc.)
+  if (typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
+      (window.location.port === '3000' || window.location.port === '5173')) {
+    return '/api';
+  }
+
+  // Web Browser production or custom environment URL
+  const cleanUrl = targetBaseUrl.replace(/\/+$/, '');
+  return cleanUrl.endsWith('/api') ? cleanUrl : `${cleanUrl}/api`;
 };
 
 const API_BASE = getApiBaseUrl();

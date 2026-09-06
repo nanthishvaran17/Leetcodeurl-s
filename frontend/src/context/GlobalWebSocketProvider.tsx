@@ -67,16 +67,28 @@ export const GlobalWebSocketProvider: React.FC<{ children: React.ReactNode }> = 
       return;
     }
 
-    const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+    const PRODUCTION_BACKEND_URL = 'https://leetcodeurl-s-3mig.onrender.com';
+    const isNative = typeof window !== 'undefined' && (
+      !!(window as any).Capacitor?.isNativePlatform?.() ||
+      window.location.protocol === 'capacitor:' ||
+      window.location.origin.includes('capacitor://')
+    );
+
+    const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || (isNative ? PRODUCTION_BACKEND_URL : null);
     let wsUrl: string;
 
     if (envUrl) {
       const targetHost = envUrl.replace(/^https?:\/\//, '').replace(/\/api\/?$/, '').replace(/\/+$/, '');
       const protocol = envUrl.startsWith('https') ? 'wss:' : 'ws:';
       wsUrl = `${protocol}//${targetHost}/ws/leaderboard`;
-    } else {
+    } else if (typeof window !== 'undefined' && 
+               (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
+               (window.location.port === '3000' || window.location.port === '5173')) {
       const loc = window.location;
       wsUrl = `${loc.protocol === 'https:' ? 'wss:' : 'ws:'}//${loc.host}/ws/leaderboard`;
+    } else {
+      const targetHost = PRODUCTION_BACKEND_URL.replace(/^https?:\/\//, '').replace(/\/+$/, '');
+      wsUrl = `wss://${targetHost}/ws/leaderboard`;
     }
 
     if (token) {

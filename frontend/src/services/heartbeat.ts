@@ -14,16 +14,30 @@
 let heartbeatTimer: any = null;
 let isPinging = false;
 
+const PRODUCTION_BACKEND_URL = 'https://leetcodeurl-s-3mig.onrender.com';
+
 const getHealthUrl = (): string => {
-  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-    return '/api/system/health';
-  }
-  const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
-  if (envUrl) {
+  const isNative = typeof window !== 'undefined' && (
+    !!(window as any).Capacitor?.isNativePlatform?.() ||
+    window.location.protocol === 'capacitor:' ||
+    window.location.origin.includes('capacitor://')
+  );
+
+  if (isNative) {
+    const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || PRODUCTION_BACKEND_URL;
     const origin = envUrl.replace(/\/api\/?$/, '').replace(/\/+$/, '');
     return `${origin}/health`;
   }
-  return '/health';
+
+  if (typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
+      (window.location.port === '3000' || window.location.port === '5173')) {
+    return '/api/system/health';
+  }
+
+  const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || PRODUCTION_BACKEND_URL;
+  const origin = envUrl.replace(/\/api\/?$/, '').replace(/\/+$/, '');
+  return `${origin}/health`;
 };
 
 const sendPing = async () => {
