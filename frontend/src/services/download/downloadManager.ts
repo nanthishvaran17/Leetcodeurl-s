@@ -124,12 +124,13 @@ class DownloadManager {
         return { success: true, downloadId };
       }
 
-      // WEB BROWSER PATH 
+      // WEB BROWSER PATH (Desktop & Mobile Web Browsers)
       state.status = 'STARTED';
       this.updateState(state, options.onStateChange);
 
-      const blobUrl = URL.createObjectURL(blob);
-      await triggerBrowserAnchorDownload(blobUrl, filename);
+      const typedBlob = blob instanceof Blob && blob.type ? blob : new Blob([blob], { type: mimeType });
+      const blobUrl = URL.createObjectURL(typedBlob);
+      await triggerBrowserAnchorDownload(blobUrl, filename, mimeType);
 
       setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
 
@@ -222,8 +223,9 @@ class DownloadManager {
       state.status = 'STARTED';
       this.updateState(state);
 
-      const blobUrl = URL.createObjectURL(blob);
-      await triggerBrowserAnchorDownload(blobUrl, safeFilename);
+      const typedBlob = blob instanceof Blob && blob.type ? blob : new Blob([blob], { type: effectiveMime });
+      const blobUrl = URL.createObjectURL(typedBlob);
+      await triggerBrowserAnchorDownload(blobUrl, safeFilename, effectiveMime);
 
       setTimeout(() => {
         URL.revokeObjectURL(blobUrl);

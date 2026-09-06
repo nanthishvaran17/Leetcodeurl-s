@@ -167,6 +167,20 @@ export function isStandaloneMode(): boolean {
   );
 }
 
+/** Check if running on a mobile web browser (iOS Safari, Android Chrome, etc.) */
+export function isMobileBrowser(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = window.navigator.userAgent || '';
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+}
+
+/** Check if running on iOS (iPhone/iPad) */
+export function isIOS(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = window.navigator.userAgent || '';
+  return /iPhone|iPad|iPod/i.test(ua);
+}
+
 /**
  * Validates a response Blob to ensure it is non-empty and not a JSON error.
  */
@@ -206,20 +220,44 @@ export async function validateFileBlob(blob: Blob, mimeType?: string): Promise<{
 /**
  * Executes a clean browser native download trigger without navigating the SPA page.
  * Uses a hidden anchor tag with Blob URL or secure temporary URL.
+ * Handles iOS Safari, Android Chrome, and Desktop browsers cleanly.
  */
-export async function triggerBrowserAnchorDownload(url: string, filename: string): Promise<void> {
+export async function triggerBrowserAnchorDownload(url: string, filename: string, mimeType?: string): Promise<void> {
   const safeName = sanitizeFilename(filename);
+
+  // iOS Safari mobile browser handling:
+  // iOS Safari ignores the download attribute on blob: URLs for PDFs/documents.
+  // Navigating/opening the blob URL directly opens native Safari PDF preview with Save/Share.
+  if (isIOS() && url.startsWith('blob:')) {
+    try {
+      const w = window.open(url, '_blank');
+      if (!w) {
+        window.location.href = url;
+      }
+      return;
+    } catch {
+      window.location.href = url;
+      return;
+    }
+  }
 
   const anchor = document.createElement('a');
   anchor.href = url;
   anchor.download = safeName;
   anchor.style.display = 'none';
   anchor.rel = 'noopener noreferrer';
+  if (mimeType) {
+    anchor.type = mimeType;
+  }
 
   document.body.appendChild(anchor);
 
-  // Execute click immediately. Delaying this click blocks it from being considered a user-triggered event by the browser.
-  anchor.click();
+  try {
+    anchor.click();
+  } catch (e) {
+    console.warn('[DownloadUtils] Anchor click failed, falling back to direct navigation:', e);
+    window.location.href = url;
+  }
 
   // Remove anchor after a small delay
   setTimeout(() => {

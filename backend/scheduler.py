@@ -336,10 +336,11 @@ async def sunday_2200_virtual_contest_job():
 @with_global_lock('sunday_2205_rollover_job', timeout_minutes=120)
 async def sunday_2205_rollover_job():
     """
-    Scheduled for Sunday 10:05 PM IST: Automatic Rollover to Weekly Contest 518.
-    Verifies Contest 517 is FINALIZED before activating Contest 518. If Contest 517 is LOCK_BLOCKED, rollover is strictly blocked.
+    Scheduled for Sunday 10:05 PM IST: Automatic Rollover to the Next Weekly Contest.
+    Verifies the current session is FINALIZED before activating the next one. If current session is LOCK_BLOCKED, rollover is strictly blocked.
+    Contest number is calculated dynamically by discover_contest_metadata() — never hardcoded.
     """
-    logger.info("[SCHEDULER] Sunday 10:05 PM IST: Executing Contest 518 Rollover Safety Check & Preparation...")
+    logger.info("[SCHEDULER] Sunday 10:05 PM IST: Executing Automatic Contest Rollover Safety Check & Next Session Preparation...")
     db = SessionLocal()
     try:
         res = sunday_autopilot.phase_8_prepare_next_contest(db=db)

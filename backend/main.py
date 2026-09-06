@@ -139,12 +139,14 @@ async def _deferred_startup_tasks():
                 _cfg = get_or_create_default_schedule(_sched_db)
                 register_apscheduler_job(_cfg)
                 
-            # Pre-generate weekly report cache in background for instant user download
+            # Pre-generate weekly report cache in background thread for instant user download without blocking startup
             try:
                 from backend.services.pregenerated_report_service import pregenerate_all_weekly_reports
-                with SessionLocal() as _report_db:
-                    pregenerate_all_weekly_reports(_report_db)
-                logger.info("[STARTUP] Weekly report pre-generation worker initiated.")
+                def _run_bg_pregen():
+                    with SessionLocal() as _report_db:
+                        pregenerate_all_weekly_reports(_report_db)
+                await asyncio.to_thread(_run_bg_pregen)
+                logger.info("[STARTUP] Weekly report pre-generation worker completed.")
             except Exception as _p_err:
                 logger.warning(f"[STARTUP] Weekly report pre-generation note: {_p_err}")
 
@@ -338,11 +340,11 @@ app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origin_regex=r"https://.*\.netlify\.app|https://.*\.web\.app|https://.*\.firebaseapp\.com|https://.*\.vercel\.app|https://.*\.pages\.dev|https://.*\.loca\.lt",
+    allow_origin_regex=r"https://.*\.netlify\.app|https://.*\.web\.app|https://.*\.firebaseapp\.com|https://.*\.vercel\.app|https://.*\.pages\.dev|https://.*\.loca\.lt|http://192\.168\..*|http://10\..*|http://172\.(1[6-9]|2[0-9]|3[01])\..*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["Content-Disposition", "Content-Length", "Content-Type"],
+    expose_headers=["Content-Disposition", "Content-Length", "Content-Type", "X-Report-Cache-Hit", "X-Report-Lookup-Ms"],
 )
 
 # =====================================================================

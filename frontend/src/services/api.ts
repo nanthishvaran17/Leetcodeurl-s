@@ -23,10 +23,14 @@ const getApiBaseUrl = () => {
     return cleanUrl.endsWith('/api') ? cleanUrl : `${cleanUrl}/api`;
   }
 
-  // Web Browser local development (Vite dev server running on port 3000, 5173, etc.)
+  // Web Browser local development (Vite dev server running on port 3000, 5173, etc. or local IP)
   if (typeof window !== 'undefined' && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
-      (window.location.port === '3000' || window.location.port === '5173')) {
+      (window.location.hostname === 'localhost' || 
+       window.location.hostname === '127.0.0.1' ||
+       window.location.hostname.startsWith('192.168.') ||
+       window.location.hostname.startsWith('10.') ||
+       window.location.hostname.endsWith('.local')) &&
+      (window.location.port === '3000' || window.location.port === '5173' || window.location.port === '8000')) {
     return '/api';
   }
 

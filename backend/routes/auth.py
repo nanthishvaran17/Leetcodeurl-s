@@ -7,6 +7,8 @@ import asyncio
 import random
 import bcrypt
 import jwt
+import urllib.parse
+import re
 from typing import Optional
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response, BackgroundTasks
@@ -119,42 +121,66 @@ def uuid_hex_short() -> str:
 
 def validate_csrf_origin(request: Request):
     """Verifies request Origin/Referer for state-changing operations and blocks unauthorized origins."""
-    origin = request.headers.get("Origin") or request.headers.get("Referer")
-    if not origin:
+    raw_origin = request.headers.get("Origin") or request.headers.get("Referer")
+    if not raw_origin:
         return
 
-    clean_origin = origin.rstrip("/")
-    
-    # Core Production Vercel Origin
+    # Properly parse scheme and host/port from Origin or Referer header (strips paths like /login)
+    try:
+        parsed = urllib.parse.urlparse(raw_origin)
+        if parsed.scheme and parsed.netloc:
+            clean_origin = f"{parsed.scheme}://{parsed.netloc}".lower()
+        else:
+            clean_origin = raw_origin.rstrip("/").lower()
+    except Exception:
+        clean_origin = raw_origin.rstrip("/").lower()
+
+    # Core Production & App origins
     allowed_origins = [
         "https://leetcodeurl-s-roan.vercel.app",
+        "capacitor://localhost",
+        "ionic://localhost",
+        "http://localhost",
+        "https://localhost",
+        "http://127.0.0.1",
+        "https://127.0.0.1"
     ]
-    
-    # Environment-provided Origin (if different)
+
     env_origin = getattr(settings, "FRONTEND_ORIGIN", None)
     if env_origin:
-        allowed_origins.append(env_origin.rstrip("/"))
+        allowed_origins.append(env_origin.rstrip("/").lower())
 
-    if clean_origin.startswith("http://localhost") or clean_origin.startswith("http://127.0.0.1"):
-        return  # Allowed for development
+    cors_allowed = getattr(settings, "CORS_ALLOWED_ORIGINS", None)
+    if cors_allowed:
+        for o in cors_allowed.split(","):
+            o_clean = o.strip().rstrip("/").lower()
+            if o_clean and o_clean not in allowed_origins:
+                allowed_origins.append(o_clean)
 
-    # Capacitor mobile app origins (Android: capacitor://localhost or https://localhost)
-    if clean_origin in ("capacitor://localhost", "https://localhost", "http://localhost"):
-        return  # Allowed for Capacitor native app
+    # 1. Exact match against allowed origins
+    if clean_origin in allowed_origins:
+        return
 
-    # Verify if the origin matches any of the allowed origins exactly
-    is_allowed = any(allowed == clean_origin for allowed in allowed_origins)
+    # 2. Local development & LAN IP origins (e.g. http://192.168.x.x:3000, http://10.x.x.x:5173, *.local)
+    local_and_lan_pattern = r"^(http|https)://(localhost|127\.0\.0\.1|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2[0-9]|3[01])\.\d{1,3}\.\d{1,3}|[a-zA-Z0-9-]+\.local)(:\d+)?$"
+    if re.match(local_and_lan_pattern, clean_origin):
+        return
 
-    # Automatically allow ANY *.vercel.app domain (especially for preview deployments)
-    if not is_allowed and "://" in clean_origin and clean_origin.endswith(".vercel.app"):
-        is_allowed = True
+    # 3. Mobile app schemes (capacitor://, ionic://, app://, file://)
+    if any(clean_origin.startswith(scheme) for scheme in ("capacitor://", "ionic://", "app://", "file://")):
+        return
 
-    if not is_allowed:
-        logger.warning(f"[CSRF CHECK] Blocked request from unverified origin: {origin}")
-        raise HTTPException(
-            status_code=403, 
-            detail="CSRF validation failed. Unrecognized request origin."
-        )
+    # 4. Standard hosted deployments (*.vercel.app, *.netlify.app, *.web.app, *.firebaseapp.com, *.pages.dev, *.loca.lt)
+    deployment_pattern = r"^https://[a-zA-Z0-9-]+\.(vercel\.app|netlify\.app|web\.app|firebaseapp\.com|pages\.dev|loca\.lt)$"
+    if re.match(deployment_pattern, clean_origin):
+        return
+
+    # If none matched, log warning and block
+    logger.warning(f"[CSRF CHECK] Blocked request from unverified origin: {raw_origin}")
+    raise HTTPException(
+        status_code=403, 
+        detail="CSRF validation failed. Unrecognized request origin."
+    )
 
 
 def get_current_user_from_request(request: Request, db: Session) -> Optional[User]:
