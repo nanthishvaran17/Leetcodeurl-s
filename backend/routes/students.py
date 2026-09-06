@@ -1072,19 +1072,18 @@ def update_student(
         raw_lc = payload.leetcode_url.strip() if payload.leetcode_url else None
         if raw_lc != old_url:
             url_changed = True
-            student.leetcode_url = raw_lc
             if raw_lc:
                 _parsed_u, _parsed_url, _u_status = extract_leetcode_username(raw_lc)
                 if _parsed_u:
-                    student.username = _parsed_u.lower()
+                    student.username = _parsed_u.strip()
                     student.leetcode_url = _parsed_url  # canonical URL
                 else:
                     student.username = None
 
     # Direct username override (e.g. from the username field in the edit form)
     if payload.username and payload.username.strip():
-        _direct_u = payload.username.strip().lower()
-        if _direct_u != (old_username or "").strip().lower():
+        _direct_u = payload.username.strip()
+        if _direct_u.lower() != (old_username or "").strip().lower():
             url_changed = True
             student.username = _direct_u
             student.leetcode_url = f"https://leetcode.com/u/{_direct_u}/"
@@ -1096,13 +1095,13 @@ def update_student(
         from backend.models import LeetCodeAccount
         db.query(LeetCodeAccount).filter(LeetCodeAccount.student_id == student.id).delete()
         for sec in payload.secondary_accounts:
-            u_clean = (sec.leetcode_username or "").strip().lower()
+            u_clean = (sec.leetcode_username or "").strip()
             if u_clean:
                 url_clean = (sec.profile_url or "").strip() or f"https://leetcode.com/u/{u_clean}/"
                 sec_account = LeetCodeAccount(
                     student_id=student.id,
                     leetcode_username=u_clean,
-                    normalized_username=u_clean,
+                    normalized_username=u_clean.lower(),
                     profile_url=url_clean,
                     is_verified=True
                 )
