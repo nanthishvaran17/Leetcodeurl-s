@@ -2646,7 +2646,7 @@ class ReportCache(Base):
     institution_id = Column(String(50), default="NEC", index=True, nullable=False)
     week_id = Column(String(50), default="latest", index=True, nullable=False)
     file_type = Column(String(50), index=True, nullable=False) # e.g. pdf, excel, official_summary, master_tracker
-    filter_hash = Column(String(64), index=True, nullable=True) # SHA-256 of normalized config & filters
+    filter_hash = Column(String(64), nullable=True) # SHA-256 of normalized config & filters
     report_type = Column(String(100), default="WEEKLY_PERFORMANCE", index=True, nullable=True)
     format = Column(String(20), default="xlsx", index=True, nullable=True)
     filters_json = Column(Text, nullable=True)
@@ -2753,6 +2753,5 @@ class LearningSignal(Base):
     supporting_evidence = Column(Text, default="{}") # JSON evidence
     suggested_action = Column(Text, default="{}") # JSON actions
     created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
-
 
 
