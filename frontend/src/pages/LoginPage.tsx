@@ -168,31 +168,52 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     setLoading(true);
     setAuthStatusText('Signing in...');
 
+    // Attempt login — with one automatic retry after a brief warm-up pause
+    // to gracefully handle Render free-tier cold starts.
+    const attemptLogin = async (attempt: number): Promise<boolean> => {
+      try {
+        const res = await api.post('/auth/login', { username: cleanUser, password: cleanPass }, { timeout: 60000 });
+        console.log('[LOGIN] Response status:', res.status, 'data keys:', Object.keys(res.data || {}));
+        if (res.data && res.data.access_token) {
+          setSuccessMsg('Authentication verified. Directing to workspace...');
+          login(res.data.access_token, res.data.user);
+          setTimeout(() => { onSuccess(); }, 180);
+          return true;
+        }
+        return false;
+      } catch (err: any) {
+        const status = err?.response?.status;
+        const detail = err?.response?.data?.detail;
+        const errMsg = err?.message || 'unknown';
+        console.error(`[LOGIN_ERROR] attempt=${attempt} status=${status} detail=${detail} message=${errMsg}`);
+
+        // If it's a real auth failure (401/403), don't retry — show the actual message
+        if (status === 401 || status === 403) {
+          setError(detail || 'Invalid username or password.');
+          return true; // Handled
+        }
+
+        // Network error or server cold start — retry once after warm-up
+        if (attempt === 1 && (!status || status >= 500 || !err.response)) {
+          setAuthStatusText('Server warming up — retrying...');
+          await new Promise(r => setTimeout(r, 8000));
+          return await attemptLogin(2);
+        }
+
+        // Final failure
+        if (detail) {
+          setError(detail);
+        } else if (!err.response) {
+          setError('Cannot reach server. Please check your connection and try again in a moment.');
+        } else {
+          setError(`Login failed (HTTP ${status || 'unknown'}). Please try again.`);
+        }
+        return true;
+      }
+    };
+
     try {
-      const res = await api.post('/auth/login', { username: cleanUser, password: cleanPass }, { timeout: 30000 });
-      console.log('[LOGIN] Response status:', res.status, 'data:', res.data);
-      if (res.data && res.data.access_token) {
-        setSuccessMsg('Authentication verified. Directing to workspace...');
-        login(res.data.access_token, res.data.user);
-        setTimeout(() => {
-          onSuccess();
-        }, 180);
-        return;
-      }
-    } catch (err: any) {
-      const status = err?.response?.status;
-      const detail = err?.response?.data?.detail;
-      const errMsg = err?.message || 'unknown';
-      console.error('[LOGIN_ERROR] status:', status, 'detail:', detail, 'message:', errMsg, 'full:', err);
-      triggerShake();
-      // Show the actual API detail if available, otherwise show specific network error
-      if (detail) {
-        setError(detail);
-      } else if (status === 0 || !err.response) {
-        setError(`Network error — server may be starting up. Please wait 10 seconds and try again. (${errMsg})`);
-      } else {
-        setError(`Login failed (HTTP ${status || 'unknown'}). Please try again.`);
-      }
+      await attemptLogin(1);
     } finally {
       setLoading(false);
       setAuthStatusText('');
