@@ -92,11 +92,25 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     setIsDarkMode(isDark);
   }, []);
 
+  // Eagerly warm up Render server as soon as login page mounts
+  // This prevents cold-start Network Errors when user clicks Sign In
+  useEffect(() => {
+    const warmUp = async () => {
+      try {
+        await api.get('/health', { timeout: 25000 } as any);
+        console.log('[SERVER_WARMUP] Backend ready');
+      } catch {
+        // Silently ignore — the login retry will handle if still not ready
+      }
+    };
+    warmUp();
+  }, []);
+
   // Fetch Live Stats from Public Endpoint
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await api.get('/public/stats', { timeout: 6000 });
+        const res = await api.get('/public/stats', { timeout: 10000 });
         const data = res.data;
         const total = data?.total || 307;
         const verified = data?.verified || 290;
