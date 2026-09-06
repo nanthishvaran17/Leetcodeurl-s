@@ -51,12 +51,12 @@ from backend.services.contest_problem_accuracy_engine import (
     ContestProblemAccuracyEngine, ContestProblemSet
 )
 
-# ─── TIMEZONE DEFINITIONS ──────────────────────────────────────────────────────
+# TIMEZONE DEFINITIONS 
 IST_TZ = zoneinfo.ZoneInfo("Asia/Kolkata")
 UTC_TZ = zoneinfo.ZoneInfo("UTC")
 
 
-# ─── EVIDENCE HIERARCHY ────────────────────────────────────────────────────────
+# EVIDENCE HIERARCHY 
 class EvidenceLevel:
     LEVEL_5_AUTHENTICATED_VIRTUAL_UI = "LEVEL_5_AUTHENTICATED_VIRTUAL_UI"  # Authenticated My Contests -> Virtual UI
     LEVEL_5_AUTHORITATIVE_VIRTUAL = "LEVEL_5_AUTHORITATIVE_VIRTUAL"        # Authoritative virtual contest metadata
@@ -77,7 +77,7 @@ class EvidenceLevel:
     UNVERIFIED = NO_EVIDENCE
 
 
-# ─── SOURCE AUTHORITY HEALTH STATES ────────────────────────────────────────────
+# SOURCE AUTHORITY HEALTH STATES 
 class SourceAuthorityStatus:
     VERIFIED_ZERO = "VERIFIED_ZERO"                              # Complete authoritative source explicitly proves zero
     VERIFIED_NONZERO = "VERIFIED_NONZERO"                        # Verified positive virtual records found
@@ -95,7 +95,7 @@ class SourceAuthorityStatus:
     UNKNOWN_CONTEST = "UNKNOWN_CONTEST"                          # Contest identifier unknown
 
 
-# ─── LAYER A: INSTITUTIONAL ATTENDANCE STATES ──────────────────────────────────
+# LAYER A: INSTITUTIONAL ATTENDANCE STATES 
 class CanonicalAttendanceState:
     DATA_ERROR = "DATA_ERROR"
     LIVE_ATTENDED = "LIVE_ATTENDED"
@@ -109,7 +109,7 @@ class CanonicalAttendanceState:
     ALL_STATES = {DATA_ERROR, LIVE_ATTENDED, VIRTUAL_ATTENDED, POST_CONTEST_PRACTICE, UNKNOWN_PENDING_EVIDENCE, NOT_ATTENDED, EVIDENCE_UNAVAILABLE}
 
 
-# ─── LAYER B: EVIDENCE STATES ──────────────────────────────────────────────────
+# LAYER B: EVIDENCE STATES 
 class EvidenceState:
     VERIFIED_LIVE = "VERIFIED_LIVE"
     LIVE_VERIFIED = "LIVE_VERIFIED"
@@ -649,7 +649,7 @@ class UniversalContestReconciliationEngine:
             "detection_status": detection_status,
             "mandatory_honesty_statement": mandatory_honesty_statement,
             "audit_warning": (
-                "⚠ Virtual detection source is not authoritative. "
+                " Virtual detection source is not authoritative. "
                 "0 students have been verified as Virtual, but a complete Virtual participation count cannot be proven from the available source."
                 if detection_status == SourceAuthorityStatus.AUTH_REQUIRED else None
             ),
@@ -990,7 +990,7 @@ class UniversalContestReconciliationEngine:
             session_obj.virtual_participants = virtual_attended
             session_obj.not_participated = not_attended
             session_obj.failed_verification = data_errors
-            session_obj.sync_status = "🟢 Verified"
+            session_obj.sync_status = " Verified"
             session_obj.last_synced = datetime.datetime.now(UTC_TZ)
             session_obj.dataset_hash = dataset_checksum
             

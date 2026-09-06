@@ -509,7 +509,7 @@ def send_admin_test_report_email(
         </div>
         <div style="border: 1px solid #e2e8f0; border-top: none; padding: 24px; border-radius: 0 0 12px 12px; background-color: #ffffff;">
             <p>Hello <b>{getattr(current_user, 'username', 'Admin')}</b>,</p>
-            <p style="color: #16a34a; font-weight: bold;">🟢 Pre-flight test dispatch verified successfully!</p>
+            <p style="color: #16a34a; font-weight: bold;"> Pre-flight test dispatch verified successfully!</p>
             <p>This test email confirms that your SMTP server configuration, database delivery tracking, attachment generator, and Asia/Kolkata Sunday automation pipeline are fully ready.</p>
             <ul style="font-size: 13px; color: #475569;">
                 <li><b>Recipient:</b> {admin_email} (Admin Only)</li>

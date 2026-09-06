@@ -183,48 +183,48 @@ class AIControlEngine:
     @staticmethod
     def _execute_tool_pipeline(db: Session, m: str, raw_msg: str, plan: Dict[str, Any], req_id: str) -> Dict[str, Any]:
         
-        # ── 1. DATABASE AUDIT & BUG DETECTION TOOL ──
+        # 1. DATABASE AUDIT & BUG DETECTION TOOL 
         if any(k in m for k in ["audit", "bug", "duplicate", "invalid", "missing url", "inconsistency", "check the entire database"]):
             return AIControlEngine._tool_database_audit(db)
 
-        # ── 2. TOP PERFORMERS & LEADERBOARD TOOL ──
+        # 2. TOP PERFORMERS & LEADERBOARD TOOL 
         if any(k in m for k in ["top 10", "top solver", "best student", "highest solved", "top performer"]):
             return AIControlEngine._tool_top_performers(db, m)
 
-        # ── 3. ABSENTEE & LOW PERFORMERS ANALYSIS TOOL ──
+        # 3. ABSENTEE & LOW PERFORMERS ANALYSIS TOOL 
         if any(k in m for k in ["absent", "low performer", "decreased", "decline", "not attended"]):
             return AIControlEngine._tool_absentee_and_low_performers(db, m, req_id)
 
-        # ── 4. CONTEST COMPARISON TOOL ──
+        # 4. CONTEST COMPARISON TOOL 
         if "compare" in m and ("contest" in m or "51" in m):
             return AIControlEngine._tool_compare_contests(db, m)
 
-        # ── 5. STUDENT COMPARISON TOOL ──
+        # 5. STUDENT COMPARISON TOOL 
         if "compare" in m and ("student" in m or "7322" in m or "23c" in m):
             return AIControlEngine._tool_compare_students(db, m)
 
-        # ── 6. EMAIL PREPARATION & ACTION CONFIRMATION ──
+        # 6. EMAIL PREPARATION & ACTION CONFIRMATION 
         if any(k in m for k in ["prepare an email", "email low", "email draft", "send email", "mail hod", "mail panu", "mail anuppu", "send mail", "mail absent", "mail"]):
             return AIControlEngine._tool_prepare_email(db, m, req_id)
 
-        # ── 7. REPORT GENERATION TOOL ──
+        # 7. REPORT GENERATION TOOL 
         if any(k in m for k in ["report", "hod summary", "weekly summary report"]):
             return AIControlEngine._tool_generate_report(db, m)
 
-        # ── 8. DEPARTMENT / YEAR PERFORMANCE MATRIX ──
+        # 8. DEPARTMENT / YEAR PERFORMANCE MATRIX 
         if any(k in m for k in ["cyber security", "cse(cs)", "cse(iot)", "iot", "year iii", "year ii", "year iv"]):
             return AIControlEngine._tool_department_year_performance(db, m)
 
-        # ── 9. SPECIFIC STUDENT LOOKUP ──
+        # 9. SPECIFIC STUDENT LOOKUP 
         st_match = re.search(r'\b(73222[0-9a-z]+|23c[0-9a-z]+|bharath|nanthish|rithanya|deepak|dhanushya|kaniska|keerthana|wasim|eniyavan|steffy|praveen)\b', m)
         if st_match:
             return AIControlEngine._tool_student_detail_lookup(db, st_match.group(1))
 
-        # ── 10. SYSTEM HEALTH & LAST FETCH INQUIRY ──
+        # 10. SYSTEM HEALTH & LAST FETCH INQUIRY 
         if any(k in m for k in ["last successful fetch", "last fetch", "failed to fetch", "fetch status", "system status", "epo fetch", "last fetch kaatu", "fergc", "last sync", "fetch time", "when was fetch"]):
             return AIControlEngine._tool_system_fetch_health(db)
 
-        # ── DEFAULT FALLBACK (ZERO-HALLUCINATION DATABASE SCAN) ──
+        # DEFAULT FALLBACK (ZERO-HALLUCINATION DATABASE SCAN) 
         return AIControlEngine._tool_general_database_query(db, raw_msg)
 
 
@@ -452,7 +452,7 @@ class AIControlEngine:
         c2_att = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == s_new.id, WeeklyPublicResult.participation_status == "PUBLIC_ATTENDED").count()
 
         diff = c2_att - c1_att
-        trend_str = f"▲ +{diff} participants increase" if diff > 0 else (f"▼ {abs(diff)} decrease" if diff < 0 else "● Equal attendance")
+        trend_str = f" +{diff} participants increase" if diff > 0 else (f" {abs(diff)} decrease" if diff < 0 else " Equal attendance")
 
         answer = (
             f"**Contest Performance Comparison: {s_old.contest_name} vs {s_new.contest_name}**\n\n"

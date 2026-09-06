@@ -390,7 +390,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                     : 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400'
                 }`}>
                   <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></span>
-                  {isActive ? '● ACTIVE ACCOUNT' : '● SUSPENDED ACCOUNT'}
+                  {isActive ? ' ACTIVE ACCOUNT' : ' SUSPENDED ACCOUNT'}
                 </span>
               </div>
               <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5">

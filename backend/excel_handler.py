@@ -1396,12 +1396,12 @@ def create_weekly_contest_matrix_sheet(ws, db: Session, batch_label: str, dept_i
             if solved_val == 0 or solved_val == "0" or solved_val == "—":
                 c_solved.fill = warning_fill
                 c_solved.font = warning_font
-                c_solved.value = "0 (⚠️ Inactive)"
+                c_solved.value = "0 ( Inactive)"
 
             if rating_val == "—":
                 c_rating.fill = warning_fill
                 c_rating.font = warning_font
-                c_rating.value = "⚠️ Unrated"
+                c_rating.value = " Unrated"
 
             col_pos += 4
 
@@ -1841,11 +1841,11 @@ def generate_single_week_matrix_excel(
             if solved_val in (0, "0", "—") or ratio_str == "0 / 4":
                 c_solved.fill = warn_fill
                 c_solved.font = Font(name=TNR, size=10, bold=True, color="9C0006")
-                c_solved.value = "0 (⚠️ Inactive)"
+                c_solved.value = "0 ( Inactive)"
             if rating_val == "—":
                 c_rating.fill = warn_fill
                 c_rating.font = Font(name=TNR, size=10, bold=True, color="9C0006")
-                c_rating.value = "⚠️ Unrated"
+                c_rating.value = " Unrated"
 
             for c in range(1, 10):
                 cell = ws.cell(row=current_row, column=c)

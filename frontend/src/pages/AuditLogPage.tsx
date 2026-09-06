@@ -84,7 +84,7 @@ export const AuditLogPage: React.FC = () => {
   return (
     <div className="space-y-6">
       
-      {/* ── HEADER (RICH GLOWING INSTITUTIONAL GRADIENT) ── */}
+      {/* HEADER (RICH GLOWING INSTITUTIONAL GRADIENT) */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-lg border border-brand-500/30">
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
           <div className="space-y-2.5 max-w-2xl">

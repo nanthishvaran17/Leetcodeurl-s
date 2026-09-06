@@ -128,7 +128,7 @@ class AIKnowledgeEngine:
         (user.email if user else "").lower()
         user.username if user else "GUEST"
 
-        # ── 1. SECURITY & CREDENTIAL PRIVACY PROTECTION ──
+        # 1. SECURITY & CREDENTIAL PRIVACY PROTECTION 
         if any(k in clean_q for k in ["smtp password", "jwt secret", "private key", "database password", "firebase secret", "api key"]):
             return {
                 "success": True,
@@ -143,7 +143,7 @@ class AIKnowledgeEngine:
                 "requestId": req_id
             }
 
-        # ── 1.1 ACTION INTENT: SEND REPORT TO ADMIN (REAL REPORT GENERATION & DISPATCH) ──
+        # 1.1 ACTION INTENT: SEND REPORT TO ADMIN (REAL REPORT GENERATION & DISPATCH) 
         if any(k in clean_q for k in [
             "send report to admin", "send report to the admin", "send report to hod",
             "email report to admin", "email report to the admin", "mail report to admin",
@@ -236,16 +236,16 @@ class AIKnowledgeEngine:
                 if email_ok:
                     ans = (
                         f"**HOD Weekly Summary Report**\n\n"
-                        f"✓ **Report generated**: Official 4-Sheet Excel & Multi-Page PDF\n"
-                        f"✓ **Data validation**: PASSED (100% snapshot integrity)\n"
-                        f"✓ **Excel attached**: `{excel_filename}` ({len(excel_bytes)//1024} KB)\n"
-                        f"✓ **PDF attached**: `{pdf_filename}` ({len(pdf_bytes)//1024} KB)\n"
-                        f"✓ **Authorized Recipient**: **{masked_admin}**\n"
-                        f"✓ **Email queued**: YES\n"
-                        f"✓ **Provider accepted**: `{msg_id}`\n\n"
+                        f" **Report generated**: Official 4-Sheet Excel & Multi-Page PDF\n"
+                        f" **Data validation**: PASSED (100% snapshot integrity)\n"
+                        f" **Excel attached**: `{excel_filename}` ({len(excel_bytes)//1024} KB)\n"
+                        f" **PDF attached**: `{pdf_filename}` ({len(pdf_bytes)//1024} KB)\n"
+                        f" **Authorized Recipient**: **{masked_admin}**\n"
+                        f" **Email queued**: YES\n"
+                        f" **Provider accepted**: `{msg_id}`\n\n"
                         f"**Delivery status**:\n"
-                        f"✓ **Provider accepted**\n"
-                        f"⏳ Delivery confirmation pending\n\n"
+                        f" **Provider accepted**\n"
+                        f" Delivery confirmation pending\n\n"
                         f"**Report Snapshot**:\n"
                         f"`{snapshot_id}`"
                     )
@@ -288,7 +288,7 @@ class AIKnowledgeEngine:
                     "requestId": req_id
                 }
 
-        # ── 1.2 STRUCTURED INTENT: TOP 10 COLLEGE SOLVERS OVERALL ──
+        # 1.2 STRUCTURED INTENT: TOP 10 COLLEGE SOLVERS OVERALL 
         if any(k in clean_q for k in [
             "top 10 college solvers", "top 10 solvers", "top 10 students", 
             "top 10 overall", "top 10", "top ten solvers", "top ten students"
@@ -315,7 +315,7 @@ class AIKnowledgeEngine:
                 rating = f"{s.stats.contest_rating:.1f}" if (s.stats and s.stats.contest_rating) else "—"
                 g_rank = f"#{s.stats.public_profile_ranking:,}" if (s.stats and s.stats.public_profile_ranking) else "—"
                 dept_code = s.department.code if s.department else "CSE"
-                medal = "🥇 " if rank == 1 else ("🥈 " if rank == 2 else ("🥉 " if rank == 3 else f"#{rank:<2d} "))
+                medal = " " if rank == 1 else (" " if rank == 2 else (" " if rank == 3 else f"#{rank:<2d} "))
                 table_rows.append(f"{medal}| **{s.name}** | `{s.reg_no}` | {dept_code} · {s.year_level} | **{solved}** | {rating} | {g_rank}")
 
             table_header = "| Rank | Student Name | Register No | Dept / Year | Verified Solved | Contest Rating | Global Rank |\n| :---: | :--- | :---: | :---: | :---: | :---: | :---: |"
@@ -333,7 +333,7 @@ class AIKnowledgeEngine:
             )
 
             ans = (
-                f"### 🏆 Top 10 College Solvers Overall\n\n"
+                f"### Top 10 College Solvers Overall\n\n"
                 f"Queried directly from the canonical student performance database:\n\n"
                 f"{table_header}\n{table_body}"
                 f"{audit_block}"
@@ -352,7 +352,7 @@ class AIKnowledgeEngine:
                 "requestId": req_id
             }
 
-        # ── 1.3 STRUCTURED INTENT: TOP DEPARTMENT & HOD SUMMARY REPORT ──
+        # 1.3 STRUCTURED INTENT: TOP DEPARTMENT & HOD SUMMARY REPORT 
         if any(k in clean_q for k in [
             "top department", "which department is top", "best department",
             "generate hod weekly summary", "hod weekly summary report", "hod summary",
@@ -463,7 +463,7 @@ class AIKnowledgeEngine:
             )
 
             ans = (
-                f"### 📊 Executive HOD & Institutional Performance Summary\n\n"
+                f"### Executive HOD & Institutional Performance Summary\n\n"
                 f"**Institutional Key Performance Indicators (KPIs):**\n\n"
                 f"• **Total Enrolled Students**: **{total_enrolled}**\n"
                 f"• **Active Solvers** (total_solved > 0): **{total_inst_active}** ({round(total_inst_active/total_enrolled*100, 1)}%)\n"
@@ -492,7 +492,7 @@ class AIKnowledgeEngine:
                 "requestId": req_id
             }
 
-        # ── 1.5 EMAIL & NOTIFICATION DRAFT ROUTER ──
+        # 1.5 EMAIL & NOTIFICATION DRAFT ROUTER 
         if any(k in clean_q for k in [
             "prepare an email", "email low", "email draft", "mail hod", 
             "mail panu", "mail pannu", "mail anuppu", "mail anupu", "mail send panu", 
@@ -514,7 +514,7 @@ class AIKnowledgeEngine:
                 "requestId": req_id
             }
 
-        # ── 2. TRUST SCORE & OPERATIONS INTENT ──
+        # 2. TRUST SCORE & OPERATIONS INTENT 
         if any(k in clean_q for k in ["trust score", "trustscore", "why this score", "why 99.5", "why 98.7", "score why"]):
             from backend.routes.settings import get_operations_center_overview
             try:
@@ -540,7 +540,7 @@ class AIKnowledgeEngine:
             except Exception as e:
                 logger.error(f"Error computing trust score: {e}")
 
-        # ── 2.5 LAST FETCH & LIVE SYNC TELEMETRY ──
+        # 2.5 LAST FETCH & LIVE SYNC TELEMETRY 
         if any(k in clean_q for k in ["last fetch", "last sync", "fetch time", "epo fetch", "fergc", "sync status", "when was fetch", "when was last sync", "last updated"]):
             total_students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count()
             verified_count = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.sync_status.in_(["success", "verified"])).count()
@@ -571,7 +571,7 @@ class AIKnowledgeEngine:
                 f"• **Verified Profiles**: **{verified_count} / {total_students}**\n"
                 f"• **Pending Verification**: **{pending_count}**\n"
                 f"• **Failed / Unlinked**: **{failed_count}**\n"
-                f"• **Database State**: 🟢 100% Single Source of Truth Verified"
+                f"• **Database State**: 100% Single Source of Truth Verified"
             )
             return {
                 "success": True,
@@ -586,7 +586,7 @@ class AIKnowledgeEngine:
                 "requestId": req_id
             }
 
-        # ── 3. SYSTEM HEALTH & DATABASE QUESTIONS ──
+        # 3. SYSTEM HEALTH & DATABASE QUESTIONS 
         if any(k in clean_q for k in ["system healthy", "database ok", "database healthy", "is database ok", "backend healthy", "system status", "pulse"]):
             total_students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count()
             backups = list_backups_detail()
@@ -605,7 +605,7 @@ class AIKnowledgeEngine:
                 "requestId": req_id
             }
 
-        # ── 4. SUNDAY AUTOMATION QUESTIONS ──
+        # 4. SUNDAY AUTOMATION QUESTIONS 
         if any(k in clean_q for k in ["sunday automation", "when is automation", "sunday run", "next run", "automation schedule", "sunday session"]):
             return {
                 "success": True,
@@ -620,12 +620,12 @@ class AIKnowledgeEngine:
                 "requestId": req_id
             }
 
-        # ── 5. REPORT PARITY & LINEAGE QUESTIONS ──
+        # 5. REPORT PARITY & LINEAGE QUESTIONS 
         if any(k in clean_q for k in ["report parity", "are pdf and excel same", "excel and word same", "report correct", "report same", "lineage", "where did this number come from"]):
             total_students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count()
             return {
                 "success": True,
-                "answer": "Report Parity Status: **100% IDENTICAL ACROSS ALL EXPORTERS**\n\n• UI Matrix: 300 rows ✓\n• Excel Workbook (.xlsx): 300 rows ✓\n• Official Word (.docx): 300 rows ✓\n• Landscape PDF (.pdf): 300 rows ✓\n• Email Dispatch: 300 rows ✓",
+                "answer": "Report Parity Status: **100% IDENTICAL ACROSS ALL EXPORTERS**\n\n• UI Matrix: 300 rows \n• Excel Workbook (.xlsx): 300 rows \n• Official Word (.docx): 300 rows \n• Landscape PDF (.pdf): 300 rows \n• Email Dispatch: 300 rows ",
                 "why": "All exporters consume the exact same canonical normalized dataset `get_normalized_contest_data()`. No exporter recalculates data independently.",
                 "evidence": f"Data Lineage: LeetCode GraphQL → SQLite Database → Normalization Engine → Canonical Matrix ({total_students} students) → Exporters.",
                 "confidence": "VERIFIED",
@@ -636,7 +636,7 @@ class AIKnowledgeEngine:
                 "requestId": req_id
             }
 
-        # ── 6. STRUCTURED INTENT: TOP SOLVER / HIGHEST RATING / STREAK ──
+        # 6. STRUCTURED INTENT: TOP SOLVER / HIGHEST RATING / STREAK 
         # Example: "Who is the top Cyber Security student?", "Who has highest rating?"
         if any(k in clean_q for k in ["top solver", "top student", "best student", "highest solved", "who solved the most", "rank 1", "first rank"]):
             dept_filter = None
@@ -734,7 +734,7 @@ class AIKnowledgeEngine:
                     "requestId": req_id
                 }
 
-        # ── 7. STRUCTURED INTENT: COUNT / AGGREGATION QUERIES ──
+        # 7. STRUCTURED INTENT: COUNT / AGGREGATION QUERIES 
         # Example: "How many Cyber Security students are there?", "How many in IoT?"
         if any(k in clean_q for k in ["how many", "count of", "total count", "number of students"]):
             target_dept = None
@@ -779,7 +779,7 @@ class AIKnowledgeEngine:
                 "requestId": req_id
             }
 
-        # ── 8. STRUCTURED INTENT: SOLVED THRESHOLD QUERIES ──
+        # 8. STRUCTURED INTENT: SOLVED THRESHOLD QUERIES 
         # Example: "Who solved more than 500 problems?", "solved > 300"
         thresh_match = re.search(r'(?:more than|greater than|>|above)\s*([0-9]{2,4})\s*(?:problems|questions|solved)?', clean_q)
         if thresh_match:
@@ -818,7 +818,7 @@ class AIKnowledgeEngine:
                 "requestId": req_id
             }
 
-        # ── 9. STRUCTURED INTENT: YEAR/DEPARTMENT ROSTER QUERIES ──
+        # 9. STRUCTURED INTENT: YEAR/DEPARTMENT ROSTER QUERIES 
         # Example: "Show III Year IoT students", "List 2nd year cyber security students"
         if any(k in clean_q for k in ["show", "list", "display", "get"]) and any(k in clean_q for k in ["students", "roster"]):
             target_dept = "CS" if ("cyber" in clean_q or " cs" in clean_q) else ("IOT" if "iot" in clean_q else None)
@@ -856,7 +856,7 @@ class AIKnowledgeEngine:
                     "requestId": req_id
                 }
 
-        # ── 10. STUDENT LOOKUP & FORENSIC INQUIRIES ──
+        # 10. STUDENT LOOKUP & FORENSIC INQUIRIES 
         potential_student = None
         student_match = re.search(r'\b(dhanu[a-z]*|nisha[a-z]*|santhosh[a-z]*|[0-9]{7,12}|7311[0-9a-z]+)\b', clean_q)
         if student_match:
@@ -913,7 +913,7 @@ class AIKnowledgeEngine:
                 "requestId": req_id
             }
 
-        # ── 11. CONTEST COMPARISON QUESTIONS ──
+        # 11. CONTEST COMPARISON QUESTIONS 
         if any(k in clean_q for k in ["compare", "vs", "last week vs this week", "difference between contests", "which improved"]):
             sessions = db.query(WeeklySession).filter(WeeklySession.status.in_(['COMPLETED', 'FINALIZED'])).order_by(WeeklySession.id.desc()).limit(2).all()
             if len(sessions) >= 2:
@@ -927,7 +927,7 @@ class AIKnowledgeEngine:
                     WeeklyPublicResult.participation_status == "PUBLIC_ATTENDED"
                 ).scalar() or 0
                 diff = pub_new - pub_old
-                trend = f"▲ +{diff} participants increase" if diff > 0 else (f"▼ {diff} decrease" if diff < 0 else "● Equal participation")
+                trend = f" +{diff} participants increase" if diff > 0 else (f" {diff} decrease" if diff < 0 else " Equal participation")
 
                 return {
                     "success": True,
@@ -942,7 +942,7 @@ class AIKnowledgeEngine:
                     "requestId": req_id
                 }
 
-        # ── 12. CONTEST SPECIFIC STATS (PUBLIC / VIRTUAL / NOT ATTENDED / UNKNOWN / ERRORS) ──
+        # 12. CONTEST SPECIFIC STATS (PUBLIC / VIRTUAL / NOT ATTENDED / UNKNOWN / ERRORS) 
         target_sess = AIKnowledgeEngine._extract_session(db, clean_q, history=history)
         if target_sess and any(k in clean_q for k in ["contest", "public", "virtual", "not attended", "attended", "how many", "count", "stat", "result", "pending", "error", "unverified", "unknown"]):
             total_cnt = db.query(func.count(WeeklyPublicResult.id)).filter(WeeklyPublicResult.session_id == target_sess.id).scalar() or 300
@@ -1009,7 +1009,7 @@ class AIKnowledgeEngine:
                 "requestId": req_id
             }
 
-        # ── 13. GENERAL PLATFORM ARCHITECTURE & KNOWLEDGE ──
+        # 13. GENERAL PLATFORM ARCHITECTURE & KNOWLEDGE 
         if any(k in clean_q for k in ["how does this work", "how does this website work", "what is this platform", "overview", "architecture"]):
             return {
                 "success": True,
@@ -1052,7 +1052,7 @@ class AIKnowledgeEngine:
                 "requestId": req_id
             }
 
-        # ── 13.5 EMAIL PREPARATION & ACTION SAFETY ──
+        # 13.5 EMAIL PREPARATION & ACTION SAFETY 
         if any(k in clean_q for k in ["mail panu", "mail anuppu", "send email", "email draft", "mail absent", "mail low", "prepare email", "send mail"]):
             from backend.services.ai_control_engine import AIControlEngine
             res = AIControlEngine._tool_prepare_email(db, query_text, req_id)
@@ -1069,7 +1069,7 @@ class AIKnowledgeEngine:
                 "requestId": req_id
             }
 
-        # ── 14. DEFAULT CONTEXTUAL INTELLIGENCE & LLM GENERATION FALLBACK ──
+        # 14. DEFAULT CONTEXTUAL INTELLIGENCE & LLM GENERATION FALLBACK 
         total_students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count()
         latest_sess = db.query(WeeklySession).filter(WeeklySession.status.in_(['COMPLETED', 'FINALIZED'])).order_by(WeeklySession.id.desc()).first()
         sess_name = latest_sess.contest_name if latest_sess else "Weekly Contest 514"

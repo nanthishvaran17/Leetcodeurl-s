@@ -363,28 +363,28 @@ def generate_forensic_audit_pdf(db: Session, student_id: int, session_id: int, t
             Paragraph("Easy / Foundational", body_style),
             Paragraph("3 Points", body_style),
             Paragraph(f"<b>{'AC (Accepted)' if q1_val == 1 else 'Not Solved'}</b>", body_style),
-            Paragraph(f"<font color='{'#16A34A' if q1_val == 1 else '#94A3B8'}'>{'✓ 1' if q1_val == 1 else '0'}</font>", body_bold)
+            Paragraph(f"<font color='{'#16A34A' if q1_val == 1 else '#94A3B8'}'>{' 1' if q1_val == 1 else '0'}</font>", body_bold)
         ],
         [
             Paragraph("Question 2 (Q2)", body_style),
             Paragraph("Medium / Data Structures", body_style),
             Paragraph("4 Points", body_style),
             Paragraph(f"<b>{'AC (Accepted)' if q2_val == 1 else 'Not Solved'}</b>", body_style),
-            Paragraph(f"<font color='{'#16A34A' if q2_val == 1 else '#94A3B8'}'>{'✓ 1' if q2_val == 1 else '0'}</font>", body_bold)
+            Paragraph(f"<font color='{'#16A34A' if q2_val == 1 else '#94A3B8'}'>{' 1' if q2_val == 1 else '0'}</font>", body_bold)
         ],
         [
             Paragraph("Question 3 (Q3)", body_style),
             Paragraph("Medium / Algorithms", body_style),
             Paragraph("5 Points", body_style),
             Paragraph(f"<b>{'AC (Accepted)' if q3_val == 1 else 'Not Solved'}</b>", body_style),
-            Paragraph(f"<font color='{'#16A34A' if q3_val == 1 else '#94A3B8'}'>{'✓ 1' if q3_val == 1 else '0'}</font>", body_bold)
+            Paragraph(f"<font color='{'#16A34A' if q3_val == 1 else '#94A3B8'}'>{' 1' if q3_val == 1 else '0'}</font>", body_bold)
         ],
         [
             Paragraph("Question 4 (Q4)", body_style),
             Paragraph("Hard / Advanced Optimization", body_style),
             Paragraph("6 Points", body_style),
             Paragraph(f"<b>{'AC (Accepted)' if q4_val == 1 else 'Not Solved'}</b>", body_style),
-            Paragraph(f"<font color='{'#16A34A' if q4_val == 1 else '#94A3B8'}'>{'✓ 1' if q4_val == 1 else '0'}</font>", body_bold)
+            Paragraph(f"<font color='{'#16A34A' if q4_val == 1 else '#94A3B8'}'>{' 1' if q4_val == 1 else '0'}</font>", body_bold)
         ]
     ]
 

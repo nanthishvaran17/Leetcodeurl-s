@@ -114,7 +114,7 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
                             : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
                         }`}
                       >
-                        ● {job.status}
+                         {job.status}
                       </span>
                       <span className="text-[10px] font-bold text-slate-400 uppercase">Triggered by: {job.triggered_by}</span>
                     </div>

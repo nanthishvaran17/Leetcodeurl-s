@@ -44,7 +44,7 @@ class EfficientStudentFetcher:
 
         logger.info(f"[FETCHER] Starting 3-tier fetch for {len(remaining)} students in {contest_slug}")
 
-        # ── STRATEGY 1: Targeted lookups (Fastest for defined cohorts) ────────
+        # STRATEGY 1: Targeted lookups (Fastest for defined cohorts) 
         targeted_results = await self._fetch_targeted(contest_slug, remaining)
         for username, data in targeted_results.items():
             if username in remaining and data is not None:
@@ -57,7 +57,7 @@ class EfficientStudentFetcher:
 
         logger.info(f"[FETCHER] Strategy 1 completed. Falling back to pagination for {len(remaining)} students...")
 
-        # ── STRATEGY 2: Paginated ranking (Unresolved only) ───────────────────
+        # STRATEGY 2: Paginated ranking (Unresolved only) 
         paginated_results = await self._fetch_paginated(contest_slug, remaining)
         for username, data in paginated_results.items():
             if username in remaining and data is not None:
@@ -70,7 +70,7 @@ class EfficientStudentFetcher:
 
         logger.info(f"[FETCHER] Strategy 2 completed. Checking history for {len(remaining)} remaining students...")
 
-        # ── STRATEGY 3: History lookup (Final fallback) ───────────────────────
+        # STRATEGY 3: History lookup (Final fallback) 
         history_results = await self._fetch_history(contest_slug, remaining)
         for username, data in history_results.items():
             if username in remaining and data is not None:

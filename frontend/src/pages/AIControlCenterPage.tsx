@@ -126,7 +126,7 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
   return (
     <div className="space-y-6 pb-12 animate-fade-in font-sans">
 
-      {/* ── 1. HEADER TELEMETRY BAR (SOC / NOC OPERATIONS DESIGN) ── */}
+      {/* 1. HEADER TELEMETRY BAR (SOC / NOC OPERATIONS DESIGN) */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-lg border border-brand-500/30">
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -176,7 +176,7 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
               className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 text-slate-950 font-black text-xs shadow-lg shadow-amber-500/30 flex items-center space-x-2 transition-all cursor-pointer transform hover:scale-105 disabled:opacity-50"
             >
               <Play className="w-4 h-4" />
-              <span>{isScheduling ? 'Executing...' : '▶ Run Scheduler Now'}</span>
+              <span>{isScheduling ? 'Executing...' : ' Run Scheduler Now'}</span>
             </button>
           </div>
         </div>
@@ -226,7 +226,7 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
         </div>
       )}
 
-      {/* ── 2. ACTIVE INCIDENTS ALERT SECTION ── */}
+      {/* 2. ACTIVE INCIDENTS ALERT SECTION */}
       {incidents.length > 0 ? (
         <div className="space-y-3">
           {incidents.map((inc: any, idx: number) => (
@@ -261,7 +261,7 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
         </div>
       )}
 
-      {/* ── 3. 10-COMPONENT 24/7 SYSTEM SERVICE MATRIX GRID ── */}
+      {/* 3. 10-COMPONENT 24/7 SYSTEM SERVICE MATRIX GRID */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
@@ -319,7 +319,7 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
         </div>
       </div>
 
-      {/* ── 4. LIVE CONTEST SYNCHRONIZATION & SUNDAY AUTOMATION PANELS ── */}
+      {/* 4. LIVE CONTEST SYNCHRONIZATION & SUNDAY AUTOMATION PANELS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* Live Contest Synchronization Panel */}
@@ -395,7 +395,7 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
               className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 text-slate-950 rounded-2xl text-xs font-black shadow-lg shadow-amber-500/25 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2"
             >
               <Play className="w-3.5 h-3.5" />
-              <span>{isScheduling ? 'Executing...' : '▶ Run Now'}</span>
+              <span>{isScheduling ? 'Executing...' : ' Run Now'}</span>
             </button>
           </div>
 
@@ -428,7 +428,7 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
 
       </div>
 
-      {/* ── 5. RECENT SYSTEM EVENT LOG TIMELINE ── */}
+      {/* 5. RECENT SYSTEM EVENT LOG TIMELINE */}
       <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-xl space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
           <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
@@ -462,7 +462,7 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
         </div>
       </div>
 
-      {/* ── 6. SERVICE DETAIL DIAGNOSTICS DRAWER ── */}
+      {/* 6. SERVICE DETAIL DIAGNOSTICS DRAWER */}
       {selectedService && (
         <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/60 backdrop-blur-sm animate-fade-in p-4">
           <div className="bg-white dark:bg-navy-950 border-l border-slate-200 dark:border-navy-700 w-full max-w-lg h-full rounded-3xl p-6 sm:p-8 shadow-lg space-y-6 overflow-y-auto relative">
@@ -508,7 +508,7 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
         </div>
       )}
 
-      {/* ── 7. UNIFIED AI COMMAND SHORTCUTS AT BOTTOM ── */}
+      {/* 7. UNIFIED AI COMMAND SHORTCUTS AT BOTTOM */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">

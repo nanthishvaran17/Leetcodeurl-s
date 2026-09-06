@@ -34,7 +34,7 @@ class WhatsAppIntentRouter:
             return {
                 "success": False,
                 "intent": "EMPTY_MESSAGE",
-                "message": "👋 Please send a message or type `/help` to see available commands."
+                "message": " Please send a message or type `/help` to see available commands."
             }
 
         # 1. Unregistered Number Check
@@ -240,7 +240,7 @@ class WhatsAppIntentRouter:
                 return {
                     "success": False,
                     "intent": "AT_RISK",
-                    "message": "⛔ *Access Denied:* Only Faculty, HOD, and Principal can query student risk status."
+                    "message": " *Access Denied:* Only Faculty, HOD, and Principal can query student risk status."
                 }
 
         elif intent == "SEARCH":
@@ -265,8 +265,8 @@ class WhatsAppIntentRouter:
             "success": False,
             "intent": "UNKNOWN",
             "message": (
-                f"❓ I didn't quite catch that (*\"{original_query}\"*).\n\n"
-                f"💡 Type `/help` to view available commands for *{identity.display_role}*, "
+                f" I didn't quite catch that (*\"{original_query}\"*).\n\n"
+                f" Type `/help` to view available commands for *{identity.display_role}*, "
                 f"or ask things like *\"Show my contest results\"* or *\"Who are the top students?\"*."
             )
         }

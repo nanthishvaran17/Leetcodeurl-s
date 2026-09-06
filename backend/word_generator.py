@@ -102,7 +102,7 @@ def build_weekly_performance_docx(data: Dict[str, Any], dept_id: Optional[int] =
             dept_title = f"Department of {dept_title}"
         coordinator = dept.get("coordinator") or get_coordinator_for_department(dept_code)
 
-        # ── 1. OFFICIAL INSTITUTIONAL HEADER ──
+        # 1. OFFICIAL INSTITUTIONAL HEADER 
         p_inst = doc.add_paragraph()
         p_inst.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p_inst.paragraph_format.space_after = Pt(2)
@@ -155,7 +155,7 @@ def build_weekly_performance_docx(data: Dict[str, Any], dept_id: Optional[int] =
         r_coord.font.size = Pt(9.5)
         r_coord.font.bold = True
 
-        # ── 2. OFFICIAL MULTI-LEVEL TABLE ──
+        # 2. OFFICIAL MULTI-LEVEL TABLE 
         batches_dict = dept.get("batches", {})
         active_batch_cfgs = [b for b in BATCH_CONFIG if batches_dict.get(b["key"], {}).get("total_students", 0) > 0]
         if not active_batch_cfgs:
@@ -224,7 +224,7 @@ def build_weekly_performance_docx(data: Dict[str, Any], dept_id: Optional[int] =
                         run.font.bold = True
                         run.font.color.rgb = RGBColor(255, 255, 255)
 
-        # ── 3. DATA ROWS FOR EACH BATCH (LAST WEEK & CURRENT WEEK) ──
+        # 3. DATA ROWS FOR EACH BATCH (LAST WEEK & CURRENT WEEK) 
         curr_row = 2
 
         for b_cfg in active_batch_cfgs:
@@ -299,7 +299,7 @@ def build_weekly_performance_docx(data: Dict[str, Any], dept_id: Optional[int] =
 
         set_table_borders(table, color="94A3B8", sz="4", val="single")
 
-        # ── 4. SIGNATURE BLOCK ──
+        # 4. SIGNATURE BLOCK 
         p_space = doc.add_paragraph()
         p_space.paragraph_format.space_before = Pt(14)
 

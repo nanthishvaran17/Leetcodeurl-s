@@ -95,7 +95,7 @@ class WhatsAppAgentService:
         # 1. Rate Limiting Check
         if not cls.check_rate_limit(from_phone):
             logger.warning(f"[{corr_id}] [WHATSAPP_RATE_LIMIT_EXCEEDED] From: {from_phone}")
-            rate_limit_msg = "⏳ *Rate Limit Notice:*\nYou are sending messages too quickly. Please wait a moment before sending your next query."
+            rate_limit_msg = " *Rate Limit Notice:*\nYou are sending messages too quickly. Please wait a moment before sending your next query."
             meta_whatsapp_client.send_text_message(from_phone, rate_limit_msg, correlation_id=corr_id)
             return {
                 "success": False,

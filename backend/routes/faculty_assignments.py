@@ -390,14 +390,14 @@ def calculate_student_performance_status(s: Student) -> Dict[str, Any]:
 
     # Performance trend calculation based on recent records
     trend = "STABLE"
-    trend_label = "➡️ Stable"
+    trend_label = " Stable"
 
     if total > 50 and days_inactive <= 2:
         trend = "IMPROVING"
-        trend_label = "📈 Improving"
+        trend_label = " Improving"
     elif days_inactive >= 7:
         trend = "DECLINING"
-        trend_label = "📉 Declining"
+        trend_label = " Declining"
 
     return {
         "status_code": status_code,

@@ -239,7 +239,7 @@ class CollegeReportGenerator:
         wb = Workbook()
         date_display = report_date_str or now_ist().strftime("%d.%m.%Y")
 
-        # ── Sheet 1: Management Summary ─────────────────────────────────────────
+        # Sheet 1: Management Summary 
         ws1 = wb.active
         ws1.title = "Management Summary"
 
@@ -343,7 +343,7 @@ class CollegeReportGenerator:
             cell.fill = light_gray_fill
             cell.border = grid_border
 
-        # ── Sheet 2: Student Details ─────────────────────────────────────────────
+        # Sheet 2: Student Details 
         ws2 = wb.create_sheet(title="Student Details")
 
         # Write header
@@ -554,7 +554,7 @@ class CollegeReportGenerator:
                     </div>
 
                     <div class="section-title">
-                        <span>📊 Batch-wise Performance Summary</span>
+                        <span> Batch-wise Performance Summary</span>
                     </div>
                     <table>
                         <thead>
@@ -584,7 +584,7 @@ class CollegeReportGenerator:
                     </table>
 
                     <div class="section-title">
-                        <span>🏆 Top 10 Live Contest Performers</span>
+                        <span> Top 10 Live Contest Performers</span>
                     </div>
                     <table>
                         <thead>
@@ -604,7 +604,7 @@ class CollegeReportGenerator:
                     </table>
 
                     <div style="margin-top: 24px; padding: 14px; background: #e0f2fe; border-left: 4px solid #0284c7; border-radius: 6px; font-size: 12px; color: #0369a1;">
-                        <strong>📎 Excel Attachment Included:</strong> Contains complete sheet with Management Summary and full 17-column student-wise verification breakdown.
+                        <strong> Excel Attachment Included:</strong> Contains complete sheet with Management Summary and full 17-column student-wise verification breakdown.
                     </div>
                 </div>
 

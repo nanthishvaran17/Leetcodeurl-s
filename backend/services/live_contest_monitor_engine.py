@@ -119,7 +119,7 @@ class LiveContestMonitorEngine:
                 "type": "INITIAL_SYNC_COMPLETE",
                 "contest_id": contest_id,
                 "total": self.total_students,
-                "status_text": "✓ INITIAL SYNC COMPLETE — LIVE SYNC ACTIVE",
+                "status_text": " INITIAL SYNC COMPLETE — LIVE SYNC ACTIVE",
                 "timestamp": self.get_server_ist_time_str()
             })
             logger.info(f"[LIVE_MONITOR] Initial sync complete ({self.total_students}/{self.total_students}). Transitioning to continuous live monitoring.")
@@ -221,7 +221,7 @@ class LiveContestMonitorEngine:
                     "score_display": f"{curr_solved} / 4" if curr_solved > 0 else "Not Attended",
                     "activity_timeline_entry": {
                         "time": timestamp_str,
-                        "text": f"✨ Solved {curr_solved - prev_state['solved_count']} Problem(s) (Total: {curr_solved}/4)"
+                        "text": f" Solved {curr_solved - prev_state['solved_count']} Problem(s) (Total: {curr_solved}/4)"
                     }
                 }
             }
@@ -249,7 +249,7 @@ class LiveContestMonitorEngine:
                 "people_id": people_id,
                 "username": username,
                 "solved_count": curr_solved,
-                "text": f"✨ Solved {curr_solved - prev_state['solved_count']} Problem(s) — Total {curr_solved}/4"
+                "text": f" Solved {curr_solved - prev_state['solved_count']} Problem(s) — Total {curr_solved}/4"
             })
             if len(self.live_activity_feed) > 50:
                 self.live_activity_feed.pop()

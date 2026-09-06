@@ -219,7 +219,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         mimeType: 'application/pdf',
       });
       if (res.success) {
-        notify.success('✓ Weekly report downloaded', 'Weekly PDF report generated and downloaded.', { category: 'REPORTS' });
+        notify.success(' Weekly report downloaded', 'Weekly PDF report generated and downloaded.', { category: 'REPORTS' });
       } else {
         notify.error('Unable to generate report', res.error || 'Please try again later.', { category: 'REPORTS' });
       }
@@ -243,7 +243,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     });
     if (res.success) {
-      notify.success('✓ Weekly report downloaded', 'Weekly Contest workbook downloaded.', { category: 'REPORTS' });
+      notify.success(' Weekly report downloaded', 'Weekly Contest workbook downloaded.', { category: 'REPORTS' });
     } else {
       notify.error('Unable to generate report', res.error || 'Please try again.', { category: 'REPORTS' });
     }

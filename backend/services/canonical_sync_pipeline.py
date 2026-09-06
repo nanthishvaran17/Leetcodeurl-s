@@ -91,7 +91,7 @@ async def _sync_single_student_canonical_impl(
         streak_count = 0
         total_active_days = 0
 
-        # ── PHASE 1: NETWORK ONLY — No DB session open during HTTP calls ────────
+        # PHASE 1: NETWORK ONLY — No DB session open during HTTP calls 
         c_username, c_url, u_status = extract_leetcode_username(student.username or student.leetcode_url)
 
         status_code = "PENDING_USERNAME"
@@ -158,7 +158,7 @@ async def _sync_single_student_canonical_impl(
                         status_code = "FETCH_FAILED"
                         error_msg = phase_a_res.get("detail", "Fetch failed during Phase A")
 
-        # ── PHASE 2: DATABASE — Short-lived session, NO network calls inside ────
+        # PHASE 2: DATABASE — Short-lived session, NO network calls inside 
         db_student = db_session if db_session else SessionLocal()
         try:
             st = db_student.query(Student).filter(Student.id == student.id).first()
@@ -193,7 +193,7 @@ async def _sync_single_student_canonical_impl(
             hard_solved = None
             contest_rating = None
 
-            # ── Apply network results to DB objects ─────────────────────────────
+            # Apply network results to DB objects 
             if status_code == "PENDING_USERNAME":
                 lc_prof.verification_status = "PENDING_USERNAME"
                 lc_prof.sync_state = "PENDING_USERNAME"

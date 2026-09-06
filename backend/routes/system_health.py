@@ -427,16 +427,16 @@ def get_admin_control_center_data(db: Session = Depends(get_db)):
         pass
 
     system_health_matrix = {
-        "frontend": {"name": "Frontend", "status": "ONLINE", "type": "Firebase CDN", "badge": "🟢 ONLINE"},
-        "backend": {"name": "Backend", "status": "ONLINE" if db_ok else "DEGRADED", "type": "FastAPI ASGI", "badge": "🟢 ONLINE" if db_ok else "🟡 DEGRADED", "latency_ms": db_latency_ms},
-        "api": {"name": "API Service", "status": "HEALTHY", "type": "REST Endpoints", "badge": "🟢 HEALTHY"},
-        "firestore": {"name": "Cloud Firestore", "status": "CONNECTED" if firestore_connected else "STANDALONE_SQLITE", "type": "Google Cloud NoSQL", "badge": "🟢 CONNECTED" if firestore_connected else "⚪ STANDALONE_SQLITE"},
-        "websocket": {"name": "WebSocket", "status": "ACTIVE", "type": "Broadcast Engine", "badge": "🟢 ACTIVE", "connections": ws_active_count},
-        "leetcode_service": {"name": "LeetCode Service", "status": "READY", "type": "GraphQL Client", "badge": "🟢 READY"},
-        "authentication": {"name": "Authentication", "status": "PROTECTED", "type": "JWT & Role RBAC", "badge": "🟢 PROTECTED"},
-        "scheduler": {"name": "Scheduler", "status": "RUNNING" if scheduler_running else "STOPPED", "type": "APScheduler Cron", "badge": "🟢 RUNNING" if scheduler_running else "🔴 STOPPED"},
-        "report_service": {"name": "Report Service", "status": "READY", "type": "19-Sheet Excel / PDF", "badge": "🟢 READY"},
-        "email_service": {"name": "Email Service", "status": "READY", "type": "SMTP Dispatcher", "badge": "🟢 READY"}
+        "frontend": {"name": "Frontend", "status": "ONLINE", "type": "Firebase CDN", "badge": " ONLINE"},
+        "backend": {"name": "Backend", "status": "ONLINE" if db_ok else "DEGRADED", "type": "FastAPI ASGI", "badge": " ONLINE" if db_ok else " DEGRADED", "latency_ms": db_latency_ms},
+        "api": {"name": "API Service", "status": "HEALTHY", "type": "REST Endpoints", "badge": " HEALTHY"},
+        "firestore": {"name": "Cloud Firestore", "status": "CONNECTED" if firestore_connected else "STANDALONE_SQLITE", "type": "Google Cloud NoSQL", "badge": " CONNECTED" if firestore_connected else " STANDALONE_SQLITE"},
+        "websocket": {"name": "WebSocket", "status": "ACTIVE", "type": "Broadcast Engine", "badge": " ACTIVE", "connections": ws_active_count},
+        "leetcode_service": {"name": "LeetCode Service", "status": "READY", "type": "GraphQL Client", "badge": " READY"},
+        "authentication": {"name": "Authentication", "status": "PROTECTED", "type": "JWT & Role RBAC", "badge": " PROTECTED"},
+        "scheduler": {"name": "Scheduler", "status": "RUNNING" if scheduler_running else "STOPPED", "type": "APScheduler Cron", "badge": " RUNNING" if scheduler_running else " STOPPED"},
+        "report_service": {"name": "Report Service", "status": "READY", "type": "19-Sheet Excel / PDF", "badge": " READY"},
+        "email_service": {"name": "Email Service", "status": "READY", "type": "SMTP Dispatcher", "badge": " READY"}
     }
 
     # 2. Institutional Student Data Health
@@ -519,14 +519,14 @@ def get_admin_control_center_data(db: Session = Depends(get_db)):
     # 5. Security & Authentication
     audit_logs_count = db.query(AuditLog).count()
     security_data = {
-        "admin_auth": {"name": "Admin Authentication", "status": "PROTECTED", "badge": "🟢 PROTECTED"},
-        "session_protection": {"name": "Session Protection", "status": "ACTIVE", "badge": "🟢 ACTIVE"},
-        "otp": {"name": "One-Time Password (OTP)", "status": "ENABLED", "badge": "🟢 ENABLED"},
-        "google_sign_in": {"name": "Google Sign-In", "status": "ENABLED", "badge": "🟢 ENABLED"},
-        "route_guard": {"name": "Route Guard", "status": "ACTIVE", "badge": "🟢 ACTIVE"},
-        "backend_authorization": {"name": "Backend Authorization", "status": "ENABLED", "badge": "🟢 ENABLED"},
-        "firestore_writes": {"name": "Client Firestore Writes", "status": "RESTRICTED", "badge": "🟢 RESTRICTED"},
-        "audit_logging": {"name": "Audit Logging", "status": "ACTIVE", "badge": "🟢 ACTIVE", "records_count": audit_logs_count}
+        "admin_auth": {"name": "Admin Authentication", "status": "PROTECTED", "badge": " PROTECTED"},
+        "session_protection": {"name": "Session Protection", "status": "ACTIVE", "badge": " ACTIVE"},
+        "otp": {"name": "One-Time Password (OTP)", "status": "ENABLED", "badge": " ENABLED"},
+        "google_sign_in": {"name": "Google Sign-In", "status": "ENABLED", "badge": " ENABLED"},
+        "route_guard": {"name": "Route Guard", "status": "ACTIVE", "badge": " ACTIVE"},
+        "backend_authorization": {"name": "Backend Authorization", "status": "ENABLED", "badge": " ENABLED"},
+        "firestore_writes": {"name": "Client Firestore Writes", "status": "RESTRICTED", "badge": " RESTRICTED"},
+        "audit_logging": {"name": "Audit Logging", "status": "ACTIVE", "badge": " ACTIVE", "records_count": audit_logs_count}
     }
 
     # 6. Sunday Automation Center (Asia/Kolkata)
@@ -585,10 +585,10 @@ def get_admin_control_center_data(db: Session = Depends(get_db)):
     # 7. Reports & Email Center
     reports_data = {
         "formats": {
-            "excel": {"format": "19-Sheet Excel (.xlsx)", "status": "AVAILABLE", "badge": "✓ AVAILABLE"},
-            "pdf": {"format": "PDF Digest (.pdf)", "status": "AVAILABLE", "badge": "✓ AVAILABLE"},
-            "docx": {"format": "Word Document (.docx)", "status": "AVAILABLE", "badge": "✓ AVAILABLE"},
-            "zip": {"format": "Certificates Bundle (.zip)", "status": "AVAILABLE", "badge": "✓ AVAILABLE"}
+            "excel": {"format": "19-Sheet Excel (.xlsx)", "status": "AVAILABLE", "badge": " AVAILABLE"},
+            "pdf": {"format": "PDF Digest (.pdf)", "status": "AVAILABLE", "badge": " AVAILABLE"},
+            "docx": {"format": "Word Document (.docx)", "status": "AVAILABLE", "badge": " AVAILABLE"},
+            "zip": {"format": "Certificates Bundle (.zip)", "status": "AVAILABLE", "badge": " AVAILABLE"}
         },
         "last_public_report": latest_completed_session.session_date if latest_completed_session else "13-08-2026",
         "email_dispatch_status": "READY",

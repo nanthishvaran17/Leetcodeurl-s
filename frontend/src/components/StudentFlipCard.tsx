@@ -10,7 +10,7 @@ interface StudentFlipCardProps {
   onDeleteStudent?: (student: StudentData) => void;
 }
 
-// ─── Sync State Machine ───────────────────────────────────────────────────────
+// Sync State Machine 
 // Derives a clean status from the raw syncStatus field.
 // CRITICAL: null/undefined NEVER means "0 solved". It means "not yet fetched".
 type SyncState = 'pending' | 'syncing' | 'verified' | 'failed' | 'stale' | 'mismatch' | 'invalid_profile' | 'pending_username';
@@ -63,7 +63,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
   const liveStudent = (useStudentEntity(initialStudent.id) as any) || initialStudent;
   const student = liveStudent;
 
-  // ── Sync State ──────────────────────────────────────────────────────────────
+  // Sync State 
   const rawTotal = student.stats?.total_solved ?? student.total_solved;
   const syncStatus = student.stats?.sync_status;
   const lastVerifiedAt = student.stats?.last_verified_at;
@@ -90,7 +90,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
     return 'bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800';
   };
 
-  // ── Sync Status Badge (bottom of front card) ────────────────────────────────
+  // Sync Status Badge (bottom of front card) 
   const SyncBadge = () => {
     if (state === 'pending_username') return (
       <span className="flex items-center space-x-1 text-xs font-bold text-amber-600 dark:text-amber-400">
@@ -141,7 +141,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
     );
   };
 
-  // ── Front card bottom stats display ────────────────────────────────────────
+  // Front card bottom stats display 
   const FrontStatsPill = () => {
     if (state === 'pending_username') return (
       <div className="flex items-center space-x-1.5 font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-3 py-1.5 rounded-xl border border-amber-200 dark:border-amber-800/60">
@@ -292,7 +292,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
           <div className="space-y-3 flex-1 flex flex-col justify-center py-3 min-w-0">
             
             {!isVerified ? (
-              /* ── PENDING / FAILED state placeholder ── */
+              /* PENDING / FAILED state placeholder */
               <div className={`p-4 rounded-2xl text-center space-y-2 ${
                 state === 'pending_username' ? 'bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800' :
                 state === 'pending' ? 'bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800' :
@@ -316,7 +316,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 </p>
               </div>
             ) : (
-              /* ── VERIFIED / STALE state with real stats ── */
+              /* VERIFIED / STALE state with real stats */
               <>
                 {/* Total Solved Banner */}
                 <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-brand-500/10 to-indigo-500/10 border border-emerald-500/20 dark:border-emerald-500/30 flex items-center justify-between">

@@ -30,7 +30,7 @@ def get_paginated_matrix_rows(
         (Student.is_active == True) | (Student.is_active.is_(None))
     )
 
-    # ── AUTHORITATIVE RBAC SCOPE GATE ────────────────────────────────────────
+    # AUTHORITATIVE RBAC SCOPE GATE 
     # Must be applied BEFORE total_count and all other filters.
     # Admin/Principal → unmodified (global scope)
     # HOD → department scope
@@ -39,7 +39,7 @@ def get_paginated_matrix_rows(
     if current_user is not None:
         from backend.services.authorization_service import apply_role_based_student_filter
         query = apply_role_based_student_filter(query, current_user, db)
-    # ─────────────────────────────────────────────────────────────────────────
+    # 
 
     # 1. Complex CASE for department
     dept_expr = case(

@@ -26,9 +26,9 @@ from backend.cache import cache
 router = APIRouter(prefix="/institutional", tags=["Institutional Dashboards"])
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 1. SUPER ADMIN DASHBOARD
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 @router.get("/super-admin")
 def get_super_admin_dashboard(
     db: Session = Depends(get_db),
@@ -138,9 +138,9 @@ def get_super_admin_dashboard(
     )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 2. HOD DASHBOARD (Department-Scoped)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 @router.get("/hod")
 def get_hod_dashboard(
     dept_id: Optional[int] = Query(None),
@@ -271,9 +271,9 @@ def get_hod_dashboard(
     return result
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 3. FACULTY DASHBOARD (Assigned-Students Scoped, Dynamic Count)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 @router.get("/faculty")
 def get_faculty_dashboard(
     db: Session = Depends(get_db),
@@ -361,9 +361,9 @@ def get_faculty_dashboard(
     }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 4. STUDENT DASHBOARD (Self Profile)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 @router.get("/student-profile")
 def get_student_self_profile(
     student_id: Optional[int] = Query(None),

@@ -13,7 +13,7 @@ import { IDCardGenerator } from '../components/IDCardGenerator';
 import { StudentCodingProfileView } from '../components/StudentCodingProfileView';
 import { GlobalFilter } from '../components/GlobalFilter';
 
-// ─── Priority Config ──────────────────────────────────────────────────────────
+// Priority Config 
 const PRIORITY_CONFIG: Record<string, { tw: string; dot: string; icon: React.ReactNode }> = {
   Critical: { tw: 'bg-red-50 dark:bg-red-500/15 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/30 shadow-sm',   dot: 'bg-red-500 dark:bg-red-400',    icon: <ShieldAlert size={12} strokeWidth={3} /> },
   High:     { tw: 'bg-orange-50 dark:bg-orange-500/15 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-500/30 shadow-sm', dot: 'bg-orange-500 dark:bg-orange-400', icon: <AlertTriangle size={12} strokeWidth={2.5} /> },
@@ -40,7 +40,7 @@ const EVENT_COLOR: Record<string, string> = {
   PRIORITY_CHANGED: 'text-orange-400',
 };
 
-// ─── Score Tooltip Badge ──────────────────────────────────────────────────────
+// Score Tooltip Badge 
 const PriorityBadge: React.FC<{ priority: string; score: number; reason: string }> = ({ priority, score, reason }) => {
   const [show, setShow] = useState(false);
   const cfg = PRIORITY_CONFIG[priority] || PRIORITY_CONFIG.Low;
@@ -64,7 +64,7 @@ const PriorityBadge: React.FC<{ priority: string; score: number; reason: string 
   );
 };
 
-// ─── Custom Dropdown Select ──────────────────────────────────────────────────
+// Custom Dropdown Select 
 const CustomSelect: React.FC<{
   value: string;
   onChange: (v: string) => void;
@@ -169,7 +169,7 @@ const CustomSelect: React.FC<{
   );
 };
 
-// ─── Animated KPI Card ─────────────────────────────────────────────────────────
+// Animated KPI Card 
 const KPICard: React.FC<{
   label: string; value: number; colorTheme: string; icon: React.ReactNode;
   active: boolean; onClick: () => void; subtitle?: string;
@@ -211,7 +211,7 @@ const KPICard: React.FC<{
   );
 };
 
-// ─── Unified Student View & Pass Modal ─────────────────────────────────────────
+// Unified Student View & Pass Modal 
 const StudentViewModal: React.FC<{
   item: FacultyActionItem;
   initialTab?: 'pass' | 'profile' | 'timeline';
@@ -386,7 +386,7 @@ const StudentViewModal: React.FC<{
   );
 };
 
-// ─── Update Modal ─────────────────────────────────────────────────────────────
+// Update Modal 
 const UpdateModal: React.FC<{
   item: FacultyActionItem;
   onClose: () => void;
@@ -563,7 +563,7 @@ const UpdateModal: React.FC<{
   );
 };
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
+// Main Page 
 export const FacultyActionCenter: React.FC = () => {
   const [kpis, setKpis] = useState<FacultyActionKPIs | null>(null);
   const [items, setItems] = useState<FacultyActionItem[]>([]);
@@ -675,7 +675,7 @@ export const FacultyActionCenter: React.FC = () => {
 
   return (
     <div className="space-y-5 pb-12 animate-fade-in font-sans">
-      {/* ── Executive Header Banner ── */}
+      {/* Executive Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-lg border border-brand-500/30">
 
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
@@ -720,7 +720,7 @@ export const FacultyActionCenter: React.FC = () => {
         </div>
       </div>
 
-      {/* ── KPI Cards ── */}
+      {/* KPI Cards */}
       {kpis && (
         <div className="flex flex-wrap gap-3">
           <KPICard label="Critical" value={kpis.critical_count} colorTheme="red"
@@ -742,7 +742,7 @@ export const FacultyActionCenter: React.FC = () => {
         </div>
       )}
 
-      {/* ── Filters ── */}
+      {/* Filters */}
       <div className="relative z-20 flex flex-wrap gap-3 items-center p-4 rounded-3xl bg-white/70 dark:bg-navy-800/70 border border-slate-200 dark:border-navy-700 backdrop-blur-md shadow-sm">
         <div className="relative group flex-1 min-w-[250px]">
           <div className="absolute -inset-0.5 bg-gradient-to-r from-brand-500 via-purple-500 to-indigo-500 rounded-full blur opacity-20 group-focus-within:opacity-75 transition duration-500 group-hover:opacity-40"></div>
@@ -825,7 +825,7 @@ export const FacultyActionCenter: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Table ── */}
+      {/* Table */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 text-slate-400 dark:text-navy-400">
           <RefreshCw size={24} className="animate-spin opacity-40 mb-3" />
@@ -981,7 +981,7 @@ export const FacultyActionCenter: React.FC = () => {
         </div>
       )}
 
-      {/* ── Pagination ── */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3">
           <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
@@ -996,7 +996,7 @@ export const FacultyActionCenter: React.FC = () => {
         </div>
       )}
 
-      {/* ── Modals ── */}
+      {/* Modals */}
       {updateItem && <UpdateModal item={updateItem} onClose={() => setUpdateItem(null)} onSaved={loadData} />}
       {viewItem && <StudentViewModal item={viewItem} onClose={() => setViewItem(null)} onOpenUpdate={() => setUpdateItem(viewItem)} />}
     </div>

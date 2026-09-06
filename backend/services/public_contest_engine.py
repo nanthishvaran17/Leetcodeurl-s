@@ -18,7 +18,7 @@ from backend.services.authorization_service import get_authorized_student_ids
 
 logger = logging.getLogger(__name__)
 
-# ─── 1. CIRCUIT BREAKER CLASS ─────────────────────────────────────────────────
+# 1. CIRCUIT BREAKER CLASS 
 class CircuitBreaker:
     """
     Circuit Breaker pattern for upstream LeetCode API protection.
@@ -61,7 +61,7 @@ class CircuitBreaker:
 # Global Circuit Breaker Instance
 _global_circuit_breaker = CircuitBreaker()
 
-# ─── 2. PROCESS-LOCAL SINGLE-FLIGHT LOCK ─────────────────────────────────────
+# 2. PROCESS-LOCAL SINGLE-FLIGHT LOCK 
 _single_flight_locks: Dict[str, asyncio.Lock] = {}
 _single_flight_global_lock = asyncio.Lock()
 
@@ -73,7 +73,7 @@ async def get_single_flight_lock(contest_key: str) -> asyncio.Lock:
         return _single_flight_locks[contest_key]
 
 
-# ─── 3. PUBLIC CONTEST ENGINE v10.0 ──────────────────────────────────────────
+# 3. PUBLIC CONTEST ENGINE v10.0 
 class PublicContestEngine:
     """
     Official Public/Live LeetCode Contest Participation Engine v10.0.
@@ -272,7 +272,7 @@ class PublicContestEngine:
         contest_slug = contest_slug.lower().strip()
         contest_title = session.contest_name or f"Weekly Contest {session.week_number}"
 
-        # ─── DISTRIBUTED DB LEASE LOCK & STALE LOCK RECOVERY ───
+        # DISTRIBUTED DB LEASE LOCK & STALE LOCK RECOVERY 
         now_utc = datetime.now(timezone.utc)
         worker_id = f"worker_{uuid.uuid4().hex[:8]}"
 

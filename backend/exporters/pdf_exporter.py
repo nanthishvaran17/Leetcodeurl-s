@@ -100,7 +100,7 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
     story = []
     styles = getSampleStyleSheet()
 
-    # ── Custom Typography (Times New Roman strictly) ──
+    # Custom Typography (Times New Roman strictly) 
     title_style = ParagraphStyle(
         'DocTitle',
         parent=styles['Heading1'],
@@ -249,9 +249,9 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
                 return header_text_cells
         return header_text_cells
 
-    # ══════════════════════════════════════════════════════════════════════════
+    # 
     # PAGE 1: EXECUTIVE SUMMARY & OVERVIEW
-    # ══════════════════════════════════════════════════════════════════════════
+    # 
     story.extend(build_header_flowables())
     story.append(Spacer(1, 5))
     story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#1B365D'), spaceAfter=8))
@@ -344,9 +344,9 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
     ]))
     story.append(t_csum)
 
-    # ══════════════════════════════════════════════════════════════════════════
+    # 
     # PAGE 2: DEPARTMENT-WISE SUMMARY
-    # ══════════════════════════════════════════════════════════════════════════
+    # 
     story.append(PageBreak())
     story.append(Spacer(1, 5))
     story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#1B365D'), spaceAfter=8))
@@ -417,9 +417,9 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
     ]))
     story.append(t_dept)
 
-    # ══════════════════════════════════════════════════════════════════════════
+    # 
     # PAGE 3: YEAR-WISE / BATCH MATRIX & PROBLEM DISTRIBUTION
-    # ══════════════════════════════════════════════════════════════════════════
+    # 
     story.append(PageBreak())
     story.append(Spacer(1, 5))
     story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#1B365D'), spaceAfter=8))
@@ -472,9 +472,9 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
     ]))
     story.append(t_batch)
 
-    # ══════════════════════════════════════════════════════════════════════════
+    # 
     # PAGE 4: TOP PERFORMERS & FACULTY ACTION INTERVENTION
-    # ══════════════════════════════════════════════════════════════════════════
+    # 
     story.append(PageBreak())
     story.append(Spacer(1, 5))
     story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#1B365D'), spaceAfter=8))
@@ -517,9 +517,9 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
     ]))
     story.append(t_top)
 
-    # ══════════════════════════════════════════════════════════════════════════
+    # 
     # PAGE 5+: CONTEST PUBLIC ATTENDED ROSTER
-    # ══════════════════════════════════════════════════════════════════════════
+    # 
     story.append(PageBreak())
     story.append(Spacer(1, 5))
     story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#1B365D'), spaceAfter=8))

@@ -124,7 +124,7 @@ class DownloadManager {
         return { success: true, downloadId };
       }
 
-      // ─── WEB BROWSER PATH ────────────────────────────────────────────────────────
+      // WEB BROWSER PATH 
       state.status = 'STARTED';
       this.updateState(state, options.onStateChange);
 

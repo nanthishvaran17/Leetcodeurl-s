@@ -108,9 +108,9 @@ def get_upcoming_session_info(db: Session = Depends(get_db)):
     }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # PREVIOUS WEEK CONTEST ANALYZER ENDPOINTS
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 @router.get("/sessions/{session_id}/live-status")
 def get_session_live_telemetry(
@@ -136,7 +136,7 @@ def get_session_live_telemetry(
     # Scoped telemetry
     telemetry = sunday_live_engine.get_telemetry(session_id, db)
 
-    # ── Enrich with sync latency, WS connection count, verification status ──
+    # Enrich with sync latency, WS connection count, verification status 
     from backend.websocket_manager import manager as ws_manager
     telemetry["wsConnectionCount"] = len(ws_manager.active_connections)
 
@@ -549,7 +549,7 @@ def matches_dept(r_dept: str, target_dept: str) -> bool:
     if norm_target is None:
         return True
     r_d = str(r_dept or "").upper().strip()
-    t_d = norm_target.replace("🏢", "").strip()
+    t_d = norm_target.replace("", "").strip()
     
     if "CS" in t_d and "IOT" not in t_d:
         return ("CS" in r_d or "CYBER" in r_d) and ("IOT" not in r_d)
@@ -562,8 +562,8 @@ def matches_year(r_year: str, target_year: str) -> bool:
     norm_target = normalize_year_filter(target_year)
     if norm_target is None:
         return True
-    r_y = str(r_year or "").upper().replace("YEAR", "").replace("🎓", "").strip()
-    t_y = norm_target.replace("YEAR", "").replace("🎓", "").strip()
+    r_y = str(r_year or "").upper().replace("YEAR", "").replace("", "").strip()
+    t_y = norm_target.replace("YEAR", "").replace("", "").strip()
     
     if t_y in ["III", "3", "3RD"]:
         return r_y in ["III", "3", "3RD"]
@@ -1056,9 +1056,9 @@ def get_session_diagnostics_detail(
     }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # LIVE COMMAND CENTER: LEADERBOARD TIERS
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 @router.get("/sessions/{session_id}/leaderboard")
 def get_contest_leaderboard(
@@ -1160,9 +1160,9 @@ def get_contest_leaderboard(
 
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # LIVE COMMAND CENTER: DEPARTMENT ANALYTICS
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 @router.get("/sessions/{session_id}/dept-analytics")
 def get_contest_dept_analytics(
@@ -1254,9 +1254,9 @@ def get_contest_dept_analytics(
     return {"sessionId": session_id, "departments": analytics, "totalDepts": len(analytics)}
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # LIVE COMMAND CENTER: QUESTION ANALYTICS
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 @router.get("/sessions/{session_id}/question-analytics")
 def get_contest_question_analytics(
@@ -1605,7 +1605,7 @@ def delete_weekly_session(
     }
 
 
-# ─── AUTOPILOT CONTROL & TELEMETRY ENDPOINTS ──────────────────────────────────
+# AUTOPILOT CONTROL & TELEMETRY ENDPOINTS 
 @router.get("/autopilot/status")
 def get_autopilot_status(db: Session = Depends(get_db)):
     """
@@ -2336,7 +2336,7 @@ def export_post_930_solvers_excel(
     )
 
 
-# ─── OFFICIAL PUBLIC PARTICIPANTS v10.0 ENDPOINTS ────────────────────────────
+# OFFICIAL PUBLIC PARTICIPANTS v10.0 ENDPOINTS 
 from backend.models import User
 from backend.routes.auth import get_current_user
 from backend.services.public_contest_engine import PublicContestEngine
@@ -2656,7 +2656,7 @@ def get_contest_participants(
 
 
 
-# ─── SUNDAY LIVE CONTEST INGESTION ENDPOINTS ──────────────────────────────────
+# SUNDAY LIVE CONTEST INGESTION ENDPOINTS 
 
 from pydantic import BaseModel, Field
 

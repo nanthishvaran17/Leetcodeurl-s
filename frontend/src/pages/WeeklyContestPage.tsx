@@ -92,7 +92,7 @@ const Sparkline: React.FC<{ data: number[]; color?: string }> = ({ data, color =
   );
 };
 
-// ── Isolated Live Countdown Clock (renders every 1s WITHOUT re-rendering the whole page) ──
+// Isolated Live Countdown Clock (renders every 1s WITHOUT re-rendering the whole page) 
 const LiveCountdownClock = memo(({ endSec, label, className }: { endSec: number; label: string; className?: string }) => {
   const [sec, setSec] = useState(endSec);
   useEffect(() => { setSec(endSec); }, [endSec]);
@@ -107,7 +107,7 @@ const LiveCountdownClock = memo(({ endSec, label, className }: { endSec: number;
   return <span className={className}>{fmt(h)}:{fmt(m)}:{fmt(s)}</span>;
 });
 
-// ── Isolated Next-Update Ticker (ticks down without page re-render) ──
+// Isolated Next-Update Ticker (ticks down without page re-render) 
 const NextUpdateTicker = memo(({ initialSec }: { initialSec: number }) => {
   const [sec, setSec] = useState(initialSec);
   useEffect(() => { setSec(initialSec); }, [initialSec]);
@@ -118,7 +118,7 @@ const NextUpdateTicker = memo(({ initialSec }: { initialSec: number }) => {
   return <span>{sec}s</span>;
 });
 
-// ── Isolated Countdown Segments (Days/Hours/Mins/Secs before contest starts) ──
+// Isolated Countdown Segments (Days/Hours/Mins/Secs before contest starts) 
 const ContestCountdown = memo(({ initialSec }: { initialSec: number }) => {
   const [sec, setSec] = useState(initialSec);
   useEffect(() => { setSec(initialSec); }, [initialSec]);
@@ -155,7 +155,7 @@ const ContestCountdown = memo(({ initialSec }: { initialSec: number }) => {
   );
 });
 
-// ── Memoized Contest Matrix Row (only re-renders when THIS student's data changes) ──
+// Memoized Contest Matrix Row (only re-renders when THIS student's data changes) 
 interface RowProps {
   r: any;
   actualIdx: number;
@@ -391,7 +391,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     }
   }, [selectedSessionId, currentSession?.status]);
 
-  // ── Live Telemetry Auto-Poll: always runs every 30s when session is LIVE ──
+  // Live Telemetry Auto-Poll: always runs every 30s when session is LIVE 
   useEffect(() => {
     let isMounted = true;
     let interval: ReturnType<typeof setInterval> | null = null;
@@ -416,7 +416,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pollTelemetry, autoRefresh, currentSession?.status, sessionsList, selectedSessionId]);
 
-  // ── Live Matrix Rows Auto-Poll: refresh contest results every 5s when LIVE ──
+  // Live Matrix Rows Auto-Poll: refresh contest results every 5s when LIVE 
   useEffect(() => {
     if (!selectedSessionId) return;
     const isSessionLive = currentSession?.status === 'LIVE';
@@ -436,7 +436,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSessionId, currentSession?.status, autoRefresh, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter]);
 
-  // ── Post-9:30 AM Activity Fix: Automatic Final Fetch ──
+  // Post-9:30 AM Activity Fix: Automatic Final Fetch 
   useEffect(() => {
     if (selectedSessionId && currentSession?.status === 'FINALIZED') {
       // Automatically pull the authoritative finalized dataset once when transitioning to FINALIZED
@@ -1116,7 +1116,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     }
   };
 
-  // ── Memoized Dynamic Statistics Calculation (Hook MUST run before any early return) ──
+  // Memoized Dynamic Statistics Calculation (Hook MUST run before any early return) 
   const stats = useMemo(() => {
     // BUG 6 FIX: Never use pagination to calculate global metrics. Always rely on the SSOT backend sessionMetrics.
     const totalRows = sessionMetrics?.totalStudents ?? 0;
@@ -1236,7 +1236,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     }
   };
 
-  // ── Helper Time Formatters ──
+  // Helper Time Formatters 
   const formatCountdown = (totalSec: number) => {
     const days = Math.floor(totalSec / 86400);
     const hours = Math.floor((totalSec % 86400) / 3600);
@@ -1277,7 +1277,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   return (
     <div className="space-y-5 sm:space-y-6 pt-1 sm:pt-0 animate-fade-in pb-12">
 
-      {/* ── 1. SLEEK INSTITUTIONAL HERO HEADER ── */}
+      {/* 1. SLEEK INSTITUTIONAL HERO HEADER */}
       <div className={`relative overflow-hidden rounded-3xl text-white p-6 sm:p-8 shadow-2xl border transition-all duration-500 ${isLive
         ? 'bg-gradient-to-br from-rose-900 via-slate-900 to-indigo-900 border-rose-500/60 shadow-rose-900/40 before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/5 before:to-transparent before:-translate-x-full before:animate-[shimmer_2s_infinite]'
         : 'bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 border-brand-500/30 shadow-indigo-900/10'
@@ -1465,7 +1465,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         </div>
       </div>
 
-      {/* ── INITIAL SYNC PROGRESS BANNER (1/297 -> 297/297) ── */}
+      {/* INITIAL SYNC PROGRESS BANNER (1/297 -> 297/297) */}
       {wsProgress && (
         <div className="p-4 rounded-2xl bg-indigo-950/80 border border-indigo-500/40 text-indigo-200 flex items-center justify-between shadow-xl animate-pulse">
           <div className="flex items-center space-x-3">
@@ -1481,7 +1481,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         </div>
       )}
 
-      {/* ── GLOBAL LIVE ACTIVITY FEED (ZERO MANUAL REFRESH) ── */}
+      {/* GLOBAL LIVE ACTIVITY FEED (ZERO MANUAL REFRESH) */}
       {wsLiveFeed.length > 0 && (
         <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-emerald-500/30 text-slate-200 shadow-xl overflow-hidden">
           <div className="flex items-center justify-between mb-2 px-1">
@@ -1504,7 +1504,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       )}
 
 
-      {/* ── 1B. SCHEDULED MODE COUNTDOWN BANNER (BEFORE SUNDAY 08:00 AM IST) ── */}
+      {/* 1B. SCHEDULED MODE COUNTDOWN BANNER (BEFORE SUNDAY 08:00 AM IST) */}
       {isScheduled && (
         <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-amber-950/90 via-slate-900 to-navy-950 border border-amber-500/30 text-white shadow-lg space-y-4 animate-fade-in">
           <div className="flex items-center justify-between flex-wrap gap-3">
@@ -1530,7 +1530,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         </div>
       )}
 
-      {/* ── 1C. LIVE MODE TELEMETRY, QUESTION PROGRESS & LIVE ACTIVITY FEED ── */}
+      {/* 1C. LIVE MODE TELEMETRY, QUESTION PROGRESS & LIVE ACTIVITY FEED */}
       {isLive && (
         <div className="space-y-4 animate-fade-in">
           {/* Live Timer Bar */}
@@ -1620,7 +1620,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         </div>
       )}
 
-      {/* ── 1D. ADMIN LIVE CONTEST OPERATIONS & WORKER TELEMETRY SUITE ── */}
+      {/* 1D. ADMIN LIVE CONTEST OPERATIONS & WORKER TELEMETRY SUITE */}
       {showAdminMonitor && (
         <div className="p-5 sm:p-7 rounded-3xl bg-slate-900 text-white border border-slate-700/80 shadow-lg space-y-6 animate-fade-in">
           {/* Header with Title, Worker Badge, and Action Status */}
@@ -1633,7 +1633,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <h4 className="text-sm font-black uppercase tracking-wider text-brand-400 flex items-center gap-2">
                   <span>Admin Live Contest Operations & Worker Telemetry</span>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono border border-emerald-500/30">
-                    ● ACTIVE SUITE
+                     ACTIVE SUITE
                   </span>
                 </h4>
                 <p className="text-xs text-slate-400">Mission-control engine for real-time synchronization, worker gating, and invariant validation.</p>
@@ -1956,7 +1956,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   <Terminal className="w-3.5 h-3.5 text-emerald-400" />
                   <span>REAL-TIME AUDIT LOG STREAM</span>
                 </span>
-                <span className="text-[10px] text-emerald-400 animate-pulse">● LIVE STREAM</span>
+                <span className="text-[10px] text-emerald-400 animate-pulse"> LIVE STREAM</span>
               </div>
 
               <div className="max-h-60 overflow-y-auto space-y-1.5 pr-2 scrollbar-thin">
@@ -2068,7 +2068,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         </div>
       )}
 
-      {/* ── LIVE STUDENT MONITOR PANEL ── */}
+      {/* LIVE STUDENT MONITOR PANEL */}
       {showAdminMonitor && adminSubTab === 'live_monitor' && (
         <div className="p-5 sm:p-6 rounded-3xl bg-slate-900 border border-slate-700 shadow-lg animate-fade-in">
           <React.Suspense fallback={<div className="p-8 text-center text-xs font-bold text-slate-400 animate-pulse">Loading Live Monitor Chart Engine...</div>}>
@@ -2077,7 +2077,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         </div>
       )}
 
-      {/* ── PRIMARY VIEW TAB SWITCHER ── */}
+      {/* PRIMARY VIEW TAB SWITCHER */}
       <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-slate-800">
         <button
           onClick={() => setActiveTab('previous_week')}
@@ -2104,15 +2104,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         </button>
       </div>
 
-      {/* ── PREVIOUS WEEK CONTEST ANALYZER TAB ── */}
+      {/* PREVIOUS WEEK CONTEST ANALYZER TAB */}
       {activeTab === 'previous_week' && (
         <PreviousWeekContestPanel sessionId={selectedSessionId} onStudentClick={onSelectStudent} />
       )}
 
-      {/* ── SESSION ANALYTICS & ROSTER MATRIX TAB ── */}
+      {/* SESSION ANALYTICS & ROSTER MATRIX TAB */}
       {activeTab === 'matrix' && (
         <>
-          {/* ── 2. UNIFIED COHESIVE FILTER & ACTION COMMAND BAR ── */}
+          {/* 2. UNIFIED COHESIVE FILTER & ACTION COMMAND BAR */}
           <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4 no-print">
         {/* Row 1: Search Input + Full Consolidated Action Toolbar */}
         <div className="flex items-center justify-between flex-wrap gap-3">
@@ -2426,7 +2426,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         </div>
       </div>
 
-      {/* ── 3. EXECUTIVE QUICK VIEW (SCANNABLE IN < 3 SECONDS) ── */}
+      {/* 3. EXECUTIVE QUICK VIEW (SCANNABLE IN < 3 SECONDS) */}
       <div className="space-y-6">
         
         {/* Department-wise Summary Section */}
@@ -2467,7 +2467,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             </div>
           );
         })()}
-        {/* ── ACTIVE SCOPE BANNER ── */}
+        {/* ACTIVE SCOPE BANNER */}
         {(selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL') && (
           <div className="bg-indigo-50/80 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50 rounded-2xl px-4 py-2.5 flex items-center justify-between flex-wrap gap-2 shadow-sm animate-fade-in -mb-1 mt-4">
             <div className="flex items-center gap-2 text-xs">
@@ -2671,7 +2671,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <span>Participation Trend</span>
               </h4>
               <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black border border-emerald-500/30 shadow-sm">
-                ▲ +30.5% Growth
+                 +30.5% Growth
               </span>
             </div>
 
@@ -2741,7 +2741,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           </div>
         </div>
 
-        {/* ── Virtual Students Detail Card (High Contrast, Beautiful Purple Theme) ── */}
+        {/* Virtual Students Detail Card (High Contrast, Beautiful Purple Theme) */}
         <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-navy-950 border border-purple-200 dark:border-purple-900/50 shadow-lg shadow-purple-500/5 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center space-x-3.5">
             <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-inner shrink-0">
@@ -2783,7 +2783,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           )}
         </div>
 
-        {/* ── Active Cohort Problem-Wise Solve Distribution (Dynamic for Selected Department/Year) ── */}
+        {/* Active Cohort Problem-Wise Solve Distribution (Dynamic for Selected Department/Year) */}
         <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-lg flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center space-x-3.5">
             <div className="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800/60 text-brand-600 dark:text-brand-400 flex items-center justify-center shadow-inner shrink-0">
@@ -2819,7 +2819,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           </div>
         </div>
 
-        {/* ── TOGGLE CTA BUTTON: QUICK VIEW ↔ DETAILED VIEW ── */}
+        {/* TOGGLE CTA BUTTON: QUICK VIEW ↔ DETAILED VIEW */}
         <div className="flex justify-center pt-2">
           <button
             onClick={() => setShowDetailedView(!showDetailedView)}
@@ -2840,7 +2840,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         </div>
       </div>
 
-      {/* ── 4. DETAILED VIEW SECTION (LAZY-LOADED ON TOGGLE) ── */}
+      {/* 4. DETAILED VIEW SECTION (LAZY-LOADED ON TOGGLE) */}
       {showDetailedView && (
         <div className="space-y-6 pt-4 border-t border-slate-200 dark:border-slate-800 animate-fade-in">
           {/* Detailed View Sub-Tab Switcher */}
@@ -3009,7 +3009,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                           <div className="flex items-center justify-center space-x-1">
                             <span>{qKey.toUpperCase()}</span>
                             <span className="text-[10px] opacity-50 group-hover:opacity-100">
-                              {sortConfig?.key === qKey ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '↕'}
+                              {sortConfig?.key === qKey ? (sortConfig.direction === 'asc' ? '' : '') : '↕'}
                             </span>
                           </div>
                         </th>
@@ -3019,7 +3019,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                         <div className="flex items-center justify-end space-x-1">
                           <span>Contest Solved</span>
                           <span className="text-[10px] opacity-50 group-hover:opacity-100">
-                            {sortConfig?.key === 'solved' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '↕'}
+                            {sortConfig?.key === 'solved' ? (sortConfig.direction === 'asc' ? '' : '') : '↕'}
                           </span>
                         </div>
                       </th>
@@ -3028,7 +3028,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                         <div className="flex items-center justify-end space-x-1">
                           <span>Rank</span>
                           <span className="text-[10px] opacity-50 group-hover:opacity-100">
-                            {sortConfig?.key === 'rank' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : '↕'}
+                            {sortConfig?.key === 'rank' ? (sortConfig.direction === 'asc' ? '' : '') : '↕'}
                           </span>
                         </div>
                       </th>
@@ -3065,7 +3065,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 </table>
               </div>
 
-              {/* ── HIGH-SPEED VIRTUALIZED PAGINATION BAR ── */}
+              {/* HIGH-SPEED VIRTUALIZED PAGINATION BAR */}
               {totalRows > 0 && (
                 <div className="px-5 py-3.5 bg-slate-50 dark:bg-navy-950 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
                   {/* Showing count */}
@@ -3310,7 +3310,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         >
           <div className="modal-container-responsive max-w-5xl bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 animate-modal-content">
 
-            {/* ── A. SLEEK GRADIENT HEADER (Matches Image 2) ── */}
+            {/* A. SLEEK GRADIENT HEADER (Matches Image 2) */}
             <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-brand-900 via-indigo-950 to-slate-950 text-white flex items-center justify-between shrink-0">
               <div className="flex items-center space-x-3 min-w-0">
                 <div className="shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center font-black text-white text-base shadow-lg shadow-brand-500/30">
@@ -3345,7 +3345,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </button>
             </div>
 
-            {/* ── B. COMPACT METRICS & FILTER SUMMARY BAR ── */}
+            {/* B. COMPACT METRICS & FILTER SUMMARY BAR */}
             <div className="px-4 py-2.5 bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2.5 text-xs shrink-0">
               {/* Quick Metrics Badges */}
               <div className="flex items-center space-x-2 flex-wrap gap-y-1">
@@ -3369,7 +3369,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </div>
             </div>
 
-            {/* ── C. SCROLLABLE PREVIEW TABLE ── */}
+            {/* C. SCROLLABLE PREVIEW TABLE */}
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 sm:p-4">
               <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
                 <table className="w-full min-w-[780px] text-left text-xs">
@@ -3461,7 +3461,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               )}
             </div>
 
-            {/* ── D. CLEAN COMPACT ACTION FOOTER (Matches Image 2) ── */}
+            {/* D. CLEAN COMPACT ACTION FOOTER (Matches Image 2) */}
             <div className="p-3.5 sm:p-4 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0">
               <span className="text-[11px] text-slate-500 font-bold font-mono">
                 Nandha Engineering College • LeetCode Tracker
@@ -3797,7 +3797,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         </>
       )}
 
-      {/* ── STUDENT PROFILE MODAL ── */}
+      {/* STUDENT PROFILE MODAL */}
       {viewingProfileStudent && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setViewingProfileStudent(null)}>
           <div className="bg-white dark:bg-navy-950 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200 dark:border-slate-800" onClick={e => e.stopPropagation()}>

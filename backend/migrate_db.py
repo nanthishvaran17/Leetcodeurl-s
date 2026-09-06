@@ -30,7 +30,7 @@ def run_db_migrations():
             table_cols_map = {}
 
         pg_migrations = [
-            # ── users table ─────────────────────────────────────────────────
+            # users table 
             ("users", "institutional_id", "ALTER TABLE users ADD COLUMN IF NOT EXISTS institutional_id VARCHAR(50)"),
             ("users", "full_name", "ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(200)"),
             ("users", "designation", "ALTER TABLE users ADD COLUMN IF NOT EXISTS designation VARCHAR(100)"),
@@ -48,7 +48,7 @@ def run_db_migrations():
             ("users", "is_2fa_enabled", "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_2fa_enabled BOOLEAN DEFAULT FALSE"),
             ("users", "created_at", "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP"),
             ("users", "reporting_manager_id", "ALTER TABLE users ADD COLUMN IF NOT EXISTS reporting_manager_id INTEGER"),
-            # ── students table ───────────────────────────────────────────────
+            # students table 
             ("students", "people_id", "ALTER TABLE students ADD COLUMN IF NOT EXISTS people_id VARCHAR(50)"),
             ("students", "phone_number", "ALTER TABLE students ADD COLUMN IF NOT EXISTS phone_number VARCHAR(30)"),
             ("students", "whatsapp_verified", "ALTER TABLE students ADD COLUMN IF NOT EXISTS whatsapp_verified BOOLEAN DEFAULT FALSE"),
@@ -62,7 +62,7 @@ def run_db_migrations():
             ("students", "version", "ALTER TABLE students ADD COLUMN IF NOT EXISTS version INTEGER DEFAULT 1"),
             ("students", "joining_date", "ALTER TABLE students ADD COLUMN IF NOT EXISTS joining_date TIMESTAMP"),
             ("students", "created_at", "ALTER TABLE students ADD COLUMN IF NOT EXISTS created_at TIMESTAMP"),
-            # ── weekly_sessions table ────────────────────────────────────────
+            # weekly_sessions table 
             ("weekly_sessions", "academic_year", "ALTER TABLE weekly_sessions ADD COLUMN IF NOT EXISTS academic_year VARCHAR(20) DEFAULT '2026-27'"),
             ("weekly_sessions", "week_number", "ALTER TABLE weekly_sessions ADD COLUMN IF NOT EXISTS week_number INTEGER"),
             ("weekly_sessions", "session_code", "ALTER TABLE weekly_sessions ADD COLUMN IF NOT EXISTS session_code VARCHAR(50)"),
@@ -87,7 +87,7 @@ def run_db_migrations():
             ("weekly_sessions", "pipeline_state", "ALTER TABLE weekly_sessions ADD COLUMN IF NOT EXISTS pipeline_state VARCHAR(50)"),
             ("weekly_sessions", "pipeline_last_updated", "ALTER TABLE weekly_sessions ADD COLUMN IF NOT EXISTS pipeline_last_updated TIMESTAMP"),
             ("weekly_sessions", "pipeline_error", "ALTER TABLE weekly_sessions ADD COLUMN IF NOT EXISTS pipeline_error TEXT"),
-            # ── leetcode_profile_stats ───────────────────────────────────────
+            # leetcode_profile_stats 
             ("leetcode_profile_stats", "source_total_solved", "ALTER TABLE leetcode_profile_stats ADD COLUMN IF NOT EXISTS source_total_solved INTEGER"),
             ("leetcode_profile_stats", "derived_total_solved", "ALTER TABLE leetcode_profile_stats ADD COLUMN IF NOT EXISTS derived_total_solved INTEGER"),
             ("leetcode_profile_stats", "public_profile_ranking", "ALTER TABLE leetcode_profile_stats ADD COLUMN IF NOT EXISTS public_profile_ranking INTEGER"),
@@ -106,7 +106,7 @@ def run_db_migrations():
             ("leetcode_profile_stats", "last_attempt_at", "ALTER TABLE leetcode_profile_stats ADD COLUMN IF NOT EXISTS last_attempt_at TIMESTAMP"),
             ("leetcode_profile_stats", "retry_count", "ALTER TABLE leetcode_profile_stats ADD COLUMN IF NOT EXISTS retry_count INTEGER DEFAULT 0"),
             ("leetcode_profile_stats", "fetch_duration", "ALTER TABLE leetcode_profile_stats ADD COLUMN IF NOT EXISTS fetch_duration FLOAT"),
-            # ── weekly_public_results ────────────────────────────────────────
+            # weekly_public_results 
             ("weekly_public_results", "state", "ALTER TABLE weekly_public_results ADD COLUMN IF NOT EXISTS state VARCHAR(30) DEFAULT 'PENDING'"),
             ("weekly_public_results", "previous_state", "ALTER TABLE weekly_public_results ADD COLUMN IF NOT EXISTS previous_state VARCHAR(30)"),
             ("weekly_public_results", "state_changed_at", "ALTER TABLE weekly_public_results ADD COLUMN IF NOT EXISTS state_changed_at TIMESTAMP"),
@@ -118,11 +118,11 @@ def run_db_migrations():
             ("weekly_public_results", "verification_evidence", "ALTER TABLE weekly_public_results ADD COLUMN IF NOT EXISTS verification_evidence TEXT"),
             ("weekly_public_results", "retry_count", "ALTER TABLE weekly_public_results ADD COLUMN IF NOT EXISTS retry_count INTEGER DEFAULT 0"),
             ("weekly_public_results", "last_fetched_at", "ALTER TABLE weekly_public_results ADD COLUMN IF NOT EXISTS last_fetched_at TIMESTAMP"),
-            # ── weekly_virtual_results ───────────────────────────────────────
+            # weekly_virtual_results 
             ("weekly_virtual_results", "state", "ALTER TABLE weekly_virtual_results ADD COLUMN IF NOT EXISTS state VARCHAR(30) DEFAULT 'VALIDATED'"),
             ("weekly_virtual_results", "evidence_json", "ALTER TABLE weekly_virtual_results ADD COLUMN IF NOT EXISTS evidence_json TEXT"),
             ("weekly_virtual_results", "record_hash", "ALTER TABLE weekly_virtual_results ADD COLUMN IF NOT EXISTS record_hash VARCHAR(128)"),
-            # ── weekly_student_progress ──────────────────────────────────────
+            # weekly_student_progress 
             ("weekly_student_progress", "academic_year", "ALTER TABLE weekly_student_progress ADD COLUMN IF NOT EXISTS academic_year VARCHAR(20)"),
             ("weekly_student_progress", "year_rank", "ALTER TABLE weekly_student_progress ADD COLUMN IF NOT EXISTS year_rank INTEGER"),
             ("weekly_student_progress", "section_rank", "ALTER TABLE weekly_student_progress ADD COLUMN IF NOT EXISTS section_rank INTEGER"),
@@ -131,42 +131,42 @@ def run_db_migrations():
             ("weekly_student_progress", "consistency_score", "ALTER TABLE weekly_student_progress ADD COLUMN IF NOT EXISTS consistency_score FLOAT DEFAULT 0.0"),
             ("weekly_student_progress", "badge_list", "ALTER TABLE weekly_student_progress ADD COLUMN IF NOT EXISTS badge_list TEXT"),
             ("weekly_student_progress", "composite_score", "ALTER TABLE weekly_student_progress ADD COLUMN IF NOT EXISTS composite_score FLOAT DEFAULT 0.0"),
-            # ── admin_sessions ───────────────────────────────────────────────
+            # admin_sessions 
             ("admin_sessions", "revoked_at", "ALTER TABLE admin_sessions ADD COLUMN IF NOT EXISTS revoked_at TIMESTAMP"),
             ("admin_sessions", "ip_hash", "ALTER TABLE admin_sessions ADD COLUMN IF NOT EXISTS ip_hash VARCHAR(128)"),
             ("admin_sessions", "user_agent_hash", "ALTER TABLE admin_sessions ADD COLUMN IF NOT EXISTS user_agent_hash VARCHAR(128)"),
-            # ── contest_participations ───────────────────────────────────────
+            # contest_participations 
             ("contest_participations", "source_username", "ALTER TABLE contest_participations ADD COLUMN IF NOT EXISTS source_username VARCHAR(100)"),
-            # ── student_contest_participations ───────────────────────────────
+            # student_contest_participations 
             ("student_contest_participations", "solved_problems", "ALTER TABLE student_contest_participations ADD COLUMN IF NOT EXISTS solved_problems TEXT"),
             ("student_contest_participations", "confidence", "ALTER TABLE student_contest_participations ADD COLUMN IF NOT EXISTS confidence VARCHAR(50) DEFAULT 'HIGH'"),
             ("student_contest_participations", "participation_mode", "ALTER TABLE student_contest_participations ADD COLUMN IF NOT EXISTS participation_mode VARCHAR(30)"),
             ("student_contest_participations", "verification_level", "ALTER TABLE student_contest_participations ADD COLUMN IF NOT EXISTS verification_level VARCHAR(50)"),
             ("student_contest_participations", "verification_evidence", "ALTER TABLE student_contest_participations ADD COLUMN IF NOT EXISTS verification_evidence TEXT"),
             ("student_contest_participations", "updated_at", "ALTER TABLE student_contest_participations ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP"),
-            # ── hod_snapshots ────────────────────────────────────────────────
+            # hod_snapshots 
             ("hod_snapshots", "academic_year", "ALTER TABLE hod_snapshots ADD COLUMN IF NOT EXISTS academic_year VARCHAR(20) DEFAULT '2026-27'"),
             ("hod_snapshots", "status", "ALTER TABLE hod_snapshots ADD COLUMN IF NOT EXISTS status VARCHAR(30) DEFAULT 'READY'"),
             ("hod_snapshots", "created_by", "ALTER TABLE hod_snapshots ADD COLUMN IF NOT EXISTS created_by VARCHAR(100) DEFAULT 'HOD / System'"),
             ("hod_snapshots", "verified_at", "ALTER TABLE hod_snapshots ADD COLUMN IF NOT EXISTS verified_at TIMESTAMP"),
-            # ── official_weekly_snapshots ────────────────────────────────────
+            # official_weekly_snapshots 
             ("official_weekly_snapshots", "is_superseded", "ALTER TABLE official_weekly_snapshots ADD COLUMN IF NOT EXISTS is_superseded BOOLEAN DEFAULT FALSE"),
             ("official_weekly_snapshots", "superseded_by_id", "ALTER TABLE official_weekly_snapshots ADD COLUMN IF NOT EXISTS superseded_by_id INTEGER"),
             ("official_weekly_snapshots", "session_data_hash", "ALTER TABLE official_weekly_snapshots ADD COLUMN IF NOT EXISTS session_data_hash VARCHAR(128)"),
             ("official_weekly_snapshots", "reconciliation_summary", "ALTER TABLE official_weekly_snapshots ADD COLUMN IF NOT EXISTS reconciliation_summary TEXT"),
             ("official_weekly_snapshots", "snapshot_version", "ALTER TABLE official_weekly_snapshots ADD COLUMN IF NOT EXISTS snapshot_version INTEGER DEFAULT 1"),
-            # ── scheduled_job_executions table ───────────────────────────────
+            # scheduled_job_executions table 
             ("scheduled_job_executions", "error_message", "ALTER TABLE scheduled_job_executions ADD COLUMN IF NOT EXISTS error_message TEXT"),
             ("scheduled_job_executions", "last_error", "ALTER TABLE scheduled_job_executions ADD COLUMN IF NOT EXISTS last_error TEXT"),
             ("scheduled_job_executions", "next_run", "ALTER TABLE scheduled_job_executions ADD COLUMN IF NOT EXISTS next_run TIMESTAMP"),
-            # ── conversations table ──────────────────────────────────────────
+            # conversations table 
             ("conversations", "last_message_preview", "ALTER TABLE conversations ADD COLUMN IF NOT EXISTS last_message_preview VARCHAR(255)"),
             ("conversations", "last_message_at", "ALTER TABLE conversations ADD COLUMN IF NOT EXISTS last_message_at TIMESTAMP"),
             ("conversations", "unread_count_1", "ALTER TABLE conversations ADD COLUMN IF NOT EXISTS unread_count_1 INTEGER DEFAULT 0"),
             ("conversations", "unread_count_2", "ALTER TABLE conversations ADD COLUMN IF NOT EXISTS unread_count_2 INTEGER DEFAULT 0"),
             ("conversations", "pinned_by_users", "ALTER TABLE conversations ADD COLUMN IF NOT EXISTS pinned_by_users TEXT DEFAULT '[]'"),
             ("conversations", "archived_by_users", "ALTER TABLE conversations ADD COLUMN IF NOT EXISTS archived_by_users TEXT DEFAULT '[]'"),
-            # ── messages table ───────────────────────────────────────────────
+            # messages table 
             ("messages", "delivered_at", "ALTER TABLE messages ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMP"),
             ("messages", "read_at", "ALTER TABLE messages ADD COLUMN IF NOT EXISTS read_at TIMESTAMP"),
             ("messages", "edited_at", "ALTER TABLE messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP"),
@@ -181,7 +181,7 @@ def run_db_migrations():
             ("messages", "t3_fanout", "ALTER TABLE messages ADD COLUMN IF NOT EXISTS t3_fanout BIGINT"),
             ("messages", "reactions", "ALTER TABLE messages ADD COLUMN IF NOT EXISTS reactions TEXT DEFAULT '{}'"),
             ("messages", "attachment_file_id", "ALTER TABLE messages ADD COLUMN IF NOT EXISTS attachment_file_id VARCHAR(100)"),
-            # ── notification_files table ─────────────────────────────────────
+            # notification_files table 
             ("notification_files", "file_size", "ALTER TABLE notification_files ADD COLUMN IF NOT EXISTS file_size INTEGER"),
             ("notification_files", "entity_type", "ALTER TABLE notification_files ADD COLUMN IF NOT EXISTS entity_type VARCHAR(60)"),
             ("notification_files", "entity_id", "ALTER TABLE notification_files ADD COLUMN IF NOT EXISTS entity_id VARCHAR(100)"),
@@ -189,7 +189,7 @@ def run_db_migrations():
             ("notification_files", "allowed_user_ids", "ALTER TABLE notification_files ADD COLUMN IF NOT EXISTS allowed_user_ids TEXT"),
             ("notification_files", "is_deleted", "ALTER TABLE notification_files ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE"),
             ("notification_files", "expires_at", "ALTER TABLE notification_files ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP"),
-            # ── notification_preferences table ───────────────────────────────
+            # notification_preferences table 
             ("notification_preferences", "push_enabled", "ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS push_enabled BOOLEAN DEFAULT TRUE"),
             ("notification_preferences", "email_enabled", "ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS email_enabled BOOLEAN DEFAULT TRUE"),
             ("notification_preferences", "categories_json", "ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS categories_json TEXT"),
@@ -206,7 +206,7 @@ def run_db_migrations():
             except Exception as _col_err:
                 print(f"[PG Migration] Note ({t_name}.{c_name}): {_col_err}")
 
-        # ── Session Recovery ─────────────────────────────────────────────
+        # Session Recovery 
         try:
             with engine.begin() as pg_conn:
                 pg_conn.execute(sql_text("UPDATE weekly_sessions SET status = 'SCHEDULED' WHERE status = 'FINALIZED' AND id NOT IN (SELECT session_id FROM official_weekly_snapshots)"))
@@ -215,7 +215,7 @@ def run_db_migrations():
 
         print("[PG Migration] PostgreSQL column migrations applied successfully.")
 
-        # ── Compound Performance Indexes ──────────────────────────────────
+        # Compound Performance Indexes 
         perf_indexes = [
             "CREATE INDEX IF NOT EXISTS ix_weekly_public_results_session_student ON weekly_public_results (session_id, student_id)",
             "CREATE INDEX IF NOT EXISTS ix_weekly_virtual_results_session_student ON weekly_virtual_results (session_id, student_id)",

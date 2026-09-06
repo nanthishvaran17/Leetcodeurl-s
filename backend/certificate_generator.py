@@ -269,7 +269,7 @@ def render_certificate_pdf_bytes(
     story.append(Spacer(1, 10))
 
     # 6. Distinction Pill Badge
-    badge_p = Paragraph(f"★ {clean_recognition.upper()} • WEEKLY LEETCODE PROGRAM ★", c_badge_style)
+    badge_p = Paragraph(f" {clean_recognition.upper()} • WEEKLY LEETCODE PROGRAM ", c_badge_style)
     badge_table = Table([[badge_p]], colWidths=[360])
     badge_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#D1FAE5')),

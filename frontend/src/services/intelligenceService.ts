@@ -180,9 +180,9 @@ export const markAlertResolve = async (alertId: number) => {
   return response.data;
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// 
 // Faculty Action Center — Types & API
-// ─────────────────────────────────────────────────────────────────────────────
+// 
 
 export interface FacultyActionKPIs {
   critical_count: number;

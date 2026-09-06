@@ -102,7 +102,7 @@ const DEFAULT_SAVED_VIEWS: SavedView[] = [
   { id: 'iot_all_issues', name: 'IoT - All Attention Items',   dept: 'CSE(IOT)', year: 'all', issue: 'ISSUES',          search: '' }
 ];
 
-// ─── Custom Dropdown Select ──────────────────────────────────────────────────
+// Custom Dropdown Select 
 const CustomSelect: React.FC<{
   value: string;
   onChange: (v: string) => void;
@@ -604,7 +604,7 @@ export const StudentDataIssuesPage: React.FC = () => {
   return (
     <div className="space-y-6 pb-20 animate-fade-in text-slate-900 dark:text-slate-100 font-sans">
 
-      {/* ── 1. TOP HERO BANNER (MATCHING INSTITUTIONAL GRADIENT) ── */}
+      {/* 1. TOP HERO BANNER (MATCHING INSTITUTIONAL GRADIENT) */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-xl border border-brand-500/30">
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -652,7 +652,7 @@ export const StudentDataIssuesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── 2. MULTI-DIMENSIONAL SMART FILTERING WORKSPACE — FIRST ── */}
+      {/* 2. MULTI-DIMENSIONAL SMART FILTERING WORKSPACE — FIRST */}
       <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
           <div>
@@ -767,7 +767,7 @@ export const StudentDataIssuesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── 3. ADMINISTRATIVE QUICK VIEWS & SAVED PRESETS BAR ── */}
+      {/* 3. ADMINISTRATIVE QUICK VIEWS & SAVED PRESETS BAR */}
       <div className="p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center space-x-1.5">
@@ -808,7 +808,7 @@ export const StudentDataIssuesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── 4. DEPARTMENT & ACADEMIC YEAR BREAKDOWN MATRICES ── */}
+      {/* 4. DEPARTMENT & ACADEMIC YEAR BREAKDOWN MATRICES */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Department Breakdown */}
         <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
@@ -898,7 +898,7 @@ export const StudentDataIssuesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── 5. BULK ACTIONS TOOLBAR & SELECTION BANNER ── */}
+      {/* 5. BULK ACTIONS TOOLBAR & SELECTION BANNER */}
       {selectedStudentIds.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -943,7 +943,7 @@ export const StudentDataIssuesPage: React.FC = () => {
         </motion.div>
       )}
 
-      {/* ── 6. STUDENT ISSUE TABLE (ENTERPRISE GRADE) ── */}
+      {/* 6. STUDENT ISSUE TABLE (ENTERPRISE GRADE) */}
       <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 shadow-sm overflow-hidden space-y-0">
         
         {/* Table Header & Download Controls */}
@@ -1165,7 +1165,7 @@ export const StudentDataIssuesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── 8. REPAIR USERNAME MODAL ── */}
+      {/* 8. REPAIR USERNAME MODAL */}
       <AnimatePresence>
         {repairStudent && (
           <div className="fixed inset-0 w-screen h-screen z-[1000000] flex items-center justify-center p-4 bg-black/90">
@@ -1283,7 +1283,7 @@ export const StudentDataIssuesPage: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* ── 9. SAVE CUSTOM VIEW MODAL ── */}
+      {/* 9. SAVE CUSTOM VIEW MODAL */}
       <AnimatePresence>
         {showSaveViewModal && (
           <div className="fixed inset-0 z-[1000000] flex items-center justify-center p-4 bg-black/85 animate-modal-backdrop">

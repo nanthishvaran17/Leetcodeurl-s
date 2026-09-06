@@ -336,20 +336,20 @@ class LLMService:
         top_solved = (data_context or {}).get("top_student_solved", 849)
         latest_sess = (data_context or {}).get("latest_session", "Weekly Contest 515")
 
-        # ── 1. Tanglish / Tamil Questions on Platform & Unified AI ──
+        # 1. Tanglish / Tamil Questions on Platform & Unified AI 
         if any(k in q for k in ["eppadi work", "epdi work", "how it work", "how does it work", "unified ai eppadi", "ai eppadi", "enna pannum", "features"]):
             return (
                 "**NEC Unified AI & Operations Copilot System Overview:**\n\n"
                 "வணக்கம்! **NEC Unified AI** is Nandha Engineering College's autonomous intelligence engine designed for real-time LeetCode performance monitoring.\n\n"
                 "### Core Capabilities:\n"
-                "1. **⚡ Real-Time Tracking**: 300 students across **CSE (Cyber Security)** and **CSE (IoT)**.\n"
-                "2. **🏆 Weekly Sunday Automation**: Runs weekly contest sync from 08:00 AM – 09:30 AM IST.\n"
-                "3. **📊 Multi-Sheet Master Reporting**: 100% frozen data parity across Excel, PDF, and Word reports.\n"
-                "4. **🛡️ 2-Step Action Safety Guard**: Drafts and dispatches official notifications and warning emails with explicit confirmation.\n"
-                "5. **🧠 Zero-Hallucination Grounding**: Every metric is validated directly against the institutional SQLite single source of truth database."
+                "1. ** Real-Time Tracking**: 300 students across **CSE (Cyber Security)** and **CSE (IoT)**.\n"
+                "2. ** Weekly Sunday Automation**: Runs weekly contest sync from 08:00 AM – 09:30 AM IST.\n"
+                "3. ** Multi-Sheet Master Reporting**: 100% frozen data parity across Excel, PDF, and Word reports.\n"
+                "4. ** 2-Step Action Safety Guard**: Drafts and dispatches official notifications and warning emails with explicit confirmation.\n"
+                "5. ** Zero-Hallucination Grounding**: Every metric is validated directly against the institutional SQLite single source of truth database."
             )
 
-        # ── 2. Top Solver / Stats Queries in Tanglish ──
+        # 2. Top Solver / Stats Queries in Tanglish 
         if any(k in q for k in ["yaaru", "who is top", "top solver", "performer", "first rank", "number 1", "top yaaru"]):
             return (
                 f"**Top Institutional Performer:**\n\n"
@@ -360,7 +360,7 @@ class LLMService:
                 f"You can view the complete college leaderboard on the **Leaderboard** tab."
             )
 
-        # ── 3. Data Structures & Algorithms (DSA) Knowledge ──
+        # 3. Data Structures & Algorithms (DSA) Knowledge 
         if "binary search" in q:
             return (
                 "### Binary Search Algorithm\n\n"
@@ -415,7 +415,7 @@ class LLMService:
                 "4. Optimize space from `O(N)` to `O(1)` where applicable."
             )
 
-        # ── 4. General Student Roster Summary ──
+        # 4. General Student Roster Summary 
         return (
             f"The **Nandha Engineering College** LeetCode Analytics platform currently monitors **{total_st}** enrolled students.\n\n"
             f"• **Top College Ranker**: **{top_name}** ({top_solved} problems solved)\n"

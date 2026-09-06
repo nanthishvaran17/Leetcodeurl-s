@@ -53,9 +53,9 @@ class SundayLifecycle:
         self.fetcher = EfficientStudentFetcher(adapter=self.adapter, max_concurrency=5)
         self.scheduler = scheduler
 
-    # ─────────────────────────────────────────────────────────────────────────
+    # 
     # CONTEST DISCOVERY (DYNAMIC)
-    # ─────────────────────────────────────────────────────────────────────────
+    # 
 
     async def discover_current_weekly(self) -> Contest:
         """
@@ -122,9 +122,9 @@ class SundayLifecycle:
         finally:
             db.close()
 
-    # ─────────────────────────────────────────────────────────────────────────
+    # 
     # FULL SUNDAY RUNNER WORKFLOW
-    # ─────────────────────────────────────────────────────────────────────────
+    # 
 
     async def run(self, auto_wait: bool = True) -> Dict[str, Any]:
         """
@@ -206,9 +206,9 @@ class SundayLifecycle:
             "report": report_data,
         }
 
-    # ─────────────────────────────────────────────────────────────────────────
+    # 
     # SNAPSHOT & CLASSIFICATION LOGIC
-    # ─────────────────────────────────────────────────────────────────────────
+    # 
 
     async def take_live_snapshot(self, contest: Contest):
         """Captures real-time participant snapshots into the snapshots table."""

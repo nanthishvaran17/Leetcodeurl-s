@@ -84,7 +84,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
   return (
     <div className="space-y-8 pb-12 animate-slide-right">
 
-      {/* ─── HERO BANNER ─── */}
+      {/* HERO BANNER */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy-950 via-slate-900 to-indigo-950 text-white p-8 md:p-10 shadow-lg border border-brand-500/30">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 right-0 -mt-16 -mr-16 w-80 h-80 bg-brand-500/15 rounded-full blur-3xl" />
@@ -129,7 +129,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
         </div>
       </div>
 
-      {/* ─── TOP 3 PODIUM ─── */}
+      {/* TOP 3 PODIUM */}
       {top3.length >= 3 && (
         <div className="glass-card p-6 rounded-3xl border border-amber-500/20 bg-gradient-to-b from-amber-500/5 to-transparent shadow-xl">
           <h2 className="text-center font-black text-base text-slate-900 dark:text-white flex items-center justify-center space-x-2 mb-6">
@@ -190,7 +190,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
         </div>
       )}
 
-      {/* ─── FILTER & SEARCH BAR ─── */}
+      {/* FILTER & SEARCH BAR */}
       <div className="glass-card p-5 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-xl space-y-4">
         <div className="flex flex-wrap items-center gap-3">
           {/* Search */}
@@ -262,10 +262,10 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
         </div>
       </div>
 
-      {/* ─── FULL LEADERBOARD TABLE ─── */}
+      {/* FULL LEADERBOARD TABLE */}
       <LeaderboardTable students={filtered} onSelectStudent={onSelectStudent} />
 
-      {/* ─── SERVER PAGINATION ─── */}
+      {/* SERVER PAGINATION */}
       {total > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-3xl glass-card border border-slate-200 dark:border-navy-700 shadow-xl">
           <div className="text-sm font-semibold text-slate-500 dark:text-slate-400">

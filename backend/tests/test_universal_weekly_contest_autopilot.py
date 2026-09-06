@@ -32,7 +32,7 @@ class TestUniversalWeeklyContestAutopilot(unittest.TestCase):
         self.assertIn("next_contest", status)
         self.assertIn("countdown_formatted", status["next_contest"])
         self.assertIn("health_status", status)
-        self.assertEqual(status["health_status"], "🟢 HEALTHY")
+        self.assertEqual(status["health_status"], " HEALTHY")
 
     def test_03_start_live_monitoring(self):
         """Phase 2: Start live monitoring mode"""

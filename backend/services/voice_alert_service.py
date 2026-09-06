@@ -45,7 +45,7 @@ class VoiceAlertService:
                 "reg_no": st.reg_no,
                 "department": st.department.name if st.department else "General",
                 "consecutive_missed_contests": 3,
-                "escalation_level": "LEVEL_3_VOICE_ALERT_REQUIRED 🚨",
+                "escalation_level": "LEVEL_3_VOICE_ALERT_REQUIRED ",
                 "voice_tts_script_tamil": f"வணக்கம். இது நந்தா பொறியியல் கல்லூரி லீட்கோடு நுண்ணறிவு தளம். மாணவர் {st.name} ({st.reg_no}) கடந்த 3 வாரங்களாக லீட்கோடு போட்டிகளில் பங்கேற்கவில்லை. உடனடி நடவடிக்கை தேவை.",
                 "voice_tts_script_english": f"Hello, this is Nandha LeetCode Intelligence. Student {st.name} ({st.reg_no}) has missed 3 consecutive Sunday coding contests. Immediate faculty intervention is requested.",
                 "dispatch_ready": True

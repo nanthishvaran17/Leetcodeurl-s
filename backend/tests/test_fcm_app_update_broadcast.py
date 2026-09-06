@@ -50,7 +50,7 @@ def test_publish_app_update_notification_endpoint():
             # Direct service call validation
             from backend.services.notification_service import NotificationService
             results = NotificationService.send_app_update_broadcast(
-                title="⚡ LeetCode Performance Update v2.0",
+                title=" LeetCode Performance Update v2.0",
                 message="Real-time leaderboard sync & growth delta engine activated!",
                 feature_version="2.0.0",
                 action_route="/dashboard",
@@ -66,7 +66,7 @@ def test_publish_app_update_notification_endpoint():
             assert mock_send.call_count == 1
             fcm_arg = mock_send.call_args[0][0]
             assert fcm_arg.topic == "all_app_users"
-            assert fcm_arg.notification.title == "⚡ LeetCode Performance Update v2.0"
+            assert fcm_arg.notification.title == " LeetCode Performance Update v2.0"
             assert fcm_arg.data["type"] == "APP_UPDATE"
             assert fcm_arg.data["actionRoute"] == "/dashboard"
             assert fcm_arg.data["version"] == "2.0.0"

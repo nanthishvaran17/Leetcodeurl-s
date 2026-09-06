@@ -434,7 +434,7 @@ async def test_admin_otp_delivery(db: Session = Depends(get_db)):
     return {
         "success": True,
         "status": "SMTP_ACCEPTED",
-        "message": f"✓ Real OTP verification email accepted by SMTP server for {masked_target}",
+        "message": f" Real OTP verification email accepted by SMTP server for {masked_target}",
         "recipientMasked": masked_target,
         "messageId": msg_id,
         "timestamp": _utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")

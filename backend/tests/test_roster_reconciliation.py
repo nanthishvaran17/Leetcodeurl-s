@@ -17,7 +17,7 @@ Covers all 20 test categories from the audit spec:
 import pytest
 from collections import defaultdict
 
-# ─── Helpers ───────────────────────────────────────────────────────────────────
+# Helpers 
 
 def make_pub_result(**kwargs):
     """Create a fake WeeklyPublicResult with controlled attribute values."""
@@ -68,7 +68,7 @@ from backend.services.weekly_report_service import (
     classify_virtual_contest_outcome,
 )
 
-# ─── Test: classify_public_contest_outcome ─────────────────────────────────────
+# Test: classify_public_contest_outcome 
 
 class TestPublicClassifier:
 

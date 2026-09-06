@@ -22,13 +22,13 @@ from typing import Dict, Any, List, Optional, Set
 
 
 
-# ─── ALL 11 INSTITUTIONAL DEPARTMENTS ──────────────────────────────────────────
+# ALL 11 INSTITUTIONAL DEPARTMENTS 
 INSTITUTIONAL_DEPARTMENTS = [
     "CSE", "CSE(CS)", "CSE(IOT)", "IT", "AIDS", 
     "ECE", "EEE", "MECH", "CIVIL", "AGRI", "BME"
 ]
 
-# ─── ALL 3 ACADEMIC YEARS ──────────────────────────────────────────────────────
+# ALL 3 ACADEMIC YEARS 
 INSTITUTIONAL_ACADEMIC_YEARS = ["II", "III", "IV"]
 
 
@@ -56,7 +56,7 @@ class ContestProblemSet:
     problem_set_status: str = "VERIFIED"  # VERIFIED, INVALID, PROBLEM_SET_MISMATCH
 
 
-# ─── KNOWN CANONICAL CONTEST PROBLEM REGISTRY ──────────────────────────────────
+# KNOWN CANONICAL CONTEST PROBLEM REGISTRY 
 # Stored with exact canonical slugs to prevent fuzzy match errors.
 # The engine dynamically resolves any weekly contest N.
 OFFICIAL_CONTEST_PROBLEM_REGISTRY: Dict[int, List[Dict[str, Any]]] = {
@@ -239,7 +239,7 @@ class ContestProblemAccuracyEngine:
                 "q1": 0, "q2": 0, "q3": 0, "q4": 0,
                 "solved": 0,
                 "tier": "0/4",
-                "tier_display": "⚪ 0/4",
+                "tier_display": " 0/4",
                 "score": 0,
                 "status": "PROBLEM_SET_MISMATCH",
                 "is_consistent": False,

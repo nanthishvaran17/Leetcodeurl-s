@@ -25,7 +25,7 @@ from backend.logger import logger
 
 router = APIRouter(prefix="/command-center", tags=["Command Center Operations & Analytics"])
 
-# ── Pydantic Schemas ──────────────────────────────────────────────────────────
+# Pydantic Schemas 
 
 class StudentAddRequest(BaseModel):
     reg_no: str = Field(..., min_length=4, max_length=30)
@@ -87,7 +87,7 @@ def _log_admin_action(db: Session, action: str, target_id: str, description: str
     except Exception as e:
         logger.warning(f"[COMMAND_CENTER] Audit log write failed: {e}")
 
-# ── 1. LIVE SCOPED SUMMARY ANALYTICS ──────────────────────────────────────────
+# 1. LIVE SCOPED SUMMARY ANALYTICS 
 
 @router.get("/summary")
 def get_command_center_summary(
@@ -203,7 +203,7 @@ def get_command_center_summary(
         tags=tags
     )
 
-# ── 2. LIVE STUDENT LIST (Scoped & Paginated) ──────────────────────────────────
+# 2. LIVE STUDENT LIST (Scoped & Paginated) 
 
 @router.get("/students")
 def get_students(
@@ -345,7 +345,7 @@ def get_students(
         "students":  results,
     }
 
-# ── 3. HOD STAFF ALLOCATION MANAGEMENT ENDPOINTS ──────────────────────────────
+# 3. HOD STAFF ALLOCATION MANAGEMENT ENDPOINTS 
 
 @router.post("/faculty/assign-batch")
 def assign_students_batch(
@@ -477,7 +477,7 @@ def get_faculty_workload(
         "faculty_workload": workload
     }
 
-# ── 4. DEDICATED REPORT DATA ENGINE ───────────────────────────────────────────
+# 4. DEDICATED REPORT DATA ENGINE 
 
 @router.get("/reports/data")
 def get_report_data(
@@ -604,7 +604,7 @@ def get_report_data(
             "health": health
         }
 
-# ── 5. ADD / UPDATE / DELETE / DEPARTMENTS ────────────────────────────────────
+# 5. ADD / UPDATE / DELETE / DEPARTMENTS 
 
 @router.post("/students/add")
 async def add_student(req: StudentAddRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):

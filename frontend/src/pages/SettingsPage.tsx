@@ -1382,7 +1382,7 @@ export const SettingsPage: React.FC = () => {
                         <td className="py-2.5 px-3 text-slate-400">{log.timestamp ? log.timestamp.substring(0, 19).replace('T', ' ') : '—'}</td>
                         <td className="py-2.5 px-3 font-bold text-white">{log.user_name}</td>
                         <td className="py-2.5 px-3 text-indigo-300 font-bold">{log.action}</td>
-                        <td className="py-2.5 px-3 text-emerald-400 font-black">● SUCCESS</td>
+                        <td className="py-2.5 px-3 text-emerald-400 font-black"> SUCCESS</td>
                         <td className="py-2.5 px-3 text-slate-300">{log.details}</td>
                       </tr>
                     ))}

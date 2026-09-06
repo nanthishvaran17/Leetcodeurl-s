@@ -128,7 +128,7 @@ def get_current_sync_status(db: Session = Depends(get_db)):
 
     if is_running:
         operation = "RUNNING"
-        status_text = "● Sync Engine Running"
+        status_text = " Sync Engine Running"
         total_students = sync_tracker.total_students or (running_job.total_records if running_job else tot)
         students_processed = sync_tracker.students_processed or (running_job.success_count + running_job.error_count if running_job else 0)
         profiles_synced = sync_tracker.profiles_synced or (running_job.success_count if running_job else 0)
@@ -140,7 +140,7 @@ def get_current_sync_status(db: Session = Depends(get_db)):
         progress_pct = sync_tracker.progress_percentage or round((students_processed / max(1, total_students)) * 100.0, 1)
     elif last_completed_job or verified_cnt > 0:
         operation = "COMPLETED"
-        status_text = "✓ All Student Profiles Synchronized"
+        status_text = " All Student Profiles Synchronized"
         total_students = tot
         students_processed = tot
         profiles_synced = verified_cnt
@@ -152,7 +152,7 @@ def get_current_sync_status(db: Session = Depends(get_db)):
         progress_pct = 100.0
     else:
         operation = "IDLE"
-        status_text = "● Sync Engine Ready"
+        status_text = " Sync Engine Ready"
         total_students = tot
         students_processed = 0
         profiles_synced = 0

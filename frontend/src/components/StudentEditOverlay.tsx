@@ -18,7 +18,7 @@ export interface SecondaryAccountItem {
   url: string;
 }
 
-// ─── LeetCode Validation State Machine ───────────────────────────────────────
+// LeetCode Validation State Machine 
 type LcValidationState =
   | { status: 'idle' }
   | { status: 'validating' }

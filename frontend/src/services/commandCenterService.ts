@@ -1,13 +1,13 @@
 /**
  * commandCenterService.ts
- * ─────────────────────────────────────────────────────────────────
+ * 
  * TypeScript API client for the Command Center Operations & Scoped Analytics.
  * All endpoints backed by real-time SQLite database data.
  */
 
 import api from './api';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// Types 
 
 export interface DeptHealth {
   health_score: number;
@@ -205,7 +205,7 @@ export interface DepartmentRecord {
   student_count: number;
 }
 
-// ── API Functions ─────────────────────────────────────────────────────────────
+// API Functions 
 
 export async function getCommandCenterSummary(params?: {
   dept_id?: number;

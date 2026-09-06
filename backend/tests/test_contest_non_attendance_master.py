@@ -77,7 +77,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
         self.start_utc = self.contest_meta["start_timestamp_utc"]
         self.end_utc = self.contest_meta["end_timestamp_utc"]
 
-    # ─── TEST 1: Public contest attended + 1+ solved ──────────────────────────
+    # TEST 1: Public contest attended + 1+ solved 
     def test_01_public_attended_solved_plus(self):
         """TEST 1: Student attended public contest and solved 1+ problems -> LIVE_ATTENDED, NO EMAIL"""
         student = MockStudent(101, "732224CS101", "Alice Attended", "alice_lc", "alice@nandha.ac.in")
@@ -94,7 +94,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
         self.assertFalse(eligible, "Live attended student must never receive non-attendance email.")
         self.assertIn("LIVE_ATTENDED", reason)
 
-    # ─── TEST 2: Public contest attended + 0 solved ───────────────────────────
+    # TEST 2: Public contest attended + 0 solved 
     def test_02_public_attended_zero_solved(self):
         """TEST 2: Student attended public contest and solved 0 problems -> LIVE_ATTENDED, NO EMAIL"""
         student = MockStudent(102, "732224CS102", "Bob Zero", "bob_zero", "bob@nandha.ac.in")
@@ -111,7 +111,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
         self.assertFalse(eligible, "Live attended with 0 solves is still attended. Must NOT get email.")
         self.assertIn("LIVE_ATTENDED", reason)
 
-    # ─── TEST 3: Public attended + later post-contest solve ────────────────────
+    # TEST 3: Public attended + later post-contest solve 
     def test_03_public_attended_plus_post_contest_solve(self):
         """TEST 3: Student attended public contest and later solved another problem -> LIVE_ATTENDED, NO EMAIL"""
         student = MockStudent(103, "732224CS103", "Charlie Multi", "charlie_lc", "charlie@nandha.ac.in")
@@ -129,7 +129,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
         self.assertFalse(eligible)
         self.assertIn("LIVE_ATTENDED", reason)
 
-    # ─── TEST 4: Verified absent & no qualifying activity ──────────────────────
+    # TEST 4: Verified absent & no qualifying activity 
     def test_04_verified_absent_no_activity(self):
         """TEST 4: Student did not attend public contest and has no activity -> NOT_ATTENDED, SEND ONE EMAIL"""
         student = MockStudent(104, "732224CS104", "David Absent", "david_lc", "david@nandha.ac.in")
@@ -146,7 +146,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
         self.assertTrue(eligible)
         self.assertEqual(reason, "ELIGIBLE")
 
-    # ─── TEST 5: Student solves exact contest problem after end ────────────────
+    # TEST 5: Student solves exact contest problem after end 
     def test_05_virtual_attended_exact_contest_problem(self):
         """TEST 5: Student solves exact contest problem after contest end -> VIRTUAL_ATTENDED, NO EMAIL"""
         student = MockStudent(105, "732224CS105", "Emma Virtual", "emma_lc", "emma@nandha.ac.in")
@@ -163,7 +163,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
         self.assertFalse(eligible, "Virtual attendees must not receive public non-attendance email.")
         self.assertIn("VIRTUAL_ATTENDED", reason)
 
-    # ─── TEST 6: Student solves unrelated problem ─────────────────────────────
+    # TEST 6: Student solves unrelated problem 
     def test_06_unrelated_problem_solve(self):
         """TEST 6: Student solves unrelated problem -> NOT virtual contest; if no live attendance -> NOT_ATTENDED"""
         problem_set = ContestProblemAccuracyEngine.resolve_official_problem_set(516)
@@ -193,7 +193,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
         self.assertTrue(eligible)
         self.assertEqual(reason, "ELIGIBLE")
 
-    # ─── TEST 7: LeetCode API returns 503 ─────────────────────────────────────
+    # TEST 7: LeetCode API returns 503 
     def test_07_api_503_source_unavailable(self):
         """TEST 7: LeetCode API returns 503 -> SOURCE_UNAVAILABLE, NO EMAIL"""
         student = MockStudent(107, "732224CS107", "Grace 503", "grace_lc", "grace@nandha.ac.in")
@@ -209,7 +209,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
         self.assertFalse(eligible, "503 failure must never accuse student of non-attendance.")
         self.assertIn("SOURCE_UNAVAILABLE", reason)
 
-    # ─── TEST 8: LeetCode API returns 429 ─────────────────────────────────────
+    # TEST 8: LeetCode API returns 429 
     def test_08_api_429_rate_limit(self):
         """TEST 8: LeetCode API returns 429 -> SOURCE_UNAVAILABLE, NO EMAIL"""
         student = MockStudent(108, "732224CS108", "Henry 429", "henry_lc", "henry@nandha.ac.in")
@@ -225,7 +225,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
         self.assertFalse(eligible, "429 rate limit must never accuse student of non-attendance.")
         self.assertIn("SOURCE_UNAVAILABLE", reason)
 
-    # ─── TEST 9: Username invalid/deleted ──────────────────────────────────────
+    # TEST 9: Username invalid/deleted 
     def test_09_username_invalid_data_error(self):
         """TEST 9: Username invalid/deleted -> DATA_ERROR, NO EMAIL"""
         student = MockStudent(109, "732224CS109", "Ian Invalid", "UNLINKED", "ian@nandha.ac.in")
@@ -241,7 +241,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
         self.assertFalse(eligible, "Invalid or unlinked usernames must be DATA_ERROR, NO EMAIL.")
         self.assertIn("DATA_ERROR", reason)
 
-    # ─── TEST 10: Evidence is pending ─────────────────────────────────────────
+    # TEST 10: Evidence is pending 
     def test_10_evidence_is_pending(self):
         """TEST 10: Evidence is pending -> PENDING_EVIDENCE, NO EMAIL"""
         student = MockStudent(110, "732224CS110", "Jack Pending", "jack_lc", "jack@nandha.ac.in")
@@ -257,7 +257,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
         self.assertFalse(eligible, "Pending evidence state must never dispatch non-attendance email.")
         self.assertIn("PENDING_EVIDENCE", reason)
 
-    # ─── TEST 11: Valid account + no activity + source success ────────────────
+    # TEST 11: Valid account + no activity + source success 
     def test_11_valid_account_verified_absent_source_success(self):
         """TEST 11: Valid account + no contest activity + source verification succeeds -> NOT_ATTENDED, SEND ONE EMAIL"""
         student = MockStudent(111, "732224CS111", "Karen Absent", "karen_lc", "karen@nandha.ac.in")
@@ -274,7 +274,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
         self.assertTrue(eligible)
         self.assertEqual(reason, "ELIGIBLE")
 
-    # ─── TEST 12: Idempotency 2x execution ────────────────────────────────────
+    # TEST 12: Idempotency 2x execution 
     def test_12_idempotency_run_twice(self):
         """TEST 12: Email dispatch job executes twice -> Exactly ONE email recorded."""
         db = MagicMock()
@@ -292,7 +292,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
         is_sent_2 = ContestNonAttendanceService.is_already_dispatched(student.id, self.session.id, db)
         self.assertTrue(is_sent_2, "Second run must detect previous dispatch and skip sending.")
 
-    # ─── TEST 13: Idempotency multiple (5x) execution ─────────────────────────
+    # TEST 13: Idempotency multiple (5x) execution 
     def test_13_idempotency_run_multiple_times(self):
         """TEST 13: Email dispatch job executes multiple times -> Exactly ONE email."""
         db = MagicMock()
@@ -306,7 +306,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
             is_sent = ContestNonAttendanceService.is_already_dispatched(student.id, self.session.id, db)
             self.assertTrue(is_sent, f"Iteration {iteration} must safely skip.")
 
-    # ─── TEST 14: 1450+ roster reconciliation invariant ───────────────────────
+    # TEST 14: 1450+ roster reconciliation invariant 
     def test_14_roster_reconciliation_invariant_1450_students(self):
         """
         TEST 14: 1450+ roster reconciliation invariant:
@@ -329,7 +329,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
         non_attendance_targets = counts["NOT_ATTENDED"]
         self.assertEqual(non_attendance_targets, 850)
 
-    # ─── TEST 15: Snapshot is not frozen ──────────────────────────────────────
+    # TEST 15: Snapshot is not frozen 
     def test_15_snapshot_not_frozen_no_email(self):
         """TEST 15: Snapshot is not frozen -> NO EMAIL"""
         student = MockStudent(115, "732224CS115", "Noah Unfrozen", "noah_lc", "noah@nandha.ac.in")
@@ -345,7 +345,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
         self.assertFalse(eligible, "Unfrozen snapshots must NEVER trigger email dispatch.")
         self.assertIn("SNAPSHOT_NOT_FROZEN", reason)
 
-    # ─── TEST 16: Snapshot frozen + LIVE_ATTENDED ─────────────────────────────
+    # TEST 16: Snapshot frozen + LIVE_ATTENDED 
     def test_16_snapshot_frozen_live_attended(self):
         """TEST 16: Snapshot is frozen and final status is LIVE_ATTENDED -> NO EMAIL"""
         student = MockStudent(116, "732224CS116", "Olivia Frozen Live", "olivia_lc", "olivia@nandha.ac.in")
@@ -356,7 +356,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
         self.assertFalse(eligible)
         self.assertIn("LIVE_ATTENDED", reason)
 
-    # ─── TEST 17: Snapshot frozen + VIRTUAL_ATTENDED ──────────────────────────
+    # TEST 17: Snapshot frozen + VIRTUAL_ATTENDED 
     def test_17_snapshot_frozen_virtual_attended(self):
         """TEST 17: Snapshot is frozen and final status is VIRTUAL_ATTENDED -> NO EMAIL"""
         student = MockStudent(117, "732224CS117", "Paul Frozen Virtual", "paul_lc", "paul@nandha.ac.in")
@@ -367,7 +367,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
         self.assertFalse(eligible)
         self.assertIn("VIRTUAL_ATTENDED", reason)
 
-    # ─── TEST 18: Snapshot frozen + DATA_ERROR ────────────────────────────────
+    # TEST 18: Snapshot frozen + DATA_ERROR 
     def test_18_snapshot_frozen_data_error(self):
         """TEST 18: Snapshot is frozen and final status is DATA_ERROR -> NO EMAIL"""
         student = MockStudent(118, "732224CS118", "Quinn Frozen Error", "quinn_lc", "quinn@nandha.ac.in")
@@ -378,7 +378,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
         self.assertFalse(eligible)
         self.assertIn("DATA_ERROR", reason)
 
-    # ─── TEST 19: Snapshot frozen + SOURCE_UNAVAILABLE ────────────────────────
+    # TEST 19: Snapshot frozen + SOURCE_UNAVAILABLE 
     def test_19_snapshot_frozen_source_unavailable(self):
         """TEST 19: Snapshot is frozen and final status is SOURCE_UNAVAILABLE -> NO EMAIL"""
         student = MockStudent(119, "732224CS119", "Ruby Frozen Source", "ruby_lc", "ruby@nandha.ac.in")
@@ -389,7 +389,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
         self.assertFalse(eligible)
         self.assertIn("SOURCE_UNAVAILABLE", reason)
 
-    # ─── TEST 20: Snapshot frozen + PENDING_EVIDENCE ──────────────────────────
+    # TEST 20: Snapshot frozen + PENDING_EVIDENCE 
     def test_20_snapshot_frozen_pending_evidence(self):
         """TEST 20: Snapshot is frozen and final status is PENDING_EVIDENCE -> NO EMAIL"""
         student = MockStudent(120, "732224CS120", "Sam Frozen Pending", "sam_lc", "sam@nandha.ac.in")
@@ -400,7 +400,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
         self.assertFalse(eligible)
         self.assertIn("PENDING_EVIDENCE", reason)
 
-    # ─── TEST 21: Snapshot frozen + NOT_ATTENDED ──────────────────────────────
+    # TEST 21: Snapshot frozen + NOT_ATTENDED 
     def test_21_snapshot_frozen_not_attended(self):
         """TEST 21: Snapshot is frozen and final status is NOT_ATTENDED -> SEND ONE EMAIL"""
         student = MockStudent(121, "732224CS121", "Tina Frozen Absent", "tina_lc", "tina@nandha.ac.in")
@@ -416,7 +416,7 @@ class TestContestNonAttendanceMaster(unittest.TestCase):
         self.assertTrue(eligible)
         self.assertEqual(reason, "ELIGIBLE")
 
-    # ─── TEST 22: Submission timestamp == contest_end_time ────────────────────
+    # TEST 22: Submission timestamp == contest_end_time 
     def test_22_boundary_timestamp_exact_contest_end(self):
         """
         TEST 22: Submission timestamp exactly equals contest_end_time:

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Building2, TrendingUp, Users, Award, ChevronRight } from 'lucide-react';
 import api from '../../services/api';
 

@@ -103,7 +103,7 @@ class TestCapacityRaceCondition:
         finally:
             db_setup.close()
 
-        # ─── Concurrent Assignment Phase ───────────────────────────────────────
+        # Concurrent Assignment Phase 
         THREADS = 10
         STUDENTS_PER_THREAD = 5
         results = []
@@ -145,7 +145,7 @@ class TestCapacityRaceCondition:
         for t in threads:
             t.join()
 
-        # ─── Verify Final State ────────────────────────────────────────────────
+        # Verify Final State 
         db_verify = SessionLocal()
         try:
             final_count = faculty_assignment_service.get_faculty_assigned_count(db_verify, staff_id)

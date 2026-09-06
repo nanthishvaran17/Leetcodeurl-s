@@ -32,11 +32,11 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 
-# ── Contest range to backfill ─────────────────────────────────────────────────
+# Contest range to backfill 
 DEFAULT_FROM_CONTEST = 510
 DEFAULT_TO_CONTEST   = 515
 
-# ── LeetCode GraphQL ──────────────────────────────────────────────────────────
+# LeetCode GraphQL 
 GRAPHQL_URL = "https://leetcode.com/graphql"
 
 CONTEST_HISTORY_QUERY = """
@@ -56,7 +56,7 @@ query userContestRankingInfo($username: String!) {
 }
 """
 
-# ── Token-bucket rate limiter (shared with leetcode_tracker.py) ───────────────
+# Token-bucket rate limiter (shared with leetcode_tracker.py) 
 import asyncio
 import time
 
@@ -153,7 +153,7 @@ def _q_matrix(solved: int) -> Tuple[int, int, int, int]:
     )
 
 
-# ── Main backfill engine ──────────────────────────────────────────────────────
+# Main backfill engine 
 async def backfill_historical(
     from_contest: int = DEFAULT_FROM_CONTEST,
     to_contest: int = DEFAULT_TO_CONTEST,
@@ -352,7 +352,7 @@ async def backfill_historical(
         db.close()
 
 
-# ── CLI Entry Point ───────────────────────────────────────────────────────────
+# CLI Entry Point 
 if __name__ == "__main__":
     import argparse
 

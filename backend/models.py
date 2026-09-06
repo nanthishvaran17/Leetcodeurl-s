@@ -174,7 +174,7 @@ class WeeklySession(Base):
     not_participated = Column(Integer, default=0)
     failed_verification = Column(Integer, default=0)
     dataset_hash = Column(String(100), nullable=True)
-    sync_status = Column(String(50), default="🟢 Verified") # 🟢 Verified, 🟡 Syncing, 🔴 Sync Error
+    sync_status = Column(String(50), default=" Verified") # Verified, Syncing, Sync Error
     last_synced = Column(DateTime, nullable=True)
 
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
@@ -1084,11 +1084,11 @@ class AuthorizedSignature(Base):
     uploaded_by = Column(String(128), default="Admin")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # CANONICAL NORMALIZED LEETCODE TABLES
 # Every field traces to a specific LeetCode GraphQL API response field.
 # All tables foreign-key to students.id — never to name, reg_no, or username.
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 class LeetCodeProfile(Base):
     """
@@ -1360,9 +1360,9 @@ class LeetCodeSubmission(Base):
 
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # FORENSIC AUDIT — 300 STUDENTS × 100 CONTESTS
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 class ForensicAuditJob(Base):
     """
@@ -1519,9 +1519,9 @@ class ForensicAuditRecord(Base):
     student = relationship("Student", backref="forensic_audit_records")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # PRODUCTION LEETCODE CONTEST TRACKING SYSTEM (FINAL SCHEMA)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 class Contest(Base):
     """
@@ -1735,7 +1735,7 @@ class AIChatHistory(Base):
 
 
 # ============================================================================
-# 🤖 AI CODING INTELLIGENCE PLATFORM MODELS
+# AI CODING INTELLIGENCE PLATFORM MODELS
 # ============================================================================
 
 class StudentRiskProfile(Base):

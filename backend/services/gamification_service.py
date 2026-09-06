@@ -2,14 +2,14 @@
 gamification_service.py — Smart Gamification & Dynamic Badge Engine
 
 Defines and evaluates prestigious digital badges for student achievements:
-1. 🔥 100-Day Streak Knight: Maintained active streak >= 100 days.
-2. ⚡ Speed Demon: Solved Q1 and Q2 in contest under 10 minutes.
-3. 🏆 Contest Champion: Finished in Top 3 College Ranks in weekly contest.
-4. 🧠 Algorithm Master: Solved 30+ Hard difficulty LeetCode problems.
-5. 🎯 Century Club: Solved 100+ Total problems.
-6. 💎 Grandmaster: Achieved Contest Rating >= 2000.
-7. 🛡️ Consistent Crusader: Maintained active streak >= 30 days.
-8. 🚀 Department Topper: Rank 1 in assigned Department.
+1. 100-Day Streak Knight: Maintained active streak >= 100 days.
+2. Speed Demon: Solved Q1 and Q2 in contest under 10 minutes.
+3. Contest Champion: Finished in Top 3 College Ranks in weekly contest.
+4. Algorithm Master: Solved 30+ Hard difficulty LeetCode problems.
+5. Century Club: Solved 100+ Total problems.
+6. Grandmaster: Achieved Contest Rating >= 2000.
+7. Consistent Crusader: Maintained active streak >= 30 days.
+8. Department Topper: Rank 1 in assigned Department.
 """
 
 from typing import List, Dict, Any
@@ -22,7 +22,7 @@ BADGE_DEFINITIONS = [
     {
         "id": "streak_100",
         "title": "100-Day Streak Knight",
-        "icon": "🔥",
+        "icon": "",
         "category": "STREAK",
         "rarity": "LEGENDARY",
         "gradient": "from-amber-500 via-orange-500 to-red-600",
@@ -32,7 +32,7 @@ BADGE_DEFINITIONS = [
     {
         "id": "contest_champ",
         "title": "Contest Champion",
-        "icon": "🏆",
+        "icon": "",
         "category": "CONTEST",
         "rarity": "LEGENDARY",
         "gradient": "from-yellow-400 via-amber-500 to-yellow-600",
@@ -42,7 +42,7 @@ BADGE_DEFINITIONS = [
     {
         "id": "speed_demon",
         "title": "Speed Demon",
-        "icon": "⚡",
+        "icon": "",
         "category": "SPEED",
         "rarity": "EPIC",
         "gradient": "from-cyan-400 via-blue-500 to-indigo-600",
@@ -52,7 +52,7 @@ BADGE_DEFINITIONS = [
     {
         "id": "algo_master",
         "title": "Algorithm Master",
-        "icon": "🧠",
+        "icon": "",
         "category": "MASTERY",
         "rarity": "EPIC",
         "gradient": "from-purple-500 via-indigo-500 to-violet-600",
@@ -62,7 +62,7 @@ BADGE_DEFINITIONS = [
     {
         "id": "grandmaster",
         "title": "Grandmaster",
-        "icon": "💎",
+        "icon": "",
         "category": "RATING",
         "rarity": "MYTHIC",
         "gradient": "from-emerald-400 via-teal-500 to-cyan-600",
@@ -72,7 +72,7 @@ BADGE_DEFINITIONS = [
     {
         "id": "century_club",
         "title": "Century Club",
-        "icon": "🎯",
+        "icon": "",
         "category": "MILESTONE",
         "rarity": "RARE",
         "gradient": "from-blue-500 via-indigo-500 to-purple-600",
@@ -82,7 +82,7 @@ BADGE_DEFINITIONS = [
     {
         "id": "streak_30",
         "title": "Consistent Crusader",
-        "icon": "🛡️",
+        "icon": "",
         "category": "STREAK",
         "rarity": "RARE",
         "gradient": "from-emerald-500 to-teal-600",
@@ -92,7 +92,7 @@ BADGE_DEFINITIONS = [
     {
         "id": "dept_topper",
         "title": "Department Topper",
-        "icon": "👑",
+        "icon": "",
         "category": "HONOR",
         "rarity": "EPIC",
         "gradient": "from-amber-400 to-rose-500",

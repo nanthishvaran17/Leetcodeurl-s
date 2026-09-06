@@ -15,7 +15,7 @@ import { studentLiveStore } from '../stores/studentLiveStore';
 import { useDepartmentsQuery } from '../hooks/useDashboardQueries';
 import { useFilters, useFilteredStudents } from '../context/FilterContext';
 
-// ─── Validation state machine ────────────────────────────────────────────────
+// Validation state machine 
 type LcValidationState =
   | { status: 'idle' }
   | { status: 'validating' }
@@ -137,7 +137,7 @@ function mapValidationResponse(res: any): LcValidationState {
   }
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+// Component 
 
 interface StudentMasterPageProps {
   onSelectStudent: (student: StudentData) => void;
@@ -218,7 +218,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     }
   }, [globalDepts, deptId]);
 
-  // ── LeetCode URL validation (debounced, 900ms) ─────────────────────────────
+  // LeetCode URL validation (debounced, 900ms) 
   const validateLcUrl = useCallback(async (url: string) => {
     const trimmed = url.trim();
     if (!trimmed) {
@@ -280,7 +280,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     return () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); };
   }, []);
 
-  // ── Handlers ───────────────────────────────────────────────────────────────
+  // Handlers 
 
   const handleOpenAddModal = () => {
     // Reset form + validation state cleanly
@@ -649,7 +649,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                 />
               </div>
 
-              {/* ── LeetCode URL with live validation ── */}
+              {/* LeetCode URL with live validation */}
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">LeetCode Profile Link</label>
                 <div className="relative">

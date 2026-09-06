@@ -570,7 +570,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
       return;
     }
 
-    // ── Institutional queries: use SSE streaming for zero-wait "thinking" indicator ──
+    // Institutional queries: use SSE streaming for zero-wait "thinking" indicator 
     const thinkingId = `thinking_${Date.now()}`;
     const thinkingMsg: ChatMessage = {
       id: thinkingId,
@@ -837,7 +837,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
             ) : (
               /* MESSAGES AREA */
               <>
-                {/* ── PROACTIVE INTEL FEED ── */}
+                {/* PROACTIVE INTEL FEED */}
                 {!briefDismissed && (briefLoading || briefCards.length > 0) && (
                   <div className="px-3 pt-2.5 pb-1 bg-slate-50 dark:bg-navy-900/70 border-b border-slate-200 dark:border-navy-800 shrink-0">
                     <div className="flex items-center justify-between mb-2">

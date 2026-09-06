@@ -118,7 +118,7 @@ class UniversalWeeklyContestAutopilot:
         self.current_phase: str = AutopilotState.SCHEDULED
         self.last_sync_timestamp: Optional[datetime.datetime] = None
         self.last_action_summary: str = "Autopilot Initialized"
-        self.health_status: str = "🟢 HEALTHY"
+        self.health_status: str = " HEALTHY"
         self.error_count: int = 0
         self.telemetry: Dict[str, Any] = {
             "processed_count": 0,
@@ -328,7 +328,7 @@ class UniversalWeeklyContestAutopilot:
             if close_on_exit:
                 db.close()
 
-    # ─── 1. DISCOVERY & PRE-CONTEST PREPARATION ───────────────────────────────
+    # 1. DISCOVERY & PRE-CONTEST PREPARATION 
     def phase_1_discovery_and_preparation(self, db: Optional[Session] = None) -> Dict[str, Any]:
         """
         Discovers the upcoming contest, verifies 1,450 roster, resolves problem set,
@@ -347,7 +347,7 @@ class UniversalWeeklyContestAutopilot:
             
             if meta.get("status") == "DISCOVERY_FAILED":
                 logger.warning("[AUTOPILOT] Discovery API failed. Scheduling retry.")
-                self.health_status = "🟡 DEGRADED"
+                self.health_status = " DEGRADED"
                 return {"phase": "PREPARATION", "success": False, "error": "DISCOVERY_FAILED", "retry": True}
 
             # Get or create WeeklySession for upcoming contest
@@ -367,7 +367,7 @@ class UniversalWeeklyContestAutopilot:
                     end_time="09:30",
                     status="SCHEDULED",
                     total_students=1450,
-                    sync_status="🟢 Verified"
+                    sync_status=" Verified"
                 )
                 db.add(session)
                 db.commit()
@@ -424,13 +424,13 @@ class UniversalWeeklyContestAutopilot:
             }
         except Exception as e:
             logger.error(f"[AUTOPILOT_PREP_ERROR] {e}", exc_info=True)
-            self.health_status = "🟡 DEGRADED"
+            self.health_status = " DEGRADED"
             return {"phase": "PREPARATION", "success": False, "error": str(e)}
         finally:
             if close_on_exit:
                 db.close()
 
-    # ─── 2. START CONTEST MONITORING ──────────────────────────────────────────
+    # 2. START CONTEST MONITORING 
     def phase_2_start_live_monitoring(self, session_id: Optional[int] = None, db: Optional[Session] = None) -> Dict[str, Any]:
         """
         Transitions contest to LIVE / MONITORING and starts live ingestion stream.
@@ -447,7 +447,7 @@ class UniversalWeeklyContestAutopilot:
                 return {"phase": "START_MONITORING", "success": False, "error": "No active session found"}
 
             session.status = "LIVE"
-            session.sync_status = "🟡 Syncing"
+            session.sync_status = " Syncing"
             if session.pipeline_state != "LIVE":
                 session.pipeline_state = "LIVE"
                 session.pipeline_last_updated = datetime.datetime.utcnow()
@@ -471,7 +471,7 @@ class UniversalWeeklyContestAutopilot:
             if close_on_exit:
                 db.close()
 
-    # ─── 3. LIVE MONITORING CYCLE ─────────────────────────────────────────────
+    # 3. LIVE MONITORING CYCLE 
     def phase_3_live_monitoring_cycle(self, session_id: Optional[int] = None, db: Optional[Session] = None) -> Dict[str, Any]:
         """
         Rate-limit aware periodic solve tracker during live contest window.
@@ -514,7 +514,7 @@ class UniversalWeeklyContestAutopilot:
             if close_on_exit:
                 db.close()
 
-    # ─── 4. CONTEST FINALIZATION & RECONCILIATION ─────────────────────────────
+    # 4. CONTEST FINALIZATION & RECONCILIATION 
     def phase_4_finalization_and_reconciliation(self, session_id: Optional[int] = None, db: Optional[Session] = None) -> Dict[str, Any]:
         """
         Stops live monitoring, executes complete 1,450 student reconciliation,
@@ -596,7 +596,7 @@ class UniversalWeeklyContestAutopilot:
             if close_on_exit:
                 db.close()
 
-    # ─── 5. MULTI-FORMAT REPORT GENERATION & PACKAGING ────────────────────────
+    # 5. MULTI-FORMAT REPORT GENERATION & PACKAGING 
     def phase_5_report_generation(self, session_id: Optional[int] = None, db: Optional[Session] = None) -> Dict[str, Any]:
         """
         Generates Master Excel, PDF, Word, and ZIP package directly from canonical dataset.
@@ -669,7 +669,7 @@ class UniversalWeeklyContestAutopilot:
             if close_on_exit:
                 db.close()
 
-    # ─── 6. EMAIL & TELEGRAM DISPATCH ─────────────────────────────────────────
+    # 6. EMAIL & TELEGRAM DISPATCH 
     def phase_6_broadcast_dispatch(self, session_id: Optional[int] = None, db: Optional[Session] = None) -> Dict[str, Any]:
         """
         Idempotently dispatches emails with attachments and updates Telegram bot.
@@ -709,7 +709,7 @@ class UniversalWeeklyContestAutopilot:
             if close_on_exit:
                 db.close()
 
-    # ─── 7. VIRTUAL CONTEST RECHECK ───────────────────────────────────────────
+    # 7. VIRTUAL CONTEST RECHECK 
     def phase_7_virtual_recheck(self, session_id: Optional[int] = None, db: Optional[Session] = None) -> Dict[str, Any]:
         """
         Incremental Virtual Recheck: Scans non-live profiles and reconciles
@@ -748,7 +748,7 @@ class UniversalWeeklyContestAutopilot:
             if close_on_exit:
                 db.close()
 
-    # ─── 8. PREPARE NEXT CONTEST (CONTINUOUS AUTONOMOUS LOOP) ──────────────────
+    # 8. PREPARE NEXT CONTEST (CONTINUOUS AUTONOMOUS LOOP) 
     def phase_8_prepare_next_contest(self, db: Optional[Session] = None) -> Dict[str, Any]:
         """
         Automatically prepares the NEXT weekly contest session once current is finalized.
@@ -794,7 +794,7 @@ class UniversalWeeklyContestAutopilot:
                     end_time="09:30",
                     status="SCHEDULED",
                     total_students=1450,
-                    sync_status="🟢 Verified"
+                    sync_status=" Verified"
                 )
                 session.pipeline_state = "DISCOVERED"
                 session.pipeline_last_updated = datetime.datetime.utcnow()
@@ -823,7 +823,7 @@ class UniversalWeeklyContestAutopilot:
             if close_on_exit:
                 db.close()
 
-    # ─── AUTOPILOT STATUS & TELEMETRY ─────────────────────────────────────────
+    # AUTOPILOT STATUS & TELEMETRY 
     def get_status_overview(self, db: Optional[Session] = None) -> Dict[str, Any]:
         """
         Returns full telemetry overview for dashboard widget and health monitor.
@@ -865,7 +865,7 @@ class UniversalWeeklyContestAutopilot:
                     "virtual_attended": latest_session.virtual_participants if latest_session else 0,
                     "not_attended": latest_session.not_participated if latest_session else 668,
                     "data_errors": latest_session.failed_verification if latest_session else 15,
-                    "sync_status": latest_session.sync_status if latest_session else "🟢 Verified"
+                    "sync_status": latest_session.sync_status if latest_session else " Verified"
                 },
                 "next_contest": {
                     "contest_name": next_meta["contest_name"],

@@ -28,9 +28,9 @@ import httpx
 from backend.logger import logger
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 1. ENUMS (Strict 7-Enum System)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 class ContestStatus(str, Enum):
     # New Standard Enums
@@ -71,9 +71,9 @@ class FetchStatus(str, Enum):
     PARTIAL = "PARTIAL"
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 2. CANONICAL DATA STRUCTURE
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 @dataclass
 class ContestStatusRow:
@@ -134,9 +134,9 @@ class ContestStatusRow:
         }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # SLUG UTILITIES
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 def normalize_contest_id(contest_name_or_id: str) -> str:
     """Converts any contest name or slug to its canonical slug."""
@@ -162,9 +162,9 @@ def contest_number_from_id(contest_id: str) -> Optional[int]:
     return int(m.group(0)) if m else None
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 3. CORE CLASSIFIER CLASS (Sync Interface)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 class ContestClassifier:
     """
@@ -425,9 +425,9 @@ class ContestClassifier:
         return results
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 4. ASYNC BATCH PIPELINE (High-Concurrency Network Engine)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 GRAPHQL_URL = "https://leetcode.com/graphql"
 

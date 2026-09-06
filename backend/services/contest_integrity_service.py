@@ -270,7 +270,7 @@ class ContestIntegrityService:
             channel="FCM_PUSH",
             recipient_target="STAFF_TOPIC",
             payload={
-                "title": "⚠️ Dual-ID Review Required",
+                "title": " Dual-ID Review Required",
                 "message": f"Student {student.name} ({student.people_id}) flagged for dual non-attendance on {case.contest_id}.",
                 "action_route": f"/integrity-monitor?case_id={case.case_id}",
                 "contest_id": case.contest_id

@@ -6,7 +6,7 @@ Capabilities:
    - Every contest finalization, score update, and assignment is chained using SHA-256 blocks:
      Hash(N) = SHA256(Hash(N-1) + EventPayload + Timestamp).
 2. Tamper-Proof Verification:
-   - Any unauthorized direct database modification breaks the Merkle block chain and is instantly flagged as '🚨 TAMPER_DETECTED'.
+   - Any unauthorized direct database modification breaks the Merkle block chain and is instantly flagged as ' TAMPER_DETECTED'.
 3. Role-Based Dynamic PII Masking:
    - Sensitive student fields (Phone, Email) are masked (e.g. +91 98*** **01) unless requested by authorized Super Admin.
 """
@@ -61,14 +61,14 @@ class ImmutableEventStore:
                 return {
                     "is_valid": False,
                     "tamper_detected_at_block": block["block_index"],
-                    "status": "🚨 TAMPER_DETECTED (Hash mismatch)"
+                    "status": " TAMPER_DETECTED (Hash mismatch)"
                 }
 
         return {
             "is_valid": True,
             "total_blocks": len(cls._event_chain),
             "latest_block_hash": cls._event_chain[-1]["block_hash"],
-            "status": "🟢 CHAIN_SECURE_AND_VERIFIED",
+            "status": " CHAIN_SECURE_AND_VERIFIED",
             "algorithm": "SHA-256 Merkle Hash Chain"
         }
 

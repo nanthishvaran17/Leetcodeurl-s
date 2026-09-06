@@ -499,7 +499,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
               <form id="create-staff-form" onSubmit={handleCreate} className="space-y-6 max-w-3xl" autoComplete="off">
                 
-                {/* ── STEP 1: ROLE & ACADEMIC SCOPE ── */}
+                {/* STEP 1: ROLE & ACADEMIC SCOPE */}
                 {activeStep === 1 && (
                   <section className="space-y-6 animate-fade-in">
                     <div>
@@ -640,7 +640,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                   </section>
                 )}
 
-                {/* ── STEP 2: IDENTITY & CREDENTIALS ── */}
+                {/* STEP 2: IDENTITY & CREDENTIALS */}
                 {activeStep === 2 && (
                   <section className="space-y-6 animate-fade-in">
                     <div>
@@ -785,7 +785,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                   </section>
                 )}
 
-                {/* ── STEP 3: CONTACT INFORMATION ── */}
+                {/* STEP 3: CONTACT INFORMATION */}
                 {activeStep === 3 && (
                   <section className="space-y-6 animate-fade-in">
                     <div>
@@ -870,7 +870,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                   </section>
                 )}
 
-                {/* ── STEP 4: STAFF VERIFICATION ── */}
+                {/* STEP 4: STAFF VERIFICATION */}
                 {activeStep === 4 && (
                   <section className="space-y-6 animate-fade-in">
                     <div>
@@ -931,7 +931,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                   </section>
                 )}
 
-                {/* ── STEP 5: PERMISSIONS & AGREEMENT ── */}
+                {/* STEP 5: PERMISSIONS & AGREEMENT */}
                 {activeStep === 5 && (
                   <section className="space-y-6 animate-fade-in">
                     <div>

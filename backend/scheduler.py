@@ -686,7 +686,7 @@ def start_scheduler():
         max_instances=1, coalesce=True, misfire_grace_time=3600
     )
 
-    # ── DAILY AUTOMATIC NOTIFICATION ENGINE JOBS (Asia/Kolkata IST) ──
+    # DAILY AUTOMATIC NOTIFICATION ENGINE JOBS (Asia/Kolkata IST) 
     # Job: Daily 10:00 AM IST Faculty Performance Analysis & Digest
     scheduler.add_job(
         daily_faculty_performance_job,
@@ -715,7 +715,7 @@ def start_scheduler():
         max_instances=1, coalesce=True, misfire_grace_time=3600
     )
 
-    # ── DUAL-SYNC TRACKER JOB 1: Sunday 10:00 AM IST — Official Contest Batch Scrape ──
+    # DUAL-SYNC TRACKER JOB 1: Sunday 10:00 AM IST — Official Contest Batch Scrape 
     scheduler.add_job(
         tracker_dual_sync_morning,
         CronTrigger(day_of_week='sun', hour=10, minute=0, second=0, timezone=IST),
@@ -723,7 +723,7 @@ def start_scheduler():
         replace_existing=True
     )
 
-    # ── DUAL-SYNC TRACKER JOB 2: Sunday 10:00 PM IST — Virtual Contest Consolidation ──
+    # DUAL-SYNC TRACKER JOB 2: Sunday 10:00 PM IST — Virtual Contest Consolidation 
     scheduler.add_job(
         tracker_dual_sync_evening,
         CronTrigger(day_of_week='sun', hour=22, minute=0, second=0, timezone=IST),

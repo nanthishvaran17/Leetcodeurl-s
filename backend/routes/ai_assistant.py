@@ -114,11 +114,11 @@ async def handle_ai_assistant_stream(
     req_id = f"ai_{uuid.uuid4().hex[:12]}"
 
     async def generate():
-        # ── T0: Immediately emit THINKING so the UI renders the indicator ──
+        # T0: Immediately emit THINKING so the UI renders the indicator 
         thinking_event = json.dumps({"type": "THINKING", "requestId": req_id})
         yield f"data: {thinking_event}\n\n"
 
-        # ── T1: Compute the answer (blocking DB call → run in thread) ──
+        # T1: Compute the answer (blocking DB call → run in thread) 
         loop = asyncio.get_event_loop()
         response_data = await loop.run_in_executor(
             None,
@@ -133,7 +133,7 @@ async def handle_ai_assistant_stream(
             )
         )
 
-        # ── T2: Emit the full result ──
+        # T2: Emit the full result 
         result_payload = {
             "type": "RESULT",
             "requestId": response_data.get("requestId", req_id),
@@ -149,7 +149,7 @@ async def handle_ai_assistant_stream(
         }
         yield f"data: {json.dumps(result_payload)}\n\n"
 
-        # ── Background: persist history + audit (non-blocking, after response) ──
+        # Background: persist history + audit (non-blocking, after response) 
         try:
             from backend.models import AIChatHistory
             chat_log = AIChatHistory(

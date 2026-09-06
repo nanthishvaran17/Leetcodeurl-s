@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BarChart2, Star, TrendingUp, Users, Award, Zap } from 'lucide-react';
 import api from '../../services/api';
 

@@ -26,7 +26,7 @@ from unittest.mock import AsyncMock, patch
 from backend.leetcode_fetcher import fetch_verified_student_contest_record
 
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
+# Helpers 
 
 def _run(coro):
     return asyncio.run(coro)
@@ -59,7 +59,7 @@ _SLUG = "weekly-contest-420"
 _USER = "test_user_abc"
 
 
-# ── Test Suite ────────────────────────────────────────────────────────────────
+# Test Suite 
 
 class TestFetchVerifiedStudentContestRecord(unittest.TestCase):
 

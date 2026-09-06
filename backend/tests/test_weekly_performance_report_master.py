@@ -37,9 +37,9 @@ def db():
         Base.metadata.drop_all(bind=engine)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 1. PRIMARY ACCOUNT ISOLATION TESTS (TEST 3, 4, 5, 6)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 def test_primary_account_isolation_bucket_240_primary_260_secondary():
     """
@@ -81,9 +81,9 @@ def test_primary_account_isolation_bucket_510_primary_20_secondary():
     assert cat == "Above 500"
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 2. PEOPLE ID DEDUPLICATION TEST (TEST 7)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 def test_people_id_deduplication_two_accounts_one_student(db):
     """
@@ -113,9 +113,9 @@ def test_people_id_deduplication_two_accounts_one_student(db):
     assert data["total_students"] == 1
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 3. DYNAMIC PREVIOUS WEEK CONTEST DISCOVERY TEST (TEST 1, TEST 2)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 def test_dynamic_previous_week_contest_discovery(db):
     """
@@ -144,9 +144,9 @@ def test_dynamic_previous_week_contest_discovery(db):
     assert c_ids == ["513", "514"]
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 4. BATCH TOTAL PRE-GENERATION VALIDATION & BUCKET SUM (TEST 9)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 def test_batch_total_validation_equality(db):
     """
@@ -179,9 +179,9 @@ def test_batch_total_validation_equality(db):
     assert data["validation_status"] == "VALID"
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 5. TEST DEPARTMENT EXCLUSION (TEST 10)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 def test_test_department_exclusion(db):
     """
@@ -202,9 +202,9 @@ def test_test_department_exclusion(db):
     assert "TEST_P930" not in depts
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 6. HISTORICAL SNAPSHOT IMMUTABILITY & REPRODUCIBILITY (TEST 11, TEST 15)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 def test_historical_snapshot_immutability(db):
     """
@@ -250,9 +250,9 @@ def test_reporting_period_isolation_current_vs_last(db):
     assert p_info["current_week_start"] > p_info["previous_week_start"]
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 7. EXCEL AND PDF PARITY WITH SNAPSHOT (TEST 12)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 def test_excel_and_pdf_parity_with_snapshot(db):
     """
@@ -274,9 +274,9 @@ def test_excel_and_pdf_parity_with_snapshot(db):
     assert excel_bytes is not None and len(excel_bytes) > 5000
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 8. DETERMINISTIC HASH TESTS (TEST 13, TEST 14)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 def test_canonical_hash_determinism_and_sensitivity(db):
     """

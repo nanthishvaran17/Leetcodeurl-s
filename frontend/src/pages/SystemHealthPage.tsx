@@ -66,7 +66,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
     'overview' | 'integrity' | 'forensic' | 'lineage' | 'automation' | 'recovery' | 'audit' | 'copilot'
   >('overview');
 
-  // ── FORENSIC TRACE STATE (STRICTLY BLANK INITIAL STATE) ──
+  // FORENSIC TRACE STATE (STRICTLY BLANK INITIAL STATE) 
   const [forensicSearchInput, setForensicSearchInput] = useState<string>('');
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
   const [studentSuggestions, setStudentSuggestions] = useState<any[]>([]);
@@ -280,7 +280,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
   }, [fetchOperationsCenterData, fetchBackups, fetchAvailableContests]);
 
 
-  // ── FORENSIC SEARCH: LIVE STUDENT AUTOCOMPLETE (NON-AUTO-RUN) ──
+  // FORENSIC SEARCH: LIVE STUDENT AUTOCOMPLETE (NON-AUTO-RUN) 
   const handleStudentSearchChange = (val: string) => {
     setForensicSearchInput(val);
     setSelectedStudent(null);
@@ -359,7 +359,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
     setForensicError(null);
   }, []);
 
-  // ── EXPLICIT EXECUTE FORENSIC TRACE ──
+  // EXPLICIT EXECUTE FORENSIC TRACE 
   const handleExecuteForensicTrace = async () => {
     let studentToUse = selectedStudent;
     if (!studentToUse && forensicSearchInput.trim()) {
@@ -431,7 +431,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
     }
   };
 
-  // ── CLEAN RESET FORENSIC TRACE ──
+  // CLEAN RESET FORENSIC TRACE 
   const handleClearForensicTrace = useCallback(() => {
     activeTraceRequestRef.current++;
     setForensicSearchInput('');
@@ -632,7 +632,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
   return (
     <div className="space-y-6 pb-20 animate-fade-in text-slate-900 dark:text-slate-100 font-sans">
-      {/* ── 1. TOP HERO BANNER (RICH GLOWING INSTITUTIONAL GRADIENT) ── */}
+      {/* 1. TOP HERO BANNER (RICH GLOWING INSTITUTIONAL GRADIENT) */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-lg border border-brand-500/30">
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -719,7 +719,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
         </div>
       </div>
 
-      {/* ── 2. LIVE SYSTEM PULSE (10 CORE SERVICES) ── */}
+      {/* 2. LIVE SYSTEM PULSE (10 CORE SERVICES) */}
       <div className="bg-white dark:bg-navy-950 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
           <div className="flex items-center gap-2">
@@ -751,7 +751,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 <span className={`w-2 h-2 rounded-full ${svc.status === 'HEALTHY' || svc.status === 'Healthy' ? 'bg-emerald-500' : 'bg-amber-500'} animate-pulse`}></span>
               </div>
               <div className="flex items-center justify-between mt-2 pt-1 border-t border-slate-200/40 dark:border-slate-800/40 text-[10px]">
-                <span className={`${svc.status === 'HEALTHY' || svc.status === 'Healthy' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600'} font-bold`}>● {svc.status}</span>
+                <span className={`${svc.status === 'HEALTHY' || svc.status === 'Healthy' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600'} font-bold`}> {svc.status}</span>
                 <span className="text-slate-400 font-mono">{svc.latencyMs ? `${svc.latencyMs}ms` : (svc.latency ? `${svc.latency}` : 'Latency Unavailable')}</span>
               </div>
             </div>
@@ -759,7 +759,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
         </div>
       </div>
 
-      {/* ── 3. EXCEPTION-FIRST "ATTENTION REQUIRED" & NEXT BEST ACTION ── */}
+      {/* 3. EXCEPTION-FIRST "ATTENTION REQUIRED" & NEXT BEST ACTION */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Left Column: Attention Required */}
         <div className="lg:col-span-2 p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
@@ -851,7 +851,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       </div>
 
 
-      {/* ── 4. CANONICAL OPERATIONS NAVIGATION BAR ── */}
+      {/* 4. CANONICAL OPERATIONS NAVIGATION BAR */}
       <div className="flex items-center space-x-2 overflow-x-auto pb-1 border-b border-slate-200 dark:border-slate-800 no-scrollbar">
         {[
           { id: 'overview', label: 'Operations Overview' },
@@ -876,7 +876,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
         ))}
       </div>
 
-      {/* ── 5. TAB 1: OPERATIONS OVERVIEW ── */}
+      {/* 5. TAB 1: OPERATIONS OVERVIEW */}
       {activeOpsTab === 'overview' && (
         <div className="space-y-6">
           {/* Institutional Configuration Banner Card */}
@@ -993,7 +993,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
         </div>
       )}
 
-      {/* ── 6. TAB 2: DATA INTEGRITY COMMAND CENTER ── */}
+      {/* 6. TAB 2: DATA INTEGRITY COMMAND CENTER */}
       {activeOpsTab === 'integrity' && (
         <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
@@ -1037,7 +1037,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                   <div key={idx} className="p-3 rounded-xl bg-white dark:bg-navy-950 border border-emerald-100 dark:border-emerald-900/40 text-xs">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-extrabold text-slate-900 dark:text-white text-[11px]">{rule.rule}</span>
-                      <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">● PASSED</span>
+                      <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400"> PASSED</span>
                     </div>
                     <p className="text-[10.5px] text-slate-500">{rule.details}</p>
                   </div>
@@ -1074,7 +1074,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
         </div>
       )}
 
-      {/* ── 7. TAB 3: STUDENT × CONTEST FORENSIC TRACE (STRICTLY BLANK INITIAL STATE & EXPLICIT RUN FLOW) ── */}
+      {/* 7. TAB 3: STUDENT × CONTEST FORENSIC TRACE (STRICTLY BLANK INITIAL STATE & EXPLICIT RUN FLOW) */}
       {activeOpsTab === 'forensic' && (
         <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
@@ -1100,7 +1100,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             )}
           </div>
 
-          {/* ── STEP 1 & 2: SELECTION CONTROLS ── */}
+          {/* STEP 1 & 2: SELECTION CONTROLS */}
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
             {/* Student Search / Selector (5 cols) */}
             <div className="sm:col-span-6 relative">
@@ -1187,7 +1187,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             </div>
           </div>
 
-          {/* ── INITIAL BLANK STATE GUIDANCE BANNER ── */}
+          {/* INITIAL BLANK STATE GUIDANCE BANNER */}
           {!forensicResult && !forensicLoading && !forensicError && (
             <div className="p-8 rounded-3xl bg-slate-50/70 dark:bg-navy-950/40 border border-dashed border-slate-200 dark:border-slate-800 text-center space-y-2">
               <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto">
@@ -1203,7 +1203,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             </div>
           )}
 
-          {/* ── LOADING STATE: MULTI-STEP VERIFICATION INDICATOR ── */}
+          {/* LOADING STATE: MULTI-STEP VERIFICATION INDICATOR */}
           {forensicLoading && (
             <div className="p-6 rounded-3xl bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-200/50 space-y-4 animate-fade-in">
               <div className="flex items-center space-x-3 text-indigo-700 dark:text-indigo-300">
@@ -1243,7 +1243,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             </div>
           )}
 
-          {/* ── ERROR STATE (FAIL-CLOSED) ── */}
+          {/* ERROR STATE (FAIL-CLOSED) */}
           {forensicError && (
             <div className="p-5 rounded-3xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 space-y-2 animate-fade-in">
               <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300">
@@ -1264,7 +1264,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             </div>
           )}
 
-          {/* ── RESULT STATE (DISPLAYED ONLY AFTER EXPLICIT SUCCESSFUL QUERY) ── */}
+          {/* RESULT STATE (DISPLAYED ONLY AFTER EXPLICIT SUCCESSFUL QUERY) */}
           {forensicResult && (
             <div className="space-y-5 animate-fade-in">
               {/* Top Result Bento Cards */}
@@ -1296,7 +1296,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                         : 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30'
                     }`}
                   >
-                    ● {forensicResult.result.participation_status}
+                     {forensicResult.result.participation_status}
                   </span>
                 </div>
 
@@ -1329,7 +1329,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 </div>
               </div>
 
-              {/* ── OFFICIAL PDF & CERTIFICATE ACTION BAR ── */}
+              {/* OFFICIAL PDF & CERTIFICATE ACTION BAR */}
               <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-indigo-900/10 via-purple-900/10 to-brand-900/10 border border-indigo-500/20">
                 <div className="flex items-center gap-2">
                   <FileCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
@@ -1379,7 +1379,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 </div>
               </div>
 
-              {/* ── HUMAN-READABLE EVIDENCE SUMMARY & SOURCE METADATA ── */}
+              {/* HUMAN-READABLE EVIDENCE SUMMARY & SOURCE METADATA */}
               <div className="p-5 rounded-3xl bg-slate-50/70 dark:bg-navy-950/40 border border-slate-200 dark:border-slate-800 space-y-3">
                 <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-2.5">
                   <div className="flex items-center gap-2">
@@ -1436,7 +1436,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 </div>
               </div>
 
-              {/* ── EXPANDABLE DEVELOPER JSON VIEWER (ZERO EMPTY BRACES) ── */}
+              {/* EXPANDABLE DEVELOPER JSON VIEWER (ZERO EMPTY BRACES) */}
               <div className="p-5 rounded-3xl bg-navy-950 text-slate-200 border border-indigo-900/50 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -1479,7 +1479,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
         </div>
       )}
 
-      {/* ── 8. TAB 4: DATA LINEAGE & REPORT PARITY MONITOR ── */}
+      {/* 8. TAB 4: DATA LINEAGE & REPORT PARITY MONITOR */}
       {activeOpsTab === 'lineage' && (
         <div className="space-y-6">
           {/* Visual Data Lineage */}
@@ -1563,7 +1563,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       )}
 
 
-      {/* ── 9. TAB 5: AUTONOMOUS SUNDAY SESSION ── */}
+      {/* 9. TAB 5: AUTONOMOUS SUNDAY SESSION */}
       {activeOpsTab === 'automation' && (
         <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
@@ -1574,7 +1574,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               </p>
             </div>
             <span className="px-3 py-1 text-xs font-black rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 self-start sm:self-center">
-              ● AUTOMATION ARMED
+               AUTOMATION ARMED
             </span>
           </div>
 
@@ -1673,7 +1673,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
         </div>
       )}
 
-      {/* ── 10. TAB 6: DATABASE RECOVERY & TIME MACHINE ── */}
+      {/* 10. TAB 6: DATABASE RECOVERY & TIME MACHINE */}
       {activeOpsTab === 'recovery' && (
         <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
@@ -1730,7 +1730,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                       <td className="py-2.5 px-3 font-mono text-[10px] text-slate-400" title={bk.checksum}>
                         {bk.checksum ? (bk.checksum.length > 20 ? `${bk.checksum.substring(0, 16)}...` : bk.checksum) : 'Verified'}
                       </td>
-                      <td className="py-2.5 px-3 text-emerald-600 font-black">● {bk.status}</td>
+                      <td className="py-2.5 px-3 text-emerald-600 font-black"> {bk.status}</td>
                       <td className="py-2.5 px-3 text-right space-x-2">
                         <button
                           onClick={() => handleVerifySnapshot(bk.filename)}
@@ -1749,7 +1749,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
         </div>
       )}
 
-      {/* ── 11. TAB 7: OPERATIONS AUDIT TIMELINE ── */}
+      {/* 11. TAB 7: OPERATIONS AUDIT TIMELINE */}
       {activeOpsTab === 'audit' && (
         <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -1784,7 +1784,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
         </div>
       )}
 
-      {/* ── 12. TAB 8: NEC OPERATIONS COPILOT ── */}
+      {/* 12. TAB 8: NEC OPERATIONS COPILOT */}
       {activeOpsTab === 'copilot' && (
         <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
           <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
@@ -1862,7 +1862,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
         </div>
       )}
 
-      {/* ── 13. TRUST SCORE "WHY THIS SCORE?" FACTOR BREAKDOWN MODAL ── */}
+      {/* 13. TRUST SCORE "WHY THIS SCORE?" FACTOR BREAKDOWN MODAL */}
       {showTrustModal && (
         <div className="modal-overlay-responsive animate-modal-backdrop">
           <div className="modal-container-responsive max-w-xl bg-white dark:bg-navy-950 border border-indigo-300 dark:border-indigo-700/60 rounded-3xl shadow-lg p-6 space-y-4 animate-modal-content">
@@ -1915,7 +1915,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
         </div>
       )}
 
-      {/* ── 13. OFFICIAL FORENSIC AUDIT CERTIFICATE PREVIEW MODAL ── */}
+      {/* 13. OFFICIAL FORENSIC AUDIT CERTIFICATE PREVIEW MODAL */}
       {showCertPreviewModal && forensicResult && (
         <div className="modal-overlay-responsive animate-modal-backdrop">
           <div className="modal-container-responsive max-w-3xl bg-white text-slate-900 rounded-3xl shadow-lg border-4 border-amber-500/40 animate-modal-content">
@@ -2070,7 +2070,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               <div className="p-3 bg-slate-100 rounded-xl border border-slate-300 space-y-1 text-[11px]">
                 <div className="flex items-center justify-between font-bold">
                   <span className="text-slate-700">Trace ID: <code className="text-navy-950 font-black">{forensicResult.traceId}</code></span>
-                  <span className="text-emerald-700 font-black">● AUTHENTIC & SEALED</span>
+                  <span className="text-emerald-700 font-black"> AUTHENTIC & SEALED</span>
                 </div>
                 <div className="flex items-center justify-between text-slate-500 text-[10px]">
                   <span>Source: {forensicResult.sourceMetadata?.sourceEngine || 'LeetCode GraphQL API v2.0'}</span>
@@ -2099,7 +2099,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
         </div>
       )}
 
-      {/* ── 14. SMART COMMAND PALETTE (CTRL+K / CMD+K) ── */}
+      {/* 14. SMART COMMAND PALETTE (CTRL+K / CMD+K) */}
       {showCommandPalette && (
         <div className="modal-overlay-responsive animate-modal-backdrop">
           <div className="modal-container-responsive max-w-lg bg-white dark:bg-navy-950 border border-indigo-300 dark:border-indigo-700/60 rounded-3xl shadow-lg animate-modal-content">

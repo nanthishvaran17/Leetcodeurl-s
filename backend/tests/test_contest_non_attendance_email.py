@@ -53,7 +53,7 @@ class TestContestNonAttendanceEmail(unittest.TestCase):
     def setUp(self):
         self.session = MockSessionModel()
 
-    # ─── CASE 1: Attended Public Contest (Solved > 0) ──────────────────────────
+    # CASE 1: Attended Public Contest (Solved > 0) 
     def test_case_01_public_attended_solved(self):
         student = MockStudentModel(1, "732224CS001", "Live Student", "live_coder", "live@nandha.ac.in")
         record = {
@@ -66,7 +66,7 @@ class TestContestNonAttendanceEmail(unittest.TestCase):
         self.assertFalse(eligible)
         self.assertIn("LIVE_ATTENDED", reason)
 
-    # ─── CASE 2: Attended Public Contest (0 Solved) ────────────────────────────
+    # CASE 2: Attended Public Contest (0 Solved) 
     def test_case_02_public_attended_zero_solved(self):
         student = MockStudentModel(2, "732224CS002", "Zero Solver", "zero_coder", "zero@nandha.ac.in")
         record = {
@@ -79,7 +79,7 @@ class TestContestNonAttendanceEmail(unittest.TestCase):
         self.assertFalse(eligible)
         self.assertIn("LIVE_ATTENDED", reason)
 
-    # ─── CASE 3: Verified Not Attended ─────────────────────────────────────────
+    # CASE 3: Verified Not Attended 
     def test_case_03_verified_not_attended(self):
         student = MockStudentModel(3, "732224CS003", "Absent Student", "absent_coder", "absent@nandha.ac.in")
         record = {
@@ -92,7 +92,7 @@ class TestContestNonAttendanceEmail(unittest.TestCase):
         self.assertTrue(eligible)
         self.assertEqual(reason, "ELIGIBLE")
 
-    # ─── CASE 4: Virtual Contest Participant ───────────────────────────────────
+    # CASE 4: Virtual Contest Participant 
     def test_case_04_virtual_participant(self):
         student = MockStudentModel(4, "732224CS004", "Virtual Student", "virt_coder", "virt@nandha.ac.in")
         record = {
@@ -105,7 +105,7 @@ class TestContestNonAttendanceEmail(unittest.TestCase):
         self.assertFalse(eligible)
         self.assertIn("VIRTUAL_ATTENDED", reason)
 
-    # ─── CASE 5: Upstream API Failure (SOURCE_UNAVAILABLE) ─────────────────────
+    # CASE 5: Upstream API Failure (SOURCE_UNAVAILABLE) 
     def test_case_05_source_unavailable_no_email(self):
         student = MockStudentModel(5, "732224CS005", "Timeout Student", "timeout_coder", "timeout@nandha.ac.in")
         record = {
@@ -117,7 +117,7 @@ class TestContestNonAttendanceEmail(unittest.TestCase):
         self.assertFalse(eligible)
         self.assertIn("SOURCE_UNAVAILABLE", reason)
 
-    # ─── CASE 6: Invalid / Unlinked Username (DATA_ERROR) ──────────────────────
+    # CASE 6: Invalid / Unlinked Username (DATA_ERROR) 
     def test_case_06_data_error_no_email(self):
         student = MockStudentModel(6, "732224CS006", "Broken Student", "UNLINKED", "broken@nandha.ac.in")
         record = {
@@ -129,7 +129,7 @@ class TestContestNonAttendanceEmail(unittest.TestCase):
         self.assertFalse(eligible)
         self.assertIn("DATA_ERROR", reason)
 
-    # ─── CASE 7: Evidence Pending (PENDING_EVIDENCE) ───────────────────────────
+    # CASE 7: Evidence Pending (PENDING_EVIDENCE) 
     def test_case_07_pending_evidence_no_email(self):
         student = MockStudentModel(7, "732224CS007", "Pending Student", "pending_coder", "pending@nandha.ac.in")
         record = {
@@ -141,7 +141,7 @@ class TestContestNonAttendanceEmail(unittest.TestCase):
         self.assertFalse(eligible)
         self.assertIn("PENDING_EVIDENCE", reason)
 
-    # ─── CASE 8: Idempotency & De-duplication ──────────────────────────────────
+    # CASE 8: Idempotency & De-duplication 
     def test_case_08_idempotency_duplicate_protection(self):
         db = SessionLocal()
         try:
@@ -160,7 +160,7 @@ class TestContestNonAttendanceEmail(unittest.TestCase):
         finally:
             db.close()
 
-    # ─── CASE 9: Boundary Condition (timestamp == contest_end_time) ───────────
+    # CASE 9: Boundary Condition (timestamp == contest_end_time) 
     def test_case_09_boundary_condition_end_time(self):
         meta = ContestMetadataResolver.resolve_contest_metadata(516)
         end_utc = meta["end_timestamp_utc"]
@@ -169,7 +169,7 @@ class TestContestNonAttendanceEmail(unittest.TestCase):
         is_live = meta["start_timestamp_utc"] <= end_utc < meta["end_timestamp_utc"]
         self.assertFalse(is_live, "Exact end_time timestamp must be strictly outside the live window.")
 
-    # ─── CASE 10: Academic Design / Zero Emojis Validation ────────────────────
+    # CASE 10: Academic Design / Zero Emojis Validation 
     def test_case_10_zero_emojis_in_email(self):
         subject, html_body, plain_text = build_non_attendance_email_content(
             student_name="Karthik M",
@@ -182,16 +182,16 @@ class TestContestNonAttendanceEmail(unittest.TestCase):
 
         # 1. Subject validation
         self.assertEqual(subject, "Weekly LeetCode Contest — Non-Attendance Notification")
-        self.assertNotIn("⚠️", subject)
-        self.assertNotIn("🚨", subject)
-        self.assertNotIn("❌", subject)
+        self.assertNotIn("", subject)
+        self.assertNotIn("", subject)
+        self.assertNotIn("", subject)
 
         # 2. Exact phrasing checks
         self.assertIn("No valid public contest participation evidence was found during the official contest window.", html_body)
         self.assertIn("If you were unable to participate in the contest, please contact your Account Coordinator, Faculty Coordinator, or Contest Proctor", html_body)
 
         # 3. Emoji pattern search (Forbidden symbols)
-        forbidden_symbols = ["⚠️", "🚨", "❌", "🔔", "📢", "🏆", "📊", "🔥", "✨"]
+        forbidden_symbols = ["", "", "", "", "", "", "", "", ""]
         for sym in forbidden_symbols:
             self.assertNotIn(sym, html_body, f"Forbidden decorative symbol found in HTML: {sym}")
             self.assertNotIn(sym, plain_text, f"Forbidden decorative symbol found in text: {sym}")

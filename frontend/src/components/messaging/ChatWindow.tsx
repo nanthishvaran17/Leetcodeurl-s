@@ -115,7 +115,7 @@ interface Props {
   onReportTyping?: (isTyping: boolean) => void;
 }
 
-const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '👏', '🔥'];
+const QUICK_EMOJIS = ['', '', '', '', '', '', ''];
 
 export const ChatWindow: React.FC<Props> = ({
   conversation,
@@ -738,11 +738,11 @@ export const ChatWindow: React.FC<Props> = ({
                         {msg.status === 'SENDING' ? (
                           <Loader2 className="w-3 h-3 text-slate-400 animate-spin" />
                         ) : msg.status === 'SENT' ? (
-                          <span title="Sent ✓"><Check className="w-3.5 h-3.5 text-slate-400" /></span>
+                          <span title="Sent "><Check className="w-3.5 h-3.5 text-slate-400" /></span>
                         ) : msg.status === 'DELIVERED' ? (
-                          <span title="Delivered ✓✓"><CheckCheck className="w-3.5 h-3.5 text-slate-400" /></span>
+                          <span title="Delivered "><CheckCheck className="w-3.5 h-3.5 text-slate-400" /></span>
                         ) : (
-                          <span title="Read ✓✓"><CheckCheck className="w-3.5 h-3.5 text-brand-500 dark:text-cyan-400 font-extrabold" /></span>
+                          <span title="Read "><CheckCheck className="w-3.5 h-3.5 text-brand-500 dark:text-cyan-400 font-extrabold" /></span>
                         )}
                       </span>
                     )}

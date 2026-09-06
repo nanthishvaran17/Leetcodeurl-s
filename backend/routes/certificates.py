@@ -37,10 +37,10 @@ class RevokeCertificateRequest(BaseModel):
     reason: Optional[str] = "Administrative Revocation"
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# ─────────────────────────────────────────────────────────────────────────────
+# 
+# 
 # SHARED AUTHORITATIVE CERTIFICATE RESOLVER
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 def resolve_certificate_record(
     db: Session,
@@ -144,7 +144,7 @@ def resolve_certificate_record(
     clean_reg_str = re.sub(r'[^A-Za-z0-9]+', '', student_obj.reg_no or "").strip().upper()
 
     if is_forensic_request:
-        # ── Resolve Forensic Contest Audit Record ──
+        # Resolve Forensic Contest Audit Record 
         q_p = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.student_id == student_obj.id)
         if contest:
             clean_c = str(contest).strip()
@@ -217,7 +217,7 @@ def resolve_certificate_record(
             created_by="Automated Forensic Engine"
         )
     else:
-        # ── Resolve Certificate of Excellence Record ──
+        # Resolve Certificate of Excellence Record 
         target_v_id = f"CERT-{clean_reg_str}-EXCELLENCE"
         cert = CertificateRecord(
             verification_id=target_v_id,
@@ -248,9 +248,9 @@ def resolve_certificate_record(
     return cert
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # PUBLIC VERIFICATION ENDPOINT (No authentication required)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 @router.get("/certificates/verify/{verification_id}")
 def verify_certificate_public(
@@ -402,9 +402,9 @@ def verify_certificate_public(
         )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # CERTIFICATE ISSUANCE & MANAGEMENT
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 @router.get("/certificates")
 def list_certificates(
@@ -676,9 +676,9 @@ def revoke_certificate_endpoint(
     }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # AUTHORIZED SIGNATURES MANAGEMENT
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 @router.get("/signatures")
 def list_signatures(db: Session = Depends(get_db)):

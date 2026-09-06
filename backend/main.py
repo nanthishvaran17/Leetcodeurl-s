@@ -127,12 +127,12 @@ async def _deferred_startup_tasks():
     except Exception as _init_err:
         logger.warning(f"[STARTUP] Firestore pending init note: {_init_err}")
 
-    # ── STEP 3: SCHEDULER START + MISSED JOB RECOVERY ─────────────────────
+    # STEP 3: SCHEDULER START + MISSED JOB RECOVERY 
     is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")
     run_scheduler_in_web = os.environ.get("RUN_SCHEDULER_IN_WEB", "true").lower() == "true"
     if not is_vercel and SCHEDULER_AVAILABLE and run_scheduler_in_web:
         try:
-            logger.info("[STARTUP] ── Step 3: Scheduler Initialization...")
+            logger.info("[STARTUP] Step 3: Scheduler Initialization...")
             start_scheduler()
             from backend.services.schedule_service import get_or_create_default_schedule, register_apscheduler_job
             with SessionLocal() as _sched_db:
@@ -148,10 +148,10 @@ async def _deferred_startup_tasks():
             except Exception as _p_err:
                 logger.warning(f"[STARTUP] Weekly report pre-generation note: {_p_err}")
 
-            logger.info("[STARTUP] ── Step 3: Scheduler started. Checking for missed jobs...")
+            logger.info("[STARTUP] Step 3: Scheduler started. Checking for missed jobs...")
 
 
-            # ── MISSED JOB RECOVERY ──────────────────────────────────────
+            # MISSED JOB RECOVERY 
             # If server was down over a Sunday window, detect and recover safely.
             try:
                 import datetime as _dt
@@ -170,7 +170,7 @@ async def _deferred_startup_tasks():
 
                         if not existing_session or existing_session.status in ("SCHEDULED", "DISCOVERED"):
                             logger.warning(
-                                f"[STARTUP] ⚠️  MISSED SCHEDULE DETECTED — Sunday {today_str} "
+                                f"[STARTUP] MISSED SCHEDULE DETECTED — Sunday {today_str} "
                                 f"at {now_ist.strftime('%H:%M IST')}. Triggering safe recovery..."
                             )
                             # Record recovery attempt
@@ -203,19 +203,19 @@ async def _deferred_startup_tasks():
                             recovery_record.status = "COMPLETED"
                             recovery_record.completed_at = _dt.datetime.utcnow()
                             _recovery_db.commit()
-                            logger.info("[STARTUP] ✅ Missed job recovery completed.")
+                            logger.info("[STARTUP] Missed job recovery completed.")
                         else:
                             logger.info(f"[STARTUP] No missed jobs detected. Session {today_str} status: {existing_session.status}")
             except Exception as _recovery_err:
                 logger.warning(f"[STARTUP] Missed job recovery note: {_recovery_err}")
 
-            # ── STEP 4: CONTEST DISCOVERY ─────────────────────────────────
+            # STEP 4: CONTEST DISCOVERY 
             try:
-                logger.info("[STARTUP] ── Step 4: Contest Discovery...")
+                logger.info("[STARTUP] Step 4: Contest Discovery...")
                 from backend.services.contest_discovery import discover_contest_metadata
                 meta = discover_contest_metadata()
                 logger.info(
-                    f"[STARTUP] ✅ Contest Discovery: {meta.get('contest_name')} "
+                    f"[STARTUP] Contest Discovery: {meta.get('contest_name')} "
                     f"({meta.get('status')}) on {meta.get('raw_date')}"
                 )
             except Exception as _disc_err:

@@ -165,7 +165,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
  const activeStaffCount = useMemo(() => staffList.filter(s => s.is_active).length, [staffList]);
 
- // ─── Staff Assigned Roster Modal Handler ─────────────────────────
+ // Staff Assigned Roster Modal Handler 
  const handleOpenStaffRoster = async (st: any) => {
  setViewRosterModal({ isOpen: true, loading: true, staff: st, data: null });
  try {
@@ -213,7 +213,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  }
  };
 
- // ─── Unassign Tab: Load roster for selected staff ──────────────────────────
+ // Unassign Tab: Load roster for selected staff 
  const handleLoadUnassignRoster = async (staffId: number) => {
  setUnassignStaffId(staffId);
  setSelectedAssignedStudents([]);
@@ -269,7 +269,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  );
  }, [assignedRoster, unassignSearchQuery]);
 
- // ─── 1. Create Staff Handler ──────────────────────────────────────────────
+ // 1. Create Staff Handler 
  const handleCreateStaff = async (e: React.FormEvent) => {
  e.preventDefault();
  if (!newUsername.trim() || !newEmail.trim()) return;
@@ -295,7 +295,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  }
  };
 
- // ─── 2. Delete Staff Handler with Custom Confirm Modal ───────────────────
+ // 2. Delete Staff Handler with Custom Confirm Modal 
  const triggerDeleteStaffModal = (st: any) => {
  setConfirmModal({
  isOpen: true,
@@ -322,7 +322,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
     }
   };
 
- // ─── 3. Toggle Staff Active Status Handler ───────────────────────────────
+ // 3. Toggle Staff Active Status Handler 
  const triggerToggleStatusModal = (st: any) => {
  const actionLabel = st.is_active ? 'deactivate' : 'activate';
  setConfirmModal({
@@ -351,7 +351,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  }
  };
 
- // ─── 4. Smart Auto-Assign Handler ─────────────────────────────────────────
+ // 4. Smart Auto-Assign Handler 
  const triggerSmartAutoAssignModal = () => {
  if (filteredUnassigned.length === 0) {
  notify.warning('Queue Empty', 'No unassigned students match the selected filter criteria.');
@@ -392,7 +392,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  }
  };
 
- // ─── 5. Auto Rebalance Handler ─────────────────────────────────────────────
+ // 5. Auto Rebalance Handler 
  const triggerAutoRebalanceModal = () => {
  setConfirmModal({
  isOpen: true,
@@ -416,7 +416,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  }
  };
 
- // ─── 6. Bulk Manual Student Assignment ───────────────────────────────────
+ // 6. Bulk Manual Student Assignment 
  const handleBulkAssign = () => {
  if (!targetStaffId || selectedStudents.length === 0) {
  notify.warning('Selection Required', 'Please select a target staff member and at least one student.');
@@ -504,7 +504,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
     <div className="max-w-7xl mx-auto space-y-8 pb-12">
 
 
- {/* ─── 1. STAFF WORKLOAD MATRIX PANEL ─── */}
+ {/* 1. STAFF WORKLOAD MATRIX PANEL */}
  <div className="bg-white dark:bg-navy-950 p-6 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-xl space-y-6">
  <div className="flex items-center justify-between flex-wrap gap-4">
  <div>
@@ -607,7 +607,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
              : isFull ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400'
              : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
            }`}>
-             {!st.is_active ? '⊘ DISABLED' : isFull ? 'FULL' : '● AVAILABLE'}
+             {!st.is_active ? '⊘ DISABLED' : isFull ? 'FULL' : ' AVAILABLE'}
            </span>
            <div className="flex items-center space-x-1">
              <button onClick={() => handleOpenStaffRoster(st)}
@@ -676,7 +676,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
   </div>
 
 
- {/* ─── 2. ASSIGN / UNASSIGN TAB PANEL ─── */}
+ {/* 2. ASSIGN / UNASSIGN TAB PANEL */}
  <div className="bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-xl overflow-hidden">
 
   {/* Tab Header */}
@@ -712,7 +712,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
    </button>
   </div>
 
-  {/* ── ASSIGN TAB ── */}
+  {/* ASSIGN TAB */}
   {activeTab === 'assign' && (
    <div className="p-6 space-y-6">
     {/* Header row */}
@@ -825,7 +825,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
    </div>
   )}
 
-  {/* ── UNASSIGN TAB ── */}
+  {/* UNASSIGN TAB */}
   {activeTab === 'unassign' && (
    <div className="p-6 space-y-6">
     {/* Staff picker */}
@@ -955,7 +955,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  </div>
 
 
- {/* ─── 3. VIEW STAFF ASSIGNED ROSTER & COMPLETION MODAL ─── */}
+ {/* 3. VIEW STAFF ASSIGNED ROSTER & COMPLETION MODAL */}
  {viewRosterModal.isOpen && (
  <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
  <div className="bg-white dark:bg-navy-950 w-full max-w-3xl p-6 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
@@ -1076,7 +1076,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  </GlobalModalBackdrop>
  )}
 
- {/* ─── 4. REUSABLE PREMIUM CONFIRMATION MODAL ─── */}
+ {/* 4. REUSABLE PREMIUM CONFIRMATION MODAL */}
  {confirmModal.isOpen && (
  <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
  <div className="bg-white dark:bg-navy-950 w-full max-w-md p-6 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-2xl space-y-5">
@@ -1196,7 +1196,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  </GlobalModalBackdrop>
  )}
 
- {/* ─── 5. CREATE STAFF MODAL ─── */}
+ {/* 5. CREATE STAFF MODAL */}
  {showCreateModal && (
  <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
  <div className="bg-white dark:bg-navy-950 w-full max-w-md p-6 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
@@ -1292,7 +1292,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  selectedCount={selectedStudents.length}
  />
 
- {/* ─── 6. UNASSIGN STUDENT WARNING MODAL ─── */}
+ {/* 6. UNASSIGN STUDENT WARNING MODAL */}
  {studentToUnassign && (
  <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4">
   <div className="bg-white dark:bg-navy-950 w-full max-w-md p-6 rounded-3xl border border-rose-200 dark:border-rose-900/50 shadow-2xl space-y-5 text-center relative">

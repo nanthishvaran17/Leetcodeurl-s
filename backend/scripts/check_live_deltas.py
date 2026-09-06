@@ -117,7 +117,7 @@ async def check_live_deltas():
     print("=" * 60, flush=True)
     print(f"Newly Attended Students (0 -> Solved): {len(newly_attended)}", flush=True)
     for st, solved, score, q1, q2, q3, q4 in newly_attended:
-        print(f"  🌟 NEW PARTICIPANT: {st.name:<25} ({st.reg_no}) -> Solved: {solved}/4 | Score: {score:>2} | Q1:{q1} Q2:{q2} Q3:{q3} Q4:{q4} | @{st.username}", flush=True)
+        print(f" NEW PARTICIPANT: {st.name:<25} ({st.reg_no}) -> Solved: {solved}/4 | Score: {score:>2} | Q1:{q1} Q2:{q2} Q3:{q3} Q4:{q4} | @{st.username}", flush=True)
         print(f"  NEW PARTICIPANT: {st.name:<25} ({st.reg_no}) -> Solved: {solved}/4 | Score: {score:>2} | Q1:{q1} Q2:{q2} Q3:{q3} Q4:{q4} | @{st.username}", flush=True)
 
     print(f"\nImproved Solved Counts (Previous -> New): {len(improved_solves)}", flush=True)

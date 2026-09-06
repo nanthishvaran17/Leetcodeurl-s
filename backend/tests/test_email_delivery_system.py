@@ -1,6 +1,6 @@
 """
 test_email_delivery_system.py
-───────────────────────────────────────────────────────────────────────────────
+
 Automated test suite for the Report Email Delivery System.
 
 Tests:
@@ -30,7 +30,7 @@ from backend.services.email_service import (
     send_manual_report_email
 )
 
-# ── In-memory SQLite engine for isolated testing ──────────────────────────────
+# In-memory SQLite engine for isolated testing 
 TEST_DATABASE_URL = "sqlite:///:memory:"
 engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
 TestSessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
@@ -74,7 +74,7 @@ def add_default_recipient(db, email: str = "hod@test.nec.in", role: str = "HOD")
     return r
 
 
-# ── Test Cases ────────────────────────────────────────────────────────────────
+# Test Cases 
 
 class TestEmailDeliverySystem(unittest.TestCase):
 
@@ -86,7 +86,7 @@ class TestEmailDeliverySystem(unittest.TestCase):
         Base.metadata.drop_all(bind=engine)
         Base.metadata.create_all(bind=engine)
 
-    # ── Test 1 ──────────────────────────────────────────────────────────────
+    # Test 1 
     def test_weekly_email_after_finalization(self):
         """
         RULE: Automatic dispatch queues emails ONLY when session.status == FINALIZED.
@@ -110,7 +110,7 @@ class TestEmailDeliverySystem(unittest.TestCase):
         self.assertIsNotNone(log)
         self.assertEqual(log.status, "QUEUED")
 
-    # ── Test 2 ──────────────────────────────────────────────────────────────
+    # Test 2 
     def test_no_email_during_live(self):
         """
         RULE: Automatic dispatch is BLOCKED for sessions with status=LIVE.
@@ -125,7 +125,7 @@ class TestEmailDeliverySystem(unittest.TestCase):
         log_count = self.db.query(EmailDispatchLog).filter(EmailDispatchLog.session_id == session.id).count()
         self.assertEqual(log_count, 0, "No dispatch logs should be created for LIVE sessions.")
 
-    # ── Test 3 ──────────────────────────────────────────────────────────────
+    # Test 3 
     def test_no_email_before_finalization(self):
         """
         RULE: Sessions with status=SCHEDULED or PENDING must NOT trigger dispatch.
@@ -135,7 +135,7 @@ class TestEmailDeliverySystem(unittest.TestCase):
             result = queue_weekly_report_dispatches(self.db, session_id=session.id)
             self.assertEqual(result["status"], "skipped", f"Session with status={status} should be skipped.")
 
-    # ── Test 4 ──────────────────────────────────────────────────────────────
+    # Test 4 
     def test_idempotency_prevents_duplicate_emails(self):
         """
         RULE: Same session + recipient combination must never produce two SENT emails.
@@ -162,7 +162,7 @@ class TestEmailDeliverySystem(unittest.TestCase):
         self.assertGreater(result2.get("skipped_duplicate_count", 0), 0,
                            "Duplicate email must be prevented by idempotency check.")
 
-    # ── Test 5 ──────────────────────────────────────────────────────────────
+    # Test 5 
     def test_canonical_dataset_in_email_summary(self):
         """
         RULE: Email body metrics MUST come from fetch_normalized_students, not independent DB query.
@@ -180,7 +180,7 @@ class TestEmailDeliverySystem(unittest.TestCase):
         self.assertIn("16.08.2026", html)
         self.assertIn("NANDHA ENGINEERING COLLEGE", html)
 
-    # ── Test 6 ──────────────────────────────────────────────────────────────
+    # Test 6 
     def test_failed_email_retry(self):
         """
         RULE: On SMTP failure, EmailDispatchLog.status transitions to RETRYING.
@@ -211,7 +211,7 @@ class TestEmailDeliverySystem(unittest.TestCase):
         self.assertEqual(updated.retry_count, 3)
         self.assertIsNotNone(updated.error_message)
 
-    # ── Test 7 ──────────────────────────────────────────────────────────────
+    # Test 7 
     def test_manual_report_email(self):
         """
         RULE: Manual dispatch to custom email list creates QUEUED dispatch logs.
@@ -236,7 +236,7 @@ class TestEmailDeliverySystem(unittest.TestCase):
         self.assertIsNotNone(log)
         self.assertEqual(log.status, "SENT")
 
-    # ── Test 8 ──────────────────────────────────────────────────────────────
+    # Test 8 
     def test_large_attachment_handling(self):
         """
         RULE: If total attachment size > MAX_EMAIL_ATTACHMENT_SIZE_MB,
@@ -263,7 +263,7 @@ class TestEmailDeliverySystem(unittest.TestCase):
         self.assertEqual(log.attachment_count, 2,
                          "Large attachment mode must reduce to PDF + ZIP (2 files).")
 
-    # ── Test 9 ──────────────────────────────────────────────────────────────
+    # Test 9 
     def test_recipient_management_crud(self):
         """
         RULE: Admins must be able to add, update, and soft-disable email recipients
@@ -294,7 +294,7 @@ class TestEmailDeliverySystem(unittest.TestCase):
         ).first()
         self.assertIsNone(disabled, "Disabled recipient must not appear in active filter.")
 
-    # ── Test 10 ─────────────────────────────────────────────────────────────
+    # Test 10 
     def test_delivery_log_creation(self):
         """
         RULE: Every dispatch attempt (queued, sent, failed) must be persisted in email_dispatch_logs.

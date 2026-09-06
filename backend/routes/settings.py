@@ -167,7 +167,7 @@ def test_email_dispatch(
         </div>
         <div style="border: 1px solid #e2e8f0; border-top: none; padding: 24px; border-radius: 0 0 12px 12px; background-color: #ffffff;">
             <p>Hello <b>{getattr(current_user, 'username', 'Admin')}</b>,</p>
-            <p style="color: #16a34a; font-weight: bold;">🟢 Sample test report email dispatched successfully!</p>
+            <p style="color: #16a34a; font-weight: bold;"> Sample test report email dispatched successfully!</p>
             <p>This automated email confirms that your SMTP server configuration, database delivery tracking, attachment generator, and Asia/Kolkata Sunday automation pipeline are fully ready.</p>
             <ul style="font-size: 13px; color: #475569;">
                 <li><b>Recipient:</b> {target_email}</li>
@@ -1373,13 +1373,13 @@ def get_student_forensic_trace(
     # Human-readable evidence summary
     public_status_summary = "Not Attended / Absent"
     if is_public_attended:
-        public_status_summary = "✓ Verified (Public Contest Participation Confirmed)"
+        public_status_summary = " Verified (Public Contest Participation Confirmed)"
     elif contest_result and contest_result.participation_status == "DATA_ERROR":
-        public_status_summary = "✕ Isolated as Data Error"
+        public_status_summary = " Isolated as Data Error"
 
     virtual_status_summary = "Not Used / Not Found"
     if virtual_result or (contest_result and contest_result.participation_status == "VIRTUAL_ATTENDED"):
-        virtual_status_summary = "✓ Verified Virtual Mode"
+        virtual_status_summary = " Verified Virtual Mode"
     elif is_public_attended:
         virtual_status_summary = "Not used because public participation was verified first"
 
@@ -1478,7 +1478,7 @@ def get_forensic_audit_pdf_file(
         logger.error(f"Error generating forensic audit PDF: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to generate forensic audit PDF: {str(e)}")
 
-# ── YEAR LEVEL AUTO-CORRECTION FROM REG_NO PREFIX ────────────────────────────
+# YEAR LEVEL AUTO-CORRECTION FROM REG_NO PREFIX 
 
 BATCH_YEAR_MAP = {
     "23": "IV",   # Admitted 2023 → Final Year

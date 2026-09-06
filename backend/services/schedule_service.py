@@ -247,7 +247,7 @@ def toggle_report_schedule(db: Session, enable: bool, admin_email: str = "Admin"
     return {
         "success": True,
         "is_enabled": config.is_enabled,
-        "message": f"Scheduled report automation is now {'ENABLED 🟢' if enable else 'DISABLED 🔴'}",
+        "message": f"Scheduled report automation is now {'ENABLED ' if enable else 'DISABLED '}",
         "next_run": next_run_str if enable else "Automation Disabled"
     }
 
@@ -389,7 +389,7 @@ async def execute_scheduled_report_pipeline(
 
         <div style="background-color: #f8fafc; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 4px; margin: 24px 0;">
             <p style="margin: 0; font-size: 14px; color: #334155;">
-                📎 <strong>Attached Report:</strong> <code>{excel_filename}</code><br/>
+                 <strong>Attached Report:</strong> <code>{excel_filename}</code><br/>
                 Contains comprehensive department performance matrices, score distributions, and contest validation sheets.
             </p>
         </div>

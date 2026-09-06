@@ -27,7 +27,7 @@ def require_security_access(resource_name: str = "", required_roles: list = None
     return check_access
 
 
-# ── SCHEMAS ─────────────────────────────────────────────────────────────
+# SCHEMAS 
 
 class DeviceRegisterRequest(BaseModel):
     user_id: Optional[str] = None
@@ -62,7 +62,7 @@ class AppUpdateBroadcastRequest(BaseModel):
     action_route: str = "/dashboard"
 
 
-# ── 1. FCM DEVICE TOKEN REGISTRATION ───────────────────────────────────
+# 1. FCM DEVICE TOKEN REGISTRATION 
 
 @router.post("/register-device")
 def register_device_token_endpoint(
@@ -100,7 +100,7 @@ def unregister_device_token_endpoint(
     return NotificationService.unregister_device_token(db, user_id=user_id, device_token=req.device_token)
 
 
-# ── 2. IN-APP NOTIFICATION CENTER ─────────────────────────────────────
+# 2. IN-APP NOTIFICATION CENTER 
 
 @router.get("")
 def get_user_notifications_endpoint(
@@ -280,7 +280,7 @@ def delete_notification_endpoint(
     return {"success": True, "notification_id": notification_id}
 
 
-# ── 3. PREFERENCES ──────────────────────────────────────────────────────
+# 3. PREFERENCES 
 
 @router.get("/preferences")
 def get_notification_preferences_endpoint(
@@ -341,7 +341,7 @@ def update_notification_preferences_endpoint(
     return {"success": True, "message": "Notification preferences updated successfully"}
 
 
-# ── 4. ADMIN ANNOUNCEMENTS & APP UPDATE BROADCASTS ──────────────────────
+# 4. ADMIN ANNOUNCEMENTS & APP UPDATE BROADCASTS 
 
 @router.post("/announcements")
 def create_announcement_notification_endpoint(
@@ -476,7 +476,7 @@ def trigger_daily_principal_digest_endpoint(
     return {"success": True, "result": res}
 
 
-# ── 5. SECURE FILE ACCESS & PREVIEW / DOWNLOAD ───────────────────────────
+# 5. SECURE FILE ACCESS & PREVIEW / DOWNLOAD 
 
 @router.get("/files/{file_id}")
 def get_notification_file_metadata_endpoint(

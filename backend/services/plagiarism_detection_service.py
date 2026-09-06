@@ -9,7 +9,7 @@ Core Capabilities:
 3. Suspicion Scoring:
    - Assigns a Plagiarism Suspicion Score (0–100%) and categorizes into LOW, MEDIUM, HIGH, CRITICAL.
 4. Fraud Alert Flagging:
-   - Emits '🔴 PLAGIARISM_SUSPECTED' alerts to HOD & Faculty Dashboards.
+   - Emits ' PLAGIARISM_SUSPECTED' alerts to HOD & Faculty Dashboards.
 5. Audit & Review Workflow:
    - Faculty/HOD can review code diffs, verify IP/network clusters, and mark as DISMISSED or CONFIRMED.
 """

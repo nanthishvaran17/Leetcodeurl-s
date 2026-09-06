@@ -711,7 +711,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
             onClick={(e) => e.stopPropagation()}
           >
 
-            {/* ── A. STICKY HEADER ─────────────────────────────────────── */}
+            {/* A. STICKY HEADER */}
             <div className="shrink-0 p-5 sm:p-6 bg-gradient-to-r from-brand-900 via-indigo-900 to-navy-950 text-white flex items-start justify-between relative overflow-hidden">
 
               {/* Identity */}
@@ -757,7 +757,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
               </button>
             </div>
 
-            {/* ── B. SCROLLABLE CONTENT ─────────────────────────────────── */}
+            {/* B. SCROLLABLE CONTENT */}
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4">
 
               {/* LeetCode Handle */}
@@ -898,10 +898,10 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
               </div>
 
             </div>
-            {/* ── END SCROLLABLE CONTENT ───────────────────────────────── */}
+            {/* END SCROLLABLE CONTENT */}
 
 
-            {/* ── C. STICKY FOOTER ─────────────────────────────────────── */}
+            {/* C. STICKY FOOTER */}
             <div className="shrink-0 px-4 sm:px-6 py-3 sm:py-4 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
               <div className="text-[11px] text-slate-400 font-bold hidden sm:block">
                 Nandha Engineering College • LeetCode Tracker
@@ -929,7 +929,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                 </button>
               </div>
             </div>
-            {/* ── END FOOTER ───────────────────────────────────────────── */}
+            {/* END FOOTER */}
 
           </div>
         </div>,

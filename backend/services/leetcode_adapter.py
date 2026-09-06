@@ -23,9 +23,9 @@ from backend.time_utils import UTC, IST, now_utc
 GRAPHQL_URL = "https://leetcode.com/graphql"
 DEFAULT_TIMEOUT = 12.0
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # DATA MODELS
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 @dataclass
 class ContestMetadata:
@@ -123,9 +123,9 @@ class UserProfile:
     language_stats: List[Dict[str, Any]] = field(default_factory=list)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # ADAPTER INTERFACE
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 class LeetCodeAdapter(ABC):
     """
@@ -169,9 +169,9 @@ class LeetCodeAdapter(ABC):
         """Get user profile data (supporting evidence only, never primary)."""
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # PRODUCTION IMPLEMENTATION
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 class ProductionLeetCodeAdapter(LeetCodeAdapter):
     """

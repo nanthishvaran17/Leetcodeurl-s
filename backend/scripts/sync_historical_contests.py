@@ -50,7 +50,7 @@ def main():
                 end_time="09:30",
                 status="FINALIZED",
                 total_students=1450,
-                sync_status="🟢 Verified"
+                sync_status=" Verified"
             )
             db.add(session)
             db.commit()

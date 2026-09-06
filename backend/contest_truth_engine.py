@@ -137,7 +137,7 @@ class ContestTruthEngine:
 
         # Hardened 3-Tier Classification Engine
         if official_entry and official_entry.get("attended"):
-            status_badge = "🟢 GREEN"
+            status_badge = " GREEN"
             status_text = "Official Participation"
             solved_count = official_entry.get("problemsSolved", 0)
             rating = official_entry.get("rating", 0.0)
@@ -151,13 +151,13 @@ class ContestTruthEngine:
                     if q_key not in timestamps:
                         timestamps[q_key] = "Official Contest Window (08:00 AM - 09:30 AM IST)"
         elif virtual_solves > 0 or any(q_matrix.values()):
-            status_badge = "🟡 YELLOW"
+            status_badge = " YELLOW"
             status_text = "Virtual Practice Participant"
             solved_count = sum(1 for v in q_matrix.values() if v)
             rating = 0.0
             finish_time = 0
         else:
-            status_badge = "🔴 RED"
+            status_badge = " RED"
             status_text = "Absent / No Activity"
             solved_count = 0
             rating = 0.0
@@ -165,7 +165,7 @@ class ContestTruthEngine:
 
         # Requirement 18: Anomaly Detection (Impossible solve counts / mismatch)
         anomaly_flag = False
-        if status_badge == "🟢 GREEN" and solved_count > 0 and not any(q_matrix.values()):
+        if status_badge == " GREEN" and solved_count > 0 and not any(q_matrix.values()):
             anomaly_flag = True
 
         snapshot_id = self.generate_snapshot_id(contest_id, datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S"))

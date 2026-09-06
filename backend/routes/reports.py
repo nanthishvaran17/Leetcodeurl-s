@@ -866,7 +866,7 @@ def _get_dataset_for_id(
 
             all_raw_rows = canonical_data.get("rows", [])
 
-            # ── Apply caller's active filters ──────
+            # Apply caller's active filters 
             DEPT_CANONICAL_MAP = {
                 "CSE(CS)":  ["CSE(CS)", "CYBER SECURITY", "CYBER", "CSE(CYBER", "CSE (CYBER", "(CS)"],
                 "CSE(IOT)": ["CSE(IOT)", "IOT", "CSE(IOT", "CSE (IOT", "(IOT)"],

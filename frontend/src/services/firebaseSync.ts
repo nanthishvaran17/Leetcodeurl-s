@@ -28,7 +28,7 @@ export async function syncAllStudentsToFirestoreWeb(studentsList: any[]) {
       const studentRef = doc(firestoreDb, 'students', studId);
       const statsRef   = doc(firestoreDb, 'leetcodeStats', studId);
 
-      // ── Determine the real sync state ────────────────────────────────────────
+      // Determine the real sync state 
       const rawSyncStatus: string | null = s.stats?.sync_status ?? s.sync_status ?? null;
       const totalSolvedVal    = s.stats?.total_solved   ?? s.total_solved   ?? null;
       const easySolvedVal     = s.stats?.easy_solved    ?? s.easy_solved    ?? null;
@@ -56,7 +56,7 @@ export async function syncAllStudentsToFirestoreWeb(studentsList: any[]) {
         rawSyncStatus ?? (isVerified ? 'success' : (s.username ? 'pending' : 'invalid_profile'));
 
 
-      // ── Student identity document ─────────────────────────────────────────────
+      // Student identity document 
       batch.set(studentRef, {
         id:                s.id,
         registerNo:        s.reg_no,
@@ -71,7 +71,7 @@ export async function syncAllStudentsToFirestoreWeb(studentsList: any[]) {
         isActive:          true
       }, { merge: true });
 
-      // ── LeetCode stats document ───────────────────────────────────────────────
+      // LeetCode stats document 
       batch.set(statsRef, {
         studentId:         s.id,
         registerNo:        s.reg_no,

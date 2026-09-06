@@ -12,7 +12,7 @@ from backend.sync_engine import sync_single_student_db, sync_single_student_by_i
 
 async def run_live_verification_tests():
     print("=" * 70)
-    print("🧪 RUNNING CRITICAL LEETCODE PROFILE VERIFICATION TESTS")
+    print(" RUNNING CRITICAL LEETCODE PROFILE VERIFICATION TESTS")
     print("=" * 70)
 
     # Test 1: Username extraction & normalization
@@ -27,7 +27,7 @@ async def run_live_verification_tests():
         u, std_url, status = extract_leetcode_username(url)
         assert u == "thamaraikannan_mr_2007", f"Failed to extract username from '{url}'"
         assert status == "OK", f"URL status error for '{url}'"
-    print("✅ Passed: Username extraction handles trailing slashes, spaces, and domain paths.")
+    print(" Passed: Username extraction handles trailing slashes, spaces, and domain paths.")
 
     # Test 2: Dynamic Live Fetch & Sum Validation for thamaraikannan_mr_2007
     print("\n[Test 2] Fetching Live Public Profile for 'thamaraikannan_mr_2007'...")
@@ -39,7 +39,7 @@ async def run_live_verification_tests():
     med = profile_data.get("medium_solved", 0)
     hd = profile_data.get("hard_solved", 0)
 
-    print(f"📊 Live Profile Result for thamaraikannan_mr_2007:")
+    print(f" Live Profile Result for thamaraikannan_mr_2007:")
     print(f"   Status: {status}")
     print(f"   Total Solved: {tot}")
     print(f"   Easy: {ez}")
@@ -49,7 +49,7 @@ async def run_live_verification_tests():
     # Validate sum rule: easy + medium + hard == total_solved
     calculated_sum = ez + med + hd
     assert calculated_sum == tot, f"Validation Failed: easy({ez}) + med({med}) + hard({hd}) != total({tot})"
-    print(f"✅ Passed: Sum Validation Verified ({ez} + {med} + {hd} = {tot}).")
+    print(f" Passed: Sum Validation Verified ({ez} + {med} + {hd} = {tot}).")
 
     # Test 3: DB & Identity Mapping Verification
     print("\n[Test 3] Verifying Identity Mapping in Database for THAMARAIKANNAN M R (732225CI056)...")
@@ -70,7 +70,7 @@ async def run_live_verification_tests():
         assert updated_student.stats.sync_status == "success"
         assert updated_student.stats.source == "leetcode_public_profile"
         assert updated_student.stats.last_verified_at is not None
-        print("✅ Passed: Database record updated with 100% verified live stats & source metadata.")
+        print(" Passed: Database record updated with 100% verified live stats & source metadata.")
     finally:
         db.close()
 
@@ -89,7 +89,7 @@ async def run_live_verification_tests():
         }
         res_student = sync_single_student_db(nanthish_student.id, mismatched_payload, db)
         assert res_student.stats.sync_status == "mismatch", "Identity mismatch was not caught!"
-        print("✅ Passed: Mismatched stats were rejected and marked with 'mismatch' status.")
+        print(" Passed: Mismatched stats were rejected and marked with 'mismatch' status.")
     finally:
         db.close()
 
@@ -97,10 +97,10 @@ async def run_live_verification_tests():
     print("\n[Test 5] Testing 30-Second Single Student Timeout Endpoint...")
     sync_result = await sync_single_student_by_id(student.id, timeout=30.0)
     assert sync_result.get("status") in ["success", "timeout"]
-    print("✅ Passed: Single student refresh endpoint respects 30-second target constraint.")
+    print(" Passed: Single student refresh endpoint respects 30-second target constraint.")
 
     print("\n" + "=" * 70)
-    print("🎉 ALL PROFILE VERIFICATION TESTS PASSED SUCCESSFULLY!")
+    print(" ALL PROFILE VERIFICATION TESTS PASSED SUCCESSFULLY!")
     print("=" * 70)
 
 if __name__ == "__main__":

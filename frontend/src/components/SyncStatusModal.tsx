@@ -155,7 +155,7 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
 
   const getWorkerStatusBadge = () => {
     if (isRunning) {
-      return { text: '● Sync Engine Running', color: 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/30' };
+      return { text: ' Sync Engine Running', color: 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/30' };
     }
     if (syncStatus?.operation === 'COMPLETED' || syncStatus?.status === 'COMPLETED') {
       return { text: 'Synchronization Complete', color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/30' };
@@ -163,7 +163,7 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
     if (syncStatus?.operation === 'FAILED' || syncStatus?.status === 'FAILED') {
       return { text: 'Sync Engine Error', color: 'text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/30' };
     }
-    return { text: '● Sync Engine Ready', color: 'text-brand-600 dark:text-brand-400 bg-brand-500/10 border-brand-500/30' };
+    return { text: ' Sync Engine Ready', color: 'text-brand-600 dark:text-brand-400 bg-brand-500/10 border-brand-500/30' };
   };
 
   const workerBadge = getWorkerStatusBadge();

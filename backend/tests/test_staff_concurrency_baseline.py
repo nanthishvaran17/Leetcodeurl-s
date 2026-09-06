@@ -20,7 +20,7 @@ from backend.models import User, Student
 from backend.services.faculty_assignment_service import faculty_assignment_service
 
 
-# ─── SQLAlchemy Query Counter ─────────────────────────────────────────────────
+# SQLAlchemy Query Counter 
 
 from sqlalchemy import event
 from backend.database import engine
@@ -45,7 +45,7 @@ def get_query_count() -> int:
         return _query_counts.get(tid, 0)
 
 
-# ─── Simulated Endpoint Calls (direct service layer, no HTTP overhead) ────────
+# Simulated Endpoint Calls (direct service layer, no HTTP overhead) 
 
 def measure_get_my_students(staff_id: int) -> Dict[str, Any]:
     """Measures /faculty-assignments/my-students performance."""
@@ -149,7 +149,7 @@ def measure_get_mentoring_summary(staff_id: int) -> Dict[str, Any]:
         db.close()
 
 
-# ─── Percentile Calculation ────────────────────────────────────────────────────
+# Percentile Calculation 
 
 def percentile(data: List[float], pct: float) -> float:
     if not data:
@@ -159,7 +159,7 @@ def percentile(data: List[float], pct: float) -> float:
     return round(sorted_data[idx], 2)
 
 
-# ─── Main Baseline Runner ─────────────────────────────────────────────────────
+# Main Baseline Runner 
 
 def run_baseline():
     print("=" * 70)
@@ -187,7 +187,7 @@ def run_baseline():
     mentoring_results = []
     errors = 0
 
-    print(f"\n▶  Running {RUNS_PER_STAFF} × {len(staff_ids)} = {RUNS_PER_STAFF * len(staff_ids)} measurements per endpoint...")
+    print(f"\n Running {RUNS_PER_STAFF} × {len(staff_ids)} = {RUNS_PER_STAFF * len(staff_ids)} measurements per endpoint...")
 
     for run in range(RUNS_PER_STAFF):
         for sid in staff_ids:

@@ -10,7 +10,7 @@ Capabilities:
    - Dynamic Programming
    - Math & Bit Manipulation
 2. Automated Gap Detection:
-   - Identifies skills under the 40% threshold and tags them as '⚠️ CRITICAL_WEAKNESS'.
+   - Identifies skills under the 40% threshold and tags them as ' CRITICAL_WEAKNESS'.
 3. Personalized Remedial Practice Generator:
    - Recommends curated LeetCode problem paths (Easy -> Medium -> Hard) targeted directly at the student's weakest domain.
 """
@@ -76,9 +76,9 @@ class SkillGraphService:
         radar_dimensions = [
             {"dimension": "Arrays & Strings", "mastery_pct": round(arr_mastery, 1), "status": "STRONG" if arr_mastery >= 70 else "MEDIUM"},
             {"dimension": "Two Pointers & Sliding Window", "mastery_pct": round(two_pt_mastery, 1), "status": "STRONG" if two_pt_mastery >= 70 else "MEDIUM"},
-            {"dimension": "Trees & Binary Search Trees", "mastery_pct": round(tree_mastery, 1), "status": "STRONG" if tree_mastery >= 65 else "MEDIUM" if tree_mastery >= 40 else "WEAK ⚠️"},
-            {"dimension": "Graphs, BFS & DFS", "mastery_pct": round(graph_mastery, 1), "status": "STRONG" if graph_mastery >= 65 else "MEDIUM" if graph_mastery >= 40 else "WEAK ⚠️"},
-            {"dimension": "Dynamic Programming", "mastery_pct": round(dp_mastery, 1), "status": "STRONG" if dp_mastery >= 60 else "MEDIUM" if dp_mastery >= 35 else "CRITICAL_WEAKNESS 🚨"},
+            {"dimension": "Trees & Binary Search Trees", "mastery_pct": round(tree_mastery, 1), "status": "STRONG" if tree_mastery >= 65 else "MEDIUM" if tree_mastery >= 40 else "WEAK "},
+            {"dimension": "Graphs, BFS & DFS", "mastery_pct": round(graph_mastery, 1), "status": "STRONG" if graph_mastery >= 65 else "MEDIUM" if graph_mastery >= 40 else "WEAK "},
+            {"dimension": "Dynamic Programming", "mastery_pct": round(dp_mastery, 1), "status": "STRONG" if dp_mastery >= 60 else "MEDIUM" if dp_mastery >= 35 else "CRITICAL_WEAKNESS "},
             {"dimension": "Math & Bit Manipulation", "mastery_pct": round(math_bit_mastery, 1), "status": "STRONG" if math_bit_mastery >= 65 else "MEDIUM"}
         ]
 

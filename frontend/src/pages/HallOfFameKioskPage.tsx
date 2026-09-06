@@ -86,7 +86,7 @@ export const HallOfFameKioskPage: React.FC = () => {
       <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-amber-500/15 rounded-full blur-[140px] pointer-events-none animate-pulse" />
       <div className="absolute top-[40%] left-[50%] translate-x-[-50%] w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[160px] pointer-events-none" />
 
-      {/* ── Top Header Banner ── */}
+      {/* Top Header Banner */}
       <header className="relative z-10 px-8 py-5 flex items-center justify-between border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-xl">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 p-0.5 shadow-lg shadow-amber-500/20">
@@ -149,7 +149,7 @@ export const HallOfFameKioskPage: React.FC = () => {
         </div>
       </header>
 
-      {/* ── Main Dynamic Stage (Auto Rotating Slides) ── */}
+      {/* Main Dynamic Stage (Auto Rotating Slides) */}
       <main className="relative z-10 flex-1 px-8 py-6 flex flex-col justify-center">
         {/* SLIDE 0: INSTITUTIONAL TOP 10 OVERALL CHAMPIONS */}
         {currentSlide === 0 && (
@@ -367,7 +367,7 @@ export const HallOfFameKioskPage: React.FC = () => {
         )}
       </main>
 
-      {/* ── Bottom Live News Ticker ── */}
+      {/* Bottom Live News Ticker */}
       <footer className="relative z-10 px-8 py-3 bg-slate-950/90 border-t border-slate-800/80 flex items-center justify-between text-xs">
         <div className="flex items-center gap-3 w-full overflow-hidden">
           <span className="font-black uppercase tracking-wider text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded border border-amber-500/20 whitespace-nowrap">

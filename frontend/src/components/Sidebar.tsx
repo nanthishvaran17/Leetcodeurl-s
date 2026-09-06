@@ -73,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
     return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
 
-  // ── FACULTY / STAFF MENTOR: Full Academic, Contest & Mentoring Access ────────
+  // FACULTY / STAFF MENTOR: Full Academic, Contest & Mentoring Access 
   const facultySections: NavSection[] = [
     {
       title: 'FACULTY & MENTOR PORTAL',
@@ -105,7 +105,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
     }
   ];
 
-  // ── HOD: Command center + faculty tools; NO admin-only pages ──────────────
+  // HOD: Command center + faculty tools; NO admin-only pages 
   const hodSections: NavSection[] = [
     {
       title: 'EXECUTIVE INTELLIGENCE',
@@ -138,7 +138,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
     }
   ];
 
-  // ── ADMIN / SUPER ADMIN: Full system access ─────────────────────────────
+  // ADMIN / SUPER ADMIN: Full system access 
   const adminSections: NavSection[] = [
     {
       title: 'EXECUTIVE INTELLIGENCE',
@@ -173,7 +173,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
     }
   ];
 
-  // ── STUDENT: Minimal access ───────────────────────────────────────
+  // STUDENT: Minimal access 
   const studentSections: NavSection[] = [
     {
       title: 'MY PORTAL',
@@ -217,7 +217,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
             transition={{ type: 'spring', stiffness: 350, damping: 32 }}
             className="relative w-[78vw] max-w-[285px] sm:max-w-[300px] h-full shadow-2xl bg-white dark:bg-navy-950 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))] px-3.5 sm:px-4 flex flex-col justify-between overflow-hidden z-10 border-r border-slate-200 dark:border-navy-800"
           >
-            {/* ── Region 1: Fixed Compact Header ── */}
+            {/* Region 1: Fixed Compact Header */}
             <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-navy-800/80 shrink-0 mb-0.5 relative z-10">
               <button 
                 type="button"
@@ -248,7 +248,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
               </button>
             </div>
 
-            {/* ── Region 2: Independently Scrollable Menu (Compact & Crisp) ── */}
+            {/* Region 2: Independently Scrollable Menu (Compact & Crisp) */}
             <div className="space-y-4 sm:space-y-4.5 overflow-y-auto pr-0.5 flex-1 min-h-0 custom-scrollbar overscroll-contain py-1.5 relative z-10">
               {sections.map((section, sIdx) => (
                 <div key={sIdx} className="space-y-1.5">
@@ -332,7 +332,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
               ))}
             </div>
 
-            {/* ── Region 3: Fixed Mobile Action Bar (Theme & Auth) ── */}
+            {/* Region 3: Fixed Mobile Action Bar (Theme & Auth) */}
             <div className="pt-2 border-t border-slate-100 dark:border-navy-800/80 shrink-0 relative z-10 flex items-center gap-1.5">
               <button
                 type="button"
@@ -354,7 +354,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
               )}
             </div>
 
-            {/* ── Region 4: Fixed Minimal Sunday Session Window Card ── */}
+            {/* Region 4: Fixed Minimal Sunday Session Window Card */}
             <div className="pt-1.5 shrink-0 relative z-10">
               <div className="p-2.5 sm:p-3 rounded-xl bg-slate-900 dark:bg-navy-900 text-white border border-emerald-500/25 shadow-xs text-xs space-y-1 relative overflow-hidden group cursor-default max-h-[145px]">
                 <div className="absolute top-0 right-0 -mt-4 -mr-4 w-12 h-12 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />

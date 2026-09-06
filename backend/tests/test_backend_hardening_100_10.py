@@ -26,7 +26,7 @@ from backend.logger import sensitive_filter
 client = TestClient(app)
 
 
-# ── FIXTURES ─────────────────────────────────────────────────────────────
+# FIXTURES 
 
 @pytest.fixture(scope="function")
 def db_session():
@@ -83,7 +83,7 @@ def student_headers(student_user: User):
     return {"Authorization": f"Bearer {token}"}
 
 
-# ── 1. STUDENT DELETE CONCURRENCY & IDEMPOTENCY ─────────────────────────
+# 1. STUDENT DELETE CONCURRENCY & IDEMPOTENCY 
 
 def test_student_delete_concurrency_and_idempotency(db_session: Session, admin_headers: dict, admin_user: User):
     """
@@ -142,7 +142,7 @@ def test_student_delete_concurrency_and_idempotency(db_session: Session, admin_h
     assert audit_count == 1, f"Expected exactly 1 audit log record, found {audit_count}"
 
 
-# ── 2. RANKING ENGINE CONCURRENCY & DEDUPLICATION ───────────────────────
+# 2. RANKING ENGINE CONCURRENCY & DEDUPLICATION 
 
 def test_ranking_engine_concurrency_and_performance(db_session: Session):
     """
@@ -175,7 +175,7 @@ def test_ranking_engine_concurrency_and_performance(db_session: Session):
     assert len(records) > 0
 
 
-# ── 3. NOTIFICATION IDEMPOTENCY & DUPLICATE PREVENTION ───────────────────
+# 3. NOTIFICATION IDEMPOTENCY & DUPLICATE PREVENTION 
 
 def test_notification_idempotency_and_concurrency(db_session: Session):
     """
@@ -216,7 +216,7 @@ def test_notification_idempotency_and_concurrency(db_session: Session):
     assert duplicate_prevented_count >= 8, f"Expected duplicate prevention on concurrent requests, got {duplicate_prevented_count}"
 
 
-# ── 4. AUTHENTICATION & RBAC SECURITY ───────────────────────────────────
+# 4. AUTHENTICATION & RBAC SECURITY 
 
 def test_auth_security_valid_token(admin_headers: dict):
     res = client.get("/api/admin/audit-logs", headers=admin_headers)
@@ -248,7 +248,7 @@ def test_auth_rbac_student_cannot_access_admin(student_headers: dict):
     assert res.status_code == 403
 
 
-# ── 5. SECRET REDACTION IN LOGGING ──────────────────────────────────────
+# 5. SECRET REDACTION IN LOGGING 
 
 def test_sensitive_data_filter_redaction():
     """

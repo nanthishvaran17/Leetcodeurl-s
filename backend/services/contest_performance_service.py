@@ -58,7 +58,7 @@ def matches_dept(r_dept_code: str, r_dept_name: str, target_dept: Optional[str])
 
 
 def normalize_year_val(year_raw: Optional[str]) -> str:
-    y = str(year_raw or "").upper().replace("YEAR", "").replace("🎓", "").strip()
+    y = str(year_raw or "").upper().replace("YEAR", "").replace("", "").strip()
     if "III" in y or "3" in y:
         return "III"
     if "IV" in y or "4" in y:

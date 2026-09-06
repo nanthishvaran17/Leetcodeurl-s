@@ -176,7 +176,7 @@ def extract_leetcode_username(url_or_username: Optional[str]) -> Tuple[Optional[
 
 GRAPHQL_URL = "https://leetcode.com/graphql"
 
-# ── PROFILE + STATS + BADGES + LANGUAGES + CALENDAR (Phase A) ─────────────
+# PROFILE + STATS + BADGES + LANGUAGES + CALENDAR (Phase A) 
 USER_PROFILE_QUERY = """
 query userPublicProfile($username: String!) {
   matchedUser(username: $username) {
@@ -216,7 +216,7 @@ query userPublicProfile($username: String!) {
 }
 """
 
-# ── CONTEST RANKING + FULL HISTORY (Phase B) ────────────────────────────────
+# CONTEST RANKING + FULL HISTORY (Phase B) 
 
 USER_CONTEST_QUERY = """
 query userContestRankingInfo($username: String!) {
@@ -636,9 +636,9 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: str, force_refres
             "fetch_duration": 0.0
         }
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # NEW GRAPHQL QUERIES (Phase C, D, E)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 # Phase C — Topic stats
 USER_TOPIC_QUERY = """
@@ -683,10 +683,10 @@ query recentAcSubmissions($username: String!, $limit: Int!) {
 """
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # TYPED ASYNC FETCH FUNCTIONS WITH EXPLICIT BACKOFF
 # Return shape: {"status": "ok"|"rate_limited"|"timeout"|"not_found"|"identity_mismatch"|"error", "data": ...}
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 def _make_headers(username: str) -> dict:
     return {
@@ -1099,9 +1099,9 @@ async def fetch_recent_submissions(
     return {"status": "ok", "data": {"submissions": submissions}}
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # DYNAMIC CONTEST METADATA & MULTI-STAGE VERIFICATION PIPELINE
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 CONTEST_METADATA_QUERY = """
 query contestMetadata($vContestSlug: String!) {

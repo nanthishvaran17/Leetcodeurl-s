@@ -31,7 +31,7 @@ def test_truth_engine_official_green_classification():
         raw_data=mock_raw_official
     )
     
-    assert result["status_badge"] == "🟢 GREEN"
+    assert result["status_badge"] == " GREEN"
     assert result["solved_count"] == 2
     assert result["evidence_verified"] is True
     assert result["q_matrix"]["Q1"] is True
@@ -63,7 +63,7 @@ def test_truth_engine_virtual_yellow_classification():
         raw_data=mock_raw_virtual
     )
     
-    assert result["status_badge"] == "🟡 YELLOW"
+    assert result["status_badge"] == " YELLOW"
     assert result["solved_count"] == 1
     assert result["evidence_verified"] is True
 
@@ -82,7 +82,7 @@ def test_truth_engine_absent_red_classification():
         raw_data=mock_raw_absent
     )
     
-    assert result["status_badge"] == "🔴 RED"
+    assert result["status_badge"] == " RED"
     assert result["solved_count"] == 0
     assert result["evidence_verified"] is True
 

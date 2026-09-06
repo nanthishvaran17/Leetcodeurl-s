@@ -20,7 +20,7 @@ from backend.database import SessionLocal, engine
 from backend.models import User, Student
 from backend.services.faculty_assignment_service import faculty_assignment_service
 
-# ─── Query Counter Instrumentation ────────────────────────────────────────────
+# Query Counter Instrumentation 
 
 _q_counts = {}
 _q_lock = threading.Lock()
@@ -42,7 +42,7 @@ def get_count():
         return _q_counts.get(tid, 0)
 
 
-# ─── Helper: load isolation test data ─────────────────────────────────────────
+# Helper: load isolation test data 
 
 def load_test_staff():
     """Loads the test staff IDs from the isolation seed data."""
@@ -54,7 +54,7 @@ def load_test_staff():
         return json.load(f)
 
 
-# ─── Tests ────────────────────────────────────────────────────────────────────
+# Tests 
 
 class TestN1Queries:
     """Verifies that critical endpoints do not have N+1 query patterns."""

@@ -41,9 +41,9 @@ def create_student_with_account(db, people_id="P_LIVE_01", name="Nanthish", user
     return student, acc
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 1. SEQUENTIAL SOLVE PROGRESSION TEST (0 -> 1 -> 2 -> 3 SOLVES)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 @pytest.mark.asyncio
 @patch("backend.services.live_contest_monitor_engine.LiveContestMonitorEngine.broadcast_ws_event")
@@ -111,9 +111,9 @@ async def test_student_solve_progression_0_to_3(mock_ws, db):
     assert len(events_in_db) == 3
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 2. INITIAL SYNC 297/297 TRANSITION TO CONTINUOUS LIVE SYNC
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 def test_initial_sync_transition_to_live_sync(db):
     """
@@ -130,9 +130,9 @@ def test_initial_sync_transition_to_live_sync(db):
     assert engine_inst.is_monitoring is True # Continuous monitoring active!
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 3. MISSED EVENT RECOVERY TEST (GET_MISSED_EVENTS)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 def test_missed_event_recovery_via_version(db):
     """Client requesting last_received_version=2 receives events with version=3, 4, 5"""
@@ -156,9 +156,9 @@ def test_missed_event_recovery_via_version(db):
     assert missed[2]["version"] == 5
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 4. 09:30 AM CUTOFF & 09:35 AM FREEZE COMPLIANCE
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 def test_post_930_activity_does_not_change_attendance(db):
     """Late solves after 09:30 AM IST do not alter official frozen attendance"""

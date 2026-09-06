@@ -141,7 +141,7 @@ def simulate_staff_session(staff_info: Dict[str, Any], results: List, errors: Li
         staff_id = staff_info["staff_id"]
         expected_ids = set(staff_info["student_ids"])
 
-        # ─── Load My Students ─────────────────────────────────────────────────
+        # Load My Students 
         t0 = time.perf_counter()
         assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, staff_id)
 
@@ -154,7 +154,7 @@ def simulate_staff_session(staff_info: Dict[str, Any], results: List, errors: Li
         ).all()
         my_students_ms = (time.perf_counter() - t0) * 1000
 
-        # ─── Security Check: No Cross-Staff Leakage ───────────────────────────
+        # Security Check: No Cross-Staff Leakage 
         returned_ids = {s.id for s in students}
         leaked_ids = returned_ids - expected_ids
         extra_non_assigned = returned_ids - set(assigned_ids)
@@ -169,7 +169,7 @@ def simulate_staff_session(staff_info: Dict[str, Any], results: List, errors: Li
                 })
             return
 
-        # ─── Load Mentoring Summary ───────────────────────────────────────────
+        # Load Mentoring Summary 
         t1 = time.perf_counter()
         from backend.models import StaffFollowUp, StaffAlert
         pending_followups = db.query(StaffFollowUp).filter(

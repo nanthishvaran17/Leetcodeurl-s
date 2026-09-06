@@ -44,9 +44,9 @@ def create_student_with_accounts(db, people_id="P001", name="Test Student", num_
     return student, accounts
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 1. BOUNDARY TIMESTAMP PRECISION TESTS
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 def test_boundary_precision_080000_ist(db):
     """08:00:00 IST -> IN_CONTEST"""
@@ -79,9 +79,9 @@ def test_boundary_precision_093500_ist(db):
     assert ContestWindowEngine.classify_activity_time(t) == ContestActivityType.POST_CONTEST
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 2. IMMUTABLE SNAPSHOT & POST-CONTEST SOLVE ISOLATION
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 def test_post_contest_solves_cannot_alter_frozen_attendance(db):
     """
@@ -125,9 +125,9 @@ def test_post_contest_solves_cannot_alter_frozen_attendance(db):
     assert snapshot.official_attendance_state == OfficialAttendanceState.NOT_ATTENDED
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 3. MULTI-ACCOUNT CONSOLIDATION & DYNAMIC EXPLANATION TESTS (2, 3, 4+ ACCOUNTS)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 @patch("backend.services.notification_outbox_worker.send_email", return_value=(True, "MOCK_MSG_ID"))
 @patch("backend.services.notification_outbox_worker.NotificationService.send_targeted_notification", return_value={"success": True})
@@ -151,9 +151,9 @@ def test_multi_account_consolidation_3_accounts(mock_notif, mock_email, db):
     assert "3 different LeetCode contest accounts" in cases[0]["why_this_alert"]
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 4. TRANSACTIONAL OUTBOX IDEMPOTENCY TESTS
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 @patch("backend.services.notification_outbox_worker.send_email", return_value=(True, "MOCK_MSG_ID"))
 @patch("backend.services.notification_outbox_worker.NotificationService.send_targeted_notification", return_value={"success": True})
@@ -181,9 +181,9 @@ def test_outbox_notification_idempotency(mock_notif, mock_email, db):
     assert len(events_run2) == 3 # Still strictly 3 events!
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 5. ADMINISTRATIVE CORRECTION AUDIT TRAIL TEST
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 def test_administrative_correction_audit_event(db):
     """Administrative corrections write CorrectionEvent and do not corrupt history"""

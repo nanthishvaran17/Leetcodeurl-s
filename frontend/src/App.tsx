@@ -411,7 +411,7 @@ export const App: React.FC = () => {
     );
   }, [user?.role, handleSelectStudent, handleOpenImport, handleTabChange]);
 
-  // ─── CENTRALIZED ROLE PERMISSION MATRIX ────────────────────────────────────
+  // CENTRALIZED ROLE PERMISSION MATRIX 
   // Single source of truth for all role-based tab access.
   // NEVER duplicate this logic across components.
   const ALL_ACADEMIC_TABS = useMemo(() => ['dashboard','landing','public','profile','students','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','staff-dashboard','student-dashboard','messages'], []);

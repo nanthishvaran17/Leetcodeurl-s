@@ -169,7 +169,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
           console.log('[Push] Backend registration: success');
           console.log('[Push] Push status: ENABLED');
           setPushPermState('granted');
-          setTestPushStatus('✓ Device registered for System Push Notifications');
+          setTestPushStatus(' Device registered for System Push Notifications');
           setTimeout(() => setTestPushStatus(null), 5000);
         } else {
           console.log('[Push] ERROR: Backend registration failed');
@@ -209,7 +209,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
             console.log('[Push] Backend registration: success');
             console.log('[Push] Push status: ENABLED');
             setPushPermState('granted');
-            setTestPushStatus('✓ Device registered for System Push Notifications');
+            setTestPushStatus(' Device registered for System Push Notifications');
             setTimeout(() => setTestPushStatus(null), 5000);
           } else {
             console.log('[Push] ERROR: Backend token save failed');
@@ -265,7 +265,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
       });
 
       if (res.ok) {
-        setTestPushStatus('✓ Real system push sent! Check device notification panel & lock screen.');
+        setTestPushStatus(' Real system push sent! Check device notification panel & lock screen.');
       } else {
         const errJson = await res.json().catch(() => ({}));
         setTestPushStatus(`Push warning: ${errJson.detail || 'Push queued'}`);

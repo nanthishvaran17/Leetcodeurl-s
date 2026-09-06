@@ -86,7 +86,7 @@ def get_performance_metrics() -> Dict[str, Any]:
     cache_hit_ratio = round((_CACHE_HITS / total_cache_lookups) * 100, 1) if total_cache_lookups > 0 else 100.0
 
     return {
-        "status": "🟢 OPTIMAL",
+        "status": " OPTIMAL",
         "uptime_seconds": round(uptime_sec, 1),
         "requests": {
             "total": _REQUEST_COUNTER,

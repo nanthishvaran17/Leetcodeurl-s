@@ -794,7 +794,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                     return (
                       <div key={step} className="step-item">
                         <div className={`step-dot ${done ? 'done' : ''} ${active ? 'active' : ''}`}>
-                          {done ? '✓' : i + 1}
+                          {done ? '' : i + 1}
                         </div>
                         {i < 3 && <div className={`step-line ${done ? 'done' : ''}`} />}
                       </div>

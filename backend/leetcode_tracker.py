@@ -21,7 +21,7 @@ from backend.models import (
 
 router = APIRouter(prefix="/tracker", tags=["LeetCode Sunday Automated Tracker & HOD Reports"])
 
-# ── LEETCODE GRAPHQL CONSTANTS ────────────────────────────────────────────────
+# LEETCODE GRAPHQL CONSTANTS 
 GRAPHQL_URL = "https://leetcode.com/graphql"
 
 USER_CONTEST_HISTORY_QUERY = """
@@ -78,7 +78,7 @@ query userPublicProfile($username: String!) {
 }
 """
 
-# ── TOKEN BUCKET RATE LIMITER FOR 300+ PROFILE SCRAPING ──────────────────────
+# TOKEN BUCKET RATE LIMITER FOR 300+ PROFILE SCRAPING 
 class TokenBucketRateLimiter:
     """
     Token-bucket rate limiter with exponential backoff on HTTP 429 for batch scraping.
@@ -106,7 +106,7 @@ class TokenBucketRateLimiter:
 rate_limiter = TokenBucketRateLimiter(rate_per_sec=4.0, capacity=8.0)
 
 
-# ── TIME UTILITIES (IST — Asia/Kolkata UTC+5:30) ──────────────────────────────
+# TIME UTILITIES (IST — Asia/Kolkata UTC+5:30) 
 def get_now_ist() -> datetime.datetime:
     now_utc = datetime.datetime.now(datetime.timezone.utc)
     ist_tz = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
@@ -121,7 +121,7 @@ def format_ist(dt: Optional[datetime.datetime] = None) -> str:
     return dt.strftime("%d %b %Y, %I:%M:%S %p IST")
 
 
-# ── LEETCODE GRAPHQL FETCH ENGINE ──────────────────────────────────────────────
+# LEETCODE GRAPHQL FETCH ENGINE 
 async def fetch_leetcode_contest_and_submissions(username: str) -> Dict[str, Any]:
     """
     Fetches userContestRankingHistory and recentAcSubmissionList from LeetCode GraphQL.
@@ -193,7 +193,7 @@ async def fetch_leetcode_contest_and_submissions(username: str) -> Dict[str, Any
         }
 
 
-# ── DUAL CONTEST CLASSIFICATION ENGINE (RULES A, B, C) ────────────────────────
+# DUAL CONTEST CLASSIFICATION ENGINE (RULES A, B, C) 
 def classify_student_contest_performance(
     gql_data: Dict[str, Any],
     session_title: str = "Weekly Contest 515"
@@ -306,7 +306,7 @@ def classify_student_contest_performance(
     }
 
 
-# ── SINGLE-STUDENT LIVE INSPECTION ENGINE ──────────────────────────────────────
+# SINGLE-STUDENT LIVE INSPECTION ENGINE 
 @router.get("/student-monitor/{identifier}")
 @router.post("/force-sync-student/{identifier}")
 async def get_or_force_sync_single_student(identifier: str, db: Session = Depends(get_db)):
@@ -409,7 +409,7 @@ async def get_or_force_sync_single_student(identifier: str, db: Session = Depend
     }
 
 
-# ── DUAL-SYNC AUTOMATION PIPELINE (JOB 1 @ 10:00 AM & JOB 2 @ 10:00 PM IST) ──
+# DUAL-SYNC AUTOMATION PIPELINE (JOB 1 @ 10:00 AM & JOB 2 @ 10:00 PM IST) 
 @router.post("/run-dual-sync")
 async def execute_dual_sync_job(job_type: str = Query("morning", enum=["morning", "evening"]), db: Session = Depends(get_db)):
     """
@@ -490,7 +490,7 @@ async def execute_dual_sync_job(job_type: str = Query("morning", enum=["morning"
     }
 
 
-# ── MONDAY MORNING MASTER HOD EXCEL GENERATOR ─────────────────────────────────
+# MONDAY MORNING MASTER HOD EXCEL GENERATOR 
 @router.get("/export-hod-excel")
 def export_monday_hod_master_excel(
     dept: Optional[str] = Query(None, description="CSE-CS or CSE-IoT"),
@@ -655,7 +655,7 @@ def export_monday_hod_master_excel(
     )
 
 
-# ── MONDAY MORNING MASTER HOD PDF GENERATOR ──────────────────────────────────
+# MONDAY MORNING MASTER HOD PDF GENERATOR 
 @router.get("/export-hod-pdf")
 def export_monday_hod_master_pdf(
     dept: Optional[str] = Query(None),
@@ -730,7 +730,7 @@ def export_monday_hod_master_pdf(
     )
 
 
-# ── HISTORICAL CONTEST BACKFILL ENDPOINT ──────────────────────────────────────
+# HISTORICAL CONTEST BACKFILL ENDPOINT 
 @router.post("/backfill-historical")
 async def trigger_historical_backfill(
     from_contest: int = Query(510, ge=1, le=9999, description="First contest number to backfill"),
@@ -758,7 +758,7 @@ async def trigger_historical_backfill(
     return result
 
 
-# ── CONTEST MATRIX OVERVIEW ENDPOINT ─────────────────────────────────────────
+# CONTEST MATRIX OVERVIEW ENDPOINT 
 @router.get("/contest-matrix")
 def get_contest_matrix(db: Session = Depends(get_db)):
     """
@@ -779,7 +779,7 @@ def get_contest_matrix(db: Session = Depends(get_db)):
                 "official_participants": s.official_participants or 0,
                 "virtual_participants": s.virtual_participants or 0,
                 "not_participated": s.not_participated or 0,
-                "sync_status": s.sync_status or "🟢 Verified",
+                "sync_status": s.sync_status or " Verified",
                 "last_synced": format_ist(s.last_synced) if s.last_synced else "Never",
             }
             for s in sessions

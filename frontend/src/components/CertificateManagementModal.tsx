@@ -480,7 +480,7 @@ export const CertificateManagementModal: React.FC<{
         onClick={(e) => e.stopPropagation()}
       >
 
-        {/* ── TOP INSTITUTIONAL HEADER & SYSTEM STATUS ───────────────────────── */}
+        {/* TOP INSTITUTIONAL HEADER & SYSTEM STATUS */}
         <div className="px-4 sm:px-6 py-3.5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 border-b border-brand-500/30 flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0 shadow-lg">
           <div className="flex items-center space-x-3 sm:space-x-4">
             <div className="p-2.5 sm:p-3 rounded-2xl bg-brand-500/10 text-brand-400 border border-brand-500/30 shadow-lg shrink-0">
@@ -498,7 +498,7 @@ export const CertificateManagementModal: React.FC<{
                 </h2>
                 <span className="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center space-x-1.5 shadow-sm">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                  <span className="hidden sm:inline">● CREDENTIAL SYSTEM OPERATIONAL</span>
+                  <span className="hidden sm:inline"> CREDENTIAL SYSTEM OPERATIONAL</span>
                   <span className="sm:hidden">OPERATIONAL</span>
                 </span>
               </div>
@@ -562,7 +562,7 @@ export const CertificateManagementModal: React.FC<{
           </div>
         </div>
 
-        {/* ── METRICS RIBBON (GROUND TRUTH NUMBERS) ─────────────────────────── */}
+        {/* METRICS RIBBON (GROUND TRUTH NUMBERS) */}
         <div className="px-6 py-2.5 bg-white dark:bg-navy-950 border-b border-slate-200 dark:border-navy-700/80 flex items-center justify-between text-xs sm:text-sm font-black overflow-x-auto no-scrollbar shrink-0">
           <div className="flex items-center space-x-6 whitespace-nowrap">
             <div className="flex items-center space-x-2">
@@ -591,7 +591,7 @@ export const CertificateManagementModal: React.FC<{
           </div>
         </div>
 
-        {/* ── BODY WORKSPACE ────────────────────────────────────────────────── */}
+        {/* BODY WORKSPACE */}
         <div className="flex-1 overflow-hidden flex flex-col min-h-0">
 
           {/* TAB 1: ISSUANCE STUDIO WITH 5-STEP WORKFLOW */}
@@ -650,7 +650,7 @@ export const CertificateManagementModal: React.FC<{
               {/* Two-Column Studio Layout */}
               <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5 p-5 overflow-y-auto min-h-0">
 
-                {/* ── LEFT COLUMN: WORKFLOW CONTROL PANEL (5 COLS) ──────────── */}
+                {/* LEFT COLUMN: WORKFLOW CONTROL PANEL (5 COLS) */}
                 <div className="lg:col-span-5 space-y-4 flex flex-col">
 
                   {/* STEP 1: RECIPIENT SELECTION */}
@@ -813,7 +813,7 @@ export const CertificateManagementModal: React.FC<{
                             <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 shadow-inner">
                               <span className="text-xs text-slate-300 block font-black uppercase tracking-wider">Contest Rating</span>
                               <span className="font-mono font-black text-amber-400 text-base sm:text-xl flex items-center space-x-1.5 mt-0.5">
-                                <span>⭐</span>
+                                <span></span>
                                 <span>{selectedStudent.stats?.contest_rating ? selectedStudent.stats.contest_rating.toFixed(1) : '1500.0'}</span>
                               </span>
                             </div>
@@ -1069,7 +1069,7 @@ export const CertificateManagementModal: React.FC<{
                             <span>Document Center & Verification</span>
                           </span>
                           <span className="px-3 py-1 rounded-full text-xs font-black bg-emerald-100 dark:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40">
-                            ● VALID CREDENTIAL
+                             VALID CREDENTIAL
                           </span>
                         </div>
 
@@ -1152,7 +1152,7 @@ export const CertificateManagementModal: React.FC<{
 
                 </div>
 
-                {/* ── RIGHT COLUMN: HIGH-FIDELITY A4 LANDSCAPE LIVE PREVIEW (7 COLS) ─ */}
+                {/* RIGHT COLUMN: HIGH-FIDELITY A4 LANDSCAPE LIVE PREVIEW (7 COLS) */}
                 <div className="lg:col-span-7 space-y-3 flex flex-col justify-start">
                   <div className="flex items-center justify-between text-xs px-1">
                     <span className="font-extrabold text-slate-900 dark:text-slate-200 uppercase tracking-wider text-xs flex items-center space-x-1.5">
@@ -1166,7 +1166,7 @@ export const CertificateManagementModal: React.FC<{
                     </div>
                   </div>
 
-                  {/* ── THE A4 CERTIFICATE CANVAS (PRINT TARGET) ── */}
+                  {/* THE A4 CERTIFICATE CANVAS (PRINT TARGET) */}
                   <div className="print-certificate-target relative w-full aspect-[297/210] bg-[#FCFCFA] text-slate-950 rounded-3xl p-4 sm:p-6 flex flex-col justify-between shadow-xl border-[5px] border-[#0B192C] overflow-hidden select-none font-sans">
 
                     {/* Outer & Inner Gold Filigree Borders */}
@@ -1203,7 +1203,7 @@ export const CertificateManagementModal: React.FC<{
                         Approved by AICTE, New Delhi • Affiliated to Anna University, Chennai • Accredited by NAAC with 'A+' Grade
                       </p>
                       <div className="text-[#C5A059] text-xs font-black tracking-widest pt-0.5">
-                        ────────────── ◆ ──────────────
+                          
                       </div>
                     </div>
 
@@ -1310,7 +1310,7 @@ export const CertificateManagementModal: React.FC<{
               {/* CARD 1 & CARD 2 GRID */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
 
-                {/* ── CARD 1: PRINCIPAL SIGNATURE ── */}
+                {/* CARD 1: PRINCIPAL SIGNATURE */}
                 <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 flex flex-col justify-between h-full space-y-4 shadow-xl">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between border-b border-slate-200 dark:border-navy-700 pb-3">
@@ -1410,7 +1410,7 @@ export const CertificateManagementModal: React.FC<{
                   </div>
                 </div>
 
-                {/* ── CARD 2: HOD SIGNATURES ── */}
+                {/* CARD 2: HOD SIGNATURES */}
                 <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 flex flex-col justify-between h-full space-y-4 shadow-xl">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between border-b border-slate-200 dark:border-navy-700 pb-3">
@@ -1690,7 +1690,7 @@ export const CertificateManagementModal: React.FC<{
 
       </motion.div>
 
-      {/* ── REVIEW & CONFIRM ISSUANCE MODAL ─────────────────────────────────── */}
+      {/* REVIEW & CONFIRM ISSUANCE MODAL */}
       <AnimatePresence>
         {showConfirmIssueModal && selectedStudent && (
           <GlobalModalBackdrop isOpen={true} onClose={() => setShowConfirmIssueModal(false)} className="flex items-center justify-center p-4">

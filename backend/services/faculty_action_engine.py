@@ -24,7 +24,7 @@ from backend.models import (
 )
 from backend.logger import logger
 
-# ── Status Lifecycle Rules ───────────────────────────────────────────────────
+# Status Lifecycle Rules 
 VALID_STATUSES = ["Pending", "In Progress", "Monitoring", "Completed", "Resolved"]
 ALLOWED_TRANSITIONS = {
     "Pending": ["In Progress", "Monitoring", "Resolved"],
@@ -34,7 +34,7 @@ ALLOWED_TRANSITIONS = {
     "Resolved": ["Monitoring", "In Progress", "Pending"] # Reopening allowed
 }
 
-# ── Signal Type to Recommended Action Matrix ──────────────────────────────────
+# Signal Type to Recommended Action Matrix 
 RECOMMENDED_ACTION_MAP = {
     "CONTEST_ABSENT": "Contact student immediately to verify reason for contest absence and enforce official attendance.",
     "CONSECUTIVE_ABSENT": "Escalate to Faculty Mentor / HOD: Severe pattern of consecutive weekly contest absences.",
@@ -127,7 +127,7 @@ def calculate_priority_score(
     return final_score, level, explanation
 
 
-# ── Signal Detector & Queue Synchronizer ──────────────────────────────────────
+# Signal Detector & Queue Synchronizer 
 def detect_and_sync_faculty_signals(db: Session, force: bool = False) -> Dict[str, Any]:
     """
     Runs automated signal detection against all active students in DB.
@@ -279,7 +279,7 @@ def detect_and_sync_faculty_signals(db: Session, force: bool = False) -> Dict[st
     }
 
 
-# ── Action Queue & Filtered Retrieval ─────────────────────────────────────────
+# Action Queue & Filtered Retrieval 
 def get_faculty_actions_list(
     db: Session,
     priority: Optional[str] = None,
@@ -433,7 +433,7 @@ def get_faculty_actions_list(
     }
 
 
-# ── Top KPI Aggregator ────────────────────────────────────────────────────────
+# Top KPI Aggregator 
 def get_faculty_kpis(
     db: Session, 
     department_id: Optional[int] = None, 
@@ -443,7 +443,7 @@ def get_faculty_kpis(
 ) -> Dict[str, Any]:
     """
     Computes real database KPI card metrics for Faculty Action Center:
-    🔴 Critical, 🟠 High, 🟡 Monitoring, 🔵 In Progress, 🟢 Completed, ✅ Resolved.
+     Critical, High, Monitoring, In Progress, Completed, Resolved.
     When faculty_id is provided, scopes to that faculty's assigned students only.
     Applies year_level and search filters if provided so counts match the filtered list.
     """
@@ -519,7 +519,7 @@ def get_faculty_kpis(
     }
 
 
-# ── Action Lifecycle Operations & Audit Logging ───────────────────────────────
+# Action Lifecycle Operations & Audit Logging 
 def update_faculty_action_details(
     db: Session,
     action_id: int,

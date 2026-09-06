@@ -41,9 +41,9 @@ def create_student_with_accounts(db, people_id="P001", name="Test Student", num_
     return student, accounts
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 1. EXPLICIT TIMED SUBMISSION TESTS (9:29 AM, 9:30 AM, 9:31 AM, 10:00 AM, 4:30 PM, 8:20 PM, 11:00 PM)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 def test_explicit_submission_929_am(db):
     """9:29 AM Submission: IN_CONTEST -> ATTENDED -> Frozen -> No Alert"""
@@ -228,9 +228,9 @@ def test_explicit_submission_820_pm(db):
     assert rec.post_contest_solves_count == 1
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 2. DUPLICATE ACCOUNT TRUTH TABLE VERIFICATION
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 def test_truth_table_attended_attended(db):
     """ATTENDED + ATTENDED -> NO ALERT"""
@@ -344,9 +344,9 @@ def test_truth_table_unknown_unknown(db):
     assert len(cases) == 0
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # 3. IDEMPOTENCY / RETRY VERIFICATION (NO DUPLICATE NOTIFICATIONS ON RETRY)
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 @patch("backend.services.contest_integrity_service.send_email", return_value=(True, "MOCK_MSG_ID"))
 @patch("backend.services.notification_service.NotificationService.send_targeted_notification", return_value={"success": True})

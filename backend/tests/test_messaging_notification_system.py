@@ -67,7 +67,7 @@ def recipient_student(db: Session):
     return st
 
 
-# ── 1. TWO DISTINCT MESSAGES REMAIN SEPARATE & CREATE LEGITIMATE NOTIFICATIONS ──
+# 1. TWO DISTINCT MESSAGES REMAIN SEPARATE & CREATE LEGITIMATE NOTIFICATIONS 
 
 def test_distinct_messages_preserved_and_notified(db: Session, sender_admin: User, recipient_student: Student):
     """
@@ -120,7 +120,7 @@ def test_distinct_messages_preserved_and_notified(db: Session, sender_admin: Use
     assert "kl" in notif_b.body
 
 
-# ── 2. RETRY / DUPLICATE EVENT IS DEDUPLICATED (EXACTLY ONCE) ───────────
+# 2. RETRY / DUPLICATE EVENT IS DEDUPLICATED (EXACTLY ONCE) 
 
 def test_same_message_event_deduplicated_on_retry(db: Session, sender_admin: User, recipient_student: Student):
     """
@@ -158,7 +158,7 @@ def test_same_message_event_deduplicated_on_retry(db: Session, sender_admin: Use
     assert count == 1, f"Expected exactly 1 notification record, got {count}"
 
 
-# ── 3. CONCURRENT WORKERS (10 THREADS) FOR SAME EVENT ───────────────────
+# 3. CONCURRENT WORKERS (10 THREADS) FOR SAME EVENT 
 
 def test_concurrent_notification_processing_exactly_once(db: Session, sender_admin: User, recipient_student: Student):
     """
@@ -198,7 +198,7 @@ def test_concurrent_notification_processing_exactly_once(db: Session, sender_adm
     assert dups == 9, f"Expected 9 duplicate prevented flags, got {dups}"
 
 
-# ── 4. DEEP LINK ROUTING METADATA ACCURACY ──────────────────────────────
+# 4. DEEP LINK ROUTING METADATA ACCURACY 
 
 def test_notification_deep_link_metadata(db: Session, sender_admin: User, recipient_student: Student):
     """

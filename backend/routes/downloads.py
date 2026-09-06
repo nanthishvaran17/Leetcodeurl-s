@@ -16,7 +16,7 @@ from backend.logger import logger
 
 router = APIRouter(prefix="/api/downloads", tags=["Global Downloads"])
 
-# ── IN-MEMORY SECURE TOKEN STORE ─────────────────────────────────────────────
+# IN-MEMORY SECURE TOKEN STORE 
 # Token records stored by token_hash to avoid logging/exposing raw tokens
 _TOKEN_LOCK = threading.Lock()
 _SECURE_DOWNLOAD_TOKENS: Dict[str, Dict[str, Any]] = {}
@@ -152,7 +152,7 @@ def execute_secure_download(
         logger.error(f"[SECURE DOWNLOAD ERROR] Endpoint execution failed: {err}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Unable to download the file. Please try again.")
 
-    # ── FILE VALIDATION ────────────────────────────────────────────────────────
+    # FILE VALIDATION 
     if not content_bytes or len(content_bytes) == 0:
         raise HTTPException(status_code=500, detail="Generated download file was 0 bytes.")
 

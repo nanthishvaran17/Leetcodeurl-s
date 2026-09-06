@@ -67,7 +67,7 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
   return (
     <div className="space-y-6">
 
-      {/* ── 1. DIGITAL CODING PROFILE HEADER CARD ── */}
+      {/* 1. DIGITAL CODING PROFILE HEADER CARD */}
       <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white border border-navy-800 shadow-lg space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
           
@@ -133,7 +133,7 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
         </div>
       </div>
 
-      {/* ── 2. EXPLAINABLE AI RISK PREDICTION ENGINE PANEL ── */}
+      {/* 2. EXPLAINABLE AI RISK PREDICTION ENGINE PANEL */}
       <div className="bg-white dark:bg-navy-950 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -208,7 +208,7 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
         )}
       </div>
 
-      {/* ── 3. DSA SKILL KNOWLEDGE MAP (16 TOPICS) ── */}
+      {/* 3. DSA SKILL KNOWLEDGE MAP (16 TOPICS) */}
       <div className="bg-white dark:bg-navy-950 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -255,7 +255,7 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
         </div>
       </div>
 
-      {/* ── 4. CONTEST READINESS & CONSISTENCY INTELLIGENCE ── */}
+      {/* 4. CONTEST READINESS & CONSISTENCY INTELLIGENCE */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         {/* Contest Readiness Engine */}
@@ -342,7 +342,7 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
 
       </div>
 
-      {/* ── 5. PERSONALIZED 4-WEEK AI LEARNING PATH ── */}
+      {/* 5. PERSONALIZED 4-WEEK AI LEARNING PATH */}
       <div className="bg-white dark:bg-navy-950 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">

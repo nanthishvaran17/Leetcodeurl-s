@@ -21,9 +21,9 @@ from backend.services.leetcode_adapter import (
     UserProfile,
 )
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # CONSTANTS & ENUMS
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 class ParticipationType:
     LIVE = "LIVE"
@@ -41,9 +41,9 @@ class ConfidenceLevel:
     NONE = "NONE"
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # CLASSIFICATION RESULT MODEL
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 @dataclass
 class ClassificationResult:
@@ -117,7 +117,7 @@ class ClassificationResult:
             "contestModeAvailable": contest_mode_available
         }
 
-    # ── Backward-compat property aliases (tests & legacy callers) ──────────────
+    # Backward-compat property aliases (tests & legacy callers) 
 
     @property
     def participation_status(self) -> str:
@@ -194,9 +194,9 @@ class ClassificationResult:
         }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # PARTICIPATION CLASSIFIER ENGINE
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 class ParticipationClassifier:
     """
@@ -263,9 +263,9 @@ class ParticipationClassifier:
 
         # 2. TIER A: OFFICIAL LEADERBOARD (LIVE)
         if c_is_live and getattr(c_ev, "source", None) in ["contest_ranking", "final_contest"]:
-            evidence_trace.append("✓ Strong LIVE evidence: Official contest leaderboard match.")
+            evidence_trace.append(" Strong LIVE evidence: Official contest leaderboard match.")
             if h_is_live:
-                evidence_trace.append("✓ Supporting LIVE evidence: Profile attended=true.")
+                evidence_trace.append(" Supporting LIVE evidence: Profile attended=true.")
                 conf = ConfidenceLevel.VERY_HIGH
             else:
                 evidence_trace.append("! Note: Profile history has not yet synced or is missing (acceptable for Leaderboard match).")
@@ -286,7 +286,7 @@ class ParticipationClassifier:
 
         # 3. TIER B: PROFILE ATTENDED (LIVE)
         if h_is_live:
-            evidence_trace.append("✓ Strong LIVE evidence: Profile explicitly marks attended=true, virtual=false.")
+            evidence_trace.append(" Strong LIVE evidence: Profile explicitly marks attended=true, virtual=false.")
             return ClassificationResult(
                 participation_type=ParticipationType.LIVE,
                 confidence=ConfidenceLevel.HIGH,
@@ -299,7 +299,7 @@ class ParticipationClassifier:
 
         # 4. TIER C: EXPLICIT VIRTUAL EVIDENCE
         if v_is_virtual or c_is_virtual or (h_is_virtual and getattr(h_ev, "virtual_contest", False)):
-            evidence_trace.append("✓ Strong VIRTUAL evidence: Explicit virtual flag confirmed.")
+            evidence_trace.append(" Strong VIRTUAL evidence: Explicit virtual flag confirmed.")
             metrics_src = v_ev if v_ev else (h_ev if h_ev else c_ev)
             
             return ClassificationResult(
@@ -329,7 +329,7 @@ class ParticipationClassifier:
 
         # 6. RELIABLE NONE (NOT_ATTENDED)
         if h_ev and getattr(h_ev, "attended", None) is False and getattr(h_ev, "problems_solved", 0) == 0:
-            evidence_trace.append("✓ Reliable NONE evidence: Profile explicitly marks attended=false and 0 problems solved.")
+            evidence_trace.append(" Reliable NONE evidence: Profile explicitly marks attended=false and 0 problems solved.")
             return ClassificationResult(
                 participation_type=ParticipationType.NONE,
                 confidence=ConfidenceLevel.HIGH,
@@ -349,9 +349,9 @@ class ParticipationClassifier:
             raw_evidence_chain=raw_chain
         )
 
-    # ─────────────────────────────────────────────────────────────────────────
+    # 
     # VALIDATION & SIGNAL HELPERS
-    # ─────────────────────────────────────────────────────────────────────────
+    # 
 
     def _normalize_slug(self, s: Optional[str]) -> str:
         if not s:

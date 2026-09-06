@@ -8,7 +8,7 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-# ─── Style & Border Constants ────────────────────────────────────────────────
+# Style & Border Constants 
 FONT_TNR = "Times New Roman"
 NAVY_FILL = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
 HEADER_FILL = PatternFill(start_color="2E5B88", end_color="2E5B88", fill_type="solid")
@@ -229,9 +229,9 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         if y not in year_map: year_map[y] = []
         year_map[y].append(r)
 
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     # SHEET 1: EXECUTIVE SUMMARY
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     ws1 = wb.create_sheet(title="Executive Summary")
     _write_college_header(ws1, f"{contest_name.upper()} — EXECUTIVE SUMMARY", dept_header_text, 10, metadata_block)
 
@@ -289,9 +289,9 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         _apply_thin_border(cell)
     ws1.row_dimensions[r_perf_hdr+1].height = 22
 
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     # SHEET 2: COMPLETE STUDENT ROSTER (OPTION 1: ALPHABETICAL ORDER)
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     ws2 = wb.create_sheet(title="Complete Student Roster")
     _write_college_header(ws2, f"STUDENT ROSTER — ALPHABETICAL ORDER ({tot_students} STUDENTS)", dept_header_text, 12, metadata_block)
     r2_hdr = 7
@@ -316,9 +316,9 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
                 cell.fill = GREEN_FILL
             _apply_thin_border(cell)
 
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     # SHEET 3: CONTEST ATTENDANCE
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     ws3 = wb.create_sheet(title="Contest Attendance")
     _write_college_header(ws3, f"{contest_name.upper()} — ATTENDANCE & VIRTUAL DETECTION AUDIT", dept_header_text, 10, metadata_block)
     r3_hdr = 7
@@ -346,9 +346,9 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
                 cell.font = FONT_BOLD
             _apply_thin_border(cell)
 
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     # SHEET 4: CONTEST PERFORMANCE MATRIX (BINARY Q1-Q4)
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     ws4 = wb.create_sheet(title="Contest Performance Matrix")
     _write_college_header(ws4, f"{contest_name.upper()} — BINARY QUESTION MATRIX (0 OR 1)", dept_header_text, 12, metadata_block)
     r4_hdr = 7
@@ -370,9 +370,9 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
                 cell.font = FONT_BOLD
             _apply_thin_border(cell)
 
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     # SHEET 5: TOP PERFORMERS (OPTION 2: RANK ORDER 4/4 -> 3/4 -> 2/4 -> 1/4)
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     def render_tier_sheet(sheet_title, title_text, tier_rows, show_rank=True):
         ws_t = wb.create_sheet(title=sheet_title)
         _write_college_header(ws_t, title_text, dept_header_text, 12, metadata_block)
@@ -398,29 +398,29 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     all_top_solvers = sorted(attended_rows, key=lambda x: (-x["solved"], -x["score"], x["dept"], x["name"]))
     render_tier_sheet("Top Performers", f"{contest_name.upper()} — TOP PERFORMERS LEADERBOARD (4/4 -> 3/4 -> 2/4 -> 1/4)", all_top_solvers, show_rank=True)
 
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     # SHEET 6: 4-4 PERFECT SOLVERS
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     render_tier_sheet("4-4 Perfect Solvers", f"{contest_name.upper()} — 4/4 PERFECT SOLVERS ({len(p_4)} STUDENTS)", p_4, show_rank=True)
 
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     # SHEET 7: 3-4 SOLVERS
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     render_tier_sheet("3-4 Solvers", f"{contest_name.upper()} — 3/4 SOLVERS ({len(p_3)} STUDENTS)", p_3, show_rank=True)
 
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     # SHEET 8: 2-4 SOLVERS
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     render_tier_sheet("2-4 Solvers", f"{contest_name.upper()} — 2/4 SOLVERS ({len(p_2)} STUDENTS)", p_2, show_rank=True)
 
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     # SHEET 9: 1-4 SOLVERS
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     render_tier_sheet("1-4 Solvers", f"{contest_name.upper()} — 1/4 SOLVERS ({len(p_1)} STUDENTS)", p_1, show_rank=True)
 
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     # SHEET 10: DEPARTMENT SUMMARY
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     ws10 = wb.create_sheet(title="Department Summary")
     _write_college_header(ws10, f"{contest_name.upper()} — DEPARTMENTS BREAKDOWN", dept_header_text, 11, metadata_block)
     r10_hdr = 7
@@ -480,9 +480,9 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         cell.fill = SUB_FILL
         _apply_thin_border(cell)
 
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     # SHEET 11: DEPARTMENT TOP PERFORMERS
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     ws11 = wb.create_sheet(title="Department Top Performers")
     _write_college_header(ws11, f"{contest_name.upper()} — DEPARTMENT TOP PERFORMERS", dept_header_text, 10, metadata_block)
     r11_cur = 7
@@ -527,9 +527,9 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
                 r11_cur += 1
             r11_cur += 1
 
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     # SHEET 12: YEAR SUMMARY
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     ws12 = wb.create_sheet(title="Year Summary")
     _write_college_header(ws12, f"{contest_name.upper()} — ACADEMIC YEAR BATCH SUMMARY", dept_header_text, 7, metadata_block)
     r12_hdr = 7
@@ -555,9 +555,9 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
             _apply_thin_border(cell)
         cur_r += 1
 
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     # SHEET 13: VERIFICATION AUDIT
-    # ──────────────────────────────────────────────────────────────────────────
+    # 
     ws13 = wb.create_sheet(title="Verification Audit")
     _write_college_header(ws13, f"{contest_name.upper()} — DATA AUDIT & IMMUTABILITY RECORD", dept_header_text, 6, metadata_block)
 

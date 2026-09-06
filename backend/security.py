@@ -134,7 +134,7 @@ def evaluate_security_alert_threshold(
             admin_email = getattr(settings, "ALERT_EMAIL_RECIPIENT", "admin@nandha.edu.in")
             email_body_html = f"""
             <div style="font-family: Arial, sans-serif; max-width: 600px; padding: 20px; border: 1px solid #e1e8ed; border-radius: 8px;">
-                <h2 style="color: #dc2626; margin-top: 0;">🔒 Security Alert: Unauthorized Access Threshold Exceeded</h2>
+                <h2 style="color: #dc2626; margin-top: 0;"> Security Alert: Unauthorized Access Threshold Exceeded</h2>
                 <p>The institutional LeetCode Tracker access-control layer detected repeated unauthorized access attempts.</p>
                 <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
                     <tr style="background: #f8fafc;"><td style="padding: 8px; font-weight: bold; width: 140px;">Timestamp:</td><td style="padding: 8px;">{time_str}</td></tr>

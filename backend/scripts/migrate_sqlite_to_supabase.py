@@ -147,7 +147,7 @@ def migrate_to_postgresql(pg_url: str, dry_run: bool = False, verify_only: bool 
     # 2. Initialize Target Schema via Declarative Models
     print("\n[SCHEMA] Initializing PostgreSQL Schema from SQLAlchemy Models...")
     Base.metadata.create_all(bind=target_engine)
-    print("  ✓ PostgreSQL tables ensured cleanly.")
+    print(" PostgreSQL tables ensured cleanly.")
 
     if dry_run:
         print("\n[DRY RUN] Schema created. Skipping data insertion.")
@@ -179,7 +179,7 @@ def migrate_to_postgresql(pg_url: str, dry_run: bool = False, verify_only: bool 
                 continue
 
             if table_name not in target_metadata.tables:
-                print(f"  ⚠ Table '{table_name}' not in PostgreSQL schema; creating dynamically...")
+                print(f" Table '{table_name}' not in PostgreSQL schema; creating dynamically...")
                 continue
 
             target_table = target_metadata.tables[table_name]
@@ -214,7 +214,7 @@ def migrate_to_postgresql(pg_url: str, dry_run: bool = False, verify_only: bool 
                 except Exception as ins_err:
                     pg_conn.rollback()
                     # Fallback to single-row insertion to identify specific row error or skip duplicates
-                    print(f"  ⚠ Batch insert note on table '{table_name}' chunk {i}: {ins_err}. Retrying row-by-row...")
+                    print(f" Batch insert note on table '{table_name}' chunk {i}: {ins_err}. Retrying row-by-row...")
                     for r_single in chunk:
                         try:
                             pg_conn.execute(target_table.insert().values(**r_single))
@@ -223,7 +223,7 @@ def migrate_to_postgresql(pg_url: str, dry_run: bool = False, verify_only: bool 
                             pg_conn.rollback()
 
             total_migrated_rows += len(batch)
-            print(f"  ✓ {table_name:<36} : {len(batch):>6} rows migrated")
+            print(f" {table_name:<36} : {len(batch):>6} rows migrated")
 
         # 4. Synchronize PostgreSQL SERIAL sequences for auto-increment IDs
         print("\n[SEQUENCES] Synchronizing PostgreSQL ID sequences...")
@@ -275,7 +275,7 @@ def verify_postgres_counts(target_engine, source_counts: Dict[str, int]) -> bool
             else:
                 tgt_cnt = 0
 
-            status = "MATCH ✓" if src_cnt == tgt_cnt else "MISMATCH ✗"
+            status = "MATCH " if src_cnt == tgt_cnt else "MISMATCH "
             if src_cnt != tgt_cnt:
                 all_matched = False
                 mismatches.append(f"{table}: Source={src_cnt} vs Target={tgt_cnt}")
@@ -284,10 +284,10 @@ def verify_postgres_counts(target_engine, source_counts: Dict[str, int]) -> bool
 
     print("=" * 70)
     if all_matched:
-        print("✓ ALL CRITICAL PRODUCTION TABLES VERIFIED 100% PARITY!")
+        print(" ALL CRITICAL PRODUCTION TABLES VERIFIED 100% PARITY!")
         return True
     else:
-        print(f"✗ CRITICAL TABLE MISMATCH DETECTED: {mismatches}")
+        print(f" CRITICAL TABLE MISMATCH DETECTED: {mismatches}")
         return False
 
 if __name__ == "__main__":

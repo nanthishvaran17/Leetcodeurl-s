@@ -154,7 +154,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
     >
       <div className="modal-container-responsive max-w-6xl bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 animate-modal-content print:rounded-none print:shadow-none print:border-none print:max-w-full print:w-full">
         
-        {/* ── 1. HEADER BANNER ── */}
+        {/* 1. HEADER BANNER */}
         <div className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-r from-brand-900 via-indigo-950 to-slate-950 text-white flex items-center justify-between shrink-0 print:bg-white print:text-black print:border-b-2 print:border-black">
           <div className="flex items-center space-x-3 min-w-0">
             <div className="shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center font-black text-white text-base shadow-lg shadow-brand-500/30 print:hidden">
@@ -189,7 +189,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
           </button>
         </div>
 
-        {/* ── 2. DATASET QUALITY & RECONCILIATION BAR ── */}
+        {/* 2. DATASET QUALITY & RECONCILIATION BAR */}
         <div className="px-5 py-2.5 bg-slate-100 dark:bg-navy-950 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs font-bold shrink-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className="flex items-center space-x-1 text-slate-700 dark:text-slate-300 font-black">
@@ -217,10 +217,10 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
           </span>
         </div>
 
-        {/* ── 3. SCROLLABLE REPORT CONTENT ── */}
+        {/* 3. SCROLLABLE REPORT CONTENT */}
         <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0 space-y-6 print:overflow-visible print:h-auto print:p-0 print:space-y-4 print:mt-4">
 
-          {/* ═══════════ CONTEST PERFORMANCE SPECIALIZED VIEW ═══════════ */}
+          {/* CONTEST PERFORMANCE SPECIALIZED VIEW */}
           {isContestReport ? (
             <div className="space-y-6">
               
@@ -491,7 +491,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
 
             </div>
           ) : (
-            /* ═══════════ DEFAULT / OTHER REPORTS VIEW ═══════════ */
+            /* DEFAULT / OTHER REPORTS VIEW */
             <div className="space-y-6">
               
               {/* Metrics Overview Cards */}
@@ -627,7 +627,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
 
         </div>
 
-        {/* ── 4. FOOTER / EXPORT ACTIONS ── */}
+        {/* 4. FOOTER / EXPORT ACTIONS */}
         <div className="p-4 sm:p-5 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shrink-0 print:hidden">
           <div className="text-xs text-slate-500 font-semibold flex items-center space-x-2">
             <span>Official Institutional Report Dataset</span>

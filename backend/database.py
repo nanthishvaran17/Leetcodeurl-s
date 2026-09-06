@@ -430,7 +430,7 @@ def run_migrations():
             except Exception as _e_edl:
                 pass
 
-            # ── faculty_action_queue: add new columns if missing ─────────────
+            # faculty_action_queue: add new columns if missing 
             try:
                 result_faq = conn.execute(
                     __import__('sqlalchemy').text("PRAGMA table_info(faculty_action_queue)")
@@ -461,7 +461,7 @@ def run_migrations():
             except Exception as _e_faq:
                 print(f"[DB Migration] faculty_action_queue migration note: {_e_faq}")
 
-            # ── faculty_action_audit_logs: create if missing ─────────────────
+            # faculty_action_audit_logs: create if missing 
             try:
                 conn.execute(__import__('sqlalchemy').text("""
                     CREATE TABLE IF NOT EXISTS faculty_action_audit_logs (
@@ -498,7 +498,7 @@ def run_migrations():
             except Exception as _trg_err:
                 print(f"[DB Migration] Trigger registration note: {_trg_err}")
 
-            # ── faculty_student_assignments: create if missing ────────────────
+            # faculty_student_assignments: create if missing 
             try:
                 conn.execute(__import__('sqlalchemy').text("""
                     CREATE TABLE IF NOT EXISTS faculty_student_assignments (
@@ -515,7 +515,7 @@ def run_migrations():
             except Exception as _e_fsa:
                 pass
 
-            # ── report_cache: ensure missing columns exist (PostgreSQL & SQLite safe) ────────────────
+            # report_cache: ensure missing columns exist (PostgreSQL & SQLite safe) 
             try:
                 from sqlalchemy import inspect, text
                 inspector = inspect(conn)

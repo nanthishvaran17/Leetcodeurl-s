@@ -158,32 +158,32 @@ def update_all_rankings_and_badges(db: Session, week_number: Optional[int] = Non
         for r in student_records:
             badges = []
             if r["college_rank"] and r["college_rank"] == 1:
-                badges.append("🏆 College #1")
+                badges.append(" College #1")
             elif r["dept_rank"] and r["dept_rank"] == 1:
-                badges.append("🏅 Dept #1")
+                badges.append(" Dept #1")
             elif r["section_rank"] and r["section_rank"] == 1:
-                badges.append("🥇 Section #1")
+                badges.append(" Section #1")
 
             if r["progress_rank"] and r["progress_rank"] <= 3 and r["weekly_progress"] > 0:
-                badges.append("🚀 Fastest Improver")
+                badges.append(" Fastest Improver")
 
             if r["streak"] >= 10:
-                badges.append("🔥 10 Week Streak")
+                badges.append(" 10 Week Streak")
             elif r["streak"] >= 5:
-                badges.append("🔥 5 Week Streak")
+                badges.append(" 5 Week Streak")
 
             if r["total_solved"] >= 500:
-                badges.append("⚡ 500 Solved")
+                badges.append(" 500 Solved")
             elif r["total_solved"] >= 200:
-                badges.append("💯 200 Solved")
+                badges.append(" 200 Solved")
             elif r["total_solved"] >= 100:
-                badges.append("🎯 100 Solved")
+                badges.append(" 100 Solved")
 
             if r["consistency"] >= 90:
-                badges.append("🌟 90% Consistency")
+                badges.append(" 90% Consistency")
 
             if r["rating"] and r["rating"] >= 1600:
-                badges.append("👑 Contest Champion")
+                badges.append(" Contest Champion")
 
             # Composite Coding Score (Difficulty-weighted: Easy*1 + Med*3 + Hard*5 + Progress*2)
             composite_score = (r["easy"] * 1.0) + (r["med"] * 3.0) + (r["hard"] * 5.0) + (r["weekly_progress"] * 2.0)

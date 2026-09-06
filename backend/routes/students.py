@@ -1065,7 +1065,7 @@ def update_student(
             changes_made['allocation'] = new_allocation or "None"
             student.allocation = new_allocation
 
-    # ── LeetCode URL / username normalisation ─────────────────────────────────
+    # LeetCode URL / username normalisation 
     url_changed = False
     old_url = student.leetcode_url
     if payload.leetcode_url is not None:
@@ -1163,7 +1163,7 @@ def update_student(
     db.add(audit)
     db.commit()
 
-    # ── Background Post-Processing (Async Rankings & Cloud Sync) ─────────────────
+    # Background Post-Processing (Async Rankings & Cloud Sync) 
     if changes_made and student.email:
         from backend.services.email_notifications import notify_student_updated
         background_tasks.add_task(
@@ -1481,10 +1481,10 @@ async def trigger_batch_sync(
         raise HTTPException(status_code=500, detail="Failed to trigger synchronization job")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 # LEETCODE ACCOUNT VALIDATION ENDPOINT
 # Read-only: validates the account exists + identity matches, no DB writes.
-# ─────────────────────────────────────────────────────────────────────────────
+# 
 
 class LeetCodeValidateRequest(BaseModel):
     leetcode_url: Optional[str] = None
@@ -1510,7 +1510,7 @@ async def validate_leetcode_account(
       4. Return a structured validation status — does NOT write to the database.
 
     Use this before saving a new/changed LeetCode username so the UI can surface
-    'Validating → Fetching → Verified ✓' / 'Username not found' feedback without
+    'Validating → Fetching → Verified ' / 'Username not found' feedback without
     waiting for a full background sync to complete.
     """
     # student_id=0 is a sentinel for "validate a new account before creation" —

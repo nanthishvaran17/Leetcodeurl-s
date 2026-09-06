@@ -29,7 +29,7 @@ import { useGlobalWebSocket } from '../context/GlobalWebSocketProvider';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
 
-// ─── Shared Card Component ───────────────────────────────────────────────────
+// Shared Card Component 
 
 const Card: React.FC<{ children: React.ReactNode; className?: string; id?: string; onClick?: () => void }> = ({ children, className = '', id, onClick }) => (
   <div id={id} onClick={onClick} className={`bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm ${className}`}>
@@ -37,7 +37,7 @@ const Card: React.FC<{ children: React.ReactNode; className?: string; id?: strin
   </div>
 );
 
-// ─── Student Detail Drawer ───────────────────────────────────────────────────
+// Student Detail Drawer 
 
 const StudentDetailDrawer: React.FC<{
   student: StudentRecord | null;
@@ -178,7 +178,7 @@ const StudentDetailDrawer: React.FC<{
   );
 };
 
-// ─── HOD Staff Allocation Manager Modal ───────────────────────────────────────
+// HOD Staff Allocation Manager Modal 
 
 const StaffAllocationModal: React.FC<{
   isOpen: boolean;
@@ -423,7 +423,7 @@ const StaffAllocationModal: React.FC<{
   );
 };
 
-// ─── Dedicated Report Hub Modal ───────────────────────────────────────────────
+// Dedicated Report Hub Modal 
 
 const ReportHubModal: React.FC<{
   isOpen: boolean;
@@ -677,12 +677,12 @@ const ReportHubModal: React.FC<{
   );
 };
 
-// ─── Main Component ──────────────────────────────────────────────────────────
+// Main Component 
 
 export const HODCommandCenter: React.FC = () => {
   const { user } = useAuth();
   const { notify } = useNotification();
-  // ── Multi-Dimensional View Scope ──
+  // Multi-Dimensional View Scope 
   const [selectedStaff, setSelectedStaff] = useState<string>('ALL');
   const [selectedDept, setSelectedDept] = useState<string>('ALL');
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
@@ -801,7 +801,7 @@ export const HODCommandCenter: React.FC = () => {
     setWsConnected(isGlobalWsConnected);
   }, [isGlobalWsConnected]);
 
-  // ── WebSocket Ingestion Subscription ──
+  // WebSocket Ingestion Subscription 
   useEffect(() => {
     registerCallback('hod_command_center', (data) => {
       if (!data) return;
@@ -969,7 +969,7 @@ export const HODCommandCenter: React.FC = () => {
 
 
 
-      {/* ── 1. HEADER ──────────────────────────────────────────────────────── */}
+      {/* 1. HEADER */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-lg border border-brand-500/30">
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="space-y-3">
@@ -1040,7 +1040,7 @@ export const HODCommandCenter: React.FC = () => {
 
 
 
-      {/* ── 3. STUDENT COHORT SUMMARY BANNER ───────────────────────────────── */}
+      {/* 3. STUDENT COHORT SUMMARY BANNER */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-600 font-bold font-mono text-sm">
@@ -1065,7 +1065,7 @@ export const HODCommandCenter: React.FC = () => {
         </div>
       </div>
 
-      {/* ── 4. FOUR PRIMARY KPI CARDS ──────────────────────────────────────── */}
+      {/* 4. FOUR PRIMARY KPI CARDS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
         <Card 
           className={`p-4 flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-1 hover:shadow-md ${selectedStatus === 'ALL' ? 'ring-2 ring-slate-400 bg-slate-50 dark:bg-navy-800' : ''}`}
@@ -1136,7 +1136,7 @@ export const HODCommandCenter: React.FC = () => {
         </Card>
       </div>
 
-      {/* ── 5. DEPARTMENT PERFORMANCE & NEEDS ATTENTION ─────────────────────── */}
+      {/* 5. DEPARTMENT PERFORMANCE & NEEDS ATTENTION */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Left: Department Performance (Compact) */}
         <Card className="lg:col-span-6 p-5 space-y-4">
@@ -1261,7 +1261,7 @@ export const HODCommandCenter: React.FC = () => {
         </Card>
       </div>
 
-      {/* ── 6. LIVE STUDENT ACTIVITY (MOST IMPORTANT MAIN OPERATIONAL TABLE) ── */}
+      {/* 6. LIVE STUDENT ACTIVITY (MOST IMPORTANT MAIN OPERATIONAL TABLE) */}
       <Card id="student-directory-section" className="p-5 space-y-4 scroll-mt-20">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2">
           <div>
@@ -1438,7 +1438,7 @@ export const HODCommandCenter: React.FC = () => {
         </div>
       </Card>
 
-      {/* ── 7. DEPARTMENT MATRIX & YEAR BENCHMARKS ──────────────────────────── */}
+      {/* 7. DEPARTMENT MATRIX & YEAR BENCHMARKS */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Department Matrix */}
         <Card className="lg:col-span-12 p-5 space-y-3.5">
@@ -1615,7 +1615,7 @@ export const HODCommandCenter: React.FC = () => {
         </div>
       </div>
 
-      {/* ── 8. FACULTY MENTORS PERFORMANCE & COMPLETION MATRIX ─────────────── */}
+      {/* 8. FACULTY MENTORS PERFORMANCE & COMPLETION MATRIX */}
       <Card className="p-5 space-y-3.5">
         <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-navy-800">
           <div>
@@ -1733,7 +1733,7 @@ export const HODCommandCenter: React.FC = () => {
         </div>
       </Card>
 
-      {/* ── Student Detail Drawer ── */}
+      {/* Student Detail Drawer */}
       <StudentDetailDrawer
         student={selectedStudentDetail}
         staffList={staffList}
@@ -1747,7 +1747,7 @@ export const HODCommandCenter: React.FC = () => {
         onClose={() => setSelectedDeptIntelligence(null)}
       />
 
-      {/* ── Staff Detail Drawer ── */}
+      {/* Staff Detail Drawer */}
       <StaffDetailDrawer
         staff={selectedStaffDetail}
         studentList={students}
@@ -1758,7 +1758,7 @@ export const HODCommandCenter: React.FC = () => {
         }}
       />
 
-      {/* ── HOD Staff Allocation Manager Modal ── */}
+      {/* HOD Staff Allocation Manager Modal */}
       <StaffAllocationModal
         isOpen={showStaffAllocationModal}
         onClose={() => setShowStaffAllocationModal(false)}
@@ -1767,7 +1767,7 @@ export const HODCommandCenter: React.FC = () => {
         onRefreshAll={() => { loadScopedData(false); loadStudents(); }}
       />
 
-      {/* ── Unassign All Mentees Confirmation Modal ── */}
+      {/* Unassign All Mentees Confirmation Modal */}
       {confirmUnassignTarget && (
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
@@ -1821,7 +1821,7 @@ export const HODCommandCenter: React.FC = () => {
         </div>
       )}
 
-      {/* ── Dedicated Report Hub Modal ── */}
+      {/* Dedicated Report Hub Modal */}
       <ReportHubModal
         isOpen={showReportHubModal}
         onClose={() => setShowReportHubModal(false)}
@@ -1829,7 +1829,7 @@ export const HODCommandCenter: React.FC = () => {
         departments={departments}
       />
 
-      {/* ── View Methodology Modal ── */}
+      {/* View Methodology Modal */}
       {showMethodologyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 animate-fade-in" onClick={e => e.target === e.currentTarget && setShowMethodologyModal(false)}>
           <div className="w-full max-w-lg bg-white dark:bg-navy-950 rounded-2xl p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
@@ -1858,7 +1858,7 @@ export const HODCommandCenter: React.FC = () => {
         </div>
       )}
 
-      {/* ── Ask AI Modal ── */}
+      {/* Ask AI Modal */}
       {showAIModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 animate-fade-in" onClick={e => e.target === e.currentTarget && setShowAIModal(false)}>
           <div className="w-full max-w-lg bg-white dark:bg-navy-950 rounded-2xl p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
@@ -1893,7 +1893,7 @@ export const HODCommandCenter: React.FC = () => {
         </div>
       )}
 
-      {/* ── What-If Simulator Modal ── */}
+      {/* What-If Simulator Modal */}
       {showWhatIfModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 animate-fade-in" onClick={e => e.target === e.currentTarget && setShowWhatIfModal(false)}>
           <div className="w-full max-w-md bg-white dark:bg-navy-950 rounded-2xl p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">

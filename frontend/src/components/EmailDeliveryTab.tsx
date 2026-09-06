@@ -1467,7 +1467,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                 className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl text-xs font-black shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 active:scale-95"
               >
                 {isSendingManual ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-white" />}
-                <span>▶ Run Scheduled Job Now</span>
+                <span> Run Scheduled Job Now</span>
               </button>
 
               <button
@@ -1479,7 +1479,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                 }`}
               >
                 {scheduleEnabled ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                <span>{scheduleEnabled ? 'Pause Automation' : '▶ Resume Automation'}</span>
+                <span>{scheduleEnabled ? 'Pause Automation' : ' Resume Automation'}</span>
               </button>
             </div>
 

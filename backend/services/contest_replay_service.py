@@ -103,7 +103,7 @@ class ContestReplayService:
                 "difficulty": "Medium-Hard",
                 "topic": "Dynamic Programming (2D Subsequences)",
                 "solve_rate_pct": 31.8,
-                "struggle_index": "HIGH ⚠️ (68.2% Struggle)",
+                "struggle_index": "HIGH (68.2% Struggle)",
                 "recommended_action": "PRIORITY: Schedule Faculty Remedial Workshop on 2D DP Memoization"
             },
             {
@@ -111,7 +111,7 @@ class ContestReplayService:
                 "difficulty": "Hard",
                 "topic": "Segment Tree / Bitmask Graph",
                 "solve_rate_pct": 7.4,
-                "struggle_index": "CRITICAL 🚨 (92.6% Struggle)",
+                "struggle_index": "CRITICAL (92.6% Struggle)",
                 "recommended_action": "Elite Placement Batch coaching on Advanced Range Query Trees"
             }
         ]
