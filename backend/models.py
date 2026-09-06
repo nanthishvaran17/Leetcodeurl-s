@@ -2633,11 +2633,12 @@ class Message(Base):
 class ReportCache(Base):
     """
     Stores pre-generated report metadata and file links for instant downloads.
+    Supports deterministic filter_hash caching across any report type, format, and user scope.
     """
     __tablename__ = "report_cache"
     __table_args__ = (
-        UniqueConstraint("institution_id", "week_id", "file_type", "data_version", name="uix_report_cache_key"),
         Index("ix_report_cache_lookup", "institution_id", "week_id", "file_type", "status"),
+        Index("ix_report_cache_filter_hash", "filter_hash", "status", "data_version"),
         {"extend_existing": True},
     )
 
@@ -2645,11 +2646,19 @@ class ReportCache(Base):
     institution_id = Column(String(50), default="NEC", index=True, nullable=False)
     week_id = Column(String(50), default="latest", index=True, nullable=False)
     file_type = Column(String(50), index=True, nullable=False) # e.g. pdf, excel, official_summary, master_tracker
+    filter_hash = Column(String(64), index=True, nullable=True) # SHA-256 of normalized config & filters
+    report_type = Column(String(100), default="WEEKLY_PERFORMANCE", index=True, nullable=True)
+    format = Column(String(20), default="xlsx", index=True, nullable=True)
+    filters_json = Column(Text, nullable=True)
+    user_scope = Column(String(100), default="ALL", index=True, nullable=True)
+    filename = Column(String(255), nullable=True)
+    mime_type = Column(String(100), nullable=True)
     storage_path = Column(String(500), nullable=True)
     download_url = Column(String(500), nullable=True)
     data_version = Column(String(100), index=True, nullable=False)
-    status = Column(String(30), default="READY", index=True, nullable=False) # READY, PREPARING, FAILED
+    status = Column(String(30), default="READY", index=True, nullable=False) # READY, GENERATING, FAILED, EXPIRED, STALE
     generated_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    expires_at = Column(DateTime, nullable=True)
     generation_time_ms = Column(Float, nullable=True)
     file_size_bytes = Column(Integer, nullable=True)
     error_message = Column(Text, nullable=True)

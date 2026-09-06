@@ -67,19 +67,83 @@ export async function blobToBase64(blob: Blob): Promise<string> {
   });
 }
 
-/** Native Android file open/share helper via Capacitor Share plugin */
-export async function shareOrOpenFile(fileUri: string, filename: string): Promise<void> {
-  try {
-    const { Share } = await import('@capacitor/share');
-    await Share.share({
-      title: filename,
-      text: `Downloaded ${filename}`,
-      url: fileUri,
-      dialogTitle: `Open ${filename}`,
-    });
-  } catch (err) {
-    console.warn('[DownloadUtils] Native share/open note:', err);
+/** Native Android file open/share helper via DocumentOpener / FileProvider / Capacitor Share */
+export async function openDownloadedDocument(
+  fileUri: string,
+  filename: string,
+  mimeType?: string
+): Promise<{ success: boolean; error?: string }> {
+  const effectiveMime = mimeType || getMimeTypeFromFilename(filename);
+
+  if (isNativeMobile()) {
+    try {
+      // 1. Try DocumentOpener custom plugin (Direct Android FileProvider ACTION_VIEW)
+      const { registerPlugin } = await import('@capacitor/core');
+      const DocumentOpener = registerPlugin<any>('DocumentOpener');
+
+      if (DocumentOpener) {
+        await DocumentOpener.openDocument({
+          path: fileUri,
+          filename: filename,
+          mimeType: effectiveMime,
+        });
+        return { success: true };
+      }
+    } catch (e: any) {
+      console.warn('[DownloadUtils] DocumentOpener plugin note:', e);
+      if (
+        e?.message?.includes('FILE_NOT_FOUND') ||
+        e?.code === 'FILE_NOT_FOUND' ||
+        e?.message?.includes('File is no longer available')
+      ) {
+        showFileUnavailableNotice(filename);
+        return { success: false, error: 'File is no longer available.' };
+      }
+    }
+
+    // 2. Fallback to @capacitor/share
+    try {
+      const { Share } = await import('@capacitor/share');
+      await Share.share({
+        title: filename,
+        text: `Open ${filename}`,
+        url: fileUri,
+        dialogTitle: `Open ${filename}`,
+      });
+      return { success: true };
+    } catch (err: any) {
+      console.warn('[DownloadUtils] Capacitor Share fallback note:', err);
+    }
   }
+
+  return { success: true };
+}
+
+/** Display non-disruptive user notification when file is deleted or unavailable */
+export function showFileUnavailableNotice(filename?: string) {
+  const message = 'File is no longer available.';
+  console.warn('[DownloadUtils]', message, filename);
+  
+  if (typeof window !== 'undefined') {
+    const event = new CustomEvent('show_toast', {
+      detail: { message, type: 'error' }
+    });
+    window.dispatchEvent(event);
+
+    // Also trigger subtle alert if no custom toast container is mounted
+    if (typeof alert === 'function') {
+      try {
+        alert(message);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+}
+
+/** Native Android file open/share helper via Capacitor Share plugin */
+export async function shareOrOpenFile(fileUri: string, filename: string, mimeType?: string): Promise<void> {
+  await openDownloadedDocument(fileUri, filename, mimeType);
 }
 
 /** Infer MIME type from filename extension */

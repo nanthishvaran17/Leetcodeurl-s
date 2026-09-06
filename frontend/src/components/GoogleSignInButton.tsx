@@ -29,7 +29,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
       if (msg === 'Google sign-in was cancelled.' || msg.toLowerCase().includes('cancel')) {
         setErrorMsg('Google sign-in was cancelled.');
       } else {
-        setErrorMsg(msg);
+        setErrorMsg('Google sign-in could not be completed. Please try again.');
       }
     } finally {
       setIsSigningIn(false);
@@ -60,7 +60,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
         <button
           onClick={logout}
           disabled={authState === 'AUTHENTICATING'}
-          className="p-2.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="p-2.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-transparent hover:border-rose-200 transition-all min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
           title="Sign Out"
         >
           <LogOut className="w-4 h-4" />
@@ -79,8 +79,9 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
               <span>Authentication Notice</span>
             </div>
             <button
+              type="button"
               onClick={() => setErrorMsg('')}
-              className="text-slate-400 hover:text-rose-600 text-xs font-bold p-1 rounded-md hover:bg-rose-100 dark:hover:bg-rose-900/40 min-h-[32px] min-w-[32px] flex items-center justify-center"
+              className="text-slate-400 hover:text-rose-600 text-xs font-bold p-1 rounded-md hover:bg-rose-100 dark:hover:bg-rose-900/40 min-h-[32px] min-w-[32px] flex items-center justify-center cursor-pointer"
               aria-label="Dismiss notice"
             >
               <X className="w-4 h-4" />

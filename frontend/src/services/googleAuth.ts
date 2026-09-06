@@ -25,10 +25,20 @@ export const isNativeMobile = (): boolean => {
   }
 };
 
+/** Check whether running in a mobile web browser (e.g. Chrome on Android, Safari on iOS) */
+export const isMobileBrowser = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent || navigator.vendor || (window as any).opera || '';
+  const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  const isTouchScreen = ('ontouchstart' in window) || (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0);
+  const isSmallScreen = window.innerWidth <= 768;
+  return isMobileUA || (isTouchScreen && isSmallScreen);
+};
+
 let redirectCheckPromise: Promise<GoogleAuthResult | null> | null = null;
 
 /**
- * Safely checks if the user is returning from a Google signInWithRedirect flow on Web.
+ * Safely checks if the user is returning from a Google signInWithRedirect flow on Mobile Web / Browser.
  */
 export const checkGoogleRedirectResult = async (): Promise<GoogleAuthResult | null> => {
   if (redirectCheckPromise) return redirectCheckPromise;
@@ -36,16 +46,31 @@ export const checkGoogleRedirectResult = async (): Promise<GoogleAuthResult | nu
   redirectCheckPromise = (async () => {
     try {
       const auth = getOrInitAuth();
+      console.log('[MOBILE AUTH] Checking redirect result from Firebase Auth...');
       const cred = await getRedirectResult(auth);
+      
       if (cred && cred.user && cred.user.email) {
-        console.log('[GOOGLE_REDIRECT_SUCCESS] Redirect result retrieved from Firebase Auth.');
+        console.log('[MOBILE AUTH] OAuth callback received');
+        console.log('[MOBILE AUTH] Firebase result received');
+        console.log('[MOBILE AUTH] Firebase user verified');
+        
         const idToken = await cred.user.getIdToken(true);
+        console.log('[MOBILE AUTH] ID token obtained');
+        
+        console.log('[MOBILE AUTH] Backend session requested');
         const response = await api.post('/auth/google', { id_token: idToken }, { timeout: 35000 });
+        
         if (response.data && response.data.authenticated) {
+          console.log('[MOBILE AUTH] Backend session created');
+          console.log('[MOBILE AUTH] Auth state updated');
+          console.log('[MOBILE AUTH] Redirecting to dashboard');
+          console.log('[MOBILE AUTH] Login completed');
+          sessionStorage.removeItem('nec_mobile_google_redirect');
           return response.data;
         }
       }
     } catch (err: any) {
+      sessionStorage.removeItem('nec_mobile_google_redirect');
       const errStr = String(err?.message || err?.code || err || '');
       if (
         errStr.includes('missing initial state') ||
@@ -53,14 +78,18 @@ export const checkGoogleRedirectResult = async (): Promise<GoogleAuthResult | nu
         err?.code === 'auth/missing-initial-state' ||
         err?.code === 'auth/web-storage-unsupported'
       ) {
-        console.warn('[GOOGLE_REDIRECT_STORAGE_PARTITIONED] Handled missing initial state gracefully');
+        console.warn('[MOBILE AUTH] Handled missing initial state gracefully');
         if (typeof window !== 'undefined' && window.history && window.location.search.includes('state=')) {
           const cleanUrl = window.location.origin + window.location.pathname;
           window.history.replaceState({}, document.title, cleanUrl);
         }
       } else {
-        console.warn('[GOOGLE_REDIRECT_CHECK_ERR]', err);
+        console.warn('[MOBILE AUTH] Redirect check note:', err);
       }
+    } finally {
+      setTimeout(() => {
+        redirectCheckPromise = null;
+      }, 2000);
     }
     return null;
   })();
@@ -100,7 +129,6 @@ async function generateCodeChallenge(codeVerifier: string): Promise<string> {
     const digest = await window.crypto.subtle.digest('SHA-256', data);
     return base64UrlEncode(digest);
   }
-  // Fallback
   return codeVerifier;
 }
 
@@ -126,12 +154,12 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
   }
 
   if (isProcessingCallback) {
-    console.log('[OAUTH_CALLBACK] Already processing callback in flight, ignoring duplicate event.');
+    console.log('[MOBILE AUTH] Already processing callback in flight, ignoring duplicate event.');
     return null;
   }
 
   isProcessingCallback = true;
-  console.log('[OAUTH_CALLBACK_START] Processing PKCE authorization code callback...');
+  console.log('[MOBILE AUTH] OAuth callback received');
 
   try {
     const { Browser } = await import('@capacitor/browser');
@@ -156,6 +184,8 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
         activePkceSession.reject(new Error(errMsg));
       }
       activePkceSession = null;
+      sessionStorage.removeItem('nec_pkce_verifier');
+      sessionStorage.removeItem('nec_pkce_state');
       throw new Error(errMsg);
     }
 
@@ -163,14 +193,17 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
       throw new Error('No authorization code returned in callback.');
     }
 
-    // Validate State
-    if (activePkceSession && activePkceSession.state && stateParam) {
-      if (activePkceSession.state !== stateParam) {
-        throw new Error('OAuth State verification failed (possible CSRF attempt).');
-      }
+    // Recover code_verifier and state from memory or sessionStorage
+    const expectedState = activePkceSession?.state || sessionStorage.getItem('nec_pkce_state');
+    const codeVerifier = activePkceSession?.code_verifier || sessionStorage.getItem('nec_pkce_verifier') || '';
+
+    // Validate State (CSRF check)
+    if (expectedState && stateParam && expectedState !== stateParam) {
+      throw new Error('OAuth State verification failed (possible CSRF attempt).');
     }
 
-    const codeVerifier = activePkceSession?.code_verifier || '';
+    console.log('[MOBILE AUTH] Firebase user verified via authorization code');
+    console.log('[MOBILE AUTH] Backend session requested');
 
     // Securely exchange code + code_verifier via HTTPS backend endpoint
     const res = await api.post('/auth/google/exchange-code', {
@@ -180,6 +213,11 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
     }, { timeout: 35000 });
 
     if (res.data && res.data.authenticated && res.data.user) {
+      console.log('[MOBILE AUTH] Backend session created');
+      console.log('[MOBILE AUTH] Auth state updated');
+      console.log('[MOBILE AUTH] Redirecting to dashboard');
+      console.log('[MOBILE AUTH] Login completed');
+
       const result: GoogleAuthResult = {
         authenticated: true,
         access_token: res.data.access_token || '',
@@ -190,6 +228,8 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
         activePkceSession.resolve(result);
       }
       activePkceSession = null;
+      sessionStorage.removeItem('nec_pkce_verifier');
+      sessionStorage.removeItem('nec_pkce_state');
       return result;
     }
 
@@ -199,6 +239,8 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
       activePkceSession.reject(err);
     }
     activePkceSession = null;
+    sessionStorage.removeItem('nec_pkce_verifier');
+    sessionStorage.removeItem('nec_pkce_state');
     throw err;
   } finally {
     setTimeout(() => {
@@ -212,7 +254,8 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
  * Zero tokens, passwords, or credentials are ever transmitted via URL parameters.
  */
 const authenticateWithGoogleMobile = async (): Promise<GoogleAuthResult> => {
-  console.log('[GOOGLE_MOBILE_AUTH_STARTED] Initializing PKCE Authorization Code Flow...');
+  console.log('[MOBILE AUTH] Login initiated');
+  console.log('[MOBILE AUTH] Google authentication started');
 
   const { Browser } = await import('@capacitor/browser');
 
@@ -229,7 +272,13 @@ const authenticateWithGoogleMobile = async (): Promise<GoogleAuthResult> => {
   const codeChallenge = await generateCodeChallenge(codeVerifier);
   const state = generateRandomString(32);
 
+  // Persist in sessionStorage in case WebView is recycled
+  sessionStorage.setItem('nec_pkce_verifier', codeVerifier);
+  sessionStorage.setItem('nec_pkce_state', state);
+
   const authUrl = `${bridgeBase}/mobile-auth.html?scheme=${scheme}&code_challenge=${encodeURIComponent(codeChallenge)}&state=${encodeURIComponent(state)}&api_base=${encodeURIComponent(apiBase)}`;
+
+  console.log('[MOBILE AUTH] Redirect initiated via Chrome Custom Tab');
 
   return new Promise<GoogleAuthResult>((resolve, reject) => {
     activePkceSession = {
@@ -240,24 +289,37 @@ const authenticateWithGoogleMobile = async (): Promise<GoogleAuthResult> => {
       reject
     };
 
+    // Safety timeout: 90 seconds maximum wait
+    const authTimeout = setTimeout(() => {
+      if (activePkceSession) {
+        activePkceSession.reject?.(new Error('Google sign-in could not be completed. Please try again.'));
+        activePkceSession = null;
+        sessionStorage.removeItem('nec_pkce_verifier');
+        sessionStorage.removeItem('nec_pkce_state');
+      }
+    }, 90000);
+
     // Listen for browser closed / dismissed by user
-    let browserFinishedListener: any = null;
     Browser.addListener('browserFinished', () => {
       setTimeout(() => {
+        clearTimeout(authTimeout);
         if (activePkceSession) {
           activePkceSession.reject?.(new Error('Google sign-in was cancelled.'));
           activePkceSession = null;
+          sessionStorage.removeItem('nec_pkce_verifier');
+          sessionStorage.removeItem('nec_pkce_state');
         }
       }, 600);
-    }).then(handle => {
-      browserFinishedListener = handle;
     });
 
     // Launch Chrome Custom Tab
     Browser.open({ url: authUrl, windowName: '_self' }).catch((_err) => {
+      clearTimeout(authTimeout);
       if (activePkceSession) {
         activePkceSession.reject?.(new Error('Unable to open browser for Google authentication.'));
         activePkceSession = null;
+        sessionStorage.removeItem('nec_pkce_verifier');
+        sessionStorage.removeItem('nec_pkce_state');
       }
     });
   });
@@ -265,17 +327,30 @@ const authenticateWithGoogleMobile = async (): Promise<GoogleAuthResult> => {
 
 /**
  * Universal Google Sign-In Entrypoint.
- * Automatically delegates to Chrome Custom Tab on Native Mobile and Firebase Auth on Web.
+ * Automatically handles:
+ * - Native Mobile App: Chrome Custom Tab + PKCE
+ * - Mobile Web Browser: Firebase Redirect Flow (safe against popup blockers and ITP)
+ * - Desktop Web Browser: Existing Firebase Popup Flow (100% untouched)
  */
 export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
   if (isNativeMobile()) {
     return authenticateWithGoogleMobile();
   }
 
-  // Web Browser Flow via Firebase Auth
   const authInstance = getOrInitAuth();
   const provider = createGoogleProvider();
 
+  // Mobile Web Browser Flow: Use Redirect Flow to avoid mobile popup isolation / ITP blocks
+  if (isMobileBrowser()) {
+    console.log('[MOBILE AUTH] Login initiated');
+    console.log('[MOBILE AUTH] Google authentication started');
+    console.log('[MOBILE AUTH] Redirect initiated');
+    sessionStorage.setItem('nec_mobile_google_redirect', '1');
+    await signInWithRedirect(authInstance, provider);
+    return new Promise(() => {}); // Page will redirect
+  }
+
+  // Desktop Web Browser Flow: Existing Working Popup Flow (PRESERVED 100% UNCHANGED)
   try {
     const cred = await signInWithPopup(authInstance, provider);
     if (!cred || !cred.user) throw new Error('No user profile returned from Google.');

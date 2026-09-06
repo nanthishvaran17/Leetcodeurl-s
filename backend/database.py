@@ -515,6 +515,24 @@ def run_migrations():
             except Exception as _e_fsa:
                 pass
 
+            # ── report_cache: ensure columns exist ────────────────
+            report_cache_cols = [
+                ("filter_hash", "VARCHAR(64)"),
+                ("report_type", "VARCHAR(100)"),
+                ("format", "VARCHAR(20)"),
+                ("filters_json", "TEXT"),
+                ("user_scope", "VARCHAR(100)"),
+                ("filename", "VARCHAR(255)"),
+                ("mime_type", "VARCHAR(100)"),
+                ("expires_at", "DATETIME")
+            ]
+            for col_name, col_type in report_cache_cols:
+                try:
+                    conn.execute(__import__('sqlalchemy').text(f"ALTER TABLE report_cache ADD COLUMN {col_name} {col_type}"))
+                    conn.commit()
+                except Exception:
+                    pass
+
             # Performance Indexes Creation (Universal for both SQLite and PostgreSQL)
             indexes = [
                 ("idx_students_dept_year", "CREATE INDEX IF NOT EXISTS idx_students_dept_year ON students(department_id, year_level)"),

@@ -18,7 +18,13 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
-  const { login, authError, clearAuthError } = useAuth();
+  const { user, isAuthenticated, login, authError, clearAuthError } = useAuth();
+  
+  useEffect(() => {
+    if (isAuthenticated || user) {
+      onSuccess();
+    }
+  }, [isAuthenticated, user, onSuccess]);
   
   const pageVariants: Variants = {
     initial: { opacity: 0, y: 8 },

@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { onAuthStateChanged, signOut as firebaseSignOut, User as FirebaseUser } from 'firebase/auth';
 import { auth, getOrInitAuth } from '../services/firebase';
 import api, { clearApiCache } from '../services/api';
 import { AuthState, AuthUser, AuthContextType } from '../services/auth/authTypes';
-import { checkGoogleRedirectResult } from '../services/googleAuth';
+import { checkGoogleRedirectResult, isMobileBrowser } from '../services/googleAuth';
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -28,6 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [authError, setAuthError] = useState<string | null>(null);
   const [authNotice, setAuthNotice] = useState<string | null>(null);
+  const isVerifyingRef = useRef(false);
 
   // Helper to clear error state
   const clearAuthError = useCallback(() => {
@@ -103,16 +104,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const initializeAuthLifecycle = async () => {
       try {
-        // 1. Check Google redirect result first (if returning from redirect flow)
-        const redirectRes = await checkGoogleRedirectResult();
-        if (redirectRes && redirectRes.user && isMounted) {
-          login('', redirectRes.user);
-          return;
+        // 1. Check Google redirect result first (if returning from redirect flow on Mobile Web)
+        if (sessionStorage.getItem('nec_mobile_google_redirect') || window.location.search.includes('state=')) {
+          isVerifyingRef.current = true;
+          const redirectRes = await checkGoogleRedirectResult();
+          if (redirectRes && redirectRes.user && isMounted) {
+            login(redirectRes.access_token || '', redirectRes.user);
+            isVerifyingRef.current = false;
+            return;
+          }
+          isVerifyingRef.current = false;
         }
 
         // 2. Check HttpOnly server session endpoint
-        const res = await api.get('/auth/session');
-        if (res.data && res.data.authenticated && res.data.user && isMounted) {
+        const res = await api.get('/auth/session').catch(() => null);
+        if (res && res.data && res.data.authenticated && res.data.user && isMounted) {
           const u = res.data.user;
           const formattedUser: AuthUser = {
             uid: `user_${u.id}`,
@@ -160,25 +166,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         unsubscribeFirebase = onAuthStateChanged(activeAuth, async (fbUser: FirebaseUser | null) => {
           if (!isMounted) return;
           if (fbUser && fbUser.email) {
-            // Only perform backend verification if we don't already have an active authorized session
+            // Only perform backend verification if we don't already have an active authorized session or active verification in-flight
             const storedUserStr = localStorage.getItem('user');
-            if (!storedUserStr) {
+            if (!storedUserStr && !isVerifyingRef.current) {
+              isVerifyingRef.current = true;
               setAuthState('AUTHENTICATED_PENDING_BACKEND');
               try {
                 const idToken = await fbUser.getIdToken(true);
                 const backendRes = await api.post('/auth/google', { id_token: idToken }, { timeout: 35000 });
                 if (backendRes.data && backendRes.data.authenticated && isMounted) {
-                  login('', backendRes.data.user);
+                  login(backendRes.data.access_token || '', backendRes.data.user);
                 }
               } catch (err: any) {
                 if (isMounted) {
                   console.warn('[FIREBASE_AUTH_BACKEND_REJECT]', err);
-                  // Sign out from Firebase if backend rejects
                   try { await firebaseSignOut(activeAuth); } catch (_) {}
                   const errMsg = err.response?.data?.detail || err.message || 'Your Google account is not registered with the institution.';
                   setAuthError(errMsg);
                   setAuthState('UNAUTHENTICATED');
                 }
+              } finally {
+                isVerifyingRef.current = false;
               }
             }
           }
@@ -202,14 +210,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { authenticateWithGoogle } = await import('../services/googleAuth');
       const res = await authenticateWithGoogle();
       if (res && res.user) {
-        login('', res.user);
+        login(res.access_token || '', res.user);
       }
     } catch (error: any) {
-      const msg = error.message || 'Failed to sign in with Google.';
-      if (msg === 'Redirecting to Google Sign-In...') {
-        // Redirecting, leave in authenticating state
-        return;
-      }
+      const msg = error.message || 'Google sign-in could not be completed. Please try again.';
       setAuthError(msg);
       setAuthState('AUTH_ERROR');
     }

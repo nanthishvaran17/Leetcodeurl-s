@@ -174,9 +174,23 @@ export const initPushNotifications = async (): Promise<void> => {
     );
 
     // Local Notification Tapped
-    await LocalNotifications.addListener('localNotificationActionPerformed', (action) => {
+    await LocalNotifications.addListener('localNotificationActionPerformed', async (action) => {
       console.log('[LOCAL NOTIF] Local notification tapped:', action);
       const extra = action.notification.extra || {};
+
+      // 1. Download Completion Notification: Open the ACTUAL file directly with external document viewer
+      if (extra.type === 'DOWNLOAD_COMPLETE' || extra.filePath || extra.localFileUri) {
+        const filePath = extra.filePath || extra.localFileUri;
+        const filename = extra.filename || 'report';
+        const mimeType = extra.mimeType;
+
+        console.log(`[LOCAL NOTIF] Download notification clicked -> Opening file: ${filePath} (${mimeType})`);
+        const { openDownloadedDocument } = await import('./download/downloadUtils');
+        await openDownloadedDocument(filePath, filename, mimeType);
+        return; // DO NOT REDIRECT OR NAVIGATE TO APP ROUTES
+      }
+
+      // 2. Non-download system notifications (navigation fallback)
       const actionRoute = extra.actionRoute || extra.action_route;
       if (actionRoute) {
         window.location.href = actionRoute.startsWith('/') ? actionRoute : '/' + actionRoute;

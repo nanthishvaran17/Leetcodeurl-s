@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Edit3, X, CheckCircle, XCircle, Loader2, AlertTriangle, WifiOff, Save, Building2, User, Code2, Mail, Calendar, Plus, Trash2 } from 'lucide-react';
+import { Edit3, X, CheckCircle, XCircle, Loader2, AlertTriangle, WifiOff, Save, Building2, User, Mail, Calendar, Plus, Trash2 } from 'lucide-react';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { CustomDropdown } from './CustomDropdown';
@@ -35,8 +35,8 @@ function LcValidationChip({ state }: { state: LcValidationState }) {
 
   if (state.status === 'validating') {
     return (
-      <div className="flex items-center gap-1.5 text-xs text-brand-500 dark:text-brand-400 mt-1.5 animate-pulse">
-        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+      <div className="flex items-center gap-1.5 text-xs text-brand-500 dark:text-brand-400 mt-1 animate-pulse">
+        <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
         <span className="font-semibold">Verifying account with LeetCode...</span>
       </div>
     );
@@ -44,13 +44,13 @@ function LcValidationChip({ state }: { state: LcValidationState }) {
 
   if (state.status === 'valid') {
     return (
-      <div className="flex flex-col gap-0.5 mt-1.5">
+      <div className="flex flex-col gap-0.5 mt-1">
         <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
-          <CheckCircle className="w-3.5 h-3.5" />
+          <CheckCircle className="w-3.5 h-3.5 shrink-0" />
           <span className="font-bold">Account verified — <span className="font-black">{state.username}</span></span>
         </div>
         {(state.total_solved != null || state.contest_rating != null) && (
-          <div className="text-xs text-slate-500 dark:text-slate-400 pl-5">
+          <div className="text-[11px] text-slate-500 dark:text-slate-400 pl-5">
             {state.total_solved != null && <span>{state.total_solved} solved</span>}
             {state.total_solved != null && state.contest_rating != null && <span> · </span>}
             {state.contest_rating != null && <span>Rating {state.contest_rating}</span>}
@@ -62,8 +62,8 @@ function LcValidationChip({ state }: { state: LcValidationState }) {
 
   if (state.status === 'not_found') {
     return (
-      <div className="flex items-center gap-1.5 text-xs text-red-500 dark:text-red-400 mt-1.5">
-        <XCircle className="w-3.5 h-3.5" />
+      <div className="flex items-center gap-1.5 text-xs text-rose-500 dark:text-rose-400 mt-1">
+        <XCircle className="w-3.5 h-3.5 shrink-0" />
         <span className="font-semibold">No LeetCode account found for this username</span>
       </div>
     );
@@ -71,8 +71,8 @@ function LcValidationChip({ state }: { state: LcValidationState }) {
 
   if (state.status === 'invalid_format') {
     return (
-      <div className="flex items-center gap-1.5 text-xs text-amber-500 dark:text-amber-400 mt-1.5">
-        <AlertTriangle className="w-3.5 h-3.5" />
+      <div className="flex items-center gap-1.5 text-xs text-amber-500 dark:text-amber-400 mt-1">
+        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
         <span className="font-semibold">Invalid format — use https://leetcode.com/u/username/</span>
       </div>
     );
@@ -80,8 +80,8 @@ function LcValidationChip({ state }: { state: LcValidationState }) {
 
   if (state.status === 'identity_mismatch') {
     return (
-      <div className="flex items-center gap-1.5 text-xs text-orange-500 dark:text-orange-400 mt-1.5">
-        <AlertTriangle className="w-3.5 h-3.5" />
+      <div className="flex items-center gap-1.5 text-xs text-orange-500 dark:text-orange-400 mt-1">
+        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
         <span className="font-semibold">LeetCode returned a different username — check link</span>
       </div>
     );
@@ -89,8 +89,8 @@ function LcValidationChip({ state }: { state: LcValidationState }) {
 
   if (state.status === 'rate_limited') {
     return (
-      <div className="flex items-center gap-1.5 text-xs text-purple-500 dark:text-purple-400 mt-1.5">
-        <AlertTriangle className="w-3.5 h-3.5" />
+      <div className="flex items-center gap-1.5 text-xs text-purple-500 dark:text-purple-400 mt-1">
+        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
         <span className="font-semibold">LeetCode rate-limited — try again in a moment</span>
       </div>
     );
@@ -98,8 +98,8 @@ function LcValidationChip({ state }: { state: LcValidationState }) {
 
   if (state.status === 'network_error') {
     return (
-      <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1.5">
-        <WifiOff className="w-3.5 h-3.5" />
+      <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1">
+        <WifiOff className="w-3.5 h-3.5 shrink-0" />
         <span className="font-semibold">Could not reach LeetCode — check connection</span>
       </div>
     );
@@ -149,7 +149,6 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   const [showUnsavedPrompt, setShowUnsavedPrompt] = useState(false);
   const [lcValidation, setLcValidation] = useState<LcValidationState>({ status: 'idle' });
 
-  const scrollPosRef = useRef(0);
   const initialRef = useRef<any>(null);
   const debounceTimerRef = useRef<any>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -172,8 +171,6 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
 
   useEffect(() => {
     if (isOpen && student) {
-      scrollPosRef.current = window.scrollY;
-
       const initName = student.name || student.student_name || '';
       const initRegNo = student.reg_no || student.register_number || '';
       const initDeptId = student.department_id || student.department?.id || 1;
@@ -227,7 +224,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   const hasUnsavedChanges = useCallback(() => {
     if (!initialRef.current) return false;
     const init = initialRef.current;
-    return name !== init.name ||
+    return (
+      name !== init.name ||
       regNo !== init.regNo ||
       deptId !== init.deptId ||
       yearLevel !== init.yearLevel ||
@@ -237,25 +235,12 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       email !== init.email ||
       institutionalEmail !== init.institutionalEmail ||
       allocation !== init.allocation ||
-      JSON.stringify(secondaryAccounts) !== init.secondaryAccounts;
+      JSON.stringify(secondaryAccounts) !== init.secondaryAccounts
+    );
   }, [name, regNo, deptId, yearLevel, section, username, leetcodeUrl, email, institutionalEmail, allocation, secondaryAccounts]);
 
   const handleAddSecondaryAccount = () => {
     setSecondaryAccounts(prev => [...prev, { username: '', url: '' }]);
-  };
-
-  const handleGenerateEmail = async () => {
-    if (!student || !student.id) return;
-    try {
-      const res = await api.post(`/students/${student.id}/generate-email`);
-      if (res.data.success) {
-        setInstitutionalEmail(res.data.institutional_email);
-        setEmailStatus(res.data.email_status);
-        notify.success('Email Generated', res.data.message || 'Institutional email generated successfully.', { category: 'STUDENT EDIT' });
-      }
-    } catch (err: any) {
-      notify.error('Generation Failed', err.response?.data?.detail || 'Failed to generate institutional email.', { category: 'STUDENT EDIT' });
-    }
   };
 
   const handleRemoveSecondaryAccount = (idx: number) => {
@@ -295,6 +280,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
     }
   }, [hasUnsavedChanges, onClose]);
 
+  // Handle ESC key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isOpen && e.key === 'Escape') {
@@ -306,6 +292,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, handleAttemptClose]);
 
+  // Lock body scroll while modal is open
   useEffect(() => {
     if (isOpen) {
       const originalOverflow = document.body.style.overflow;
@@ -451,91 +438,129 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
     <div
       role="dialog"
       aria-modal="true"
-      className="modal-overlay-responsive animate-modal-backdrop"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-0 sm:p-4 md:p-6 bg-slate-950/80 backdrop-blur-sm overflow-hidden"
       onClick={(e) => { if (e.target === e.currentTarget && !isSaving) handleAttemptClose(); }}
     >
+      {/* Responsive Modal Card: 100dvh on mobile, floating max-w-xl on desktop */}
       <div
-        className="modal-container-responsive w-full max-w-xl bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-navy-700 animate-modal-content text-slate-900 dark:text-slate-100 antialiased overflow-hidden flex flex-col my-auto z-50"
+        className="w-full h-[100dvh] sm:h-auto sm:max-h-[88dvh] max-w-xl bg-white dark:bg-navy-950 sm:rounded-3xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-slate-100 antialiased overflow-hidden flex flex-col z-[100000]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-4 py-3 sm:px-6 sm:py-4 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-slate-800 rounded-t-2xl sm:rounded-t-3xl shrink-0 z-10">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-              <Edit3 className="w-5 h-5" />
+        {/* Fixed Header */}
+        <div className="px-4 py-3 sm:px-6 sm:py-3.5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-slate-800 shrink-0 z-20">
+          <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+            <div className="p-1.5 sm:p-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 shrink-0">
+              <Edit3 className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <h3 className="text-base font-bold text-white tracking-tight">EDIT STUDENT RECORD</h3>
-              <p className="text-xs text-slate-300 font-mono font-medium mt-0.5 flex items-center space-x-2">
+            <div className="min-w-0">
+              <h3 className="text-sm sm:text-base font-bold text-white tracking-tight truncate">EDIT STUDENT RECORD</h3>
+              <p className="text-[11px] sm:text-xs text-slate-300 font-mono font-medium truncate">
                 <span>{student.reg_no || student.register_number || 'ID: ' + student.id}</span>
+                {name && <span className="text-slate-400 font-sans"> · {name}</span>}
               </p>
             </div>
           </div>
-          <button type="button" onClick={handleAttemptClose} title="Close" className="p-2 rounded-xl bg-white/10 hover:bg-rose-500/80 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center">
+          <button
+            type="button"
+            onClick={handleAttemptClose}
+            title="Close"
+            className="p-2 rounded-xl bg-white/10 hover:bg-rose-500/80 active:scale-95 transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0 ml-2"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
 
+        {/* Scrollable Form Content */}
         <form id="edit-student-form" onSubmit={handleSave} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          <div className="p-3.5 sm:p-6 space-y-5 sm:space-y-6 flex-1 min-h-0 overflow-y-auto overscroll-contain pb-6">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3.5 sm:p-6 space-y-4 sm:space-y-5 pb-6">
             {errorMessage && (
-              <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center space-x-2 animate-shake">
+              <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center space-x-2 animate-shake">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span>{errorMessage}</span>
               </div>
             )}
 
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-navy-800 pb-2">
-                <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-indigo-500 text-white font-black text-[10px]">1</span>
+            {/* Section 1: Student Information */}
+            <div className="space-y-3 sm:space-y-3.5">
+              <div className="flex items-center space-x-2 border-b border-slate-100 dark:border-navy-800 pb-1.5">
+                <span className="flex items-center justify-center w-5 h-5 rounded-md bg-indigo-500 text-white font-black text-[10px]">1</span>
                 <h4 className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
                   <User className="w-3.5 h-3.5" /> Student Information
                 </h4>
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Student Full Name <span className="text-rose-500">*</span></label>
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className="w-full h-10 px-3.5 text-xs bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-brand-500 transition-all shadow-sm" />
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                  Student Full Name <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  placeholder="e.g. NANTHISHVARAN M"
+                  className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl sm:rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-brand-500 transition-all shadow-xs"
+                />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Register Number <span className="text-rose-500">*</span></label>
-                  <input type="text" value={regNo} onChange={(e) => {
-                    const val = e.target.value;
-                    setRegNo(val);
-                    if (val.trim()) {
-                      setInstitutionalEmail(generateEmailFromRegNo(val));
-                    } else {
-                      setInstitutionalEmail('');
-                    }
-                  }} className="w-full h-10 px-3.5 text-xs font-mono bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-brand-500 transition-all shadow-sm" />
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                    Register Number <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={regNo}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setRegNo(val);
+                      if (val.trim()) {
+                        setInstitutionalEmail(generateEmailFromRegNo(val));
+                      } else {
+                        setInstitutionalEmail('');
+                      }
+                    }}
+                    required
+                    placeholder="e.g. 732223CS101"
+                    className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs font-mono bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl sm:rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-brand-500 transition-all shadow-xs"
+                  />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Personal Email</label>
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full h-10 px-3.5 text-xs bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-brand-500 transition-all shadow-sm" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="e.g. student@gmail.com"
+                    className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl sm:rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-brand-500 transition-all shadow-xs"
+                  />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3.5">
-                  <div className="space-y-1 relative">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center justify-between">
-                      <span>Institutional Email <span className="text-rose-500">*</span></span>
-                      {emailStatus === 'generated' && <span className="text-[10px] text-emerald-500 font-bold">ASSIGNED</span>}
-                      {emailStatus === 'needs_verification' && <span className="text-[10px] text-amber-500 font-bold">NEEDS VERIFICATION</span>}
-                      {emailStatus === 'error' && <span className="text-[10px] text-rose-500 font-bold">ERROR</span>}
-                    </label>
-                    <div className="relative flex items-center gap-2">
-                      <input type="email" value={institutionalEmail} readOnly placeholder="Auto-generated from Register Number" className="w-full h-10 px-3.5 text-xs font-mono bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-2xl text-slate-700 dark:text-slate-300 font-bold outline-none shadow-sm cursor-not-allowed" />
-                    </div>
-                  </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center justify-between">
+                  <span>Institutional Email <span className="text-rose-500">*</span></span>
+                  {emailStatus === 'generated' && <span className="text-[10px] text-emerald-500 font-bold">ASSIGNED</span>}
+                  {emailStatus === 'needs_verification' && <span className="text-[10px] text-amber-500 font-bold">NEEDS VERIFICATION</span>}
+                </label>
+                <div className="relative flex items-center">
+                  <input
+                    type="email"
+                    value={institutionalEmail}
+                    readOnly
+                    placeholder="Auto-generated from Register Number"
+                    className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs font-mono bg-slate-50 dark:bg-navy-900/60 border border-slate-200 dark:border-navy-700 rounded-xl sm:rounded-2xl text-slate-700 dark:text-slate-300 font-bold outline-none shadow-xs cursor-not-allowed"
+                  />
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5">
                 <CustomDropdown
                   id="edit-student-dept-select"
                   label="Department *"
                   labelClassName="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1"
                   menuWidthClass="w-full min-w-full"
+                  triggerClassName="w-full h-11 sm:h-10 flex items-center justify-between px-3.5 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white text-sm sm:text-xs font-bold shadow-xs cursor-pointer"
                   options={departments.map((d: any) => ({
                     value: String(d.id),
                     label: d.code ? `${d.code} - ${d.name}` : d.name,
@@ -552,6 +577,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                   label="Year Level *"
                   labelClassName="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1"
                   menuWidthClass="w-full min-w-full"
+                  triggerClassName="w-full h-11 sm:h-10 flex items-center justify-between px-3.5 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white text-sm sm:text-xs font-bold shadow-xs cursor-pointer"
                   options={[
                     { value: "I", label: "1st Year", badge: "I YEAR", icon: Calendar },
                     { value: "II", label: "2nd Year", badge: "II YEAR", icon: Calendar },
@@ -563,130 +589,135 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                   icon={Calendar}
                 />
               </div>
-              
             </div>
 
-            {/* Primary LeetCode Account Section */}
-            <div className="p-4 rounded-2xl bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/40 shadow-sm space-y-3">
+            {/* Section 2: Primary LeetCode Account */}
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/40 shadow-xs space-y-2.5 sm:space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-amber-500 text-white font-black text-[10px]">2</span>
+                  <span className="flex items-center justify-center w-5 h-5 rounded-md bg-amber-500 text-white font-black text-[10px]">2</span>
                   <h4 className="text-xs font-black text-amber-700 dark:text-amber-300 uppercase tracking-wide">Primary LeetCode Account</h4>
                 </div>
-                <span className="px-2.5 py-1 text-[10px] font-black uppercase rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                  Primary Account
+                <span className="px-2 py-0.5 text-[10px] font-black uppercase rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                  Primary
                 </span>
               </div>
               
               <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                This is the Primary LeetCode account used for problem-solving metrics, weekly progress reports, and college rankings.
+                Used for live problem-solving metrics, weekly progress reports, and institutional rankings.
               </p>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Primary LeetCode Username Handle</label>
-                <input type="text" value={username} onChange={(e) => handleUsernameChange(e.target.value)} className="w-full h-10 px-3.5 text-xs font-mono bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500 shadow-sm" />
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-200">LeetCode Username Handle</label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => handleUsernameChange(e.target.value)}
+                  placeholder="e.g. nanthish_17"
+                  className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs font-mono bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl sm:rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500 shadow-xs"
+                />
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Primary LeetCode Profile URL</label>
-                <input type="text" value={leetcodeUrl} onChange={(e) => handleUrlChange(e.target.value)} className="w-full h-10 px-3.5 text-xs bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500 shadow-sm" />
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-200">LeetCode Profile URL</label>
+                <input
+                  type="text"
+                  value={leetcodeUrl}
+                  onChange={(e) => handleUrlChange(e.target.value)}
+                  placeholder="https://leetcode.com/u/username/"
+                  className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl sm:rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500 shadow-xs"
+                />
                 <LcValidationChip state={lcValidation} />
               </div>
             </div>
 
-            {/* Secondary LeetCode Accounts Section */}
-            <div className="p-4 rounded-2xl bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-200/50 dark:border-indigo-800/40 shadow-sm space-y-4">
+            {/* Section 3: Secondary LeetCode Accounts */}
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-200/50 dark:border-indigo-800/40 shadow-xs space-y-3">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center space-x-2">
-                  <span className="flex items-center justify-center w-5 h-5 rounded-lg bg-indigo-500 text-white font-black text-[10px]">3</span>
+                  <span className="flex items-center justify-center w-5 h-5 rounded-md bg-indigo-500 text-white font-black text-[10px]">3</span>
                   <h4 className="text-xs font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-wide">Secondary LeetCode Accounts</h4>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    type="button"
-                    onClick={handleAddSecondaryAccount}
-                    className="px-2.5 py-1 text-[10px] font-black uppercase rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-all cursor-pointer flex items-center space-x-1 min-h-[36px]"
-                  >
-                    <Plus className="w-3 h-3" />
-                    <span>Add Secondary Account</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleAddSecondaryAccount}
+                  className="px-2.5 py-1.5 text-[10px] font-black uppercase rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-all cursor-pointer flex items-center space-x-1 min-h-[38px] active:scale-95"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>Add Secondary</span>
+                </button>
               </div>
 
               <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                Secondary accounts are tracked for live contest participation and integrity verification. They do not increase primary problem-solving totals.
+                Tracked for live contest participation and integrity verification.
               </p>
 
               {secondaryAccounts.length > 0 ? (
                 <div className="space-y-3">
                   {secondaryAccounts.map((acc, idx) => (
-                    <div key={idx} className="p-3.5 rounded-2xl bg-white dark:bg-navy-950 border border-indigo-100 dark:border-navy-700 space-y-3 shadow-xs relative">
+                    <div key={idx} className="p-3 rounded-xl bg-white dark:bg-navy-950 border border-indigo-100 dark:border-navy-700 space-y-2.5 shadow-xs relative">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/40">
-                          Secondary Account #{idx + 1}
+                          Account #{idx + 1}
                         </span>
                         <button
                           type="button"
                           onClick={() => handleRemoveSecondaryAccount(idx)}
-                          className="p-1 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
-                          title="Remove Secondary Account"
+                          className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center active:scale-95"
+                          title="Remove Account"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Secondary LeetCode Username Handle</label>
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Secondary Username</label>
                         <input
                           type="text"
                           value={acc.username}
                           onChange={(e) => handleSecondaryUsernameChange(idx, e.target.value)}
-                          placeholder="e.g. Spidy_contest_sec"
-                          className="w-full h-9 px-3 text-xs font-mono bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-indigo-500"
+                          placeholder="e.g. user_contest_alt"
+                          className="w-full max-w-full box-border h-10 px-3 text-xs font-mono bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Secondary LeetCode Profile URL</label>
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Secondary Profile URL</label>
                         <input
                           type="text"
                           value={acc.url}
                           onChange={(e) => handleSecondaryUrlChange(idx, e.target.value)}
-                          placeholder="https://leetcode.com/u/Spidy_contest_sec/"
-                          className="w-full h-9 px-3 text-xs bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-indigo-500"
+                          placeholder="https://leetcode.com/u/user_contest_alt/"
+                          className="w-full max-w-full box-border h-10 px-3 text-xs bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="p-4 rounded-2xl bg-white/60 dark:bg-navy-950/60 border border-dashed border-slate-300 dark:border-navy-700 text-center space-y-2">
-                  <span className="block text-xs text-slate-500 dark:text-slate-400 font-medium">No secondary LeetCode accounts linked to this student.</span>
-                  <button
-                    type="button"
-                    onClick={handleAddSecondaryAccount}
-                    className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/40 rounded-xl text-xs font-bold transition-all cursor-pointer inline-flex items-center space-x-1.5 min-h-[38px]"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Add Secondary LeetCode Account</span>
-                  </button>
+                <div className="p-3.5 rounded-xl bg-white/60 dark:bg-navy-950/60 border border-dashed border-slate-300 dark:border-navy-700 text-center space-y-2">
+                  <span className="block text-[11px] text-slate-500 dark:text-slate-400 font-medium">No secondary LeetCode accounts linked.</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Fixed Modal Footer inside Form for native submission & mobile visibility */}
-          <div className="px-4 py-3.5 sm:px-6 sm:py-4 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-navy-800 flex items-center justify-between rounded-b-2xl sm:rounded-b-3xl shrink-0 z-30 shadow-xl gap-3">
+          {/* Dedicated Fixed Bottom Action Bar: Always visible from any scroll position */}
+          <div
+            className="px-4 py-3 sm:px-6 sm:py-3.5 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0 z-30 shadow-lg gap-3"
+            style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+          >
             <button
               type="button"
               onClick={handleAttemptClose}
-              className="flex-1 sm:flex-initial px-4 py-2.5 sm:px-5 sm:py-2.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all cursor-pointer active:scale-95 min-h-[44px] flex items-center justify-center"
+              disabled={isSaving}
+              className="flex-1 sm:flex-initial px-4 py-2.5 sm:px-6 sm:py-2.5 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 active:scale-95 transition-all cursor-pointer min-h-[46px] flex items-center justify-center"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="flex-1 sm:flex-initial px-5 py-2.5 sm:px-6 sm:py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white text-xs font-black shadow-md flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer transition-all active:scale-95 min-h-[44px]"
+              className="flex-1 sm:flex-initial px-5 py-2.5 sm:px-7 sm:py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 active:scale-95 text-white text-xs sm:text-sm font-black shadow-md flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer transition-all min-h-[46px]"
             >
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               <span>{isSaving ? 'Saving...' : 'Save Changes'}</span>
@@ -694,14 +725,28 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
           </div>
         </form>
 
+        {/* Unsaved Prompt Modal */}
         {showUnsavedPrompt && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm rounded-3xl">
-            <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-navy-950 p-6 shadow-2xl space-y-4 text-center">
+          <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm sm:rounded-3xl">
+            <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-navy-950 p-6 shadow-2xl space-y-4 text-center border border-slate-200 dark:border-navy-700">
               <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto" />
-              <h4 className="text-sm font-black">Discard Changes?</h4>
+              <h4 className="text-sm font-black text-slate-900 dark:text-white">Discard Changes?</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400">You have unsaved changes. Are you sure you want to discard them?</p>
               <div className="flex gap-3">
-                <button onClick={() => setShowUnsavedPrompt(false)} className="flex-1 py-2 rounded-xl bg-slate-100 text-xs font-bold">Stay</button>
-                <button onClick={() => { setShowUnsavedPrompt(false); onClose(); }} className="flex-1 py-2 rounded-xl bg-rose-500 text-xs font-bold text-white">Discard</button>
+                <button
+                  type="button"
+                  onClick={() => setShowUnsavedPrompt(false)}
+                  className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-navy-900 text-xs font-bold text-slate-700 dark:text-slate-300 min-h-[42px] cursor-pointer"
+                >
+                  Stay
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowUnsavedPrompt(false); onClose(); }}
+                  className="flex-1 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-xs font-bold text-white min-h-[42px] cursor-pointer"
+                >
+                  Discard
+                </button>
               </div>
             </div>
           </div>

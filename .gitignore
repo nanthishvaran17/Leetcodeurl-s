@@ -108,5 +108,6 @@ data/leetcode_tracker.db
 reports/
 classes.txt
 db.sqlite3
+*.apk
 
 

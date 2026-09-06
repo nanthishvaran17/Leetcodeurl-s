@@ -28,26 +28,60 @@ router = APIRouter(prefix="/api/reports", tags=["Reports"])
 @router.get("/download-info")
 def get_report_download_info(
     file_type: str = Query("pdf"),
+    report_type: Optional[str] = Query(None),
+    format: Optional[str] = Query(None),
     session_id: str = Query("latest"),
     institution_id: str = Query("NEC"),
+    dept_id: Optional[int] = Query(None),
+    department: Optional[str] = Query("ALL"),
+    dept: Optional[str] = Query("ALL"),
+    year: Optional[str] = Query("ALL"),
+    year_level: Optional[str] = Query("ALL"),
+    batch: Optional[str] = Query("ALL"),
+    attendance: Optional[str] = Query("ALL"),
+    status: Optional[str] = Query("ALL"),
+    search: Optional[str] = Query(""),
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Get Report Download Info", dept_scoped=True))
 ):
     """
-    INSTANT REPORT PRE-FLIGHT LOOKUP (< 50ms)
-    Returns cached download URL if report exists and dataVersion is current.
-    If stale or missing, triggers background pre-generation and returns status 'PREPARING'.
-    Enforces authorization: authenticated user role & institution isolation.
+    INSTANT REPORT PRE-FLIGHT LOOKUP (< 30ms)
+    Computes deterministic filter_hash, returns cached download URL if READY.
+    Triggers non-blocking background generation if missing.
     """
     user_inst = getattr(current_user, "institution_id", None) or "NEC"
     user_role = (getattr(current_user, "role", "") or "").lower()
     
-    # Non-admin users are strictly isolated to their assigned institution
     if user_role not in ["admin", "super admin", "super_admin"] and institution_id != user_inst:
         institution_id = user_inst
 
-    from backend.services.pregenerated_report_service import get_cached_report_info
-    return get_cached_report_info(db, week_id=session_id, file_type=file_type, institution_id=institution_id)
+    eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
+    eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+    eff_status = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
+    eff_search = (search or "").strip()
+    eff_batch = batch or "ALL"
+    eff_type = report_type or file_type
+    eff_format = format or file_type
+
+    filters = {
+        "department": eff_dept,
+        "year": eff_year,
+        "batch": eff_batch,
+        "status": eff_status,
+        "search": eff_search,
+        "session_id": session_id
+    }
+
+    from backend.services.pregenerated_report_service import get_or_create_report
+    return get_or_create_report(
+        db=db,
+        report_type=eff_type,
+        format=eff_format,
+        filters=filters,
+        current_user=current_user,
+        institution_id=institution_id,
+        background=True
+    )
 
 
 @router.get("/cached-download/{cache_id}")
@@ -57,7 +91,7 @@ def download_cached_report_file(
     current_user = Depends(require_security_access(resource_name="Download Cached Report", dept_scoped=True))
 ):
     """
-    Direct instant static file stream for pre-generated cached reports (< 100ms initiation).
+    Direct instant static file stream for pre-generated cached reports (< 50ms initiation).
     Enforces authentication, institution authorization boundaries, and disk file integrity.
     """
     from fastapi.responses import FileResponse
@@ -66,39 +100,29 @@ def download_cached_report_file(
     if not cache_record:
         raise HTTPException(status_code=404, detail="Requested report file not found.")
 
-    # Authorization Check: Verify caller's institution matches report's institution
     user_inst = getattr(current_user, "institution_id", None) or "NEC"
     user_role = (getattr(current_user, "role", "") or "").lower()
     if user_role not in ["admin", "super admin", "super_admin"] and cache_record.institution_id != user_inst:
         raise HTTPException(status_code=403, detail="Unauthorized: Access denied to requested report.")
 
-    # File Integrity Check: verify storage_path exists and size > 0
     if not cache_record.storage_path or not os.path.exists(cache_record.storage_path) or os.path.getsize(cache_record.storage_path) == 0:
         cache_record.status = "STALE"
         try:
             db.commit()
         except Exception:
             db.rollback()
-        from backend.services.pregenerated_report_service import trigger_background_report_generation
-        from backend.services.data_version_service import get_current_data_version
-        curr_v = get_current_data_version(db)
-        trigger_background_report_generation(
-            week_id=cache_record.week_id,
-            file_type=cache_record.file_type,
-            institution_id=cache_record.institution_id,
-            data_version=curr_v
-        )
-        raise HTTPException(status_code=404, detail="Report file was missing or corrupted. Regeneration initiated.")
+        raise HTTPException(status_code=404, detail="Report file was missing. Regeneration initiated.")
 
     ext_media_types = {
         "pdf": "application/pdf",
         "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "csv": "text/csv"
+        "csv": "text/csv",
+        "zip": "application/zip"
     }
     ext = cache_record.storage_path.split(".")[-1].lower()
-    media_type = ext_media_types.get(ext, "application/octet-stream")
-    filename = os.path.basename(cache_record.storage_path)
+    media_type = cache_record.mime_type or ext_media_types.get(ext, "application/octet-stream")
+    filename = cache_record.filename or os.path.basename(cache_record.storage_path)
 
     return FileResponse(
         path=cache_record.storage_path,
@@ -108,7 +132,8 @@ def download_cached_report_file(
             "Content-Disposition": f'attachment; filename="{filename}"',
             "Cache-Control": "private, no-cache, no-store, must-revalidate",
             "Pragma": "no-cache",
-            "Expires": "0"
+            "Expires": "0",
+            "X-Report-Cache-Hit": "true"
         }
     )
 
@@ -146,35 +171,42 @@ def download_student_performance_detail_excel(
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export Student Performance Detail Excel", dept_scoped=True))
 ):
-    """Generates the student performance detail Excel, strictly scoped to caller's active filters."""
-    try:
-        eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
-        eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
-        eff_batch = batch or "ALL"
-        eff_status = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
-        eff_search = (search or "").strip()
+    """Generates and downloads student performance detail Excel with instant deterministic caching."""
+    from fastapi.responses import FileResponse
+    from backend.services.pregenerated_report_service import get_or_create_report
+    from backend.models import ReportCache
 
-        if dept_id:
-            d_obj = db.query(Department).filter(Department.id == dept_id).first()
-            if d_obj:
-                eff_dept = d_obj.code or d_obj.name
+    eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
+    eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+    eff_batch = batch or "ALL"
+    eff_status = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
+    eff_search = (search or "").strip()
 
-        config = ReportConfig(
-            report_type="STUDENT_PERFORMANCE",
-            department=eff_dept,
-            year=eff_year,
-            filters={"search": eff_search, "batch": eff_batch, "status": eff_status}
-        )
-        dataset = build_universal_report(db, config, current_user=current_user)
-        excel_bytes = export_excel_from_dataset(dataset)
-        return Response(
-            content=excel_bytes,
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": "attachment; filename=Nandha_Student_Performance_Detail.xlsx"}
-        )
-    except Exception as e:
-        logger.error(f"[EXPORT ERROR] /export-student-performance-detail: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to generate Student Performance Detail Excel: {str(e)}")
+    if dept_id:
+        d_obj = db.query(Department).filter(Department.id == dept_id).first()
+        if d_obj:
+            eff_dept = d_obj.code or d_obj.name
+
+    res = get_or_create_report(
+        db=db,
+        report_type="STUDENT_PERFORMANCE",
+        format="xlsx",
+        filters={"department": eff_dept, "year": eff_year, "batch": eff_batch, "status": eff_status, "search": eff_search},
+        current_user=current_user
+    )
+
+    cache_record = db.query(ReportCache).filter(ReportCache.id == res["cache_id"]).first()
+    return FileResponse(
+        path=cache_record.storage_path,
+        media_type=res.get("mime_type") or "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename=res.get("filename") or "Nandha_Student_Performance_Detail.xlsx",
+        headers={
+            "Content-Disposition": f'attachment; filename="{res.get("filename") or "Nandha_Student_Performance_Detail.xlsx"}"',
+            "Cache-Control": "private, no-cache, no-store, must-revalidate",
+            "X-Report-Cache-Hit": str(res.get("cache_hit", False)),
+            "X-Report-Lookup-Ms": str(res.get("lookup_ms", 0))
+        }
+    )
 
 @router.get("/export-excel")
 @router.get("/export/excel")
@@ -192,35 +224,42 @@ def download_official_college_summary_excel(
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export Excel Summary Report", dept_scoped=True))
 ):
-    """Generates the official college Excel, strictly matching caller's active filters."""
-    try:
-        eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
-        eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
-        eff_batch = batch or "ALL"
-        eff_status = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
-        eff_search = (search or "").strip()
+    """Generates and downloads official college Excel with instant deterministic caching."""
+    from fastapi.responses import FileResponse
+    from backend.services.pregenerated_report_service import get_or_create_report
+    from backend.models import ReportCache
 
-        if dept_id:
-            d_obj = db.query(Department).filter(Department.id == dept_id).first()
-            if d_obj:
-                eff_dept = d_obj.code or d_obj.name
+    eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
+    eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+    eff_batch = batch or "ALL"
+    eff_status = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
+    eff_search = (search or "").strip()
 
-        config = ReportConfig(
-            report_type="STUDENT_PERFORMANCE",
-            department=eff_dept,
-            year=eff_year,
-            filters={"search": eff_search, "batch": eff_batch, "status": eff_status}
-        )
-        dataset = build_universal_report(db, config, current_user=current_user)
-        excel_bytes = export_excel_from_dataset(dataset)
-        return Response(
-            content=excel_bytes,
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": "attachment; filename=Nandha_College_Official_Weekly_Report.xlsx"}
-        )
-    except Exception as e:
-        logger.error(f"[EXPORT ERROR] /export-official-college-summary: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to generate Official College Weekly Excel: {str(e)}")
+    if dept_id:
+        d_obj = db.query(Department).filter(Department.id == dept_id).first()
+        if d_obj:
+            eff_dept = d_obj.code or d_obj.name
+
+    res = get_or_create_report(
+        db=db,
+        report_type="OFFICIAL_SUMMARY",
+        format="xlsx",
+        filters={"department": eff_dept, "year": eff_year, "batch": eff_batch, "status": eff_status, "search": eff_search},
+        current_user=current_user
+    )
+
+    cache_record = db.query(ReportCache).filter(ReportCache.id == res["cache_id"]).first()
+    return FileResponse(
+        path=cache_record.storage_path,
+        media_type=res.get("mime_type") or "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename=res.get("filename") or "Nandha_College_Official_Weekly_Report.xlsx",
+        headers={
+            "Content-Disposition": f'attachment; filename="{res.get("filename") or "Nandha_College_Official_Weekly_Report.xlsx"}"',
+            "Cache-Control": "private, no-cache, no-store, must-revalidate",
+            "X-Report-Cache-Hit": str(res.get("cache_hit", False)),
+            "X-Report-Lookup-Ms": str(res.get("lookup_ms", 0))
+        }
+    )
 
 @router.get("/export-master-tracker")
 def download_master_tracker_excel(
@@ -236,29 +275,36 @@ def download_master_tracker_excel(
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export Master Tracker Excel", dept_scoped=True))
 ):
-    try:
-        eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
-        eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
-        eff_batch = batch or "ALL"
-        eff_status = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
-        eff_search = (search or "").strip()
+    from fastapi.responses import FileResponse
+    from backend.services.pregenerated_report_service import get_or_create_report
+    from backend.models import ReportCache
 
-        config = ReportConfig(
-            report_type="STUDENT_PERFORMANCE",
-            department=eff_dept,
-            year=eff_year,
-            filters={"search": eff_search, "batch": eff_batch, "status": eff_status}
-        )
-        dataset = build_universal_report(db, config, current_user=current_user)
-        excel_bytes = export_excel_from_dataset(dataset)
-        return Response(
-            content=excel_bytes,
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": "attachment; filename=Full_8_Sheet_Master_Tracker.xlsx"}
-        )
-    except Exception as e:
-        logger.error(f"[EXPORT ERROR] /export-master-tracker: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to generate Master Tracker Excel: {str(e)}")
+    eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
+    eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+    eff_batch = batch or "ALL"
+    eff_status = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
+    eff_search = (search or "").strip()
+
+    res = get_or_create_report(
+        db=db,
+        report_type="MASTER_TRACKER",
+        format="xlsx",
+        filters={"department": eff_dept, "year": eff_year, "batch": eff_batch, "status": eff_status, "search": eff_search},
+        current_user=current_user
+    )
+
+    cache_record = db.query(ReportCache).filter(ReportCache.id == res["cache_id"]).first()
+    return FileResponse(
+        path=cache_record.storage_path,
+        media_type=res.get("mime_type") or "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename=res.get("filename") or "Full_8_Sheet_Master_Tracker.xlsx",
+        headers={
+            "Content-Disposition": f'attachment; filename="{res.get("filename") or "Full_8_Sheet_Master_Tracker.xlsx"}"',
+            "Cache-Control": "private, no-cache, no-store, must-revalidate",
+            "X-Report-Cache-Hit": str(res.get("cache_hit", False)),
+            "X-Report-Lookup-Ms": str(res.get("lookup_ms", 0))
+        }
+    )
 
 @router.get("/export-weekly-contest-matrix")
 def download_weekly_contest_matrix_excel(
@@ -270,11 +316,27 @@ def download_weekly_contest_matrix_excel(
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export Contest Matrix Excel", dept_scoped=True))
 ):
-    excel_bytes = generate_weekly_contest_matrix_excel(db, batch_label=batch, dept_id=dept_id)
-    return Response(
-        content=excel_bytes,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename=LeetCode_Weekly_Contest_Matrix_Batch_{batch}.xlsx"}
+    from fastapi.responses import FileResponse
+    from backend.services.pregenerated_report_service import get_or_create_report
+    from backend.models import ReportCache
+
+    res = get_or_create_report(
+        db=db,
+        report_type="WEEKLY_CONTEST_MATRIX",
+        format="xlsx",
+        filters={"batch": batch, "dept_id": dept_id, "department": department or dept, "year": year},
+        current_user=current_user
+    )
+    cache_record = db.query(ReportCache).filter(ReportCache.id == res["cache_id"]).first()
+    return FileResponse(
+        path=cache_record.storage_path,
+        media_type=res.get("mime_type") or "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename=res.get("filename") or f"LeetCode_Weekly_Contest_Matrix_Batch_{batch}.xlsx",
+        headers={
+            "Content-Disposition": f'attachment; filename="{res.get("filename") or f"LeetCode_Weekly_Contest_Matrix_Batch_{batch}.xlsx"}"',
+            "Cache-Control": "private, no-cache, no-store, must-revalidate",
+            "X-Report-Cache-Hit": str(res.get("cache_hit", False))
+        }
     )
 
 @router.get("/export-current-week-matrix")
@@ -319,34 +381,41 @@ def download_pdf_report(
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export PDF Report", dept_scoped=True))
 ):
-    try:
-        eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
-        eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
-        eff_batch = batch or "ALL"
-        eff_status = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
-        eff_search = (search or "").strip()
+    from fastapi.responses import FileResponse
+    from backend.services.pregenerated_report_service import get_or_create_report
+    from backend.models import ReportCache
 
-        if dept_id:
-            d_obj = db.query(Department).filter(Department.id == dept_id).first()
-            if d_obj:
-                eff_dept = d_obj.code or d_obj.name
+    eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
+    eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+    eff_batch = batch or "ALL"
+    eff_status = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
+    eff_search = (search or "").strip()
 
-        config = ReportConfig(
-            report_type="STUDENT_PERFORMANCE",
-            department=eff_dept,
-            year=eff_year,
-            filters={"search": eff_search, "batch": eff_batch, "status": eff_status}
-        )
-        dataset = build_universal_report(db, config, current_user=current_user)
-        pdf_bytes = export_pdf_from_dataset(dataset)
-        return Response(
-            content=pdf_bytes,
-            media_type="application/pdf",
-            headers={"Content-Disposition": "attachment; filename=LeetCode_Weekly_Performance_Summary.pdf"}
-        )
-    except Exception as e:
-        logger.error(f"[EXPORT ERROR] /export-pdf: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to generate PDF Report: {str(e)}")
+    if dept_id:
+        d_obj = db.query(Department).filter(Department.id == dept_id).first()
+        if d_obj:
+            eff_dept = d_obj.code or d_obj.name
+
+    res = get_or_create_report(
+        db=db,
+        report_type="STUDENT_PERFORMANCE",
+        format="pdf",
+        filters={"department": eff_dept, "year": eff_year, "batch": eff_batch, "status": eff_status, "search": eff_search},
+        current_user=current_user
+    )
+
+    cache_record = db.query(ReportCache).filter(ReportCache.id == res["cache_id"]).first()
+    return FileResponse(
+        path=cache_record.storage_path,
+        media_type="application/pdf",
+        filename=res.get("filename") or "LeetCode_Weekly_Performance_Summary.pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{res.get("filename") or "LeetCode_Weekly_Performance_Summary.pdf"}"',
+            "Cache-Control": "private, no-cache, no-store, must-revalidate",
+            "X-Report-Cache-Hit": str(res.get("cache_hit", False)),
+            "X-Report-Lookup-Ms": str(res.get("lookup_ms", 0))
+        }
+    )
 
 @router.get("/export-word")
 def download_word_report(
@@ -362,34 +431,41 @@ def download_word_report(
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export Word Report", dept_scoped=True))
 ):
-    try:
-        eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
-        eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
-        eff_batch = batch or "ALL"
-        eff_status = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
-        eff_search = (search or "").strip()
+    from fastapi.responses import FileResponse
+    from backend.services.pregenerated_report_service import get_or_create_report
+    from backend.models import ReportCache
 
-        if dept_id:
-            d_obj = db.query(Department).filter(Department.id == dept_id).first()
-            if d_obj:
-                eff_dept = d_obj.code or d_obj.name
+    eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
+    eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+    eff_batch = batch or "ALL"
+    eff_status = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
+    eff_search = (search or "").strip()
 
-        config = ReportConfig(
-            report_type="STUDENT_PERFORMANCE",
-            department=eff_dept,
-            year=eff_year,
-            filters={"search": eff_search, "batch": eff_batch, "status": eff_status}
-        )
-        dataset = build_universal_report(db, config, current_user=current_user)
-        word_bytes = export_word_from_dataset(dataset)
-        return Response(
-            content=word_bytes,
-            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            headers={"Content-Disposition": "attachment; filename=LeetCode_Weekly_Performance_Summary.docx"}
-        )
-    except Exception as e:
-        logger.error(f"[EXPORT ERROR] /export-word: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to generate Word Report: {str(e)}")
+    if dept_id:
+        d_obj = db.query(Department).filter(Department.id == dept_id).first()
+        if d_obj:
+            eff_dept = d_obj.code or d_obj.name
+
+    res = get_or_create_report(
+        db=db,
+        report_type="STUDENT_PERFORMANCE",
+        format="docx",
+        filters={"department": eff_dept, "year": eff_year, "batch": eff_batch, "status": eff_status, "search": eff_search},
+        current_user=current_user
+    )
+
+    cache_record = db.query(ReportCache).filter(ReportCache.id == res["cache_id"]).first()
+    return FileResponse(
+        path=cache_record.storage_path,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        filename=res.get("filename") or "LeetCode_Weekly_Performance_Summary.docx",
+        headers={
+            "Content-Disposition": f'attachment; filename="{res.get("filename") or "LeetCode_Weekly_Performance_Summary.docx"}"',
+            "Cache-Control": "private, no-cache, no-store, must-revalidate",
+            "X-Report-Cache-Hit": str(res.get("cache_hit", False)),
+            "X-Report-Lookup-Ms": str(res.get("lookup_ms", 0))
+        }
+    )
 
 @router.get("/export-csv")
 def download_csv_report(
@@ -405,34 +481,41 @@ def download_csv_report(
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Export CSV Report", dept_scoped=True))
 ):
-    try:
-        eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
-        eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
-        eff_batch = batch or "ALL"
-        eff_status = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
-        eff_search = (search or "").strip()
+    from fastapi.responses import FileResponse
+    from backend.services.pregenerated_report_service import get_or_create_report
+    from backend.models import ReportCache
 
-        if dept_id:
-            d_obj = db.query(Department).filter(Department.id == dept_id).first()
-            if d_obj:
-                eff_dept = d_obj.code or d_obj.name
+    eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
+    eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+    eff_batch = batch or "ALL"
+    eff_status = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
+    eff_search = (search or "").strip()
 
-        config = ReportConfig(
-            report_type="STUDENT_PERFORMANCE",
-            department=eff_dept,
-            year=eff_year,
-            filters={"search": eff_search, "batch": eff_batch, "status": eff_status}
-        )
-        dataset = build_universal_report(db, config, current_user=current_user)
-        csv_bytes = export_csv_from_dataset(dataset)
-        return Response(
-            content=csv_bytes,
-            media_type="text/csv",
-            headers={"Content-Disposition": "attachment; filename=LeetCode_Student_Performance_Report.csv"}
-        )
-    except Exception as e:
-        logger.error(f"[EXPORT ERROR] /export-csv: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Failed to generate CSV Report: {str(e)}")
+    if dept_id:
+        d_obj = db.query(Department).filter(Department.id == dept_id).first()
+        if d_obj:
+            eff_dept = d_obj.code or d_obj.name
+
+    res = get_or_create_report(
+        db=db,
+        report_type="STUDENT_PERFORMANCE",
+        format="csv",
+        filters={"department": eff_dept, "year": eff_year, "batch": eff_batch, "status": eff_status, "search": eff_search},
+        current_user=current_user
+    )
+
+    cache_record = db.query(ReportCache).filter(ReportCache.id == res["cache_id"]).first()
+    return FileResponse(
+        path=cache_record.storage_path,
+        media_type="text/csv",
+        filename=res.get("filename") or "LeetCode_Student_Performance_Report.csv",
+        headers={
+            "Content-Disposition": f'attachment; filename="{res.get("filename") or "LeetCode_Student_Performance_Report.csv"}"',
+            "Cache-Control": "private, no-cache, no-store, must-revalidate",
+            "X-Report-Cache-Hit": str(res.get("cache_hit", False)),
+            "X-Report-Lookup-Ms": str(res.get("lookup_ms", 0))
+        }
+    )
 
 @router.get("/{report_id}/preview")
 def get_report_preview(
@@ -1453,71 +1536,74 @@ def download_weekly_performance_19_sheet_excel(
     db: Session = Depends(get_db)
 ):
     """
-    Generates and downloads the official institutional Excel workbook.
+    Generates and downloads the official institutional Excel workbook with deterministic caching.
     """
-    import os
-    import tempfile
-    import uuid
-    import re
-    from backend.services.weekly_report_service import generate_weekly_performance_data
-    from backend.exporters.weekly_excel_generator import build_weekly_performance_excel
+    from fastapi.responses import FileResponse
+    from backend.services.pregenerated_report_service import get_or_create_report
+    from backend.models import ReportCache
 
     date_str = report_date or datetime.date.today().strftime("%d-%m-%Y")
-    safe_date_str = re.sub(r'[^\w\-]', '_', date_str)
+    filters = {
+        "report_date": date_str,
+        "last_week_contest": last_week_contest,
+        "current_week_contest": current_week_contest
+    }
 
-    data = generate_weekly_performance_data(
-        db, 
-        last_week_contest=last_week_contest,
-        current_week_contest=current_week_contest,
-        report_date=date_str, 
-        save_snapshot=False
+    res = get_or_create_report(
+        db=db,
+        report_type="WEEKLY_PERFORMANCE_19_SHEET",
+        format="xlsx",
+        filters=filters
     )
 
-    temp_dir = tempfile.gettempdir()
-    unique_id = uuid.uuid4().hex
-    file_path = os.path.join(temp_dir, f"LeetCode_Weekly_Report_{unique_id}.xlsx")
-    
-    build_weekly_performance_excel(data, file_path)
-
-    with open(file_path, "rb") as f:
-        file_bytes = f.read()
-        
-    try:
-        os.remove(file_path)
-    except Exception:
-        pass
-
-    return Response(
-        content=file_bytes,
+    cache_record = db.query(ReportCache).filter(ReportCache.id == res["cache_id"]).first()
+    return FileResponse(
+        path=cache_record.storage_path,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename=LeetCode_Weekly_Report_{safe_date_str}.xlsx"}
+        filename=res.get("filename") or f"LeetCode_Weekly_Report_{date_str}.xlsx",
+        headers={
+            "Content-Disposition": f'attachment; filename="{res.get("filename") or f"LeetCode_Weekly_Report_{date_str}.xlsx"}"',
+            "Cache-Control": "private, no-cache, no-store, must-revalidate",
+            "X-Report-Cache-Hit": str(res.get("cache_hit", False)),
+            "X-Report-Lookup-Ms": str(res.get("lookup_ms", 0))
+        }
     )
 
 @router.get("/college-weekly-format")
 @router.get("/export-college-format")
-async def download_college_weekly_format_excel(
+def download_college_weekly_format_excel(
     contest_id: Optional[int] = Query(None),
     db: Session = Depends(get_db)
 ):
     """
-    Generates and downloads the exact 2-Sheet Nandha Engineering College Report
-    (Sheet 1: Management Summary, Sheet 2: Student Details) with openpyxl styling.
+    Generates and downloads the exact 2-Sheet Nandha Engineering College Report with deterministic caching.
     """
-    from backend.database import SessionLocal
-    from backend.models import Contest
-    from backend.report_generator import CollegeReportGenerator
+    from fastapi.responses import FileResponse
+    from backend.services.pregenerated_report_service import get_or_create_report
+    from backend.models import ReportCache, Contest
 
     if not contest_id:
         latest_c = db.query(Contest).order_by(Contest.id.desc()).first()
         contest_id = latest_c.id if latest_c else 1
 
-    report_gen = CollegeReportGenerator(SessionLocal)
-    res = await report_gen.generate_complete_report(contest_id)
+    res = get_or_create_report(
+        db=db,
+        report_type="COLLEGE_FORMAT",
+        format="xlsx",
+        filters={"contest_id": contest_id}
+    )
 
-    return Response(
-        content=res["excel_bytes"],
+    cache_record = db.query(ReportCache).filter(ReportCache.id == res["cache_id"]).first()
+    return FileResponse(
+        path=cache_record.storage_path,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={res['filename']}"}
+        filename=res.get("filename") or "Nandha_College_Official_Weekly_Report.xlsx",
+        headers={
+            "Content-Disposition": f'attachment; filename="{res.get("filename") or "Nandha_College_Official_Weekly_Report.xlsx"}"',
+            "Cache-Control": "private, no-cache, no-store, must-revalidate",
+            "X-Report-Cache-Hit": str(res.get("cache_hit", False)),
+            "X-Report-Lookup-Ms": str(res.get("lookup_ms", 0))
+        }
     )
 
 

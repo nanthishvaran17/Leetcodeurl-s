@@ -53,20 +53,8 @@ class DownloadManager {
     this.updateState(state, options.onStateChange);
 
     try {
-      // 2. TOKEN REFRESH & AUTH
-      let token = localStorage.getItem('token') || '';
-      try {
-        const { auth } = await import('../firebase');
-        if (auth && auth.currentUser) {
-          const fbToken = await auth.currentUser.getIdToken();
-          if (fbToken) {
-            token = fbToken;
-            localStorage.setItem('token', fbToken);
-          }
-        }
-      } catch (tokenErr) {
-        console.warn('[DownloadManager] Token refresh note:', tokenErr);
-      }
+      // 2. FAST AUTHENTICATION (Synchronous read from local session)
+      const token = localStorage.getItem('token') || '';
 
       // 3. GENERATE REPORT VIA API (Axios Blob Request)
       // Note: We DO NOT emit notifyStart before the server responds successfully!
@@ -93,10 +81,9 @@ class DownloadManager {
         throw new Error(validation.error || 'Generated report payload is invalid or empty.');
       }
 
-      // 5. STATE MACHINE: GENERATION SUCCEEDED -> NOW START DOWNLOAD
+      // 5. STATE MACHINE: GENERATION SUCCEEDED -> NOW FINALIZE DOWNLOAD
       state.status = 'DOWNLOADING';
       this.updateState(state, options.onStateChange);
-      await downloadNotification.notifyStart(filename, mimeType);
 
       // 6. STORAGE & PLATFORM-SPECIFIC DISPATCH
       if (isNativeMobile()) {
@@ -105,7 +92,6 @@ class DownloadManager {
 
         // Modern Scoped Storage compliant: Write into Directory.Cache (app-sandboxed internal storage).
         // Zero permission requirements on Android 10, 11, 12, 13, 14, 15, 16+.
-        // Never targets external shared documents directory directly.
         const writeResult = await Filesystem.writeFile({
           path: filename,
           data: base64Data,
@@ -120,11 +106,18 @@ class DownloadManager {
         state.localPath = writeResult.uri;
         this.updateState(state, options.onStateChange);
 
-        await downloadNotification.notifySuccess(filename);
+        // Notify with full persistent file reference
+        await downloadNotification.notifySuccess({
+          filename,
+          localFileUri: writeResult.uri,
+          mimeType,
+          fileSizeBytes: blob.size,
+          reportId: options.params?.report_id || options.params?.reportId
+        });
 
         setTimeout(() => {
           if (writeResult.uri) {
-            shareOrOpenFile(writeResult.uri, filename);
+            shareOrOpenFile(writeResult.uri, filename, mimeType);
           }
         }, 250);
 
@@ -146,7 +139,13 @@ class DownloadManager {
       state.status = 'COMPLETED';
       this.updateState(state, options.onStateChange);
 
-      await downloadNotification.notifySuccess(filename);
+      await downloadNotification.notifySuccess({
+        filename,
+        localFileUri: blobUrl,
+        mimeType,
+        fileSizeBytes: blob.size,
+        reportId: options.params?.report_id || options.params?.reportId
+      });
 
       return { success: true, downloadId };
     } catch (err: any) {
@@ -187,7 +186,6 @@ class DownloadManager {
 
       state.status = 'DOWNLOADING';
       this.updateState(state);
-      await downloadNotification.notifyStart(safeFilename, effectiveMime);
 
       if (isNativeMobile()) {
         const { Filesystem, Directory } = await import('@capacitor/filesystem');
@@ -207,10 +205,15 @@ class DownloadManager {
         state.localPath = writeResult.uri;
         this.updateState(state);
 
-        await downloadNotification.notifySuccess(safeFilename);
+        await downloadNotification.notifySuccess({
+          filename: safeFilename,
+          localFileUri: writeResult.uri,
+          mimeType: effectiveMime,
+          fileSizeBytes: blob.size
+        });
 
         setTimeout(() => {
-          shareOrOpenFile(writeResult.uri, safeFilename);
+          shareOrOpenFile(writeResult.uri, safeFilename, effectiveMime);
         }, 250);
 
         return { success: true, downloadId };
@@ -229,7 +232,12 @@ class DownloadManager {
       state.status = 'COMPLETED';
       this.updateState(state);
 
-      await downloadNotification.notifySuccess(safeFilename);
+      await downloadNotification.notifySuccess({
+        filename: safeFilename,
+        localFileUri: blobUrl,
+        mimeType: effectiveMime,
+        fileSizeBytes: blob.size
+      });
 
       return { success: true, downloadId };
     } catch (err: any) {

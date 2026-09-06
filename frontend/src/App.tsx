@@ -158,6 +158,15 @@ export const App: React.FC = () => {
 
 
   useEffect(() => {
+    if (isAuthenticated) {
+      if (showLoginModal) setShowLoginModal(false);
+      if (activeTab === 'landing' && !window.location.hash) {
+        setActiveTab('dashboard');
+      }
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
     if (showLoginModal) {
       document.body.style.overflow = 'hidden';
     } else {

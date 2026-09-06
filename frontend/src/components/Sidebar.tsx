@@ -215,24 +215,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', stiffness: 350, damping: 32 }}
-            className="relative w-[88vw] max-w-[340px] sm:max-w-[360px] h-full shadow-2xl bg-white dark:bg-navy-950 pt-[max(1rem,env(safe-area-inset-top,1rem))] pb-[max(1rem,env(safe-area-inset-bottom,1rem))] px-5 flex flex-col justify-between overflow-hidden z-10 border-r border-slate-200 dark:border-navy-800"
+            className="relative w-[78vw] max-w-[285px] sm:max-w-[300px] h-full shadow-2xl bg-white dark:bg-navy-950 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))] px-3.5 sm:px-4 flex flex-col justify-between overflow-hidden z-10 border-r border-slate-200 dark:border-navy-800"
           >
-            {/* ── Region 1: Fixed Header ── */}
-            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-navy-800/80 shrink-0 mb-1 relative z-10">
+            {/* ── Region 1: Fixed Compact Header ── */}
+            <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-navy-800/80 shrink-0 mb-0.5 relative z-10">
               <button 
                 type="button"
                 onClick={() => {
                   setActiveTab('dashboard');
                   if (window.innerWidth < 1024) onClose();
                 }}
-                className="flex items-center space-x-3 hover:opacity-85 transition-opacity text-left cursor-pointer"
+                className="flex items-center space-x-2.5 hover:opacity-85 transition-opacity text-left cursor-pointer min-w-0"
               >
-                <CollegeLogo size={36} />
-                <div className="flex flex-col">
-                  <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                <CollegeLogo size={30} />
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider truncate">
                     Nandha Intelligence
                   </span>
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">
+                  <span className="text-[9.5px] font-bold text-slate-400 dark:text-slate-500 truncate">
                     Institutional Platform
                   </span>
                 </div>
@@ -240,26 +240,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
               <button
                 type="button"
                 onClick={onClose}
-                className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-navy-900 cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center transition-colors"
+                className="p-1.5 rounded-xl text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-navy-900 cursor-pointer min-w-[38px] min-h-[38px] flex items-center justify-center transition-colors shrink-0 ml-1"
                 title="Close Navigation Menu"
                 aria-label="Close Navigation Menu"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
 
-            {/* ── Region 2: Independently Scrollable Menu ── */}
-            <div className="space-y-7 overflow-y-auto pr-1 flex-1 min-h-0 custom-scrollbar overscroll-contain py-2 relative z-10">
+            {/* ── Region 2: Independently Scrollable Menu (Compact & Crisp) ── */}
+            <div className="space-y-4 sm:space-y-4.5 overflow-y-auto pr-0.5 flex-1 min-h-0 custom-scrollbar overscroll-contain py-1.5 relative z-10">
               {sections.map((section, sIdx) => (
-                <div key={sIdx} className="space-y-2">
-                  <div className="px-1 pb-1 flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                <div key={sIdx} className="space-y-1.5">
+                  <div className="px-1 pb-0.5 flex items-center justify-between">
+                    <span className="text-[10px] sm:text-[10.5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                       {section.title}
                     </span>
-                    <span className="w-8 h-px bg-slate-200 dark:bg-navy-800 shrink-0" />
+                    <span className="w-6 h-px bg-slate-200 dark:bg-navy-800 shrink-0" />
                   </div>
 
-                  <nav className="space-y-2">
+                  <nav className="space-y-1">
                     {section.items.map((item) => {
                       const Icon = item.icon;
                       const isActive = activeTab === item.id;
@@ -272,22 +272,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                             setActiveTab(item.id);
                             if (window.innerWidth < 1024) onClose();
                           }}
-                          className={`w-full min-h-[64px] flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-left cursor-pointer select-none transition-all duration-200 group active:scale-[0.98] ${
+                          className={`w-full min-h-[46px] sm:min-h-[50px] flex items-center justify-between px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-left cursor-pointer select-none transition-all duration-200 group active:scale-[0.98] ${
                             isActive
-                              ? 'bg-brand-600 text-white font-bold shadow-md shadow-brand-500/20 border border-brand-400/30'
+                              ? 'bg-brand-600 text-white font-bold shadow-sm shadow-brand-500/20 border border-brand-400/30'
                               : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100/90 dark:hover:bg-navy-900/90 hover:text-brand-600 dark:hover:text-brand-400'
                           }`}
                         >
-                          {/* Left Icon (44px) + Label */}
-                          <div className="flex items-center space-x-3.5 min-w-0 flex-1 pr-2 relative z-10">
-                            <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 ${
+                          {/* Left Icon + Label */}
+                          <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0 flex-1 pr-1.5 relative z-10">
+                            <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200 ${
                               isActive 
                                 ? 'bg-white/20 text-white shadow-inner scale-105' 
-                                : 'bg-slate-100 dark:bg-navy-900 text-slate-500 dark:text-slate-400 group-hover:bg-brand-50 dark:group-hover:bg-navy-800 group-hover:text-brand-600 dark:group-hover:text-brand-300 shadow-sm'
+                                : 'bg-slate-100 dark:bg-navy-900 text-slate-500 dark:text-slate-400 group-hover:bg-brand-50 dark:group-hover:bg-navy-800 group-hover:text-brand-600 dark:group-hover:text-brand-300 shadow-xs'
                             }`}>
-                              <Icon className="w-5 h-5 shrink-0 transition-transform duration-200" />
+                              <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0 transition-transform duration-200" />
                             </div>
-                            <span className={`text-[13px] sm:text-sm tracking-normal leading-snug break-words transition-colors ${
+                            <span className={`text-xs sm:text-[13px] tracking-normal leading-tight break-words transition-colors ${
                               isActive ? 'font-bold text-white' : 'font-semibold'
                             }`}>
                               {item.label}
@@ -295,11 +295,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                           </div>
 
                           {/* Badges & Consistent Right-Aligned Arrow */}
-                          <div className="flex items-center space-x-2 shrink-0 ml-auto relative z-10">
+                          <div className="flex items-center space-x-1.5 shrink-0 ml-auto relative z-10">
                             {item.badge && (
-                              <span className={`px-2 py-0.5 text-[10px] font-black rounded-md uppercase tracking-wider transition-all duration-200 shrink-0 inline-flex items-center gap-1 ${
+                              <span className={`px-1.5 py-0.5 text-[9px] font-black rounded-md uppercase tracking-wider transition-all duration-200 shrink-0 inline-flex items-center gap-1 ${
                                 isActive
-                                  ? 'bg-amber-400 text-slate-950 font-black shadow-sm'
+                                  ? 'bg-amber-400 text-slate-950 font-black shadow-xs'
                                   : item.badgeColor === 'purple'
                                   ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30'
                                   : item.badgeColor === 'indigo'
@@ -318,7 +318,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                               </span>
                             )}
 
-                            <ChevronRight className={`w-4 h-4 shrink-0 transition-all duration-200 ${
+                            <ChevronRight className={`w-3.5 h-3.5 shrink-0 transition-all duration-200 ${
                               isActive
                                 ? 'text-white/90 opacity-100 translate-x-0.5'
                                 : 'opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 text-slate-400 dark:text-slate-500'
@@ -333,41 +333,41 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
             </div>
 
             {/* ── Region 3: Fixed Mobile Action Bar (Theme & Auth) ── */}
-            <div className="pt-2.5 border-t border-slate-100 dark:border-navy-800/80 shrink-0 relative z-10 flex items-center gap-2">
+            <div className="pt-2 border-t border-slate-100 dark:border-navy-800/80 shrink-0 relative z-10 flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={toggleTheme}
-                className="h-[52px] min-h-[52px] px-3.5 rounded-xl text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-navy-900 border border-slate-200/80 dark:border-navy-800 transition-all duration-200 flex items-center justify-center flex-1 font-bold text-xs shadow-sm cursor-pointer"
+                className="h-[42px] min-h-[42px] sm:h-[46px] sm:min-h-[46px] px-2.5 rounded-xl text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-navy-900 border border-slate-200/80 dark:border-navy-800 transition-all duration-200 flex items-center justify-center flex-1 font-bold text-xs shadow-xs cursor-pointer active:scale-95"
               >
-                {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400 mr-2 shrink-0" /> : <Moon className="w-4 h-4 text-navy-700 dark:text-slate-300 mr-2 shrink-0" />}
+                {theme === 'dark' ? <Sun className="w-3.5 h-3.5 text-amber-400 mr-1.5 shrink-0" /> : <Moon className="w-3.5 h-3.5 text-navy-700 dark:text-slate-300 mr-1.5 shrink-0" />}
                 <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
               </button>
               {user && (
                 <button
                   type="button"
                   onClick={logout}
-                  className="h-[52px] min-h-[52px] px-3.5 rounded-xl text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/40 transition-colors flex items-center justify-center flex-1 font-bold text-xs shadow-sm cursor-pointer"
+                  className="h-[42px] min-h-[42px] sm:h-[46px] sm:min-h-[46px] px-2.5 rounded-xl text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/40 transition-colors flex items-center justify-center flex-1 font-bold text-xs shadow-xs cursor-pointer active:scale-95"
                 >
-                  <LogOut className="w-4 h-4 mr-2 shrink-0" />
+                  <LogOut className="w-3.5 h-3.5 mr-1.5 shrink-0" />
                   <span>Sign Out</span>
                 </button>
               )}
             </div>
 
             {/* ── Region 4: Fixed Minimal Sunday Session Window Card ── */}
-            <div className="pt-2 shrink-0 relative z-10">
-              <div className="p-3.5 rounded-2xl bg-slate-900 dark:bg-navy-900 text-white border border-emerald-500/25 shadow-md text-xs space-y-1.5 relative overflow-hidden group cursor-default max-h-[165px]">
-                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
-                <div className="flex items-center space-x-2 relative z-10">
-                  <Calendar className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span className="text-white text-xs font-black tracking-wide">Sunday Session Window</span>
+            <div className="pt-1.5 shrink-0 relative z-10">
+              <div className="p-2.5 sm:p-3 rounded-xl bg-slate-900 dark:bg-navy-900 text-white border border-emerald-500/25 shadow-xs text-xs space-y-1 relative overflow-hidden group cursor-default max-h-[145px]">
+                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-12 h-12 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
+                <div className="flex items-center space-x-1.5 relative z-10">
+                  <Calendar className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span className="text-white text-[11px] sm:text-xs font-black tracking-wide">Sunday Session Window</span>
                 </div>
-                <p className="text-[11px] text-slate-300 leading-snug font-medium relative z-10">
+                <p className="text-[10px] sm:text-[10.5px] text-slate-300 leading-snug font-medium relative z-10">
                   Official Window: <b className="text-emerald-400 font-bold">08:00 AM – 09:30 AM IST</b>.<br />
-                  Continuous LeetCode tracking & live sync.
+                  Continuous tracking & live sync.
                 </p>
-                <div className="pt-1 border-t border-slate-800/80 relative z-10">
-                  <p className="text-[10px] text-slate-400 font-semibold tracking-wide">
+                <div className="pt-0.5 border-t border-slate-800/80 relative z-10">
+                  <p className="text-[9px] text-slate-400 font-semibold tracking-wide">
                     Nandha Engineering College • Erode
                   </p>
                 </div>

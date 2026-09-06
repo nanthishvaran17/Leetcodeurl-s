@@ -134,7 +134,7 @@
   <!-- Firebase App & Auth SDK (Modular CDN) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAsP9hOeAxrIO5hbmlrPhmGa3p1vv-1Jek",
@@ -157,16 +157,20 @@
     const actionBtnEl = document.getElementById('action-btn');
     const cancelBtnEl = document.getElementById('cancel-btn');
 
-    // Get parameters
+    // Retrieve parameters with SessionStorage persistence
     const urlParams = new URLSearchParams(window.location.search);
-    const scheme = urlParams.get('scheme') || 'org.nandhaengg.leetcodesync';
-    const codeChallenge = urlParams.get('code_challenge') || '';
-    const state = urlParams.get('state') || '';
-    const apiBase = urlParams.get('api_base') || (window.location.origin.includes('localhost') ? 'http://localhost:8000/api' : (window.location.origin + '/api'));
+    const scheme = urlParams.get('scheme') || sessionStorage.getItem('nec_auth_scheme') || 'org.nandhaengg.leetcodesync';
+    const codeChallenge = urlParams.get('code_challenge') || sessionStorage.getItem('nec_auth_challenge') || '';
+    const state = urlParams.get('state') || sessionStorage.getItem('nec_auth_state') || '';
+    const apiBase = urlParams.get('api_base') || sessionStorage.getItem('nec_auth_apibase') || (window.location.origin.includes('localhost') ? 'http://localhost:8000/api' : (window.location.origin + '/api'));
+
+    // Cache parameters in sessionStorage to survive redirect
+    if (urlParams.get('scheme')) sessionStorage.setItem('nec_auth_scheme', scheme);
+    if (urlParams.get('code_challenge')) sessionStorage.setItem('nec_auth_challenge', codeChallenge);
+    if (urlParams.get('state')) sessionStorage.setItem('nec_auth_state', state);
+    if (urlParams.get('api_base')) sessionStorage.setItem('nec_auth_apibase', apiBase);
 
     function returnToAppWithAuthCode(authCode, returnState) {
-      // RFC 7636 PKCE Compliant Callback: Only authorization code + state parameter.
-      // ZERO sensitive tokens, access keys, or credentials in deep link URL!
       const params = new URLSearchParams();
       params.set('code', authCode);
       params.set('state', returnState);
@@ -176,6 +180,12 @@
       statusEl.innerText = "Returning to App...";
       subtitleEl.innerText = "Securing institutional session...";
       spinnerEl.style.display = 'none';
+
+      // Clear cached parameters
+      sessionStorage.removeItem('nec_auth_scheme');
+      sessionStorage.removeItem('nec_auth_challenge');
+      sessionStorage.removeItem('nec_auth_state');
+      sessionStorage.removeItem('nec_auth_apibase');
 
       window.location.href = deepLink;
 
@@ -198,15 +208,19 @@
       errorBoxEl.style.display = 'block';
       errorBoxEl.innerText = message;
       statusEl.innerText = "Sign-In Notice";
-      subtitleEl.innerText = "Please choose an action below.";
+      subtitleEl.innerText = "Google sign-in could not be completed. Please try again.";
       
       actionBtnEl.style.display = 'inline-flex';
       actionBtnEl.innerText = "Try Again";
-      actionBtnEl.onclick = () => { window.location.reload(); };
+      actionBtnEl.onclick = () => { 
+        sessionStorage.removeItem('nec_auth_redirect_started');
+        window.location.reload(); 
+      };
 
       cancelBtnEl.style.display = 'inline-flex';
+      cancelBtnEl.innerText = "Back to Sign In";
       cancelBtnEl.onclick = () => {
-        returnToAppWithError('cancelled');
+        returnToAppWithError('Google sign-in was cancelled.');
       };
     }
 
@@ -247,29 +261,59 @@
     }
 
     async function startAuth() {
+      // Set safety timeout to prevent infinite loading
+      const safetyTimeout = setTimeout(() => {
+        if (spinnerEl && spinnerEl.style.display !== 'none') {
+          showError('Authentication timed out. Please try again.');
+        }
+      }, 35000);
+
       try {
-        // 1. Check if returning from redirect flow first
-        const redirectRes = await getRedirectResult(auth).catch(() => null);
+        console.log('[MOBILE AUTH] Mobile authentication bridge started');
+        // 1. Check if returning from redirect result
+        const redirectRes = await getRedirectResult(auth).catch((err) => {
+          console.warn('[MOBILE AUTH] getRedirectResult note:', err);
+          return null;
+        });
+
         if (redirectRes && redirectRes.user) {
+          clearTimeout(safetyTimeout);
+          console.log('[MOBILE AUTH] Firebase result received, obtaining ID token...');
           const token = await redirectRes.user.getIdToken(true);
           await handleIdToken(token);
           return;
         }
 
-        // 2. Trigger Google Sign-In Popup in Chrome Custom Tab
-        const cred = await signInWithPopup(auth, provider);
-        if (cred && cred.user) {
-          const token = await cred.user.getIdToken(true);
+        // 2. Check if already has active Firebase user
+        if (auth.currentUser) {
+          clearTimeout(safetyTimeout);
+          console.log('[MOBILE AUTH] Active Firebase user found:', auth.currentUser.email);
+          const token = await auth.currentUser.getIdToken(true);
           await handleIdToken(token);
+          return;
         }
-      } catch (err) {
-        const code = err?.code || '';
-        if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
-          returnToAppWithError('cancelled');
-        } else if (code === 'auth/popup-blocked') {
+
+        // 3. Initiate Google Sign-in redirect
+        if (!sessionStorage.getItem('nec_auth_redirect_started')) {
+          sessionStorage.setItem('nec_auth_redirect_started', '1');
+          console.log('[MOBILE AUTH] Redirect initiated to Google OAuth...');
+          statusEl.innerText = "Connecting to Google...";
+          subtitleEl.innerText = "Opening Google account selector...";
           await signInWithRedirect(auth, provider);
         } else {
-          const msg = err?.message || 'Google sign-in was cancelled.';
+          // If we already attempted redirect but returned without user:
+          sessionStorage.removeItem('nec_auth_redirect_started');
+          clearTimeout(safetyTimeout);
+          showError('Google sign-in could not be completed. Please try again.');
+        }
+      } catch (err) {
+        clearTimeout(safetyTimeout);
+        console.error('[MOBILE AUTH] Bridge error:', err);
+        const code = err?.code || '';
+        if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+          returnToAppWithError('Google sign-in was cancelled.');
+        } else {
+          const msg = err?.message || 'Google sign-in could not be completed. Please try again.';
           showError(msg);
         }
       }
