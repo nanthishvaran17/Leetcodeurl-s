@@ -515,23 +515,42 @@ def run_migrations():
             except Exception as _e_fsa:
                 pass
 
-            # ── report_cache: ensure columns exist ────────────────
-            report_cache_cols = [
-                ("filter_hash", "VARCHAR(64)"),
-                ("report_type", "VARCHAR(100)"),
-                ("format", "VARCHAR(20)"),
-                ("filters_json", "TEXT"),
-                ("user_scope", "VARCHAR(100)"),
-                ("filename", "VARCHAR(255)"),
-                ("mime_type", "VARCHAR(100)"),
-                ("expires_at", "DATETIME")
-            ]
-            for col_name, col_type in report_cache_cols:
-                try:
-                    conn.execute(__import__('sqlalchemy').text(f"ALTER TABLE report_cache ADD COLUMN {col_name} {col_type}"))
-                    conn.commit()
-                except Exception:
-                    pass
+            # ── report_cache: ensure missing columns exist (PostgreSQL & SQLite safe) ────────────────
+            try:
+                from sqlalchemy import inspect, text
+                inspector = inspect(conn)
+                if inspector.has_table("report_cache"):
+                    existing_cols = {c["name"] for c in inspector.get_columns("report_cache")}
+                    date_type = "TIMESTAMP" if "postgresql" in str(engine.dialect.name).lower() else "DATETIME"
+                    report_cache_cols = [
+                        ("filter_hash", "VARCHAR(64)"),
+                        ("report_type", "VARCHAR(100)"),
+                        ("format", "VARCHAR(20)"),
+                        ("filters_json", "TEXT"),
+                        ("user_scope", "VARCHAR(100)"),
+                        ("filename", "VARCHAR(255)"),
+                        ("mime_type", "VARCHAR(100)"),
+                        ("storage_path", "VARCHAR(500)"),
+                        ("download_url", "VARCHAR(500)"),
+                        ("data_version", "VARCHAR(100)"),
+                        ("status", "VARCHAR(30)"),
+                        ("generated_at", date_type),
+                        ("expires_at", date_type),
+                        ("generation_time_ms", "FLOAT"),
+                        ("file_size_bytes", "INTEGER"),
+                        ("error_message", "TEXT"),
+                    ]
+                    for col_name, col_type in report_cache_cols:
+                        if col_name not in existing_cols:
+                            try:
+                                conn.execute(text(f"ALTER TABLE report_cache ADD COLUMN {col_name} {col_type}"))
+                                conn.commit()
+                                print(f"[DB Migration] Added missing column '{col_name}' to report_cache table.")
+                            except Exception as _e_rc_col:
+                                conn.rollback()
+                                print(f"[DB Migration] Note: Could not add column '{col_name}' to report_cache: {_e_rc_col}")
+            except Exception as _e_rc:
+                print(f"[DB Migration] report_cache column migration note: {_e_rc}")
 
             # Performance Indexes Creation (Universal for both SQLite and PostgreSQL)
             indexes = [
