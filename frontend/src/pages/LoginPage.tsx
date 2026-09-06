@@ -396,15 +396,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
           ======================================================== */}
       <div className="mobile-top-branding hide-on-desktop" role="banner">
         <div className="mobile-jubilee-badge">
-          <img
-            src="/nec_25_logo.png"
-            alt="25 NEC Silver Jubilee"
-            className="mobile-jubilee-img"
-            onError={(e) => {
-              // Fallback to CollegeLogo if image fails
-              (e.target as HTMLElement).style.display = 'none';
-            }}
-          />
+          <picture>
+            <source srcSet="/nec_25_logo.webp" type="image/webp" />
+            <img
+              src="/nec_25_logo.png"
+              alt="25 NEC Silver Jubilee"
+              className="mobile-jubilee-img"
+              width={70}
+              height={70}
+              // @ts-ignore
+              fetchPriority="high"
+              onError={(e) => {
+                // Fallback to CollegeLogo if image fails
+                (e.target as HTMLElement).style.display = 'none';
+              }}
+            />
+          </picture>
         </div>
         <span className="mobile-eyebrow">INSTITUTIONAL PORTAL</span>
         <h1 className="mobile-title">Nandha LeetCode Intelligence</h1>
