@@ -761,7 +761,7 @@ def create_staff_user(
 
     return {
         "success": True,
-        "message": f"Staff account for '{staff_user.username}' created successfully.",
+        "message": f"Staff account for '{staff_user.username}' created successfully." + (f" Temporary Password: {raw_pwd}" if not payload.password else ""),
         "staff": {
             "id": staff_user.id,
             "institutional_id": staff_user.institutional_id,

@@ -1409,7 +1409,7 @@ def forgot_password_reset(req: ResetPasswordSubmitRequest, background_tasks: Bac
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters.")
 
 
-    user = db.query(User).filter(User.id == otp_rec.user_id).first()
+    user = db.query(User).filter(User.id == user_id).first()
     if user:
         if verify_password(pwd, str(user.hashed_password or "")):
             raise HTTPException(status_code=400, detail="New password cannot be the same as the old password.")
