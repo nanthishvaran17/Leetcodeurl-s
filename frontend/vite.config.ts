@@ -108,12 +108,6 @@ export default defineConfig({
           if (id.includes('/src/utils/') || id.includes('/src/types/')) {
             return 'app-utils';
           }
-          // ── Page-level splits (each page is already lazy) ──────────────────
-          // These are automatically split by lazy() but manualChunks ensures
-          // shared components between pages don't get duplicated.
-          if (id.includes('/src/components/EmailDeliveryTab') || id.includes('/src/components/CertificateManagementModal') || id.includes('/src/components/PreviousWeekContestPanel') || id.includes('/src/components/ReportPreview') || id.includes('/src/components/LeaderboardTable')) {
-            return 'app-heavy-components';
-          }
         },
       },
     },
