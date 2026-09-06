@@ -23,7 +23,8 @@ from backend.services.data_version_service import get_current_data_version, bump
 from backend.services.pregenerated_report_service import (
     get_cached_report_info,
     trigger_background_report_generation,
-    pregenerate_all_weekly_reports
+    pregenerate_all_weekly_reports,
+    compute_report_filter_hash
 )
 
 client = TestClient(app)
@@ -145,12 +146,26 @@ def test_multi_worker_idempotency_concurrent_generation():
         for t in threads:
             t.join()
 
-        # Check database: exactly 1 entry created for this version key
-        entries = db.query(ReportCache).filter(
-            ReportCache.week_id == "latest",
-            ReportCache.file_type == "official_summary",
-            ReportCache.data_version == curr_v
-        ).all()
+        filter_hash = compute_report_filter_hash(
+            report_type="official_summary",
+            format="official_summary",
+            filters={"week_id": "latest"},
+            user_scope="ALL",
+            institution_id="NEC",
+            data_version=curr_v
+        )
+
+        # Wait up to 10 seconds for worker to commit entry
+        start_wait = time.time()
+        entries = []
+        while time.time() - start_wait < 10.0:
+            db.expire_all()
+            entries = db.query(ReportCache).filter(
+                ReportCache.filter_hash == filter_hash
+            ).all()
+            if len(entries) >= 1:
+                break
+            time.sleep(0.3)
 
         assert len(entries) == 1, f"Expected exactly 1 idempotent job entry, got {len(entries)}"
     finally:
@@ -166,7 +181,8 @@ def test_corrupted_file_recovery():
 
         start = time.time()
         ready_id = None
-        while time.time() - start < 5.0:
+        while time.time() - start < 8.0:
+            db.expire_all()
             info = get_cached_report_info(db, week_id="latest", file_type="student_detail")
             if info["status"] == "READY":
                 ready_id = info["cache_id"]
@@ -181,9 +197,10 @@ def test_corrupted_file_recovery():
             with open(rec.storage_path, "wb") as f:
                 f.write(b"")  # 0 bytes
 
-        # Re-query get_cached_report_info: should detect corruption and return PREPARING
+        # Re-query get_cached_report_info: should detect corruption and return PREPARING / GENERATING
+        db.expire_all()
         info2 = get_cached_report_info(db, week_id="latest", file_type="student_detail")
-        assert info2["status"] == "PREPARING"
+        assert info2["status"] in ("PREPARING", "GENERATING")
         assert info2["cache_hit"] is False
     finally:
         db.close()

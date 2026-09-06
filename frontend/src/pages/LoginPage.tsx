@@ -396,12 +396,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
           ======================================================== */}
       <header className="mobile-header hide-on-desktop" role="banner">
         <div className="mobile-header-bg">
-          <img
-            src="/nandha_gate_bg.jpg"
-            alt="Nandha Engineering College Main Campus"
-            className="mobile-header-img"
-            loading="eager"
-          />
+          <picture>
+            <source
+              type="image/webp"
+              srcSet="/nandha_gate_bg_mobile.webp 480w, /nandha_gate_bg.webp 1280w"
+              sizes="(max-width: 640px) 480px, 1280px"
+            />
+            <img
+              src="/nandha_gate_bg_mobile.webp"
+              alt="Nandha Engineering College Main Campus"
+              className="mobile-header-img"
+              loading="eager"
+              fetchPriority="high"
+              width="480"
+              height="130"
+            />
+          </picture>
           <div className="mobile-header-overlay" />
         </div>
         
