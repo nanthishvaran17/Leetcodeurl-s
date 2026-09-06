@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Radio } from 'lucide-react';
+import { Clock, Radio, Zap, ShieldCheck, Sparkles } from 'lucide-react';
 
 interface CountdownTimerProps {
   targetSeconds?: number;
@@ -131,92 +131,190 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetSeconds: _
 
   return (
     <motion.div
-      whileHover={{ scale: 1.01 }}
-      transition={{ type: "spring", stiffness: 300, damping: 25 }}
-      className={`glass-card p-6 rounded-3xl border transition-all duration-500 shadow-xl relative overflow-hidden ${
-        isSessionLive 
-          ? 'border-emerald-500/40 bg-gradient-to-r from-emerald-950/40 via-teal-950/30 to-slate-900 shadow-emerald-950/30' 
-          : 'border-brand-500/20 bg-gradient-to-r from-brand-900/10 via-indigo-900/10 to-purple-900/10'
+      whileHover={{ scale: 1.008 }}
+      transition={{ type: "spring", stiffness: 350, damping: 25 }}
+      className={`p-5 sm:p-6 rounded-3xl border transition-all duration-500 shadow-2xl relative overflow-hidden backdrop-blur-xl ${
+        isSessionLive
+          ? 'bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-emerald-600/20 dark:from-emerald-950/80 dark:via-slate-900/90 dark:to-teal-950/80 border-emerald-500/50 dark:border-emerald-400/50 shadow-emerald-500/20 dark:shadow-[0_0_40px_rgba(16,185,129,0.25)]'
+          : 'bg-gradient-to-br from-indigo-500/10 via-blue-500/5 to-purple-500/10 dark:from-slate-900/90 dark:via-indigo-950/50 dark:to-purple-950/60 border-indigo-200/80 dark:border-indigo-500/40 shadow-indigo-500/10 dark:shadow-[0_0_30px_rgba(99,102,241,0.2)]'
       }`}
     >
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 w-full">
+      {/* Dynamic Ambient Background Glow Elements */}
+      <div 
+        className={`absolute -top-16 -right-16 w-56 h-56 rounded-full blur-3xl pointer-events-none transition-all duration-700 ${
+          isSessionLive 
+            ? 'bg-emerald-400/25 dark:bg-emerald-500/20 animate-pulse' 
+            : 'bg-indigo-400/20 dark:bg-indigo-600/15'
+        }`} 
+      />
+      <div 
+        className={`absolute -bottom-16 -left-16 w-56 h-56 rounded-full blur-3xl pointer-events-none transition-all duration-700 ${
+          isSessionLive 
+            ? 'bg-teal-400/20 dark:bg-teal-500/15' 
+            : 'bg-purple-400/20 dark:bg-purple-600/15'
+        }`} 
+      />
+
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 w-full relative z-10">
         
-        <div className="flex items-center space-x-3.5">
-          <div className={`p-3 rounded-2xl text-white shadow-lg ${
-            isSessionLive ? 'bg-emerald-600 shadow-emerald-500/40 animate-pulse' : 'bg-brand-600 shadow-brand-500/30'
-          }`}>
-            {isSessionLive ? <Radio className="w-6 h-6 animate-pulse text-white" /> : <Clock className="w-6 h-6 animate-pulse" />}
+        {/* Left Section: Live Beacon & Title */}
+        <div className="flex items-center space-x-4">
+          
+          {/* Glowing Animated Icon Badge */}
+          <div className="relative flex items-center justify-center shrink-0">
+            {isSessionLive ? (
+              <>
+                <span className="absolute -inset-2 rounded-2xl bg-emerald-500/40 blur-md animate-ping opacity-75" />
+                <div className="relative p-3.5 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-600 to-emerald-500 text-white shadow-lg shadow-emerald-500/40 ring-2 ring-emerald-300 dark:ring-emerald-400/40">
+                  <Radio className="w-6 h-6 text-white animate-pulse" />
+                </div>
+              </>
+            ) : (
+              <div className="relative p-3.5 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30 ring-2 ring-indigo-200 dark:ring-indigo-500/40">
+                <Clock className="w-6 h-6 text-white" />
+              </div>
+            )}
           </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h4 className="font-black text-base text-slate-900 dark:text-white">
-                {isSessionLive ? 'SUNDAY SESSION LIVE NOW' : timing.headerTitle}
+
+          {/* Titles and Badges */}
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h4 className="font-black text-lg sm:text-xl tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                {isSessionLive ? (
+                  <>
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-600 dark:from-emerald-300 dark:via-teal-200 dark:to-emerald-400">
+                      SUNDAY SESSION LIVE NOW
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-slate-900 dark:text-white">
+                    {timing.headerTitle}
+                  </span>
+                )}
               </h4>
+
+              {/* Status Pill Badge */}
               {isSessionLive ? (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 animate-pulse">
-                  Live Window
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-600 text-white dark:bg-emerald-500/20 dark:text-emerald-300 dark:border dark:border-emerald-400/40 shadow-sm shadow-emerald-600/30">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-80"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                  </span>
+                  <span>LIVE WINDOW ACTIVE</span>
                 </span>
               ) : timing.phase === 'COUNTDOWN_TODAY' ? (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-brand-500/20 text-brand-600 dark:text-brand-400 border border-brand-500/30">
-                  Starting Today
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-brand-500/20 text-brand-700 dark:text-brand-300 border border-brand-500/30 shadow-sm">
+                  <Zap className="w-3 h-3 text-brand-600 dark:text-brand-400" />
+                  <span>Starting Today</span>
                 </span>
-              ) : null}
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-300/40 dark:border-indigo-500/30">
+                  <Sparkles className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
+                  <span>Weekly Automation</span>
+                </span>
+              )}
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              {timing.subTitle}
+
+            <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+              <ShieldCheck className={`w-4 h-4 shrink-0 ${isSessionLive ? 'text-emerald-600 dark:text-emerald-400' : 'text-indigo-600 dark:text-indigo-400'}`} />
+              <span>{timing.subTitle}</span>
             </p>
           </div>
         </div>
 
-        {/* Timer Numbers */}
-        <div className="flex items-center space-x-3 font-mono">
+        {/* Right Section: Time Counter Digit Cards */}
+        <div className="flex items-center space-x-2 sm:space-x-3 self-center sm:self-auto font-mono">
           {!isSessionLive && (
             <>
+              {/* Days Box */}
               <div className="flex flex-col items-center">
-                <span className="text-2xl md:text-3xl font-extrabold px-3 py-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-400 shadow-sm">
-                  {time.days}
+                <div className="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl bg-white/95 dark:bg-slate-900/90 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/40 shadow-md shadow-indigo-500/10 ring-1 ring-indigo-500/20 min-w-[52px] sm:min-w-[62px] text-center">
+                  <span className="text-2xl sm:text-3xl font-black tracking-tight">
+                    {time.days}
+                  </span>
+                </div>
+                <span className="text-[10px] font-extrabold font-sans mt-1.5 uppercase tracking-widest text-indigo-700 dark:text-indigo-300">
+                  DAYS
                 </span>
-                <span className="text-[10px] text-slate-400 font-sans mt-1 uppercase font-bold">Days</span>
               </div>
-              <span className="text-xl font-black text-slate-400">:</span>
+              <span className="text-xl sm:text-2xl font-black text-indigo-300 dark:text-indigo-500 mb-4">:</span>
             </>
           )}
+
+          {/* Hours Box */}
           <div className="flex flex-col items-center">
-            <span className={`text-2xl md:text-3xl font-extrabold px-3 py-1.5 rounded-2xl shadow-sm ${
+            <div className={`px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl min-w-[52px] sm:min-w-[62px] text-center shadow-md ring-1 transition-all ${
               isSessionLive 
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100'
+                ? 'bg-white/95 dark:bg-slate-900/90 text-emerald-600 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/50 ring-emerald-500/30 shadow-emerald-500/15' 
+                : 'bg-white/95 dark:bg-slate-900/90 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/40 ring-blue-500/20 shadow-blue-500/10'
             }`}>
-              {time.hours}
+              <span className="text-2xl sm:text-3xl font-black tracking-tight">
+                {time.hours}
+              </span>
+            </div>
+            <span className={`text-[10px] font-extrabold font-sans mt-1.5 uppercase tracking-widest ${
+              isSessionLive ? 'text-emerald-700 dark:text-emerald-300' : 'text-blue-700 dark:text-blue-300'
+            }`}>
+              HOURS
             </span>
-            <span className="text-[10px] text-slate-400 font-sans mt-1 uppercase font-bold">Hours</span>
           </div>
-          <span className="text-xl font-black text-slate-400">:</span>
+
+          <span className={`text-xl sm:text-2xl font-black mb-4 ${
+            isSessionLive ? 'text-emerald-400 dark:text-emerald-500 animate-pulse' : 'text-slate-300 dark:text-slate-600'
+          }`}>:</span>
+
+          {/* Minutes Box */}
           <div className="flex flex-col items-center">
-            <span className={`text-2xl md:text-3xl font-extrabold px-3 py-1.5 rounded-2xl shadow-sm ${
+            <div className={`px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl min-w-[52px] sm:min-w-[62px] text-center shadow-md ring-1 transition-all ${
               isSessionLive 
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100'
+                ? 'bg-white/95 dark:bg-slate-900/90 text-emerald-600 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/50 ring-emerald-500/30 shadow-emerald-500/15' 
+                : 'bg-white/95 dark:bg-slate-900/90 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-500/40 ring-purple-500/20 shadow-purple-500/10'
             }`}>
-              {time.minutes}
+              <span className="text-2xl sm:text-3xl font-black tracking-tight">
+                {time.minutes}
+              </span>
+            </div>
+            <span className={`text-[10px] font-extrabold font-sans mt-1.5 uppercase tracking-widest ${
+              isSessionLive ? 'text-emerald-700 dark:text-emerald-300' : 'text-purple-700 dark:text-purple-300'
+            }`}>
+              MINS
             </span>
-            <span className="text-[10px] text-slate-400 font-sans mt-1 uppercase font-bold">Mins</span>
           </div>
-          <span className="text-xl font-black text-slate-400">:</span>
+
+          <span className={`text-xl sm:text-2xl font-black mb-4 ${
+            isSessionLive ? 'text-emerald-400 dark:text-emerald-500 animate-pulse' : 'text-slate-300 dark:text-slate-600'
+          }`}>:</span>
+
+          {/* Seconds Box */}
           <div className="flex flex-col items-center">
-            <span className={`text-2xl md:text-3xl font-extrabold px-3 py-1.5 rounded-2xl shadow-sm ${
+            <div className={`px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl min-w-[52px] sm:min-w-[62px] text-center shadow-md ring-1 transition-all ${
               isSessionLive 
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                : 'bg-slate-100 dark:bg-slate-800 text-rose-500 dark:text-rose-400'
+                ? 'bg-emerald-600 text-white dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-400 dark:border-emerald-400/60 ring-emerald-400/40 shadow-emerald-600/30 animate-pulse' 
+                : 'bg-white/95 dark:bg-slate-900/90 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/40 ring-rose-500/20 shadow-rose-500/10'
             }`}>
-              {time.seconds}
+              <span className="text-2xl sm:text-3xl font-black tracking-tight">
+                {time.seconds}
+              </span>
+            </div>
+            <span className={`text-[10px] font-extrabold font-sans mt-1.5 uppercase tracking-widest ${
+              isSessionLive ? 'text-emerald-700 dark:text-emerald-300 font-black' : 'text-rose-600 dark:text-rose-400'
+            }`}>
+              SECS
             </span>
-            <span className="text-[10px] text-slate-400 font-sans mt-1 uppercase font-bold">Secs</span>
           </div>
+
+          {/* Audio Wave / Pulse Visualizer when Live */}
+          {isSessionLive && (
+            <div className="hidden sm:flex items-end space-x-1 h-8 pl-3 pb-4">
+              <span className="w-1 bg-emerald-500 rounded-full animate-[bounce_0.8s_infinite_100ms] h-full" />
+              <span className="w-1 bg-emerald-500 rounded-full animate-[bounce_0.8s_infinite_300ms] h-3/4" />
+              <span className="w-1 bg-emerald-500 rounded-full animate-[bounce_0.8s_infinite_200ms] h-5/6" />
+              <span className="w-1 bg-emerald-500 rounded-full animate-[bounce_0.8s_infinite_400ms] h-1/2" />
+            </div>
+          )}
         </div>
 
       </div>
     </motion.div>
   );
 };
-
