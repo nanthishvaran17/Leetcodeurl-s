@@ -3,6 +3,9 @@ import { auth } from '../firebase';
 
 // Smart API Base URL Resolution for Local Development vs Production Hosting
 const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return '/api';
+  }
   const envUrl = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_API_URL || import.meta.env?.VITE_API_BASE_URL));
   if (envUrl) {
     const cleanUrl = envUrl.replace(/\/+$/, '');
@@ -38,7 +41,7 @@ const api = axios.create({
 
 // In-flight GET request deduplication map to prevent redundant concurrent network round-trips
 const inFlightRequests = new Map<string, Promise<any>>();
-const activeControllers = new Map<string, AbortController>();
+const activeControllers = new Map<string, { controller: AbortController; key: string }>();
 const responseCache = new Map<string, { timestamp: number; data: any }>();
 const CACHE_TTL_MS = 120_000; // 2 minutes — fast-enough for live staff use, eliminates redundant fetches
 
@@ -241,13 +244,14 @@ api.get = async function (url: string, config?: any) {
   // Ensures that rapid filter changes cancel obsolete requests.
   const baseUrl = url.split('?')[0];
   
-  // Only cancel if this isn't a duplicate in-flight request (handled below)
+  // Only cancel previous request if parameters changed (different key), NOT when concurrent components call the same endpoint
   if (!inFlightRequests.has(key)) {
-    if (activeControllers.has(baseUrl)) {
-      activeControllers.get(baseUrl)?.abort();
+    const existing = activeControllers.get(baseUrl);
+    if (existing && existing.key !== key) {
+      existing.controller.abort();
     }
     const controller = new AbortController();
-    activeControllers.set(baseUrl, controller);
+    activeControllers.set(baseUrl, { controller, key });
     if (!config) config = {};
     config.signal = controller.signal;
   }
@@ -271,7 +275,7 @@ api.get = async function (url: string, config?: any) {
           })
           .finally(() => {
             inFlightRequests.delete(key);
-            if (activeControllers.get(baseUrl)?.signal === config?.signal) {
+            if (activeControllers.get(baseUrl)?.controller.signal === config?.signal) {
                 activeControllers.delete(baseUrl);
             }
           });
@@ -298,7 +302,7 @@ api.get = async function (url: string, config?: any) {
       throw err;
   }).finally(() => {
     inFlightRequests.delete(key);
-    if (activeControllers.get(baseUrl)?.signal === config?.signal) {
+    if (activeControllers.get(baseUrl)?.controller.signal === config?.signal) {
         activeControllers.delete(baseUrl);
     }
   });

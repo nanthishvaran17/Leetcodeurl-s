@@ -414,9 +414,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
         <div className="relative z-10 max-w-3xl space-y-6">
           <motion.div
-            initial={{ opacity: 0, x: -15 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1, duration: 0.4 }}
+            initial={{ opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0 }}
             className="inline-flex items-center space-x-2.5 px-3.5 py-1.5 rounded-2xl bg-white/10 border border-white/20 text-white text-xs font-bold backdrop-blur-md shadow-lg"
           >
             <CollegeLogo size={24} className="w-6 h-6 animate-float" />
@@ -424,9 +423,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
             className="text-3xl md:text-5xl font-black tracking-tight leading-tight"
           >
             Nandha LeetCode <br />
@@ -436,9 +434,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </motion.h1>
 
           <motion.div
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
             className="space-y-3"
           >
             <div className="flex flex-wrap items-center gap-2">

@@ -399,8 +399,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
           <picture>
             <source
               type="image/webp"
-              srcSet="/nandha_gate_bg_mobile.webp 480w, /nandha_gate_bg.webp 1280w"
-              sizes="(max-width: 640px) 480px, 1280px"
+              srcSet="/nandha_gate_bg_mobile.webp 480w, /nandha_gate_bg.webp 840w"
+              sizes="100vw"
             />
             <img
               src="/nandha_gate_bg_mobile.webp"

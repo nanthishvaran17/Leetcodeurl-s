@@ -116,24 +116,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           isVerifyingRef.current = false;
         }
 
-        // 2. Check HttpOnly server session endpoint
-        const res = await api.get('/auth/session').catch(() => null);
-        if (res && res.data && res.data.authenticated && res.data.user && isMounted) {
-          const u = res.data.user;
-          const formattedUser: AuthUser = {
-            uid: `user_${u.id}`,
-            name: u.username || 'User',
-            email: u.email || '',
-            role: u.role || 'Admin',
-            isProfileLinked: true,
-            id: u.id,
-            username: u.username,
-            department_id: u.department_id || null
-          };
-          setUser(formattedUser);
-          localStorage.setItem('user', JSON.stringify(formattedUser));
-          setAuthState('AUTHORIZED');
-          return;
+        // 2. Check HttpOnly server session endpoint if token or storedUser exists
+        const storedToken = localStorage.getItem('token');
+        const existingStoredUser = localStorage.getItem('user');
+        if (storedToken || existingStoredUser) {
+          const res = await api.get('/auth/session').catch(() => null);
+          if (res && res.data && res.data.authenticated && res.data.user && isMounted) {
+            const u = res.data.user;
+            const formattedUser: AuthUser = {
+              uid: `user_${u.id}`,
+              name: u.username || 'User',
+              email: u.email || '',
+              role: u.role || 'Admin',
+              isProfileLinked: true,
+              id: u.id,
+              username: u.username,
+              department_id: u.department_id || null
+            };
+            setUser(formattedUser);
+            localStorage.setItem('user', JSON.stringify(formattedUser));
+            setAuthState('AUTHORIZED');
+            return;
+          }
         }
 
         // 3. If stored user exists and session check didn't fail hard, keep authorized state

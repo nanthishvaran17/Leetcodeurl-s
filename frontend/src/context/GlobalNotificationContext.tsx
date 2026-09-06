@@ -66,10 +66,12 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
   const { notify } = useToastNotification();
   const seenNotificationIdsRef = React.useRef(new Set<string>());
 
-  // Request browser desktop notification permission if supported
-  useEffect(() => {
+  // Request browser desktop notification permission on explicit user action
+  const requestNotificationPermission = useCallback(async () => {
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission().catch(() => {});
+      try {
+        await Notification.requestPermission();
+      } catch (_e) {}
     }
   }, []);
 

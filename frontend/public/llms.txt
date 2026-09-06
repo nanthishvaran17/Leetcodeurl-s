@@ -1,0 +1,8 @@
+# Nandha Engineering College — LeetCode Intelligence Platform
+
+> Official LeetCode Tracking, Analytics, Leaderboard & Automated Reporting System for Nandha Engineering College (NEC), Erode, Tamil Nadu, India.
+
+## Key Resources
+- [Main Landing Page](https://leetcodeurl-s-roan.vercel.app/): Overview of institutional coding performance and 25 years of engineering excellence.
+- [Public Leaderboard](https://leetcodeurl-s-roan.vercel.app/public-leaderboard): Real-time ranking of 273+ institutional student coders.
+- [Portal Login](https://leetcodeurl-s-roan.vercel.app/login): Authenticated access for Staff, HOD, Principal, Admin, and Students.

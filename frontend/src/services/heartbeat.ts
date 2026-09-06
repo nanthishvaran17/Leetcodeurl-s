@@ -15,6 +15,9 @@ let heartbeatTimer: any = null;
 let isPinging = false;
 
 const getHealthUrl = (): string => {
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return '/api/system/health';
+  }
   const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
   if (envUrl) {
     const origin = envUrl.replace(/\/api\/?$/, '').replace(/\/+$/, '');

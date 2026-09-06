@@ -501,6 +501,12 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-navy-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+      <a 
+        href="#main-content" 
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100000] focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-md shadow-lg"
+      >
+        Skip to main content
+      </a>
       
       {/* COMMAND PALETTE */}
       <CommandPalette 
@@ -537,6 +543,7 @@ export const App: React.FC = () => {
         {/* Main Content View Container with Framer Motion Transition */}
         <AnimatePresence mode="wait">
           <motion.main
+            id="main-content"
             key={activeTab}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}

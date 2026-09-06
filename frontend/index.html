@@ -37,19 +37,23 @@
   <link rel="preconnect" href="https://leetcodeurl-s-3mig.onrender.com" crossorigin />
 
   <!-- LCP Hero Image Preload for Mobile -->
-  <link rel="preload" as="image" href="/nandha_gate_bg_mobile.webp" type="image/webp" media="(max-width: 899px)" fetchpriority="high" />
+  <link rel="preload" as="image" href="/nandha_gate_bg_mobile.webp" imagesrcset="/nandha_gate_bg_mobile.webp 480w, /nandha_gate_bg.webp 840w" imagesizes="100vw" type="image/webp" media="(max-width: 899px)" fetchpriority="high" />
 
   <!-- Fonts — High-Precision Institutional Typography (Non-blocking & Swapped) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+  </noscript>
 
   <!-- SEO / Page Metadata -->
-  <title>LeetCode Tracker</title>
-  <meta name="title" content="Nandha LeetCode Intelligence" />
+  <title>LeetCode Tracker | Nandha Engineering College</title>
+  <meta name="title" content="Nandha LeetCode Intelligence Platform" />
   <meta name="description" content="NEC 25 Years of Excellence — LeetCode Tracker & Intelligence Platform for Nandha Engineering College, Erode. Track student performance, leaderboards, contests, and reports." />
   <meta name="keywords" content="Nandha Engineering College, LeetCode, tracker, intelligence, student performance, coding, competitive programming, NEC" />
   <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://leetcodeurl-s-roan.vercel.app/" />
 
   <!-- Open Graph / Social -->
   <meta property="og:type" content="website" />
