@@ -34,8 +34,28 @@ export function isNativeMobile(): boolean {
 }
 
 /** Convert a Blob to a raw base64 string */
-export function blobToBase64(blob: Blob): Promise<string> {
+export async function blobToBase64(blob: Blob): Promise<string> {
+  if (blob && typeof blob.arrayBuffer === 'function') {
+    const buffer = await blob.arrayBuffer();
+    if (typeof (globalThis as any).Buffer !== 'undefined') {
+      return (globalThis as any).Buffer.from(buffer).toString('base64');
+    }
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    if (typeof btoa === 'function') {
+      return btoa(binary);
+    }
+  }
+
   return new Promise((resolve, reject) => {
+    if (typeof FileReader === 'undefined') {
+      reject(new Error('FileReader is not supported in this runtime.'));
+      return;
+    }
     const reader = new FileReader();
     reader.onerror = () => reject(new Error('Failed to read file binary.'));
     reader.onload = () => {

@@ -14,25 +14,15 @@ export const useCapacitorPush = () => {
 
     let isMounted = true;
 
-    const registerPush = async () => {
+    const syncDeviceToken = async () => {
       try {
         await createNotificationChannels();
-
-        let permStatus = await PushNotifications.checkPermissions();
-
-        if (permStatus.receive === 'prompt') {
-          permStatus = await PushNotifications.requestPermissions();
+        const permStatus = await PushNotifications.checkPermissions();
+        if (permStatus.receive === 'granted') {
+          await PushNotifications.register();
         }
-
-        if (permStatus.receive !== 'granted') {
-          console.log('[CAPACITOR PUSH] User denied push permissions');
-          return;
-        }
-
-        if (!isMounted) return;
-        await PushNotifications.register();
       } catch (err) {
-        console.error('[CAPACITOR PUSH] Error requesting push permissions:', err);
+        console.error('[CAPACITOR PUSH] Token sync check failed:', err);
       }
     };
 
@@ -45,64 +35,12 @@ export const useCapacitorPush = () => {
       }
     };
 
-    // Register listeners only once
-    const addListeners = async () => {
-      window.addEventListener('trigger_native_push_notification', handleNativeTrigger);
-
-      await PushNotifications.addListener('registration', async (capacitorToken) => {
-        console.log('[CAPACITOR PUSH] Push registration success, token:', capacitorToken.value);
-        try {
-          await fetch(`${API_BASE_URL}/api/notifications/register-device`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-              device_token: capacitorToken.value,
-              platform: Capacitor.getPlatform(),
-              app_version: '2.0.0'
-            })
-          });
-        } catch (e) {
-          console.warn('[CAPACITOR PUSH] Backend registration failed:', e);
-        }
-      });
-
-      await PushNotifications.addListener('registrationError', (error) => {
-        console.error('[CAPACITOR PUSH] Error on registration:', error);
-      });
-
-      await PushNotifications.addListener('pushNotificationReceived', (notification) => {
-        console.log('[CAPACITOR PUSH] Push received in foreground: ', notification);
-        triggerNativeStatusBarNotification(
-          notification.title || 'LeetCode Tracker',
-          notification.body || '',
-          notification.data
-        );
-        window.dispatchEvent(new CustomEvent('fcm_notification_received', { detail: notification }));
-      });
-
-      await PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-        console.log('[CAPACITOR PUSH] Push action performed: ', notification);
-        const data = notification.notification.data;
-        if (data && data.actionRoute) {
-          let route = data.actionRoute;
-          if (!route.startsWith('/')) route = '/' + route;
-          window.location.href = route;
-        }
-      });
-    };
-
-    addListeners();
-    registerPush();
+    window.addEventListener('trigger_native_push_notification', handleNativeTrigger);
+    syncDeviceToken();
 
     return () => {
       isMounted = false;
       window.removeEventListener('trigger_native_push_notification', handleNativeTrigger);
-      if (Capacitor.isNativePlatform()) {
-        PushNotifications.removeAllListeners();
-      }
     };
   }, [isAuthenticated, token]);
 };

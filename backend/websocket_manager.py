@@ -277,21 +277,30 @@ class ConnectionManager:
         for conn in disconnected:
             self.disconnect(conn)
 
+    def _run_async_safely(self, coro):
+        """Thread-safe runner for async operations from synchronous callers."""
+        try:
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = None
+
+            if loop and loop.is_running():
+                return asyncio.create_task(coro)
+            else:
+                new_loop = asyncio.new_event_loop()
+                try:
+                    return new_loop.run_until_complete(coro)
+                finally:
+                    new_loop.close()
+        except Exception as e:
+            logger.warning(f"Could not execute websocket coroutine safely: {e}")
+
     def broadcast_sync(self, message: dict):
         """Thread-safe synchronous wrapper around broadcast."""
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                asyncio.create_task(self.broadcast(message))
-            else:
-                loop.run_until_complete(self.broadcast(message))
-        except Exception as e:
-            try:
-                new_loop = asyncio.new_event_loop()
-                new_loop.run_until_complete(self.broadcast(message))
-                new_loop.close()
-            except Exception as inner_e:
-                logger.warning(f"Could not broadcast sync event: {inner_e}")
+        if not self.active_connections and not self.redis_client:
+            return
+        self._run_async_safely(self.broadcast(message))
 
     async def send_to_user(self, user_id: str, message: dict):
         """Sends a WebSocket message to all active connections matching user_id, email, or username."""
@@ -334,19 +343,10 @@ class ConnectionManager:
 
     def send_to_user_sync(self, user_id: str, message: dict):
         """Thread-safe synchronous wrapper around send_to_user."""
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                asyncio.create_task(self.send_to_user(user_id, message))
-            else:
-                loop.run_until_complete(self.send_to_user(user_id, message))
-        except Exception as e:
-            try:
-                new_loop = asyncio.new_event_loop()
-                new_loop.run_until_complete(self.send_to_user(user_id, message))
-                new_loop.close()
-            except Exception as inner_e:
-                logger.warning(f"Could not send sync message to user {user_id}: {inner_e}")
+        if not self.active_connections:
+            return
+        self._run_async_safely(self.send_to_user(user_id, message))
+
     async def send_to_users(self, user_ids: List[str], message: dict):
         """Sends a WebSocket message to multiple targeted users."""
         for uid in set(user_ids):
@@ -355,19 +355,9 @@ class ConnectionManager:
 
     def send_to_users_sync(self, user_ids: List[str], message: dict):
         """Thread-safe synchronous wrapper to send WebSocket messages to multiple users."""
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                asyncio.create_task(self.send_to_users(user_ids, message))
-            else:
-                loop.run_until_complete(self.send_to_users(user_ids, message))
-        except Exception as e:
-            try:
-                new_loop = asyncio.new_event_loop()
-                new_loop.run_until_complete(self.send_to_users(user_ids, message))
-                new_loop.close()
-            except Exception as inner_e:
-                logger.warning(f"Could not send sync message to users {user_ids}: {inner_e}")
+        if not self.active_connections:
+            return
+        self._run_async_safely(self.send_to_users(user_ids, message))
 
     async def broadcast_contest_result(
         self,

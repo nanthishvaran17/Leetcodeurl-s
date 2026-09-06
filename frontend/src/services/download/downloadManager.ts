@@ -20,9 +20,11 @@ class DownloadManager {
   private stateListeners: Set<(downloads: DownloadState[]) => void> = new Set();
 
   /**
-   * High-Performance Direct Download Method.
-   * Eliminates sequential /prepare roundtrips, eliminates token refresh delays,
-   * and uses native C++ Android Filesystem.downloadFile streaming on mobile.
+   * Scoped-Storage Compliant Download & Report Generation Method.
+   * - Uses app-sandboxed cache (Scoped Storage compliant across all modern Android versions)
+   * - Emits notifications ONLY following the verified state machine:
+   *   GENERATING (no start notification) -> GENERATION SUCCESS -> START DOWNLOAD notification -> SUCCESS notification.
+   * - If generation fails, stops all download actions and shows clean error notification.
    */
   async download(options: DownloadOptions): Promise<{ success: boolean; downloadId: string; error?: string }> {
     const startTime = performance.now();
@@ -32,11 +34,11 @@ class DownloadManager {
 
     const downloadId = `${endpoint}:${filename}:${JSON.stringify(options.params || {})}`;
 
-    // 1. DUPLICATE CLICK PROTECTION: Block fast double-taps
+    // 1. DUPLICATE CLICK PROTECTION: Block concurrent duplicate taps
     const existing = this.activeDownloads.get(downloadId);
     if (existing && ['AUTHENTICATING', 'PREPARING', 'READY', 'DOWNLOADING', 'STARTED'].includes(existing.status)) {
       console.warn('[DownloadManager] Duplicate download tap blocked:', downloadId);
-      return { success: false, downloadId, error: 'Download is already in progress.' };
+      return { success: false, downloadId, error: 'A report generation or download is already in progress.' };
     }
 
     const state: DownloadState = {
@@ -44,100 +46,37 @@ class DownloadManager {
       endpoint,
       filename,
       mimeType,
-      status: 'DOWNLOADING',
+      status: 'PREPARING',
       startTime: Date.now(),
     };
 
     this.updateState(state, options.onStateChange);
 
-    // 2. SECURE TOKEN VERIFICATION: Verify and refresh token securely if needed
-    let token = localStorage.getItem('token') || '';
     try {
-      const { auth } = await import('../firebase');
-      if (auth && auth.currentUser) {
-        // getIdToken(false) returns cached token instantly if valid, or securely refreshes if expired
-        const fbToken = await auth.currentUser.getIdToken();
-        if (fbToken) {
-          token = fbToken;
-          localStorage.setItem('token', fbToken);
-        }
-      }
-    } catch (tokenErr) {
-      console.warn('[DownloadManager] Token refresh failed. Proceeding with fallback handling.');
-    }
-
-    // Construct target URL
-    const apiBase = api.defaults.baseURL || '/api';
-    const cleanBase = apiBase.replace(/\/+$/, '');
-    let queryString = '';
-    if (options.params && Object.keys(options.params).length > 0) {
-      const sp = new URLSearchParams();
-      Object.entries(options.params).forEach(([k, v]) => {
-        if (v !== undefined && v !== null) sp.append(k, String(v));
-      });
-      queryString = `?${sp.toString()}`;
-    }
-
-    const targetUrl = endpoint.startsWith('http')
-      ? `${endpoint}${queryString}`
-      : `${cleanBase}${endpoint.startsWith('/') ? '' : '/'}${endpoint}${queryString}`;
-
-    // ─── FAST PATH A: NATIVE ANDROID CAPACITOR MOBILE APP ────────────────────────
-    if (isNativeMobile()) {
-      await downloadNotification.notifyStart(filename, mimeType);
-
+      // 2. TOKEN REFRESH & AUTH
+      let token = localStorage.getItem('token') || '';
       try {
-        const { Filesystem, Directory } = await import('@capacitor/filesystem');
-        const headers: Record<string, string> = {};
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        // Native Android C++/Java Direct Stream Download directly to Documents disk
-        // ZERO JS memory allocation, ZERO Base64 conversion, ZERO FileReader blocking!
-        const downloadRes = await Filesystem.downloadFile({
-          url: targetUrl,
-          path: filename,
-          directory: Directory.Documents,
-          headers,
-          recursive: true,
-        });
-
-        // Some Capacitor versions do not throw on 401 HTTP response, so we must verify the file or fall back
-        // If it's a 401 error, fallback to Axios which correctly handles the 401 token refresh loop
-        if (downloadRes.path && (downloadRes.path.endsWith('.json') || downloadRes.path.includes('unauthorized'))) {
-           throw new Error('Possible 401 Error in native download, falling back to Axios');
-        }
-
-        const totalMs = Math.round(performance.now() - startTime);
-        console.log(`[FAST_DOWNLOAD] Completed natively in ${totalMs}ms -> ${downloadRes.path || ''}`);
-
-        state.status = 'COMPLETED';
-        state.localPath = downloadRes.path || '';
-        this.updateState(state, options.onStateChange);
-
-        await downloadNotification.notifySuccess(filename);
-
-        setTimeout(() => {
-          if (downloadRes.path) {
-            shareOrOpenFile(downloadRes.path, filename);
+        const { auth } = await import('../firebase');
+        if (auth && auth.currentUser) {
+          const fbToken = await auth.currentUser.getIdToken();
+          if (fbToken) {
+            token = fbToken;
+            localStorage.setItem('token', fbToken);
           }
-        }, 250);
-
-        return { success: true, downloadId };
-      } catch (err: any) {
-        console.warn('[FAST_DOWNLOAD] Native downloadFile fallback to Blob stream:', err);
-        return this.handleFallbackMobileBlobDownload(endpoint, options.params, filename, mimeType, state, startTime, options.onStateChange);
+        }
+      } catch (tokenErr) {
+        console.warn('[DownloadManager] Token refresh note:', tokenErr);
       }
-    }
 
-    // ─── FAST PATH B: WEB BROWSER DIRECT 1-REQUEST DOWNLOAD ──────────────────────
-    try {
-      await downloadNotification.notifyStart(filename, mimeType);
-
-      const response = await api.get(endpoint, {
+      // 3. GENERATE REPORT VIA API (Axios Blob Request)
+      // Note: We DO NOT emit notifyStart before the server responds successfully!
+      const response = await api.request({
+        url: endpoint,
+        method: options.method || 'GET',
         params: options.params || {},
+        data: options.data,
         responseType: 'blob',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
         onDownloadProgress: (progressEvent) => {
           if (progressEvent.total) {
             const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -147,11 +86,54 @@ class DownloadManager {
         },
       });
 
+      // 4. VALIDATE REPORT PAYLOAD
       const blob = response.data;
       const validation = await validateFileBlob(blob, mimeType);
       if (!validation.valid) {
-        throw new Error(validation.error || 'Downloaded file payload is invalid.');
+        throw new Error(validation.error || 'Generated report payload is invalid or empty.');
       }
+
+      // 5. STATE MACHINE: GENERATION SUCCEEDED -> NOW START DOWNLOAD
+      state.status = 'DOWNLOADING';
+      this.updateState(state, options.onStateChange);
+      await downloadNotification.notifyStart(filename, mimeType);
+
+      // 6. STORAGE & PLATFORM-SPECIFIC DISPATCH
+      if (isNativeMobile()) {
+        const { Filesystem, Directory } = await import('@capacitor/filesystem');
+        const base64Data = await blobToBase64(blob);
+
+        // Modern Scoped Storage compliant: Write into Directory.Cache (app-sandboxed internal storage).
+        // Zero permission requirements on Android 10, 11, 12, 13, 14, 15, 16+.
+        // Never targets external shared documents directory directly.
+        const writeResult = await Filesystem.writeFile({
+          path: filename,
+          data: base64Data,
+          directory: Directory.Cache,
+          recursive: true,
+        });
+
+        const totalMs = Math.round(performance.now() - startTime);
+        console.log(`[DownloadManager] Mobile report saved to cache in ${totalMs}ms -> ${writeResult.uri}`);
+
+        state.status = 'COMPLETED';
+        state.localPath = writeResult.uri;
+        this.updateState(state, options.onStateChange);
+
+        await downloadNotification.notifySuccess(filename);
+
+        setTimeout(() => {
+          if (writeResult.uri) {
+            shareOrOpenFile(writeResult.uri, filename);
+          }
+        }, 250);
+
+        return { success: true, downloadId };
+      }
+
+      // ─── WEB BROWSER PATH ────────────────────────────────────────────────────────
+      state.status = 'STARTED';
+      this.updateState(state, options.onStateChange);
 
       const blobUrl = URL.createObjectURL(blob);
       await triggerBrowserAnchorDownload(blobUrl, filename);
@@ -159,65 +141,21 @@ class DownloadManager {
       setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
 
       const totalMs = Math.round(performance.now() - startTime);
-      console.log(`[FAST_DOWNLOAD] Web download completed in ${totalMs}ms`);
+      console.log(`[DownloadManager] Web report download completed in ${totalMs}ms`);
 
       state.status = 'COMPLETED';
       this.updateState(state, options.onStateChange);
 
+      await downloadNotification.notifySuccess(filename);
+
       return { success: true, downloadId };
     } catch (err: any) {
       return await this.handleDownloadError(err, state, filename, options.onStateChange);
-    }
-  }
-
-  /** Fallback Mobile Download using Axios Blob if Filesystem.downloadFile fails */
-  private async handleFallbackMobileBlobDownload(
-    endpoint: string,
-    params: any,
-    filename: string,
-    mimeType: string,
-    state: DownloadState,
-    startTime: number,
-    onStateChange?: (state: DownloadState) => void
-  ): Promise<{ success: boolean; downloadId: string; error?: string }> {
-    try {
-      const response = await api.get(endpoint, {
-        params: params || {},
-        responseType: 'blob',
-      });
-
-      const blob = response.data;
-      const validation = await validateFileBlob(blob, mimeType);
-      if (!validation.valid) {
-        throw new Error(validation.error || 'Invalid file payload.');
-      }
-
-      const { Filesystem, Directory } = await import('@capacitor/filesystem');
-      const base64Data = await blobToBase64(blob);
-
-      const writeResult = await Filesystem.writeFile({
-        path: filename,
-        data: base64Data,
-        directory: Directory.Documents,
-        recursive: true,
-      });
-
-      const totalMs = Math.round(performance.now() - startTime);
-      console.log(`[FAST_DOWNLOAD] Fallback blob download completed in ${totalMs}ms`);
-
-      state.status = 'COMPLETED';
-      state.localPath = writeResult.uri;
-      this.updateState(state, onStateChange);
-
-      await downloadNotification.notifySuccess(filename);
-
+    } finally {
+      // Auto cleanup active download record after short grace window
       setTimeout(() => {
-        shareOrOpenFile(writeResult.uri, filename);
-      }, 250);
-
-      return { success: true, downloadId: state.downloadId };
-    } catch (err: any) {
-      return await this.handleDownloadError(err, state, filename, onStateChange);
+        this.activeDownloads.delete(downloadId);
+      }, 3000);
     }
   }
 
@@ -235,7 +173,7 @@ class DownloadManager {
       endpoint: 'local:blob',
       filename: safeFilename,
       mimeType: effectiveMime,
-      status: 'DOWNLOADING',
+      status: 'PREPARING',
       startTime: Date.now(),
     };
 
@@ -247,6 +185,8 @@ class DownloadManager {
         throw new Error(validation.error || 'Invalid file payload.');
       }
 
+      state.status = 'DOWNLOADING';
+      this.updateState(state);
       await downloadNotification.notifyStart(safeFilename, effectiveMime);
 
       if (isNativeMobile()) {
@@ -256,12 +196,12 @@ class DownloadManager {
         const writeResult = await Filesystem.writeFile({
           path: safeFilename,
           data: base64Data,
-          directory: Directory.Documents,
+          directory: Directory.Cache,
           recursive: true,
         });
 
         const totalMs = Math.round(performance.now() - startTime);
-        console.log(`[FAST_DOWNLOAD] Native blob export completed in ${totalMs}ms`);
+        console.log(`[DownloadManager] Native blob export completed in ${totalMs}ms`);
 
         state.status = 'COMPLETED';
         state.localPath = writeResult.uri;
@@ -289,9 +229,15 @@ class DownloadManager {
       state.status = 'COMPLETED';
       this.updateState(state);
 
+      await downloadNotification.notifySuccess(safeFilename);
+
       return { success: true, downloadId };
     } catch (err: any) {
       return await this.handleDownloadError(err, state, safeFilename);
+    } finally {
+      setTimeout(() => {
+        this.activeDownloads.delete(downloadId);
+      }, 3000);
     }
   }
 
@@ -301,8 +247,11 @@ class DownloadManager {
     filename: string,
     onStateChange?: (state: DownloadState) => void
   ): Promise<{ success: boolean; downloadId: string; error: string }> {
+    // 1. Log real error for debugging
+    console.error(`[DownloadManager] Download failed for ${filename}:`, err);
+
     let status: DownloadStatus = 'FAILED';
-    let errorMessage = 'Unable to download the file. Please try again.';
+    let errorMessage = 'Unable to generate report. Please try again.';
 
     const httpStatus = err?.response?.status;
     let detail = err?.response?.data?.detail || err?.message;
@@ -321,35 +270,35 @@ class DownloadManager {
     if (httpStatus === 401) {
       status = 'UNAUTHORIZED';
       errorMessage = 'Your session has expired. Please sign in again.';
-      downloadNotification.notifyFailure(filename, errorMessage);
+      await downloadNotification.notifyFailure(filename, errorMessage);
     } else if (httpStatus === 403) {
       status = 'FORBIDDEN';
-      errorMessage = "You don't have permission to download this file.";
-      downloadNotification.notifyPermissionDenied(filename);
+      errorMessage = "You don't have permission to generate this report.";
+      await downloadNotification.notifyPermissionDenied(filename);
     } else if (httpStatus === 404) {
       status = 'FAILED';
-      errorMessage = 'File not found.';
-      downloadNotification.notifyFailure(filename, errorMessage);
+      errorMessage = 'Report data not found.';
+      await downloadNotification.notifyFailure(filename, errorMessage);
     } else if (httpStatus === 410) {
       status = 'EXPIRED';
-      errorMessage = 'Download link expired. Please try again.';
-      downloadNotification.notifyExpired(filename);
+      errorMessage = 'Report link expired. Please try again.';
+      await downloadNotification.notifyExpired(filename);
     } else if (httpStatus === 429) {
       status = 'FAILED';
-      errorMessage = 'Too many download requests. Please try again shortly.';
-      downloadNotification.notifyFailure(filename, errorMessage);
+      errorMessage = 'Too many requests. Please try again shortly.';
+      await downloadNotification.notifyFailure(filename, errorMessage);
     } else if (httpStatus >= 500) {
       status = 'FAILED';
-      errorMessage = detail || 'Unable to download the file. Please try again.';
-      downloadNotification.notifyFailure(filename, errorMessage);
+      errorMessage = detail || 'Unable to generate report due to a server error.';
+      await downloadNotification.notifyFailure(filename, errorMessage);
     } else if (err?.code === 'ERR_NETWORK' || (typeof window !== 'undefined' && !window.navigator.onLine)) {
       status = 'FAILED';
       errorMessage = 'Network error. Please check your connection and try again.';
-      downloadNotification.notifyFailure(filename, errorMessage);
+      await downloadNotification.notifyFailure(filename, errorMessage);
     } else {
       status = 'FAILED';
       errorMessage = detail || errorMessage;
-      downloadNotification.notifyFailure(filename, errorMessage);
+      await downloadNotification.notifyFailure(filename, errorMessage);
     }
 
     state.status = status;

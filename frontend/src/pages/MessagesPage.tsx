@@ -42,6 +42,20 @@ export const MessagesPage: React.FC = () => {
     } catch(e) {}
   }, []);
 
+  // Deep Link Auto-Navigation from Notification tap
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const convId = params.get('conversationId') || params.get('conversation_id');
+      if (convId) {
+        console.log(`[DEEP LINK] Automatically opening target conversation: ${convId}`);
+        setActiveConversationId(convId);
+      }
+    } catch (e) {
+      console.warn('[DEEP LINK] Error parsing conversation query parameter:', e);
+    }
+  }, []);
+
   const fetchConversations = useCallback(async () => {
     try {
       const res = await axios.get(getApiUrl('/messaging/conversations'), { headers: getAuthHeaders() });

@@ -41,10 +41,21 @@ export const createNotificationChannels = async () => {
   }
 };
 
+function hashStringToId(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return (Math.abs(hash) % 2147483647) || 1;
+}
+
 export const triggerNativeStatusBarNotification = async (title: string, body: string, data?: any) => {
   if (!Capacitor.isNativePlatform()) return;
   try {
-    const notifId = Math.floor(Math.random() * 2147483647);
+    const rawId = data?.conversation_id || data?.conversationId || data?.notificationId || data?.event_id || title;
+    const notifId = rawId ? hashStringToId(String(rawId)) : Math.floor(Math.random() * 2147483647);
+    
     await LocalNotifications.schedule({
       notifications: [
         {
@@ -52,7 +63,8 @@ export const triggerNativeStatusBarNotification = async (title: string, body: st
           title: title || 'LeetCode Tracker',
           body: body || 'New update received',
           channelId: 'leetcode_intelligence_channel',
-          smallIcon: 'ic_launcher',
+          smallIcon: 'ic_stat_notification',
+          iconColor: '#3b82f6',
           extra: data || {},
           schedule: { at: new Date(Date.now() + 100) }
         }
@@ -119,14 +131,28 @@ export const initPushNotifications = async (): Promise<void> => {
       (notification: PushNotificationSchema) => {
         console.log('[FCM] Notification Received in Foreground:', notification);
         
-        // Post native system status bar notification
-        triggerNativeStatusBarNotification(
-          notification.title || 'LeetCode Tracker',
-          notification.body || '',
-          notification.data
+        // If user is actively viewing this specific conversation in foreground, suppress redundant banner
+        const notifData = notification.data || {};
+        const convId = notifData.conversation_id || notifData.conversationId;
+        const currentSearch = window.location.search;
+        const currentPath = window.location.pathname;
+        const isViewingConversation = Boolean(
+          convId && 
+          (currentPath.includes('/messages') || window.location.hash.includes('/messages')) &&
+          (currentSearch.includes(convId) || window.location.href.includes(convId))
         );
 
-        // Dispatch custom event for UI toast / banner
+        if (!isViewingConversation) {
+          triggerNativeStatusBarNotification(
+            notification.title || 'LeetCode Tracker',
+            notification.body || '',
+            notification.data
+          );
+        } else {
+          console.log(`[FCM] Redundant system notification suppressed: user is actively viewing conversation ${convId}`);
+        }
+
+        // Dispatch custom event for UI toast / banner / real-time message stream
         const event = new CustomEvent('fcm_notification_received', { detail: notification });
         window.dispatchEvent(event);
       }

@@ -377,18 +377,27 @@ class MessagingService:
             getattr(current_user, "name", None) or 
             getattr(current_user, "username", None) or 
             getattr(current_user, "email", None) or 
-            "User"
+            "Admin" if (getattr(current_user, "role", "") or "").lower() in ("admin", "super admin") else "User"
         )
+        msg_preview = content[:80] + ("..." if len(content) > 80 else "")
+        idempotency_event_id = f"MSG_{msg.message_id}_{receiver_id}"
+
         NotificationService.emit_event(
             event_type="DIRECT_MESSAGE",
             title=f"New message from {sender_name}",
-            body=content[:50] + ("..." if len(content) > 50 else ""),
+            body=msg_preview,
             actor_user_id=sender_id,
             recipient_scope="INDIVIDUAL",
             recipient_target=receiver_id,
-            route=f"/messages/{conv.conversation_id}",
+            route=f"/messages?conversationId={conv.conversation_id}&messageId={msg.message_id}",
             priority="high",
-            metadata={"conversation_id": conv.conversation_id, "message_id": msg.message_id},
+            event_id=idempotency_event_id,
+            metadata={
+                "conversation_id": conv.conversation_id,
+                "message_id": msg.message_id,
+                "sender_id": sender_id,
+                "sender_name": sender_name
+            },
             send_email_notification=False
         )
         

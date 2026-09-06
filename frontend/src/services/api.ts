@@ -3,7 +3,7 @@ import { auth } from '../firebase';
 
 // Smart API Base URL Resolution for Local Development vs Production Hosting
 const getApiBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+  const envUrl = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_API_URL || import.meta.env?.VITE_API_BASE_URL));
   if (envUrl) {
     const cleanUrl = envUrl.replace(/\/+$/, '');
     return cleanUrl.endsWith('/api') ? cleanUrl : `${cleanUrl}/api`;

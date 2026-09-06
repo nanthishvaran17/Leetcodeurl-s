@@ -1,3 +1,4 @@
+import threading
 from typing import Dict, Any, List, Optional
 import os
 import json
@@ -5,6 +6,10 @@ import uuid
 import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
+from sqlalchemy.exc import IntegrityError
+
+_in_flight_events = set()
+_in_flight_lock = threading.Lock()
 
 from backend.database import SessionLocal
 from backend.models import (
@@ -246,11 +251,17 @@ class NotificationService:
             # 1. Idempotency Check (Duplicate Prevention)
             eff_event_id = event_id or f"{event_type}_{entity_id or 'GEN'}_{int(datetime.datetime.utcnow().timestamp())}"
             
-            # Check for duplicate event_id to prevent multi-device duplication
+            # In-flight concurrent event deduplication
             if event_id:
+                with _in_flight_lock:
+                    if event_id in _in_flight_events:
+                        logger.info(f"[NOTIF-DEBUG] DUPLICATE_EVENT_PREVENTED (in-flight) event_id={event_id}")
+                        return {"success": True, "duplicate_prevented": True, "event_id": event_id}
+                    _in_flight_events.add(event_id)
+
                 existing = db.query(NotificationRecord).filter_by(event_id=event_id).first()
                 if existing:
-                    logger.info(f"[NOTIF-DEBUG] DUPLICATE_EVENT_PREVENTED event_id={event_id}")
+                    logger.info(f"[NOTIF-DEBUG] DUPLICATE_EVENT_PREVENTED (db-persisted) event_id={event_id}")
                     return {"success": True, "duplicate_prevented": True, "event_id": event_id}
 
             category = NotificationService.resolve_category(event_type)
@@ -320,7 +331,16 @@ class NotificationService:
                     "fileId": file_id
                 })
 
-            db.commit()
+            try:
+                db.commit()
+            except IntegrityError:
+                db.rollback()
+                logger.info(f"[NOTIF-DEBUG] DUPLICATE_EVENT_COMMITTED_CONCURRENTLY event_id={eff_event_id}")
+                return {"success": True, "duplicate_prevented": True, "event_id": eff_event_id}
+            except Exception as _c_err:
+                db.rollback()
+                logger.error(f"[NOTIFICATION] Commit error: {_c_err}")
+                raise
             logger.info(f"[NOTIFICATION] created notification_id={eff_event_id}")
             logger.info(f"[NOTIFICATION] persisted notification_id={eff_event_id}")
             logger.info(f"[NOTIF-DEBUG] DB_SAVED created_count={len(notif_records)} event_id={eff_event_id}")
@@ -408,21 +428,23 @@ class NotificationService:
                                 "entityType": str(entity_type or ""),
                                 "entityId": str(entity_id or ""),
                                 "fileId": str(file_id or ""),
-                                "priority": str(eff_priority)
+                                "priority": str(eff_priority),
+                                **({str(k): str(v) for k, v in (metadata or {}).items() if v is not None})
                             },
                             android=messaging.AndroidConfig(
                                 priority="high" if is_high_priority else "normal",
                                 notification=messaging.AndroidNotification(
                                     title=title,
                                     body=body,
-                                    icon="stock_ticker_update",
+                                    icon="ic_stat_notification",
                                     color="#3b82f6",
                                     sound="default",
                                     default_sound=True,
                                     default_vibrate_timings=True,
                                     channel_id="leetcode_intelligence_channel",
                                     visibility="public",
-                                    notification_count=1
+                                    notification_count=1,
+                                    tag=f"conv_{metadata.get('conversation_id')}" if (metadata and metadata.get("conversation_id")) else eff_event_id
                                 )
                             ),
                             webpush=messaging.WebpushConfig(
@@ -458,8 +480,8 @@ class NotificationService:
                     db.commit()
                     logger.info(f"[NOTIF_ENGINE] Deactivated {len(stale_tokens)} stale FCM tokens.")
 
-                # Also send to FCM global topic 'all_app_users' if priority is high/critical or announcement
-                if priority in ("high", "critical") or event_type in ("APP_UPDATE_AVAILABLE", "APP_UPDATE_REQUIRED", "URGENT_ANNOUNCEMENT"):
+                # Also send to FCM global topic 'all_app_users' ONLY if scope is ALL/GLOBAL
+                if (recipient_scope or "").upper() in ("ALL", "GLOBAL") and (priority in ("high", "critical") or event_type in ("APP_UPDATE_AVAILABLE", "APP_UPDATE_REQUIRED", "URGENT_ANNOUNCEMENT")):
                     try:
                         topic_msg = messaging.Message(
                             notification=messaging.Notification(title=title, body=body),

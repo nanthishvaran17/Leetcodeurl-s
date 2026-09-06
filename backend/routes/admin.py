@@ -8,6 +8,7 @@ from backend.database import get_db
 from backend.models import AdminAuditLog, EmailDelivery, EmailAttachment, ReportRecipient, User
 from backend.routes.auth import get_current_user, get_current_user_from_request
 from backend.services.audit_service import log_admin_action
+from backend.security import require_security_access
 from backend.logger import logger
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Operations & Audit"])
@@ -37,7 +38,10 @@ class RecipientStatusUpdate(BaseModel):
 
 
 @router.get("/data-health")
-def get_data_health_check(db: Session = Depends(get_db)):
+def get_data_health_check(
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Data Health Check", required_roles=["admin", "super admin", "hod", "faculty"]))
+):
     """
     GET /api/admin/data-health
     Dynamic, authoritative database health and synchronization integrity verification.
@@ -107,7 +111,8 @@ def get_admin_audit_logs(
     role: Optional[str] = None,
     status: Optional[str] = None,
     search: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Admin Audit Logs", required_roles=["admin", "super admin"]))
 ):
     """Retrieves real database-backed admin audit activity logs."""
     query = db.query(AdminAuditLog)

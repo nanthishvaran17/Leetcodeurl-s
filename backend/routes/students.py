@@ -1234,14 +1234,58 @@ def delete_student(
     name = student.name
 
     if soft_delete:
-        student.is_active = False
+        # Atomic conditional update: only update if currently active
+        from sqlalchemy import update as sql_update
+        stmt = (
+            sql_update(Student)
+            .where(Student.id == student_id)
+            .where((Student.is_active == True) | (Student.is_active.is_(None)))
+            .values(is_active=False)
+        )
+        result = db.execute(stmt)
         db.commit()
+
+        # Idempotency check: if 0 rows were updated, student was already inactive
+        if result.rowcount == 0:
+            logger.info(f"[SOFT_DELETE_STUDENT] Student roster record {reg_no} ({name}) is already inactive. Skipping duplicate side effects.")
+            return {
+                "success": True,
+                "message": f"Student roster record {reg_no} ({name}) is already deactivated.",
+                "reg_no": reg_no,
+                "already_deactivated": True
+            }
+
         logger.info(f"[SOFT_DELETE_STUDENT] Soft-deleted student roster record {reg_no} ({name})")
         connection_manager.broadcast_sync({
             'type': 'STUDENT_DELETED',
             'student_id': student_id,
             'version': 999
         })
+
+        # Sync status to Cloud Firestore safely
+        try:
+            from backend.services.firestore_service import update_firestore_doc
+            update_firestore_doc("students", reg_no, {
+                "is_active": False,
+                "deactivated_at": datetime.datetime.utcnow().isoformat() + "Z"
+            })
+        except Exception as fs_err:
+            logger.warning(f"[FIRESTORE DELETE NOTE] {fs_err}")
+
+        audit = AuditLog(
+            user_id=current_user.id,
+            user_name=current_user.username,
+            action="SOFT_DELETE_STUDENT",
+            details=f"Deactivated student roster record {reg_no} ({name})"
+        )
+        db.add(audit)
+        db.commit()
+
+        from backend.ranking import trigger_debounced_ranking_update
+        trigger_debounced_ranking_update()
+        cache.invalidate_tag("students")
+
+        return {"success": True, "message": f"Successfully deactivated student roster record {reg_no} ({name})", "reg_no": reg_no}
     else:
         from backend.models import (
             WeeklySessionSnapshot, MentorNote, StudentStatSnapshot, StudentContestSnapshot,
@@ -1283,29 +1327,20 @@ def delete_student(
             'version': 999
         })
 
-    # Sync status to Cloud Firestore
-    try:
-        from backend.services.firestore_service import update_firestore_doc
-        update_firestore_doc("students", reg_no, {
-            "is_active": False,
-            "deactivated_at": datetime.datetime.utcnow().isoformat() + "Z"
-        })
-    except Exception as fs_err:
-        logger.warning(f"[FIRESTORE DELETE NOTE] {fs_err}")
+        audit = AuditLog(
+            user_id=current_user.id,
+            user_name=current_user.username,
+            action="DELETE_STUDENT",
+            details=f"Permanently deleted student record {reg_no} ({name})"
+        )
+        db.add(audit)
+        db.commit()
 
-    audit = AuditLog(
-        user_id=current_user.id,
-        user_name=current_user.username,
-        action="SOFT_DELETE_STUDENT" if soft_delete else "DELETE_STUDENT",
-        details=f"Deactivated student roster record {reg_no} ({name})"
-    )
-    db.add(audit)
-    db.commit()
+        from backend.ranking import trigger_debounced_ranking_update
+        trigger_debounced_ranking_update()
+        cache.invalidate_tag("students")
 
-    update_all_rankings_and_badges(db)
-    cache.invalidate_tag("students")
-
-    return {"message": f"Successfully deactivated student roster record {reg_no} ({name})", "reg_no": reg_no}
+        return {"success": True, "message": f"Successfully deleted student record {reg_no} ({name})", "reg_no": reg_no}
 
 
 @router.post("/validate-import")
