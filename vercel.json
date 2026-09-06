@@ -8,6 +8,10 @@
       "destination": "https://leetcode-student-data.firebaseapp.com/__/auth/$1"
     },
     {
+      "source": "/api/:path*",
+      "destination": "https://leetcodeurl-s-3mig.onrender.com/api/:path*"
+    },
+    {
       "source": "/((?!robots\\.txt|sitemap\\.xml|llms\\.txt|site\\.webmanifest|assets/|.*\\.(?:png|jpg|jpeg|gif|webp|ico|svg|css|js)).*)",
       "destination": "/index.html"
     }

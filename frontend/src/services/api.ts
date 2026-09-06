@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { auth } from '../firebase';
 
-// Authoritative Production Backend Base URL
+// Authoritative Production Backend Base URL (used by native apps only)
 const PRODUCTION_BACKEND_URL = 'https://leetcodeurl-s-3mig.onrender.com';
 
 // Smart API Base URL Resolution for Local Development vs Native Mobile (Capacitor/Android) vs Production Hosting
@@ -14,29 +14,15 @@ const getApiBaseUrl = () => {
     window.location.origin.includes('ionic://')
   );
 
-  const envUrl = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_API_URL || import.meta.env?.VITE_API_BASE_URL));
-  const targetBaseUrl = envUrl || PRODUCTION_BACKEND_URL;
-
-  // Native Android/iOS Capacitor app MUST always use full production HTTPS endpoint
+  // Native Android/iOS Capacitor app MUST always use full production HTTPS endpoint (no proxy)
   if (isNative) {
-    const cleanUrl = targetBaseUrl.replace(/\/+$/, '');
-    return cleanUrl.endsWith('/api') ? cleanUrl : `${cleanUrl}/api`;
+    return `${PRODUCTION_BACKEND_URL}/api`;
   }
 
-  // Web Browser local development (Vite dev server running on port 3000, 5173, etc. or local IP)
-  if (typeof window !== 'undefined' && 
-      (window.location.hostname === 'localhost' || 
-       window.location.hostname === '127.0.0.1' ||
-       window.location.hostname.startsWith('192.168.') ||
-       window.location.hostname.startsWith('10.') ||
-       window.location.hostname.endsWith('.local')) &&
-      (window.location.port === '3000' || window.location.port === '5173' || window.location.port === '8000')) {
-    return '/api';
-  }
-
-  // Web Browser production or custom environment URL
-  const cleanUrl = targetBaseUrl.replace(/\/+$/, '');
-  return cleanUrl.endsWith('/api') ? cleanUrl : `${cleanUrl}/api`;
+  // All web browsers (local dev AND production Vercel) use relative /api
+  // In production: Vercel proxy routes /api/* → Render backend (no CORS needed)
+  // In local dev: Vite dev server or relative path works the same way
+  return '/api';
 };
 
 const API_BASE = getApiBaseUrl();
