@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     ALLOW_DEFAULT_ADMIN_PASSWORD: bool = True
     ADMIN_EMAIL: str = os.environ.get("ADMIN_EMAIL", "nanthishvaran17@gmail.com")
     ADMIN_USERNAME: str = os.environ.get("ADMIN_USERNAME", "admin")
-    ADMIN_PASSWORD: str = os.environ.get("ADMIN_PASSWORD", secrets.token_urlsafe(16))
+    ADMIN_PASSWORD: str = os.environ.get("ADMIN_PASSWORD", "admin123")
 
     # Server & Timezone
     HOST: str = "0.0.0.0"
