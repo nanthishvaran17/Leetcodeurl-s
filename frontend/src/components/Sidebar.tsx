@@ -215,10 +215,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', stiffness: 350, damping: 32 }}
-            className="relative w-[88vw] max-w-[340px] sm:max-w-[360px] h-full shadow-2xl bg-white dark:bg-navy-950 pt-[max(1.25rem,env(safe-area-inset-top,1.25rem))] pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] px-5 sm:px-6 flex flex-col justify-between overflow-hidden z-10 border-r border-slate-200 dark:border-navy-800"
+            className="relative w-[88vw] max-w-[340px] sm:max-w-[360px] h-full shadow-2xl bg-white dark:bg-navy-950 pt-[max(1rem,env(safe-area-inset-top,1rem))] pb-[max(1rem,env(safe-area-inset-bottom,1rem))] px-5 flex flex-col justify-between overflow-hidden z-10 border-r border-slate-200 dark:border-navy-800"
           >
-            {/* ── Header ── */}
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-navy-800/80 shrink-0 mb-3 relative z-10">
+            {/* ── Region 1: Fixed Header ── */}
+            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-navy-800/80 shrink-0 mb-1 relative z-10">
               <button 
                 type="button"
                 onClick={() => {
@@ -248,18 +248,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
               </button>
             </div>
 
-            {/* ── Navigation Groups ── */}
-            <div className="space-y-5 overflow-y-auto pr-1 flex-1 min-h-0 custom-scrollbar overscroll-contain py-1 relative z-10">
+            {/* ── Region 2: Independently Scrollable Menu ── */}
+            <div className="space-y-7 overflow-y-auto pr-1 flex-1 min-h-0 custom-scrollbar overscroll-contain py-2 relative z-10">
               {sections.map((section, sIdx) => (
                 <div key={sIdx} className="space-y-2">
-                  <div className="px-1 pt-1 pb-1 flex items-center justify-between">
+                  <div className="px-1 pb-1 flex items-center justify-between">
                     <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                       {section.title}
                     </span>
-                    <span className="w-10 h-px bg-slate-200 dark:bg-navy-800 shrink-0" />
+                    <span className="w-8 h-px bg-slate-200 dark:bg-navy-800 shrink-0" />
                   </div>
 
-                  <nav className="space-y-1.5">
+                  <nav className="space-y-2">
                     {section.items.map((item) => {
                       const Icon = item.icon;
                       const isActive = activeTab === item.id;
@@ -272,20 +272,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                             setActiveTab(item.id);
                             if (window.innerWidth < 1024) onClose();
                           }}
-                          className={`relative w-full min-h-[48px] flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-left cursor-pointer select-none transition-all duration-200 group transform active:scale-[0.98] ${
+                          className={`w-full min-h-[64px] flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-left cursor-pointer select-none transition-all duration-200 group active:scale-[0.98] ${
                             isActive
-                              ? 'bg-brand-600 text-white font-bold shadow-lg shadow-brand-500/25 border border-brand-400/30'
+                              ? 'bg-brand-600 text-white font-bold shadow-md shadow-brand-500/20 border border-brand-400/30'
                               : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100/90 dark:hover:bg-navy-900/90 hover:text-brand-600 dark:hover:text-brand-400'
                           }`}
                         >
-                          {/* Active Left Indicator Notch */}
-                          {isActive && (
-                            <span className="absolute -left-1 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-white rounded-r-full shadow-sm z-20" />
-                          )}
-
-                          {/* Left Icon + Label */}
+                          {/* Left Icon (44px) + Label */}
                           <div className="flex items-center space-x-3.5 min-w-0 flex-1 pr-2 relative z-10">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 ${
+                            <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 ${
                               isActive 
                                 ? 'bg-white/20 text-white shadow-inner scale-105' 
                                 : 'bg-slate-100 dark:bg-navy-900 text-slate-500 dark:text-slate-400 group-hover:bg-brand-50 dark:group-hover:bg-navy-800 group-hover:text-brand-600 dark:group-hover:text-brand-300 shadow-sm'
@@ -299,10 +294,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                             </span>
                           </div>
 
-                          {/* Badges & Arrow */}
-                          <div className="flex items-center space-x-2 shrink-0 relative z-10">
+                          {/* Badges & Consistent Right-Aligned Arrow */}
+                          <div className="flex items-center space-x-2 shrink-0 ml-auto relative z-10">
                             {item.badge && (
-                              <span className={`px-2.5 py-0.5 text-[10px] font-black rounded-md uppercase tracking-wider transition-all duration-200 shrink-0 inline-flex items-center gap-1.5 ${
+                              <span className={`px-2 py-0.5 text-[10px] font-black rounded-md uppercase tracking-wider transition-all duration-200 shrink-0 inline-flex items-center gap-1 ${
                                 isActive
                                   ? 'bg-amber-400 text-slate-950 font-black shadow-sm'
                                   : item.badgeColor === 'purple'
@@ -337,12 +332,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
               ))}
             </div>
 
-            {/* ── Mobile Action Bar (Theme & Auth) ── */}
-            <div className="sm:hidden pt-3 mt-2 border-t border-slate-100 dark:border-navy-800/80 shrink-0 relative z-10 flex items-center gap-2.5">
+            {/* ── Region 3: Fixed Mobile Action Bar (Theme & Auth) ── */}
+            <div className="pt-2.5 border-t border-slate-100 dark:border-navy-800/80 shrink-0 relative z-10 flex items-center gap-2">
               <button
                 type="button"
                 onClick={toggleTheme}
-                className="min-h-[44px] px-3.5 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-navy-900 border border-slate-200/80 dark:border-navy-800 transition-all duration-200 flex items-center justify-center flex-1 font-bold text-xs shadow-sm cursor-pointer"
+                className="h-[52px] min-h-[52px] px-3.5 rounded-xl text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-navy-900 border border-slate-200/80 dark:border-navy-800 transition-all duration-200 flex items-center justify-center flex-1 font-bold text-xs shadow-sm cursor-pointer"
               >
                 {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400 mr-2 shrink-0" /> : <Moon className="w-4 h-4 text-navy-700 dark:text-slate-300 mr-2 shrink-0" />}
                 <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
@@ -351,7 +346,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                 <button
                   type="button"
                   onClick={logout}
-                  className="min-h-[44px] px-3.5 py-2.5 rounded-xl text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/40 transition-colors flex items-center justify-center flex-1 font-bold text-xs shadow-sm cursor-pointer"
+                  className="h-[52px] min-h-[52px] px-3.5 rounded-xl text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/40 transition-colors flex items-center justify-center flex-1 font-bold text-xs shadow-sm cursor-pointer"
                 >
                   <LogOut className="w-4 h-4 mr-2 shrink-0" />
                   <span>Sign Out</span>
@@ -359,19 +354,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
               )}
             </div>
 
-            {/* ── Bottom Institution Footer Card ── */}
-            <div className="pt-3 mt-2 border-t border-slate-100 dark:border-navy-800/80 shrink-0 relative z-10">
-              <div className="p-4 rounded-2xl bg-slate-900 dark:bg-navy-900 text-white border border-emerald-500/25 shadow-lg text-xs space-y-2 relative overflow-hidden group cursor-default">
+            {/* ── Region 4: Fixed Minimal Sunday Session Window Card ── */}
+            <div className="pt-2 shrink-0 relative z-10">
+              <div className="p-3.5 rounded-2xl bg-slate-900 dark:bg-navy-900 text-white border border-emerald-500/25 shadow-md text-xs space-y-1.5 relative overflow-hidden group cursor-default max-h-[165px]">
                 <div className="absolute top-0 right-0 -mt-4 -mr-4 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
                 <div className="flex items-center space-x-2 relative z-10">
                   <Calendar className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span className="text-white text-xs font-black tracking-wide">Sunday Session Window</span>
                 </div>
-                <p className="text-[11px] text-slate-300 leading-relaxed font-medium relative z-10">
+                <p className="text-[11px] text-slate-300 leading-snug font-medium relative z-10">
                   Official Window: <b className="text-emerald-400 font-bold">08:00 AM – 09:30 AM IST</b>.<br />
                   Continuous LeetCode tracking & live sync.
                 </p>
-                <div className="pt-1.5 border-t border-slate-800/80 relative z-10">
+                <div className="pt-1 border-t border-slate-800/80 relative z-10">
                   <p className="text-[10px] text-slate-400 font-semibold tracking-wide">
                     Nandha Engineering College • Erode
                   </p>
@@ -385,3 +380,5 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
     document.body
   );
 };
+
+export default Sidebar;
