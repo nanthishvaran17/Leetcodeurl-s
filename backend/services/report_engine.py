@@ -13,7 +13,12 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
     UNIVERSAL REPORT ENGINE
     Single Source of Truth generator that creates normalized datasets for all report types.
     """
-    if config.report_type in ("CONTEST_PERFORMANCE", "OFFICIAL_CONTEST", "WEEKLY_CONTEST"):
+    CONTEST_REPORT_TYPES = (
+        "CONTEST_PERFORMANCE", "OFFICIAL_CONTEST", "WEEKLY_CONTEST",
+        "OFFICIAL_SUMMARY", "STUDENT_PERFORMANCE", "EXCEL", "PDF", "WORD", "CSV",
+        "MASTER_TRACKER", "WEEKLY_PERFORMANCE", "DEFAULT"
+    )
+    if not config.report_type or config.report_type.upper() in CONTEST_REPORT_TYPES:
         return build_contest_performance_report(db, config)
 
     from backend.services.authorization_service import apply_role_based_student_filter
