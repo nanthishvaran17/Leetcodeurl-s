@@ -94,25 +94,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
         type="button"
         onClick={handleSignIn}
         disabled={isSigningIn}
-        style={{
-          width: '100%',
-          height: '52px',
-          minHeight: '52px',
-          borderRadius: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '10px',
-          fontSize: '0.95rem',
-          fontWeight: 600,
-          border: '1.5px solid var(--field-border, #E2E8F0)',
-          background: 'var(--bg-card, #FFFFFF)',
-          color: 'var(--text-primary, #172033)',
-          cursor: isSigningIn ? 'not-allowed' : 'pointer',
-          transition: 'all 0.2s ease',
-          boxSizing: 'border-box'
-        }}
-        className={`hover:bg-slate-50 dark:hover:bg-slate-800/60 active:scale-[0.99] ${isSigningIn ? 'opacity-70' : ''} ${className}`}
+        className={`google-signin-btn hover:bg-slate-50 dark:hover:bg-slate-800/60 active:scale-[0.99] ${isSigningIn ? 'opacity-70' : ''} ${className}`}
       >
         {isSigningIn ? (
           <>
