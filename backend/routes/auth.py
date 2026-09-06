@@ -108,7 +108,7 @@ def create_server_admin_session(db: Session, user: User, request: Request, respo
         path="/",
         httponly=True,
         samesite="lax",
-        secure=False  # Set True in production HTTPS environments
+        secure=(settings.ENVIRONMENT == 'production')
     )
 
     return raw_token, s_id
@@ -191,8 +191,7 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
         raw_token = auth_header.split(" ")[1].strip()
-    elif request.query_params.get("token"):
-        raw_token = request.query_params.get("token")
+
     else:
         # DO NOT fallback to cookie for standard API requests.
         # This enforces the JWT + Refresh Token architecture.
@@ -306,44 +305,7 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
                     user = User(
                         username=fb_email.split('@')[0],
                         email=fb_email,
-                        hashed_password=get_password_hash("admin123"),
-                        role="Admin",
-                        is_active=True
-                    )
-                    db.add(user)
-                    db.commit()
-                    db.refresh(user)
-                    cache.set(cache_key, {"type": "User", "id": user.id, "username": user.username, "email": user.email, "role": user.role, "department_id": getattr(user, "department_id", None)}, ttl_seconds=300, tags=[f"user_auth_{user.id}"])
-                    return user
-        except Exception:
-            db.rollback()
-
-        # 3. Try parsing unverified JWT payload for Firebase/Google Token (Fail-safe for offline/local)
-        try:
-            import base64
-            parts = raw_token.split(".")
-            padded = parts[1] + "=" * ((4 - len(parts[1]) % 4) % 4)
-            unverified_payload = json.loads(base64.urlsafe_b64decode(padded.encode('utf-8')).decode('utf-8'))
-            t_email = (unverified_payload.get("email") or "").strip().lower()
-            if t_email:
-                user = db.query(User).filter(User.email.ilike(t_email), User.is_active == True).first()
-                if user:
-                    cache.set(cache_key, {"type": "User", "id": user.id, "username": user.username, "email": user.email, "role": user.role, "department_id": getattr(user, "department_id", None)}, ttl_seconds=300, tags=[f"user_auth_{user.id}"])
-                    return user
-                if t_email in EXACT_TWO_ADMIN_EMAILS:
-                    user_by_name = db.query(User).filter(User.username.ilike(t_email.split('@')[0]), User.is_active == True).first()
-                    if user_by_name:
-                        cache.set(cache_key, {"type": "User", "id": user_by_name.id, "username": user_by_name.username, "email": user_by_name.email, "role": user_by_name.role, "department_id": getattr(user_by_name, "department_id", None)}, ttl_seconds=300, tags=[f"user_auth_{user_by_name.id}"])
-                        return user_by_name
-                    existing_email_user = db.query(User).filter(User.email.ilike(t_email)).first()
-                    if existing_email_user:
-                        cache.set(cache_key, {"type": "User", "id": existing_email_user.id, "username": existing_email_user.username, "email": existing_email_user.email, "role": existing_email_user.role, "department_id": getattr(existing_email_user, "department_id", None)}, ttl_seconds=300, tags=[f"user_auth_{existing_email_user.id}"])
-                        return existing_email_user
-
-                    user = User(
-                        username=t_email.split('@')[0],
-                        email=t_email,
-                        hashed_password=get_password_hash("admin123"),
+                        hashed_password=get_password_hash(secrets.token_urlsafe(16)),
                         role="Admin",
                         is_active=True
                     )
@@ -636,7 +598,7 @@ def verify_otp(req: VerifyOtpRequest, request: Request, response: Response, db: 
             user = User(
                 username=clean_email.split('@')[0],
                 email=clean_email,
-                hashed_password=get_password_hash("admin123"),
+                hashed_password=get_password_hash(secrets.token_urlsafe(16)),
                 role="Admin",
                 is_active=True
             )
@@ -1037,7 +999,7 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
         if allow_default_pwd:
             configured_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()
             configured_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
-            configured_password = getattr(settings, "ADMIN_PASSWORD", "admin123").strip()
+            configured_password = getattr(settings, "ADMIN_PASSWORD", secrets.token_urlsafe(16)).strip()
             is_admin_user_match = (
                 clean_username.lower() == configured_username.lower() or
                 clean_username.lower() == configured_email.lower()
@@ -1257,6 +1219,8 @@ def test_admin_email_delivery(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    if current_user.role not in ["Admin", "SuperAdmin"]:
+        raise HTTPException(status_code=403, detail="Unauthorized")
     """
     Diagnostic capability for development only (authenticated administrators).
     Sends a test verification email to the configured administrator address.
@@ -1410,25 +1374,34 @@ def forgot_password_verify(req: ForgotPasswordVerifyRequest, db: Session = Depen
         current_user=None, target_type="User", target_id=str(otp_rec.user_id)
     )
 
-    return {"success": True, "message": "OTP Verified."}
+    # Issue short-lived stateless reset token (valid for 15 mins)
+    reset_payload = {
+        "sub": str(otp_rec.user_id),
+        "email": email_clean,
+        "purpose": "password_reset",
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
+    }
+    reset_token = jwt.encode(reset_payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+    return {"success": True, "message": "OTP Verified.", "reset_token": reset_token}
 
 
 @router.post("/forgot-password/reset")
 def forgot_password_reset(req: ResetPasswordSubmitRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     email_clean = (req.email or "").strip().lower()
-    (req.institutional_id or "").strip()
-    raw_otp = (req.otp or "").strip()
     
-    # We must re-verify the OTP to ensure they didn't skip the verify step
-    from backend.models import PasswordResetOTP
-    otp_rec = db.query(PasswordResetOTP).filter(
-        PasswordResetOTP.email.ilike(email_clean),
-        PasswordResetOTP.is_used == True,  # Must be verified in previous step
-        PasswordResetOTP.created_at > datetime.datetime.utcnow() - datetime.timedelta(minutes=15)
-    ).order_by(PasswordResetOTP.created_at.desc()).first()
-
-    if not otp_rec or not verify_password(raw_otp, str(otp_rec.otp_hash)):
-        raise HTTPException(status_code=401, detail="Invalid or expired session. Please start over.")
+    # The frontend now sends the JWT reset_token in the `otp` field
+    reset_token = (req.otp or "").strip()
+    
+    try:
+        payload = jwt.decode(reset_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        if payload.get("purpose") != "password_reset":
+            raise HTTPException(status_code=401, detail="Invalid token purpose.")
+        if payload.get("email") != email_clean:
+            raise HTTPException(status_code=401, detail="Token email mismatch.")
+        user_id = int(payload.get("sub"))
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired reset token. Please start over.")
 
     # Check password strength
     pwd = req.new_password
@@ -1443,6 +1416,11 @@ def forgot_password_reset(req: ResetPasswordSubmitRequest, background_tasks: Bac
 
         user.hashed_password = get_password_hash(pwd)
         user.require_password_change = False
+        
+        # Invalidate all existing sessions
+        db.query(AdminSession).filter(AdminSession.user_id == user.id).update(
+            {"revoked_at": datetime.datetime.utcnow()}, synchronize_session=False
+        )
         db.commit()
         
         from backend.services.audit_service import log_admin_action
@@ -1454,7 +1432,7 @@ def forgot_password_reset(req: ResetPasswordSubmitRequest, background_tasks: Bac
         
         if user.email:
             from backend.services.email_notifications import notify_password_changed
-            background_tasks.add_task(notify_password_changed, staff_email=user.email, staff_name=user.username, new_password=req.new_password)
+            background_tasks.add_task(notify_password_changed, staff_email=user.email, staff_name=user.username)
             
         return {"success": True, "message": "Password reset successfully."}
         
@@ -1467,7 +1445,9 @@ class AdminResetStaffPasswordRequest(BaseModel):
 
 
 @router.post("/admin/reset-staff-password")
-def admin_reset_staff_password(req: AdminResetStaffPasswordRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+def admin_reset_staff_password(req: AdminResetStaffPasswordRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.role not in ["Admin", "SuperAdmin"]:
+        raise HTTPException(status_code=403, detail="Not authorized to reset staff passwords.")
     """
     POST /api/auth/admin/reset-staff-password
     Generates or assigns a temporary password for staff account, logs audit action, and dispatches notification.
@@ -1489,12 +1469,12 @@ def admin_reset_staff_password(req: AdminResetStaffPasswordRequest, background_t
 
     if staff_user.email:
         from backend.services.email_notifications import notify_password_changed
-        background_tasks.add_task(notify_password_changed, staff_email=staff_user.email, staff_name=staff_user.full_name or staff_user.username, new_password=temp_pass)
+        background_tasks.add_task(notify_password_changed, staff_email=staff_user.email, staff_name=staff_user.full_name or staff_user.username)
         try:
             from backend.services.notification_service import NotificationService
             NotificationService.create_direct_notification(
                 title="Security Alert: Temporary Password Issued",
-                message=f"Your staff account password was reset by an administrator. Temporary password: {temp_pass}",
+                message=f"Your staff account password was reset by an administrator. Please use 'Forgot Password' to set a new one securely.",
                 recipient_user_ids=[staff_user.email, str(staff_user.id), staff_user.username],
                 notification_type="security",
                 priority="high",

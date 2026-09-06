@@ -151,6 +151,9 @@ def test_email_dispatch(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
+    if current_user.role not in ["Admin", "SuperAdmin"]:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="Unauthorized")
     req_dict = data if isinstance(data, dict) else {}
     target_email = req_dict.get("recipient") or "nanthishvaran17@gmail.com"
 

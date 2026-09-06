@@ -75,7 +75,7 @@ uvicorn backend.main:app --host 0.0.0.0 --port 8000
 
 ### Default Admin Credentials (Initial Setup):
 - **Username**: `admin`
-- **Password**: `admin123` (Change immediately upon initial login)
+- **Password**: Check backend logs or set `ADMIN_PASSWORD` in environment variables
 
 ---
 

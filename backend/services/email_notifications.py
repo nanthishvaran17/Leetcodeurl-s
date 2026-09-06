@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 from backend.services.email_templates import generate_professional_template
 
 
-def notify_staff_created(staff_email: str, staff_name: str, role: str, department: str, raw_password: str):
+def notify_staff_created(staff_email: str, staff_name: str, role: str, department: str, raw_password: str = None):
     """Sends a welcome email with credentials to newly created staff."""
     title = "Welcome to the LeetCode Tracker System"
     portal_url = f"{settings.FRONTEND_ORIGIN}/"
@@ -34,14 +34,10 @@ def notify_staff_created(staff_email: str, staff_name: str, role: str, departmen
             <td>Email / Username</td>
             <td style="word-break: break-all;">{staff_email}</td>
         </tr>
-        <tr>
-            <td>Temporary Password</td>
-            <td><code style="background:#f1f5f9; padding:4px 8px; border-radius:4px; font-size: 15px; color:#0f172a; word-break: break-all;">{raw_password}</code></td>
-        </tr>
     </table>
 
     <div class="security-notice">
-        <strong>Security Notice:</strong> Please log in and change your temporary password immediately after your first access.
+        <strong>Security Notice:</strong> Your account has been provisioned securely. Please visit the portal and use the "Forgot Password" feature to set your initial password securely.
     </div>
     """
 
@@ -76,19 +72,9 @@ def notify_staff_updated(staff_email: str, staff_name: str, changes: dict):
 def notify_password_changed(staff_email: str, staff_name: str, new_password: Optional[str] = None):
     title = "Password Changed Successfully"
 
-    pass_html = ""
-    if new_password:
-        pass_html = f"""
-        <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 6px; margin: 20px 0; word-break: break-word; overflow-wrap: anywhere;">
-            <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: bold; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Your New / Temporary Password</p>
-            <p style="margin: 0; font-family: 'Courier New', Courier, monospace; font-size: 20px; font-weight: bold; color: #0f172a; letter-spacing: 1px; word-break: break-all;">{new_password}</p>
-        </div>
-        """
-
     content = f"""
     <p style="margin-top: 0;">Dear {staff_name},</p>
     <p>This is a confirmation that your account password was successfully updated.</p>
-    {pass_html}
     <p>If you did not perform this action, please contact the system administrator immediately to secure your account.</p>
     """
     html_body = generate_professional_template(title, content)
@@ -243,14 +229,10 @@ def notify_default_password_reset(staff_email: str, staff_name: str, temp_passwo
             <td>Institutional Email</td>
             <td style="word-break: break-all;"><strong>{staff_email}</strong></td>
         </tr>
-        <tr>
-            <td>New Temporary Password</td>
-            <td><code style="background:#f1f5f9; padding:4px 8px; border-radius:4px; font-size: 15px; color:#0f172a; word-break: break-all;">{temp_password}</code></td>
-        </tr>
     </table>
 
     <div class="security-notice">
-        <strong>Mandatory Action Required:</strong> You will be forced to change this temporary password immediately upon your next login.
+        <strong>Mandatory Action Required:</strong> Please use the "Forgot Password" feature on the portal to securely set your new password. Your current sessions have been invalidated.
     </div>
     """
 

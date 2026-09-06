@@ -337,11 +337,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     setLoading(true);
     setAuthStatusText('Validating reset code...');
     try {
-      await api.post('/auth/forgot-password/verify', {
+      const res = await api.post('/auth/forgot-password/verify', {
         institutional_id: forgotInstId.trim(),
         email: forgotEmail.trim().toLowerCase(),
         otp: rawOtp
       });
+      if (res.data && res.data.reset_token) {
+        setForgotResetToken(res.data.reset_token);
+      }
       setForgotStep('reset_password');
       setSuccessMsg('Reset code verified. Please set your new password.');
     } catch (err: any) {

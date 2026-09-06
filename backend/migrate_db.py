@@ -193,6 +193,23 @@ def run_db_migrations():
             ("notification_preferences", "push_enabled", "ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS push_enabled BOOLEAN DEFAULT TRUE"),
             ("notification_preferences", "email_enabled", "ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS email_enabled BOOLEAN DEFAULT TRUE"),
             ("notification_preferences", "categories_json", "ALTER TABLE notification_preferences ADD COLUMN IF NOT EXISTS categories_json TEXT"),
+            # report_cache
+            ("report_cache", "filter_hash", "ALTER TABLE report_cache ADD COLUMN IF NOT EXISTS filter_hash VARCHAR(64)"),
+            ("report_cache", "report_type", "ALTER TABLE report_cache ADD COLUMN IF NOT EXISTS report_type VARCHAR(100)"),
+            ("report_cache", "format", "ALTER TABLE report_cache ADD COLUMN IF NOT EXISTS format VARCHAR(20)"),
+            ("report_cache", "filters_json", "ALTER TABLE report_cache ADD COLUMN IF NOT EXISTS filters_json TEXT"),
+            ("report_cache", "user_scope", "ALTER TABLE report_cache ADD COLUMN IF NOT EXISTS user_scope VARCHAR(100)"),
+            ("report_cache", "filename", "ALTER TABLE report_cache ADD COLUMN IF NOT EXISTS filename VARCHAR(255)"),
+            ("report_cache", "mime_type", "ALTER TABLE report_cache ADD COLUMN IF NOT EXISTS mime_type VARCHAR(100)"),
+            ("report_cache", "storage_path", "ALTER TABLE report_cache ADD COLUMN IF NOT EXISTS storage_path VARCHAR(500)"),
+            ("report_cache", "download_url", "ALTER TABLE report_cache ADD COLUMN IF NOT EXISTS download_url VARCHAR(500)"),
+            ("report_cache", "data_version", "ALTER TABLE report_cache ADD COLUMN IF NOT EXISTS data_version VARCHAR(100)"),
+            ("report_cache", "status", "ALTER TABLE report_cache ADD COLUMN IF NOT EXISTS status VARCHAR(30)"),
+            ("report_cache", "generated_at", "ALTER TABLE report_cache ADD COLUMN IF NOT EXISTS generated_at TIMESTAMP"),
+            ("report_cache", "expires_at", "ALTER TABLE report_cache ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP"),
+            ("report_cache", "generation_time_ms", "ALTER TABLE report_cache ADD COLUMN IF NOT EXISTS generation_time_ms FLOAT"),
+            ("report_cache", "file_size_bytes", "ALTER TABLE report_cache ADD COLUMN IF NOT EXISTS file_size_bytes INTEGER"),
+            ("report_cache", "error_message", "ALTER TABLE report_cache ADD COLUMN IF NOT EXISTS error_message TEXT"),
         ]
 
         for t_name, c_name, migration_sql in pg_migrations:
@@ -557,6 +574,32 @@ def run_db_migrations():
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );
         """)
+
+        # report_cache columns
+        report_cache_cols = [
+            ("filter_hash", "VARCHAR(64)"),
+            ("report_type", "VARCHAR(100)"),
+            ("format", "VARCHAR(20)"),
+            ("filters_json", "TEXT"),
+            ("user_scope", "VARCHAR(100)"),
+            ("filename", "VARCHAR(255)"),
+            ("mime_type", "VARCHAR(100)"),
+            ("storage_path", "VARCHAR(500)"),
+            ("download_url", "VARCHAR(500)"),
+            ("data_version", "VARCHAR(100)"),
+            ("status", "VARCHAR(30)"),
+            ("generated_at", "DATETIME"),
+            ("expires_at", "DATETIME"),
+            ("generation_time_ms", "FLOAT"),
+            ("file_size_bytes", "INTEGER"),
+            ("error_message", "TEXT"),
+        ]
+        for col_name, col_type in report_cache_cols:
+            try:
+                cursor.execute(f"ALTER TABLE report_cache ADD COLUMN {col_name} {col_type};")
+                print(f"Added column '{col_name}' to report_cache.")
+            except Exception:
+                pass
 
         # contest_participations: source_username audit trail column
         try:

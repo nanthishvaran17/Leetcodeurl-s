@@ -447,7 +447,7 @@ def seed_database():
         # 4. Super Admin User Initialization
         admin_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()
         admin_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
-        admin_pass = getattr(settings, "ADMIN_PASSWORD", "admin123").strip()
+        admin_pass = getattr(settings, "ADMIN_PASSWORD", secrets.token_urlsafe(16)).strip()
 
         admin_user = db.query(User).filter(
             (User.username.ilike(admin_username)) | (User.email.ilike(admin_email))
@@ -455,7 +455,7 @@ def seed_database():
 
         if not admin_user:
             if not admin_pass:
-                admin_pass = "admin123"
+                admin_pass = secrets.token_urlsafe(16)
             admin_user = User(
                 username=admin_username,
                 email=admin_email,

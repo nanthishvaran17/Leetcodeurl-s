@@ -71,7 +71,7 @@ async def _deferred_startup_tasks():
             try:
                 admin_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()
                 admin_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
-                admin_pass = getattr(settings, "ADMIN_PASSWORD", "admin123").strip() or "admin123"
+                admin_pass = getattr(settings, "ADMIN_PASSWORD", secrets.token_urlsafe(16)).strip()
 
                 admin_user = db_init.query(User).filter(
                     (User.username.ilike(admin_username)) | (User.email.ilike(admin_email))
