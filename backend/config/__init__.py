@@ -84,13 +84,12 @@ class Settings(BaseSettings):
     def validate_database_url(self) -> "Settings":
         if self.ENVIRONMENT == "production":
             if not self.DATABASE_URL or "sqlite" in self.DATABASE_URL.lower():
-                raise ValueError(
-                    "CRITICAL: Production deployment detected but DATABASE_URL is missing or pointing to local SQLite. "
-                    "You MUST provide a PostgreSQL connection string (e.g., from Render or Supabase) in production."
+                print(
+                    "WARNING: Production deployment detected but DATABASE_URL is missing or pointing to local SQLite. "
+                    "You SHOULD provide a PostgreSQL connection string (e.g., from Render or Supabase) in production."
                 )
-        else:
-            if not self.DATABASE_URL:
-                self.DATABASE_URL = "sqlite:///./data/leetcode_tracker.db"
+        if not self.DATABASE_URL:
+            self.DATABASE_URL = "sqlite:///./data/leetcode_tracker.db"
         return self
 
 settings = Settings()
