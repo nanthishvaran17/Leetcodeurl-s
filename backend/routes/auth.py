@@ -1009,9 +1009,28 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
     user = db.query(User).filter(
         or_(
             User.username.ilike(clean_username),
-            User.email.ilike(clean_username)
+            User.email.ilike(clean_username),
+            User.institutional_id.ilike(clean_username)
         )
     ).first()
+
+    # Fallback to Student table if not found in User table
+    if not user:
+        student = db.query(Student).filter(
+            or_(
+                Student.reg_no.ilike(clean_username),
+                Student.email.ilike(clean_username),
+                Student.institutional_email.ilike(clean_username),
+                Student.username.ilike(clean_username)
+            )
+        ).first()
+        if student and student.is_active:
+            user = db.query(User).filter(
+                or_(
+                    User.username.ilike(student.username or student.reg_no),
+                    User.email.ilike(student.email or student.institutional_email or "")
+                )
+            ).first()
 
     if not user or not verify_password(clean_password, str(user.hashed_password or "")):
         allow_default_pwd = getattr(settings, "ALLOW_DEFAULT_ADMIN_PASSWORD", False)

@@ -169,7 +169,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     setAuthStatusText('Signing in...');
 
     try {
-      const res = await api.post('/auth/login', { username: cleanUser, password: cleanPass }, { timeout: 8000 });
+      const res = await api.post('/auth/login', { username: cleanUser, password: cleanPass }, { timeout: 30000 });
       if (res.data && res.data.access_token) {
         setSuccessMsg('Authentication verified. Directing to workspace...');
         login(res.data.access_token, res.data.user);
@@ -601,7 +601,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                           type="text"
                           value={username}
                           onChange={(e) => setUsername(e.target.value)}
-                          placeholder="username or email@nandha.org"
+                          placeholder="username or faculty@nandhaengg.org"
                           autoComplete="username"
                           autoCapitalize="none"
                           spellCheck={false}
