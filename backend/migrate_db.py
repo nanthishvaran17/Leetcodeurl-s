@@ -1,10 +1,23 @@
 import sqlite3
 import os
+from sqlalchemy import text, inspect as _inspect
 
 from backend.database import engine
 from backend.models import Base
 
 def run_db_migrations():
+    # Force drop report_cache if it exists but is missing filter_hash
+    try:
+        inspector = _inspect(engine)
+        if "report_cache" in inspector.get_table_names():
+            cols = {c["name"] for c in inspector.get_columns("report_cache")}
+            if "filter_hash" not in cols:
+                with engine.begin() as conn:
+                    conn.execute(text("DROP TABLE report_cache;"))
+                print("[PG Migration] Dropped outdated report_cache table to let create_all recreate it.")
+    except Exception as e:
+        print(f"[PG Migration] Could not drop report_cache: {e}")
+
     # ====================================================================
     # STEP 1: Create all tables defined in models that don't yet exist
     # (Works for both SQLite and PostgreSQL — safe to re-run)
