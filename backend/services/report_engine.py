@@ -101,10 +101,18 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
 
     report_id = f"RPT-{datetime.datetime.utcnow().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
 
+    from backend.services.weekly_session_resolver import resolve_weekly_sessions
+    resolved_info = resolve_weekly_sessions(db)
+    curr_sess = resolved_info.get("current_week_session")
+    resolved_cname = curr_sess.contest_name if curr_sess else None
+    resolved_cdate = curr_sess.session_date if curr_sess else None
+
     dataset = {
         "reportId": report_id,
         "reportType": config.report_type,
         "title": title,
+        "contestName": resolved_cname,
+        "sessionDate": resolved_cdate,
         "generatedAt": datetime.datetime.utcnow().isoformat(),
         "verifiedAt": datetime.datetime.utcnow().isoformat(),
         "dataStatus": "READY" if total_students > 0 else "PARTIAL",
@@ -123,7 +131,9 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
             "highestSolved": highest_solved,
             "averageRating": average_rating,
             "highestRating": highest_rating,
-            "totalParticipations": len(participations_dict)
+            "totalParticipations": len(participations_dict),
+            "contestName": resolved_cname,
+            "sessionDate": resolved_cdate
         },
         "distribution": distribution,
         "departmentSummary": dept_breakdown,

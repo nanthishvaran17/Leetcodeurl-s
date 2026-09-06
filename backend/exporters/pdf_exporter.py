@@ -189,9 +189,15 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
 
     rows = dataset.get("rows", [])
     metrics = dataset.get("metrics", {})
-    contest_name = dataset.get("contestName") or metrics.get("contestName") or "Weekly Contest 516"
-    contest_date_str = dataset.get("sessionDate") or dataset.get("session_date") or "23.08.2026"
-    snapshot_id = str(dataset.get("snapshotId") or dataset.get("snapshot_id") or dataset.get("reportId") or "SNAPSHOT_516")
+
+    from backend.services.contest_discovery import get_immediately_previous_sunday_date, calculate_contest_number
+    _prev_sun = get_immediately_previous_sunday_date()
+    _def_cname = f"Weekly Contest {calculate_contest_number(_prev_sun)}"
+    _def_cdate = _prev_sun.strftime("%d.%m.%Y")
+
+    contest_name = dataset.get("contestName") or metrics.get("contestName") or dataset.get("contest_name") or _def_cname
+    contest_date_str = dataset.get("sessionDate") or dataset.get("session_date") or _def_cdate
+    snapshot_id = str(dataset.get("snapshotId") or dataset.get("snapshot_id") or dataset.get("reportId") or f"SNAPSHOT_{calculate_contest_number(_prev_sun)}")
     gen_time_str = dataset.get("generatedAtIST") or datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")
 
     # Dynamic Department header

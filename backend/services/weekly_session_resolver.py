@@ -4,12 +4,36 @@ Strict session resolution for weekly report generation.
 Never silently falls back to arbitrary contest numbers.
 """
 import re
+import datetime
 from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
 
 from backend.models import WeeklySession
 from backend.config.report_config import FINALIZED_STATUSES
+from backend.services.contest_discovery import get_current_ist_datetime
 from backend.logger import logger
+
+
+def parse_session_date(d_str: Any) -> Optional[datetime.date]:
+    """Parses DD.MM.YYYY or YYYY-MM-DD string into a datetime.date object."""
+    if not d_str or not isinstance(d_str, str):
+        return None
+    d_str = d_str.strip()
+    try:
+        if "." in d_str:
+            parts = d_str.split(".")
+            if len(parts) == 3:
+                return datetime.date(int(parts[2]), int(parts[1]), int(parts[0]))
+        elif "-" in d_str:
+            parts = d_str.split("-")
+            if len(parts) == 3:
+                if len(parts[0]) == 4:
+                    return datetime.date(int(parts[0]), int(parts[1]), int(parts[2]))
+                else:
+                    return datetime.date(int(parts[2]), int(parts[1]), int(parts[0]))
+    except Exception:
+        pass
+    return None
 
 
 def extract_contest_number(session: Any) -> Optional[int]:
@@ -23,16 +47,12 @@ def extract_contest_number(session: Any) -> Optional[int]:
     if isinstance(session, int):
         return session
 
-    # Check object attributes
     candidates = []
     if hasattr(session, "contest_name") and session.contest_name:
         candidates.append(str(session.contest_name))
     if hasattr(session, "contest_id") and session.contest_id:
         candidates.append(str(session.contest_id))
-    if hasattr(session, "session_code") and session.session_code:
-        candidates.append(str(session.session_code))
 
-    # Check dict keys
     if isinstance(session, dict):
         if session.get("contest_name"):
             candidates.append(str(session["contest_name"]))
@@ -48,17 +68,14 @@ def extract_contest_number(session: Any) -> Optional[int]:
         candidates.append(session)
 
     for text in candidates:
-        # Match 'Weekly Contest 514', 'weekly-contest-514', 'Contest 514', or standalone number
+        if re.search(r'\b(test|mock)\b', text, re.IGNORECASE):
+            continue
         m = re.search(r'(?:weekly[- ]contest[- ]?|contest[- ]?)(\d+)', text, re.IGNORECASE)
         if m:
             return int(m.group(1))
-        # Fallback regex for numbers in text
-        m_num = re.search(r'\b(\d{1,4})\b', text)
+        m_num = re.search(r'\b(4\d{2}|5\d{2}|6\d{2})\b', text)
         if m_num:
             return int(m_num.group(1))
-        m_any = re.search(r'\d+', text)
-        if m_any:
-            return int(m_any.group(0))
 
     return None
 
@@ -73,17 +90,13 @@ def resolve_weekly_sessions(
     
     1. If BOTH CLI overrides are supplied, resolve those exact contest numbers from DB.
        - Resolution mode: 'cli_override'
-    2. Otherwise query sessions whose status is in FINALIZED_STATUSES ('COMPLETED', 'FINALIZED').
-    3. Extract contest number from contest name/id.
-    4. Sort by contest number descending:
-       - [0] = current_week
-       - [1] = last_week
-       - If only 1 exists: current = [0], last = None
-       - If none exist: both = None
-       - Resolution mode: 'db_auto' (if at least 1 session exists) or 'insufficient' (if 0 exist)
-    5. Never silently fallback to 513/514.
+    2. Otherwise filter sessions by date (session_date <= today_ist) and valid contest number.
+    3. Sort descending by parsed date & contest number:
+       - [0] = current_week (today / latest Sunday)
+       - [1] = last_week (previous Sunday)
     """
     all_db_sessions = db.query(WeeklySession).all()
+    today_ist = get_current_ist_datetime().date()
 
     def _find_session_by_contest_num(c_num: Optional[int]) -> Optional[WeeklySession]:
         if c_num is None:
@@ -115,58 +128,25 @@ def resolve_weekly_sessions(
             "current_week_date": str(curr_date) if curr_date else None,
         }
 
-    # Case 2: Automatic DB resolution from finalized/completed sessions
-    finalized_sessions = [
-        s for s in all_db_sessions
-        if (s.status or "").upper() in [st.upper() for st in FINALIZED_STATUSES]
-    ]
-
-    if not finalized_sessions and all_db_sessions:
-        finalized_sessions = all_db_sessions
-
-    if not all_db_sessions:
-        return {
-            "last_week_session": None,
-            "current_week_session": None,
-            "last_week_contest": None,
-            "current_week_contest": None,
-            "resolution_mode": "insufficient",
-            "last_week_date": None,
-            "current_week_date": None,
-        }
-
-    # Map session -> contest number
-    valid_sessions = []
-    for s in finalized_sessions:
-        c_num = extract_contest_number(s)
-        if c_num is not None:
-            valid_sessions.append((c_num, s))
-
-    # Sort descending by contest number
-    valid_sessions.sort(key=lambda item: item[0], reverse=True)
-
-    all_valid_sessions = []
+    # Filter out test sessions and future sessions (e.g. 13.09.2026 when today is 06.09.2026)
+    valid_past_or_today = []
     for s in all_db_sessions:
+        if not s or re.search(r'\b(test|mock)\b', str(s.contest_name or ""), re.IGNORECASE):
+            continue
+        p_date = parse_session_date(s.session_date)
         c_num = extract_contest_number(s)
-        if c_num is not None:
-            all_valid_sessions.append((c_num, s))
-    all_valid_sessions.sort(key=lambda item: item[0], reverse=True)
+        if p_date and p_date <= today_ist and c_num is not None:
+            valid_past_or_today.append((p_date, c_num, s))
 
-    if len(valid_sessions) >= 2:
-        curr_num, curr_sess = valid_sessions[0]
-        last_num, last_sess = valid_sessions[1]
+    # Sort descending by date and contest number
+    valid_past_or_today.sort(key=lambda item: (item[0], item[1]), reverse=True)
+
+    if len(valid_past_or_today) >= 2:
+        curr_pdate, curr_num, curr_sess = valid_past_or_today[0]
+        last_pdate, last_num, last_sess = valid_past_or_today[1]
         mode = "db_auto"
-    elif len(all_valid_sessions) >= 2:
-        curr_num, curr_sess = all_valid_sessions[0]
-        last_num, last_sess = all_valid_sessions[1]
-        mode = "db_auto"
-    elif len(valid_sessions) == 1:
-        curr_num, curr_sess = valid_sessions[0]
-        last_sess = _find_session_by_contest_num(curr_num - 1)
-        last_num = extract_contest_number(last_sess) if last_sess else None
-        mode = "db_auto"
-    elif len(all_valid_sessions) == 1:
-        curr_num, curr_sess = all_valid_sessions[0]
+    elif len(valid_past_or_today) == 1:
+        curr_pdate, curr_num, curr_sess = valid_past_or_today[0]
         last_sess = _find_session_by_contest_num(curr_num - 1)
         last_num = extract_contest_number(last_sess) if last_sess else None
         mode = "db_auto"
@@ -181,8 +161,8 @@ def resolve_weekly_sessions(
     curr_date = getattr(curr_sess, "session_date", None) if curr_sess else None
 
     logger.info(
-        f"[SESSION_RESOLVER] Mode: {mode}, Current: Contest {curr_num} (Session ID {getattr(curr_sess, 'id', None)}), "
-        f"Last: Contest {last_num} (Session ID {getattr(last_sess, 'id', None)})"
+        f"[SESSION_RESOLVER] Mode: {mode}, Current: Contest {curr_num} ({curr_date}, Session ID {getattr(curr_sess, 'id', None)}), "
+        f"Last: Contest {last_num} ({last_date}, Session ID {getattr(last_sess, 'id', None)})"
     )
 
     return {
