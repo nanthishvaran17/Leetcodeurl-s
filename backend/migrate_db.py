@@ -8,7 +8,8 @@ from backend.models import Base
 def run_db_migrations():
     # Force drop report_cache if it exists but is missing filter_hash
     try:
-        inspector = _inspect(engine)
+        from sqlalchemy import inspect
+        inspector = inspect(engine)
         if "report_cache" in inspector.get_table_names():
             cols = {c["name"] for c in inspector.get_columns("report_cache")}
             if "filter_hash" not in cols:
@@ -32,9 +33,9 @@ def run_db_migrations():
     from backend.database import db_url as _db_url
 
     if "postgresql" in _db_url or "postgres" in _db_url:
-        from sqlalchemy import inspect as _inspect
+        from sqlalchemy import inspect
         try:
-            inspector = _inspect(engine)
+            inspector = inspect(engine)
             existing_tables = set(inspector.get_table_names())
             table_cols_map = {}
             for t_name in existing_tables:
