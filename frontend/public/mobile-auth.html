@@ -288,15 +288,17 @@
       }
     }
 
-    // Rapid Firebase User Resolution (Fast 1-second max check)
-    async function resolveFirebaseUserFast(authInstance) {
-      try {
-        const redirectRes = await getRedirectResult(authInstance);
-        if (redirectRes && redirectRes.user) {
-          return redirectRes.user;
+    // Rapid Firebase User Resolution (Fast 500ms max check)
+    async function resolveFirebaseUserFast(authInstance, checkRedirect = false) {
+      if (checkRedirect) {
+        try {
+          const redirectRes = await getRedirectResult(authInstance);
+          if (redirectRes && redirectRes.user) {
+            return redirectRes.user;
+          }
+        } catch (err) {
+          console.warn('[MOBILE AUTH] getRedirectResult note:', err?.message || err);
         }
-      } catch (err) {
-        console.warn('[MOBILE AUTH] getRedirectResult note:', err?.message || err);
       }
 
       if (authInstance.currentUser) {
@@ -310,7 +312,7 @@
           if (!isSettled) {
             isSettled = true;
             unsubscribe();
-            resolve(user); // Resolves user OR null immediately!
+            resolve(user);
           }
         });
 
@@ -320,7 +322,7 @@
             unsubscribe();
             resolve(authInstance.currentUser || null);
           }
-        }, 1000); // 1 second max wait!
+        }, 500);
       });
     }
 
@@ -366,9 +368,11 @@
       const isRedirectingBack = !!sessionStorage.getItem('nec_auth_redirect_started');
 
       if (isRedirectingBack) {
+        spinnerEl.style.display = 'block';
+        googleBtnEl.style.display = 'none';
         statusEl.innerText = "Restoring Session...";
         subtitleEl.innerText = "Restoring institutional Google session...";
-        const user = await resolveFirebaseUserFast(auth);
+        const user = await resolveFirebaseUserFast(auth, true);
 
         if (user) {
           sessionStorage.removeItem('nec_auth_redirect_started');
@@ -381,23 +385,24 @@
         }
 
         sessionStorage.removeItem('nec_auth_redirect_started');
+        spinnerEl.style.display = 'none';
+        googleBtnEl.style.display = 'inline-flex';
+        statusEl.innerText = "Ready to Sign In";
+        subtitleEl.innerText = "Tap below to authenticate with your official Google account.";
+        return;
       }
 
-      // Check if user is already logged in
-      const existingUser = await resolveFirebaseUserFast(auth);
+      // Check if user is already logged in (fast 500ms check without redirect check)
+      const existingUser = await resolveFirebaseUserFast(auth, false);
       if (existingUser) {
+        spinnerEl.style.display = 'block';
+        googleBtnEl.style.display = 'none';
         if (isExchangingToken) return;
         isExchangingToken = true;
         const token = await existingUser.getIdToken(true);
         await handleIdToken(token);
         return;
       }
-
-      // Show Google Button for explicit user tap (prevents browser popup gesture blocks)
-      spinnerEl.style.display = 'none';
-      googleBtnEl.style.display = 'inline-flex';
-      statusEl.innerText = "Ready to Sign In";
-      subtitleEl.innerText = "Tap below to authenticate with your official Google account.";
     }
 
     googleBtnEl.onclick = executeGoogleSignIn;
@@ -416,16 +421,16 @@
     </div>
     <div class="eyebrow">NANDHA ENGINEERING COLLEGE</div>
     <h1 class="title">Institutional Google Sign-In</h1>
-    <p class="subtitle" id="subtitle-text">Authenticating through official Google service...</p>
+    <p class="subtitle" id="subtitle-text">Tap below to authenticate with your official Google account.</p>
 
     <div class="status-badge" id="status-badge">
-      <span id="status-text">Authorizing Session</span>
+      <span id="status-text">Ready to Sign In</span>
     </div>
 
-    <div class="spinner" id="spinner"></div>
+    <div class="spinner" id="spinner" style="display: none;"></div>
     <div class="error-box" id="error-box"></div>
 
-    <button type="button" class="btn btn-google" id="google-btn" style="display: none;">
+    <button type="button" class="btn btn-google" id="google-btn" style="display: inline-flex;">
       <svg class="google-icon" viewBox="0 0 24 24">
         <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
         <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.29v3.15C3.26 21.3 7.31 24 12 24z"/>
