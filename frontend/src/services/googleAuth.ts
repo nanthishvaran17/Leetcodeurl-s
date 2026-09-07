@@ -128,30 +128,31 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
 
   try {
     const { Browser } = await import('@capacitor/browser');
-    await Browser.close().catch(() => {});
+    await Browser.close().catch(() => {
+      console.log('[MOBILE AUTH] Browser close skipped/failed, continuing callback processing');
+    });
   } catch (_e) {}
 
   try {
-    const cleanUrlStr = urlStr
-      .replace(/^org\.nandhaengg\.leetcodesync:\/\//, 'https://dummy.local/')
-      .replace(/^leetcodesync:\/\//, 'https://dummy.local/');
+    const [base, queryString] = urlStr.split('?');
+    const searchParams = new URLSearchParams(queryString || '');
 
-    const parsed = new URL(cleanUrlStr);
-    const errorParam = parsed.searchParams.get('error');
-    const codeParam = parsed.searchParams.get('code');
-    const stateParam = parsed.searchParams.get('state');
+    if (!base.startsWith('org.nandhaengg.leetcodesync://oauth-callback') && 
+        !base.startsWith('leetcodesync://oauth-callback')) {
+      throw new Error('Invalid callback URL scheme or host.');
+    }
+    
+    console.log('[MOBILE AUTH] CALLBACK_URL_VALIDATED');
+
+    const errorParam = searchParams.get('error');
+    const codeParam = searchParams.get('code');
+    const stateParam = searchParams.get('state');
 
     if (errorParam) {
       const errMsg = errorParam.toLowerCase().includes('cancel')
         ? 'Google sign-in was cancelled.'
         : errorParam;
       console.log('[MOBILE AUTH] AUTH_FAILED Reason:', errMsg);
-      if (activePkceSession?.reject) {
-        activePkceSession.reject(new Error(errMsg));
-      }
-      activePkceSession = null;
-      sessionStorage.removeItem('nec_pkce_verifier');
-      sessionStorage.removeItem('nec_pkce_state');
       throw new Error(errMsg);
     }
 
@@ -160,20 +161,22 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
       throw new Error('No authorization code returned in callback.');
     }
 
-    // Recover code_verifier and state from memory or sessionStorage
     const expectedState = activePkceSession?.state || sessionStorage.getItem('nec_pkce_state');
-    const codeVerifier = activePkceSession?.code_verifier || sessionStorage.getItem('nec_pkce_verifier') || '';
+    const codeVerifier = activePkceSession?.code_verifier || sessionStorage.getItem('nec_pkce_verifier');
 
-    // Validate State (CSRF check)
-    if (expectedState && stateParam && expectedState !== stateParam) {
+    if (!expectedState || !codeVerifier) {
+      console.log('[MOBILE AUTH] AUTH_FAILED Reason: Missing expected state or verifier (PKCE expired)');
+      throw new Error('OAuth session expired. Please sign in again.');
+    }
+
+    if (expectedState !== stateParam) {
       console.log('[MOBILE AUTH] AUTH_FAILED Reason: State mismatch');
       throw new Error('OAuth State verification failed (possible CSRF attempt).');
     }
 
-    console.log('[MOBILE AUTH] FIREBASE_USER_RESOLVED');
-    console.log('[MOBILE AUTH] TOKEN_RESOLVED');
+    console.log('[MOBILE AUTH] STATE_VALIDATED');
+    console.log('[MOBILE AUTH] PKCE_VERIFIER_RESOLVED');
 
-    // Securely exchange code + code_verifier via HTTPS backend endpoint with bounded retry
     let res: any = null;
     let attempt = 0;
     const maxAttempts = 2;
@@ -186,18 +189,24 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
           code: codeParam,
           code_verifier: codeVerifier,
           state: stateParam || ''
-        }, { timeout: 35000 });
+        }, { timeout: 10000 });
+        
         if (res.data && res.data.authenticated) break;
       } catch (postErr: any) {
         console.warn(`[MOBILE AUTH] BACKEND_SESSION Attempt ${attempt} note:`, postErr?.message || postErr);
-        if (attempt >= maxAttempts) throw postErr;
-        await new Promise(r => setTimeout(r, 1200));
+        
+        const isClientError = postErr?.response?.status >= 400 && postErr?.response?.status < 500;
+        
+        if (isClientError || attempt >= maxAttempts) {
+          throw postErr;
+        }
+        await new Promise(r => setTimeout(r, 800)); // 800ms retry delay
       }
     }
 
     if (res && res.data && res.data.authenticated && res.data.user) {
       console.log('[MOBILE AUTH] BACKEND_SESSION_SUCCESS');
-      console.log('[MOBILE AUTH] QUICK_FETCH_STARTED');
+      console.log('[MOBILE AUTH] AUTHENTICATION_COMPLETE');
 
       const result: GoogleAuthResult = {
         authenticated: true,
@@ -205,14 +214,14 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
         user: res.data.user
       };
 
-      console.log('[MOBILE AUTH] QUICK_FETCH_SUCCESS Role:', res.data.user.role);
-
       if (activePkceSession?.resolve) {
         activePkceSession.resolve(result);
       }
       activePkceSession = null;
       sessionStorage.removeItem('nec_pkce_verifier');
       sessionStorage.removeItem('nec_pkce_state');
+      
+      console.log('[MOBILE AUTH] DASHBOARD_REDIRECT');
       return result;
     }
 
