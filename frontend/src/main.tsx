@@ -20,7 +20,14 @@ import { queryClient } from './lib/react-query'
 import { startSafeHeartbeat } from './services/heartbeat'
 
 // Safe Cold-Start Mitigation & Health Heartbeat
-startSafeHeartbeat();
+// Deferred: run after first render to avoid competing with FCP/LCP resources
+if (typeof window !== 'undefined') {
+  if ('requestIdleCallback' in window) {
+    (window as any).requestIdleCallback(() => startSafeHeartbeat(), { timeout: 3000 });
+  } else {
+    setTimeout(startSafeHeartbeat, 600);
+  }
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

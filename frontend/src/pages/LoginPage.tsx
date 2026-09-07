@@ -92,21 +92,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     setIsDarkMode(isDark);
   }, []);
 
-  // Eagerly warm up Render server as soon as login page mounts
-  // This prevents cold-start Network Errors when user clicks Sign In
+  // Eagerly warm up Render server — deferred by 1s to avoid competing with LCP image fetch
   useEffect(() => {
     const warmUp = async () => {
       try {
         await api.get('/health', { timeout: 25000 } as any);
-        console.log('[SERVER_WARMUP] Backend ready');
       } catch {
         // Silently ignore — the login retry will handle if still not ready
       }
     };
-    warmUp();
+    // Defer to after first paint so it doesn't compete with LCP image bandwidth
+    const t = setTimeout(warmUp, 1000);
+    return () => clearTimeout(t);
   }, []);
 
   // Fetch Live Stats from Public Endpoint
+  // Deferred by 2s to avoid competing with LCP image during critical rendering window
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -125,9 +126,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         // Keep previous value if fetch fails
       }
     };
-    fetchStats();
+    // Defer initial fetch to after LCP — stats are non-critical for first paint
+    const initialDelay = setTimeout(fetchStats, 2000);
     const interval = setInterval(fetchStats, 5 * 60 * 1000);
-    return () => clearInterval(interval);
+    return () => { clearTimeout(initialDelay); clearInterval(interval); };
   }, []);
 
   const toggleTheme = () => {

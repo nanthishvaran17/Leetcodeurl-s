@@ -117,7 +117,7 @@ export default defineConfig({
   },
   esbuild: {
     drop: ['debugger'],
-    pure: ['console.debug'],
+    pure: ['console.debug', 'console.log', 'console.warn', 'console.info'],
     legalComments: 'none',
   },
   optimizeDeps: {
