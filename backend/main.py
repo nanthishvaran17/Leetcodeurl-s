@@ -46,7 +46,62 @@ from backend.websocket_manager import manager
 async def _deferred_startup_tasks():
     """Executes background DB migrations, admin reconcile, and scheduler asynchronously after port binding."""
     logger.info("[STARTUP] Running background post-bind initialization...")
+
+    def _run_safety_schema_migration():
+        """
+        Idempotent safety migration: adds any missing columns directly via raw SQL.
+        This runs EVERY startup and is a guaranteed no-op if columns already exist.
+        It runs BEFORE Alembic so that even if Alembic has issues, the schema is correct.
+        """
+        try:
+            with engine.connect() as conn:
+                # Add primary/secondary LeetCode account columns if missing
+                conn.execute(text("""
+                    ALTER TABLE students
+                        ADD COLUMN IF NOT EXISTS primary_leetcode_id VARCHAR(100),
+                        ADD COLUMN IF NOT EXISTS secondary_leetcode_id VARCHAR(100),
+                        ADD COLUMN IF NOT EXISTS secondary_status VARCHAR(50) DEFAULT 'none'
+                """))
+                # Backfill primary_leetcode_id from username
+                conn.execute(text("""
+                    UPDATE students
+                    SET primary_leetcode_id = username
+                    WHERE primary_leetcode_id IS NULL AND username IS NOT NULL
+                """))
+                # Ensure index exists (CREATE INDEX IF NOT EXISTS is safe)
+                conn.execute(text("""
+                    CREATE INDEX IF NOT EXISTS ix_students_primary_leetcode_id
+                    ON students (primary_leetcode_id)
+                """))
+                conn.execute(text("""
+                    CREATE INDEX IF NOT EXISTS ix_students_secondary_leetcode_id
+                    ON students (secondary_leetcode_id)
+                """))
+                # Ensure weekly_verification_records table exists
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS weekly_verification_records (
+                        id SERIAL PRIMARY KEY,
+                        student_id INTEGER NOT NULL REFERENCES students(id),
+                        verification_week INTEGER NOT NULL,
+                        notification_type VARCHAR(50) NOT NULL,
+                        primary_solved INTEGER,
+                        secondary_solved INTEGER,
+                        status VARCHAR(30),
+                        email_dispatched BOOLEAN,
+                        timestamp TIMESTAMP,
+                        CONSTRAINT uq_weekly_verification_record
+                            UNIQUE (student_id, verification_week, notification_type)
+                    )
+                """))
+                conn.commit()
+                logger.info("[STARTUP] Safety schema migration: all required columns verified/added OK.")
+        except Exception as _schema_err:
+            logger.error(f"[STARTUP] Safety schema migration failed: {_schema_err}")
+
     def _run_blocking_migrations():
+        # Run safety migration FIRST (idempotent raw SQL - never fails if DB is reachable)
+        _run_safety_schema_migration()
+
         try:
             from backend.migrate_db import run_db_migrations
             run_db_migrations()
