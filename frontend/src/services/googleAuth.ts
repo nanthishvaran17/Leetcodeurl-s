@@ -124,7 +124,7 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
   }
 
   isProcessingCallback = true;
-  console.log('[MOBILE AUTH] OAuth callback received');
+  console.log('[MOBILE AUTH] CALLBACK_RECEIVED');
 
   try {
     const { Browser } = await import('@capacitor/browser');
@@ -145,6 +145,7 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
       const errMsg = errorParam.toLowerCase().includes('cancel')
         ? 'Google sign-in was cancelled.'
         : errorParam;
+      console.log('[MOBILE AUTH] AUTH_FAILED Reason:', errMsg);
       if (activePkceSession?.reject) {
         activePkceSession.reject(new Error(errMsg));
       }
@@ -155,6 +156,7 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
     }
 
     if (!codeParam) {
+      console.log('[MOBILE AUTH] AUTH_FAILED Reason: No authorization code in callback');
       throw new Error('No authorization code returned in callback.');
     }
 
@@ -164,30 +166,46 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
 
     // Validate State (CSRF check)
     if (expectedState && stateParam && expectedState !== stateParam) {
+      console.log('[MOBILE AUTH] AUTH_FAILED Reason: State mismatch');
       throw new Error('OAuth State verification failed (possible CSRF attempt).');
     }
 
-    console.log('[MOBILE AUTH] Firebase user verified via authorization code');
-    console.log('[MOBILE AUTH] Backend session requested');
+    console.log('[MOBILE AUTH] FIREBASE_USER_RESOLVED');
+    console.log('[MOBILE AUTH] TOKEN_RESOLVED');
 
-    // Securely exchange code + code_verifier via HTTPS backend endpoint
-    const res = await api.post('/auth/google/exchange-code', {
-      code: codeParam,
-      code_verifier: codeVerifier,
-      state: stateParam || ''
-    }, { timeout: 35000 });
+    // Securely exchange code + code_verifier via HTTPS backend endpoint with bounded retry
+    let res: any = null;
+    let attempt = 0;
+    const maxAttempts = 2;
 
-    if (res.data && res.data.authenticated && res.data.user) {
-      console.log('[MOBILE AUTH] Backend session created');
-      console.log('[MOBILE AUTH] Auth state updated');
-      console.log('[MOBILE AUTH] Redirecting to dashboard');
-      console.log('[MOBILE AUTH] Login completed');
+    while (attempt < maxAttempts) {
+      attempt++;
+      try {
+        console.log(`[MOBILE AUTH] BACKEND_SESSION_STARTED Attempt ${attempt}/${maxAttempts}`);
+        res = await api.post('/auth/google/exchange-code', {
+          code: codeParam,
+          code_verifier: codeVerifier,
+          state: stateParam || ''
+        }, { timeout: 35000 });
+        if (res.data && res.data.authenticated) break;
+      } catch (postErr: any) {
+        console.warn(`[MOBILE AUTH] BACKEND_SESSION Attempt ${attempt} note:`, postErr?.message || postErr);
+        if (attempt >= maxAttempts) throw postErr;
+        await new Promise(r => setTimeout(r, 1200));
+      }
+    }
+
+    if (res && res.data && res.data.authenticated && res.data.user) {
+      console.log('[MOBILE AUTH] BACKEND_SESSION_SUCCESS');
+      console.log('[MOBILE AUTH] QUICK_FETCH_STARTED');
 
       const result: GoogleAuthResult = {
         authenticated: true,
         access_token: res.data.access_token || '',
         user: res.data.user
       };
+
+      console.log('[MOBILE AUTH] QUICK_FETCH_SUCCESS Role:', res.data.user.role);
 
       if (activePkceSession?.resolve) {
         activePkceSession.resolve(result);
@@ -198,8 +216,10 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
       return result;
     }
 
+    console.log('[MOBILE AUTH] AUTH_FAILED Reason: Invalid session response from server');
     throw new Error('Unable to establish authenticated session with institutional server.');
   } catch (err: any) {
+    console.error('[MOBILE AUTH] AUTH_FAILED Error:', err?.message || err);
     if (activePkceSession?.reject) {
       activePkceSession.reject(err);
     }
@@ -219,8 +239,7 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
  * Zero tokens, passwords, or credentials are ever transmitted via URL parameters.
  */
 const authenticateWithGoogleMobile = async (): Promise<GoogleAuthResult> => {
-  console.log('[MOBILE AUTH] Login initiated');
-  console.log('[MOBILE AUTH] Google authentication started');
+  console.log('[MOBILE AUTH] AUTH_STARTED');
 
   const { Browser } = await import('@capacitor/browser');
 
@@ -230,7 +249,8 @@ const authenticateWithGoogleMobile = async (): Promise<GoogleAuthResult> => {
     bridgeBase = window.location.origin;
   }
 
-  const apiBase = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_API_URL || import.meta.env?.VITE_API_BASE_URL)) || 'https://leetcodeurl-s-roan.vercel.app/api';
+  // Authoritative production API endpoint for native mobile app
+  const apiBase = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_API_URL || import.meta.env?.VITE_API_BASE_URL)) || 'https://leetcodeurl-s-3mig.onrender.com/api';
 
   // 1. Generate PKCE parameters
   const codeVerifier = generateRandomString(64);

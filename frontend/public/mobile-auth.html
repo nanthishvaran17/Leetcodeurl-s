@@ -165,7 +165,14 @@
     const scheme = urlParams.get('scheme') || sessionStorage.getItem('nec_auth_scheme') || 'org.nandhaengg.leetcodesync';
     const codeChallenge = urlParams.get('code_challenge') || sessionStorage.getItem('nec_auth_challenge') || '';
     const state = urlParams.get('state') || sessionStorage.getItem('nec_auth_state') || '';
-    const apiBase = urlParams.get('api_base') || sessionStorage.getItem('nec_auth_apibase') || (window.location.origin.includes('localhost') ? 'http://localhost:8000/api' : (window.location.origin + '/api'));
+
+    // Authoritative production backend API URL for native APK & mobile auth bridge
+    const defaultProductionApi = 'https://leetcodeurl-s-3mig.onrender.com/api';
+    let rawApiBase = urlParams.get('api_base') || sessionStorage.getItem('nec_auth_apibase') || '';
+    if (!rawApiBase || rawApiBase.includes('vercel.app') || rawApiBase.includes('localhost')) {
+      rawApiBase = defaultProductionApi;
+    }
+    const apiBase = rawApiBase;
 
     // Cache parameters in sessionStorage to survive redirect
     if (urlParams.get('scheme')) sessionStorage.setItem('nec_auth_scheme', scheme);
@@ -232,6 +239,8 @@
     async function handleIdToken(idToken) {
       statusEl.innerText = "Verifying Account...";
       subtitleEl.innerText = "Validating with institutional server...";
+      console.log('[MOBILE AUTH] TOKEN_RESOLVED');
+      console.log('[MOBILE AUTH] BACKEND_SESSION_STARTED Endpoint:', apiBase + '/auth/google/create-code');
 
       try {
         const res = await fetch(`${apiBase}/auth/google/create-code`, {
@@ -247,6 +256,7 @@
         const data = await res.json();
 
         if (!res.ok) {
+          console.log('[MOBILE AUTH] AUTH_FAILED Status:', res.status);
           const detail = data?.detail || 'Your Google account is not registered with the institution.';
           showError(detail);
           returnToAppWithError(detail);
@@ -254,13 +264,16 @@
         }
 
         if (data && data.success && data.code) {
+          console.log('[MOBILE AUTH] BACKEND_SESSION_SUCCESS PKCE Code Created');
           returnToAppWithAuthCode(data.code, data.state || state);
         } else {
+          console.log('[MOBILE AUTH] AUTH_FAILED Missing code in response');
           showError('Unable to generate authorization code.');
           returnToAppWithError('Authorization code generation failed.');
         }
       } catch (err) {
-        showError('Network error connecting to institutional server.');
+        console.error('[MOBILE AUTH] AUTH_FAILED Fetch error:', err?.message || err);
+        showError('Unable to complete sign-in. Please try again.');
         returnToAppWithError('Network error connecting to authentication server.');
       }
     }

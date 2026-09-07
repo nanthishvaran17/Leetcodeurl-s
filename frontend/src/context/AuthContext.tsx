@@ -234,7 +234,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
               if (fbUser && fbUser.email) {
                 const storedUserStr = localStorage.getItem('user');
-                if (!storedUserStr && !isVerifyingRef.current) {
+                const isDeepLinkActive = typeof window !== 'undefined' && window.location.href.includes('oauth-callback');
+                if (!storedUserStr && !isVerifyingRef.current && !isDeepLinkActive) {
                   isVerifyingRef.current = true;
                   await performBackendExchange(fbUser);
                   isVerifyingRef.current = false;
