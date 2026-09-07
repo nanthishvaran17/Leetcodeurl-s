@@ -330,7 +330,7 @@
       });
     }
 
-    // Direct Google Sign-In Execution (Redirect primary for seamless Mobile & Chrome Custom Tab support)
+    // Direct Google Sign-In Execution (signInWithPopup primary for direct popover execution)
     async function executeGoogleSignIn() {
       if (isExchangingToken) return;
 
@@ -341,22 +341,22 @@
       subtitleEl.innerText = "Opening Google account selector...";
 
       try {
-        sessionStorage.setItem('nec_auth_redirect_started', '1');
-        await signInWithRedirect(auth, provider);
-      } catch (redirectErr) {
-        console.warn('[MOBILE AUTH] Redirect sign-in fallback to popup:', redirectErr?.message || redirectErr);
+        const result = await signInWithPopup(auth, provider);
+        if (result && result.user) {
+          isExchangingToken = true;
+          const token = await result.user.getIdToken(true);
+          await handleIdToken(token);
+          return;
+        }
+      } catch (popupErr) {
+        console.warn('[MOBILE AUTH] Popup sign-in fallback to redirect:', popupErr?.code || popupErr?.message);
         
         try {
-          const result = await signInWithPopup(auth, provider);
-          if (result && result.user) {
-            isExchangingToken = true;
-            const token = await result.user.getIdToken(true);
-            await handleIdToken(token);
-            return;
-          }
-        } catch (popupErr) {
+          sessionStorage.setItem('nec_auth_redirect_started', '1');
+          await signInWithRedirect(auth, provider);
+        } catch (redirectErr) {
           sessionStorage.removeItem('nec_auth_redirect_started');
-          showError(popupErr?.message || redirectErr?.message || 'Unable to open Google sign-in. Please try again.');
+          showError(popupErr?.message || 'Unable to open Google sign-in. Please try again.');
         }
       }
     }
