@@ -5,7 +5,7 @@ import secrets
 import string
 from contextlib import asynccontextmanager
 from typing import Optional
-from fastapi import FastAPI, Response, Depends, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, Response, Depends, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
