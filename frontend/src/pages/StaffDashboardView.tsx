@@ -141,7 +141,8 @@ export const StaffDashboardView: React.FC = () => {
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
               <span>MY MENTORING DASHBOARD</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-black">Welcome, {user?.name || user?.username}</h1>
+            <h1 className="text-2xl md:text-3xl font-black">Welcome back, {user?.name || user?.username} 👋</h1>
+            <p className="text-sm md:text-base text-slate-300 font-medium">Your mentoring dashboard is ready.</p>
             <p className="text-xs text-slate-300 flex items-center gap-2">
               <span>Restricted Portfolio • Monitoring {totalAssignedCount === 0 ? '0' : totalAssignedCount} Assigned Students</span>
               {lastSyncTime && (

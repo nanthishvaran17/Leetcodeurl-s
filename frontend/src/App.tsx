@@ -519,7 +519,7 @@ export const App: React.FC = () => {
         setIsSidebarOpen={setIsSidebarOpen}
       />
 
-      <div className="flex-1 w-full pt-2.5 sm:pt-6 pb-4 sm:pb-6 px-3 sm:px-5 lg:px-7 2xl:px-8 max-w-full mx-auto relative">
+      <div className="flex-1 w-full pt-2.5 sm:pt-6 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 px-3 sm:px-5 lg:px-7 2xl:px-8 max-w-full mx-auto relative">
         
         {/* Slide-out Sidebar Drawer */}
         {isAuthenticated && (
@@ -727,7 +727,7 @@ export const App: React.FC = () => {
           onMouseEnter={() => {
             import('./components/AIAssistantWidget');
           }}
-          className="fixed bottom-5 right-5 z-[9990] p-3 rounded-full bg-brand-600 hover:bg-brand-500 text-white shadow-xl shadow-brand-500/30 flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer border border-white/20"
+          className="fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom,0px))] right-4 sm:right-5 z-[9990] p-3 min-w-[48px] min-h-[48px] rounded-full bg-brand-600 hover:bg-brand-500 text-white shadow-xl shadow-brand-500/30 flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer border border-white/20"
           title="Open AI & Operations Assistant"
           aria-label="Open AI Copilot"
         >

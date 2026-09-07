@@ -648,7 +648,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               </span>
               <button
                 onClick={() => setShowCommandPalette(true)}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-indigo-300 bg-indigo-500/20 border border-indigo-400/30 hover:bg-indigo-500/30 cursor-pointer transition-all"
+                className="hidden sm:flex items-center gap-1.5 px-3 min-h-[44px] py-1 rounded-full text-xs font-bold text-indigo-300 bg-indigo-500/20 border border-indigo-400/30 hover:bg-indigo-500/30 cursor-pointer transition-all"
                 title="Open Command Palette"
               >
                 <span>Ctrl+K / Ctrl+K</span>
@@ -669,7 +669,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
           </div>
 
           {/* Right Column: Hero Metrics Bento Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* System Trust Score Card */}
             <div
               onClick={() => setShowTrustModal(true)}
@@ -731,14 +731,14 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
           <button
             onClick={handleProbeAllServices}
             disabled={refreshing}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 min-h-[44px] rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             <span>{refreshing ? 'Probing...' : 'Probe All Services'}</span>
           </button>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
           {Object.entries(livePulse).map(([key, svc]: [string, any]) => (
             <div
               key={key}

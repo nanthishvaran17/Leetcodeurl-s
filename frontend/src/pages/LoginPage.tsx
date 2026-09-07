@@ -464,7 +464,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
           </picture>
         </div>
         <span className="mobile-eyebrow">INSTITUTIONAL PORTAL</span>
-        <h1 className="mobile-title">Nandha LeetCode Intelligence</h1>
+        <h1 className="mobile-title">Nandha Intelligence</h1>
         <p className="mobile-subtitle">Nandha Engineering College (Autonomous) · Erode</p>
       </div>
 
@@ -487,7 +487,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
             <CollegeLogo className="brand-mark" size={48} />
             <div className="brand-text">
               <p className="eyebrow">INSTITUTIONAL PORTAL</p>
-              <p className="name">Nandha LeetCode Intelligence</p>
+              <p className="name">Nandha Intelligence</p>
               <p className="sub">Nandha Engineering College (Autonomous) · Erode</p>
             </div>
           </div>

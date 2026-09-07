@@ -662,8 +662,8 @@ def download_sample_student_excel():
     ws.title = "Students"
     ws.sheet_view.showGridLines = True
 
-    headers = ["REG NO", "NAME", "DEPT", "YEAR", "PRIMARY LEETCODE LINK", "SECONDARY LEETCODE LINK"]
-    col_widths = [18, 28, 14, 10, 45, 45]
+    headers = ["REG NO", "NAME", "DEPT", "YEAR", "EMAIL", "PRIMARY LEETCODE LINK", "SECONDARY LEETCODE LINK"]
+    col_widths = [18, 28, 14, 10, 25, 45, 45]
 
     navy_fill = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
     font_header = Font(name="Times New Roman", size=11, bold=True, color="FFFFFF")
@@ -1717,4 +1717,44 @@ def bulk_generate_emails(
         "error_count": error_count,
         "message": f"Successfully generated {generated_count} institutional emails."
     }
+
+
+class SecondaryAccountRequest(BaseModel):
+    secondary_leetcode_id: str
+
+class SecondaryAccountApproval(BaseModel):
+    student_id: int
+    action: str
+
+@router.post("/me/secondary-account")
+def request_secondary_account(
+    payload: SecondaryAccountRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    student = db.query(Student).filter(Student.email == current_user.email).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student profile not found.")
+    
+    sec_id = payload.secondary_leetcode_id.strip()
+    if not sec_id:
+        raise HTTPException(status_code=400, detail="Secondary LeetCode ID cannot be empty.")
+    
+    if student.primary_leetcode_id == sec_id or student.username == sec_id:
+        raise HTTPException(status_code=400, detail="Secondary ID cannot be the same as the Primary ID.")
+
+    existing = db.query(Student).filter(
+        (Student.primary_leetcode_id == sec_id) |
+        (Student.username == sec_id) |
+        (Student.secondary_leetcode_id == sec_id)
+    ).first()
+
+    if existing and existing.id != student.id:
+        raise HTTPException(status_code=400, detail="This LeetCode ID is already registered to another student.")
+
+    student.secondary_leetcode_id = sec_id
+    student.secondary_status = "pending_approval"
+    db.commit()
+
+    return {"status": "success", "message": "Secondary account requested and is pending approval."}
 

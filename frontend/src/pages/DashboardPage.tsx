@@ -295,9 +295,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') ? (
                 <>MY ASSIGNED STUDENTS <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">OVERVIEW</span></>
               ) : (
-                <>Institutional Performance <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Overview</span></>
+                <>Welcome back, Admin 👋</>
               )}
             </h1>
+            {!(user?.role?.toLowerCase() === 'faculty' || user?.role?.toLowerCase() === 'staff') && (
+              <p className="text-slate-300 text-sm sm:text-base font-medium mt-1">Manage your institutional intelligence workspace.</p>
+            )}
 
             <p className="text-sm text-slate-300 font-bold tracking-wide leading-relaxed">
               {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') 

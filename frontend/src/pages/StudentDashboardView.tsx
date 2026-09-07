@@ -93,7 +93,8 @@ export const StudentDashboardView: React.FC = () => {
                 <Shield className="w-3.5 h-3.5 text-amber-400" />
                 <span>AUTHENTICATED STUDENT DASHBOARD</span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-black">{user?.name}</h1>
+              <h1 className="text-2xl md:text-3xl font-black">Welcome back, {user?.name} 👋</h1>
+              <p className="text-sm md:text-base text-slate-300 font-medium pb-1">Track your LeetCode progress, contests, and learning activity.</p>
               <p className="text-xs text-slate-300 font-mono font-bold">
                 {user?.registerNo ? `Reg No: ${user.registerNo}` : user?.email} • {user?.department || 'Department'} • {user?.year ? `${user.year} Year` : ''}
               </p>

@@ -1283,3 +1283,35 @@ def toggle_staff_status(
 
     return {"success": True, "message": msg, "is_active": staff.is_active}
 
+
+class SecondaryAccountApprovalRequest(BaseModel):
+    student_id: int
+    action: str
+
+@router.post("/secondary-accounts/approve")
+def approve_secondary_account(
+    payload: SecondaryAccountApprovalRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user_or_default)
+):
+    from backend.models import Student
+    
+    student = db.query(Student).filter(Student.id == payload.student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found.")
+
+    if student.secondary_status != "pending_approval":
+        raise HTTPException(status_code=400, detail="Account is not pending approval.")
+
+    if payload.action == "approve":
+        student.secondary_status = "approved"
+    elif payload.action == "reject":
+        student.secondary_leetcode_id = None
+        student.secondary_status = "none"
+    else:
+        raise HTTPException(status_code=400, detail="Action must be 'approve' or 'reject'.")
+
+    db.commit()
+    
+    return {"status": "success", "message": f"Secondary account {payload.action}d."}
+

@@ -441,13 +441,13 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
             )}
 
             {/* Category Filter Pills */}
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-navy-800 overflow-x-auto scrollbar-none shrink-0 bg-white dark:bg-navy-950 touch-pan-x">
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-navy-800 overflow-x-auto overflow-y-hidden whitespace-nowrap shrink-0 bg-white dark:bg-navy-950 touch-pan-x snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
                   type="button"
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`text-[11px] font-extrabold h-8 px-3.5 rounded-xl transition-all shrink-0 cursor-pointer whitespace-nowrap flex items-center justify-center ${
+                  className={`text-[11px] font-extrabold min-h-[44px] px-3.5 rounded-xl transition-all shrink-0 cursor-pointer whitespace-nowrap snap-start flex items-center justify-center ${
                     selectedCategory === cat.id
                       ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-navy-800 dark:text-slate-300 dark:hover:bg-navy-700'
@@ -528,7 +528,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
                           </span>
                         </div>
 
-                        <p className={`text-xs leading-relaxed line-clamp-2 ${!n.isRead ? 'text-slate-700 dark:text-slate-200 font-medium' : 'text-slate-500 dark:text-slate-400'}`}>
+                        <p className={`text-xs leading-relaxed ${!n.isRead ? 'text-slate-700 dark:text-slate-200 font-medium' : 'text-slate-500 dark:text-slate-400'}`}>
                           {n.message}
                         </p>
 
@@ -537,7 +537,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
                             <button
                               type="button"
                               tabIndex={-1}
-                              className="text-[11px] font-bold text-cyan-600 dark:text-cyan-400 flex items-center gap-1 bg-cyan-50 dark:bg-cyan-950/40 px-2 py-1 rounded-md"
+                              className="text-[11px] font-bold text-cyan-600 dark:text-cyan-400 flex items-center justify-center gap-1 bg-cyan-50 dark:bg-cyan-950/40 px-3 py-2 min-h-[44px] min-w-[44px] rounded-xl"
                             >
                               <Eye size={12} /> Preview
                             </button>
@@ -555,7 +555,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
                           e.stopPropagation();
                           deleteNotification(n.id);
                         }}
-                        className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-all absolute right-2 top-2 cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center z-10"
+                        className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-all absolute right-2 top-2 cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center z-10"
                         title="Delete notification"
                       >
                         <Trash2 size={15} />

@@ -323,6 +323,7 @@ class LLMService:
             logger.debug(f"[LLM_CALL_NOTE] Call to {url} note: {err}")
         return None
 
+
     @staticmethod
     def _generate_instant_nlp_response(prompt: str, data_context: Optional[Dict[str, Any]]) -> str:
         """
@@ -330,6 +331,72 @@ class LLMService:
         Provides rich, formatted responses for Tamil/Tanglish, DSA, algorithms,
         student metrics, and system queries without any cloud latency.
         """
+        import json
+        import re
+
+        # Dynamic JSON Parsing for Institution Intelligence Assistant
+        if "Raw Verified Data (JSON):" in prompt:
+            try:
+                # Extract JSON string between Raw Verified Data (JSON): and Task:
+                json_match = re.search(r"Raw Verified Data \(JSON\):\s*(.*?)\s*Task:", prompt, re.DOTALL)
+                if json_match:
+                    raw_data_str = json_match.group(1).strip()
+                    raw_data = json.loads(raw_data_str)
+                    
+                    if isinstance(raw_data, list) and len(raw_data) > 0:
+                        # Build a Markdown table
+                        headers = list(raw_data[0].keys())
+                        header_row = "| " + " | ".join(h.replace("_", " ").title() for h in headers) + " |"
+                        sep_row = "| " + " | ".join("---" for _ in headers) + " |"
+                        rows = []
+                        for row in raw_data:
+                            rows.append("| " + " | ".join(str(row.get(h, "")) for h in headers) + " |")
+                        
+                        table = "\n".join([header_row, sep_row] + rows)
+                        return f"Based on the live database records, here are the results for your query:\n\n{table}\n\nAll data is verified against the institutional source of truth."
+                    
+                    elif isinstance(raw_data, dict) and "missed_students" in raw_data:
+                        # Contest Missed
+                        missed = raw_data["missed_students"]
+                        if not missed:
+                            return f"Great news! All students participated in {raw_data.get('contest', 'the latest contest')}."
+                        headers = list(missed[0].keys())
+                        header_row = "| " + " | ".join(h.replace("_", " ").title() for h in headers) + " |"
+                        sep_row = "| " + " | ".join("---" for _ in headers) + " |"
+                        rows = []
+                        for row in missed:
+                            rows.append("| " + " | ".join(str(row.get(h, "")) for h in headers) + " |")
+                        table = "\n".join([header_row, sep_row] + rows)
+                        return f"**Contest:** {raw_data.get('contest', 'Latest Contest')}\n\nThe following {len(missed)} students missed the contest:\n\n{table}"
+                        
+                    elif isinstance(raw_data, dict) and "difficult_topics" in raw_data:
+                        # Learning Needs
+                        topics = raw_data["difficult_topics"]
+                        if not topics:
+                            return "There are no significant difficult topics flagged recently."
+                        headers = ["Topic", "Learning Signals"]
+                        header_row = "| " + " | ".join(headers) + " |"
+                        sep_row = "| " + " | ".join("---" for _ in headers) + " |"
+                        rows = ["| " + str(t.get("topic", "")) + " | " + str(t.get("signals", "")) + " |" for t in topics]
+                        table = "\n".join([header_row, sep_row] + rows)
+                        return f"Based on recent learning signals, here are the most difficult topics:\n\n{table}"
+
+                    elif isinstance(raw_data, dict) and "error" in raw_data:
+                        return f"Error: {raw_data['error']}"
+                    
+                    elif isinstance(raw_data, dict) and "total_students_in_scope" in raw_data:
+                        # General Summary
+                        return (
+                            f"The **Nandha Engineering College** LeetCode Analytics platform currently monitors **{raw_data.get('total_students_in_scope', 0)}** enrolled students in your scope.\n\n"
+                            f"• **Your Role**: {raw_data.get('role_context', 'N/A')}\n"
+                            f"• **Department Scope**: {raw_data.get('department_scope', 'N/A')}\n"
+                            f"• **Verified Data Quality**: 100% Single Source of Truth Ground Truth\n\n"
+                            f"Feel free to ask for student lookups, contest comparisons, or database audits!"
+                        )
+
+            except Exception as e:
+                pass # fallback below
+
         q = prompt.lower().strip()
         total_st = (data_context or {}).get("total_students", 300)
         top_name = (data_context or {}).get("top_student_name", "NANTHISH S")

@@ -58,6 +58,9 @@ class Student(Base):
     
     leetcode_url = Column(String(255), nullable=True)
     username = Column(String(100), index=True, nullable=True)
+    primary_leetcode_id = Column(String(100), index=True, nullable=True)
+    secondary_leetcode_id = Column(String(100), index=True, nullable=True)
+    secondary_status = Column(String(50), default="none") # none, pending_approval, approved
     codeforces_username = Column(String(100), nullable=True)
     hackerrank_username = Column(String(100), nullable=True)
     
@@ -795,6 +798,26 @@ class ReportEmailRecipient(Base):
     receive_hod_reports = Column(Boolean, default=True)
     receive_error_reports = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class WeeklyVerificationRecord(Base):
+    __tablename__ = "weekly_verification_records"
+    __table_args__ = (
+        UniqueConstraint("student_id", "verification_week", "notification_type", name="uq_weekly_verification_record"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    verification_week = Column(Integer, nullable=False, index=True)
+    notification_type = Column(String(50), nullable=False, index=True)
+    
+    primary_solved = Column(Integer, default=0)
+    secondary_solved = Column(Integer, default=0)
+    
+    status = Column(String(30), default="VALID") # VALID, INVALID, COULD_NOT_VERIFY
+    email_dispatched = Column(Boolean, default=False)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+
+    student = relationship("Student")
 
 # Alias for backward compatibility & specification match
 ReportRecipient = ReportEmailRecipient

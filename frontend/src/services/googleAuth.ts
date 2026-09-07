@@ -35,6 +35,31 @@ export const isMobileBrowser = (): boolean => {
   return isMobileUA || (isTouchScreen && isSmallScreen);
 };
 
+/** Detect common in-app browsers that block OAuth (Instagram, FB, LinkedIn, TikTok, etc.) */
+export const isInAppBrowser = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent || navigator.vendor || (window as any).opera || '';
+  const inAppSignatures = [
+    'FBAN', 'FBAV', 'Instagram', 'LinkedIn', 'Snapchat',
+    'TikTok', 'Twitter', 'Bytedance', 'Line', 'MicroMessenger', 'WeChat'
+  ];
+  return inAppSignatures.some(sig => ua.includes(sig));
+};
+
+/** Probe if local storage / IndexedDB is available (detect Safari Private Browsing / Partitioning blocks) */
+export const isStorageAvailable = (): boolean => {
+  if (typeof window === 'undefined') return true;
+  try {
+    const testKey = '__storage_test__';
+    window.localStorage.setItem(testKey, testKey);
+    window.localStorage.removeItem(testKey);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
+
 
 
 // ========================================================
@@ -311,6 +336,18 @@ export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
       }
       // If popup was blocked or unsupported, fallback to redirect flow
       console.log('[MOBILE AUTH] Popup blocked or unhandled; initiating robust redirect flow...');
+      
+      // PRE-FLIGHT CHECKS FOR MOBILE REDIRECT FLOW
+      if (isInAppBrowser()) {
+        console.warn('[MOBILE AUTH] In-app browser detected, blocking redirect');
+        throw new Error('IN_APP_BROWSER_BLOCKED: Please open this link in Chrome or Safari to sign in.');
+      }
+      
+      if (!isStorageAvailable()) {
+        console.warn('[MOBILE AUTH] Storage unavailable (likely Safari Private Browsing), blocking redirect');
+        throw new Error('STORAGE_UNAVAILABLE: Private browsing blocks sign-in. Please try a regular browser tab.');
+      }
+
       sessionStorage.setItem('nec_mobile_google_redirect', '1');
       await signInWithRedirect(authInstance, provider);
       return new Promise(() => {}); // Page will redirect
