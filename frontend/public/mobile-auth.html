@@ -98,18 +98,26 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 10px;
       text-decoration: none;
       transition: all 0.2s;
       border: none;
       box-sizing: border-box;
     }
-    .btn-primary {
+    .btn-google {
       background: #FFFFFF;
+      color: #0F172A;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    .btn-google:hover {
+      background: #F8FAFC;
+    }
+    .btn-primary {
+      background: #38BDF8;
       color: #0B1B33;
     }
     .btn-primary:hover {
-      background: #F1F5F9;
+      background: #7DD3FC;
     }
     .btn-secondary {
       background: #152238;
@@ -129,12 +137,23 @@
       width: 100%;
       display: none;
     }
+    .google-icon {
+      width: 18px;
+      height: 18px;
+    }
   </style>
 
   <!-- Firebase App & Auth SDK (Modular CDN) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { 
+      getAuth, 
+      GoogleAuthProvider, 
+      signInWithPopup, 
+      signInWithRedirect, 
+      getRedirectResult, 
+      onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAsP9hOeAxrIO5hbmlrPhmGa3p1vv-1Jek",
@@ -154,19 +173,18 @@
     const subtitleEl = document.getElementById('subtitle-text');
     const spinnerEl = document.getElementById('spinner');
     const errorBoxEl = document.getElementById('error-box');
+    const googleBtnEl = document.getElementById('google-btn');
     const actionBtnEl = document.getElementById('action-btn');
     const cancelBtnEl = document.getElementById('cancel-btn');
 
-    // Single-flight exchange guard
     let isExchangingToken = false;
 
-    // Retrieve parameters with SessionStorage persistence
+    // Retrieve URL parameters with persistence
     const urlParams = new URLSearchParams(window.location.search);
     const scheme = urlParams.get('scheme') || sessionStorage.getItem('nec_auth_scheme') || 'org.nandhaengg.leetcodesync';
     const codeChallenge = urlParams.get('code_challenge') || sessionStorage.getItem('nec_auth_challenge') || '';
     const state = urlParams.get('state') || sessionStorage.getItem('nec_auth_state') || '';
 
-    // Authoritative production backend API URL for native APK & mobile auth bridge
     const defaultProductionApi = 'https://leetcodeurl-s-3mig.onrender.com/api';
     let rawApiBase = urlParams.get('api_base') || sessionStorage.getItem('nec_auth_apibase') || '';
     if (!rawApiBase || rawApiBase.includes('vercel.app') || rawApiBase.includes('localhost')) {
@@ -174,7 +192,6 @@
     }
     const apiBase = rawApiBase;
 
-    // Cache parameters in sessionStorage to survive redirect
     if (urlParams.get('scheme')) sessionStorage.setItem('nec_auth_scheme', scheme);
     if (urlParams.get('code_challenge')) sessionStorage.setItem('nec_auth_challenge', codeChallenge);
     if (urlParams.get('state')) sessionStorage.setItem('nec_auth_state', state);
@@ -190,8 +207,8 @@
       statusEl.innerText = "Returning to App...";
       subtitleEl.innerText = "Securing institutional session...";
       spinnerEl.style.display = 'none';
+      googleBtnEl.style.display = 'none';
 
-      // Clear cached parameters
       sessionStorage.removeItem('nec_auth_scheme');
       sessionStorage.removeItem('nec_auth_challenge');
       sessionStorage.removeItem('nec_auth_state');
@@ -221,13 +238,10 @@
       statusEl.innerText = "Sign-In Notice";
       subtitleEl.innerText = "Google sign-in could not be completed. Please try again.";
       
-      actionBtnEl.style.display = 'inline-flex';
-      actionBtnEl.innerText = "Try Again";
-      actionBtnEl.onclick = () => { 
-        sessionStorage.removeItem('nec_auth_redirect_started');
-        window.location.reload(); 
-      };
+      googleBtnEl.style.display = 'inline-flex';
+      googleBtnEl.innerText = "Sign in with Google";
 
+      actionBtnEl.style.display = 'none';
       cancelBtnEl.style.display = 'inline-flex';
       cancelBtnEl.innerText = "Back to Sign In";
       cancelBtnEl.onclick = () => {
@@ -239,8 +253,8 @@
     async function handleIdToken(idToken) {
       statusEl.innerText = "Verifying Account...";
       subtitleEl.innerText = "Validating with institutional server...";
-      console.log('[MOBILE AUTH] TOKEN_RESOLVED');
-      console.log('[MOBILE AUTH] BACKEND_SESSION_STARTED Endpoint:', apiBase + '/auth/google/create-code');
+      googleBtnEl.style.display = 'none';
+      spinnerEl.style.display = 'block';
 
       try {
         const res = await fetch(`${apiBase}/auth/google/create-code`, {
@@ -256,7 +270,6 @@
         const data = await res.json();
 
         if (!res.ok) {
-          console.log('[MOBILE AUTH] AUTH_FAILED Status:', res.status);
           const detail = data?.detail || 'Your Google account is not registered with the institution.';
           showError(detail);
           returnToAppWithError(detail);
@@ -264,142 +277,133 @@
         }
 
         if (data && data.success && data.code) {
-          console.log('[MOBILE AUTH] BACKEND_SESSION_SUCCESS PKCE Code Created');
           returnToAppWithAuthCode(data.code, data.state || state);
         } else {
-          console.log('[MOBILE AUTH] AUTH_FAILED Missing code in response');
           showError('Unable to generate authorization code.');
           returnToAppWithError('Authorization code generation failed.');
         }
       } catch (err) {
-        console.error('[MOBILE AUTH] AUTH_FAILED Fetch error:', err?.message || err);
         showError('Unable to complete sign-in. Please try again.');
         returnToAppWithError('Network error connecting to authentication server.');
       }
     }
 
-    // Centralized Authentication Resolution Flow
-    async function resolveFirebaseUser(authInstance) {
-      statusEl.innerText = "Restoring Session...";
-      subtitleEl.innerText = "Restoring institutional Google session...";
-
-      // Step 1: Check getRedirectResult(auth)
+    // Rapid Firebase User Resolution (Fast 1-second max check)
+    async function resolveFirebaseUserFast(authInstance) {
       try {
         const redirectRes = await getRedirectResult(authInstance);
         if (redirectRes && redirectRes.user) {
-          console.log('[MOBILE AUTH] Resolved user from getRedirectResult:', redirectRes.user.email);
           return redirectRes.user;
         }
       } catch (err) {
         console.warn('[MOBILE AUTH] getRedirectResult note:', err?.message || err);
       }
 
-      // Step 2: Check authInstance.currentUser
       if (authInstance.currentUser) {
-        console.log('[MOBILE AUTH] Resolved user from auth.currentUser:', authInstance.currentUser.email);
         return authInstance.currentUser;
       }
 
-      // Step 3: Bounded wait for onAuthStateChanged restoration (up to 7 seconds)
       return new Promise((resolve) => {
-        let isResolved = false;
+        let isSettled = false;
 
         const unsubscribe = onAuthStateChanged(authInstance, (user) => {
-          if (user && !isResolved) {
-            isResolved = true;
+          if (!isSettled) {
+            isSettled = true;
             unsubscribe();
-            console.log('[MOBILE AUTH] Resolved user from onAuthStateChanged:', user.email);
-            resolve(user);
+            resolve(user); // Resolves user OR null immediately!
           }
         });
 
-        // Periodic check for currentUser
-        const pollInterval = setInterval(() => {
-          if (authInstance.currentUser && !isResolved) {
-            isResolved = true;
-            clearInterval(pollInterval);
-            unsubscribe();
-            console.log('[MOBILE AUTH] Resolved user from auth.currentUser polling:', authInstance.currentUser.email);
-            resolve(authInstance.currentUser);
-          }
-        }, 400);
-
-        // Bounded timeout (7 seconds)
         setTimeout(() => {
-          if (!isResolved) {
-            isResolved = true;
-            clearInterval(pollInterval);
+          if (!isSettled) {
+            isSettled = true;
             unsubscribe();
-            console.warn('[MOBILE AUTH] User resolution wait elapsed without active user');
-            resolve(null);
+            resolve(authInstance.currentUser || null);
           }
-        }, 7000);
+        }, 1000); // 1 second max wait!
       });
     }
 
-    async function startAuth() {
-      // Safety timeout: 20 seconds maximum wait to guarantee no infinite spinner
-      const safetyTimeout = setTimeout(() => {
-        if (!isExchangingToken && spinnerEl && spinnerEl.style.display !== 'none') {
-          showError('Google sign-in could not be completed. Please try again.');
-        }
-      }, 20000);
+    // Direct Google Sign-In Execution (Popup first, then Redirect fallback)
+    async function executeGoogleSignIn() {
+      if (isExchangingToken) return;
+
+      errorBoxEl.style.display = 'none';
+      spinnerEl.style.display = 'block';
+      googleBtnEl.style.display = 'none';
+      statusEl.innerText = "Connecting to Google...";
+      subtitleEl.innerText = "Opening Google account selector...";
 
       try {
-        console.log('[MOBILE AUTH] Mobile authentication bridge started');
-        const isRedirectingBack = !!sessionStorage.getItem('nec_auth_redirect_started');
-
-        if (isRedirectingBack) {
-          // Returning from Google OAuth redirect
-          const user = await resolveFirebaseUser(auth);
-
-          if (user) {
-            clearTimeout(safetyTimeout);
-            sessionStorage.removeItem('nec_auth_redirect_started');
-            if (isExchangingToken) return;
-            isExchangingToken = true;
-
-            const token = await user.getIdToken(true);
-            await handleIdToken(token);
-            return;
-          }
-
-          // If no user resolved after returning from redirect:
-          clearTimeout(safetyTimeout);
-          sessionStorage.removeItem('nec_auth_redirect_started');
-          showError('Google sign-in could not be completed. Please try again.');
+        // Strategy A: Instant Popup inside Web / Custom Tab
+        const result = await signInWithPopup(auth, provider);
+        if (result && result.user) {
+          isExchangingToken = true;
+          const token = await result.user.getIdToken(true);
+          await handleIdToken(token);
+          return;
+        }
+      } catch (popupErr) {
+        console.warn('[MOBILE AUTH] Popup sign-in fallback to redirect:', popupErr?.code || popupErr?.message);
+        
+        // Handle explicit user cancellation
+        if (popupErr?.code === 'auth/popup-closed-by-user' || popupErr?.code === 'auth/cancelled-popup-request') {
+          showError('Google sign-in was cancelled by user.');
           return;
         }
 
-        // Fresh page load check — check if Firebase user is already active
-        const existingUser = await resolveFirebaseUser(auth);
-        if (existingUser) {
-          clearTimeout(safetyTimeout);
+        // Strategy B: Full Redirect fallback if popup is blocked
+        try {
+          sessionStorage.setItem('nec_auth_redirect_started', '1');
+          await signInWithRedirect(auth, provider);
+        } catch (redirectErr) {
+          showError(redirectErr?.message || 'Unable to open Google sign-in.');
+        }
+      }
+    }
+
+    async function startAuth() {
+      const isRedirectingBack = !!sessionStorage.getItem('nec_auth_redirect_started');
+
+      if (isRedirectingBack) {
+        statusEl.innerText = "Restoring Session...";
+        subtitleEl.innerText = "Restoring institutional Google session...";
+        const user = await resolveFirebaseUserFast(auth);
+
+        if (user) {
+          sessionStorage.removeItem('nec_auth_redirect_started');
           if (isExchangingToken) return;
           isExchangingToken = true;
 
-          const token = await existingUser.getIdToken(true);
+          const token = await user.getIdToken(true);
           await handleIdToken(token);
           return;
         }
 
-        // Initiate Google OAuth Redirect
-        sessionStorage.setItem('nec_auth_redirect_started', '1');
-        statusEl.innerText = "Connecting to Google...";
-        subtitleEl.innerText = "Opening Google account selector...";
-        await signInWithRedirect(auth, provider);
-      } catch (err) {
-        clearTimeout(safetyTimeout);
         sessionStorage.removeItem('nec_auth_redirect_started');
-        console.error('[MOBILE AUTH] Bridge error:', err);
-        const code = err?.code || '';
-        if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
-          returnToAppWithError('Google sign-in was cancelled.');
-        } else {
-          showError(err?.message || 'Google sign-in could not be completed. Please try again.');
-        }
       }
+
+      // Check if user is already logged in
+      const existingUser = await resolveFirebaseUserFast(auth);
+      if (existingUser) {
+        if (isExchangingToken) return;
+        isExchangingToken = true;
+        const token = await existingUser.getIdToken(true);
+        await handleIdToken(token);
+        return;
+      }
+
+      // Show Google Button and trigger sign-in immediately
+      spinnerEl.style.display = 'none';
+      googleBtnEl.style.display = 'inline-flex';
+      statusEl.innerText = "Ready to Sign In";
+      subtitleEl.innerText = "Tap below to authenticate with your official Google account.";
+
+      // Auto-trigger for seamless 1-tap experience
+      executeGoogleSignIn();
     }
+
+    googleBtnEl.onclick = executeGoogleSignIn;
 
     window.addEventListener('DOMContentLoaded', () => {
       startAuth();
@@ -423,6 +427,16 @@
 
     <div class="spinner" id="spinner"></div>
     <div class="error-box" id="error-box"></div>
+
+    <button type="button" class="btn btn-google" id="google-btn" style="display: none;">
+      <svg class="google-icon" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.29v3.15C3.26 21.3 7.31 24 12 24z"/>
+        <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.29C.47 8.21 0 10.05 0 12s.47 3.79 1.29 5.42l3.99-3.15z"/>
+        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.58l3.99 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+      </svg>
+      Sign in with Google
+    </button>
 
     <button type="button" class="btn btn-primary" id="action-btn" style="display: none;">Open App</button>
     <button type="button" class="btn btn-secondary" id="cancel-btn" style="display: none;">Cancel</button>
