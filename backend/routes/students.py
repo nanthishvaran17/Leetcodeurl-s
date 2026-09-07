@@ -115,9 +115,7 @@ async def get_leaderboard_fast(
             students = query.all()
 
             if not students:
-                empty_bytes = b'[]'
-                from starlette.responses import Response
-                return Response(content=empty_bytes, media_type="application/json")
+                return b'[]'
 
             student_ids = [st.id for st in students]
 
@@ -1757,4 +1755,3 @@ def request_secondary_account(
     db.commit()
 
     return {"status": "success", "message": "Secondary account requested and is pending approval."}
-
