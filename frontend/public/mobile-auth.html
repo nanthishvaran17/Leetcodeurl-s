@@ -202,6 +202,7 @@
     if (urlParams.get('api_base')) sessionStorage.setItem('nec_auth_apibase', apiBase);
 
     function returnToAppWithAuthCode(authCode, returnState) {
+      console.log(`[MOBILE AUTH] Returning to APK at ${performance.now()}ms`);
       const params = new URLSearchParams();
       params.set('code', authCode);
       params.set('state', returnState);
@@ -255,10 +256,14 @@
     }
 
     async function handleIdToken(idToken) {
+      console.log(`[MOBILE AUTH] Backend request started at ${performance.now()}ms`);
       statusEl.innerText = "Verifying Account...";
       subtitleEl.innerText = "Validating with institutional server...";
       googleBtnEl.style.display = 'none';
       spinnerEl.style.display = 'block';
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       try {
         const res = await fetch(`${apiBase}/auth/google/create-code`, {
@@ -268,8 +273,11 @@
             id_token: idToken,
             code_challenge: codeChallenge,
             state: state
-          })
+          }),
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
+        console.log(`[MOBILE AUTH] Backend response received at ${performance.now()}ms`);
 
         const data = await res.json();
 
@@ -281,14 +289,21 @@
         }
 
         if (data && data.success && data.code) {
+          console.log(`[MOBILE AUTH] Authorization code generated at ${performance.now()}ms`);
           returnToAppWithAuthCode(data.code, data.state || state);
         } else {
           showError('Unable to generate authorization code.');
           returnToAppWithError('Authorization code generation failed.');
         }
       } catch (err) {
-        showError('Unable to complete sign-in. Please try again.');
-        returnToAppWithError('Network error connecting to authentication server.');
+        clearTimeout(timeoutId);
+        if (err.name === 'AbortError') {
+          showError('Authentication server is taking too long to respond. Please try again.');
+          returnToAppWithError('Backend timeout');
+        } else {
+          showError('Unable to complete sign-in. Please try again.');
+          returnToAppWithError('Network error connecting to authentication server.');
+        }
       }
     }
 
@@ -339,12 +354,15 @@
       googleBtnEl.style.display = 'none';
       statusEl.innerText = "Connecting to Google...";
       subtitleEl.innerText = "Opening Google account selector...";
+      console.log(`[MOBILE AUTH] Google popup started at ${performance.now()}ms`);
 
       try {
         const result = await signInWithPopup(auth, provider);
         if (result && result.user) {
+          console.log(`[MOBILE AUTH] Google authentication completed at ${performance.now()}ms`);
           isExchangingToken = true;
-          const token = await result.user.getIdToken(true);
+          const token = await result.user.getIdToken();
+          console.log(`[MOBILE AUTH] ID token obtained at ${performance.now()}ms`);
           await handleIdToken(token);
           return;
         }
@@ -362,6 +380,7 @@
     }
 
     async function startAuth() {
+      console.log(`[MOBILE AUTH] page initialized at ${performance.now()}ms`);
       const isRedirectingBack = !!sessionStorage.getItem('nec_auth_redirect_started');
 
       if (isRedirectingBack) {
@@ -369,14 +388,17 @@
         googleBtnEl.style.display = 'none';
         statusEl.innerText = "Restoring Session...";
         subtitleEl.innerText = "Restoring institutional Google session...";
+        console.log(`[MOBILE AUTH] Firebase user check (redirect) started at ${performance.now()}ms`);
         const user = await resolveFirebaseUserFast(auth, true);
 
         if (user) {
+          console.log(`[MOBILE AUTH] Google authentication completed (redirect) at ${performance.now()}ms`);
           sessionStorage.removeItem('nec_auth_redirect_started');
           if (isExchangingToken) return;
           isExchangingToken = true;
 
-          const token = await user.getIdToken(true);
+          const token = await user.getIdToken();
+          console.log(`[MOBILE AUTH] ID token obtained at ${performance.now()}ms`);
           await handleIdToken(token);
           return;
         }
@@ -390,13 +412,15 @@
       }
 
       // Check if user is already logged in (fast 500ms check without redirect check)
+      console.log(`[MOBILE AUTH] Firebase user check started at ${performance.now()}ms`);
       const existingUser = await resolveFirebaseUserFast(auth, false);
       if (existingUser) {
         spinnerEl.style.display = 'block';
         googleBtnEl.style.display = 'none';
         if (isExchangingToken) return;
         isExchangingToken = true;
-        const token = await existingUser.getIdToken(true);
+        const token = await existingUser.getIdToken();
+        console.log(`[MOBILE AUTH] ID token obtained at ${performance.now()}ms`);
         await handleIdToken(token);
         return;
       }
