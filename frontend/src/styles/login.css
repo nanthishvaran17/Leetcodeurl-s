@@ -1186,18 +1186,18 @@
     align-items: center;
     text-align: center;
     width: 100%;
-    margin-top: clamp(4px, 1.2vh, 10px);
-    margin-bottom: clamp(6px, 1.2vh, 12px);
+    margin-top: clamp(2px, 1vh, 6px);
+    margin-bottom: clamp(4px, 1vh, 8px);
     z-index: 10;
     flex-shrink: 0;
   }
 
   .mobile-jubilee-badge {
-    width: clamp(60px, 7.5vh, 72px);
-    height: clamp(60px, 7.5vh, 72px);
+    width: clamp(52px, 6vh, 64px);
+    height: clamp(52px, 6vh, 64px);
     border-radius: 50%;
     filter: drop-shadow(0 0 20px rgba(56, 189, 248, 0.45)) drop-shadow(0 6px 16px rgba(11, 27, 51, 0.35));
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1281,7 +1281,7 @@
 
   .panel-right {
     position: relative !important;
-    padding: clamp(1.2rem, 2.5vh, 1.5rem) clamp(1.1rem, 4vw, 1.35rem) !important;
+    padding: clamp(1rem, 2vh, 1.25rem) clamp(1rem, 3.5vw, 1.25rem) !important;
     background: transparent !important;
     width: 100%;
     box-sizing: border-box;
@@ -1335,7 +1335,7 @@
 
   /* Title Row inside Login Card */
   .form-head {
-    margin-bottom: 0.85rem !important;
+    margin-bottom: 0.65rem !important;
     margin-top: 0 !important;
     padding-top: 0 !important;
   }
@@ -1396,11 +1396,11 @@
 
   /* Segmented Tabs (Institutional Light Slate & Clean White Active) */
   .tabs {
-    height: 44px !important;
+    height: 42px !important;
     background: #F1F5F9 !important;
     border-radius: 12px !important;
     padding: 3px !important;
-    margin-bottom: 0.85rem !important;
+    margin-bottom: 0.65rem !important;
     border: 1px solid #E2E8F0 !important;
   }
 
@@ -1410,7 +1410,7 @@
   }
 
   .tabs button {
-    height: 36px !important;
+    height: 34px !important;
     border-radius: 9px !important;
     font-size: 0.85rem !important;
     font-weight: 500 !important;
@@ -1438,7 +1438,7 @@
 
   /* Form Fields */
   .field {
-    margin-bottom: 0.75rem !important;
+    margin-bottom: 0.6rem !important;
   }
 
   .field label {
@@ -1455,7 +1455,7 @@
   .field input[type="text"],
   .field input[type="email"],
   .field input[type="password"] {
-    height: 46px !important;
+    height: 42px !important;
     background: #F8FAFC !important;
     border: 1.5px solid #E2E8F0 !important;
     border-radius: 12px !important;
@@ -1486,7 +1486,7 @@
   }
 
   .row-between {
-    margin-bottom: 0.85rem !important;
+    margin-bottom: 0.65rem !important;
     min-height: 24px !important;
   }
 
@@ -1514,7 +1514,7 @@
 
   /* Sign-In Button (Deep Institutional Navy #0B1B33) */
   .submit-btn {
-    height: 48px !important;
+    height: 44px !important;
     background: #0B1B33 !important;
     color: #FFFFFF !important;
     border-radius: 12px !important;
@@ -1538,7 +1538,7 @@
   }
 
   .divider {
-    margin: 0.75rem 0 !important;
+    margin: 0.65rem 0 !important;
   }
 
   .divider span {
@@ -1550,8 +1550,8 @@
 
   /* Google Button (Clean White with Subtle Border) */
   .google-signin-btn {
-    height: 48px !important;
-    min-height: 48px !important;
+    height: 44px !important;
+    min-height: 44px !important;
     background: #FFFFFF !important;
     border: 1.5px solid #E2E8F0 !important;
     border-radius: 12px !important;
@@ -1559,6 +1559,15 @@
     font-weight: 700 !important;
     color: #0B1B33 !important;
     box-shadow: 0 2px 6px rgba(11, 27, 51, 0.04) !important;
+  }
+
+  .help-trigger-btn {
+    min-height: 44px !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  .stamp {
+    margin-top: 0.75rem !important;
   }
 
   .dark .google-signin-btn {
