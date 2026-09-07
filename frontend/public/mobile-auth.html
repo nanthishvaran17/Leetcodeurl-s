@@ -402,13 +402,19 @@
       }
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
+    function init() {
       initDomElements();
       if (googleBtnEl) {
         googleBtnEl.onclick = executeGoogleSignIn;
       }
       startAuth();
-    });
+    }
+
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
   </script>
 </head>
 <body>
