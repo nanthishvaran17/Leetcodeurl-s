@@ -326,7 +326,7 @@
       });
     }
 
-    // Direct Google Sign-In Execution (Popup first, then Redirect fallback)
+    // Direct Google Sign-In Execution (Redirect primary for seamless Mobile & Chrome Custom Tab support)
     async function executeGoogleSignIn() {
       if (isExchangingToken) return;
 
@@ -337,29 +337,22 @@
       subtitleEl.innerText = "Opening Google account selector...";
 
       try {
-        // Strategy A: Instant Popup inside Web / Custom Tab
-        const result = await signInWithPopup(auth, provider);
-        if (result && result.user) {
-          isExchangingToken = true;
-          const token = await result.user.getIdToken(true);
-          await handleIdToken(token);
-          return;
-        }
-      } catch (popupErr) {
-        console.warn('[MOBILE AUTH] Popup sign-in fallback to redirect:', popupErr?.code || popupErr?.message);
+        sessionStorage.setItem('nec_auth_redirect_started', '1');
+        await signInWithRedirect(auth, provider);
+      } catch (redirectErr) {
+        console.warn('[MOBILE AUTH] Redirect sign-in fallback to popup:', redirectErr?.message || redirectErr);
         
-        // Handle explicit user cancellation
-        if (popupErr?.code === 'auth/popup-closed-by-user' || popupErr?.code === 'auth/cancelled-popup-request') {
-          showError('Google sign-in was cancelled by user.');
-          return;
-        }
-
-        // Strategy B: Full Redirect fallback if popup is blocked
         try {
-          sessionStorage.setItem('nec_auth_redirect_started', '1');
-          await signInWithRedirect(auth, provider);
-        } catch (redirectErr) {
-          showError(redirectErr?.message || 'Unable to open Google sign-in.');
+          const result = await signInWithPopup(auth, provider);
+          if (result && result.user) {
+            isExchangingToken = true;
+            const token = await result.user.getIdToken(true);
+            await handleIdToken(token);
+            return;
+          }
+        } catch (popupErr) {
+          sessionStorage.removeItem('nec_auth_redirect_started');
+          showError(popupErr?.message || redirectErr?.message || 'Unable to open Google sign-in. Please try again.');
         }
       }
     }
