@@ -121,21 +121,6 @@ class AIKnowledgeEngine:
         history: Optional[List[Dict[str, Any]]] = None,
         mode: str = "institutional"
     ) -> Dict[str, Any]:
-        from backend.config import settings
-        from backend.services.ai_gemini_service import AIGeminiEngine
-        
-        # If Gemini API Key is configured, use the true AI engine
-        if getattr(settings, "GEMINI_API_KEY", None):
-            return AIGeminiEngine.answer_query(
-                db=db,
-                query_text=query_text,
-                user=user,
-                context_page=context_page,
-                context_filters=context_filters,
-                history=history,
-                mode=mode
-            )
-
         req_id = f"ai_{uuid.uuid4().hex[:12]}"
         clean_q = query_text.strip().lower()
 

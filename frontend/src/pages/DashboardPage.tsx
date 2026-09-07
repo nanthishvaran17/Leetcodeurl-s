@@ -293,9 +293,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-display font-extrabold tracking-tight text-white uppercase">
               {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') ? (
-                <>MY ASSIGNED STUDENTS <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">OVERVIEW</span></>
+                <>Welcome back, {user?.name || user?.username} 👋</>
               ) : (
-                <>Welcome back, Admin 👋</>
+                <>Welcome back, {user?.name || user?.username || 'Admin'} 👋</>
               )}
             </h1>
             {!(user?.role?.toLowerCase() === 'faculty' || user?.role?.toLowerCase() === 'staff') && (

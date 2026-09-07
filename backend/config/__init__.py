@@ -74,6 +74,9 @@ class Settings(BaseSettings):
     TELEGRAM_BOT_TOKEN: str = ""
     TELEGRAM_CHAT_ID: str = ""
     
+    # AI Engine
+    GEMINI_API_KEY: str = os.environ.get("GEMINI_API_KEY", "")
+    
     # College Branding
     COLLEGE_NAME: str = "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)"
     COLLEGE_ADDRESS: str = "ERODE - 638 052, TAMIL NADU"
