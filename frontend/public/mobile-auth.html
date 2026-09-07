@@ -203,28 +203,39 @@
 
     function returnToAppWithAuthCode(authCode, returnState) {
       console.log(`[MOBILE AUTH] Returning to APK at ${performance.now()}ms`);
+      
+      let safeScheme = scheme;
+      if (!safeScheme || safeScheme.trim() === '') {
+        safeScheme = 'org.nandhaengg.leetcodesync';
+      }
+
       const params = new URLSearchParams();
       params.set('code', authCode);
       params.set('state', returnState);
       
-      const deepLink = `${scheme}://oauth-callback?${params.toString()}`;
+      const deepLink = `${safeScheme}://oauth-callback?${params.toString()}`;
+      console.log(`[MOBILE AUTH] Deep-link redirect started to ${safeScheme}://...`);
       
-      statusEl.innerText = "Returning to App...";
-      subtitleEl.innerText = "Securing institutional session...";
+      statusEl.innerText = "Authentication successful";
+      subtitleEl.innerText = "Returning to LeetCode Tracker App...";
       spinnerEl.style.display = 'none';
       googleBtnEl.style.display = 'none';
 
-      sessionStorage.removeItem('nec_auth_scheme');
-      sessionStorage.removeItem('nec_auth_challenge');
-      sessionStorage.removeItem('nec_auth_state');
-      sessionStorage.removeItem('nec_auth_apibase');
-      sessionStorage.removeItem('nec_auth_redirect_started');
+      // Do NOT clear sessionStorage yet, wait a moment in case the deep link fails and user needs fallback
+      setTimeout(() => {
+        sessionStorage.removeItem('nec_auth_scheme');
+        sessionStorage.removeItem('nec_auth_challenge');
+        sessionStorage.removeItem('nec_auth_state');
+        sessionStorage.removeItem('nec_auth_apibase');
+        sessionStorage.removeItem('nec_auth_redirect_started');
+      }, 5000);
 
       window.location.href = deepLink;
 
       actionBtnEl.style.display = 'inline-flex';
       actionBtnEl.innerText = "Open LeetCode Tracker App";
       actionBtnEl.onclick = () => { window.location.href = deepLink; };
+      console.log(`[MOBILE AUTH] Deep-link fallback displayed`);
     }
 
     function returnToAppWithError(errorMessage) {
