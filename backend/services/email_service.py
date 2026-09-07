@@ -372,6 +372,10 @@ def send_email_via_brevo(
     brevo_configured_sender = (os.environ.get("BREVO_SENDER_EMAIL") or getattr(settings, "BREVO_SENDER_EMAIL", "nanthishvaran0106@gmail.com")).strip()
     sender_email = brevo_configured_sender if (brevo_configured_sender and "@" in brevo_configured_sender) else "nanthishvaran0106@gmail.com"
 
+    subject = strip_all_emojis(subject)
+    if text_body:
+        text_body = strip_all_emojis(text_body)
+
     payload: Dict[str, Any] = {
         "sender": {"name": "Nandha Engineering College — LeetCode Tracker", "email": sender_email},
         "replyTo": {"name": "Nandha Admin Support", "email": recipient if recipient else "nanthishvaran17@gmail.com"},
@@ -490,6 +494,27 @@ def _log_to_db(msg_id: str, recipient: str, subject: str, status: str, err: Opti
     except Exception as e:
         logger.error(f"[EMAIL_DB_LOG_FAILED] Failed to record email delivery to DB: {e}")
 
+EMOJI_CLEAN_REGEX = re.compile(
+    r"[\U00010000-\U0010FFFF"  # Emojis, Symbols, Flags, Emoticons (❤️, 👍, 🏆, 📊, 🚨, etc.)
+    r"\u2600-\u27BF"          # Misc Symbols & Dingbats
+    r"\u2300-\u23FF"          # Technical Symbols
+    r"\u2B00-\u2BFF"          # Arrows & Misc Symbols
+    r"\u20E3"                 # Keycap Symbols
+    r"\uFE0F"                 # Variation Selectors
+    r"\u2190-\u21FF"          # Arrows
+    r"\u200D"                 # Zero Width Joiner
+    r"]+",
+    flags=re.UNICODE
+)
+
+def strip_all_emojis(text: Optional[str]) -> str:
+    """Strips all emojis (e.g. ❤️, 👍, 🏆, 📊, 🚨) and decorative icons to ensure strictly clean, professional emails."""
+    if not text:
+        return ""
+    cleaned = EMOJI_CLEAN_REGEX.sub("", text)
+    cleaned = re.sub(r"[ \t]+", " ", cleaned)
+    return cleaned.strip()
+
 def send_email(
     recipient: str,
     subject: str,
@@ -500,6 +525,11 @@ def send_email(
     """
     Core Email Sender function with strict pre-flight validation and robust delivery status detection.
     """
+    # Sanitize subject & text body to guarantee strictly emoji-free, professional emails
+    subject = strip_all_emojis(subject)
+    if text_body:
+        text_body = strip_all_emojis(text_body)
+
     # Step 1: Pre-flight recipient validation
     is_valid, status_code, val_err = validate_recipient_email(recipient)
     if not is_valid:
