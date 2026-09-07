@@ -8,7 +8,11 @@
       "destination": "https://leetcode-student-data.firebaseapp.com/__/auth/$1"
     },
     {
-      "source": "/(.*)",
+      "source": "/mobile-auth.html",
+      "destination": "/mobile-auth.html"
+    },
+    {
+      "source": "/((?!assets/|mobile-auth.html|firebase-messaging-sw.js|favicon.ico).*)",
       "destination": "/index.html"
     }
   ],
@@ -36,15 +40,11 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://*.firebaseapp.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://leetcodeurl-s-3mig.onrender.com wss://leetcodeurl-s-3mig.onrender.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com; frame-src 'self' https://*.firebaseapp.com; object-src 'none'; base-uri 'self';"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://*.firebaseapp.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://leetcodeurl-s-3mig.onrender.com wss://leetcodeurl-s-3mig.onrender.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; frame-src 'self' https://*.firebaseapp.com https://leetcode-student-data.firebaseapp.com; object-src 'none'; base-uri 'self';"
         },
         {
           "key": "Cross-Origin-Opener-Policy",
           "value": "same-origin-allow-popups"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
         },
         {
           "key": "X-Content-Type-Options",
