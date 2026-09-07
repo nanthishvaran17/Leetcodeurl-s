@@ -134,7 +134,7 @@
   <!-- Firebase App & Auth SDK (Modular CDN) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAsP9hOeAxrIO5hbmlrPhmGa3p1vv-1Jek",
@@ -156,6 +156,9 @@
     const errorBoxEl = document.getElementById('error-box');
     const actionBtnEl = document.getElementById('action-btn');
     const cancelBtnEl = document.getElementById('cancel-btn');
+
+    // Single-flight exchange guard
+    let isExchangingToken = false;
 
     // Retrieve parameters with SessionStorage persistence
     const urlParams = new URLSearchParams(window.location.search);
@@ -186,6 +189,7 @@
       sessionStorage.removeItem('nec_auth_challenge');
       sessionStorage.removeItem('nec_auth_state');
       sessionStorage.removeItem('nec_auth_apibase');
+      sessionStorage.removeItem('nec_auth_redirect_started');
 
       window.location.href = deepLink;
 
@@ -220,6 +224,7 @@
       cancelBtnEl.style.display = 'inline-flex';
       cancelBtnEl.innerText = "Back to Sign In";
       cancelBtnEl.onclick = () => {
+        sessionStorage.removeItem('nec_auth_redirect_started');
         returnToAppWithError('Google sign-in was cancelled.');
       };
     }
@@ -260,61 +265,125 @@
       }
     }
 
-    async function startAuth() {
-      // Set safety timeout to prevent infinite loading
-      const safetyTimeout = setTimeout(() => {
-        if (spinnerEl && spinnerEl.style.display !== 'none') {
-          showError('Authentication timed out. Please try again.');
+    // Centralized Authentication Resolution Flow
+    async function resolveFirebaseUser(authInstance) {
+      statusEl.innerText = "Restoring Session...";
+      subtitleEl.innerText = "Restoring institutional Google session...";
+
+      // Step 1: Check getRedirectResult(auth)
+      try {
+        const redirectRes = await getRedirectResult(authInstance);
+        if (redirectRes && redirectRes.user) {
+          console.log('[MOBILE AUTH] Resolved user from getRedirectResult:', redirectRes.user.email);
+          return redirectRes.user;
         }
-      }, 35000);
+      } catch (err) {
+        console.warn('[MOBILE AUTH] getRedirectResult note:', err?.message || err);
+      }
+
+      // Step 2: Check authInstance.currentUser
+      if (authInstance.currentUser) {
+        console.log('[MOBILE AUTH] Resolved user from auth.currentUser:', authInstance.currentUser.email);
+        return authInstance.currentUser;
+      }
+
+      // Step 3: Bounded wait for onAuthStateChanged restoration (up to 7 seconds)
+      return new Promise((resolve) => {
+        let isResolved = false;
+
+        const unsubscribe = onAuthStateChanged(authInstance, (user) => {
+          if (user && !isResolved) {
+            isResolved = true;
+            unsubscribe();
+            console.log('[MOBILE AUTH] Resolved user from onAuthStateChanged:', user.email);
+            resolve(user);
+          }
+        });
+
+        // Periodic check for currentUser
+        const pollInterval = setInterval(() => {
+          if (authInstance.currentUser && !isResolved) {
+            isResolved = true;
+            clearInterval(pollInterval);
+            unsubscribe();
+            console.log('[MOBILE AUTH] Resolved user from auth.currentUser polling:', authInstance.currentUser.email);
+            resolve(authInstance.currentUser);
+          }
+        }, 400);
+
+        // Bounded timeout (7 seconds)
+        setTimeout(() => {
+          if (!isResolved) {
+            isResolved = true;
+            clearInterval(pollInterval);
+            unsubscribe();
+            console.warn('[MOBILE AUTH] User resolution wait elapsed without active user');
+            resolve(null);
+          }
+        }, 7000);
+      });
+    }
+
+    async function startAuth() {
+      // Safety timeout: 20 seconds maximum wait to guarantee no infinite spinner
+      const safetyTimeout = setTimeout(() => {
+        if (!isExchangingToken && spinnerEl && spinnerEl.style.display !== 'none') {
+          showError('Google sign-in could not be completed. Please try again.');
+        }
+      }, 20000);
 
       try {
         console.log('[MOBILE AUTH] Mobile authentication bridge started');
-        // 1. Check if returning from redirect result
-        const redirectRes = await getRedirectResult(auth).catch((err) => {
-          console.warn('[MOBILE AUTH] getRedirectResult note:', err);
-          return null;
-        });
+        const isRedirectingBack = !!sessionStorage.getItem('nec_auth_redirect_started');
 
-        if (redirectRes && redirectRes.user) {
+        if (isRedirectingBack) {
+          // Returning from Google OAuth redirect
+          const user = await resolveFirebaseUser(auth);
+
+          if (user) {
+            clearTimeout(safetyTimeout);
+            sessionStorage.removeItem('nec_auth_redirect_started');
+            if (isExchangingToken) return;
+            isExchangingToken = true;
+
+            const token = await user.getIdToken(true);
+            await handleIdToken(token);
+            return;
+          }
+
+          // If no user resolved after returning from redirect:
           clearTimeout(safetyTimeout);
-          console.log('[MOBILE AUTH] Firebase result received, obtaining ID token...');
-          const token = await redirectRes.user.getIdToken(true);
-          await handleIdToken(token);
-          return;
-        }
-
-        // 2. Check if already has active Firebase user
-        if (auth.currentUser) {
-          clearTimeout(safetyTimeout);
-          console.log('[MOBILE AUTH] Active Firebase user found:', auth.currentUser.email);
-          const token = await auth.currentUser.getIdToken(true);
-          await handleIdToken(token);
-          return;
-        }
-
-        // 3. Initiate Google Sign-in redirect
-        if (!sessionStorage.getItem('nec_auth_redirect_started')) {
-          sessionStorage.setItem('nec_auth_redirect_started', '1');
-          console.log('[MOBILE AUTH] Redirect initiated to Google OAuth...');
-          statusEl.innerText = "Connecting to Google...";
-          subtitleEl.innerText = "Opening Google account selector...";
-          await signInWithRedirect(auth, provider);
-        } else {
-          // If we already attempted redirect but returned without user:
           sessionStorage.removeItem('nec_auth_redirect_started');
-          clearTimeout(safetyTimeout);
           showError('Google sign-in could not be completed. Please try again.');
+          return;
         }
+
+        // Fresh page load check — check if Firebase user is already active
+        const existingUser = await resolveFirebaseUser(auth);
+        if (existingUser) {
+          clearTimeout(safetyTimeout);
+          if (isExchangingToken) return;
+          isExchangingToken = true;
+
+          const token = await existingUser.getIdToken(true);
+          await handleIdToken(token);
+          return;
+        }
+
+        // Initiate Google OAuth Redirect
+        sessionStorage.setItem('nec_auth_redirect_started', '1');
+        statusEl.innerText = "Connecting to Google...";
+        subtitleEl.innerText = "Opening Google account selector...";
+        await signInWithRedirect(auth, provider);
       } catch (err) {
         clearTimeout(safetyTimeout);
+        sessionStorage.removeItem('nec_auth_redirect_started');
         console.error('[MOBILE AUTH] Bridge error:', err);
         const code = err?.code || '';
         if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
           returnToAppWithError('Google sign-in was cancelled.');
         } else {
-          const msg = err?.message || 'Google sign-in could not be completed. Please try again.';
-          showError(msg);
+          showError(err?.message || 'Google sign-in could not be completed. Please try again.');
         }
       }
     }

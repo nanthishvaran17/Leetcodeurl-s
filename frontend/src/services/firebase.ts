@@ -39,14 +39,10 @@ export const getOrInitAuth = (): Auth => {
   return authInstance;
 };
 
-if (isFirebaseConfigured()) {
-  try {
-    appInstance = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    authInstance = getAuth(appInstance);
-  } catch (err) {
-    console.warn("Firebase lazy initialization mode active:", err);
-  }
-}
+// Lazy getter for auth instance — initialized on demand
+export const getAuthInstance = (): Auth | null => {
+  return authInstance;
+};
 
 export const getOrInitDbAsync = async (): Promise<any> => {
   if (dbInstance) return dbInstance;
@@ -64,7 +60,13 @@ export const getOrInitStorageAsync = async (): Promise<any> => {
   return storageInstance;
 };
 
-export const auth = authInstance;
+export const auth = new Proxy({} as Auth, {
+  get(_target, prop) {
+    const authObj = getOrInitAuth();
+    const val = (authObj as any)[prop];
+    return typeof val === 'function' ? val.bind(authObj) : val;
+  }
+});
 
 export const createGoogleProvider = (): GoogleAuthProvider => {
   const provider = new GoogleAuthProvider();

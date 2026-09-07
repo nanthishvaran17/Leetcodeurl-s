@@ -44,6 +44,8 @@ class ContestStatus(str, Enum):
     NO_LEETCODE_HANDLE            = "NO_LEETCODE_HANDLE"
 
     # Legacy Backward Compatibility Enums
+    PUBLIC_LIVE       = "PUBLIC_LIVE"
+    VIRTUAL_PRACTICE  = "VIRTUAL_PRACTICE"
     PUBLIC_ATTENDED   = "PUBLIC_ATTENDED"
     VIRTUAL_ATTENDED  = "VIRTUAL_ATTENDED"
     FETCH_FAILED      = "FETCH_FAILED"

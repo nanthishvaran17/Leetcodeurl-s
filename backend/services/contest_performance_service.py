@@ -266,7 +266,17 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             status = ContestStatus.NOT_ATTENDED.value
 
         # Consistency Rule: NOT_ATTENDED students MUST have Q1-Q4 = None and contest_solved = None
-        if status not in (ContestStatus.PUBLIC_LIVE.value, ContestStatus.VIRTUAL_PRACTICE.value, ContestStatus.PUBLIC_ATTENDED.value, ContestStatus.VIRTUAL_ATTENDED.value):
+        valid_attended_statuses = (
+            ContestStatus.PUBLIC_LIVE.value,
+            ContestStatus.VIRTUAL_PRACTICE.value,
+            ContestStatus.PUBLIC_ATTENDED.value,
+            ContestStatus.VIRTUAL_ATTENDED.value,
+            ContestStatus.PUBLIC_LIVE_VERIFIED.value,
+            ContestStatus.VIRTUAL_PRACTICE_VERIFIED.value,
+            ContestStatus.PUBLIC_LIVE_UNVERIFIED.value,
+            ContestStatus.VIRTUAL_PRACTICE_UNVERIFIED.value,
+        )
+        if status not in valid_attended_statuses:
             q1_val = None
             q2_val = None
             q3_val = None

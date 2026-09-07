@@ -98,17 +98,107 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => window.removeEventListener('auth_logout', handleGlobalLogout);
   }, [logout]);
 
+  // Centralized Firebase User Resolution Helper (Checks getRedirectResult, currentUser, onAuthStateChanged, and bounded polling)
+  const resolveAuthenticatedFirebaseUser = useCallback(async (authInstance: any): Promise<FirebaseUser | null> => {
+    // Step 1: Check getRedirectResult
+    try {
+      const { getRedirectResult } = await import('firebase/auth');
+      const result = await getRedirectResult(authInstance).catch((e) => {
+        console.warn('[AUTH RESOLVE] getRedirectResult note:', e?.message || e);
+        return null;
+      });
+      if (result && result.user) {
+        console.log('[AUTH RESOLVE] Resolved Firebase user via getRedirectResult');
+        return result.user;
+      }
+    } catch (err) {
+      console.warn('[AUTH RESOLVE] Error checking getRedirectResult:', err);
+    }
+
+    // Step 2: Check authInstance.currentUser
+    if (authInstance.currentUser) {
+      console.log('[AUTH RESOLVE] Resolved Firebase user via auth.currentUser');
+      return authInstance.currentUser;
+    }
+
+    // Step 3: Bounded wait for onAuthStateChanged / currentUser polling
+    return new Promise<FirebaseUser | null>((resolve) => {
+      let isSettled = false;
+
+      const unsubscribe = onAuthStateChanged(authInstance, (user) => {
+        if (user && !isSettled) {
+          isSettled = true;
+          unsubscribe();
+          console.log('[AUTH RESOLVE] Resolved Firebase user via onAuthStateChanged');
+          resolve(user);
+        }
+      });
+
+      const pollInterval = setInterval(() => {
+        if (authInstance.currentUser && !isSettled) {
+          isSettled = true;
+          clearInterval(pollInterval);
+          unsubscribe();
+          console.log('[AUTH RESOLVE] Resolved Firebase user via polling auth.currentUser');
+          resolve(authInstance.currentUser);
+        }
+      }, 350);
+
+      // Bounded timeout (6 seconds max wait)
+      setTimeout(() => {
+        if (!isSettled) {
+          isSettled = true;
+          clearInterval(pollInterval);
+          unsubscribe();
+          console.warn('[AUTH RESOLVE] Bounded timeout reached without active Firebase user');
+          resolve(null);
+        }
+      }, 6000);
+    });
+  }, []);
+
   // App Initialization & Firebase Auth State Lifecycle
   useEffect(() => {
     let isMounted = true;
     let unsubscribeFirebase: (() => void) | undefined;
+    const isBackendExchangingRef = { current: false };
+
+    const performBackendExchange = async (fbUser: FirebaseUser) => {
+      if (isBackendExchangingRef.current) return;
+      isBackendExchangingRef.current = true;
+      setAuthState('AUTHENTICATED_PENDING_BACKEND');
+
+      try {
+        console.log('[AUTH] Initiating backend session exchange');
+        const idToken = await fbUser.getIdToken();
+        const backendRes = await api.post('/auth/google', { id_token: idToken }, { timeout: 35000 });
+
+        if (backendRes.data && backendRes.data.authenticated && isMounted) {
+          console.log('[AUTH] Backend session created successfully, establishing user role session');
+          login(backendRes.data.access_token || '', backendRes.data.user);
+        } else {
+          throw new Error('Unable to establish authenticated session with institutional server.');
+        }
+      } catch (err: any) {
+        if (isMounted) {
+          console.warn('[AUTH] Backend verification failed:', err);
+          try {
+            const authInstance = getOrInitAuth();
+            await firebaseSignOut(authInstance);
+          } catch (_) {}
+          const errMsg = err.response?.data?.detail || err.message || 'Google sign-in could not be completed. Please try again.';
+          setAuthError(errMsg);
+          setAuthState('AUTH_ERROR');
+        }
+      } finally {
+        isBackendExchangingRef.current = false;
+      }
+    };
 
     const processAuthLifecycle = async () => {
       try {
         console.log('[AUTH] Starting auth initialization lifecycle');
-        const authInstance = getOrInitAuth();
 
-        // 1. Check Google redirect result first (if returning from redirect flow on Mobile Web)
         const isMobileRedirect = !!(
           sessionStorage.getItem('nec_mobile_google_redirect') ||
           (typeof window !== 'undefined' && (window.location.search.includes('state=') || window.location.search.includes('code=')))
@@ -117,130 +207,90 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isMobileRedirect) {
           console.log('[MOBILE AUTH] Returning from mobile Google redirect flow');
           setAuthState('AUTH_REDIRECT_PROCESSING');
-          
-          try {
-            // Give Firebase SDK a chance to process the OAuth redirect URL
-            const { getRedirectResult } = await import('firebase/auth');
-            const result = await getRedirectResult(authInstance).catch((e) => {
-              const errStr = String(e?.message || e?.code || e || '');
-              if (errStr.includes('missing initial state') || errStr.includes('sessionStorage')) {
-                console.warn('[MOBILE AUTH] Handled missing initial state gracefully');
-                if (typeof window !== 'undefined' && window.history && window.location.search.includes('state=')) {
-                  const cleanUrl = window.location.origin + window.location.pathname;
-                  window.history.replaceState({}, document.title, cleanUrl);
-                }
-              } else {
-                console.warn('[MOBILE AUTH] getRedirectResult note:', e?.message || e);
-              }
-              return null; // Ensure promise resolves to null on error instead of throwing further
-            });
-            console.log('[MOBILE AUTH] getRedirectResult check completed. Result:', !!result);
-            
-            // Handle Race Condition: Wait for onAuthStateChanged to fire if getRedirectResult is null
-            // We set a bounded timeout (e.g., 5 seconds) for auth state to stabilize
-            if (!result) {
-              console.log('[MOBILE AUTH] getRedirectResult is null, but we expected a redirect. Waiting for auth state to stabilize...');
-              setTimeout(() => {
-                // If we are still in AUTH_REDIRECT_PROCESSING after 5 seconds, assume auth failed
-                setAuthState(prevState => {
-                   if (prevState === 'AUTH_REDIRECT_PROCESSING') {
-                     console.warn('[MOBILE AUTH] Auth state stabilization timeout reached without a user.');
-                     setAuthError('Google sign-in could not be completed. Please try again.');
-                     return 'AUTH_ERROR';
-                   }
-                   return prevState;
-                });
-              }, 5000);
-            }
-          } catch (redirectErr: any) {
-            console.warn('[MOBILE AUTH] Redirect flow encountered an error:', redirectErr);
-            // Handle specific errors like In-App Browser or Storage constraints if they propagated here
-            const msg = redirectErr?.message || '';
-            if (msg.includes('IN_APP_BROWSER_BLOCKED') || msg.includes('STORAGE_UNAVAILABLE')) {
-               setAuthError(msg.replace(/^(IN_APP_BROWSER_BLOCKED|STORAGE_UNAVAILABLE):\s*/, ''));
-               setAuthState('AUTH_ERROR');
-            }
-          } finally {
-            // We don't remove the sessionStorage item if we are waiting for the timeout,
-            // we remove it after so it doesn't trigger on reload.
-            sessionStorage.removeItem('nec_mobile_google_redirect');
+          sessionStorage.removeItem('nec_mobile_google_redirect');
+
+          const authInstance = getOrInitAuth();
+          const fbUser = await resolveAuthenticatedFirebaseUser(authInstance);
+
+          if (fbUser && isMounted) {
+            await performBackendExchange(fbUser);
+            return;
+          } else if (isMounted) {
+            console.warn('[MOBILE AUTH] Unable to resolve Firebase user after redirect');
+            setAuthError('Google sign-in could not be completed. Please try again.');
+            setAuthState('AUTH_ERROR');
+            return;
           }
         }
 
-        // 2. Subscribe to Firebase Auth state listener now that redirect is settled
-        unsubscribeFirebase = onAuthStateChanged(authInstance, async (fbUser: FirebaseUser | null) => {
+        // Standard auth lifecycle listener
+        const initFirebaseListener = async () => {
           if (!isMounted) return;
+          try {
+            const authInstance = getOrInitAuth();
 
-          if (fbUser && fbUser.email) {
-            const storedUserStr = localStorage.getItem('user');
-            // Only perform backend verification if no local user exists AND we aren't already verifying
-            if (!storedUserStr && !isVerifyingRef.current) {
-              isVerifyingRef.current = true;
-              setAuthState('AUTHENTICATED_PENDING_BACKEND');
-              try {
-                console.log('[MOBILE AUTH] Firebase auth state listener triggered for new user');
-                // IMPORTANT: Do not use (true) to force network refresh, which can hang indefinitely on mobile ITP
-                const idToken = await fbUser.getIdToken(); 
-                console.log('[MOBILE AUTH] ID token obtained');
-                
-                const backendRes = await api.post('/auth/google', { id_token: idToken }, { timeout: 35000 });
-                if (backendRes.data && backendRes.data.authenticated && isMounted) {
-                  console.log('[MOBILE AUTH] Backend session created, logging in...');
-                  login(backendRes.data.access_token || '', backendRes.data.user);
-                }
-              } catch (err: any) {
-                if (isMounted) {
-                  console.warn('[MOBILE AUTH] Backend verification failed:', err);
-                  try { await firebaseSignOut(authInstance); } catch (_) {}
-                  const errMsg = err.response?.data?.detail || err.message || 'Google sign-in could not be completed. Please try again.';
-                  setAuthError(errMsg);
-                  setAuthState('AUTH_ERROR');
-                }
-              } finally {
-                isVerifyingRef.current = false;
-              }
-            } else if (storedUserStr) {
-               // Already authorized
-               setAuthState('AUTHORIZED');
-            }
-          } else {
-            // Firebase reports no active user.
-            if (isVerifyingRef.current) return; // Ignore if we are currently verifying
+            unsubscribeFirebase = onAuthStateChanged(authInstance, async (fbUser: FirebaseUser | null) => {
+              if (!isMounted) return;
 
-            // Fallback: Check local session/token
-            const storedToken = localStorage.getItem('token');
-            if (storedToken && storedToken.trim() !== '') {
-              try {
-                const res = await api.get('/auth/session');
-                if (res && res.data && res.data.authenticated && res.data.user && isMounted) {
-                  const u = res.data.user;
-                  const formattedUser: AuthUser = {
-                    uid: `user_${u.id}`,
-                    name: u.username || 'User',
-                    email: u.email || '',
-                    role: u.role || 'Admin',
-                    isProfileLinked: true,
-                    id: u.id,
-                    username: u.username,
-                    department_id: u.department_id || null
-                  };
-                  setUser(formattedUser);
-                  localStorage.setItem('user', JSON.stringify(formattedUser));
+              if (fbUser && fbUser.email) {
+                const storedUserStr = localStorage.getItem('user');
+                if (!storedUserStr && !isVerifyingRef.current) {
+                  isVerifyingRef.current = true;
+                  await performBackendExchange(fbUser);
+                  isVerifyingRef.current = false;
+                } else if (storedUserStr) {
+                  setAuthState('AUTHORIZED');
+                }
+              } else {
+                if (isVerifyingRef.current) return;
+
+                const storedToken = localStorage.getItem('token');
+                if (storedToken && storedToken.trim() !== '') {
+                  try {
+                    const res = await api.get('/auth/session');
+                    if (res && res.data && res.data.authenticated && res.data.user && isMounted) {
+                      const u = res.data.user;
+                      const formattedUser: AuthUser = {
+                        uid: `user_${u.id}`,
+                        name: u.username || 'User',
+                        email: u.email || '',
+                        role: u.role || 'student',
+                        isProfileLinked: true,
+                        id: u.id,
+                        username: u.username,
+                        department_id: u.department_id || null
+                      };
+                      setUser(formattedUser);
+                      localStorage.setItem('user', JSON.stringify(formattedUser));
+                      setAuthState('AUTHORIZED');
+                      return;
+                    }
+                  } catch (e) {}
+                }
+
+                const storedUser = localStorage.getItem('user');
+                if (storedUser && isMounted) {
                   setAuthState('AUTHORIZED');
                   return;
                 }
-              } catch (e) {}
-            }
 
-            const storedUser = localStorage.getItem('user');
-            if (storedUser && isMounted) {
-              setAuthState('AUTHORIZED');
-              return;
+                if (isMounted) setAuthState('AUTH_UNAUTHENTICATED');
+              }
+            });
+          } catch (_e) {
+            if (isMounted) {
+              const storedUser = localStorage.getItem('user');
+              setAuthState(storedUser ? 'AUTHORIZED' : 'AUTH_UNAUTHENTICATED');
             }
-
-            if (isMounted) setAuthState('AUTH_UNAUTHENTICATED');
           }
-        });
+        };
+
+        // Defer listener initialization after initial paint for fast LCP when not returning from redirect
+        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+          (window as any).requestIdleCallback(() => initFirebaseListener(), { timeout: 2000 });
+        } else {
+          setTimeout(initFirebaseListener, 1200);
+        }
       } catch (_err) {
         if (isMounted) {
           const storedUser = localStorage.getItem('user');
@@ -255,7 +305,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isMounted = false;
       if (unsubscribeFirebase) unsubscribeFirebase();
     };
-  }, [login]);
+  }, [login, resolveAuthenticatedFirebaseUser]);
 
   // Safety Timeout: 15s maximum wait for loading states to prevent permanent loading spinners
   useEffect(() => {

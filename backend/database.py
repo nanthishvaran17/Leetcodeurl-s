@@ -128,8 +128,21 @@ def run_migrations():
 
     try:
         with engine.connect() as conn:
-            # Create PostgreSQL performance indexes if applicable
+            # Create PostgreSQL performance indexes and missing columns if applicable
             if "postgresql" in db_url or "postgres" in db_url:
+                conn.execute(__import__('sqlalchemy').text("""
+                    ALTER TABLE students
+                        ADD COLUMN IF NOT EXISTS primary_leetcode_id VARCHAR(100),
+                        ADD COLUMN IF NOT EXISTS secondary_leetcode_id VARCHAR(100),
+                        ADD COLUMN IF NOT EXISTS secondary_status VARCHAR(50) DEFAULT 'none';
+                """))
+                conn.execute(__import__('sqlalchemy').text("""
+                    UPDATE students
+                    SET primary_leetcode_id = username
+                    WHERE primary_leetcode_id IS NULL AND username IS NOT NULL;
+                """))
+                conn.execute(__import__('sqlalchemy').text("CREATE INDEX IF NOT EXISTS ix_students_primary_leetcode_id ON students (primary_leetcode_id);"))
+                conn.execute(__import__('sqlalchemy').text("CREATE INDEX IF NOT EXISTS ix_students_secondary_leetcode_id ON students (secondary_leetcode_id);"))
                 conn.execute(__import__('sqlalchemy').text("CREATE INDEX IF NOT EXISTS ix_leetcode_profile_stats_total_solved ON leetcode_profile_stats (total_solved);"))
                 conn.execute(__import__('sqlalchemy').text("CREATE INDEX IF NOT EXISTS ix_leetcode_profile_stats_sync_status ON leetcode_profile_stats (sync_status);"))
                 conn.execute(__import__('sqlalchemy').text("CREATE INDEX IF NOT EXISTS ix_faculty_student_assignments_faculty_id ON faculty_student_assignments (faculty_id);"))
