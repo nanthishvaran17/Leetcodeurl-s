@@ -54,6 +54,11 @@ interface CertificateVerificationData {
   contest_score?: string;
   contest_rank?: string;
   contest_rating?: string;
+  q1_score?: number;
+  q2_score?: number;
+  q3_score?: number;
+  q4_score?: number;
+  integrity_status?: string;
   sha_hash?: string;
   source_engine?: string;
 }
@@ -255,18 +260,24 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
 
               {/* Status Header */}
               <div className="text-center space-y-3">
-                <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/30 shadow-lg text-xs font-black uppercase tracking-wider animate-pulse">
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>OFFICIAL FORENSIC REPORT VERIFIED</span>
+                <div className={`inline-flex items-center space-x-2 px-4 py-1.5 rounded-full ${data.integrity_status === 'FAILED' ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' : 'bg-brand-500/20 text-brand-400 border-brand-500/30'} border shadow-lg text-xs font-black uppercase tracking-wider animate-pulse`}>
+                  {data.integrity_status === 'FAILED' ? <ShieldAlert className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
+                  <span>{data.integrity_status === 'FAILED' ? 'VERIFICATION FAILED' : 'OFFICIAL FORENSIC REPORT VERIFIED'}</span>
                 </div>
                 
                 <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                   Official LeetCode Contest Forensic Verification Audit Report
                 </h2>
                 
-                <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-                  This cryptographic contest audit record has been authenticated against the official institutional ledger of Nandha Engineering College (Autonomous).
-                </p>
+                {data.integrity_status === 'FAILED' ? (
+                  <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm font-semibold max-w-lg mx-auto">
+                    This document does not match the official institutional record. Cryptographic hash integrity check failed. The data shown below reflects the authoritative institutional record.
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+                    This cryptographic contest audit record has been authenticated against the official institutional ledger of Nandha Engineering College (Autonomous).
+                  </p>
+                )}
               </div>
 
               {/* Student Credential Card */}
@@ -330,7 +341,76 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
                       {data.contest_date || data.issue_date || '16.08.2026'}
                     </strong>
                   </div>
+                </div>
 
+                {/* VERIFICATION CHECKLIST */}
+                <div className="border-t border-slate-700/60 pt-4 space-y-2 mt-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Verification Checklist</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-medium text-slate-300">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      <span>Report ID Verified</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      <span>Student Identity Verified</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      <span>Source Engine Verified</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {data.integrity_status === 'FAILED' ? (
+                        <XCircle className="w-4 h-4 text-rose-500" />
+                      ) : (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      )}
+                      <span className={data.integrity_status === 'FAILED' ? 'text-rose-400' : ''}>SHA-256 Integrity Verified</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* QUESTION BREAKDOWN */}
+                <div className="border-t border-slate-700/60 pt-4 mt-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Question Verification</h4>
+                  <div className="space-y-2 text-xs font-mono bg-slate-900 rounded-lg p-3 border border-slate-800">
+                    <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                      <span className="text-slate-400">Q1 <span className="hidden sm:inline">Accepted</span></span>
+                      <span className="text-slate-500">3 Points</span>
+                      {data.q1_score > 0 ? (
+                        <span className="text-emerald-400 flex items-center space-x-1"><CheckCircle2 className="w-3.5 h-3.5" /> <span>Verified</span></span>
+                      ) : (
+                        <span className="text-slate-500">Not Solved</span>
+                      )}
+                    </div>
+                    <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                      <span className="text-slate-400">Q2 <span className="hidden sm:inline">Accepted</span></span>
+                      <span className="text-slate-500">4 Points</span>
+                      {data.q2_score > 0 ? (
+                        <span className="text-emerald-400 flex items-center space-x-1"><CheckCircle2 className="w-3.5 h-3.5" /> <span>Verified</span></span>
+                      ) : (
+                        <span className="text-slate-500">Not Solved</span>
+                      )}
+                    </div>
+                    <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                      <span className="text-slate-400">Q3 <span className="hidden sm:inline">Accepted</span></span>
+                      <span className="text-slate-500">5 Points</span>
+                      {data.q3_score > 0 ? (
+                        <span className="text-emerald-400 flex items-center space-x-1"><CheckCircle2 className="w-3.5 h-3.5" /> <span>Verified</span></span>
+                      ) : (
+                        <span className="text-slate-500">Not Solved</span>
+                      )}
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400">Q4 <span className="hidden sm:inline">Accepted</span></span>
+                      <span className="text-slate-500">6 Points</span>
+                      {data.q4_score > 0 ? (
+                        <span className="text-emerald-400 flex items-center space-x-1"><CheckCircle2 className="w-3.5 h-3.5" /> <span>Verified</span></span>
+                      ) : (
+                        <span className="text-slate-500">Not Solved</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
               </div>
@@ -343,8 +423,8 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
                     <strong className="text-brand-400 text-sm font-black">{data.verification_id}</strong>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-black">
-                      AUTHENTIC &amp; SEALED
+                    <span className={`px-2.5 py-1 rounded-md text-[10px] font-black border ${data.integrity_status === 'FAILED' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
+                      {data.integrity_status === 'FAILED' ? 'INTEGRITY MISMATCH' : 'AUTHENTIC & SEALED'}
                     </span>
                     <span className="px-2.5 py-1 rounded-md bg-brand-500/10 text-brand-400 border border-brand-500/20 text-[10px] font-black">
                       ENGINE v2.0

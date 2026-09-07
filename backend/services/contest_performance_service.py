@@ -77,7 +77,7 @@ def matches_year(r_year: Optional[str], target_year: Optional[str]) -> bool:
     return normalize_year_val(r_year) == normalize_year_val(norm_target)
 
 
-def build_contest_performance_report(db: Session, config: ReportConfig) -> Dict[str, Any]:
+def build_contest_performance_report(db: Session, config: ReportConfig, current_user: Optional[Any] = None) -> Dict[str, Any]:
     """
     Authoritatively builds the Contest Performance Report for the resolved latest Weekly Contest.
     Strictly filter-aware (Department, Year, Output Scope) and fully reconciled.
@@ -128,6 +128,10 @@ def build_contest_performance_report(db: Session, config: ReportConfig) -> Dict[
     student_query = db.query(Student).filter(
         (Student.is_active == True) | (Student.is_active.is_(None))
     )
+    
+    from backend.services.authorization_service import apply_role_based_student_filter
+    student_query = apply_role_based_student_filter(student_query, current_user, db)
+    
     all_master_students = student_query.order_by(Student.id.asc()).all()
 
     # Filter students by Department and Year

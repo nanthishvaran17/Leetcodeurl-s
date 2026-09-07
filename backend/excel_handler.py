@@ -1197,7 +1197,7 @@ def generate_8_sheet_master_tracker(db: Session, current_user: Optional[User] = 
 
 
 
-def create_weekly_contest_matrix_sheet(ws, db: Session, batch_label: str, dept_id: Optional[int] = None):
+def create_weekly_contest_matrix_sheet(ws, db: Session, batch_label: str, dept_id: Optional[int] = None, current_user: Optional[User] = None):
     ws.sheet_view.showGridLines = True
     
     dept_obj = db.query(Department).filter(Department.id == dept_id).first() if dept_id else None
@@ -1334,6 +1334,8 @@ def create_weekly_contest_matrix_sheet(ws, db: Session, batch_label: str, dept_i
     if dept_id:
         stud_query = stud_query.filter(Student.department_id == dept_id)
 
+    stud_query = apply_role_based_student_filter(stud_query, current_user, db)
+
     students = stud_query.order_by(Student.reg_no.asc()).all()
 
     current_row = 10
@@ -1423,7 +1425,7 @@ def create_weekly_contest_matrix_sheet(ws, db: Session, batch_label: str, dept_i
         ws.column_dimensions[col_let].width = 14
 
 
-def create_batch_performance_matrix_sheet(ws, db: Session, dept_id: Optional[int] = None):
+def create_batch_performance_matrix_sheet(ws, db: Session, dept_id: Optional[int] = None, current_user: Optional[User] = None):
     """
     Creates the official 13-column Executive Batch Matrix worksheet, optionably filtered by department.
     """
@@ -1543,6 +1545,9 @@ def create_batch_performance_matrix_sheet(ws, db: Session, dept_id: Optional[int
         )
         if dept_id:
             stud_query = stud_query.filter(Student.department_id == dept_id)
+        
+        stud_query = apply_role_based_student_filter(stud_query, current_user, db)
+        
         students = stud_query.all()
         t_cnt = len(students) or (default_cnt if not dept_id else len(students))
 
@@ -1599,7 +1604,7 @@ def create_batch_performance_matrix_sheet(ws, db: Session, dept_id: Optional[int
             cell.alignment = Alignment(horizontal="center", vertical="center")
 
 
-def generate_weekly_contest_matrix_excel(db: Session, batch_label: str = "2028", dept_id: Optional[int] = None) -> bytes:
+def generate_weekly_contest_matrix_excel(db: Session, batch_label: str = "2028", dept_id: Optional[int] = None, current_user: Optional[User] = None) -> bytes:
     """
     Generates Excel Workbook with separate Matrix & Details sheets per department.
     """
@@ -1618,36 +1623,36 @@ def generate_weekly_contest_matrix_excel(db: Session, batch_label: str = "2028",
         code_label = dept.code.replace("/", "-")[:20] if dept else "DEPT"
         
         ws_m = wb.create_sheet(title=f"MATRIX - {code_label}")
-        create_batch_performance_matrix_sheet(ws_m, db, dept_id)
+        create_batch_performance_matrix_sheet(ws_m, db, dept_id, current_user)
 
         ws_d = wb.create_sheet(title=f"DETAILS - {code_label}")
-        create_weekly_contest_matrix_sheet(ws_d, db, batch_label, dept_id)
+        create_weekly_contest_matrix_sheet(ws_d, db, batch_label, dept_id, current_user)
     else:
         # Sheet 1: Matrix - CSE(CS)
         ws_cs_m = wb.create_sheet(title="MATRIX - CSE(CS)")
-        create_batch_performance_matrix_sheet(ws_cs_m, db, cs_dept.id if cs_dept else None)
+        create_batch_performance_matrix_sheet(ws_cs_m, db, cs_dept.id if cs_dept else None, current_user)
 
         # Sheet 2: Matrix - CSE(IOT)
         ws_iot_m = wb.create_sheet(title="MATRIX - CSE(IOT)")
-        create_batch_performance_matrix_sheet(ws_iot_m, db, iot_dept.id if iot_dept else None)
+        create_batch_performance_matrix_sheet(ws_iot_m, db, iot_dept.id if iot_dept else None, current_user)
 
         # Sheet 3: Matrix - ALL DEPTS
         ws_all_m = wb.create_sheet(title="MATRIX - ALL DEPTS")
-        create_batch_performance_matrix_sheet(ws_all_m, db, None)
+        create_batch_performance_matrix_sheet(ws_all_m, db, None, current_user)
 
         # Sheet 4: Details - CSE(CS)
         if cs_dept:
             ws_cs_d = wb.create_sheet(title="DETAILS - CSE(CS)")
-            create_weekly_contest_matrix_sheet(ws_cs_d, db, batch_label, cs_dept.id)
+            create_weekly_contest_matrix_sheet(ws_cs_d, db, batch_label, cs_dept.id, current_user)
 
         # Sheet 5: Details - CSE(IOT)
         if iot_dept:
             ws_iot_d = wb.create_sheet(title="DETAILS - CSE(IOT)")
-            create_weekly_contest_matrix_sheet(ws_iot_d, db, batch_label, iot_dept.id)
+            create_weekly_contest_matrix_sheet(ws_iot_d, db, batch_label, iot_dept.id, current_user)
 
         # Sheet 6: Details - ALL DEPTS
         ws_all_d = wb.create_sheet(title="DETAILS - ALL DEPTS")
-        create_weekly_contest_matrix_sheet(ws_all_d, db, batch_label, None)
+        create_weekly_contest_matrix_sheet(ws_all_d, db, batch_label, None, current_user)
 
     output = io.BytesIO()
     wb.save(output)

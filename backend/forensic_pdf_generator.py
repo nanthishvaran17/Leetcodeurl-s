@@ -79,19 +79,30 @@ def generate_forensic_audit_pdf(db: Session, student_id: int, session_id: int, t
     elif not trace_id.startswith("CERT-") and not trace_id.startswith("trace_"):
         trace_id = f"CERT-{trace_id.upper()}"
 
-    # Pre-calculate sha_hash
-    contest_result.participation_status if contest_result else ("VIRTUAL_ATTENDED" if virtual_result else "NOT_ATTENDED")
+    part_status = contest_result.participation_status if contest_result else ("VIRTUAL_ATTENDED" if virtual_result else "NOT_ATTENDED")
     tot_solved_tmp = contest_result.total_contest_solved if contest_result else (virtual_result.total_contest_solved if virtual_result else 0)
-    sha_hash = hashlib.sha256(f"{trace_id}:{student.reg_no}:{session_id}:{tot_solved_tmp}".encode()).hexdigest()
+    score_tmp = contest_result.contest_score if contest_result else (virtual_result.contest_score if virtual_result else 0)
+    q1_val = contest_result.q1 if contest_result else 0
+    q2_val = contest_result.q2 if contest_result else 0
+    q3_val = contest_result.q3 if contest_result else 0
+    q4_val = contest_result.q4 if contest_result else 0
+    
+    c_title_name = derive_clean_contest_name(session_obj)
+    dept_code_str = student.department.code if student.department else "CSE"
+    year_str = student.year_level or "III"
+    username = student.leetcodeUsername or "N/A"
+    c_date = session_obj.session_date or "16.08.2026"
+
+    # Canonical representation for strictly enforced cryptographic verification
+    canonical_data = f"{trace_id}:{student.id}:{student.name}:{student.reg_no}:{dept_code_str}:{year_str}:{username}:{session_obj.contest_id or session_obj.id}:{c_title_name}:{c_date}:{part_status}:{tot_solved_tmp}:{q1_val},{q2_val},{q3_val},{q4_val}:{score_tmp}"
+    sha_hash = hashlib.sha256(canonical_data.encode()).hexdigest()
 
     # Auto-register CertificateRecord in Database for instant verification resolution
     try:
         from backend.models import CertificateRecord
         existing_cert = db.query(CertificateRecord).filter(CertificateRecord.verification_id == trace_id).first()
         dept_name_str = student.department.name if student.department else "Computer Science and Engineering"
-        dept_code_str = student.department.code if student.department else "CSE"
         ver_url = f"https://leetcode-student-data.web.app/verify/{trace_id}"
-        c_title_name = derive_clean_contest_name(session_obj)
 
         if existing_cert:
             existing_cert.document_type = "FORENSIC_VERIFICATION_REPORT"
@@ -404,7 +415,8 @@ def generate_forensic_audit_pdf(db: Session, student_id: int, session_id: int, t
     story.append(Paragraph("3. CRYPTOGRAPHIC EVIDENCE & SOURCE AUDIT TRAIL", sec_header_style))
     story.append(Spacer(1, 4))
 
-    sha_hash = hashlib.sha256(f"{trace_id}:{student.reg_no}:{session_id}:{tot_solved}".encode()).hexdigest()
+    # Use the same canonical_data computed earlier
+    sha_hash = hashlib.sha256(canonical_data.encode()).hexdigest()
 
     audit_data = [
         [

@@ -438,12 +438,12 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-[999999] flex items-center justify-center p-0 sm:p-4 md:p-6 bg-slate-950/85 backdrop-blur-md overflow-hidden"
+      className="fixed inset-0 z-[9999999] flex items-center justify-center p-0 sm:p-4 md:p-6 bg-slate-950/85 backdrop-blur-md"
       onClick={(e) => { if (e.target === e.currentTarget && !isSaving) handleAttemptClose(); }}
     >
-      {/* Responsive Modal Card: 100dvh on mobile, floating max-w-xl on desktop */}
+      {/* Responsive Modal Card: h-full precisely respects fixed inset-0 boundaries on mobile */}
       <div
-        className="w-full h-[100dvh] sm:h-auto sm:max-h-[88dvh] max-w-xl bg-white dark:bg-navy-950 sm:rounded-3xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-slate-100 antialiased overflow-hidden flex flex-col z-[1000000] relative"
+        className="w-full h-full sm:h-auto sm:max-h-[88vh] max-w-xl bg-white dark:bg-navy-950 sm:rounded-3xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-slate-100 antialiased flex flex-col relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Fixed Header */}
@@ -471,8 +471,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         </div>
 
         {/* Scrollable Form Content */}
-        <form id="edit-student-form" onSubmit={handleSave} className="flex flex-col flex-1 min-h-0 overflow-hidden relative">
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-5 pb-32 sm:pb-12">
+        <form id="edit-student-form" onSubmit={handleSave} className="flex flex-col flex-1 min-h-0 relative">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-5">
             {errorMessage && (
               <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center space-x-2 animate-shake">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -699,11 +699,14 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                 </div>
               )}
             </div>
+            
+            {/* Small safe area spacer so last field clears cleanly */}
+            <div className="h-4 sm:h-2"></div>
           </div>
 
-          {/* Dedicated Fixed Bottom Action Bar: Always visible from any scroll position */}
+          {/* Dedicated Fixed Bottom Action Bar: Sits below the scroll container using flex shrink-0 */}
           <div
-            className="sticky bottom-0 left-0 right-0 px-4 py-3.5 sm:px-6 sm:py-4 bg-slate-50/95 dark:bg-navy-950/95 backdrop-blur-md border-t border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0 z-50 shadow-2xl gap-3 w-full"
+            className="shrink-0 px-4 py-3.5 sm:px-6 sm:py-4 bg-slate-50/95 dark:bg-navy-950/95 backdrop-blur-md border-t border-slate-200 dark:border-navy-800 flex items-center justify-between z-50 shadow-2xl gap-3 w-full"
             style={{ paddingBottom: 'calc(0.85rem + env(safe-area-inset-bottom, 0px))' }}
           >
             <button

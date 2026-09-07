@@ -226,7 +226,7 @@ def _dispatch_internal_endpoint(
     # 3. Master Tracker Excel
     elif clean_endpoint == "/api/reports/export-master-tracker":
         from backend.excel_handler import generate_8_sheet_master_tracker
-        excel_bytes = generate_8_sheet_master_tracker(db)
+        excel_bytes = generate_8_sheet_master_tracker(db, current_user=user)
         return excel_bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or "Full_8_Sheet_Master_Tracker.xlsx"
 
     # 4. Weekly Contest Matrix
@@ -234,7 +234,7 @@ def _dispatch_internal_endpoint(
         from backend.excel_handler import generate_weekly_contest_matrix_excel
         batch = params.get("batch", "2028")
         dept_id = params.get("dept_id")
-        excel_bytes = generate_weekly_contest_matrix_excel(db, batch_label=batch, dept_id=dept_id)
+        excel_bytes = generate_weekly_contest_matrix_excel(db, batch_label=batch, dept_id=dept_id, current_user=user)
         return excel_bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or f"LeetCode_Weekly_Contest_Matrix_Batch_{batch}.xlsx"
 
     # 5. Executive PDF Report

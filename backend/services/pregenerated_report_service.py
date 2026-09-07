@@ -511,12 +511,12 @@ def generate_report_bytes(
     # 3. Master 8-Sheet Tracker
     if rpt == "MASTER_TRACKER" or rpt == "8_SHEET_MASTER_TRACKER":
         from backend.excel_handler import generate_8_sheet_master_tracker
-        return generate_8_sheet_master_tracker(db)
+        return generate_8_sheet_master_tracker(db, current_user=current_user)
 
     # 4. Weekly Contest Matrix
     if rpt == "WEEKLY_CONTEST_MATRIX":
         from backend.excel_handler import generate_weekly_contest_matrix_excel
-        return generate_weekly_contest_matrix_excel(db)
+        return generate_weekly_contest_matrix_excel(db, current_user=current_user)
 
     # 5. Universal Report Engine (Student Performance, Official College Summary, Session Contests)
     from backend.services.report_engine import build_universal_report

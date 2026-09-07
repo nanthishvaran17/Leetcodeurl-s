@@ -10,6 +10,7 @@ from backend.database import get_db
 from backend.models import Student, LeetCodeProfileStats, Department, AuditLog
 from backend.leetcode_client import fetch_leetcode_profile_sync, extract_leetcode_username
 from backend.logger import logger
+from backend.security import require_security_access
 
 router = APIRouter(prefix="/api/data-issues", tags=["Student Data Issues & Recovery"])
 
@@ -156,16 +157,24 @@ def classify_student_issue(student: Student) -> dict:
 
 
 @router.get("/summary")
-def get_data_issues_summary(db: Session = Depends(get_db)):
+def get_data_issues_summary(
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Data Issues Summary", dept_scoped=True))
+):
     """
     Computes real, ground-truth issue counts across Cyber Security and IoT students.
     """
-    students = db.query(Student).join(Department, Student.department_id == Department.id).filter(
+    from backend.services.authorization_service import apply_role_based_student_filter
+    
+    query = db.query(Student).join(Department, Student.department_id == Department.id).filter(
         Department.code.in_(["CSE(CS)", "CSE(IOT)"])
     ).options(
         joinedload(Student.stats),
         joinedload(Student.department)
-    ).all()
+    )
+    
+    query = apply_role_based_student_filter(query, current_user, db)
+    students = query.all()
 
     classified = [classify_student_issue(s) for s in students]
 
@@ -238,17 +247,23 @@ def get_data_issues_students(
     issue_type: Optional[str] = Query("all", description="Specific issue category or critical"),
     search: Optional[str] = Query(None, description="Search term across name, reg_no, username, issue"),
     limit: int = Query(500, ge=1, le=1000),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Data Issues Students", dept_scoped=True))
 ):
     """
     Returns filtered student issues list for Cyber Security and IoT with full URL validation metadata.
     """
-    students = db.query(Student).join(Department, Student.department_id == Department.id).filter(
+    from backend.services.authorization_service import apply_role_based_student_filter
+    
+    query = db.query(Student).join(Department, Student.department_id == Department.id).filter(
         Department.code.in_(["CSE(CS)", "CSE(IOT)"])
     ).options(
         joinedload(Student.stats),
         joinedload(Student.department)
-    ).all()
+    )
+    
+    query = apply_role_based_student_filter(query, current_user, db)
+    students = query.all()
 
     classified = [classify_student_issue(s) for s in students]
 

@@ -324,7 +324,12 @@ def verify_certificate_public(
         contest_rank = "#1 College Rank"
         contest_rating = "1650.0"
         sha_hash = cert.sha_hash
-
+        q1_score = 0
+        q2_score = 0
+        q3_score = 0
+        q4_score = 0
+        canonical_hash_match = True
+        integrity_status = "VERIFIED"
         if doc_type == "FORENSIC_VERIFICATION_REPORT":
             p_res = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.student_id == cert.student_id).order_by(WeeklyPublicResult.id.desc()).first()
             v_res = None
@@ -344,19 +349,64 @@ def verify_certificate_public(
             
             if p_res:
                 p_status = p_res.participation_status or "PUBLIC_ATTENDED"
-                problems_solved = f"{p_res.total_contest_solved or 0} / 4 Problems"
-                contest_score = str(p_res.contest_score or 0)
+                tot_solved_tmp = p_res.total_contest_solved or 0
+                problems_solved = f"{tot_solved_tmp} / 4 Problems"
+                c_score = p_res.contest_score or 0
+                contest_score = str(c_score)
                 contest_rank = f"Rank #{p_res.contest_rank}" if p_res.contest_rank else "N/A"
-                contest_rating = f"{p_res.contest_rating:.1f}" if p_res.contest_rating else "1500.0"
+                c_rating = p_res.contest_rating or 1500.0
+                contest_rating = f"{c_rating:.1f}"
+                q1_score = p_res.q1 or 0
+                q2_score = p_res.q2 or 0
+                q3_score = p_res.q3 or 0
+                q4_score = p_res.q4 or 0
             elif v_res:
                 p_status = "VIRTUAL_ATTENDED"
-                problems_solved = f"{v_res.total_contest_solved or 0} / 4 Problems"
-                contest_score = str(v_res.contest_score or 0)
+                tot_solved_tmp = v_res.total_contest_solved or 0
+                problems_solved = f"{tot_solved_tmp} / 4 Problems"
+                c_score = v_res.contest_score or 0
+                contest_score = str(c_score)
                 contest_rank = f"Rank #{v_res.contest_rank}" if v_res.contest_rank else "N/A"
-                contest_rating = f"{v_res.contest_rating:.1f}" if v_res.contest_rating else "1500.0"
+                c_rating = v_res.contest_rating or 1500.0
+                contest_rating = f"{c_rating:.1f}"
+                q1_score = v_res.q1 or 0
+                q2_score = v_res.q2 or 0
+                q3_score = v_res.q3 or 0
+                q4_score = v_res.q4 or 0
+            else:
+                tot_solved_tmp = 0
+                c_score = 0
+                c_rating = 1500.0
+
+            # Cryptographic Validation logic
+            # Regenerate the canonical representation based on the CURRENT database state
+            student = cert.student
+            if student and session_obj:
+                c_title_name = contest_name
+                dept_code_str = student.department.code if student.department else "CSE"
+                year_str = student.year_level or "III"
+                username = student.leetcodeUsername or "N/A"
+                c_date = session_obj.session_date or "16.08.2026"
+                
+                # V2 Hash
+                canonical_data = f"{cert.verification_id}:{student.id}:{student.name}:{student.reg_no}:{dept_code_str}:{year_str}:{username}:{session_obj.contest_id or session_obj.id}:{c_title_name}:{c_date}:{p_status}:{tot_solved_tmp}:{q1_score},{q2_score},{q3_score},{q4_score}:{c_score}"
+                computed_hash_v2 = hashlib.sha256(canonical_data.encode()).hexdigest()
+                
+                # V1 Hash (Fallback for legacy certificates)
+                computed_hash_v1 = hashlib.sha256(f"{cert.verification_id}:{cert.register_no}:{session_obj.id}:{tot_solved_tmp}".encode()).hexdigest()
+
+                if cert.sha_hash == computed_hash_v2 or cert.sha_hash == computed_hash_v1:
+                    canonical_hash_match = True
+                    integrity_status = "VERIFIED"
+                else:
+                    canonical_hash_match = False
+                    integrity_status = "FAILED"
+                    # If verification failed, don't blindly trust the payload
+                    contest_status = "INTEGRITY MISMATCH"
 
             if not sha_hash:
-                sha_hash = hashlib.sha256(f"{cert.verification_id}:{cert.register_no}:{contest_name}".encode()).hexdigest()
+                sha_hash = computed_hash_v2 if (student and session_obj) else hashlib.sha256(f"{cert.verification_id}:{cert.register_no}:{contest_name}".encode()).hexdigest()
+
 
         return {
             "verified": True,
@@ -384,6 +434,12 @@ def verify_certificate_public(
             "contest_score": contest_score,
             "contest_rank": contest_rank,
             "contest_rating": contest_rating,
+            "q1_score": q1_score,
+            "q2_score": q2_score,
+            "q3_score": q3_score,
+            "q4_score": q4_score,
+            "integrity_status": integrity_status,
+            "canonical_hash_match": canonical_hash_match,
             "sha_hash": sha_hash,
             "source_engine": "LeetCode GraphQL API (userContestRankingHistory)",
             "created_at": cert.created_at.strftime("%Y-%m-%d %H:%M:%S") if cert.created_at else None

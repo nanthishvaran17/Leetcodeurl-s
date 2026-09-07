@@ -14,7 +14,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
   const [errorMsg, setErrorMsg] = useState('');
 
   const activeError = errorMsg || authError;
-  const isAuthLoading = isSigningIn || authState === 'AUTHENTICATING' || authState === 'AUTHENTICATED_PENDING_BACKEND';
+  const isAuthLoading = isSigningIn || authState === 'AUTHENTICATING' || authState === 'AUTHENTICATED_PENDING_BACKEND' || authState === 'AUTH_REDIRECT_PROCESSING';
 
   const handleSignIn = async () => {
     if (isAuthLoading) return;
@@ -115,6 +115,8 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ onSucces
             <span>
               {authState === 'AUTHENTICATED_PENDING_BACKEND'
                 ? 'Authorizing Session...'
+                : authState === 'AUTH_REDIRECT_PROCESSING'
+                ? 'Resuming Session...'
                 : 'Authenticating through Google...'}
             </span>
           </>
