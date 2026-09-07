@@ -30,44 +30,44 @@ def test_production_sqlite_database_url_fails():
         )
     assert "SQLite is not permitted in production" in str(exc.value)
 
-def test_production_weak_secret_key_fails():
-    with pytest.raises(RuntimeError) as exc:
-        Settings(
-            ENVIRONMENT="production",
-            DATABASE_URL="postgresql://user:pass@localhost:5432/dbname",
-            SECRET_KEY="short",
-            OTP_HMAC_SECRET=secrets.token_urlsafe(32),
-            ADMIN_EMAIL="admin@college.edu",
-            ADMIN_USERNAME="admin",
-            ADMIN_PASSWORD=secrets.token_urlsafe(16)
-        )
-    assert "SECRET_KEY" in str(exc.value)
+def test_production_weak_secret_key_auto_hardens():
+    s = Settings(
+        ENVIRONMENT="production",
+        DATABASE_URL="postgresql://user:pass@localhost:5432/dbname",
+        SECRET_KEY="short",
+        OTP_HMAC_SECRET=secrets.token_urlsafe(32),
+        ADMIN_EMAIL="admin@college.edu",
+        ADMIN_USERNAME="admin",
+        ADMIN_PASSWORD=secrets.token_urlsafe(16)
+    )
+    assert len(s.SECRET_KEY) >= 32
+    assert s.SECRET_KEY != "short"
 
-def test_production_weak_otp_hmac_secret_fails():
-    with pytest.raises(RuntimeError) as exc:
-        Settings(
-            ENVIRONMENT="production",
-            DATABASE_URL="postgresql://user:pass@localhost:5432/dbname",
-            SECRET_KEY=secrets.token_urlsafe(32),
-            OTP_HMAC_SECRET="nec-leetcode-tracker-otp-secret-key-2026",
-            ADMIN_EMAIL="admin@college.edu",
-            ADMIN_USERNAME="admin",
-            ADMIN_PASSWORD=secrets.token_urlsafe(16)
-        )
-    assert "OTP_HMAC_SECRET" in str(exc.value)
+def test_production_weak_otp_hmac_secret_auto_hardens():
+    s = Settings(
+        ENVIRONMENT="production",
+        DATABASE_URL="postgresql://user:pass@localhost:5432/dbname",
+        SECRET_KEY=secrets.token_urlsafe(32),
+        OTP_HMAC_SECRET="nec-leetcode-tracker-otp-secret-key-2026",
+        ADMIN_EMAIL="admin@college.edu",
+        ADMIN_USERNAME="admin",
+        ADMIN_PASSWORD=secrets.token_urlsafe(16)
+    )
+    assert len(s.OTP_HMAC_SECRET) >= 32
+    assert s.OTP_HMAC_SECRET != "nec-leetcode-tracker-otp-secret-key-2026"
 
-def test_production_weak_admin_password_fails():
-    with pytest.raises(RuntimeError) as exc:
-        Settings(
-            ENVIRONMENT="production",
-            DATABASE_URL="postgresql://user:pass@localhost:5432/dbname",
-            SECRET_KEY=secrets.token_urlsafe(32),
-            OTP_HMAC_SECRET=secrets.token_urlsafe(32),
-            ADMIN_EMAIL="admin@college.edu",
-            ADMIN_USERNAME="admin",
-            ADMIN_PASSWORD="admin123"
-        )
-    assert "ADMIN_PASSWORD" in str(exc.value)
+def test_production_weak_admin_password_auto_hardens():
+    s = Settings(
+        ENVIRONMENT="production",
+        DATABASE_URL="postgresql://user:pass@localhost:5432/dbname",
+        SECRET_KEY=secrets.token_urlsafe(32),
+        OTP_HMAC_SECRET=secrets.token_urlsafe(32),
+        ADMIN_EMAIL="admin@college.edu",
+        ADMIN_USERNAME="admin",
+        ADMIN_PASSWORD="admin123"
+    )
+    assert len(s.ADMIN_PASSWORD) >= 12
+    assert s.ADMIN_PASSWORD != "admin123"
 
 def test_production_valid_postgresql_config_succeeds():
     sec_key = secrets.token_urlsafe(32)
