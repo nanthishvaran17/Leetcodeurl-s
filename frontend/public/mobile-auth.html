@@ -169,13 +169,17 @@
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
 
-    const statusEl = document.getElementById('status-text');
-    const subtitleEl = document.getElementById('subtitle-text');
-    const spinnerEl = document.getElementById('spinner');
-    const errorBoxEl = document.getElementById('error-box');
-    const googleBtnEl = document.getElementById('google-btn');
-    const actionBtnEl = document.getElementById('action-btn');
-    const cancelBtnEl = document.getElementById('cancel-btn');
+    let statusEl, subtitleEl, spinnerEl, errorBoxEl, googleBtnEl, actionBtnEl, cancelBtnEl;
+
+    function initDomElements() {
+      statusEl = document.getElementById('status-text');
+      subtitleEl = document.getElementById('subtitle-text');
+      spinnerEl = document.getElementById('spinner');
+      errorBoxEl = document.getElementById('error-box');
+      googleBtnEl = document.getElementById('google-btn');
+      actionBtnEl = document.getElementById('action-btn');
+      cancelBtnEl = document.getElementById('cancel-btn');
+    }
 
     let isExchangingToken = false;
 
@@ -398,9 +402,11 @@
       }
     }
 
-    googleBtnEl.onclick = executeGoogleSignIn;
-
     window.addEventListener('DOMContentLoaded', () => {
+      initDomElements();
+      if (googleBtnEl) {
+        googleBtnEl.onclick = executeGoogleSignIn;
+      }
       startAuth();
     });
   </script>
