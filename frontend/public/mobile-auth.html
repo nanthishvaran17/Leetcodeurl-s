@@ -393,14 +393,11 @@
         return;
       }
 
-      // Show Google Button and trigger sign-in immediately
+      // Show Google Button for explicit user tap (prevents browser popup gesture blocks)
       spinnerEl.style.display = 'none';
       googleBtnEl.style.display = 'inline-flex';
       statusEl.innerText = "Ready to Sign In";
       subtitleEl.innerText = "Tap below to authenticate with your official Google account.";
-
-      // Auto-trigger for seamless 1-tap experience
-      executeGoogleSignIn();
     }
 
     googleBtnEl.onclick = executeGoogleSignIn;
