@@ -540,6 +540,19 @@ async def tracker_dual_sync_evening():
         except Exception:
             pass
 
+from backend.services.submission_poller import run_submission_sweep
+
+@with_global_lock('submission_sweep_job', timeout_minutes=30)
+async def submission_sweep_job():
+    """
+    Submission sweep to fetch recent AC submissions for all active students.
+    """
+    logger.info("[SCHEDULER] Running submission sweep for contest tracking.")
+    try:
+        await run_submission_sweep()
+    except Exception as e:
+        logger.error(f"[SCHEDULER] Error in submission_sweep_job: {e}", exc_info=True)
+
 
 def start_scheduler():
     """
@@ -584,6 +597,38 @@ def start_scheduler():
         replace_existing=True,
         max_instances=1, coalesce=True, misfire_grace_time=3600
     )
+
+    # --- NEW FORENSIC POLLING PIPELINE ---
+    
+    # Sweep 1: Sunday 9:35 AM
+    scheduler.add_job(
+        submission_sweep_job,
+        CronTrigger(day_of_week='sun', hour=9, minute=35, timezone=tz),
+        id='sweep_sunday_0935',
+        replace_existing=True
+    )
+    # Sweep 2: Sunday 2:00 PM
+    scheduler.add_job(
+        submission_sweep_job,
+        CronTrigger(day_of_week='sun', hour=14, minute=0, timezone=tz),
+        id='sweep_sunday_1400',
+        replace_existing=True
+    )
+    # Sweep 3: Sunday 8:00 PM
+    scheduler.add_job(
+        submission_sweep_job,
+        CronTrigger(day_of_week='sun', hour=20, minute=0, timezone=tz),
+        id='sweep_sunday_2000',
+        replace_existing=True
+    )
+    # Sweep 4: Monday 9:00 AM
+    scheduler.add_job(
+        submission_sweep_job,
+        CronTrigger(day_of_week='mon', hour=9, minute=0, timezone=tz),
+        id='sweep_monday_0900',
+        replace_existing=True
+    )
+    # ------------------------------------
 
     # 5. Sunday 09:35 AM IST — Multi-Format Report Generation (Excel, PDF, Word, Depts)
     scheduler.add_job(

@@ -380,7 +380,25 @@ class ConnectionManager:
         year_level: Optional[str] = None,
         dataset_version: int = 1
     ):
-        """Targeted broadcast when a student's question solve state updates. Uses batching."""
+        """Targeted broadcast when a student's question solve state updates. Uses batching.
+        v3 RULE: Do not broadcast classification status via WebSocket during the Jobs 1-4 (24 hours) verification window.
+        """
+        try:
+            from backend.database import SessionLocal
+            from backend.models import WeeklySession
+            db = SessionLocal()
+            session_obj = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+            if session_obj and session_obj.start_date:
+                # Contest ends ~90 mins after start
+                # The rule is: Freeze until Monday 9:00 AM (approx 24 hours).
+                contest_end_dt = session_obj.start_date + datetime.timedelta(minutes=90)
+                if datetime.datetime.now(datetime.timezone.utc).timestamp() < (contest_end_dt.timestamp() + 24 * 3600):
+                    logger.info(f"WebSocket Broadcast Rule: Suppressed broadcast for student {student_id} as the 24-hour verification window for session {session_id} is still active.")
+                    db.close()
+                    return
+            db.close()
+        except Exception as e:
+            logger.warning(f"Error checking verification window for broadcast rule: {e}")
         payload = {
             "type": "CONTEST_RESULT_UPDATED",
             "studentId": student_id,
@@ -459,13 +477,23 @@ class ConnectionManager:
         """
         Delivers a VIRTUAL_RESULT_UPDATED or VIRTUAL_ATTEMPT_STARTED event ONLY to
         WebSocket clients subscribed to the given session_id.
-
-        Falls back to broadcast_sync (all clients) if no session subscriptions exist,
-        preserving backward compatibility.
-
-        Enforces sequence guard: stale events (lower sequence than previously seen)
-        are silently dropped.
+        v3 RULE: Do not broadcast classification status via WebSocket during the Jobs 1-4 (24 hours) verification window.
         """
+        try:
+            from backend.database import SessionLocal
+            from backend.models import WeeklySession
+            import datetime
+            db = SessionLocal()
+            session_obj = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+            if session_obj and session_obj.start_date:
+                contest_end_dt = session_obj.start_date + datetime.timedelta(minutes=90)
+                if datetime.datetime.now(datetime.timezone.utc).timestamp() < (contest_end_dt.timestamp() + 24 * 3600):
+                    logger.info(f"WebSocket Broadcast Rule: Suppressed virtual broadcast as the 24-hour verification window for session {session_id} is still active.")
+                    db.close()
+                    return
+            db.close()
+        except Exception as e:
+            logger.warning(f"Error checking verification window for virtual broadcast rule: {e}")
         sequence = event_payload.get("sequence", 0)
         student_id = event_payload.get("student_id")
         scope_key = f"virtual_{session_id}_{student_id}"

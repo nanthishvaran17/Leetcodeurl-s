@@ -2756,3 +2756,21 @@ class LearningSignal(Base):
 
 
 
+
+class SubmissionLog(Base):
+    """
+    Caches recent submissions fetched from LeetCode to definitively prove
+    Virtual vs Public contest participation based on exact timestamp cutoff.
+    """
+    __tablename__ = "submission_log"
+    __table_args__ = (
+        UniqueConstraint("student_id", "contest_id", "title_slug", "submitted_at", name="uix_sublog_all"),
+        {"extend_existing": True},
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), index=True, nullable=False)
+    contest_id = Column(String(100), index=True, nullable=False)
+    title_slug = Column(String(150), index=True, nullable=False)
+    submitted_at = Column(BigInteger, index=True, nullable=False) # Unix epoch from LeetCode
+    fetched_at = Column(BigInteger, nullable=False) # Unix epoch when we cached it

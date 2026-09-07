@@ -33,12 +33,15 @@ from backend.logger import logger
 # 
 
 class ContestStatus(str, Enum):
-    # New Standard Enums
-    PUBLIC_LIVE           = "PUBLIC_LIVE"
-    VIRTUAL_PRACTICE      = "VIRTUAL_PRACTICE"
-    NOT_ATTENDED          = "NOT_ATTENDED"
-    PENDING_VERIFICATION  = "PENDING_VERIFICATION"
-    NO_LEETCODE_HANDLE    = "NO_LEETCODE_HANDLE"
+    # v3 Strict Verification Enums
+    PUBLIC_LIVE_VERIFIED          = "PUBLIC_LIVE_VERIFIED"
+    VIRTUAL_PRACTICE_VERIFIED     = "VIRTUAL_PRACTICE_VERIFIED"
+    PRACTICE_IGNORED              = "PRACTICE_IGNORED"
+    PUBLIC_LIVE_UNVERIFIED        = "PUBLIC_LIVE_UNVERIFIED"
+    VIRTUAL_PRACTICE_UNVERIFIED   = "VIRTUAL_PRACTICE_UNVERIFIED"
+    NOT_ATTENDED                  = "NOT_ATTENDED"
+    PENDING_VERIFICATION          = "PENDING_VERIFICATION"
+    NO_LEETCODE_HANDLE            = "NO_LEETCODE_HANDLE"
 
     # Legacy Backward Compatibility Enums
     PUBLIC_ATTENDED   = "PUBLIC_ATTENDED"
@@ -577,6 +580,80 @@ async def _fetch_contest_entry(username: str, contest_id: str, client: httpx.Asy
         "contest_slug":        contest_id,
     }
     return "ok", entry
+def get_cached_submissions(student_id: int, contest_id: str) -> List[Any]:
+    from backend.database import SessionLocal
+    from backend.models import SubmissionLog
+    db = SessionLocal()
+    try:
+        return db.query(SubmissionLog).filter(
+            SubmissionLog.student_id == student_id,
+            SubmissionLog.contest_id == contest_id
+        ).all()
+    finally:
+        db.close()
+
+def classify_contest_result(
+    student_id: int, 
+    contest_id: str, 
+    contest_end_unix: int, 
+    attended: bool, 
+    problems_solved: int
+) -> Dict[str, Any]:
+    matched = get_cached_submissions(student_id, contest_id)
+
+    live_submissions = [
+        s for s in matched
+        if s.submitted_at <= contest_end_unix
+    ]
+
+    virtual_submissions = [
+        s for s in matched
+        if contest_end_unix < s.submitted_at <= contest_end_unix + 24 * 3600
+    ]
+
+    if live_submissions:
+        earliest = min(s.submitted_at for s in live_submissions)
+        return {
+            "classification": ContestStatus.PUBLIC_LIVE_VERIFIED,
+            "evidence_timestamp": earliest,
+            "verified": True
+        }
+
+    if virtual_submissions:
+        earliest = min(s.submitted_at for s in virtual_submissions)
+        return {
+            "classification": ContestStatus.VIRTUAL_PRACTICE_VERIFIED,
+            "evidence_timestamp": earliest,
+            "verified": True
+        }
+
+    # FIX (v1 bug): matched evidence exists but falls outside both windows
+    if matched:
+        return {
+            "classification": ContestStatus.PRACTICE_IGNORED,
+            "evidence_timestamp": None,
+            "verified": True
+        }
+
+    if attended:
+        return {
+            "classification": ContestStatus.PUBLIC_LIVE_UNVERIFIED,
+            "evidence_timestamp": None,
+            "verified": False
+        }
+
+    if problems_solved > 0:
+        return {
+            "classification": ContestStatus.VIRTUAL_PRACTICE_UNVERIFIED,
+            "evidence_timestamp": None,
+            "verified": False
+        }
+
+    return {
+        "classification": ContestStatus.NOT_ATTENDED,
+        "evidence_timestamp": None,
+        "verified": True
+    }
 
 
 async def get_contest_status(
@@ -685,73 +762,80 @@ async def get_contest_status(
     q3 = bool(entry.get("q3_solved", False))
     q4 = bool(entry.get("q4_solved", False))
 
-    if attended:
-        return ContestStatusRow(
-            student_id=student_id,
-            student_name=student_name,
-            verified_leetcode_username=canonical_username,
-            contest_id=canonical_id,
-            contest_name=contest_name,
-            status=ContestStatus.PUBLIC_LIVE,
-            reason_code=ReasonCode.VALID_LIVE_SUBMISSION,
-            reason_text="Valid contest submission inside the official contest window.",
-            fetch_status=FetchStatus.OK,
-            score=score,
-            rank=rank,
-            problems_solved=solved,
-            q1_solved=q1,
-            q2_solved=q2,
-            q3_solved=q3,
-            q4_solved=q4,
-            rating_after=rating_after,
-            source_timestamp=source_ts,
-        )
-    else:
-        # Check for explicit virtual evidence from source
-        is_virtual_evidence = bool(entry.get("is_virtual", False))
+    # New v2 Timestamp-Based Pipeline Logic
+    matched_subs = []
+    try:
+        from backend.database import SessionLocal
+        from backend.models import SubmissionLog
+        db = SessionLocal()
+        matched_subs = db.query(SubmissionLog).filter(
+            SubmissionLog.student_id == student_id,
+            SubmissionLog.contest_id == canonical_id
+        ).all()
+        db.close()
+    except Exception as e:
+        logger.error(f"Error checking SubmissionLog for student {student_id}: {e}")
+
+    if source_ts:
+        contest_start_unix = int(source_ts.timestamp())
+        contest_end_unix = contest_start_unix + 5400
         
-        if is_virtual_evidence:
-            return ContestStatusRow(
-                student_id=student_id,
-                student_name=student_name,
-                verified_leetcode_username=canonical_username,
-                contest_id=canonical_id,
-                contest_name=contest_name,
-                status=ContestStatus.VIRTUAL_PRACTICE,
-                reason_code=ReasonCode.EXPLICIT_VIRTUAL,
-                reason_text="Source explicitly marked virtual participation.",
-                fetch_status=FetchStatus.OK,
-                score=score,
-                rank=rank,
-                problems_solved=solved,
-                q1_solved=q1,
-                q2_solved=q2,
-                q3_solved=q3,
-                q4_solved=q4,
-                rating_after=rating_after,
-                source_timestamp=source_ts,
-            )
+        live_submissions = [s for s in matched_subs if s.submitted_at <= contest_end_unix]
+        virtual_submissions = [s for s in matched_subs if contest_end_unix < s.submitted_at <= contest_end_unix + 14 * 86400]
+        
+        if live_submissions:
+            earliest = min(s.submitted_at for s in live_submissions)
+            status = ContestStatus.PUBLIC_LIVE_VERIFIED
+            reason = ReasonCode.VALID_LIVE_SUBMISSION
+            reason_text = f"Verified live submission via captured timestamp."
+        elif virtual_submissions:
+            earliest = min(s.submitted_at for s in virtual_submissions)
+            status = ContestStatus.VIRTUAL_PRACTICE_VERIFIED
+            reason = ReasonCode.EXPLICIT_VIRTUAL
+            reason_text = f"Verified virtual submission via captured timestamp."
+        elif matched_subs:
+            status = ContestStatus.PRACTICE_IGNORED
+            reason = ReasonCode.NO_PARTICIPATION
+            reason_text = "Submissions exist but outside the valid 14-day window (PRACTICE_IGNORED)."
         else:
-            return ContestStatusRow(
-                student_id=student_id,
-                student_name=student_name,
-                verified_leetcode_username=canonical_username,
-                contest_id=canonical_id,
-                contest_name=contest_name,
-                status=ContestStatus.NOT_ATTENDED,
-                reason_code=ReasonCode.NO_PARTICIPATION,
-                reason_text="No verified participation was found for the official contest window.",
-                fetch_status=FetchStatus.OK,
-                score=score,
-                rank=rank,
-                problems_solved=solved,
-                q1_solved=q1,
-                q2_solved=q2,
-                q3_solved=q3,
-                q4_solved=q4,
-                rating_after=rating_after,
-                source_timestamp=source_ts,
-            )
+            # Fallback to LeetCode rankings ONLY if no matched submissions exist at all
+            if attended:
+                status = ContestStatus.PUBLIC_LIVE_UNVERIFIED
+                reason = ReasonCode.VALID_LIVE_SUBMISSION
+                reason_text = "Fallback: LeetCode marked as attended (Unverified Timestamp)."
+            elif solved and solved > 0:
+                status = ContestStatus.VIRTUAL_PRACTICE_UNVERIFIED
+                reason = ReasonCode.EXPLICIT_VIRTUAL
+                reason_text = "Fallback: Solved problems but not marked attended (Unverified Timestamp)."
+            else:
+                status = ContestStatus.NOT_ATTENDED
+                reason = ReasonCode.NO_PARTICIPATION
+                reason_text = "No verified participation was found for the official contest window."
+    else:
+        status = ContestStatus.NOT_ATTENDED
+        reason = ReasonCode.NO_PARTICIPATION
+        reason_text = "No contest start timestamp available."
+
+    return ContestStatusRow(
+        student_id=student_id,
+        student_name=student_name,
+        verified_leetcode_username=canonical_username,
+        contest_id=canonical_id,
+        contest_name=contest_name,
+        status=status,
+        reason_code=reason,
+        reason_text=reason_text,
+        fetch_status=FetchStatus.OK,
+        score=score,
+        rank=rank,
+        problems_solved=solved,
+        q1_solved=q1,
+        q2_solved=q2,
+        q3_solved=q3,
+        q4_solved=q4,
+        rating_after=rating_after,
+        source_timestamp=source_ts,
+    )
 
 
 @dataclass
