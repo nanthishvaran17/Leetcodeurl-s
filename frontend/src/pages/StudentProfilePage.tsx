@@ -461,6 +461,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             <p className="text-xs text-slate-500">Loading topic insights...</p>
           )}
         </div>
+        </div>
         </>
       )}
 
@@ -488,6 +489,5 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         }}
       />
     </div>
-  </div>
-);
+  );
 };
