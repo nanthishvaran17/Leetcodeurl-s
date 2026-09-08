@@ -132,7 +132,8 @@ class ConnectionManager:
 
         last_jwt_error = None
         for s_key in secret_keys:
-            for algo in ["HS256", "RS256"]:
+            # Only use HS256 for plain string keys. RS256 requires an RSA key object.
+            for algo in ["HS256"]:
                 # Try standard PyJWT
                 try:
                     import jwt
