@@ -1,20 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { Activity, AlertTriangle, CheckCircle2, Clock, Zap } from 'lucide-react';
-import { useWebSocket } from '../../context/GlobalWebSocketProvider';
+import { useGlobalWebSocket } from '../../context/GlobalWebSocketProvider';
 
 export const LiveContestPanel: React.FC = () => {
-  const { wsEvents, isConnected } = useWebSocket();
+  const { registerCallback, unregisterCallback, isConnected } = useGlobalWebSocket();
   const [panelState, setPanelState] = useState<any>(null);
 
   useEffect(() => {
-    // Process incoming contest updates
-    const updates = wsEvents.filter(e => e.type === 'contest_update');
-    if (updates.length > 0) {
-      // Get the latest one
-      const latest = updates[updates.length - 1];
-      setPanelState(latest.data);
-    }
-  }, [wsEvents]);
+    registerCallback('live-contest-panel', (data: any) => {
+      if (data && data.type === 'contest_update') {
+        setPanelState(data.data);
+      }
+    });
+
+    return () => {
+      unregisterCallback('live-contest-panel');
+    };
+  }, [registerCallback, unregisterCallback]);
 
   if (!panelState) return null;
 
