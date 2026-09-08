@@ -12,7 +12,7 @@
       "destination": "/mobile-auth.html"
     },
     {
-      "source": "/((?!assets/|mobile-auth.html|firebase-messaging-sw.js|favicon.ico).*)",
+      "source": "/((?!assets/|mobile-auth.html|firebase-messaging-sw.js|favicon.ico|google[a-z0-9]+\\.html|sitemap\\.xml|robots\\.txt).*)",
       "destination": "/index.html"
     }
   ],
