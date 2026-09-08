@@ -72,6 +72,8 @@ const HallOfFameKioskPage = safeLazy(() => import('./pages/HallOfFameKioskPage')
 const AccreditationStudioPage = safeLazy(() => import('./pages/AccreditationStudioPage').then(m => ({ default: m.AccreditationStudioPage })));
 const AccessDeniedPage = safeLazy(() => import('./pages/AccessDeniedPage').then(m => ({ default: m.AccessDeniedPage })));
 const ContestIntegrityMonitor = safeLazy(() => import('./pages/ContestIntegrityMonitor').then(m => ({ default: m.ContestIntegrityMonitor })));
+const PrivacyPolicyPage = safeLazy(() => import('./pages/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })));
+const TermsOfServicePage = safeLazy(() => import('./pages/TermsOfServicePage').then(m => ({ default: m.TermsOfServicePage })));
 
 const PageSkeleton = () => (
   <div className="p-8 text-center py-20 text-brand-600 dark:text-brand-400 font-bold space-y-3 animate-pulse">
@@ -83,11 +85,33 @@ const PageSkeleton = () => (
 export const App: React.FC = () => {
   // Direct Public Route Interceptors
   const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
-  if (pathname === '/hall-of-fame' || pathname === '/kiosk' || pathname === '/tv') {
-    return <HallOfFameKioskPage />;
+  if (pathname === '/hall-of-fame' || pathname === '/hall-of-fame/' || pathname === '/kiosk' || pathname === '/tv') {
+    return (
+      <Suspense fallback={<PageSkeleton />}>
+        <HallOfFameKioskPage />
+      </Suspense>
+    );
   }
-  if (pathname === '/accreditation-studio' || pathname === '/accreditation' || pathname === '/naac-nba') {
-    return <AccreditationStudioPage />;
+  if (pathname === '/accreditation-studio' || pathname === '/accreditation-studio/' || pathname === '/accreditation' || pathname === '/naac-nba') {
+    return (
+      <Suspense fallback={<PageSkeleton />}>
+        <AccreditationStudioPage />
+      </Suspense>
+    );
+  }
+  if (pathname === '/privacy' || pathname === '/privacy/') {
+    return (
+      <Suspense fallback={<PageSkeleton />}>
+        <PrivacyPolicyPage />
+      </Suspense>
+    );
+  }
+  if (pathname === '/terms' || pathname === '/terms/') {
+    return (
+      <Suspense fallback={<PageSkeleton />}>
+        <TermsOfServicePage />
+      </Suspense>
+    );
   }
 
   const verifyPrefixes = ['/verify/', '/verify-certificate/', '/certificate/verify/', '/certificates/verify/', '/verify-contest/'];
@@ -95,7 +119,11 @@ export const App: React.FC = () => {
   if (matchedPrefix) {
     const rawCode = pathname.replace(matchedPrefix, '');
     const certId = decodeURIComponent(rawCode).split('/')[0].split('?')[0].trim();
-    return <CertificateVerificationPage verificationId={certId} />;
+    return (
+      <Suspense fallback={<PageSkeleton />}>
+        <CertificateVerificationPage verificationId={certId} />
+      </Suspense>
+    );
   }
 
   const { user, isAuthenticated, login } = useAuth();

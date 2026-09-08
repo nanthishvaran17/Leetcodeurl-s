@@ -214,6 +214,7 @@ class WeeklySessionSnapshot(Base):
     rating_change = Column(Float, default=0.0)
     
     status = Column(String(30), default="NOT STARTED") # STARTED, NOT STARTED, DATA UNAVAILABLE
+    is_sequence_broken = Column(Boolean, default=False)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
 
     session = relationship("WeeklySession", back_populates="snapshots")
@@ -1777,6 +1778,11 @@ class StudentRiskProfile(Base):
     is_silent_disengaged = Column(Boolean, default=False)
     disengagement_drop_pct = Column(Float, nullable=True)
     
+    calculation_version = Column(Integer, default=1, nullable=False)
+    
+    last_override_weights = Column(JSON, nullable=True)
+    effective_weights = Column(JSON, nullable=True)
+    
     evidence_json = Column(JSON, nullable=True) # Bullet points of signals
     explanation = Column(Text, nullable=True) # Explainable AI description
     recommended_action = Column(Text, nullable=True) # Actionable mentor guidance
@@ -1940,8 +1946,8 @@ class FacultyActionQueueItem(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
-    student = relationship("Student", backref="faculty_actions")
-    faculty = relationship("User")
+    student = relationship("Student", backref="faculty_actions", foreign_keys=[student_id])
+    faculty = relationship("User", foreign_keys=[faculty_id])
     audit_logs = relationship("FacultyActionAuditLog", back_populates="action_item", cascade="all, delete-orphan", order_by="FacultyActionAuditLog.id.asc()")
 
 
@@ -2797,3 +2803,5 @@ class SubmissionLog(Base):
     title_slug = Column(String(150), index=True, nullable=False)
     submitted_at = Column(BigInteger, index=True, nullable=False) # Unix epoch from LeetCode
     fetched_at = Column(BigInteger, nullable=False) # Unix epoch when we cached it
+
+
