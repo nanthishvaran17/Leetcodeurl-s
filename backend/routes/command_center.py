@@ -128,7 +128,7 @@ def get_command_center_summary(
     
         # Active staff list for Scope Selector
         staff_users_q = db.query(User).options(joinedload(User.department)).filter(
-            User.role.ilike("%Staff%") | User.role.ilike("%Faculty%"),
+            or_(User.role.ilike("%Staff%"), User.role.ilike("%Faculty%")),
             User.is_active == True
         )
         if role_clean == "hod" and current_user.department_id:
@@ -436,12 +436,13 @@ def get_faculty_workload(
     """Returns detailed workload and assigned student roster for each faculty member."""
     query = db.query(User).options(joinedload(User.department)).filter(
         User.is_active == True,
-        User.role.ilike("%Staff%") | User.role.ilike("%Faculty%")
+        or_(User.role.ilike("%Staff%"), User.role.ilike("%Faculty%"))
     )
     if dept_id:
         query = query.filter(User.department_id == dept_id)
     # Apply department filtering based on user permissions
-    if current_user.role.lower() not in ["admin", "super_admin", "super admin"]:
+    role_lower = (current_user.role or "").strip().lower()
+    if role_lower not in ["admin", "super_admin", "super admin", "administrator"]:
         query = query.filter(User.department_id == current_user.department_id)
 
     faculty_list = query.all()
@@ -712,7 +713,10 @@ def get_departments(db: Session = Depends(get_db), current_user: User = Depends(
     if role_clean == "hod" and current_user.department_id:
         depts = db.query(Department).filter(Department.id == current_user.department_id).all()
     else:
-        depts = db.query(Department).filter(Department.code.in_(["CSE(CS)", "CSE(IOT)"])).all()
+        # Load all production departments (exclude test/demo departments)
+        from backend.constants import is_production_department
+        all_depts = db.query(Department).all()
+        depts = [d for d in all_depts if is_production_department(d.code)]
 
     # Optimize: Pre-fetch all active student counts per department using GROUP BY
     dept_counts_query = db.query(

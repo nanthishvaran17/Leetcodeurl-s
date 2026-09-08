@@ -194,9 +194,11 @@ def get_institutional_benchmarks(db: Session, current_user: Optional[User] = Non
     ).all()
     risk_map = {r.student_id: True for r in risk_profiles}
     
-    # Pre-fetch faculty counts per department
+    # Pre-fetch faculty counts per department (Faculty + Staff roles)
+    from sqlalchemy import or_ as _or_
     faculty_users = db.query(User).filter(
-        User.role.ilike("%Faculty%"), User.is_active == True
+        _or_(User.role.ilike("%Faculty%"), User.role.ilike("%Staff%")),
+        User.is_active == True
     ).all()
     faculty_map = {}
     for f in faculty_users:
