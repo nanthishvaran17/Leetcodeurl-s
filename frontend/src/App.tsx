@@ -183,27 +183,48 @@ export const App: React.FC = () => {
   }, []);
 
   // Handle Global Native Deep Link URLs (including Google OAuth callback)
+  // Handles TWO delivery paths:
+  //   1. COLD-START: app was closed — Android launches it fresh via the deep-link intent.
+  //      getLaunchUrl() retrieves the URL that started the app before any listeners exist.
+  //   2. WARM-START: app was already running — appUrlOpen fires when the deep link arrives.
   useEffect(() => {
     let urlListenerHandle: any = null;
+
+    const processOAuthCallbackUrl = async (urlStr: string) => {
+      if (!urlStr || !urlStr.includes('oauth-callback')) return;
+      try {
+        console.log('[DEEP_LINK] Processing OAuth callback URL');
+        const { handleOAuthCallbackUrl } = await import('./services/googleAuth');
+        const authResult = await handleOAuthCallbackUrl(urlStr);
+        if (authResult && authResult.authenticated && authResult.user) {
+          console.log('[DEEP_LINK] Auth successful — establishing session and navigating to dashboard');
+          login(authResult.access_token || '', authResult.user);
+          setShowLoginModal(false);
+          setActiveTab('dashboard');
+        }
+      } catch (err) {
+        console.warn('[DEEP_LINK_AUTH_ERR]', err);
+      }
+    };
+
     const initDeepLinkListener = async () => {
       try {
+        // ── COLD-START: retrieve URL if app was launched by the deep-link intent ──
+        // getLaunchUrl() returns the URL only once per launch and is null on normal starts.
+        const launchData = await CapacitorApp.getLaunchUrl();
+        if (launchData?.url) {
+          console.log('[DEEP_LINK] Cold-start URL detected, processing...');
+          await processOAuthCallbackUrl(launchData.url);
+        }
+
+        // ── WARM-START: register listener for when app is already running ──
         urlListenerHandle = await CapacitorApp.addListener('appUrlOpen', async (data: { url: string }) => {
-          const urlStr = data?.url || '';
-          if (urlStr.includes('oauth-callback')) {
-            try {
-              const { handleOAuthCallbackUrl } = await import('./services/googleAuth');
-              const authResult = await handleOAuthCallbackUrl(urlStr);
-              if (authResult && authResult.authenticated && authResult.user) {
-                login(authResult.access_token || '', authResult.user);
-                setShowLoginModal(false);
-                setActiveTab('dashboard');
-              }
-            } catch (err) {
-              console.warn('[DEEP_LINK_AUTH_ERR]', err);
-            }
-          }
+          console.log('[DEEP_LINK] Warm-start appUrlOpen fired');
+          await processOAuthCallbackUrl(data?.url || '');
         });
-      } catch (_e) {}
+      } catch (_e) {
+        // Not running in Capacitor (web browser) — listeners silently do nothing
+      }
     };
 
     initDeepLinkListener();
@@ -244,7 +265,9 @@ export const App: React.FC = () => {
     };
     initBackButton();
     return () => {
-      CapacitorApp.removeAllListeners();
+      // Only remove the backButton listener — removing ALL listeners would also
+      // remove the appUrlOpen (warm-start OAuth) listener registered above.
+      CapacitorApp.removeAllListeners().catch(() => {});
     };
   }, [isSidebarOpen, selectedStudent, showLoginModal, showAlertCenterModal, showImportModal, activeTab, isAuthenticated]);
 

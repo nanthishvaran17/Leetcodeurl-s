@@ -104,14 +104,33 @@ interface ActivePkceSession {
   timestamp: number;
   resolve?: (res: GoogleAuthResult) => void;
   reject?: (err: Error) => void;
+  /** Safety timeout handle — must be cleared on success/failure/cancel */
+  timeoutHandle?: ReturnType<typeof setTimeout>;
 }
 
 let activePkceSession: ActivePkceSession | null = null;
 let isProcessingCallback = false;
 
 /**
+ * Cleans up the active PKCE session completely.
+ * Clears the safety timeout, clears sessionStorage, and nulls the session reference.
+ */
+function cleanupPkceSession(): void {
+  if (activePkceSession?.timeoutHandle) {
+    clearTimeout(activePkceSession.timeoutHandle);
+  }
+  activePkceSession = null;
+  sessionStorage.removeItem('nec_pkce_verifier');
+  sessionStorage.removeItem('nec_pkce_state');
+}
+
+/**
  * Authoritative Single Handler for Native OAuth Callbacks.
  * Validates State + Exchanges PKCE Authorization Code via Secure Backend HTTPS API.
+ *
+ * Called from:
+ *   - App.tsx `appUrlOpen` (warm-start: app already running)
+ *   - App.tsx `getLaunchUrl()` (cold-start: app launched by the deep-link intent)
  */
 export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuthResult | null> => {
   if (!urlStr || !urlStr.includes('oauth-callback')) {
@@ -126,22 +145,31 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
   isProcessingCallback = true;
   console.log('[MOBILE AUTH] CALLBACK_RECEIVED');
 
+  // Close the Chrome Custom Tab if it is still open.
+  // NOTE: In most cases it is already closed when the deep link fires — this is a safety call only.
   try {
     const { Browser } = await import('@capacitor/browser');
     await Browser.close().catch(() => {
-      console.log('[MOBILE AUTH] Browser close skipped/failed, continuing callback processing');
+      console.log('[MOBILE AUTH] Browser close skipped/failed — already closed, continuing.');
     });
   } catch (_e) {}
 
   try {
-    const [base, queryString] = urlStr.split('?');
-    const searchParams = new URLSearchParams(queryString || '');
+    // -------------------------------------------------------
+    // Robust URL parsing — handles both:
+    //   org.nandhaengg.leetcodesync://oauth-callback?code=...
+    //   leetcodesync://oauth-callback?code=...
+    // -------------------------------------------------------
+    const questionMarkIdx = urlStr.indexOf('?');
+    const base = questionMarkIdx !== -1 ? urlStr.substring(0, questionMarkIdx) : urlStr;
+    const queryString = questionMarkIdx !== -1 ? urlStr.substring(questionMarkIdx + 1) : '';
+    const searchParams = new URLSearchParams(queryString);
 
-    if (!base.startsWith('org.nandhaengg.leetcodesync://oauth-callback') && 
+    if (!base.startsWith('org.nandhaengg.leetcodesync://oauth-callback') &&
         !base.startsWith('leetcodesync://oauth-callback')) {
       throw new Error('Invalid callback URL scheme or host.');
     }
-    
+
     console.log('[MOBILE AUTH] CALLBACK_URL_VALIDATED');
 
     const errorParam = searchParams.get('error');
@@ -165,7 +193,7 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
     const codeVerifier = activePkceSession?.code_verifier || sessionStorage.getItem('nec_pkce_verifier');
 
     if (!expectedState || !codeVerifier) {
-      console.log('[MOBILE AUTH] AUTH_FAILED Reason: Missing expected state or verifier (PKCE expired)');
+      console.log('[MOBILE AUTH] AUTH_FAILED Reason: Missing expected state or verifier (PKCE expired or session lost)');
       throw new Error('OAuth session expired. Please sign in again.');
     }
 
@@ -190,13 +218,13 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
           code_verifier: codeVerifier,
           state: stateParam || ''
         }, { timeout: 10000 });
-        
+
         if (res.data && res.data.authenticated) break;
       } catch (postErr: any) {
         console.warn(`[MOBILE AUTH] BACKEND_SESSION Attempt ${attempt} note:`, postErr?.message || postErr);
-        
+
         const isClientError = postErr?.response?.status >= 400 && postErr?.response?.status < 500;
-        
+
         if (isClientError || attempt >= maxAttempts) {
           throw postErr;
         }
@@ -217,10 +245,8 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
       if (activePkceSession?.resolve) {
         activePkceSession.resolve(result);
       }
-      activePkceSession = null;
-      sessionStorage.removeItem('nec_pkce_verifier');
-      sessionStorage.removeItem('nec_pkce_state');
-      
+      cleanupPkceSession();
+
       console.log('[MOBILE AUTH] DASHBOARD_REDIRECT');
       return result;
     }
@@ -232,23 +258,41 @@ export const handleOAuthCallbackUrl = async (urlStr: string): Promise<GoogleAuth
     if (activePkceSession?.reject) {
       activePkceSession.reject(err);
     }
-    activePkceSession = null;
-    sessionStorage.removeItem('nec_pkce_verifier');
-    sessionStorage.removeItem('nec_pkce_state');
+    cleanupPkceSession();
     throw err;
   } finally {
+    // Extended reset window: Chrome Custom Tab delivers appUrlOpen slightly after
+    // browserFinished (now removed). Give 2s to prevent duplicate event blocking.
     setTimeout(() => {
       isProcessingCallback = false;
-    }, 500);
+    }, 2000);
   }
 };
 
 /**
  * Native Android Mobile Google Sign-In using Chrome Custom Tab + PKCE (RFC 7636).
  * Zero tokens, passwords, or credentials are ever transmitted via URL parameters.
+ *
+ * FIX: The `browserFinished` listener has been intentionally removed.
+ *
+ * REASON: Chrome Custom Tab fires `browserFinished` BEFORE the Android OS delivers
+ * the deep-link `appUrlOpen` event back to the Capacitor app. The old listener was
+ * causing a race: it would reject the in-flight Promise 600ms after the tab closed,
+ * but the `appUrlOpen` event (with the valid auth code) arrived immediately after —
+ * finding `activePkceSession` already null and dropping the successful callback.
+ *
+ * The 90-second safety timeout handles genuine abandonment (user walks away).
+ * Cold-start abandonment is handled by `App.tsx getLaunchUrl()` returning null.
  */
 const authenticateWithGoogleMobile = async (): Promise<GoogleAuthResult> => {
   console.log('[MOBILE AUTH] AUTH_STARTED');
+
+  // Clean up any stale previous session before starting a fresh one.
+  // This prevents listener accumulation across retries.
+  if (activePkceSession) {
+    console.log('[MOBILE AUTH] Cleaning up stale previous PKCE session before new attempt.');
+    cleanupPkceSession();
+  }
 
   const { Browser } = await import('@capacitor/browser');
 
@@ -266,54 +310,47 @@ const authenticateWithGoogleMobile = async (): Promise<GoogleAuthResult> => {
   const codeChallenge = await generateCodeChallenge(codeVerifier);
   const state = generateRandomString(32);
 
-  // Persist in sessionStorage in case WebView is recycled
+  // Persist in sessionStorage in case WebView is recycled (cold-start recovery)
   sessionStorage.setItem('nec_pkce_verifier', codeVerifier);
   sessionStorage.setItem('nec_pkce_state', state);
 
   const authUrl = `${bridgeBase}/mobile-auth.html?scheme=${scheme}&code_challenge=${encodeURIComponent(codeChallenge)}&state=${encodeURIComponent(state)}&api_base=${encodeURIComponent(apiBase)}`;
 
-  console.log('[MOBILE AUTH] Redirect initiated via Chrome Custom Tab');
+  console.log('[MOBILE AUTH] OAuth redirect URL prepared');
+  console.log('[MOBILE AUTH] Launching Chrome Custom Tab');
 
   return new Promise<GoogleAuthResult>((resolve, reject) => {
+    // Safety timeout: 90 seconds maximum wait for user to complete Google sign-in.
+    // This is the ONLY cancellation path for abandonment — browserFinished is NOT used
+    // because it fires before appUrlOpen delivers the auth code on success.
+    const timeoutHandle = setTimeout(() => {
+      if (activePkceSession) {
+        console.warn('[MOBILE AUTH] AUTH_TIMEOUT — 90s elapsed without callback');
+        activePkceSession.reject?.(new Error('Google sign-in could not be completed. Please try again.'));
+        cleanupPkceSession();
+      }
+    }, 90000);
+
     activePkceSession = {
       code_verifier: codeVerifier,
       state: state,
       timestamp: Date.now(),
       resolve,
-      reject
+      reject,
+      timeoutHandle,
     };
 
-    // Safety timeout: 90 seconds maximum wait
-    const authTimeout = setTimeout(() => {
-      if (activePkceSession) {
-        activePkceSession.reject?.(new Error('Google sign-in could not be completed. Please try again.'));
-        activePkceSession = null;
-        sessionStorage.removeItem('nec_pkce_verifier');
-        sessionStorage.removeItem('nec_pkce_state');
-      }
-    }, 90000);
-
-    // Listen for browser closed / dismissed by user
-    Browser.addListener('browserFinished', () => {
-      setTimeout(() => {
-        clearTimeout(authTimeout);
-        if (activePkceSession) {
-          activePkceSession.reject?.(new Error('Google sign-in was cancelled.'));
-          activePkceSession = null;
-          sessionStorage.removeItem('nec_pkce_verifier');
-          sessionStorage.removeItem('nec_pkce_state');
-        }
-      }, 600);
-    });
+    // -------------------------------------------------------
+    // NOTE: browserFinished listener intentionally NOT added here.
+    // See function JSDoc above for the full explanation.
+    // -------------------------------------------------------
 
     // Launch Chrome Custom Tab
     Browser.open({ url: authUrl, windowName: '_self' }).catch((_err) => {
-      clearTimeout(authTimeout);
+      console.error('[MOBILE AUTH] Failed to open Chrome Custom Tab:', _err?.message || _err);
       if (activePkceSession) {
         activePkceSession.reject?.(new Error('Unable to open browser for Google authentication.'));
-        activePkceSession = null;
-        sessionStorage.removeItem('nec_pkce_verifier');
-        sessionStorage.removeItem('nec_pkce_state');
+        cleanupPkceSession();
       }
     });
   });
@@ -365,13 +402,13 @@ export const authenticateWithGoogle = async (): Promise<GoogleAuthResult> => {
       }
       // If popup was blocked or unsupported, fallback to redirect flow
       console.log('[MOBILE AUTH] Popup blocked or unhandled; initiating robust redirect flow...');
-      
+
       // PRE-FLIGHT CHECKS FOR MOBILE REDIRECT FLOW
       if (isInAppBrowser()) {
         console.warn('[MOBILE AUTH] In-app browser detected, blocking redirect');
         throw new Error('IN_APP_BROWSER_BLOCKED: Please open this link in Chrome or Safari to sign in.');
       }
-      
+
       if (!isStorageAvailable()) {
         console.warn('[MOBILE AUTH] Storage unavailable (likely Safari Private Browsing), blocking redirect');
         throw new Error('STORAGE_UNAVAILABLE: Private browsing blocks sign-in. Please try a regular browser tab.');

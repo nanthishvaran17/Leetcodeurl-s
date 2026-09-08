@@ -332,12 +332,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await authenticateWithGoogle();
       if (res && res.user) {
         login(res.access_token || '', res.user);
+        // login() sets authState to AUTHORIZED, so no further action needed here
+      } else {
+        // Received a response but no user — treat as failure
+        setAuthError('Google sign-in could not be completed. Please try again.');
+        setAuthState('AUTH_ERROR');
       }
     } catch (error: any) {
       const msg = error.message || 'Google sign-in could not be completed. Please try again.';
-      setAuthError(msg);
-      setAuthState('AUTH_ERROR');
+      // Only set AUTH_ERROR if not a redirect flow (redirect flows navigate away — no state to reset)
+      if (!msg.startsWith('REDIRECT_IN_PROGRESS')) {
+        setAuthError(msg);
+        setAuthState('AUTH_ERROR');
+      }
     }
+    // NOTE: No finally block needed — success path: login() → AUTHORIZED state.
+    // Failure/cancel path: AUTH_ERROR set in catch. Redirect path: page navigates away.
   };
 
   // OTP Send trigger

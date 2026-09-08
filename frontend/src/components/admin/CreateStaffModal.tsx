@@ -284,7 +284,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
         phone_number: formData.phone_number.trim(),
         password: formData.password?.trim() || undefined,
         role: formData.role,
-        department_id: isGlobalRole ? 0 : deptIdToSend,
+        department_id: deptIdToSend,
         academic_year: isGlobalRole ? 'All Years' : (formData.academic_year || undefined),
         designation: formData.designation || undefined,
         date_of_birth: formattedDOB,

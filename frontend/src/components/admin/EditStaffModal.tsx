@@ -44,6 +44,13 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
   const [isActive, setIsActive] = useState(true);
   const [dobDisplay, setDobDisplay] = useState('');
   const [initialSnapshot, setInitialSnapshot] = useState<string>('');
+  // Tracks the actual last-modified timestamp — initialized from server data,
+  // then updated immediately in-place after every successful save so the UI
+  // reflects the real time without requiring the modal to close and reopen.
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(() => {
+    const raw = staff?.updated_at || staff?.created_at;
+    return raw ? new Date(raw) : null;
+  });
   
   // UI & Action States
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -357,6 +364,11 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
       };
 
       onSuccess(updatedStaffRecord);
+      // Update the displayed timestamp immediately so the header card reflects
+      // the real save time without the user needing to close and reopen the modal.
+      setLastUpdatedAt(new Date());
+      // Reset dirty state so the "Unsaved Changes" badge clears after save
+      setInitialSnapshot(currentSnapshot);
     } catch (err: any) {
       console.error('Failed to update staff account:', err);
       const safeErrMsg = err.response?.data?.detail || 'Unable to save staff updates. Please try again.';
@@ -432,7 +444,9 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
           <div>
             <span className="text-slate-400 font-bold uppercase text-[9px] block">Last Updated</span>
             <span className="font-mono text-slate-600 dark:text-slate-400 truncate block">
-              {staff.created_at ? new Date(staff.created_at).toLocaleDateString() : 'Active System'}
+              {lastUpdatedAt
+                ? lastUpdatedAt.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                : 'Active System'}
             </span>
           </div>
         </div>

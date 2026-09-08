@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import api, { clearApiCache } from '../services/api';
 import { StaffMentoringDetailModal } from '../components/StaffMentoringDetailModal';
 import { useNotification } from '../context/NotificationContext';
+import { LiveContestPanel } from '../components/contest/LiveContestPanel';
 
 export const StaffDashboardView: React.FC = () => {
   const { user } = useAuth();
@@ -131,6 +132,8 @@ export const StaffDashboardView: React.FC = () => {
 
   return (
     <div className="space-y-8 py-2">
+
+      <LiveContestPanel />
 
       {/* Staff Mentoring Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-lg border border-indigo-500/30">

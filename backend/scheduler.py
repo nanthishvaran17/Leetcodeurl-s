@@ -32,6 +32,7 @@ from backend.logger import logger
 
 
 from backend.services.sunday_autopilot import sunday_autopilot
+from backend.services.live_dashboard_tracker import live_dashboard_tracker
 
 tz = IST
 
@@ -137,6 +138,17 @@ async def sunday_start_job():
     finally:
         db.close()
 
+@with_global_lock('live_dashboard_start_job', timeout_minutes=5)
+async def live_dashboard_start_job():
+    """Scheduled for Sunday 8:00 AM IST: Start Staff Dashboard Live Tracking."""
+    logger.info("[SCHEDULER] Starting Live Dashboard Tracker...")
+    # Get current contest metadata to fetch contest_id (or just pass None if dynamic)
+    from backend.services.contest_discovery import discover_contest_metadata, get_upcoming_sunday_date, get_current_ist_datetime
+    meta = discover_contest_metadata(get_upcoming_sunday_date(get_current_ist_datetime()))
+    contest_id = str(meta.get("contest_num", "")) if meta.get("contest_num") else "unknown"
+    session_id = meta.get("session_id", 0) # Fallback if we need to resolve it via DB later
+    await live_dashboard_tracker.start_tracking(contest_id, session_id)
+
 @with_global_lock('sunday_live_monitoring_job', timeout_minutes=2)
 async def sunday_live_monitoring_job():
     """
@@ -166,6 +178,12 @@ async def sunday_end_job():
         logger.error(f"[SCHEDULER] Error in sunday_end_job: {e}", exc_info=True)
     finally:
         db.close()
+
+@with_global_lock('live_dashboard_stop_job', timeout_minutes=5)
+async def live_dashboard_stop_job():
+    """Scheduled for Sunday 9:30 AM IST: Stop Staff Dashboard Live Tracking."""
+    logger.info("[SCHEDULER] Stopping Live Dashboard Tracker...")
+    await live_dashboard_tracker.stop_tracking()
 
 @with_global_lock('sunday_0935_report_job', timeout_minutes=15)
 async def sunday_0935_report_job():
@@ -635,6 +653,22 @@ def start_scheduler():
         sunday_0935_report_job,
         CronTrigger(day_of_week='sun', hour=9, minute=35, timezone=tz),
         id='sunday_0935_report',
+        replace_existing=True
+    )
+
+    # 5.a Live Dashboard Start Job
+    scheduler.add_job(
+        live_dashboard_start_job,
+        CronTrigger(day_of_week='sun', hour=8, minute=0, timezone=tz),
+        id='live_dashboard_start',
+        replace_existing=True
+    )
+
+    # 5.b Live Dashboard Stop Job
+    scheduler.add_job(
+        live_dashboard_stop_job,
+        CronTrigger(day_of_week='sun', hour=9, minute=30, timezone=tz),
+        id='live_dashboard_stop',
         replace_existing=True
     )
 

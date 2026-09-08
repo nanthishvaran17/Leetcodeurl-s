@@ -209,6 +209,7 @@
         safeScheme = 'org.nandhaengg.leetcodesync';
       }
 
+      // Build the deep link using URLSearchParams for reliable encoding
       const params = new URLSearchParams();
       params.set('code', authCode);
       params.set('state', returnState);
@@ -221,13 +222,15 @@
       spinnerEl.style.display = 'none';
       googleBtnEl.style.display = 'none';
 
-      // Do NOT clear sessionStorage yet, wait a moment in case the deep link fails and user needs fallback
+      // Clear redirect flag immediately — prevents re-processing if user reloads this page
+      sessionStorage.removeItem('nec_auth_redirect_started');
+
+      // Delay cleanup of remaining session data to allow fallback button to work
       setTimeout(() => {
         sessionStorage.removeItem('nec_auth_scheme');
         sessionStorage.removeItem('nec_auth_challenge');
         sessionStorage.removeItem('nec_auth_state');
         sessionStorage.removeItem('nec_auth_apibase');
-        sessionStorage.removeItem('nec_auth_redirect_started');
       }, 5000);
 
       window.location.href = deepLink;
@@ -235,7 +238,7 @@
       actionBtnEl.style.display = 'inline-flex';
       actionBtnEl.innerText = "Open LeetCode Tracker App";
       actionBtnEl.onclick = () => { window.location.href = deepLink; };
-      console.log(`[MOBILE AUTH] Deep-link fallback displayed`);
+      console.log(`[MOBILE AUTH] Deep-link fallback button displayed`);
     }
 
     function returnToAppWithError(errorMessage) {
@@ -414,11 +417,11 @@
           return;
         }
 
+        // Redirect completed but no user was found — show a meaningful error instead
+        // of silently showing the Google button (which could confuse users into re-signing in)
         sessionStorage.removeItem('nec_auth_redirect_started');
-        spinnerEl.style.display = 'none';
-        googleBtnEl.style.display = 'inline-flex';
-        statusEl.innerText = "Ready to Sign In";
-        subtitleEl.innerText = "Tap below to authenticate with your official Google account.";
+        console.warn('[MOBILE AUTH] Redirect returned but no Firebase user found');
+        showError('Google sign-in could not be completed. Please tap below to try again.');
         return;
       }
 

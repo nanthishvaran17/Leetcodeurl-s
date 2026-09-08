@@ -90,6 +90,18 @@ class ConnectionManager:
         if self._batch_task is None or self._batch_task.done():
             self._batch_task = asyncio.create_task(self._flush_loop())
 
+        # If it's a staff/admin connecting during an active live contest, push cached state immediately
+        if user_ctx.get("role", "").lower() in ["super admin", "admin", "staff mentor", "faculty mentor", "faculty", "staff", "hod"]:
+            try:
+                from backend.services.live_dashboard_tracker import live_dashboard_tracker
+                cached_state = live_dashboard_tracker.get_cached_state()
+                if cached_state and cached_state.get("data", {}).get("phase") in ["active", "degraded"]:
+                    import json
+                    await websocket.send_text(json.dumps(cached_state))
+                    logger.info(f"[WS_CONNECT] Sent cached live dashboard state to {user_ctx.get('email')}")
+            except Exception as e:
+                logger.warning(f"[WS_CONNECT] Error sending cached live state: {e}")
+
         return True
 
     def _decode_ws_token(self, token: str) -> Dict[str, Any]:
