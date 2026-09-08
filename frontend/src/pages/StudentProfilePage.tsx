@@ -175,8 +175,8 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   return (
     <div className="h-full flex flex-col overflow-hidden animate-fade-in bg-white dark:bg-navy-950 rounded-3xl">
       
-      {/* Sticky Header Bar with Close Button & Actions */}
-      <div className="p-4 sm:p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex flex-col md:flex-row items-center justify-between gap-4 border-b border-slate-800 shrink-0 z-10 sticky top-0 shadow-xl">
+      {/* Header Bar with Close Button & Actions */}
+      <div className="p-4 sm:p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex flex-col md:flex-row items-center justify-between gap-4 border-b border-slate-800 shrink-0 relative z-50 shadow-xl pointer-events-auto">
         <div className="flex items-center space-x-4 w-full md:w-auto">
           <button
             type="button"
