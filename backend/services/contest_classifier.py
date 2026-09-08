@@ -41,6 +41,7 @@ class ContestStatus(str, Enum):
     VIRTUAL_PRACTICE_UNVERIFIED   = "VIRTUAL_PRACTICE_UNVERIFIED"
     NOT_ATTENDED                  = "NOT_ATTENDED"
     PENDING_VERIFICATION          = "PENDING_VERIFICATION"
+    REVIEW_REQUIRED               = "REVIEW_REQUIRED"
     NO_LEETCODE_HANDLE            = "NO_LEETCODE_HANDLE"
 
     # Legacy Backward Compatibility Enums
@@ -613,48 +614,46 @@ def classify_contest_result(
         if contest_end_unix < s.submitted_at <= contest_end_unix + 24 * 3600
     ]
 
-    if live_submissions:
+    signal1_live = bool(live_submissions)
+    signal1_virtual = bool(virtual_submissions) and not signal1_live
+
+    signal2_live = bool(attended)
+    signal2_virtual = bool(not attended and problems_solved and problems_solved > 0)
+
+    if signal1_live and signal2_live:
         earliest = min(s.submitted_at for s in live_submissions)
         return {
             "classification": ContestStatus.PUBLIC_LIVE_VERIFIED,
             "evidence_timestamp": earliest,
             "verified": True
         }
-
-    if virtual_submissions:
+    
+    if signal1_virtual and signal2_virtual:
         earliest = min(s.submitted_at for s in virtual_submissions)
         return {
             "classification": ContestStatus.VIRTUAL_PRACTICE_VERIFIED,
             "evidence_timestamp": earliest,
             "verified": True
         }
-
-    # FIX (v1 bug): matched evidence exists but falls outside both windows
-    if matched:
+    
+    if not signal1_live and not signal1_virtual and not signal2_live and not signal2_virtual:
+        if matched:
+            return {
+                "classification": ContestStatus.PRACTICE_IGNORED,
+                "evidence_timestamp": None,
+                "verified": True
+            }
         return {
-            "classification": ContestStatus.PRACTICE_IGNORED,
+            "classification": ContestStatus.NOT_ATTENDED,
             "evidence_timestamp": None,
             "verified": True
         }
-
-    if attended:
-        return {
-            "classification": ContestStatus.PUBLIC_LIVE_UNVERIFIED,
-            "evidence_timestamp": None,
-            "verified": False
-        }
-
-    if problems_solved > 0:
-        return {
-            "classification": ContestStatus.VIRTUAL_PRACTICE_UNVERIFIED,
-            "evidence_timestamp": None,
-            "verified": False
-        }
-
+        
     return {
-        "classification": ContestStatus.NOT_ATTENDED,
+        "classification": ContestStatus.REVIEW_REQUIRED,
         "evidence_timestamp": None,
-        "verified": True
+        "verified": False,
+        "reason": f"Mismatch: Signal1(Live:{signal1_live}, Virtual:{signal1_virtual}) vs Signal2(Live:{signal2_live}, Virtual:{signal2_virtual})"
     }
 
 
@@ -785,34 +784,35 @@ async def get_contest_status(
         live_submissions = [s for s in matched_subs if s.submitted_at <= contest_end_unix]
         virtual_submissions = [s for s in matched_subs if contest_end_unix < s.submitted_at <= contest_end_unix + 14 * 86400]
         
-        if live_submissions:
+        signal1_live = bool(live_submissions)
+        signal1_virtual = bool(virtual_submissions) and not signal1_live
+        
+        signal2_live = bool(attended)
+        signal2_virtual = bool(not attended and solved and solved > 0)
+        
+        if signal1_live and signal2_live:
             earliest = min(s.submitted_at for s in live_submissions)
             status = ContestStatus.PUBLIC_LIVE_VERIFIED
             reason = ReasonCode.VALID_LIVE_SUBMISSION
-            reason_text = f"Verified live submission via captured timestamp."
-        elif virtual_submissions:
+            reason_text = "Verified live submission matching GraphQL attended status."
+        elif signal1_virtual and signal2_virtual:
             earliest = min(s.submitted_at for s in virtual_submissions)
             status = ContestStatus.VIRTUAL_PRACTICE_VERIFIED
             reason = ReasonCode.EXPLICIT_VIRTUAL
-            reason_text = f"Verified virtual submission via captured timestamp."
-        elif matched_subs:
-            status = ContestStatus.PRACTICE_IGNORED
-            reason = ReasonCode.NO_PARTICIPATION
-            reason_text = "Submissions exist but outside the valid 14-day window (PRACTICE_IGNORED)."
-        else:
-            # Fallback to LeetCode rankings ONLY if no matched submissions exist at all
-            if attended:
-                status = ContestStatus.PUBLIC_LIVE_UNVERIFIED
-                reason = ReasonCode.VALID_LIVE_SUBMISSION
-                reason_text = "Fallback: LeetCode marked as attended (Unverified Timestamp)."
-            elif solved and solved > 0:
-                status = ContestStatus.VIRTUAL_PRACTICE_UNVERIFIED
-                reason = ReasonCode.EXPLICIT_VIRTUAL
-                reason_text = "Fallback: Solved problems but not marked attended (Unverified Timestamp)."
+            reason_text = "Verified virtual submission matching GraphQL virtual status."
+        elif not signal1_live and not signal1_virtual and not signal2_live and not signal2_virtual:
+            if matched_subs:
+                status = ContestStatus.PRACTICE_IGNORED
+                reason = ReasonCode.NO_PARTICIPATION
+                reason_text = "Submissions exist but outside the valid 14-day window (PRACTICE_IGNORED)."
             else:
                 status = ContestStatus.NOT_ATTENDED
                 reason = ReasonCode.NO_PARTICIPATION
                 reason_text = "No verified participation was found for the official contest window."
+        else:
+            status = ContestStatus.REVIEW_REQUIRED
+            reason = ReasonCode.AMBIGUOUS_PARTICIPATION
+            reason_text = f"Mismatch: Signal 1 (Live:{signal1_live}, Virtual:{signal1_virtual}) vs Signal 2 (Live:{signal2_live}, Virtual:{signal2_virtual}). Requires review."
     else:
         status = ContestStatus.NOT_ATTENDED
         reason = ReasonCode.NO_PARTICIPATION

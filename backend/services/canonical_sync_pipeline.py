@@ -36,6 +36,7 @@ from backend.leetcode_fetcher import (
 from backend.ranking import update_all_rankings_and_badges
 from backend.cache import cache
 from backend.logger import logger
+from backend.services.merge_logic import _merge_phase_a, _merge_phase_b
 
 
 async def _sync_single_student_canonical(
@@ -132,15 +133,32 @@ async def _sync_single_student_canonical_impl(
                     phase_b_res = await fetch_contest_data(c_username, client)
                     status_code = "SUCCESS"
                 else:
-                    phase_a_res, phase_b_res = await asyncio.gather(
-                        fetch_profile_and_stats(c_username, client),
-                        fetch_contest_data(c_username, client),
-                        return_exceptions=True
-                    )
-                    if isinstance(phase_a_res, Exception):
-                        phase_a_res = {"status": "error", "detail": str(phase_a_res)}
-                    if isinstance(phase_b_res, Exception):
-                        phase_b_res = {"status": "error", "detail": str(phase_b_res)}
+                    primary_id = student.primary_leetcode_id or c_username
+                    secondary_id = student.secondary_leetcode_id
+
+                    tasks = [
+                        fetch_profile_and_stats(primary_id, client),
+                        fetch_contest_data(primary_id, client)
+                    ]
+                    
+                    if secondary_id and secondary_id.strip():
+                        tasks.extend([
+                            fetch_profile_and_stats(secondary_id, client),
+                            fetch_contest_data(secondary_id, client)
+                        ])
+                        
+                    results = await asyncio.gather(*tasks, return_exceptions=True)
+                    
+                    for i, r in enumerate(results):
+                        if isinstance(r, Exception):
+                            results[i] = {"status": "error", "detail": str(r)}
+                            
+                    if not secondary_id or not secondary_id.strip():
+                        phase_a_res, phase_b_res = results[0], results[1]
+                    else:
+                        p1_a, p1_b, p2_a, p2_b = results
+                        phase_a_res = _merge_phase_a(p1_a, p2_a)
+                        phase_b_res = _merge_phase_b(p1_b, p2_b)
     
                     phase_a_status = phase_a_res.get("status")
     

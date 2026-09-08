@@ -180,7 +180,7 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
       <div className="modal-container-responsive max-w-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-lg animate-modal-content">
         
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 shrink-0 safe-area-pt">
           <div className="flex items-center space-x-3">
             <div className="p-2 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
               <Activity className={`w-5 h-5 ${isRunning ? 'animate-spin' : ''}`} />
@@ -378,7 +378,7 @@ export const SyncStatusModal: React.FC<SyncStatusModalProps> = ({ isOpen, onClos
         </div>
 
         {/* Modal Footer Actions */}
-        <div className="flex items-center justify-between p-4 border-t border-slate-100 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 shrink-0">
+        <div className="flex items-center justify-between p-4 border-t border-slate-100 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/50 shrink-0 safe-area-pb">
           <button
             type="button"
             onClick={() => fetchStatus(true)}

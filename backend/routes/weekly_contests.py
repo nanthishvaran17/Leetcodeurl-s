@@ -3,7 +3,7 @@ import datetime
 import logging
 import re
 from typing import Dict, Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, Response, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Response, Query, Request, BackgroundTasks
 from sqlalchemy.orm import Session, joinedload
 from backend.database import get_db
 
@@ -1402,18 +1402,19 @@ def _run_sync_in_background(session_id: int):
 @router.post("/sessions/{session_id}/sync")
 def sync_single_weekly_contest(
     session_id: int,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Weekly Contest Sync", required_roles=["admin", "super admin", "hod"]))
 ):
     """
     Sync ONLY the selected contest session using authoritative 4-state reconciliation engine.
-    Runs synchronously so the dashboard can await completion before fetching updated data.
+    Now correctly runs in the background to prevent 180s gateway timeout on the proxy.
     """
-    _run_sync_in_background(session_id)
+    background_tasks.add_task(_run_sync_in_background, session_id)
     return {
         "success": True,
         "sessionId": session_id,
-        "message": f"Synchronization for session {session_id} completed successfully."
+        "message": f"Synchronization for session {session_id} successfully started in the background."
     }
 
 @router.post("/sync-all")

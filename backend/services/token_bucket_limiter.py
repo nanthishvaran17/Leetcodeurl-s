@@ -52,7 +52,7 @@ class TokenBucketRateLimiter:
         # Read from environment variables if not explicitly provided
         self.rate_per_sec = rate_per_sec or float(os.getenv("LEETCODE_RATE_LIMIT_RPS", "3.0"))
         self.capacity = capacity or float(os.getenv("LEETCODE_RATE_LIMIT_CAPACITY", "5.0"))
-        self.max_concurrent = max_concurrent or int(os.getenv("LEETCODE_RATE_LIMIT_CONCURRENT", "5"))
+        self.max_concurrent = max_concurrent or int(os.getenv("LEETCODE_RATE_LIMIT_CONCURRENT", "20"))
 
         self.tokens = self.capacity
         self.last_update = time.monotonic()

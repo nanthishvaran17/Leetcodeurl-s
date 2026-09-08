@@ -213,7 +213,7 @@ def get_students(
     dept_id: Optional[int] = None,
     staff_id: Optional[int] = None,
     year_level: Optional[str] = None,
-    section_id: Optional[int] = None,
+    section: Optional[str] = None,
     status_filter: Optional[str] = None,
     allocation_filter: Optional[str] = None, # ALLOCATED, UNASSIGNED
     include_inactive: bool = True,
@@ -258,8 +258,21 @@ def get_students(
 
     if year_level and year_level != "ALL":
         q = q.filter(Student.year_level == year_level)
-    if section_id:
-        q = q.filter(Student.section_id == section_id)
+    if section and section != "ALL":
+        from backend.models import Section
+        q = q.filter(Student.section.has(Section.name.ilike(section)))
+        
+    if status_filter and status_filter != "ALL":
+        if status_filter == "INACTIVE":
+            q = q.outerjoin(LeetCodeProfileStats).filter(or_(LeetCodeProfileStats.id == None, LeetCodeProfileStats.total_solved == 0))
+        elif status_filter == "ACTIVE":
+            q = q.join(LeetCodeProfileStats).filter(LeetCodeProfileStats.total_solved > 0)
+        elif status_filter == "AT_RISK":
+            # Approximation for DB level AT_RISK filtering (0 solved)
+            q = q.outerjoin(LeetCodeProfileStats).filter(or_(LeetCodeProfileStats.id == None, LeetCodeProfileStats.total_solved == 0))
+        elif status_filter == "IMPROVING":
+            # Approximation for DB level IMPROVING filtering
+            q = q.join(LeetCodeProfileStats).filter(LeetCodeProfileStats.total_solved >= 5)
 
     if search and search.strip():
         term = f"%{search.strip()}%"

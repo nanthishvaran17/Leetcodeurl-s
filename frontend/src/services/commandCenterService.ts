@@ -224,7 +224,7 @@ export async function getCommandCenterStudents(params: {
   dept_id?: number;
   staff_id?: number;
   year_level?: string;
-  section_id?: number;
+  section?: string;
   status_filter?: string;
   allocation_filter?: string;
   include_inactive?: boolean;

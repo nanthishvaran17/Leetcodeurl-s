@@ -91,7 +91,7 @@ def fetch_normalized_students(
     if current_user:
         query = apply_role_based_student_filter(query, current_user, db)
 
-    students = query.all()
+    students = query.distinct().all()
     
     canon_dept = resolve_dept_canonical(dept_filter)
     canon_year = str(year_filter or "ALL").upper().strip()

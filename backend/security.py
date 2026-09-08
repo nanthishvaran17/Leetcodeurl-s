@@ -309,7 +309,8 @@ def require_security_access(
         effective_role = role_alias_map.get(user_role_clean, user_role_clean)
 
         # 2. ROLE & PERMISSION CHECK
-        if effective_role in ["admin", "super admin", "super_admin"] and (not required_roles or any(role_alias_map.get(r.lower(), r.lower()) in ["admin", "super admin", "super_admin"] for r in required_roles)):
+        # Admins and Super Admins get universal bypass (they can access anything)
+        if effective_role in ["admin", "super admin", "super_admin"]:
             log_security_access_event(
                 db, request, user, action="ACCESS_RESOURCE",
                 resource=target_resource, result="SUCCESS", session_id=session_id

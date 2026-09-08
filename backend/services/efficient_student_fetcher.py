@@ -21,7 +21,7 @@ class EfficientStudentFetcher:
     Optimized participant fetcher for cohort of students (e.g. 60–300 students).
     """
 
-    def __init__(self, adapter: LeetCodeAdapter, max_concurrency: int = 5):
+    def __init__(self, adapter: LeetCodeAdapter, max_concurrency: int = 20):
         self.adapter = adapter
         self.semaphore = asyncio.Semaphore(max_concurrency)
 

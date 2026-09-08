@@ -25,7 +25,7 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
     base_query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
     if current_user:
         base_query = apply_role_based_student_filter(base_query, current_user, db)
-    raw_students = base_query.all()
+    raw_students = base_query.distinct().all()
     data_quality = validate_data_quality(raw_students)
 
     cfg_filters = config.filters or {}

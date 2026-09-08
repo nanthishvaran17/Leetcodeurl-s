@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, ExternalLink, Trophy, Flame, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2 } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Trophy, Flame, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import api from '../services/api';
 import { SkillRadarChart } from '../components/SkillRadarChart';
 import { BadgeShelf } from '../components/BadgeShelf';
 import { IDCardGenerator } from '../components/IDCardGenerator';
 import { StudentEditOverlay } from '../components/StudentEditOverlay';
+import { IndividualAnalyticsDashboard } from '../components/analytics/IndividualAnalyticsDashboard';
 
 interface StudentProfilePageProps {
   student: any;
@@ -26,16 +27,19 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   const [showEditOverlay, setShowEditOverlay] = useState(false);
 
   useEffect(() => {
-    if (student?.id) {
+    const targetId = student?.id || student?.student_id;
+    if (targetId) {
       fetchStudentDetail();
     }
   }, [student]);
 
   const fetchStudentDetail = async () => {
+    const targetId = student?.id || student?.student_id;
+    if (!targetId) return;
     try {
       const [stRes, insRes] = await Promise.all([
-        api.get(`/students/${student.id}`),
-        api.get(`/analytics/compare-students?ids=${student.id}`)
+        api.get(`/students/${targetId}`),
+        api.get(`/analytics/compare-students?ids=${targetId}`)
       ]);
       setDetail(stRes.data);
       if (insRes.data && insRes.data.length > 0) {
@@ -50,12 +54,13 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   const [downloadingForensic, setDownloadingForensic] = useState(false);
 
   const handleGenerateCert = async () => {
-    if (!student?.id) return;
+    const targetId = student?.id || student?.student_id;
+    if (!targetId) return;
     setDownloadingCert(true);
     notify.info('Generating Certificate', 'Creating official performance certificate PDF...', { category: 'CERTIFICATE ENGINE' });
     try {
       const res = await api.post('/certificates/generate', {
-        student_id: student.id,
+        student_id: targetId,
         cert_type: "Top Performer"
       });
       const cleanReg = (student.reg_no || '').replace(/[^A-Za-z0-9]+/g, '').toUpperCase();
@@ -81,16 +86,17 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   };
 
   const handleDownloadForensicCert = async () => {
-    if (!student?.id) return;
+    const targetId = student?.id || student?.student_id;
+    if (!targetId) return;
     setDownloadingForensic(true);
     notify.info('Generating Forensic Report', 'Compiling official contest forensic audit PDF...', { category: 'FORENSIC AUDIT' });
     try {
       const cleanReg = (student.reg_no || '').replace(/[^A-Za-z0-9]+/g, '').toUpperCase();
-      const targetId = cleanReg ? `CERT-${cleanReg}-FORENSIC` : `CERT-${student.id}-FORENSIC`;
-      const filename = `Forensic_Audit_Report_${targetId}.pdf`;
+      const reportTargetId = cleanReg ? `CERT-${cleanReg}-FORENSIC` : `CERT-${targetId}-FORENSIC`;
+      const filename = `Forensic_Audit_Report_${reportTargetId}.pdf`;
 
       const dlResult = await downloadManager.download({
-        endpoint: `/certificates/${encodeURIComponent(targetId)}/download-forensic-pdf?student_id=${student.id}`,
+        endpoint: `/certificates/${encodeURIComponent(reportTargetId)}/download-forensic-pdf?student_id=${targetId}`,
         filename,
         mimeType: 'application/pdf',
       });
@@ -108,7 +114,8 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   };
 
   const handleLiveFetch = async () => {
-    if (!student?.id) {
+    const targetId = student?.id || student?.student_id;
+    if (!targetId) {
       setLiveFetchError("No valid student record ID found.");
       return;
     }
@@ -116,8 +123,8 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
     setIsLiveFetching(true);
     setLiveFetchError(null);
     try {
-      await api.post(`/api/sync/student/${student.id}`);
-      const refreshed = await api.get(`/students/${student.id}`);
+      await api.post(`/api/sync/student/${targetId}`);
+      const refreshed = await api.get(`/students/${targetId}`);
       setDetail(refreshed.data);
     } catch (err: any) {
       console.error("Live fetch error:", err);
@@ -128,7 +135,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   };
 
   const handleDelete = async () => {
-    const targetId = detail?.id || student?.id;
+    const targetId = detail?.id || detail?.student_id || student?.id || student?.student_id;
     if (!targetId || isDeleting) return;
     const targetName = detail?.name || student?.name || 'Student';
     const targetReg = detail?.reg_no || student?.reg_no || '';
@@ -173,7 +180,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         <div className="flex items-center space-x-4 w-full md:w-auto">
           <button
             type="button"
-            onClick={onBack}
+            onClick={() => onBack()}
             className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer flex items-center space-x-2 text-xs font-bold shadow-sm"
             title="Back"
           >
@@ -248,11 +255,11 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
 
           <button
             type="button"
-            onClick={onBack}
-            className="px-3 py-2 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition-all font-black text-[10px] flex items-center space-x-1 cursor-pointer"
+            onClick={() => onBack()}
+            className="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white transition-all font-black text-[10px] flex items-center space-x-1 cursor-pointer"
             title="Close Modal"
           >
-            <span className="text-sm leading-none"></span>
+            <X className="w-4 h-4" />
             <span className="hidden lg:inline">Close</span>
           </button>
         </div>
@@ -424,6 +431,8 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           )}
         </div>
       </div>
+
+      <IndividualAnalyticsDashboard studentId={student?.id || student?.student_id} />
 
       <StudentEditOverlay
         isOpen={showEditOverlay}

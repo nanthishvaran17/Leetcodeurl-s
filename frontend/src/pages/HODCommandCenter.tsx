@@ -22,6 +22,7 @@ import {
 } from '../services/commandCenterService';
 import { simulateWhatIfScenario, askAIDepartmentQuery } from '../services/intelligenceService';
 import { CustomDropdown } from '../components/CustomDropdown';
+import { AnalyticsDashboard } from '../components/analytics/AnalyticsDashboard';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import api from '../services/api';
@@ -760,6 +761,7 @@ export const HODCommandCenter: React.FC = () => {
     const deptId = selectedDept !== 'ALL' ? Number(selectedDept) : undefined;
     const staffId = selectedStaff !== 'ALL' ? Number(selectedStaff) : undefined;
     const yearLevel = selectedYear !== 'ALL' ? selectedYear : undefined;
+    const section = selectedSection !== 'ALL' ? selectedSection : undefined;
 
     try {
       const res = await getCommandCenterStudents({
@@ -769,6 +771,7 @@ export const HODCommandCenter: React.FC = () => {
         dept_id: deptId,
         staff_id: staffId,
         year_level: yearLevel,
+        section: section,
         status_filter: selectedStatus !== 'ALL' ? selectedStatus : undefined
       });
       setStudents(res.students || []);
@@ -779,7 +782,7 @@ export const HODCommandCenter: React.FC = () => {
     } finally {
       setStudentsLoading(false);
     }
-  }, [studentsPage, studentsSearch, selectedDept, selectedStaff, selectedYear, selectedStatus]);
+  }, [studentsPage, studentsSearch, selectedDept, selectedStaff, selectedYear, selectedSection, selectedStatus]);
 
   useEffect(() => {
     getCommandCenterDepartments().then(setDepartments).catch(() => {});
@@ -1261,7 +1264,10 @@ export const HODCommandCenter: React.FC = () => {
         </Card>
       </div>
 
-      {/* 6. LIVE STUDENT ACTIVITY (MOST IMPORTANT MAIN OPERATIONAL TABLE) */}
+      {/* 6. GRAPH ANALYTICS LAYER */}
+      <AnalyticsDashboard />
+
+      {/* 7. LIVE STUDENT ACTIVITY (MOST IMPORTANT MAIN OPERATIONAL TABLE) */}
       <Card id="student-directory-section" className="p-5 space-y-4 scroll-mt-20">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2">
           <div>

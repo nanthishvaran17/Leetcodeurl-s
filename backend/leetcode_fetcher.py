@@ -701,8 +701,13 @@ def _make_headers(username: str) -> dict:
 
 import random
 
+import time
+
 _LEETCODE_MAX_CONCURRENCY = settings.LEETCODE_MAX_CONCURRENCY
 _GQL_SEMAPHORE = asyncio.Semaphore(_LEETCODE_MAX_CONCURRENCY)
+
+_GQL_CACHE: Dict[str, Any] = {}
+_GQL_CACHE_TTL = 5.0
 
 async def _gql_post(
     client: Any,
@@ -719,6 +724,13 @@ async def _gql_post(
     Handles 429 (rate limit), 5xx (server error), timeouts.
     Returns canonical result dict — never raises.
     """
+    cache_key = f"{username}:{operation}"
+    now = time.monotonic()
+    if cache_key in _GQL_CACHE:
+        cached_time, cached_result = _GQL_CACHE[cache_key]
+        if now - cached_time < _GQL_CACHE_TTL:
+            return cached_result
+
     if not await circuit_breaker.check():
         return {"status": "error", "data": None, "detail": "Circuit breaker OPEN"}
 
@@ -760,7 +772,9 @@ async def _gql_post(
                 return {"status": "error", "data": None, "detail": msg}
 
             await circuit_breaker.record_success()
-            return {"status": "ok", "data": gql_data}
+            res_dict = {"status": "ok", "data": gql_data}
+            _GQL_CACHE[cache_key] = (time.monotonic(), res_dict)
+            return res_dict
 
         except httpx.TimeoutException:
             await circuit_breaker.record_failure()

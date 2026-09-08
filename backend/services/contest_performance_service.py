@@ -132,7 +132,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
     from backend.services.authorization_service import apply_role_based_student_filter
     student_query = apply_role_based_student_filter(student_query, current_user, db)
     
-    all_master_students = student_query.order_by(Student.id.asc()).all()
+    all_master_students = student_query.distinct().order_by(Student.id.asc()).all()
 
     # Filter students by Department and Year
     filtered_students = [

@@ -45,9 +45,10 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
   const [refreshingLive, setRefreshingLive] = useState<boolean>(false);
 
   const fetchStudentDetails = async () => {
-    if (!student?.id) return;
+    const targetId = student?.id || student?.student_id;
+    if (!targetId) return;
     try {
-      const res = await api.get(`/students/${student.id}`);
+      const res = await api.get(`/students/${targetId}`);
       if (res.data) {
         setCurrentStudent(res.data);
       }
@@ -57,18 +58,21 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
   };
 
   useEffect(() => {
-    if (student?.id) {
+    const targetId = student?.id || student?.student_id;
+    if (targetId) {
       setCurrentStudent(student);
       fetchStudentDetails();
       fetchNotes();
       fetchFollowUps();
     }
-  }, [student?.id]);
+  }, [student?.id, student?.student_id]);
 
   const fetchNotes = async () => {
+    const targetId = student?.id || student?.student_id;
+    if (!targetId) return;
     setLoadingNotes(true);
     try {
-      const res = await api.get(`/faculty-assignments/notes/${student.id}`);
+      const res = await api.get(`/faculty-assignments/notes/${targetId}`);
       setNotes(res.data || []);
     } catch (err) {
       console.error('Error fetching notes:', err);
@@ -78,10 +82,11 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
   };
 
   const fetchFollowUps = async () => {
+    const targetId = student?.id || student?.student_id;
     setLoadingFollowUps(true);
     try {
       const res = await api.get('/faculty-assignments/follow-ups');
-      const studentFollowUps = (res.data || []).filter((f: any) => f.student_id === student.id);
+      const studentFollowUps = (res.data || []).filter((f: any) => f.student_id === targetId);
       setFollowUps(studentFollowUps);
     } catch (err) {
       console.error('Error fetching follow ups:', err);
@@ -94,10 +99,11 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
     e.preventDefault();
     if (!newNote.trim()) return;
 
+    const targetId = student?.id || student?.student_id;
     setSubmittingNote(true);
     try {
       await api.post('/faculty-assignments/notes', {
-        student_id: student.id,
+        student_id: targetId,
         note: newNote.trim(),
         escalation_level: escalation
       });
@@ -116,10 +122,11 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
     e.preventDefault();
     if (!followUpTitle.trim() || !dueDate) return;
 
+    const targetId = student?.id || student?.student_id;
     setSubmittingFollowUp(true);
     try {
       await api.post('/faculty-assignments/follow-ups', {
-        student_id: student.id,
+        student_id: targetId,
         title: followUpTitle.trim(),
         due_date: dueDate,
         notes: followUpNotes.trim() || undefined
@@ -150,11 +157,12 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
   };
 
   const handleRefreshLive = async () => {
-    if (refreshingLive || !student?.id) return;
+    const targetId = student?.id || student?.student_id;
+    if (refreshingLive || !targetId) return;
     setRefreshingLive(true);
     notify.info('Live Sync Started', `Fetching live LeetCode stats for ${currentStudent.name || student.name}...`);
     try {
-      const res = await api.post(`/students/${student.id}/refresh-live`);
+      const res = await api.post(`/students/${targetId}/refresh-live`);
       notify.success('Live Stats Updated', `Successfully updated live statistics for ${currentStudent.name || student.name}.`);
       await fetchStudentDetails();
       if (onRefresh) onRefresh();
@@ -183,11 +191,11 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
   const displayYear = currentStudent?.year_level || student?.year_level || 'III';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 overflow-y-auto animate-fade-in">
-      <div className="w-full max-w-3xl max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-lg overflow-hidden my-auto text-slate-900 dark:text-slate-100">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-0 sm:p-4 bg-black/85 overflow-y-auto animate-fade-in">
+      <div className="w-full h-full sm:h-auto max-w-3xl max-h-[100dvh] sm:max-h-[92vh] flex flex-col sm:rounded-3xl bg-white dark:bg-navy-950 border-0 sm:border border-slate-200 dark:border-navy-700 shadow-lg overflow-hidden my-auto text-slate-900 dark:text-slate-100">
 
         {/* Modal Header */}
-        <div className="p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-indigo-500/20">
+        <div className="p-4 sm:p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-indigo-500/20 safe-area-pt">
           <div className="flex items-center space-x-4">
             <div className="w-14 h-14 rounded-2xl bg-indigo-600/30 border border-indigo-400/40 flex items-center justify-center font-black text-2xl text-indigo-300">
               {displayName ? displayName.charAt(0) : 'S'}
@@ -281,7 +289,7 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
         </div>
 
         {/* Tab Contents */}
-        <div className="p-6 overflow-y-auto flex-1 space-y-6">
+        <div className="p-4 sm:p-6 pb-8 overflow-y-auto flex-1 space-y-6">
 
           {/* TAB 1: OVERVIEW */}
           {activeTab === 'overview' && (
@@ -558,10 +566,12 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
             </div>
           )}
 
+          {/* Extra safe area spacer so last field clears cleanly and scrolls above keyboard */}
+          <div className="h-32 sm:h-8"></div>
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 border-t border-slate-200 dark:border-navy-800 bg-slate-50 dark:bg-navy-950 flex justify-end">
+        <div className="p-4 border-t border-slate-200 dark:border-navy-800 bg-slate-50 dark:bg-navy-950 flex justify-end safe-area-pb shrink-0">
           <button
             onClick={onClose}
             className="px-5 py-2.5 rounded-xl bg-slate-200 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all"

@@ -358,7 +358,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!student || !student.id || isSaving) return;
+    const targetId = student?.id || student?.student_id;
+    if (!student || !targetId || isSaving) return;
 
     const trimmedName = name.trim();
     const trimmedRegNo = regNo.trim().toUpperCase();
@@ -441,13 +442,12 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       className="fixed inset-0 z-[9999999] flex items-center justify-center p-0 sm:p-4 md:p-6 bg-slate-950/85 backdrop-blur-md"
       onClick={(e) => { if (e.target === e.currentTarget && !isSaving) handleAttemptClose(); }}
     >
-      {/* Responsive Modal Card: h-full precisely respects fixed inset-0 boundaries on mobile */}
       <div
-        className="w-full h-full sm:h-auto sm:max-h-[88vh] max-w-xl bg-white dark:bg-navy-950 sm:rounded-3xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-slate-100 antialiased flex flex-col relative"
+        className="w-full h-full sm:h-auto max-h-[100dvh] sm:max-h-[88vh] max-w-xl bg-white dark:bg-navy-950 sm:rounded-3xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-slate-100 antialiased flex flex-col relative overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Fixed Header */}
-        <div className="px-4 py-3.5 sm:px-6 sm:py-4 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-slate-800 shrink-0 z-20 shadow-md">
+        <div className="px-4 py-3.5 sm:px-6 sm:py-4 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-slate-800 shrink-0 z-20 shadow-md safe-area-pt">
           <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
             <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 shrink-0">
               <Edit3 className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -700,14 +700,13 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
               )}
             </div>
             
-            {/* Small safe area spacer so last field clears cleanly */}
-            <div className="h-4 sm:h-2"></div>
+            {/* Extra safe area spacer so last field clears cleanly and scrolls above keyboard */}
+            <div className="h-32 sm:h-8"></div>
           </div>
 
           {/* Dedicated Fixed Bottom Action Bar: Sits below the scroll container using flex shrink-0 */}
           <div
-            className="shrink-0 px-4 py-3.5 sm:px-6 sm:py-4 bg-slate-50/95 dark:bg-navy-950/95 backdrop-blur-md border-t border-slate-200 dark:border-navy-800 flex items-center justify-between z-50 shadow-2xl gap-3 w-full"
-            style={{ paddingBottom: 'calc(0.85rem + env(safe-area-inset-bottom, 0px))' }}
+            className="shrink-0 px-4 pt-3.5 sm:px-6 sm:pt-4 bg-slate-50/95 dark:bg-navy-950/95 backdrop-blur-md border-t border-slate-200 dark:border-navy-800 flex items-center justify-between z-50 shadow-2xl gap-3 w-full safe-area-pb"
           >
             <button
               type="button"

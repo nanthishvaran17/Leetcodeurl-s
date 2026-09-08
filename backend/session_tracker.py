@@ -34,29 +34,34 @@ async def trigger_start_snapshot(db: Session, session_id: int):
     db.commit()
 
     for student in students:
-        # Fetch current profile stats
-        stats_dict = await fetch_leetcode_profile(student.leetcode_url)
-        sync_single_student_db(student.id, stats_dict, db)
+        try:
+            # Fetch current profile stats
+            stats_dict = await fetch_leetcode_profile(student.leetcode_url)
+            sync_single_student_db(student.id, stats_dict, db)
+    
+            snapshot = db.query(WeeklySessionSnapshot).filter(
+                WeeklySessionSnapshot.session_id == session_id,
+                WeeklySessionSnapshot.student_id == student.id
+            ).first()
+    
+            if not snapshot:
+                snapshot = WeeklySessionSnapshot(
+                    session_id=session_id,
+                    student_id=student.id
+                )
+                db.add(snapshot)
+    
+            is_verified = student.stats and student.stats.sync_status in ("success", "OK")
+            
+            snapshot.start_solved_count = student.stats.total_solved if is_verified else None
+            snapshot.start_rating = student.stats.contest_rating if is_verified else None
+            snapshot.status = "UPCOMING"
+            
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            logger.error(f"[START_SNAPSHOT] Failed to snapshot student {student.id}: {e}")
 
-        snapshot = db.query(WeeklySessionSnapshot).filter(
-            WeeklySessionSnapshot.session_id == session_id,
-            WeeklySessionSnapshot.student_id == student.id
-        ).first()
-
-        if not snapshot:
-            snapshot = WeeklySessionSnapshot(
-                session_id=session_id,
-                student_id=student.id
-            )
-            db.add(snapshot)
-
-        is_verified = student.stats and student.stats.sync_status in ("success", "OK")
-        
-        snapshot.start_solved_count = student.stats.total_solved if is_verified else None
-        snapshot.start_rating = student.stats.contest_rating if is_verified else None
-        snapshot.status = "UPCOMING"
-        
-    db.commit()
     logger.info("8:00 AM Baseline Snapshot completed successfully!")
 
 async def trigger_end_snapshot(db: Session, session_id: int):
@@ -79,63 +84,83 @@ async def trigger_end_snapshot(db: Session, session_id: int):
     failed_count = 0
 
     for student in students:
-        stats_dict = await fetch_leetcode_profile(student.leetcode_url)
-        
-        snapshot = db.query(WeeklySessionSnapshot).filter(
-            WeeklySessionSnapshot.session_id == session_id,
-            WeeklySessionSnapshot.student_id == student.id
-        ).first()
-
-        if not snapshot:
-            snapshot = WeeklySessionSnapshot(
-                session_id=session_id,
-                student_id=student.id,
-                start_solved_count=None
-            )
-            db.add(snapshot)
-
-        sync_single_student_db(student.id, stats_dict, db)
-        is_ok = stats_dict.get("validation_status") == "verified"
-
-        # Determine Participation for session summary
-        # We look at recent_contest_type if contest happened recently, or from contest_participations
-        c_type = stats_dict.get("recent_contest_type", "UNKNOWN")
-        if c_type == "OFFICIAL":
-            official_count += 1
-        elif c_type == "VIRTUAL":
-            virtual_count += 1
-        elif is_ok:
-            not_participated += 1
-        else:
-            failed_count += 1
-
-        if is_ok:
-            end_solved = stats_dict.get("total_solved")
-            end_rating = stats_dict.get("contest_rating")
+        try:
+            stats_dict = await fetch_leetcode_profile(student.leetcode_url)
             
-            snapshot.end_solved_count = end_solved
-            snapshot.end_rating = end_rating
-            
-            # Progress calculation ONLY when BOTH baseline and final are verified
-            if snapshot.start_solved_count is not None and end_solved is not None:
-                progress = end_solved - snapshot.start_solved_count
-                snapshot.problems_added = max(0, progress)
+            snapshot = db.query(WeeklySessionSnapshot).filter(
+                WeeklySessionSnapshot.session_id == session_id,
+                WeeklySessionSnapshot.student_id == student.id
+            ).first()
+    
+            if not snapshot:
+                snapshot = WeeklySessionSnapshot(
+                    session_id=session_id,
+                    student_id=student.id,
+                    start_solved_count=None
+                )
+                db.add(snapshot)
+    
+            sync_single_student_db(student.id, stats_dict, db)
+            is_ok = stats_dict.get("validation_status") == "verified"
+    
+            # Determine Participation for session summary
+            # We look at recent_contest_type if contest happened recently, or from contest_participations
+            c_type = stats_dict.get("recent_contest_type", "UNKNOWN")
+            if c_type == "OFFICIAL":
+                official_count += 1
+            elif c_type == "VIRTUAL":
+                virtual_count += 1
+            elif is_ok:
+                not_participated += 1
+            else:
+                failed_count += 1
+    
+            if is_ok:
+                end_solved = stats_dict.get("total_solved")
+                end_rating = stats_dict.get("contest_rating")
                 
-                if progress >= settings.PROGRESS_THRESHOLD:
-                    snapshot.status = "STARTED"
+                snapshot.end_solved_count = end_solved
+                snapshot.end_rating = end_rating
+                
+                # Progress calculation ONLY when BOTH baseline and final are verified
+                if snapshot.start_solved_count is not None and end_solved is not None:
+                    progress = end_solved - snapshot.start_solved_count
+                    snapshot.problems_added = max(0, progress)
+                    
+                    if progress >= settings.PROGRESS_THRESHOLD:
+                        snapshot.status = "STARTED"
+                    else:
+                        snapshot.status = "NOT STARTED"
                 else:
-                    snapshot.status = "NOT STARTED"
+                    snapshot.status = "DATA UNAVAILABLE"
+                    snapshot.problems_added = 0
+    
+                if snapshot.start_rating is not None and end_rating is not None:
+                    snapshot.rating_change = round(end_rating - snapshot.start_rating, 1)
+                    
+                prev_session = db.query(WeeklySession).filter(
+                    WeeklySession.id < session_id,
+                    WeeklySession.status == "FINALIZED"
+                ).order_by(WeeklySession.id.desc()).first()
+                if prev_session:
+                    prev_snapshot = db.query(WeeklySessionSnapshot).filter(
+                        WeeklySessionSnapshot.session_id == prev_session.id,
+                        WeeklySessionSnapshot.student_id == student.id
+                    ).first()
+                    if prev_snapshot and prev_snapshot.end_solved_count is not None and snapshot.start_solved_count is not None:
+                        if snapshot.start_solved_count > prev_snapshot.end_solved_count:
+                            snapshot.is_sequence_broken = True
             else:
                 snapshot.status = "DATA UNAVAILABLE"
+                snapshot.end_solved_count = None
+                snapshot.end_rating = None
                 snapshot.problems_added = 0
-
-            if snapshot.start_rating is not None and end_rating is not None:
-                snapshot.rating_change = round(end_rating - snapshot.start_rating, 1)
-        else:
-            snapshot.status = "DATA UNAVAILABLE"
-            snapshot.end_solved_count = None
-            snapshot.end_rating = None
-            snapshot.problems_added = 0
+                snapshot.is_sequence_broken = False
+                
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            logger.error(f"[END_SNAPSHOT] Failed to snapshot student {student.id}: {e}")
 
     session.official_participants = official_count
     session.virtual_participants = virtual_count

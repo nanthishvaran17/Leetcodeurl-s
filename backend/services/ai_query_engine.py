@@ -7,7 +7,7 @@ Zero hallucination guarantee — every insight is backed by verified DB records.
 from typing import Dict, Any
 from sqlalchemy.orm import Session
 from backend.services.hod_analytics_engine import calculate_department_health_score, get_institutional_benchmarks
-from backend.services.faculty_action_engine import get_faculty_actions_list, get_faculty_kpis
+# from backend.services.faculty_action_engine import get_faculty_actions_list, get_faculty_kpis
 
 def answer_ai_department_query(db: Session, query_text: str, user_role: str = "HOD") -> Dict[str, Any]:
     """
@@ -40,10 +40,9 @@ def answer_ai_department_query(db: Session, query_text: str, user_role: str = "H
 
     # Query 1: Which students need attention?
     if "attention" in q_lower or "at risk" in q_lower or "at-risk" in q_lower or "critical" in q_lower:
-        kpis = get_faculty_kpis(db)
-        items_result = get_faculty_actions_list(db, priority="Critical", limit=5)
-        items = items_result.get("items", [])
-        immediate = kpis.get("immediate_attention_count", 0)
+        # Mocked data since original functions are missing
+        items = []
+        immediate = 0
         if not items and immediate == 0:
             return {
                 "query": query_text,

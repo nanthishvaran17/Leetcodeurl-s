@@ -121,17 +121,17 @@ export const FastStudentRow = memo(({
         </button>
       </div>
 
-      <div className="flex-none w-28 px-3 text-[11px] font-bold">
-        <span className="text-slate-900 dark:text-white block">{student.department?.code || student.department?.name || '—'}</span>
-        <span className="text-slate-500 dark:text-slate-400">{student.year_level} Yr</span>
+      <div className="flex-none w-28 px-3 text-[11px] font-bold overflow-hidden">
+        <span className="text-slate-900 dark:text-white block truncate">{student.department?.code || student.department?.name || '—'}</span>
+        <span className="text-slate-500 dark:text-slate-400 block truncate">{student.year_level} Yr</span>
       </div>
 
-      <div className="flex-none w-40 px-3">
+      <div className="flex-none w-40 px-3 overflow-hidden">
         {student.username ? (
-          <a href={`https://leetcode.com/u/${student.username}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">
+          <a href={`https://leetcode.com/u/${student.username}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline block truncate">
             @{student.username}
           </a>
-        ) : <span className="text-slate-400 text-[11px]">Not Linked</span>}
+        ) : <span className="text-slate-400 text-[11px] block truncate">Not Linked</span>}
       </div>
 
       <div className={`flex-none w-24 px-3 py-1 rounded-lg text-center transition-colors ${flashSolved ? 'bg-emerald-200 dark:bg-emerald-800/50 duration-75' : 'bg-transparent duration-1000'}`}>
