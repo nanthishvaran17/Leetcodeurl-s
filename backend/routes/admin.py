@@ -679,17 +679,29 @@ def create_staff_user(
         dept = db.query(Department).filter(Department.id == payload.department_id).first()
         dept_code = (dept.code if dept and dept.code else "GEN").replace("(", "").replace(")", "").replace("-", "").upper()
         role_prefix = "FAC" if payload.role in ["Faculty", "Staff"] else ("HOD" if payload.role == "HOD" else "ADM")
-        existing_count = db.query(User).filter(User.institutional_id.like(f"NEC-{dept_code}-{role_prefix}-%")).count()
-        inst_id = f"NEC-{dept_code}-{role_prefix}-{existing_count + 1:03d}"
+        prefix = f"NEC-{dept_code}-{role_prefix}-"
+        existing_users = db.query(User).filter(User.institutional_id.like(f"{prefix}%")).all()
+        max_num = 0
+        for u in existing_users:
+            if u.institutional_id:
+                try:
+                    num_part = int(u.institutional_id.split('-')[-1])
+                    if num_part > max_num:
+                        max_num = num_part
+                except ValueError:
+                    pass
+        inst_id = f"{prefix}{max_num + 1:03d}"
 
     if inst_id:
         if db.query(User).filter(User.institutional_id == inst_id).first():
+            print(f"DEBUG: 400 Bad Request - Institutional ID {inst_id} already exists")
             raise HTTPException(status_code=400, detail=f"A user with Institutional ID '{inst_id}' already exists. Please choose a different ID.")
 
     existing = db.query(User).filter(
         (User.username.ilike(payload.username.strip())) | (User.email.ilike(payload.email.strip()))
     ).first()
     if existing:
+        print(f"DEBUG: 400 Bad Request - Username ({payload.username}) or Email ({payload.email}) already exists")
         raise HTTPException(status_code=400, detail="A user with this username or email already exists.")
 
     import secrets
