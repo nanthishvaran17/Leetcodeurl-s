@@ -52,6 +52,18 @@ class ExcelImportTracker:
             if len(self.recent_logs) > 50:
                 self.recent_logs.pop(0)
 
+        # Throttle WebSocket broadcasts to max 2 times per second to prevent thread spawning overhead
+        import time
+        if not hasattr(self, '_last_broadcast_time'):
+            self._last_broadcast_time = 0.0
+            
+        current_time = time.time()
+        # Force broadcast if finished or if 0.5s has elapsed
+        if current_time - self._last_broadcast_time < 0.5 and self.processed_rows < self.total_rows:
+            return
+            
+        self._last_broadcast_time = current_time
+
         # Broadcast live progress over WebSocket
         try:
             from backend.websocket_manager import manager
