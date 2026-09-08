@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, ExternalLink, Trophy, Flame, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Trophy, Flame, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X, BarChart2, Activity, BookOpen, Clock } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import api from '../services/api';
 import { SkillRadarChart } from '../components/SkillRadarChart';
@@ -17,8 +17,11 @@ import { useNotification } from '../context/NotificationContext';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
 
+type TabId = 'overview' | 'analytics' | 'contests' | 'activity' | 'reports';
+
 export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student, onBack }) => {
   const { notify, confirmAction } = useNotification();
+  const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [detail, setDetail] = useState<any>(student);
   const [insights, setInsights] = useState<any>(null);
   const [isLiveFetching, setIsLiveFetching] = useState(false);
@@ -271,11 +274,39 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         </div>
       )}
 
+      {/* Custom Tab Navigation */}
+      <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-navy-900/50 overflow-x-auto custom-scrollbar shrink-0">
+        <div className="flex px-2 sm:px-4">
+          {[
+            { id: 'overview', label: 'Overview', icon: <FileText className="w-4 h-4" /> },
+            { id: 'analytics', label: 'Analytics', icon: <BarChart2 className="w-4 h-4" /> },
+            { id: 'contests', label: 'Contests', icon: <Trophy className="w-4 h-4" /> },
+            { id: 'activity', label: 'Activity', icon: <Activity className="w-4 h-4" /> },
+            { id: 'reports', label: 'Reports', icon: <BookOpen className="w-4 h-4" /> }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as TabId)}
+              className={`flex items-center gap-2 px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm font-bold border-b-2 transition-all whitespace-nowrap outline-none ${
+                activeTab === tab.id
+                  ? 'border-brand-500 text-brand-600 dark:text-brand-400'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/50'
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Scrollable Body Content */}
       <div className="p-5 sm:p-6 overflow-y-auto overscroll-contain flex-1 min-h-0 space-y-6 custom-scrollbar pt-2">
 
-      {/* Ranks & Streaks Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {activeTab === 'overview' && (
+        <>
+          {/* Ranks & Streaks Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         
         <div className="glass-card p-5 rounded-2xl border text-center shadow-md">
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">College Rank</p>
@@ -430,8 +461,20 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             <p className="text-xs text-slate-500">Loading topic insights...</p>
           )}
         </div>
+        </>
+      )}
 
+      {activeTab === 'analytics' && (
         <IndividualAnalyticsDashboard studentId={student?.id || student?.student_id} />
+      )}
+
+      {(activeTab === 'contests' || activeTab === 'activity' || activeTab === 'reports') && (
+        <div className="flex flex-col items-center justify-center py-24 text-slate-400">
+          <Clock className="w-12 h-12 mb-4 opacity-20" />
+          <p className="font-bold text-lg text-slate-500">Coming Soon</p>
+          <p className="text-sm">This section is currently under construction.</p>
+        </div>
+      )}
       </div>
 
       <StudentEditOverlay
