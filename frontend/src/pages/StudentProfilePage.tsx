@@ -430,9 +430,9 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             <p className="text-xs text-slate-500">Loading topic insights...</p>
           )}
         </div>
-      </div>
 
-      <IndividualAnalyticsDashboard studentId={student?.id || student?.student_id} />
+        <IndividualAnalyticsDashboard studentId={student?.id || student?.student_id} />
+      </div>
 
       <StudentEditOverlay
         isOpen={showEditOverlay}

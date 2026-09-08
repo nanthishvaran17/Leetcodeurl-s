@@ -142,6 +142,7 @@
   border-radius: 1.25rem !important;
   overflow: hidden !important;
   box-sizing: border-box !important;
+  pointer-events: auto !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
