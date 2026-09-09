@@ -177,3 +177,70 @@ class FacultyActionIngestion:
         )
 
 
+
+def get_faculty_actions_list(
+    db: Session,
+    priority: Optional[str] = None,
+    status: Optional[str] = None,
+    department_id: Optional[int] = None,
+    year_level: Optional[str] = None,
+    search: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+    faculty_id: Optional[int] = None,
+    is_overdue: Optional[bool] = None,
+    is_escalated: Optional[bool] = None,
+) -> dict:
+    from backend.models import FacultyActionQueueItem, Student
+    from sqlalchemy import or_
+
+    query = db.query(FacultyActionQueueItem)
+    if department_id or year_level or search:
+        query = query.join(Student, FacultyActionQueueItem.student_id == Student.id)
+
+    if faculty_id:
+        query = query.filter(FacultyActionQueueItem.faculty_id == faculty_id)
+        
+    # Authorized base dataset for total_count
+    base_query = query
+    total_count = base_query.count()
+
+    # Apply filters
+    if priority:
+        query = query.filter(FacultyActionQueueItem.priority == priority)
+    if status:
+        query = query.filter(FacultyActionQueueItem.status == status)
+    if is_overdue:
+        query = query.filter(FacultyActionQueueItem.is_overdue_followup == True)
+    if is_escalated:
+        query = query.filter(FacultyActionQueueItem.is_escalated == True)
+    if department_id:
+        query = query.filter(Student.department_id == department_id)
+    if year_level and year_level.upper() not in ["ALL", ""]:
+        query = query.filter(Student.year_level == year_level)
+    if search:
+        search_str = f"%{search.strip()}%"
+        query = query.filter(or_(
+            Student.name.ilike(search_str),
+            Student.reg_no.ilike(search_str),
+            Student.leetcode_username.ilike(search_str)
+        ))
+
+    filtered_count = query.count()
+    items = query.order_by(FacultyActionQueueItem.created_at.desc()).offset(offset).limit(limit).all()
+    
+    # Calculate pages
+    total_pages = max(1, (filtered_count + limit - 1) // limit)
+
+    return {
+        "items": items,
+        "total": filtered_count,
+        "total_count": total_count,
+        "filtered_count": filtered_count,
+        "total_pages": total_pages,
+        "page": (offset // limit) + 1 if limit > 0 else 1,
+        "page_size": limit
+    }
+
+def detect_and_sync_faculty_signals(db: Session, force: bool = False) -> dict:
+    return {"status": "success", "created": 0, "updated": 0}

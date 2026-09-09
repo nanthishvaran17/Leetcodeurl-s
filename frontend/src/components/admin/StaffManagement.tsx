@@ -482,113 +482,238 @@ export const StaffManagement: React.FC = () => {
 
         {/* 4. SUCCESS WITH DATA */}
         {!loading && !errorState && staffList.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-slate-50 dark:bg-navy-950/50 text-slate-600 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider border-b border-slate-100 dark:border-navy-700">
-                <tr>
-                  <th className="px-6 py-4">Institutional ID</th>
-                  <th className="px-6 py-4">Username / Email</th>
-                  <th className="px-6 py-4">Department / Scope</th>
-                  <th className="px-6 py-4">Role</th>
-                  <th className="px-6 py-4">Workload</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-navy-700">
-                {filteredStaff.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center text-xs font-bold text-slate-400">
-                      No staff accounts match your current filter.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredStaff.map((staff) => (
-                    <tr key={staff.id} className="hover:bg-slate-50/80 dark:hover:bg-navy-750/50 transition-colors">
-                      <td className="px-6 py-4 font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                        {staff.institutional_id || `NEC-STAFF-${staff.id}`}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                          <span>{staff.full_name || staff.username}</span>
-                          {staff.role === 'Super Admin' && (
-                            <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-                              ROOT
+          <div>
+            {filteredStaff.length === 0 ? (
+              <div className="px-6 py-12 text-center text-xs font-bold text-slate-400">
+                No staff accounts match your current filter.
+              </div>
+            ) : (
+              <>
+                {/* MOBILE CARD VIEW (< 768px) */}
+                <div className="block md:hidden divide-y divide-slate-100 dark:divide-navy-750">
+                  {filteredStaff.map((staff) => {
+                    const workloadPct = Math.min(100, Math.round(((staff.assigned_count || 0) / (staff.max_capacity || 30)) * 100));
+                    return (
+                      <div key={staff.id} className="p-4 bg-white dark:bg-navy-800 space-y-3.5 border-b border-slate-100 dark:border-navy-750 last:border-b-0">
+                        {/* Header: Name, Root Tag, Status Badge */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1 space-y-0.5">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white truncate">
+                                {staff.full_name || staff.username}
+                              </h4>
+                              {staff.role === 'Super Admin' && (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                                  ROOT
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 break-all font-medium">
+                              {staff.email || `@${staff.username}`}
+                            </p>
+                          </div>
+
+                          <div className="shrink-0">
+                            {staff.is_active ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                <CheckCircle className="w-3 h-3" /> Active
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-500 dark:text-rose-400 border border-rose-500/20">
+                                <Ban className="w-3 h-3" /> Suspended
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Institutional ID & Department / Scope */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-slate-100 dark:border-navy-750/60 text-xs">
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Institutional ID</span>
+                            <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400 break-all text-xs">
+                              {staff.institutional_id || `NEC-STAFF-${staff.id}`}
                             </span>
-                          )}
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Department / Scope</span>
+                            <span className="inline-block px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 max-w-full truncate">
+                              {staff.department || 'INSTITUTIONAL'}
+                            </span>
+                          </div>
                         </div>
-                        <div className="text-xs text-slate-500">{staff.email}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
-                          {staff.department || 'INSTITUTIONAL'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${staff.role === 'Faculty'
-                          ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20'
-                          : (staff.role === 'HOD'
-                            ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
-                            : (staff.role?.includes('Admin')
-                              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-                              : 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20'))
-                          }`}>
-                          {staff.role || 'Staff'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                          {staff.assigned_count || 0} / {staff.max_capacity || 30}
+
+                        {/* Role & Workload */}
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Role</span>
+                            <span className={`inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold border ${
+                              staff.role === 'Faculty'
+                                ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20'
+                                : (staff.role === 'HOD'
+                                  ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
+                                  : (staff.role?.includes('Admin')
+                                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                                    : 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20'))
+                            }`}>
+                              {staff.role || 'Staff'}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Workload</span>
+                            <div className="space-y-1">
+                              <div className="text-xs font-black text-slate-700 dark:text-slate-300">
+                                {staff.assigned_count || 0} / {staff.max_capacity || 30}
+                              </div>
+                              <div className="w-full h-1.5 bg-slate-100 dark:bg-navy-950 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-brand-500 rounded-full transition-all duration-300"
+                                  style={{ width: `${workloadPct}%` }}
+                                />
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <div className="w-20 h-1.5 bg-slate-100 dark:bg-navy-950 rounded-full overflow-hidden mt-1">
-                          <div
-                            className="h-full bg-brand-500 rounded-full"
-                            style={{ width: `${Math.min(100, ((staff.assigned_count || 0) / (staff.max_capacity || 30)) * 100)}%` }}
-                          />
+
+                        {/* Touch-Friendly Action Buttons */}
+                        <div className="pt-2 border-t border-slate-100 dark:border-navy-750/60 flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditModal(staff)}
+                            className="flex-1 min-h-[44px] px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-navy-750 text-slate-700 dark:text-slate-200 hover:bg-brand-600 hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleStatus(staff.id, staff.is_active)}
+                            className={`flex-1 min-h-[44px] px-3 py-2 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                              staff.is_active
+                                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500 hover:text-white'
+                                : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500 hover:text-white'
+                            }`}
+                          >
+                            {staff.is_active ? <UserX className="w-3.5 h-3.5" /> : <RefreshCcw className="w-3.5 h-3.5" />}
+                            <span>{staff.is_active ? 'Suspend' : 'Activate'}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeletingStaff(staff)}
+                            className="min-h-[44px] px-3 py-2 rounded-xl text-xs font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                            title="Delete Staff Account"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Delete</span>
+                          </button>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        {staff.is_active ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                            <CheckCircle className="w-3 h-3" /> Active
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/10 text-rose-500 dark:text-rose-400 border border-rose-500/20">
-                            <Ban className="w-3 h-3" /> Suspended
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-right space-x-1.5">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEditModal(staff)}
-                          className="p-2 rounded-xl text-slate-400 hover:bg-brand-100 hover:text-brand-600 dark:hover:bg-brand-500/20 dark:hover:text-brand-400 transition-colors cursor-pointer"
-                          title="Edit Staff Account & Role"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleToggleStatus(staff.id, staff.is_active)}
-                          className={`p-2 rounded-xl transition-colors cursor-pointer ${staff.is_active ? 'hover:bg-amber-100 hover:text-amber-600 dark:hover:bg-amber-500/20 text-slate-400' : 'hover:bg-emerald-100 hover:text-emerald-600 dark:hover:bg-emerald-500/20 text-slate-400'}`}
-                          title={staff.is_active ? "Suspend Account" : "Activate Account"}
-                        >
-                          {staff.is_active ? <UserX className="w-4 h-4" /> : <RefreshCcw className="w-4 h-4" />}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeletingStaff(staff)}
-                          className="p-2 rounded-xl text-slate-400 hover:bg-rose-100 hover:text-rose-600 dark:hover:bg-rose-500/20 dark:hover:text-rose-400 transition-colors cursor-pointer"
-                          title="Permanently Delete Staff Account"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* DESKTOP TABLE VIEW (>= 768px) */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-left text-sm whitespace-nowrap">
+                    <thead className="bg-slate-50 dark:bg-navy-950/50 text-slate-600 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider border-b border-slate-100 dark:border-navy-700">
+                      <tr>
+                        <th className="px-6 py-4">Institutional ID</th>
+                        <th className="px-6 py-4">Username / Email</th>
+                        <th className="px-6 py-4">Department / Scope</th>
+                        <th className="px-6 py-4">Role</th>
+                        <th className="px-6 py-4">Workload</th>
+                        <th className="px-6 py-4">Status</th>
+                        <th className="px-6 py-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-navy-700">
+                      {filteredStaff.map((staff) => (
+                        <tr key={staff.id} className="hover:bg-slate-50/80 dark:hover:bg-navy-750/50 transition-colors">
+                          <td className="px-6 py-4 font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                            {staff.institutional_id || `NEC-STAFF-${staff.id}`}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                              <span>{staff.full_name || staff.username}</span>
+                              {staff.role === 'Super Admin' && (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                                  ROOT
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-slate-500">{staff.email}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                              {staff.department || 'INSTITUTIONAL'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${staff.role === 'Faculty'
+                              ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20'
+                              : (staff.role === 'HOD'
+                                ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
+                                : (staff.role?.includes('Admin')
+                                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                                  : 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20'))
+                              }`}>
+                              {staff.role || 'Staff'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                              {staff.assigned_count || 0} / {staff.max_capacity || 30}
+                            </div>
+                            <div className="w-20 h-1.5 bg-slate-100 dark:bg-navy-950 rounded-full overflow-hidden mt-1">
+                              <div
+                                className="h-full bg-brand-500 rounded-full"
+                                style={{ width: `${Math.min(100, ((staff.assigned_count || 0) / (staff.max_capacity || 30)) * 100)}%` }}
+                              />
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            {staff.is_active ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                <CheckCircle className="w-3 h-3" /> Active
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/10 text-rose-500 dark:text-rose-400 border border-rose-500/20">
+                                <Ban className="w-3 h-3" /> Suspended
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-right space-x-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditModal(staff)}
+                              className="p-2 rounded-xl text-slate-400 hover:bg-brand-100 hover:text-brand-600 dark:hover:bg-brand-500/20 dark:hover:text-brand-400 transition-colors cursor-pointer"
+                              title="Edit Staff Account & Role"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleStatus(staff.id, staff.is_active)}
+                              className={`p-2 rounded-xl transition-colors cursor-pointer ${staff.is_active ? 'hover:bg-amber-100 hover:text-amber-600 dark:hover:bg-amber-500/20 text-slate-400' : 'hover:bg-emerald-100 hover:text-emerald-600 dark:hover:bg-emerald-500/20 text-slate-400'}`}
+                              title={staff.is_active ? "Suspend Account" : "Activate Account"}
+                            >
+                              {staff.is_active ? <UserX className="w-4 h-4" /> : <RefreshCcw className="w-4 h-4" />}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeletingStaff(staff)}
+                              className="p-2 rounded-xl text-slate-400 hover:bg-rose-100 hover:text-rose-600 dark:hover:bg-rose-500/20 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                              title="Permanently Delete Staff Account"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

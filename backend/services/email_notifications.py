@@ -262,3 +262,117 @@ def notify_default_password_reset(staff_email: str, staff_name: str, temp_passwo
     html_body = generate_professional_template(title, content, action_button, fallback_url=portal_url)
     send_email(staff_email, "Account Password Reset (Action Required)", html_body=html_body)
 
+
+def notify_admin_staff_created(admin_email: str, staff_data: dict, admin_data: dict, event_data: dict):
+    """Sends a detailed, professional institutional email to the administrator when a staff account is created."""
+    import datetime
+    title = "Staff Account Created Successfully"
+    subject_line = f"Staff Account Created | {staff_data.get('full_name', '')} | Nandha Engineering College"
+    
+    # Safe getters
+    staff_name = staff_data.get('full_name')
+    role = staff_data.get('role')
+    department = staff_data.get('department')
+    email = staff_data.get('email')
+    account_status = staff_data.get('status', 'Active')
+    
+    created_date = staff_data.get('created_date')
+    created_time = staff_data.get('created_time')
+    
+    account_id = staff_data.get('account_id')
+    staff_id = staff_data.get('staff_id')
+    permissions = staff_data.get('permissions', [])
+    
+    event_id = event_data.get('event_id')
+    created_by = admin_data.get('created_by')
+    timestamp = event_data.get('timestamp')
+    
+    # Build Staff Details
+    details = []
+    if staff_name: details.append(f"<tr><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; color:#64748b;'>Staff Name</td><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; font-weight:600;'>{staff_name}</td></tr>")
+    if role: details.append(f"<tr><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; color:#64748b;'>Designation / Role</td><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; font-weight:600;'>{role}</td></tr>")
+    if department and department not in ["None", "N/A", "null"]: details.append(f"<tr><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; color:#64748b;'>Department</td><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; font-weight:600;'>{department}</td></tr>")
+    if email: details.append(f"<tr><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; color:#64748b;'>Email Address</td><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; font-weight:600;'>{email}</td></tr>")
+    details.append(f"<tr><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; color:#64748b;'>Account Status</td><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; font-weight:600;'>{account_status}</td></tr>")
+    if created_date: details.append(f"<tr><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; color:#64748b;'>Created Date</td><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; font-weight:600;'>{created_date}</td></tr>")
+    if created_time: details.append(f"<tr><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; color:#64748b;'>Created Time</td><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; font-weight:600;'>{created_time}</td></tr>")
+    
+    details_html = "".join(details)
+    
+    # System Access
+    if permissions:
+        perms_html = "".join([f"<li style='margin-bottom:4px;'>{p}</li>" for p in permissions if p])
+        sys_access = f"<ul style='padding-left:20px; color:#334155; margin:0;'>{perms_html}</ul>"
+    else:
+        sys_access = "<p style='color:#334155; margin:0;'>The account has been configured according to the assigned role.</p>"
+        
+    # Account Info
+    acc_info = []
+    if account_id: acc_info.append(f"<tr><td style='padding:4px 0; width:120px;'>Account ID</td><td style='font-weight:500;'>{account_id}</td></tr>")
+    if staff_id and staff_id not in ["None", "N/A", "null"]: acc_info.append(f"<tr><td style='padding:4px 0;'>Staff ID</td><td style='font-weight:500;'>{staff_id}</td></tr>")
+    if created_by: acc_info.append(f"<tr><td style='padding:4px 0;'>Created By</td><td style='font-weight:500;'>{created_by}</td></tr>")
+    if timestamp: acc_info.append(f"<tr><td style='padding:4px 0;'>Created On</td><td style='font-weight:500;'>{timestamp}</td></tr>")
+    
+    acc_info_html = ""
+    if acc_info:
+        acc_info_html = f'<table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%; font-size:13px; color:#475569;">{"".join(acc_info)}</table>'
+    
+    # Audit Info
+    audit_info = []
+    audit_info.append(f"<tr><td style='padding:4px 0; width:120px;'>Event:</td><td style='font-weight:600;'>Staff Account Created</td></tr>")
+    if event_id: audit_info.append(f"<tr><td style='padding:4px 0;'>Event ID:</td><td>{event_id}</td></tr>")
+    if account_id: audit_info.append(f"<tr><td style='padding:4px 0;'>Account ID:</td><td>{account_id}</td></tr>")
+    if created_by: audit_info.append(f"<tr><td style='padding:4px 0;'>Created By:</td><td>{created_by}</td></tr>")
+    if timestamp: audit_info.append(f"<tr><td style='padding:4px 0;'>Timestamp:</td><td>{timestamp}</td></tr>")
+    audit_info.append(f"<tr><td style='padding:4px 0;'>Status:</td><td><span style='color:#16a34a; font-weight:bold;'>Successful</span></td></tr>")
+    
+    audit_html = f'<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:16px; margin-top:24px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%; font-size:12px; color:#64748b; font-family:monospace;">{"".join(audit_info)}</table></div>'
+    
+    content = f"""
+    <div style="text-align:center; margin-bottom:32px;">
+        <h2 style="margin:0; font-size:20px; color:#1e293b; letter-spacing:-0.5px;">Nandha Engineering College</h2>
+        <p style="margin:4px 0 0 0; font-size:14px; color:#64748b; font-weight:500;">LeetCode Intelligence System</p>
+    </div>
+    
+    <p style="color:#334155; font-size:15px; line-height:1.6;">A new staff account has been successfully created in the Nandha Engineering College LeetCode Intelligence System.</p>
+    
+    <div style="margin-top:32px;">
+        <h4 style="color:#0f172a; margin:0 0 12px 0; font-size:14px; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #e2e8f0; padding-bottom:8px;">Staff Account Details</h4>
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%; font-size:14px;">
+            {details_html}
+        </table>
+    </div>
+    
+    <div style="margin-top:32px;">
+        <h4 style="color:#0f172a; margin:0 0 12px 0; font-size:14px; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #e2e8f0; padding-bottom:8px;">System Access</h4>
+        {sys_access}
+    </div>
+    
+    <div style="margin-top:32px;">
+        <h4 style="color:#0f172a; margin:0 0 12px 0; font-size:14px; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #e2e8f0; padding-bottom:8px;">Account Information</h4>
+        {acc_info_html}
+    </div>
+    
+    <div class="security-notice" style="margin-top:32px; background:#fff1f2; border:1px solid #fecdd3; padding:16px; border-radius:6px;">
+        <h4 style="margin:0 0 8px 0; color:#be123c; font-size:13px; text-transform:uppercase;">Security Notice</h4>
+        <p style="margin:0; font-size:13px; color:#9f1239; line-height:1.5;">For security reasons, passwords, OTPs, authentication tokens, API keys, and other confidential credentials must never be included in this email. If any account information is incorrect, the Administrator can review and update the account from the administration panel.</p>
+    </div>
+    
+    {audit_html}
+    
+    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 32px 0;"/>
+    <div style="text-align:center;">
+        <p style="margin:0 0 8px 0; font-size: 12px; color: #64748b; font-weight:600;">Nandha Engineering College &bull; LeetCode Intelligence System</p>
+        <p style="margin:0 0 16px 0; font-size: 11px; color: #94a3b8;">Student Performance &bull; Contest Intelligence &bull; Analytics &bull; Reports</p>
+        <p style="margin:0; font-size: 10px; color: #cbd5e1;">This is an automated system-generated email. Please do not reply to this message.<br/>&copy; {datetime.datetime.now().year} Nandha Engineering College. All rights reserved.</p>
+    </div>
+    """
+    
+    portal_url = f"{settings.FRONTEND_ORIGIN}/settings"
+    action_button = f'<a href="{portal_url}" style="display:inline-block; background-color:#2563eb; color:#ffffff; padding:14px 28px; text-decoration:none; border-radius:6px; font-weight:bold; font-size:15px; text-align:center; min-width:200px;">View Staff Account</a>'
+    
+    html_body = generate_professional_template(title, content, action_button, fallback_url=settings.FRONTEND_ORIGIN)
+    
+    send_email(admin_email, subject_line, html_body=html_body)
+
+

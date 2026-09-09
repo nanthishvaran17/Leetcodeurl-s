@@ -300,7 +300,10 @@ def get_department_comparison(
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    departments = db.query(Department).all()
+    departments = db.query(Department).filter(
+        ~Department.code.ilike('%test%'),
+        ~Department.name.ilike('%test%')
+    ).all()
     res = []
     for dept in departments:
         # Base query for students in this department

@@ -692,7 +692,8 @@ class NotificationService:
         notification_type: str = 'announcement',
         priority: str = 'normal',
         action_route: Optional[str] = None,
-        created_by: str = 'System'
+        created_by: str = 'System',
+        send_email_notification: bool = True
     ) -> Dict[str, Any]:
         """Direct notification caller for specific recipient list."""
         created_count = 0
@@ -706,7 +707,8 @@ class NotificationService:
                 recipient_scope="INDIVIDUAL",
                 recipient_target=uid,
                 route=action_route,
-                priority=priority
+                priority=priority,
+                send_email_notification=send_email_notification
             )
             if res.get("success"):
                 created_count += 1

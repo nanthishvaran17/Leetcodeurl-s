@@ -669,7 +669,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
   };
 
   return (
-    <div className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-[calc(1.25rem+env(safe-area-inset-bottom,0px))] right-4 sm:right-6 z-[90000] font-sans pointer-events-auto">
+    <div className="ai-floating-widget fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-[calc(1.25rem+env(safe-area-inset-bottom,0px))] right-4 sm:right-6 z-[90000] font-sans pointer-events-auto">
 
       {/* FAB Toggle */}
       <AnimatePresence>

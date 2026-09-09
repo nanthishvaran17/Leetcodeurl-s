@@ -69,6 +69,19 @@ def apply_fixes():
             """))
             logger.info("  ✓ weekly_verification_records table")
 
+            # 5. Missing columns from recent updates
+            conn.execute(text("""
+                ALTER TABLE weekly_session_snapshots
+                    ADD COLUMN IF NOT EXISTS is_sequence_broken BOOLEAN DEFAULT FALSE
+            """))
+            logger.info("  ✓ weekly_session_snapshots.is_sequence_broken")
+            
+            conn.execute(text("""
+                ALTER TABLE student_contest_participations
+                    ADD COLUMN IF NOT EXISTS official_attendance_state VARCHAR(30)
+            """))
+            logger.info("  ✓ student_contest_participations.official_attendance_state")
+
             conn.commit()
             logger.info("Schema fixes applied successfully — all columns verified.")
 

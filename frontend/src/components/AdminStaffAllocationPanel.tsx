@@ -566,7 +566,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
               return (
                 <div
                   key={st.id}
-                  className={`relative rounded-3xl border overflow-hidden transition-all shadow-md hover:shadow-xl ${!st.is_active
+                  className={`relative rounded-3xl border overflow-hidden transition-all shadow-md hover:shadow-xl w-full max-w-full min-w-0 box-border ${!st.is_active
                     ? 'bg-slate-100/80 dark:bg-navy-950/60 border-slate-200 opacity-70'
                     : isFull
                       ? 'bg-gradient-to-br from-rose-50 to-white dark:from-rose-950/20 dark:to-navy-900 border-rose-300 dark:border-rose-800/50'
@@ -579,10 +579,12 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                     : 'bg-gradient-to-r from-sky-500 to-indigo-500'
                     }`} />
 
-                  <div className="p-5">
-                    {/* Avatar + Name */}
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center space-x-3">
+                  <div className="p-4 sm:p-5 flex flex-col w-full max-w-full min-w-0 box-border">
+                    {/* Avatar + Name + Actions (Responsive Header) */}
+                    <div className="flex flex-wrap items-start justify-between gap-4 w-full min-w-0">
+                      
+                      {/* Left: Avatar & Identity */}
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
                         <div className={`relative w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black text-white shadow-lg shrink-0 ${!st.is_active ? 'bg-slate-400'
                           : isFull ? 'bg-gradient-to-br from-rose-500 to-orange-500'
                             : 'bg-gradient-to-br from-sky-500 to-indigo-600'
@@ -592,32 +594,34 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                             <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-navy-800 bg-emerald-500" />
                           )}
                         </div>
-                        <div className="min-w-0">
-                          <h4 className="font-black text-sm text-slate-900 dark:text-white leading-tight truncate">{st.username}</h4>
-                          <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate mt-0.5">{st.email}</p>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-black text-sm text-slate-900 dark:text-white leading-tight break-words" style={{ overflowWrap: 'anywhere' }}>{st.username}</h4>
+                          <p className="text-[11px] text-slate-400 dark:text-slate-500 break-words mt-0.5" style={{ overflowWrap: 'anywhere' }}>{st.email}</p>
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-end space-y-1.5">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide ${!st.is_active ? 'bg-slate-200 text-slate-500'
+                      {/* Right: Badges & Actions */}
+                      <div className="flex flex-wrap items-center justify-end gap-2 sm:flex-col sm:items-end sm:gap-1.5 shrink-0">
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide whitespace-nowrap ${!st.is_active ? 'bg-slate-200 text-slate-500'
                           : isFull ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400'
                             : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
                           }`}>
                           {!st.is_active ? '⊘ DISABLED' : isFull ? 'FULL' : ' AVAILABLE'}
                         </span>
-                        <div className="flex items-center space-x-1">
+                        
+                        <div className="flex flex-wrap items-center justify-end gap-1.5">
                           <button onClick={() => handleOpenStaffRoster(st)}
-                            className="p-1.5 rounded-xl bg-sky-100 dark:bg-sky-900/30 text-sky-600 hover:bg-sky-200 transition-all cursor-pointer" title="View Roster">
-                            <Eye className="w-3.5 h-3.5" />
+                            className="min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 sm:p-1.5 flex items-center justify-center rounded-xl bg-sky-100 dark:bg-sky-900/30 text-sky-600 hover:bg-sky-200 transition-all cursor-pointer shrink-0" title="View Roster">
+                            <Eye className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                           </button>
                           <button onClick={() => triggerToggleStatusModal(st)}
-                            className={`p-1.5 rounded-xl transition-all cursor-pointer ${st.is_active ? 'bg-amber-100 text-amber-600 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'
+                            className={`min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 sm:p-1.5 flex items-center justify-center rounded-xl transition-all cursor-pointer shrink-0 ${st.is_active ? 'bg-amber-100 text-amber-600 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'
                               }`} title={st.is_active ? 'Disable' : 'Enable'}>
-                            <Power className="w-3.5 h-3.5" />
+                            <Power className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                           </button>
                           <button onClick={() => triggerDeleteStaffModal(st)}
-                            className="p-1.5 rounded-xl bg-rose-100 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-200 transition-all cursor-pointer" title="Delete">
-                            <Trash2 className="w-3.5 h-3.5" />
+                            className="min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 sm:p-1.5 flex items-center justify-center rounded-xl bg-rose-100 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-200 transition-all cursor-pointer shrink-0" title="Delete">
+                            <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                           </button>
                         </div>
                       </div>
@@ -625,22 +629,22 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
                     {/* Dept Tag */}
                     {st.department && (
-                      <div className="mt-3">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold border border-indigo-100 dark:border-indigo-800/40">
+                      <div className="mt-3 w-full min-w-0">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold border border-indigo-100 dark:border-indigo-800/40 break-words" style={{ overflowWrap: 'anywhere' }}>
                           {st.department}
                         </span>
                       </div>
                     )}
 
                     {/* Progress Bar */}
-                    <div className="mt-4 space-y-1.5">
-                      <div className="flex justify-between text-xs font-bold">
+                    <div className="mt-4 space-y-1.5 w-full max-w-full min-w-0">
+                      <div className="flex flex-wrap justify-between gap-2 text-xs font-bold w-full">
                         <span className="text-slate-500 dark:text-slate-400">Student Allocation</span>
-                        <span className={isFull ? 'text-rose-500' : count >= 20 ? 'text-amber-500' : 'text-emerald-600'}>
+                        <span className={`shrink-0 ${isFull ? 'text-rose-500' : count >= 20 ? 'text-amber-500' : 'text-emerald-600'}`}>
                           {count} / {maxCap}
                         </span>
                       </div>
-                      <div className="w-full h-2.5 rounded-full bg-slate-200 dark:bg-navy-700 overflow-hidden">
+                      <div className="w-full h-2.5 rounded-full bg-slate-200 dark:bg-navy-700 overflow-hidden shrink-0">
                         <div
                           className={`h-full rounded-full transition-all duration-700 ${isFull ? 'bg-gradient-to-r from-rose-500 to-orange-500'
                             : count >= 20 ? 'bg-gradient-to-r from-amber-400 to-orange-400'
@@ -649,12 +653,13 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                           style={{ width: `${percent}%` }}
                         />
                       </div>
-                      <div className="flex flex-col sm:flex-row sm:justify-between items-center text-[11px] mt-4 sm:mt-0 gap-3 sm:gap-0">
+                      
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-[11px] mt-4 sm:mt-1 gap-3 w-full">
                         <button onClick={() => handleOpenStaffRoster(st)}
-                          className="w-full sm:w-auto h-[44px] sm:h-auto flex items-center justify-center rounded-xl sm:rounded-none bg-sky-50 sm:bg-transparent text-sky-600 dark:text-sky-400 font-bold hover:underline cursor-pointer">
+                          className="w-full sm:w-auto h-[44px] sm:h-auto px-4 flex items-center justify-center rounded-xl sm:rounded-lg bg-sky-50 sm:bg-transparent text-sky-600 dark:text-sky-400 font-bold hover:underline cursor-pointer transition-all active:scale-95">
                           Inspect Progress →
                         </button>
-                        <span className={`font-semibold ${isFull ? 'text-rose-500' : availableSlots <= 5 ? 'text-amber-500' : 'text-slate-400'
+                        <span className={`font-semibold text-center sm:text-right w-full sm:w-auto ${isFull ? 'text-rose-500' : availableSlots <= 5 ? 'text-amber-500' : 'text-slate-400'
                           }`}>
                           {isFull ? 'Cap Reached' : `${availableSlots} slots free`}
                         </span>
@@ -765,7 +770,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
             {/* Table */}
             <div className="overflow-x-hidden md:overflow-x-auto rounded-2xl border-0 md:border border-slate-200 dark:border-navy-700 bg-slate-50 md:bg-transparent dark:bg-navy-900/20 md:dark:bg-transparent">
-              <table className="w-full text-left text-xs border-collapse block md:table">
+              <table className="w-full text-left text-xs mobile-card-table">
                 <thead className="hidden md:table-header-group">
                   <tr className="bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-navy-300 font-bold border-b border-slate-200 dark:border-navy-700">
                     <th className="p-3 text-center">
@@ -878,7 +883,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
               </div>
             ) : (
               <div className="overflow-x-hidden md:overflow-x-auto rounded-2xl border-0 md:border border-slate-200 dark:border-navy-700 bg-slate-50 md:bg-transparent dark:bg-navy-900/20 md:dark:bg-transparent">
-                <table className="w-full text-left text-xs border-collapse block md:table">
+                <table className="w-full text-left text-xs mobile-card-table">
                   <thead className="hidden md:table-header-group">
                     <tr className="bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 font-bold border-b border-rose-100 dark:border-rose-900/50">
                       <th className="p-3 text-center">
@@ -1004,7 +1009,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
                 {/* Assigned Students Roster Table */}
                 <div className="overflow-x-hidden md:overflow-x-auto rounded-2xl border-0 md:border border-slate-200 dark:border-navy-700 bg-slate-50 md:bg-transparent dark:bg-navy-900/20 md:dark:bg-transparent">
-                  <table className="w-full text-left text-xs border-collapse block md:table">
+                  <table className="w-full text-left text-xs mobile-card-table">
                     <thead className="hidden md:table-header-group">
                       <tr className="bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-navy-300 font-bold border-b border-slate-200 dark:border-navy-700">
                         <th className="p-3">Register No</th>

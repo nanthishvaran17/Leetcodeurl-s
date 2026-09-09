@@ -420,9 +420,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                   )}
                 </div>
 
-                <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm max-h-[480px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
-                  <table className="w-full text-left text-xs min-w-[850px] print:min-w-0 print:w-full">
-                    <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 print:bg-slate-200 print:text-black">
+                <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto table-responsive-container shadow-sm max-h-[480px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
+                  <table className="w-full text-left text-xs mobile-card-table min-w-[850px] print:min-w-0 print:w-full">
+                    <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 hidden md:table-header-group print:table-header-group print:bg-slate-200 print:text-black">
                       <tr>
                         <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black">S.No</th>
                         <th className="px-3.5 py-3 sticky left-0 bg-navy-950 print:bg-slate-200 print:border-b print:border-black z-20">Register No</th>
@@ -538,9 +538,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                     <Trophy className="w-4 h-4 text-amber-500" />
                     <span>Top Performers Leaderboard</span>
                   </h3>
-                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
-                    <table className="w-full text-left text-xs min-w-[750px]">
-                      <thead className="bg-navy-950 text-white font-black uppercase">
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto table-responsive-container shadow-sm">
+                    <table className="w-full text-left text-xs mobile-card-table min-w-[750px] md:min-w-[750px]">
+                      <thead className="bg-navy-950 text-white font-black uppercase hidden md:table-header-group">
                         <tr>
                           <th className="px-4 py-3 text-center">Rank</th>
                           <th className="px-4 py-3">Reg No</th>
@@ -581,9 +581,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                   <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider">
                     Full Student Performance Roster ({allRows.length} Students)
                   </h3>
-                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm max-h-[450px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
-                    <table className="w-full text-left text-xs min-w-[800px] print:min-w-0 print:w-full">
-                      <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 print:bg-slate-200 print:text-black">
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto table-responsive-container shadow-sm max-h-[450px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
+                    <table className="w-full text-left text-xs mobile-card-table min-w-[800px] print:min-w-0 print:w-full">
+                      <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 hidden md:table-header-group print:table-header-group print:bg-slate-200 print:text-black">
                         <tr>
                           <th className="px-4 py-3 text-center print:border-b print:border-black">S.No</th>
                           <th className="px-4 py-3 sticky left-0 bg-navy-950 print:bg-slate-200 print:border-b print:border-black z-20">Reg No</th>

@@ -91,7 +91,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   const popoverWidth = menuWidthClass || 'w-full min-w-[min(100%,calc(100vw-2rem))] max-w-[calc(100vw-2rem)]';
 
   return (
-    <div className={`space-y-1 min-w-0 relative ${isOpen ? 'z-[100]' : 'z-10'} ${className}`} ref={dropdownRef} id={id}>
+    <div className={`space-y-1 w-full max-w-full min-w-0 box-border relative ${isOpen ? 'z-[100]' : 'z-10'} ${className}`} ref={dropdownRef} id={id}>
       <label className={labelClassName || "block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate flex items-center justify-between"}>
         <span>{label}</span>
         {selectedOption?.count !== undefined && selectedOption.count > 0 && (
@@ -105,19 +105,19 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={triggerClassName || `w-full h-11 flex items-center justify-between px-4 rounded-2xl border transition-all duration-200 text-left cursor-pointer group shadow-sm ${
+        className={triggerClassName || `w-full min-h-[44px] h-auto py-2 flex items-center justify-between px-4 rounded-2xl border transition-all duration-200 text-left cursor-pointer group shadow-sm ${
           isOpen
             ? 'bg-white dark:bg-slate-800 border-brand-500 ring-2 ring-brand-500/20 shadow-md shadow-brand-500/10'
             : 'bg-white dark:bg-slate-800/90 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700/80 hover:border-brand-500/40'
         }`}
       >
-        <div className="flex items-center space-x-2.5 min-w-0 pr-2">
+        <div className="flex items-center space-x-2.5 min-w-0 w-full pr-2">
           {HeaderIcon && (
             <HeaderIcon className={`w-4 h-4 shrink-0 transition-colors ${
               isOpen ? 'text-brand-500' : 'text-slate-400 group-hover:text-brand-500'
             }`} />
           )}
-          <div className="flex items-center space-x-2 min-w-0">
+          <div className="flex items-center space-x-2 min-w-0 flex-wrap sm:flex-nowrap">
             {selectedOption?.badge && !selectedOption.hidePill && (
               <span className={`shrink-0 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
                 selectedOption.badgeColor || 'bg-brand-500/15 text-brand-600 dark:text-brand-400 border border-brand-500/30'
@@ -125,7 +125,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
                 {selectedOption.badge}
               </span>
             )}
-            <span className={`text-sm truncate ${
+            <span className={`text-sm break-words whitespace-normal text-left min-w-0 ${
               selectedOption ? 'font-bold text-slate-900 dark:text-slate-100' : 'font-semibold text-slate-400 dark:text-slate-500'
             }`}>
               {selectedOption ? selectedOption.label : (placeholder || label || 'Select...')}
@@ -163,14 +163,14 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
                       : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
-                  <div className="flex items-center space-x-2.5 min-w-0 pr-2">
+                  <div className="flex items-start space-x-2.5 min-w-0 pr-2 w-full">
                     {OptIcon && (
-                      <OptIcon className={`w-3.5 h-3.5 shrink-0 ${
+                      <OptIcon className={`w-3.5 h-3.5 shrink-0 mt-1 ${
                         isSelected ? 'text-white' : 'text-slate-400 group-hover:text-brand-500'
                       }`} />
                     )}
                     {opt.badge && !opt.hidePill && (
-                      <span className={`shrink-0 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
+                      <span className={`shrink-0 px-2 py-0.5 mt-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
                         isSelected
                           ? 'bg-white/20 text-white border border-white/30'
                           : opt.badgeColor || 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20'
@@ -178,10 +178,10 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
                         {opt.badge}
                       </span>
                     )}
-                    <div className="flex flex-col min-w-0">
-                      <span className="truncate">{opt.label}</span>
+                    <div className="flex flex-col min-w-0 w-full">
+                      <span className="break-words whitespace-normal text-left">{opt.label}</span>
                       {opt.sublabel && (
-                        <span className={`text-[10px] font-medium truncate ${
+                        <span className={`text-[10px] font-medium break-words whitespace-normal text-left ${
                           isSelected ? 'text-indigo-100' : 'text-slate-400 dark:text-slate-500'
                         }`}>
                           {opt.sublabel}

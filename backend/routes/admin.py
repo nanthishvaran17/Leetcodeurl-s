@@ -793,11 +793,48 @@ def create_staff_user(
             notification_type="system",
             priority="normal",
             action_route="/settings",
-            created_by=f"{current_user.username} ({current_user.role})"
+            created_by=f"{current_user.username} ({current_user.role})",
+            send_email_notification=False
         )
+        
+        # Dispatch the professional email to the administrator
+        from backend.services.email_notifications import notify_admin_staff_created
+        import datetime
+        now = datetime.datetime.now()
+        
+        staff_data = {
+            "full_name": staff_user.full_name,
+            "role": staff_user.role,
+            "department": dept_name,
+            "email": staff_user.email,
+            "status": "Active" if staff_user.is_active else "Inactive",
+            "created_date": now.strftime("%d %B %Y"),
+            "created_time": now.strftime("%I:%M %p IST"),
+            "account_id": f"ACC-{staff_user.id:06d}",
+            "staff_id": staff_user.institutional_id or "N/A",
+            "permissions": [] # Optional: populate from RBAC in future
+        }
+        
+        admin_data = {
+            "created_by": f"{current_user.full_name or current_user.username} ({current_user.role})"
+        }
+        
+        event_data = {
+            "event_id": f"EVT-STAFF-{staff_user.id}-{int(now.timestamp())}",
+            "timestamp": now.strftime("%d %B %Y, %I:%M %p IST")
+        }
+        
+        if current_user.email:
+            background_tasks.add_task(
+                notify_admin_staff_created,
+                admin_email=current_user.email,
+                staff_data=staff_data,
+                admin_data=admin_data,
+                event_data=event_data
+            )
+            
     except Exception as _notif_err:
         pass
-
 
     return {
         "success": True,

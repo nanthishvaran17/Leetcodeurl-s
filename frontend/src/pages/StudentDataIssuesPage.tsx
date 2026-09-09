@@ -788,12 +788,12 @@ export const StudentDataIssuesPage: React.FC = () => {
           </button>
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap overflow-x-auto no-scrollbar pb-1">
           {savedViews.map((view) => (
             <button
               key={view.id}
               onClick={() => handleApplySavedView(view)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border cursor-pointer flex items-center space-x-1.5 ${
+              className={`px-3 py-1.5 min-h-[44px] rounded-xl text-xs font-bold whitespace-nowrap transition-all border cursor-pointer flex items-center space-x-1.5 ${
                 selectedDept === view.dept && selectedYear === view.year && selectedIssue === view.issue && searchQuery === view.search
                   ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40 shadow-sm font-black'
                   : 'bg-slate-50 hover:bg-slate-100 dark:bg-navy-950 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800'
@@ -826,7 +826,7 @@ export const StudentDataIssuesPage: React.FC = () => {
             <span className="text-[11px] text-slate-400 font-bold">Click row to filter</span>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
+          <div className="overflow-x-auto table-responsive-container rounded-2xl border border-slate-100 dark:border-slate-800">
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="bg-navy-950 text-white uppercase font-black text-[10px]">
@@ -955,13 +955,13 @@ export const StudentDataIssuesPage: React.FC = () => {
         {/* Table Header & Download Controls */}
         <div className="px-6 py-4 bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center space-x-3">
-            <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-              <span>Matched Students Requiring Attention ({students.length})</span>
+            <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2 min-w-0">
+              <span className="w-2 h-2 shrink-0 rounded-full bg-amber-500 animate-pulse"></span>
+              <span className="break-words whitespace-normal text-left min-w-0">Matched Students Requiring Attention ({students.length})</span>
             </span>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 flex-wrap gap-y-2">
             <button
               onClick={handleDownloadExcel}
               disabled={isExporting || students.length === 0}
@@ -996,7 +996,7 @@ export const StudentDataIssuesPage: React.FC = () => {
               <p>All records within this selection meet verification and synchronization standards.</p>
             </div>
           ) : (
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs mobile-card-table">
               <thead>
                 <tr className="bg-navy-950 text-white uppercase tracking-wider font-black text-[10px]">
                   <th className="py-3.5 px-4 w-10 text-center">
@@ -1024,7 +1024,7 @@ export const StudentDataIssuesPage: React.FC = () => {
                   return (
                     <tr
                       key={student.id}
-                      className={`hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors ${
+                      className={`mobile-card-row hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors ${
                         isSelected ? 'bg-indigo-50/60 dark:bg-indigo-950/30' : ''
                       }`}
                     >

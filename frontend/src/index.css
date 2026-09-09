@@ -885,4 +885,50 @@
     -webkit-overflow-scrolling: touch !important;
     max-width: 100% !important;
   }
+
+  /* Global Mobile Card Table System */
+  .mobile-card-table {
+    display: block !important;
+  }
+  .mobile-card-table thead {
+    display: none !important;
+  }
+  .mobile-card-table tbody {
+    display: block !important;
+  }
+  .mobile-card-table tr.mobile-card-row {
+    display: block !important;
+    border-width: 1px;
+    border-radius: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+  }
+  .mobile-card-table td {
+    display: flex !important;
+    flex-direction: column;
+    align-items: flex-start !important;
+    padding: 0.75rem 0.5rem !important;
+    border-bottom-width: 1px;
+    width: 100% !important;
+  }
+  .mobile-card-table td:last-child {
+    border-bottom-width: 0 !important;
+  }
+}
+
+/* Global Long Text Safety */
+.text-wrap-safe, 
+.text-wrap-safe * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+img, svg, video {
+  max-width: 100%;
+}
+
+/* Hide AI Floating Widget when any modal is open globally */
+body:has([role="dialog"]) .ai-floating-widget,
+body:has(.modal-backdrop) .ai-floating-widget {
+  display: none !important;
 }

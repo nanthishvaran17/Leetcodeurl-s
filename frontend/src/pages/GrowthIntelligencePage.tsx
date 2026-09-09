@@ -559,9 +559,9 @@ export const GrowthIntelligencePage: React.FC = () => {
             No activity found for the selected filters.
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 uppercase font-black text-[11px] border-b border-slate-200 dark:border-slate-800 tracking-wider">
+          <div className="table-responsive-container overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
+            <table className="w-full text-left text-xs mobile-card-table">
+              <thead className="bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 uppercase font-black text-[11px] border-b border-slate-200 dark:border-slate-800 tracking-wider hidden md:table-header-group">
                 <tr>
                   <th className="py-3.5 px-4"># Rank</th>
                   <th className="py-3.5 px-4">Student</th>
@@ -588,7 +588,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                       >
                         
                         {/* Rank Badge */}
-                        <td className="py-4 px-4 font-black text-slate-900 dark:text-white">
+                        <td className="py-4 px-4 font-black text-slate-900 dark:text-white" data-label="Rank">
                           {idx === 0 ? (
                             <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black shadow-md shadow-amber-500/30 text-xs">
                               #1
@@ -609,7 +609,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                         </td>
 
                         {/* Student Info */}
-                        <td className="py-4 px-4">
+                        <td className="py-4 px-4" data-label="Student">
                           <div className="font-extrabold text-sm text-slate-900 dark:text-white tracking-tight hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
                             {imp.name}
                           </div>
@@ -619,19 +619,19 @@ export const GrowthIntelligencePage: React.FC = () => {
                         </td>
 
                         {/* Department / Year Pill */}
-                        <td className="py-4 px-4">
+                        <td className="py-4 px-4" data-label="Dept / Year">
                           <span className="inline-block px-3 py-1 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-extrabold text-xs">
                             {imp.department_code} • {imp.year_level} Yr
                           </span>
                         </td>
 
                         {/* Total Solved */}
-                        <td className="py-4 px-4 font-black text-sm text-slate-900 dark:text-white">
+                        <td className="py-4 px-4 font-black text-sm text-slate-900 dark:text-white" data-label="Total Solved">
                           {imp.total_solved}
                         </td>
 
                         {/* Growth Delta */}
-                        <td className="py-4 px-4">
+                        <td className="py-4 px-4" data-label="Growth (+Delta)">
                           {imp.delta_solved === imp.total_solved ? (
                             <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-slate-50 dark:bg-navy-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-navy-700 font-black text-sm shadow-sm" title="Initial Baseline">
                               <span>—</span>
@@ -652,8 +652,8 @@ export const GrowthIntelligencePage: React.FC = () => {
                         </td>
 
                         {/* Difficulty Breakdown */}
-                        <td className="py-4 px-4">
-                          <div className="flex items-center space-x-2 text-xs font-black">
+                        <td className="py-4 px-4" data-label="Difficulty Breakdown">
+                          <div className="flex flex-wrap items-center gap-1.5 text-xs font-black">
                             <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                               {imp.easy_solved} E (+{imp.delta_easy})
                             </span>
@@ -667,7 +667,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                         </td>
 
                         {/* Rating Delta */}
-                        <td className="py-4 px-4">
+                        <td className="py-4 px-4" data-label="Rating Delta">
                           {imp.delta_rating !== 0 ? (
                             <span className={`font-black text-xs px-2.5 py-1 rounded-lg ${
                               imp.delta_rating > 0
@@ -682,7 +682,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                         </td>
 
                         {/* Time Machine Timeline Toggle Button */}
-                        <td className="py-4 px-4 text-right">
+                        <td className="py-4 px-4 text-right" data-label="Actions">
                           <button
                             type="button"
                             onClick={(e) => handleFetchStudentHistory(String(imp.student_id), imp.name, e)}

@@ -656,9 +656,16 @@ export const ReportsPage: React.FC = () => {
 
             {/* Action Button Bar */}
             <div className="flex items-center justify-between flex-wrap gap-4 pt-2">
-              <div className="flex items-center space-x-2 text-xs text-slate-500 dark:text-slate-400 font-bold">
-                <Sparkles className="w-4 h-4 text-amber-500" />
-                <span>Workflow: <b>1. Select Parameters</b> → <b>2. Generate Preview</b> → <b>3. Review & Export</b></span>
+              <div className="flex items-start sm:items-center space-x-2 text-xs text-slate-500 dark:text-slate-400 font-bold min-w-0 flex-1">
+                <Sparkles className="w-4 h-4 text-amber-500 shrink-0 mt-0.5 sm:mt-0" />
+                <span className="flex flex-wrap items-center gap-1.5 leading-snug">
+                  <span>Workflow:</span>
+                  <b>1. Select Parameters</b>
+                  <span className="text-slate-300 dark:text-slate-600 hidden sm:inline">→</span>
+                  <b>2. Generate Preview</b>
+                  <span className="text-slate-300 dark:text-slate-600 hidden sm:inline">→</span>
+                  <b>3. Review & Export</b>
+                </span>
               </div>
 
               <button

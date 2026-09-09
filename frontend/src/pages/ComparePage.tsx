@@ -43,6 +43,32 @@ export const ComparePage: React.FC = () => {
   const [searchA, setSearchA] = useState<string>('');
   const [searchB, setSearchB] = useState<string>('');
 
+  // Mobile Viewport Detector
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Keyboard Escape listener to close dropdowns
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setDeptOpen(false);
+        setYearOpen(false);
+        setFighterAOpen(false);
+        setFighterBOpen(false);
+        setGroupAOpen(false);
+        setGroupBOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Group Comparison Selection keys
   const [groupAKey, setGroupAKey] = useState<string>('');
   const [groupBKey, setGroupBKey] = useState<string>('');
@@ -407,7 +433,7 @@ export const ComparePage: React.FC = () => {
                 <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Search Student A by Name, Reg No, or Handle..."
+                  placeholder={isMobile ? "Search Student A..." : "Search Student A by Name, Register No, or LeetCode Handle"}
                   value={searchA}
                   onChange={(e) => setSearchA(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-950 text-slate-900 dark:text-white border-brand-400/40 focus:ring-2 focus:ring-brand-500 outline-none shadow-inner"
@@ -426,15 +452,19 @@ export const ComparePage: React.FC = () => {
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
                     <User className="w-4 h-4 text-brand-500 shrink-0" />
                     {studentA ? (
-                      <div className="flex items-center gap-2 truncate">
-                        <span className="px-2 py-0.5 rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-300 font-mono font-black text-[10px]">
-                          #{studentA.college_rank || '—'}
-                        </span>
-                        <span className="text-xs font-black text-slate-900 dark:text-white truncate">{studentA.name}</span>
-                        <span className="text-[11px] text-slate-400 font-mono">({studentA.reg_no})</span>
-                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                          {studentA.stats?.total_solved || 0} Solved
-                        </span>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 min-w-0 truncate">
+                          <span className="px-2 py-0.5 rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-300 font-mono font-black text-[10px] shrink-0">
+                            #{studentA.college_rank || '—'}
+                          </span>
+                          <span className="text-xs font-black text-slate-900 dark:text-white truncate">{studentA.name}</span>
+                          <span className="text-[10px] text-slate-400 font-mono shrink-0">({studentA.reg_no})</span>
+                        </div>
+                        <div className="shrink-0 self-start sm:self-auto">
+                          <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
+                            {studentA.stats?.total_solved || 0} Solved
+                          </span>
+                        </div>
                       </div>
                     ) : (
                       <span className="text-xs font-extrabold text-slate-400">Select Fighter A</span>
@@ -485,16 +515,18 @@ export const ComparePage: React.FC = () => {
               </div>
 
               {/* Quick Select Preset Buttons */}
-              <div className="flex items-center space-x-2 pt-1">
-                <span className="text-[10px] text-slate-400 font-bold">Quick Select:</span>
-                {students[0] && (
+              <div className="flex items-center gap-2 pt-1 overflow-x-auto custom-scrollbar max-w-full pb-0.5">
+                <span className="text-[10px] text-slate-400 font-bold shrink-0">Quick Select:</span>
+                {students.slice(0, 3).map((s) => (
                   <button
-                    onClick={() => handleSelectA(Number(students[0].id))}
-                    className="px-2.5 py-1 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 text-[10px] font-black border border-brand-500/20 hover:bg-brand-500 hover:text-white transition-all cursor-pointer flex items-center space-x-1"
+                    key={s.id}
+                    type="button"
+                    onClick={() => handleSelectA(Number(s.id))}
+                    className="px-2.5 py-1 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 text-[10px] font-black border border-brand-500/20 hover:bg-brand-500 hover:text-white transition-all cursor-pointer flex items-center space-x-1 whitespace-nowrap shrink-0"
                   >
-                    <span>{students[0].name} (#1)</span>
+                    <span>{s.name} (#{s.college_rank || '—'})</span>
                   </button>
-                )}
+                ))}
               </div>
             </div>
 
@@ -510,7 +542,7 @@ export const ComparePage: React.FC = () => {
                 <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Search Student B by Name, Reg No, or Handle..."
+                  placeholder={isMobile ? "Search Student B..." : "Search Student B by Name, Register No, or LeetCode Handle"}
                   value={searchB}
                   onChange={(e) => setSearchB(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-950 text-slate-900 dark:text-white border-indigo-400/40 focus:ring-2 focus:ring-indigo-500 outline-none shadow-inner"
@@ -529,15 +561,19 @@ export const ComparePage: React.FC = () => {
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
                     <User className="w-4 h-4 text-indigo-500 shrink-0" />
                     {studentB ? (
-                      <div className="flex items-center gap-2 truncate">
-                        <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 font-mono font-black text-[10px]">
-                          #{studentB.college_rank || '—'}
-                        </span>
-                        <span className="text-xs font-black text-slate-900 dark:text-white truncate">{studentB.name}</span>
-                        <span className="text-[11px] text-slate-400 font-mono">({studentB.reg_no})</span>
-                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                          {studentB.stats?.total_solved || 0} Solved
-                        </span>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 min-w-0 truncate">
+                          <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 font-mono font-black text-[10px] shrink-0">
+                            #{studentB.college_rank || '—'}
+                          </span>
+                          <span className="text-xs font-black text-slate-900 dark:text-white truncate">{studentB.name}</span>
+                          <span className="text-[10px] text-slate-400 font-mono shrink-0">({studentB.reg_no})</span>
+                        </div>
+                        <div className="shrink-0 self-start sm:self-auto">
+                          <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
+                            {studentB.stats?.total_solved || 0} Solved
+                          </span>
+                        </div>
                       </div>
                     ) : (
                       <span className="text-xs font-extrabold text-slate-400">Select Fighter B</span>
@@ -588,16 +624,18 @@ export const ComparePage: React.FC = () => {
               </div>
 
               {/* Quick Select Preset Buttons */}
-              <div className="flex items-center space-x-2 pt-1">
-                <span className="text-[10px] text-slate-400 font-bold">Quick Select:</span>
-                {students.length > 1 && students[1] && (
+              <div className="flex items-center gap-2 pt-1 overflow-x-auto custom-scrollbar max-w-full pb-0.5">
+                <span className="text-[10px] text-slate-400 font-bold shrink-0">Quick Select:</span>
+                {students.slice(1, 4).map((s) => (
                   <button
-                    onClick={() => handleSelectB(Number(students[1].id))}
-                    className="px-2.5 py-1 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-black border border-indigo-500/20 hover:bg-indigo-500 hover:text-white transition-all cursor-pointer flex items-center space-x-1"
+                    key={s.id}
+                    type="button"
+                    onClick={() => handleSelectB(Number(s.id))}
+                    className="px-2.5 py-1 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-black border border-indigo-500/20 hover:bg-indigo-500 hover:text-white transition-all cursor-pointer flex items-center space-x-1 whitespace-nowrap shrink-0"
                   >
-                    <span>{students[1].name} (#2)</span>
+                    <span>{s.name} (#{s.college_rank || '—'})</span>
                   </button>
-                )}
+                ))}
               </div>
             </div>
 

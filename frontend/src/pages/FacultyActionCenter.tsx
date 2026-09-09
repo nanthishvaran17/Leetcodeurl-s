@@ -567,7 +567,8 @@ const UpdateModal: React.FC<{
 export const FacultyActionCenter: React.FC = () => {
   const [kpis, setKpis] = useState<FacultyActionKPIs | null>(null);
   const [items, setItems] = useState<FacultyActionItem[]>([]);
-  const [total, setTotal] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [filteredCount, setFilteredCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState('');
@@ -617,7 +618,8 @@ export const FacultyActionCenter: React.FC = () => {
       ]);
       setKpis(kpiRes);
       setItems(listRes.items);
-      setTotal(listRes.total);
+      setTotalCount(listRes.total_count ?? listRes.total);
+      setFilteredCount(listRes.filtered_count ?? listRes.total);
     } catch (err) {
       console.error('Faculty Action Center load failed:', err);
     } finally {
@@ -666,7 +668,7 @@ export const FacultyActionCenter: React.FC = () => {
       ? sortDir === 'desc' ? <ChevronDown size={11} className="opacity-60" /> : <ChevronUp size={11} className="opacity-60" />
       : null;
 
-  const totalPages = Math.ceil(total / pageSize);
+  const totalPages = Math.ceil(filteredCount / pageSize);
   const hasFilters = !!(filterPriority || filterStatus || filterYear || search);
 
   const thCls = "text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-navy-400 text-left py-3 px-3 first:pl-4";
@@ -798,14 +800,23 @@ export const FacultyActionCenter: React.FC = () => {
             { label: 'IV Year (Senior)', value: 'IV Year', icon: <User size={14} />, badge: 'Y4', badgeColor: 'bg-violet-100 text-violet-600' }
           ]}
         />
-        {hasFilters && (
-          <button onClick={() => { setFilterPriority(''); setFilterStatus(''); setFilterYear(''); setSearch(''); setFilterOverdue(false); setFilterEscalated(false); setKpiFilter(''); setPage(1); }}
-            className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 text-xs font-semibold hover:bg-red-500/20 transition">
-            <X size={11} /> Clear
-          </button>
-        )}
-        <div className="ml-auto flex items-center gap-3">
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-800 p-1 rounded-xl border border-slate-200 dark:border-navy-700">
+        <div className="w-full flex items-center justify-between xl:w-auto xl:ml-auto gap-4 mt-2 xl:mt-0">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-500 dark:text-navy-300">
+              {filteredCount === totalCount ? (
+                `Showing ${totalCount} students`
+              ) : (
+                `Showing ${filteredCount} of ${totalCount} students`
+              )}
+            </span>
+            {(hasFilters || kpiFilter) && (
+               <button onClick={() => { setFilterPriority(''); setFilterStatus(''); setFilterYear(''); setSearch(''); setFilterOverdue(false); setFilterEscalated(false); setKpiFilter(''); setPage(1); }}
+                 className="text-xs font-bold text-brand-500 hover:text-brand-600 transition flex items-center gap-0.5 ml-2">
+                 <X size={14} /> Clear
+               </button>
+            )}
+          </div>
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-800 p-1 rounded-xl border border-slate-200 dark:border-navy-700 hidden sm:flex">
             <span className="text-[10px] font-bold text-slate-400 dark:text-navy-400 px-1.5 font-mono">Show:</span>
             {[20, 50, 100, 200].map((sz) => (
               <button
@@ -821,7 +832,6 @@ export const FacultyActionCenter: React.FC = () => {
               </button>
             ))}
           </div>
-          <span className="text-xs text-slate-500 dark:text-navy-300 font-extrabold font-mono">{total} records</span>
         </div>
       </div>
 
@@ -840,8 +850,8 @@ export const FacultyActionCenter: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="rounded-2xl bg-white/80 dark:bg-navy-800/80 border border-slate-200 dark:border-navy-700 backdrop-blur-sm overflow-hidden">
-          <table className="w-full table-fixed">
+        <div className="table-responsive-container rounded-2xl bg-white/80 dark:bg-navy-800/80 border border-slate-200 dark:border-navy-700 backdrop-blur-sm">
+          <table className="mobile-card-table w-full table-fixed min-w-[800px] md:min-w-0">
             <colgroup>
               <col style={{ width: '22%' }} />
               <col style={{ width: '12%' }} />
@@ -852,7 +862,7 @@ export const FacultyActionCenter: React.FC = () => {
               <col style={{ width: '8%' }} />
               <col style={{ width: '7%' }} />
             </colgroup>
-            <thead className="border-b border-slate-200 dark:border-navy-700 bg-slate-50/80 dark:bg-navy-950/50">
+            <thead className="hidden md:table-header-group border-b border-slate-200 dark:border-navy-700 bg-slate-50/80 dark:bg-navy-950/50">
               <tr>
                 {[['Student', 'student_name'], ['Priority', 'priority_score'], ['Stats', ''], ['Signal', ''], ['Status', 'status'], ['Faculty', ''], ['Due', 'due_date'], ['Actions', '']].map(([label, col]) => (
                   <th key={label} className={`${thCls} ${col ? 'cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none' : ''}`} onClick={() => col && toggleSort(col)}>
@@ -872,18 +882,18 @@ export const FacultyActionCenter: React.FC = () => {
                       className={`cursor-pointer transition-colors ${isExpanded ? 'bg-brand-500/5' : 'hover:bg-slate-50 dark:hover:bg-navy-700/40'}`}
                     >
                       {/* Student */}
-                      <td className={tdCls}>
+                      <td className={tdCls} data-label="Student">
                         <div className="font-semibold text-slate-800 dark:text-slate-100 truncate">{item.student_name}</div>
                         <div className="text-[10px] text-slate-400 dark:text-navy-400 truncate">{item.reg_no} · {item.department_code} · {item.year_level}</div>
                       </td>
 
                       {/* Priority */}
-                      <td className={tdCls} onClick={e => e.stopPropagation()}>
+                      <td className={tdCls} data-label="Priority" onClick={e => e.stopPropagation()}>
                         <PriorityBadge priority={item.priority} score={item.priority_score} reason={item.priority_score_reason} />
                       </td>
 
                       {/* Stats */}
-                      <td className={tdCls}>
+                      <td className={tdCls} data-label="Stats">
                         <div className="text-[11px] text-slate-500 dark:text-navy-400 space-y-0.5">
                           <div>{item.current_rating}</div>
                           <div>{item.total_solved}</div>
@@ -891,7 +901,7 @@ export const FacultyActionCenter: React.FC = () => {
                       </td>
 
                       {/* Signal */}
-                      <td className={tdCls}>
+                      <td className={tdCls} data-label="Signal">
                         <div className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug line-clamp-2">{item.signal_type}</div>
                         <div className="flex gap-1 flex-wrap mt-0.5">
                           {item.is_escalated && <span className="text-[9px] text-red-400 font-bold">ESC</span>}
@@ -900,24 +910,24 @@ export const FacultyActionCenter: React.FC = () => {
                       </td>
 
                       {/* Status */}
-                      <td className={tdCls}>
+                      <td className={tdCls} data-label="Status">
                         <span className={`text-[10px] font-semibold px-2 py-1 rounded-full ${statusCls}`}>{item.status}</span>
                       </td>
 
                       {/* Faculty */}
-                      <td className={tdCls}>
+                      <td className={tdCls} data-label="Faculty">
                         <div className={`text-xs truncate ${item.assigned_faculty_name ? 'text-brand-500' : 'text-slate-400 dark:text-navy-500'}`}>
                           {item.assigned_faculty_name || '— Unassigned'}
                         </div>
                       </td>
 
                       {/* Due Date */}
-                      <td className={tdCls}>
+                      <td className={tdCls} data-label="Due Date">
                         <div className="text-[11px] text-slate-400 dark:text-navy-400">{item.due_date || '—'}</div>
                       </td>
 
                       {/* Actions */}
-                      <td className={tdCls} onClick={e => e.stopPropagation()}>
+                      <td className={tdCls} data-label="Actions" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center gap-1.5">
                           <button
                             onClick={() => setUpdateItem(item)}

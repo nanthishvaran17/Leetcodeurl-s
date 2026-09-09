@@ -205,20 +205,20 @@ export const WeeklyIntelligenceReport: React.FC<WeeklyIntelligenceReportProps> =
       {/* ─────────────────────────────────────────────────────────────────────────────
           1. HEADER BANNER & METADATA BAR
       ───────────────────────────────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900/90 to-blue-950/50 border border-blue-900/30 shadow-2xl p-6 sm:p-8 backdrop-blur-xl">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900/90 to-blue-950/50 border border-blue-900/30 shadow-2xl p-4 sm:p-6 md:p-8 backdrop-blur-xl">
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20" />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2.5">
-              <span className="px-3 py-1 bg-blue-500/10 border border-blue-500/30 rounded-full text-blue-400 text-xs font-bold tracking-wider uppercase flex items-center gap-1.5">
+              <span className="px-3 py-1 bg-blue-500/10 border border-blue-500/30 rounded-full text-blue-400 text-xs font-bold tracking-wider uppercase flex items-center gap-1.5 min-h-[32px]">
                 <Sparkles className="w-3.5 h-3.5" />
                 Institutional Report Engine
               </span>
 
               {/* LIVE INDICATOR */}
-              <div className="flex items-center space-x-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400 text-xs font-semibold">
+              <div className="flex items-center space-x-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400 text-xs font-semibold min-h-[32px]">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
@@ -227,30 +227,30 @@ export const WeeklyIntelligenceReport: React.FC<WeeklyIntelligenceReportProps> =
               </div>
 
               {/* CURRENT WEEK BADGE */}
-              <span className="px-3 py-1 bg-indigo-500/10 border border-indigo-500/30 rounded-full text-indigo-300 text-xs font-mono font-bold">
+              <span className="px-3 py-1 bg-indigo-500/10 border border-indigo-500/30 rounded-full text-indigo-300 text-xs font-mono font-bold min-h-[32px] flex items-center">
                 Current: {reportingWindow?.current_week?.week_label || 'W519'}
               </span>
 
               {/* ROLLING WINDOW PILL */}
-              <span className="px-3 py-1 bg-slate-800/80 border border-slate-700/80 rounded-full text-slate-300 text-xs font-mono font-semibold">
+              <span className="px-3 py-1 bg-slate-800/80 border border-slate-700/80 rounded-full text-slate-300 text-xs font-mono font-semibold min-h-[32px] flex items-center">
                 Window: {reportingWindow?.window_str || 'W517 → W518 → W519'}
               </span>
             </div>
 
             <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
+              <h1 className="text-xl sm:text-2xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
                 Weekly LeetCode Intelligence Report
               </h1>
-              <p className="text-sm text-slate-400 mt-1 flex items-center gap-2">
+              <p className="text-sm text-slate-400 mt-2 flex flex-wrap items-center gap-2">
                 <span>{metadata?.institution || 'NANDHA ENGINEERING COLLEGE (AUTONOMOUS)'}</span>
-                <span>•</span>
+                <span className="hidden sm:inline">•</span>
                 <span className="text-slate-300">AY 2026–27 Master Performance Dataset</span>
               </p>
             </div>
           </div>
 
           {/* ACTIONS & REFRESH STATUS */}
-          <div className="flex flex-wrap items-center gap-3 bg-slate-900/60 p-3 rounded-2xl border border-slate-800 self-start lg:self-auto">
+          <div className="flex flex-wrap items-center gap-3 bg-slate-900/60 p-3 rounded-2xl border border-slate-800 w-full sm:w-auto">
             <div className="text-right hidden sm:block px-3">
               <div className="text-xs text-slate-400 flex items-center gap-1 justify-end">
                 <Clock className="w-3.5 h-3.5 text-slate-500" />
@@ -561,9 +561,9 @@ export const WeeklyIntelligenceReport: React.FC<WeeklyIntelligenceReportProps> =
               <span className="text-xs text-slate-400">{departments.length} Active Departments</span>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-800/60 text-slate-400 font-semibold border-b border-slate-800">
+            <div className="overflow-x-auto table-responsive-container">
+              <table className="w-full text-left text-xs mobile-card-table">
+                <thead className="bg-slate-800/60 text-slate-400 font-semibold border-b border-slate-800 hidden md:table-header-group">
                   <tr>
                     <th className="py-3.5 px-4">Department</th>
                     <th className="py-3.5 px-3 text-center">Total Students</th>
@@ -628,9 +628,9 @@ export const WeeklyIntelligenceReport: React.FC<WeeklyIntelligenceReportProps> =
               <span className="text-xs text-slate-400">AY 2026–27 Batch Progression</span>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-800/60 text-slate-400 font-semibold border-b border-slate-800">
+            <div className="overflow-x-auto table-responsive-container">
+              <table className="w-full text-left text-xs mobile-card-table">
+                <thead className="bg-slate-800/60 text-slate-400 font-semibold border-b border-slate-800 hidden md:table-header-group">
                   <tr>
                     <th className="py-3.5 px-4">Academic Year</th>
                     <th className="py-3.5 px-3">Batch Label</th>
@@ -866,9 +866,9 @@ export const WeeklyIntelligenceReport: React.FC<WeeklyIntelligenceReportProps> =
 
           {/* DATA TABLE */}
           <div className="bg-slate-900/80 border border-slate-800 rounded-3xl overflow-hidden shadow-xl">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-800/60 text-slate-400 font-semibold border-b border-slate-800">
+            <div className="overflow-x-auto table-responsive-container">
+              <table className="w-full text-left text-xs mobile-card-table">
+                <thead className="bg-slate-800/60 text-slate-400 font-semibold border-b border-slate-800 hidden md:table-header-group">
                   <tr>
                     <th className="py-3.5 px-4">Reg No</th>
                     <th className="py-3.5 px-3">Student Name</th>

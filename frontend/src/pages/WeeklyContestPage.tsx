@@ -3037,9 +3037,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 </div>
               )}
 
-              <div className="responsive-table-container w-full min-w-0 max-w-full max-h-[75vh] overflow-y-auto overflow-x-auto">
-                <table className="w-full min-w-[900px] text-left text-xs">
-                  <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10">
+              <div className="table-responsive-container w-full min-w-0 max-w-full max-h-[75vh] overflow-y-auto overflow-x-auto">
+                <table className="w-full min-w-[900px] text-left text-xs mobile-card-table">
+                  <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 hidden md:table-header-group">
                     <tr>
                       {/* Checkbox Column */}
                       <th className="px-4 py-3 text-center w-12">

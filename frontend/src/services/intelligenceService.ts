@@ -274,7 +274,7 @@ export const getFacultyActionsList = async (params: {
   page_size?: number;
   is_overdue?: boolean;
   is_escalated?: boolean;
-}): Promise<{ items: FacultyActionItem[]; total: number; page: number; page_size: number }> => {
+}): Promise<{ items: FacultyActionItem[]; total: number; total_count: number; filtered_count: number; total_pages: number; page: number; page_size: number }> => {
   const response = await api.get('/intelligence/faculty/actions', { params });
   return response.data;
 };

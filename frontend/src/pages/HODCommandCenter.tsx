@@ -564,9 +564,10 @@ const ReportHubModal: React.FC<{
                     ))}
                   </div>
 
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="border-b border-slate-200 dark:border-navy-800 font-mono font-black text-slate-500 dark:text-slate-400 uppercase text-[10px]">
+                  <div className="overflow-x-auto table-responsive-container">
+                    <table className="w-full text-left text-xs border-collapse mobile-card-table">
+                      <thead className="hidden md:table-header-group">
+                        <tr className="border-b border-slate-200 dark:border-navy-800 font-mono font-black text-slate-500 dark:text-slate-400 uppercase text-[10px]">
                         <th className="py-2.5 px-3">Dimension</th>
                         <th className="py-2.5 px-3 text-right">Score</th>
                       </tr>
@@ -581,12 +582,13 @@ const ReportHubModal: React.FC<{
                     </tbody>
                   </table>
                 </div>
+                </div>
               )}
 
               {selectedReportType === 'FACULTY_ALLOCATION' && (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
+                <div className="overflow-x-auto table-responsive-container">
+                  <table className="w-full text-left text-xs border-collapse mobile-card-table">
+                    <thead className="hidden md:table-header-group">
                       <tr className="border-b border-slate-200 dark:border-navy-800 font-mono font-black text-slate-600 dark:text-slate-300 uppercase text-[10px]">
                         <th className="py-2.5 px-3">Faculty Mentor</th>
                         <th className="py-2.5 px-3">Dept</th>
@@ -623,9 +625,9 @@ const ReportHubModal: React.FC<{
                   <div className="text-xs font-black text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 p-3 rounded-xl border border-rose-200 dark:border-rose-800/50">
                     Total Inactive Solvers: {reportData?.total_inactive}
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
+                  <div className="overflow-x-auto table-responsive-container">
+                    <table className="w-full text-left text-xs border-collapse mobile-card-table">
+                      <thead className="hidden md:table-header-group">
                         <tr className="border-b border-slate-200 dark:border-navy-800 font-mono font-black text-slate-600 dark:text-slate-300 uppercase text-[10px]">
                           <th className="py-2.5 px-3">Reg No</th>
                           <th className="py-2.5 px-3">Student Name</th>
@@ -1330,9 +1332,9 @@ export const HODCommandCenter: React.FC = () => {
         )}
 
         {/* Table */}
-        <div className="overflow-x-auto border border-slate-100 dark:border-navy-800 rounded-xl">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
+        <div className="overflow-x-auto table-responsive-container border border-slate-100 dark:border-navy-800 rounded-xl">
+          <table className="w-full text-left text-xs border-collapse mobile-card-table">
+            <thead className="hidden md:table-header-group">
               <tr className="bg-slate-50 dark:bg-navy-800 text-[11px] font-bold uppercase tracking-wider text-slate-500 font-mono">
                 <th className="py-3 px-3 w-8">
                   <input
@@ -1465,9 +1467,9 @@ export const HODCommandCenter: React.FC = () => {
             </span>
           </div>
 
-          <div className="overflow-x-auto stylish-scrollbar">
-            <table className="w-full text-left text-xs border-collapse whitespace-nowrap">
-              <thead>
+          <div className="overflow-x-auto table-responsive-container stylish-scrollbar">
+            <table className="w-full text-left text-xs border-collapse whitespace-nowrap mobile-card-table">
+              <thead className="hidden md:table-header-group">
                 <tr className="text-[10px] font-bold uppercase text-slate-500 font-mono border-b border-slate-100 dark:border-navy-800 bg-slate-50 dark:bg-navy-950/50">
                   <th className="py-2.5 px-3 rounded-tl-lg">Rank</th>
                   <th className="py-2.5 px-3">Dept</th>
@@ -1644,9 +1646,9 @@ export const HODCommandCenter: React.FC = () => {
           </button>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead>
+        <div className="overflow-x-auto table-responsive-container">
+          <table className="w-full text-left text-xs border-collapse mobile-card-table">
+            <thead className="hidden md:table-header-group">
               <tr className="text-[10px] font-bold uppercase text-slate-400 font-mono border-b border-slate-100 dark:border-navy-800">
                 <th className="py-2.5 px-3">Faculty Mentor</th>
                 <th className="py-2.5 px-3">Dept</th>

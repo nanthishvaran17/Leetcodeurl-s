@@ -68,7 +68,7 @@ export const BatchPerformanceMatrix: React.FC = () => {
       </div>
 
       {/* Grid Table */}
-      <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner">
+      <div className="overflow-x-auto table-responsive-container rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner">
         <table className="w-full text-xs text-center border-collapse">
           <thead>
             {/* Header Row 1 */}
