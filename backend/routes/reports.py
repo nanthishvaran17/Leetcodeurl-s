@@ -22,7 +22,8 @@ from backend.pdf_generator import generate_pdf_summary_report
 from backend.certificate_generator import generate_student_certificate
 from backend.email_service import send_weekly_report_email
 from backend.logger import logger
-from backend.security import require_security_access
+from backend.security import require_security_access, get_current_user_optional
+from backend.models import User
 
 router = APIRouter(prefix="/api/reports", tags=["Reports"])
 
@@ -1691,5 +1692,29 @@ async def dispatch_college_report_email(
         "not_attended_count": res["not_attended_count"],
         "top_rankers_count": len(res["top_rankers"])
     }
+
+
+@router.get("/weekly-intelligence")
+def get_live_weekly_intelligence_report(
+    department: Optional[str] = Query(None),
+    year: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    risk_level: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    """
+    Live Data-Driven Weekly LeetCode Intelligence Report.
+    Adheres strictly to the 17-page reference PDF structure.
+    Dynamic 3-week rolling window, live DB aggregation, server-side RBAC.
+    """
+    from backend.services.weekly_intelligence_service import generate_live_weekly_intelligence_data
+    return generate_live_weekly_intelligence_data(
+        db=db,
+        department=department,
+        year=year,
+        current_user=current_user
+    )
+
 
 

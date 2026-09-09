@@ -1358,7 +1358,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
                   <button
                     type="button"
                     onClick={() => {
@@ -1367,7 +1367,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                       const url = `/verify/${vId}?reg=${encodeURIComponent(forensicResult.student.reg_no)}&contest=${encodeURIComponent(contestQuery)}&name=${encodeURIComponent(forensicResult.student.name)}`;
                       window.open(url, '_blank');
                     }}
-                    className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition-all shadow-md hover:scale-105 flex items-center gap-1.5 cursor-pointer"
+                    className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition-all shadow-md hover:scale-105 flex items-center justify-center gap-1.5 cursor-pointer touch-target-min sm:min-h-[auto]"
                   >
                     <FileText className="w-3.5 h-3.5" />
                     <span>View Official Certificate</span>
@@ -1377,7 +1377,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                     type="button"
                     onClick={handleDownloadPdf}
                     disabled={downloadingPdf}
-                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all shadow-md hover:scale-105 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all shadow-md hover:scale-105 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 touch-target-min sm:min-h-[auto]"
                   >
                     {downloadingPdf ? (
                       <>
@@ -1396,14 +1396,14 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
               {/* HUMAN-READABLE EVIDENCE SUMMARY & SOURCE METADATA */}
               <div className="p-5 rounded-3xl bg-slate-50/70 dark:bg-navy-950/40 border border-slate-200 dark:border-slate-800 space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-2.5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-2.5 gap-2">
                   <div className="flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                    <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
                     <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
                       EVIDENCE SUMMARY & SOURCE AUDIT
                     </h4>
                   </div>
-                  <span className="text-[10px] font-mono text-slate-400">
+                  <span className="text-[10px] font-mono text-slate-400 text-wrap-safe break-all">
                     Trace ID: {forensicResult.traceId || 'Verified'}
                   </span>
                 </div>
@@ -1482,8 +1482,8 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 </div>
 
                 {showRawJson && (
-                  <div className="max-h-72 overflow-y-auto rounded-2xl bg-black/40 border border-white/10 p-3 font-mono text-[11px] text-indigo-300 custom-scrollbar animate-fade-in">
-                    <pre className="whitespace-pre-wrap leading-relaxed">
+                  <div className="max-h-72 max-w-[calc(100vw-3rem)] overflow-auto rounded-2xl bg-black/40 border border-white/10 p-3 font-mono text-[11px] text-indigo-300 custom-scrollbar animate-fade-in">
+                    <pre className="whitespace-pre leading-relaxed min-w-min">
                       {JSON.stringify(forensicResult.rawEvidence, null, 2)}
                     </pre>
                   </div>

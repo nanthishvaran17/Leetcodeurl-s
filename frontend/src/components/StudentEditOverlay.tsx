@@ -437,13 +437,14 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
 
   return createPortal(
     <div
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 z-[9999999] flex items-center justify-center p-0 sm:p-4 md:p-6 bg-slate-950/85 backdrop-blur-md"
+      className="fixed inset-0 z-[9999999] flex items-center justify-center p-0 sm:p-4 md:p-6 bg-slate-950/85 backdrop-blur-md modal-overlay-responsive"
       onClick={(e) => { if (e.target === e.currentTarget && !isSaving) handleAttemptClose(); }}
     >
       <div
-        className="w-full h-full sm:h-auto max-h-[100dvh] sm:max-h-[88vh] max-w-xl bg-white dark:bg-navy-950 sm:rounded-3xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-slate-100 antialiased flex flex-col relative overflow-hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-student-dialog-title"
+        className="w-full h-full sm:h-auto max-h-[100dvh] sm:max-h-[88vh] max-w-xl bg-white dark:bg-navy-950 sm:rounded-3xl shadow-2xl border-0 sm:border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-slate-100 antialiased flex flex-col relative overflow-hidden mobile-responsive-modal animate-modal-content"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Fixed Header */}
@@ -453,7 +454,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
               <Edit3 className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div className="min-w-0">
-              <h3 className="text-sm sm:text-base font-black text-white tracking-tight truncate">EDIT STUDENT RECORD</h3>
+              <h3 id="edit-student-dialog-title" className="text-sm sm:text-base font-black text-white tracking-tight truncate">EDIT STUDENT RECORD</h3>
               <p className="text-[11px] sm:text-xs text-slate-300 font-mono font-medium truncate">
                 <span>{student.reg_no || student.register_number || 'ID: ' + student.id}</span>
                 {name && <span className="text-slate-400 font-sans"> · {name}</span>}

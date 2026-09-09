@@ -647,15 +647,15 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
       {/* Viewport-Centered Student Delete Confirmation Modal */}
       {deletingStudent && typeof document !== 'undefined' && createPortal(
         <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={`Deactivate student record for ${deletingStudent.name}`}
           className="modal-overlay-responsive animate-modal-backdrop"
           onClick={(e) => {
             if (e.target === e.currentTarget && !isDeleting) setDeletingStudent(null);
           }}
         >
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Deactivate student record for ${deletingStudent.name}`}
             className="modal-container-responsive max-w-md bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-rose-200 dark:border-rose-900/50 p-6 space-y-4 animate-modal-content"
             onClick={(e) => e.stopPropagation()}
           >
@@ -699,15 +699,15 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
           ================================================================ */}
       {viewingStudent && typeof document !== 'undefined' && createPortal(
         <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={`Student profile for ${viewingStudent.name}`}
           className="modal-overlay-responsive animate-modal-backdrop"
           onClick={(e) => { if (e.target === e.currentTarget) setViewingStudent(null); }}
         >
           {/* Modal panel — centered with safe margins from top & bottom */}
           <div
-            className="modal-container-responsive bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 animate-modal-content"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Student profile for ${viewingStudent.name}`}
+            className="modal-container-responsive mobile-responsive-modal bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 animate-modal-content"
             onClick={(e) => e.stopPropagation()}
           >
 

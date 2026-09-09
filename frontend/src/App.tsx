@@ -555,7 +555,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-navy-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-navy-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 overflow-x-hidden w-full relative">
       <a 
         href="#main-content" 
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100000] focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-md shadow-lg"
@@ -799,14 +799,14 @@ export const App: React.FC = () => {
       {/* Viewport-Centered Student Profile Modal */}
       {selectedStudent && typeof document !== 'undefined' && createPortal(
         <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={`Student profile for ${selectedStudent.name}`}
           className="modal-overlay-responsive animate-modal-backdrop"
           onClick={(e) => { if (e.target === e.currentTarget) setSelectedStudent(null); }}
         >
           <div
-            className="modal-container-responsive bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 animate-modal-content max-w-4xl"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Student profile for ${selectedStudent.name}`}
+            className="modal-container-responsive mobile-responsive-modal bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 animate-modal-content max-w-4xl"
             onClick={(e) => e.stopPropagation()}
           >
             <Suspense fallback={null}>

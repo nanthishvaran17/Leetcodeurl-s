@@ -270,35 +270,37 @@ const StaffAllocationModal: React.FC<{
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-none animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-4xl max-h-[90vh] bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-2xl flex flex-col justify-between overflow-hidden">
+    <div className="modal-overlay-responsive animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal-container-responsive bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 w-full max-w-4xl">
         {/* Modal Header */}
-        <div className="p-5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between">
+        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-navy-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-brand-50 text-brand-600">
+            <div className="p-2 rounded-xl bg-brand-50 text-brand-600 shrink-0">
               <Users size={18} />
             </div>
-            <div>
-              <h3 className="font-display text-base font-bold text-slate-900 dark:text-white">
+            <div className="min-w-0">
+              <h3 className="font-display text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate">
                 HOD Faculty Mentorship & Student Allocation Manager
               </h3>
-              <p className="text-xs text-slate-500">Enforces institutional 1:20 faculty-to-student mentor ratio</p>
+              <p className="text-xs text-slate-500 truncate">Enforces institutional 1:20 faculty-to-student mentor ratio</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <GlobalFilter
-              value={selectedDeptId.toString()}
-              onChange={val => setSelectedDeptId(Number(val))}
-              dropdownWidth="w-max min-w-full"
-              options={departments.map((d: any) => ({ value: String(d.id), label: `${d.name} (${d.code})`, pillText: d.code }))}
-              icon={<Building2 className="w-4 h-4" />}
-            />
-            <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100"><X size={18} /></button>
+          <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+            <div className="flex-1 sm:flex-initial min-w-0">
+              <GlobalFilter
+                value={selectedDeptId.toString()}
+                onChange={val => setSelectedDeptId(Number(val))}
+                dropdownWidth="w-full sm:w-max min-w-full"
+                options={departments.map((d: any) => ({ value: String(d.id), label: `${d.name} (${d.code})`, pillText: d.code }))}
+                icon={<Building2 className="w-4 h-4" />}
+              />
+            </div>
+            <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 shrink-0 touch-target-min flex items-center justify-center"><X size={18} /></button>
           </div>
         </div>
 
         {/* Modal Body */}
-        <div className="p-5 overflow-y-auto space-y-5 flex-1 text-xs">
+        <div className="p-4 sm:p-5 overflow-y-auto overflow-x-hidden space-y-5 flex-1 text-xs">
           {message && (
             <div className={`p-3 rounded-xl font-medium ${message.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'}`}>
               {message.text}
@@ -363,25 +365,27 @@ const StaffAllocationModal: React.FC<{
           {/* Unassigned Students Selection Box */}
           {unassignedStudents.length > 0 && (
             <div className="p-4 rounded-xl border border-slate-200 dark:border-navy-700 space-y-3">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                 <h4 className="font-bold font-mono text-slate-700 dark:text-slate-200">
                   Manual Student Allocation ({unassignedStudents.length} unassigned)
                 </h4>
-                <div className="flex items-center gap-2">
-                  <GlobalFilter
-                    value={targetFacultyId?.toString() || ""}
-                    onChange={val => setTargetFacultyId(Number(val))}
-                    dropdownWidth="w-64"
-                    options={[
-                      { value: "", label: "Select target faculty..." },
-                      ...workload.map((f: any) => ({ value: String(f.faculty_id), label: `${f.faculty_name} (${f.assigned_students}/20)` }))
-                    ]}
-                    icon={<User className="w-4 h-4" />}
-                  />
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+                  <div className="flex-1 sm:flex-initial min-w-0">
+                    <GlobalFilter
+                      value={targetFacultyId?.toString() || ""}
+                      onChange={val => setTargetFacultyId(Number(val))}
+                      dropdownWidth="w-full sm:w-64"
+                      options={[
+                        { value: "", label: "Select target faculty..." },
+                        ...workload.map((f: any) => ({ value: String(f.faculty_id), label: `${f.faculty_name} (${f.assigned_students}/20)` }))
+                      ]}
+                      icon={<User className="w-4 h-4" />}
+                    />
+                  </div>
                   <button
                     disabled={!targetFacultyId || selectedUnassigned.length === 0 || actionLoading}
                     onClick={handleBatchAssign}
-                    className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold disabled:opacity-50"
+                    className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold disabled:opacity-50 touch-target-min sm:min-h-[auto]"
                   >
                     Assign ({selectedUnassigned.length})
                   </button>
@@ -968,7 +972,7 @@ export const HODCommandCenter: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-5 pb-16 font-sans text-slate-900 dark:text-slate-100 antialiased">
+    <div className="w-full box-border space-y-5 pb-16 font-sans text-slate-900 dark:text-slate-100 antialiased">
 
 
 

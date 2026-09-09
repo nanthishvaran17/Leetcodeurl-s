@@ -707,8 +707,8 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
             role="dialog" aria-label="NEC AI Assistant"
             className={`bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-navy-800 shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-slate-100 transition-all duration-300 ${
               isExpanded
-                ? 'w-[840px] max-w-[calc(100vw-1.5rem)] h-[800px] max-h-[calc(100vh-3.5rem)]'
-                : 'w-[min(430px,calc(100vw-1.5rem))] h-[min(640px,calc(100dvh-4.5rem))]'
+                ? 'w-[840px] max-w-[calc(100vw-1.5rem)] h-[800px] max-h-[calc(100dvh-3.5rem)]'
+                : 'w-[min(430px,calc(100vw-1rem))] h-[min(640px,calc(100dvh-5rem))]'
             }`}
           >
 

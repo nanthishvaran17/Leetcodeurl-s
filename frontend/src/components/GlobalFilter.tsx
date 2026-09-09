@@ -92,8 +92,8 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={twMerge(
-            "relative w-full flex items-center justify-between px-4 py-2.5 bg-white dark:bg-navy-950",
-            "border transition-all duration-200 outline-none select-none rounded-[1.25rem]",
+            "relative w-full flex items-center justify-between px-4 py-2.5 min-h-[44px] bg-white dark:bg-navy-950",
+            "border transition-all duration-200 outline-none select-none rounded-[1.25rem] cursor-pointer",
             isOpen 
               ? "border-brand-500 ring-4 ring-brand-500/10 shadow-sm" 
               : "border-slate-200 dark:border-navy-700 hover:border-slate-300 dark:hover:border-navy-600 hover:shadow-sm"
@@ -139,7 +139,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
               transition={{ duration: 0.15, ease: 'easeOut' }}
               className={clsx(
                 "absolute z-[9999] mt-2 top-full left-0 bg-white dark:bg-navy-950",
-                "rounded-[1.25rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 dark:border-navy-800/60 overflow-hidden",
+                "rounded-[1.25rem] shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 dark:border-navy-800/60 overflow-hidden max-w-[calc(100vw-2rem)]",
                 dropdownWidth
               )}
             >
@@ -156,7 +156,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
                         setIsOpen(false);
                       }}
                       className={clsx(
-                        "w-full flex items-center justify-between px-3 py-2.5 mx-2 w-[calc(100%-16px)] rounded-xl transition-all duration-150 outline-none text-left",
+                        "w-full flex items-center justify-between px-3 py-2.5 min-h-[44px] mx-2 w-[calc(100%-16px)] rounded-xl transition-all duration-150 outline-none text-left cursor-pointer",
                         isSelected 
                           ? "bg-brand-600 text-white shadow-md shadow-brand-500/20" 
                           : "hover:bg-slate-50 dark:hover:bg-navy-800"

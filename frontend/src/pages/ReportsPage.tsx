@@ -10,13 +10,14 @@ import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { downloadFromUrl } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
+import { WeeklyIntelligenceReport } from '../components/WeeklyIntelligenceReport';
 import { ExportStatus } from '../components/ExportStatus';
 import { DownloadState } from '../services/download/downloadTypes';
 
 export const ReportsPage: React.FC = () => {
   const { notify } = useNotification();
   const { user, token } = useAuth();
-  const [activeTab, setActiveTab] = useState<'reports' | 'email' | 'manual_email' | 'auto_email'>('reports');
+  const [activeTab, setActiveTab] = useState<'weekly_intelligence' | 'reports' | 'email' | 'manual_email' | 'auto_email'>('weekly_intelligence');
   const [showCertModal, setShowCertModal] = useState<boolean>(false);
   const [emailLogs, setEmailLogs] = useState<any[]>([]);
   const [hodSnapshots, setHodSnapshots] = useState<any[]>([]);
@@ -432,6 +433,17 @@ export const ReportsPage: React.FC = () => {
       {/* Main Tab Navigation */}
       <div className="flex items-center space-x-2 bg-slate-100 dark:bg-navy-950 p-1.5 rounded-2xl max-w-fit border border-slate-200 dark:border-slate-800 flex-wrap gap-1">
         <button
+          onClick={() => setActiveTab('weekly_intelligence')}
+          className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${activeTab === 'weekly_intelligence'
+              ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+        >
+          <Sparkles className="w-4 h-4 text-amber-300" />
+          <span>Live Weekly Intelligence Report</span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('reports')}
           className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${activeTab === 'reports'
               ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
@@ -439,7 +451,7 @@ export const ReportsPage: React.FC = () => {
             }`}
         >
           <FileSpreadsheet className="w-4 h-4" />
-          <span>Reports & Analytics Suite</span>
+          <span>Exports & Download Hub</span>
         </button>
 
         <button
@@ -454,7 +466,11 @@ export const ReportsPage: React.FC = () => {
         </button>
       </div>
 
-      {activeTab === 'email' || activeTab === 'manual_email' || activeTab === 'auto_email' ? (
+      {activeTab === 'weekly_intelligence' ? (
+        <WeeklyIntelligenceReport
+          onExportPDF={handleDownloadPDF}
+        />
+      ) : activeTab === 'email' || activeTab === 'manual_email' || activeTab === 'auto_email' ? (
         <EmailDeliveryTab defaultSection="manual" />
       ) : (
         <>

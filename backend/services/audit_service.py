@@ -1,15 +1,17 @@
 import datetime
-import random
+import time
+import secrets
 from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
 from backend.models import AdminAuditLog, User
 from backend.logger import logger
 
 def generate_audit_id() -> str:
-    """Generates unique formatted Audit ID: AUD-YYYY-XXXXX"""
+    """Generates unique formatted Audit ID: AUD-YYYY-XXXXXXXX with timestamp + cryptographically secure random entropy."""
     year_str = datetime.date.today().strftime("%Y")
-    rand_num = random.randint(10000, 99999)
-    return f"AUD-{year_str}-{rand_num}"
+    ts_part = hex(int(time.time() * 1000))[2:][-4:].upper()
+    rand_part = secrets.token_hex(3).upper()
+    return f"AUD-{year_str}-{ts_part}{rand_part}"
 
 def log_admin_action(
     db: Session,
@@ -28,6 +30,7 @@ def log_admin_action(
     """
     Persists an admin activity audit log entry into AdminAuditLog table.
     Captures complete user identity (id, name, email, role).
+    Guarantees unique audit_id with automated retry on rare duplicate collisions.
     """
     audit_id = generate_audit_id()
     if event_id:
@@ -78,13 +81,20 @@ def log_admin_action(
         created_at=datetime.datetime.now(datetime.timezone.utc)
     )
 
-    try:
-        db.add(audit_entry)
-        db.commit()
-        db.refresh(audit_entry)
-        logger.info(f"Audit Log Recorded: [{audit_id}] {action} by {admin_name} ({admin_email})")
-        return audit_entry
-    except Exception as e:
-        db.rollback()
-        logger.error(f"Failed to record audit log: {e}")
-        return audit_entry
+    for attempt in range(3):
+        try:
+            db.add(audit_entry)
+            db.commit()
+            db.refresh(audit_entry)
+            logger.info(f"Audit Log Recorded: [{audit_entry.audit_id}] {action} by {admin_name} ({admin_email})")
+            return audit_entry
+        except Exception as e:
+            db.rollback()
+            if attempt < 2 and ("unique" in str(e).lower() or "duplicate" in str(e).lower()):
+                audit_entry.audit_id = generate_audit_id()
+                continue
+            logger.error(f"Failed to record audit log: {e}")
+            return audit_entry
+
+    return audit_entry
+

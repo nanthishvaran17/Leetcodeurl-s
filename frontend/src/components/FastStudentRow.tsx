@@ -115,11 +115,14 @@ export const FastStudentRow = memo(({
                  <span className="text-sm font-black text-amber-500">{student.stats?.contest_rating ? student.stats.contest_rating.toLocaleString() : '—'}</span>
              </div>
          </div>
-         <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-           <button onClick={() => onView(student)} className="p-2 rounded-xl text-brand-600 bg-brand-50 dark:bg-brand-950/50" title="View"><Eye className="w-4 h-4" /></button>
-           <button onClick={() => onEdit(student)} className="p-2 rounded-xl text-amber-600 bg-amber-50 dark:bg-amber-950/50" title="Edit"><Edit3 className="w-4 h-4" /></button>
-         </div>
-      </div>
+          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => onView(student)} className="p-2.5 rounded-xl text-brand-600 bg-brand-50 dark:bg-brand-950/50 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer active:scale-95 transition-transform" title="View Student"><Eye className="w-4 h-4" /></button>
+            <button onClick={() => onEdit(student)} className="p-2.5 rounded-xl text-amber-600 bg-amber-50 dark:bg-amber-950/50 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer active:scale-95 transition-transform" title="Edit Student"><Edit3 className="w-4 h-4" /></button>
+            {onDelete && (
+              <button onClick={(e) => onDelete(student, e)} className="p-2.5 rounded-xl text-rose-600 bg-rose-50 dark:bg-rose-950/50 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer active:scale-95 transition-transform" title="Delete Student Record"><Trash2 className="w-4 h-4" /></button>
+            )}
+          </div>
+       </div>
 
       {/* DESKTOP LAYOUT COLUMNS */}
       <div className="hidden md:block flex-none w-10 text-center px-3" onClick={(e) => e.stopPropagation()}>

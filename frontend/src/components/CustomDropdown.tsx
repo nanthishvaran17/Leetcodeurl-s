@@ -88,7 +88,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
       ? 'left-0 right-auto' 
       : 'left-0 sm:left-0';
 
-  const popoverWidth = menuWidthClass || 'w-full min-w-full';
+  const popoverWidth = menuWidthClass || 'w-full min-w-[min(100%,calc(100vw-2rem))] max-w-[calc(100vw-2rem)]';
 
   return (
     <div className={`space-y-1 min-w-0 relative ${isOpen ? 'z-[100]' : 'z-10'} ${className}`} ref={dropdownRef} id={id}>

@@ -139,56 +139,58 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
 
       {/* TOP 3 PODIUM */}
       {top3.length >= 3 && (
-        <div className="glass-card p-6 rounded-3xl border border-amber-500/20 bg-gradient-to-b from-amber-500/5 to-transparent shadow-xl">
-          <h2 className="text-center font-black text-base text-slate-900 dark:text-white flex items-center justify-center space-x-2 mb-6">
-            <Trophy className="w-5 h-5 text-amber-500 fill-amber-500" />
-            <span>INSTITUTION TOP 3 RANKERS</span>
-            <Trophy className="w-5 h-5 text-amber-500 fill-amber-500" />
+        <div className="glass-card p-4 sm:p-6 rounded-3xl border border-amber-500/20 bg-gradient-to-b from-amber-500/5 to-transparent shadow-xl">
+          <h2 className="text-center font-black text-sm sm:text-base text-slate-900 dark:text-white flex items-center justify-center space-x-2 mb-4 sm:mb-6">
+            <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 fill-amber-500 shrink-0" />
+            <span className="truncate">INSTITUTION TOP 3 RANKERS</span>
+            <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 fill-amber-500 shrink-0" />
           </h2>
 
-          <div className="flex items-end justify-center gap-4 flex-wrap">
+          <div className="grid grid-cols-3 items-end justify-items-center max-w-xl mx-auto gap-2 sm:gap-6">
             {MEDAL_CONFIGS.map(cfg => {
               const s = top3[cfg.rank - 1];
               if (!s) return null;
               return (
                 <div
                   key={s.id}
-                  className={`${cfg.order} ${cfg.size} flex flex-col items-center space-y-3 cursor-pointer group`}
+                  className={`${cfg.order} w-full flex flex-col items-center space-y-2 sm:space-y-3 cursor-pointer group`}
                   onClick={() => onSelectStudent?.(s)}
                 >
                   {/* Medal Crown */}
-                  <div className={`text-2xl ${cfg.rank === 1 ? 'animate-bounce' : ''}`}>{cfg.emoji}</div>
+                  <div className={`text-xl sm:text-2xl ${cfg.rank === 1 ? 'animate-bounce' : ''}`}>{cfg.emoji}</div>
 
                   {/* Avatar */}
-                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${cfg.color} flex items-center justify-center text-white font-black text-xl shadow-xl border-2 ${cfg.borderColor} group-hover:scale-110 transition-transform`}>
+                  <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br ${cfg.color} flex items-center justify-center text-white font-black text-base sm:text-xl shadow-xl border-2 ${cfg.borderColor} group-hover:scale-105 transition-transform`}>
                     {s.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                   </div>
 
                   {/* Info */}
-                  <div className="text-center space-y-0.5">
-                    <div className={`text-xs font-black ${cfg.textColor}`}>{cfg.label}</div>
-                    <div className="text-sm font-extrabold text-slate-900 dark:text-white truncate max-w-[120px]">{s.name}</div>
-                    <div className="text-[10px] text-slate-500 font-mono">{s.reg_no}</div>
-                    <div className="text-[11px] text-slate-400 font-medium">{s.department?.code} • {s.year_level} Yr</div>
-                    <div className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black text-xs border border-emerald-500/20 mt-1">
+                  <div className="text-center space-y-0.5 w-full px-1">
+                    <div className={`text-[10px] sm:text-xs font-black ${cfg.textColor}`}>{cfg.label}</div>
+                    <div className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white truncate max-w-[85px] sm:max-w-[130px] mx-auto" title={s.name}>{s.name}</div>
+                    <div className="text-[9px] sm:text-[10px] text-slate-500 font-mono truncate">{s.reg_no}</div>
+                    <div className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate">{s.department?.code} • {s.year_level} Yr</div>
+                    <div className="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black text-[10px] sm:text-xs border border-emerald-500/20 mt-1 inline-block whitespace-nowrap">
                       {s.stats?.total_solved || 0} Solved
                     </div>
                     {s.username && (
-                      <a
-                        href={`https://leetcode.com/u/${s.username}/`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center space-x-1 text-[10px] text-brand-500 hover:text-brand-600 font-mono"
-                        onClick={e => e.stopPropagation()}
-                      >
-                        <span>@{s.username}</span>
-                        <ExternalLink className="w-2.5 h-2.5" />
-                      </a>
+                      <div className="pt-0.5">
+                        <a
+                          href={`https://leetcode.com/u/${s.username}/`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center space-x-1 text-[9px] sm:text-[10px] text-brand-500 hover:text-brand-600 font-mono truncate max-w-full"
+                          onClick={e => e.stopPropagation()}
+                        >
+                          <span className="truncate">@{s.username}</span>
+                          <ExternalLink className="w-2.5 h-2.5 shrink-0" />
+                        </a>
+                      </div>
                     )}
                   </div>
 
                   {/* Podium Stand */}
-                  <div className={`w-20 rounded-t-xl ${cfg.rank === 1 ? 'h-10 bg-gradient-to-b from-amber-400 to-amber-500' : cfg.rank === 2 ? 'h-7 bg-gradient-to-b from-slate-400 to-slate-500' : 'h-5 bg-gradient-to-b from-orange-500 to-amber-600'} flex items-center justify-center text-white font-black text-sm`}>
+                  <div className={`w-full max-w-[70px] sm:max-w-[90px] rounded-t-xl ${cfg.rank === 1 ? 'h-9 sm:h-12 bg-gradient-to-b from-amber-400 to-amber-500' : cfg.rank === 2 ? 'h-6 sm:h-8 bg-gradient-to-b from-slate-400 to-slate-500' : 'h-4 sm:h-6 bg-gradient-to-b from-orange-500 to-amber-600'} flex items-center justify-center text-white font-black text-xs sm:text-sm shadow-md`}>
                     #{cfg.rank}
                   </div>
                 </div>
@@ -199,22 +201,22 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
       )}
 
       {/* FILTER & SEARCH BAR */}
-      <div className="glass-card p-5 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-xl space-y-4">
-        <div className="flex flex-wrap items-center gap-3">
+      <div className="glass-card p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-xl space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center gap-3">
           {/* Search */}
-          <div className="relative flex-1 min-w-[200px]">
+          <div className="relative flex-1 w-full min-w-0">
             <Search className="w-5 h-5 text-slate-400 absolute left-3 top-2.5" />
             <input
               type="text"
               placeholder="Search by name, reg no, or username..."
               value={filters.searchQuery}
               onChange={e => filters.setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-10 py-2.5 rounded-2xl border text-xs font-bold bg-white dark:bg-navy-950 text-slate-900 dark:text-white border-slate-200 dark:border-navy-700 focus:ring-2 focus:ring-brand-500 outline-none transition-all"
+              className="w-full pl-10 pr-10 py-2.5 min-h-[44px] rounded-2xl border text-xs font-bold bg-white dark:bg-navy-950 text-slate-900 dark:text-white border-slate-200 dark:border-navy-700 focus:ring-2 focus:ring-brand-500 outline-none transition-all"
             />
             {filters.searchQuery && (
               <button
                 onClick={() => filters.setSearchQuery('')}
-                className="absolute right-2 top-2 p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                className="absolute right-2 top-2 p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
                 title="Clear search"
               >
                 <XCircle className="w-4 h-4" />
@@ -222,38 +224,40 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
             )}
           </div>
 
-          {/* Year Filter */}
-          <GlobalFilter
-            value={filters.academicYear}
-            onChange={val => filters.setAcademicYear(val)}
-            icon={<Calendar className="w-5 h-5" />}
-            dropdownWidth="w-56"
-            options={[
-              { value: 'ALL', label: 'All Years' },
-              ...uniqueYears.map((y: any) => ({ value: y, label: `${y} Year` }))
-            ]}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:flex md:items-center gap-3">
+            {/* Year Filter */}
+            <GlobalFilter
+              value={filters.academicYear}
+              onChange={val => filters.setAcademicYear(val)}
+              icon={<Calendar className="w-5 h-5" />}
+              dropdownWidth="w-56"
+              options={[
+                { value: 'ALL', label: 'All Years' },
+                ...uniqueYears.map((y: any) => ({ value: y, label: `${y} Year` }))
+              ]}
+            />
 
-          {/* Dept Filter */}
-          <GlobalFilter
-            value={filters.department}
-            onChange={val => filters.setDepartment(val)}
-            icon={<Building2 className="w-5 h-5" />}
-            dropdownWidth="w-72"
-            options={[
-              { value: 'ALL', label: 'All Departments' },
-              ...departments.map(d => ({ value: d.code, label: d.name }))
-            ]}
-          />
+            {/* Dept Filter */}
+            <GlobalFilter
+              value={filters.department}
+              onChange={val => filters.setDepartment(val)}
+              icon={<Building2 className="w-5 h-5" />}
+              dropdownWidth="w-72"
+              options={[
+                { value: 'ALL', label: 'All Departments' },
+                ...departments.map(d => ({ value: d.code, label: d.name }))
+              ]}
+            />
+          </div>
 
           {/* Sort By */}
-          <div className="flex items-center space-x-1 bg-slate-100 dark:bg-navy-950 p-1 rounded-2xl border border-slate-200 dark:border-navy-700">
+          <div className="flex items-center space-x-1 bg-slate-100 dark:bg-navy-950 p-1 rounded-2xl border border-slate-200 dark:border-navy-700 overflow-x-auto max-w-full custom-scrollbar shrink-0">
             {(['rank', 'easy', 'medium', 'hard'] as const).map(s => (
               <button
                 key={s}
                 type="button"
                 onClick={() => setSortBy(s)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                className={`px-3 py-1.5 min-h-[38px] rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
                   sortBy === s
                     ? 'bg-brand-600 text-white shadow-md'
                     : 'text-slate-500 hover:text-brand-600'
