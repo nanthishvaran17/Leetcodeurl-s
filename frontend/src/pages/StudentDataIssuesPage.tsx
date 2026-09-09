@@ -42,6 +42,7 @@ import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
+import { useDepartments } from '../contexts/DepartmentContext';
 
 interface StudentIssue {
   id: number;
@@ -97,9 +98,7 @@ const DEFAULT_SAVED_VIEWS: SavedView[] = [
   { id: 'missing_user',   name: 'Missing Username Profiles',   dept: 'all',      year: 'all', issue: 'MISSING_USERNAME', search: '' },
   { id: 'never_synced',  name: 'Never Synced Roster',         dept: 'all',      year: 'all', issue: 'NEVER_SYNCED',    search: '' },
   { id: 'not_started_only', name: 'Not Started (0 Solved)',    dept: 'all',      year: 'all', issue: 'NOT_STARTED',     search: '' },
-  { id: 'stale_records',  name: 'Stale Data (>7 Days)',        dept: 'all',      year: 'all', issue: 'STALE_DATA',      search: '' },
-  { id: 'cs_iii_sync',    name: 'Cyber Security - III Year',   dept: 'CSE(CS)',  year: 'III', issue: 'SYNC_FAILED',     search: '' },
-  { id: 'iot_all_issues', name: 'IoT - All Attention Items',   dept: 'CSE(IOT)', year: 'all', issue: 'ISSUES',          search: '' }
+  { id: 'stale_records',  name: 'Stale Data (>7 Days)',        dept: 'all',      year: 'all', issue: 'STALE_DATA',      search: '' }
 ];
 
 // Custom Dropdown Select 
@@ -219,6 +218,7 @@ export const StudentDataIssuesPage: React.FC = () => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
   // Filter States
+  const { departments } = useDepartments();
   const [selectedDept, setSelectedDept] = useState<string>('all');
   const [selectedYear, setSelectedYear] = useState<string>('all');
   const [selectedIssue, setSelectedIssue] = useState<string>('all');
@@ -695,8 +695,12 @@ export const StudentDataIssuesPage: React.FC = () => {
               placeholder="All Departments"
               icon={<Building2 size={16} />}
               options={[
-                { label: 'CSE (Cyber Security)', value: 'CSE(CS)', badge: 'CYBER', badgeColor: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400' },
-                { label: 'CSE (Internet of Things - IoT)', value: 'CSE(IoT)', badge: 'IOT', badgeColor: 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400' },
+                ...departments.map(d => ({
+                  label: d.name,
+                  value: d.code,
+                  badge: d.code,
+                  badgeColor: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
+                }))
               ]}
             />
           </div>

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useDepartments } from '../contexts/DepartmentContext';
 import { StatusNotificationModal, NotificationState } from './StatusNotificationModal';
 
 interface EmailRecipient {
@@ -121,6 +122,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
   defaultSection = 'manual'
 }) => {
   const { user } = useAuth();
+  const { departments } = useDepartments();
   const isStaff = ['faculty', 'staff'].includes(user?.role?.toLowerCase() || '');
 
   // Navigation & Data States
@@ -292,7 +294,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
               name: user.name || user.username || 'My Mentoring Email',
               email: user.email,
               role: 'STAFF',
-              department: typeof user.department === 'string' ? user.department : ((user.department as any)?.code || 'CSE'),
+              department: typeof user.department === 'string' ? user.department : ((user.department as any)?.code || 'DEPT'),
               is_active: true,
               receive_weekly_reports: true,
               receive_hod_reports: false,
@@ -2195,11 +2197,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                       className={`flex items-center justify-between w-full p-2.5 bg-white dark:bg-navy-950 border rounded-xl text-left transition-all focus:outline-none ${isNewDeptOpen ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
                     >
                       <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                        {{
-                          'ALL': 'ALL (College-wide)',
-                          'CSE(CS)': 'CSE(CS)',
-                          'CSE(IoT)': 'CSE(IoT)'
-                        }[newDept] || newDept}
+                        {newDept === 'ALL' ? 'ALL (College-wide)' : (departments.find(d => d.code === newDept)?.name || newDept)}
                       </span>
                       <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${isNewDeptOpen ? 'rotate-180' : ''}`} />
                     </button>
@@ -2207,8 +2205,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                       <div className="absolute z-[200] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
                         {[
                           { value: 'ALL', label: 'ALL (College-wide)' },
-                          { value: 'CSE(CS)', label: 'CSE(CS)' },
-                          { value: 'CSE(IoT)', label: 'CSE(IoT)' }
+                          ...departments.map(d => ({ value: d.code, label: d.name }))
                         ].map(opt => (
                           <button key={opt.value} type="button"
                             onMouseDown={(e) => e.preventDefault()}

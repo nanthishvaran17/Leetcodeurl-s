@@ -561,13 +561,22 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                   labelClassName="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1"
                   menuWidthClass="w-full min-w-full"
                   triggerClassName="w-full h-11 sm:h-10 flex items-center justify-between px-3.5 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white text-sm sm:text-xs font-bold shadow-xs cursor-pointer"
-                  options={departments.map((d: any) => ({
-                    value: String(d.id),
-                    label: d.code ? `${d.code} - ${d.name}` : d.name,
-                    badge: d.code || 'DEPT',
-                    badgeColor: d.code === 'CSE(CS)' ? 'bg-purple-500/10 text-purple-600 border-purple-500/20' : 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20',
-                    icon: Building2
-                  }))}
+                  options={departments.map((d: any, index: number) => {
+                    const badgeColors = [
+                      'bg-purple-500/10 text-purple-600 border-purple-500/20',
+                      'bg-cyan-500/10 text-cyan-600 border-cyan-500/20',
+                      'bg-blue-500/10 text-blue-600 border-blue-500/20',
+                      'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+                      'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                    ];
+                    return {
+                      value: String(d.id),
+                      label: d.code ? `${d.code} - ${d.name}` : d.name,
+                      badge: d.code || 'DEPT',
+                      badgeColor: badgeColors[index % badgeColors.length],
+                      icon: Building2
+                    };
+                  })}
                   value={deptId?.toString() || "1"}
                   onChange={(val) => setDeptId(Number(val))}
                   icon={Building2}

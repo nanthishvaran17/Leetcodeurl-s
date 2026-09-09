@@ -1682,7 +1682,7 @@ export const HODCommandCenter: React.FC = () => {
                       </td>
                       <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300 font-mono font-semibold">
                         <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 text-[10px]">
-                          {(s as any).department_code || 'CSE'}
+                          {(s as any).department_code || 'DEPT'}
                         </span>
                       </td>
                       <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200">

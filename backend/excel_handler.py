@@ -185,6 +185,16 @@ def run_high_speed_excel_import(db: Session, file_bytes: bytes, job_id: str, tra
         email = str(row.get("EMAIL", "")).strip() if "EMAIL" in df.columns and pd.notna(row.get("EMAIL")) else ""
 
         dept_obj = existing_depts.get(dept_str)
+        if not dept_obj and dept_str:
+            dept_obj = Department(name=dept_str, code=dept_str.upper())
+            db.add(dept_obj)
+            db.commit()
+            db.refresh(dept_obj)
+            existing_depts[dept_str] = dept_obj
+            existing_depts[dept_str.upper()] = dept_obj
+            tracker.new_departments.append(dept_str)
+            tracker.update(log_msg=f"Discovered and registered new department: {dept_str}")
+            
         dept_id = dept_obj.id if dept_obj else None
 
         # --- Batch Extraction / Inference ---

@@ -187,7 +187,7 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
 
   const displayName = currentStudent?.name || student?.name || 'Student';
   const displayRegNo = currentStudent?.reg_no || student?.reg_no;
-  const displayDept = currentStudent?.department?.code || currentStudent?.department || student?.department?.code || student?.department || 'CSE';
+  const displayDept = currentStudent?.department?.code || currentStudent?.department || student?.department?.code || student?.department || 'DEPT';
   const displayYear = currentStudent?.year_level || student?.year_level || 'III';
 
   return (

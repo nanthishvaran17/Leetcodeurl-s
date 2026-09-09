@@ -4,6 +4,7 @@ import {
   Sparkles, RefreshCw, Volume2, VolumeX, Maximize2, 
   Clock, ShieldCheck, ChevronRight, BarChart3, Users
 } from "lucide-react";
+import { useDepartments } from "../contexts/DepartmentContext";
 
 interface LeaderItem {
   id: number;
@@ -24,6 +25,7 @@ export const HallOfFameKioskPage: React.FC = () => {
   const [currentTime, setCurrentTime] = useState<string>("");
   const [leaders, setLeaders] = useState<LeaderItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const { departments } = useDepartments();
 
   const SLIDE_COUNT = 4;
   const SLIDE_DURATION_SEC = 10;
@@ -187,7 +189,7 @@ export const HallOfFameKioskPage: React.FC = () => {
                       #{idx + 1}
                     </span>
                     <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-800/80 text-cyan-300 border border-slate-700">
-                      {st.dept || "CSE"}
+                      {st.dept || "DEPT"}
                     </span>
                   </div>
 
@@ -256,7 +258,7 @@ export const HallOfFameKioskPage: React.FC = () => {
                   COLLEGE TOPPER
                 </span>
                 <h3 className="text-2xl font-black text-white mt-2">{leaders[0]?.name || "Student Champion"}</h3>
-                <p className="text-xs text-slate-300 font-mono mt-0.5">{leaders[0]?.dept || "CSE"} • {leaders[0]?.reg_no || "732223CS001"}</p>
+                <p className="text-xs text-slate-300 font-mono mt-0.5">{leaders[0]?.dept || "DEPT"} • {leaders[0]?.reg_no || "732223CS001"}</p>
                 <div className="mt-5 py-4 bg-slate-950/80 rounded-2xl border border-amber-500/30 flex justify-around">
                   <div>
                     <span className="text-[10px] text-slate-400 uppercase">Score</span>
@@ -275,7 +277,7 @@ export const HallOfFameKioskPage: React.FC = () => {
                   3
                 </div>
                 <h3 className="text-xl font-bold text-white">{leaders[2]?.name || "Student Rank 3"}</h3>
-                <p className="text-xs text-slate-400 font-mono mt-0.5">{leaders[2]?.dept || "IT"} • {leaders[2]?.reg_no || "732223IT003"}</p>
+                <p className="text-xs text-slate-400 font-mono mt-0.5">{leaders[2]?.dept || "Information Technology"} • {leaders[2]?.reg_no || "732223IT003"}</p>
                 <div className="mt-4 py-3 bg-slate-950/60 rounded-xl border border-slate-800 flex justify-around">
                   <div>
                     <span className="text-[10px] text-slate-400 uppercase">Score</span>
@@ -303,28 +305,23 @@ export const HallOfFameKioskPage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-4 gap-5">
-              {[
-                { name: "Computer Science (CSE)", code: "CSE", students: 425, solved: 42800, avg: 100.7, color: "emerald" },
-                { name: "Cyber Security (CS)", code: "CS", students: 425, solved: 39400, avg: 92.7, color: "cyan" },
-                { name: "Information Tech (IT)", code: "IT", students: 425, solved: 38100, avg: 89.6, color: "blue" },
-                { name: "AI & Data Science (AIDS)", code: "AIDS", students: 425, solved: 36500, avg: 85.8, color: "purple" }
-              ].map((d, i) => (
+              {departments.map((d, i) => (
                 <div key={d.code} className="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 backdrop-blur-xl hover:border-slate-700 transition-all">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs font-bold font-mono px-2.5 py-1 rounded bg-slate-800 text-white border border-slate-700">
                       RANK #{i + 1}
                     </span>
-                    <span className="text-xs text-slate-400 font-semibold">{d.students} Students</span>
+                    <span className="text-xs text-slate-400 font-semibold">{Math.floor(Math.random() * 200 + 300)} Students</span>
                   </div>
                   <h3 className="font-bold text-lg text-white mb-1">{d.name}</h3>
                   <div className="mt-4 pt-3 border-t border-slate-800 flex justify-between">
                     <div>
                       <div className="text-[10px] text-slate-400 uppercase font-semibold">Total Solved</div>
-                      <div className="text-xl font-black text-emerald-400">{d.solved.toLocaleString()}</div>
+                      <div className="text-xl font-black text-emerald-400">{(Math.floor(Math.random() * 10000) + 30000).toLocaleString()}</div>
                     </div>
                     <div className="text-right">
                       <div className="text-[10px] text-slate-400 uppercase font-semibold">Avg / Student</div>
-                      <div className="text-xl font-black text-cyan-400">{d.avg}</div>
+                      <div className="text-xl font-black text-cyan-400">{(Math.random() * 20 + 80).toFixed(1)}</div>
                     </div>
                   </div>
                 </div>

@@ -10,6 +10,8 @@ import { studentLiveStore, useStudentListIds } from '../stores/studentLiveStore'
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
 import { sortStudents } from '../utils/filterUtils';
 import { useFilters, useFilteredStudents } from '../context/FilterContext';
+import { useGlobalData } from '../context/GlobalDataContext';
+import { useDepartments } from '../contexts/DepartmentContext';
 import { XCircle } from 'lucide-react';
 
 interface PublicLeaderboardPageProps {
@@ -21,35 +23,42 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
   // NOTE: useLiveLeaderboard() is NOT called here — the global singleton in GlobalWebSocketProvider
   // already handles all WebSocket events for the whole app.
 
-  // Reconcile live store with RQ canonical data whenever it changes
-  // (Now handled globally in useStudentsQuery)
-
-  // Hook into the live store for reactive re-renders when list changes
-  const allIds = useStudentListIds();
-  const globalStudents = useFilteredStudents();
+  // Global Roster context + Local Filter States
+  const globalStudents = initialStudents;
   const filters = useFilters();
+  const { departments } = useDepartments();
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
   const [sortBy, setSortBy] = useState<'rank' | 'easy' | 'medium' | 'hard'>('rank');
 
-  // Derived sorted list
+  // Filter & Sort Logic
   const filteredAndSorted = useMemo(() => {
-    let list = [...globalStudents];
+    let result = [...globalStudents];
 
-    if (sortBy === 'rank') {
-      list = sortStudents(list, 'top_solved');
-    } else {
-      list.sort((a, b) => {
-        const getStat = (s: any, diff: string) => Number(s.stats?.[`${diff}_solved`] || 0);
-        const diffValue = getStat(b, sortBy) - getStat(a, sortBy);
-        if (diffValue !== 0) return diffValue;
-        return (a.name || '').localeCompare(b.name || '');
-      });
+    if (filters.searchQuery) {
+      const q = filters.searchQuery.toLowerCase();
+      result = result.filter((s: any) =>
+        s.name?.toLowerCase().includes(q) ||
+        s.reg_no?.toLowerCase().includes(q) ||
+        s.username?.toLowerCase().includes(q) ||
+        s.codeforces_username?.toLowerCase().includes(q)
+      );
+    }
+    if (filters.department !== 'ALL') {
+      result = result.filter((s: any) => s.department?.code === filters.department);
+    }
+    if (filters.academicYear !== 'ALL') {
+      result = result.filter((s: any) => s.year_level === filters.academicYear);
     }
 
-    return list;
-  }, [globalStudents, sortBy]);
+    if (sortBy === 'easy') result.sort((a, b) => (b.stats?.easy_solved || 0) - (a.stats?.easy_solved || 0));
+    else if (sortBy === 'medium') result.sort((a, b) => (b.stats?.medium_solved || 0) - (a.stats?.medium_solved || 0));
+    else if (sortBy === 'hard') result.sort((a, b) => (b.stats?.hard_solved || 0) - (a.stats?.hard_solved || 0));
+    // Default 'rank' uses global ranking / total solved which is already sorted from backend
+
+    return result;
+  }, [globalStudents, filters.searchQuery, filters.department, filters.academicYear, sortBy]);
 
   const total = filteredAndSorted.length;
   const top3 = filteredAndSorted.slice(0, 3);
@@ -73,7 +82,6 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
   const totalSolved = students.reduce((acc, s) => acc + (s.stats?.total_solved || 0), 0);
   const avgSolved = students.length ? Math.round(totalSolved / students.length) : 0;
   const uniqueYears = [...new Set(students.map(s => s.year_level).filter(Boolean))];
-  const uniqueDepts = ['CSE(CS)', 'CSE(IOT)'];
 
   const MEDAL_CONFIGS = [
     { rank: 2, color: 'from-slate-400 to-slate-500', borderColor: 'border-slate-300', textColor: 'text-slate-300', emoji: '', label: 'SILVER', size: 'scale-90', order: 'order-1' },
@@ -101,7 +109,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
               LeetCode Performance <span className="text-brand-400">Leaderboard</span>
             </h1>
             <p className="text-sm text-slate-300 font-semibold">
-              Real-time institutional performance rankings — Academic Departments (Cyber Security &amp; IoT)
+              Real-time institutional performance rankings — Academic Departments
             </p>
             <div className="flex items-center space-x-2 text-[11px] text-slate-400 font-mono">
               <Shield className="w-3.5 h-3.5 text-emerald-400" />
@@ -234,7 +242,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
             dropdownWidth="w-72"
             options={[
               { value: 'ALL', label: 'All Departments' },
-              ...uniqueDepts.map((d: any) => ({ value: d, label: d }))
+              ...departments.map(d => ({ value: d.code, label: d.name }))
             ]}
           />
 

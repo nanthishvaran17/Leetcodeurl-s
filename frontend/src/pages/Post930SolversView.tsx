@@ -5,11 +5,13 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { downloadManager } from '../services/download/downloadManager';
+import { useDepartments } from '../contexts/DepartmentContext';
 
 export const Post930SolversView: React.FC = () => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const { departments } = useDepartments();
 
   // Filters state
   const [search, setSearch] = useState<string>('');
@@ -214,14 +216,9 @@ export const Post930SolversView: React.FC = () => {
               className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950"
             >
               <option value="">All Depts</option>
-              <option value="CSE">CSE</option>
-              <option value="IT">IT</option>
-              <option value="ECE">ECE</option>
-              <option value="EEE">EEE</option>
-              <option value="MECH">MECH</option>
-              <option value="CIVIL">CIVIL</option>
-              <option value="AIDS">AIDS</option>
-              <option value="AIML">AIML</option>
+              {departments.map(d => (
+                <option key={d.id} value={d.code}>{d.code}</option>
+              ))}
             </select>
 
             <select

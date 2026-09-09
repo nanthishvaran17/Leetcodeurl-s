@@ -28,6 +28,8 @@ services:
         value: 3.11.0
       - key: LEETCODE_SYNC_CONCURRENCY
         value: "5"
+      - key: FIREBASE_SERVICE_ACCOUNT_BASE64
+        sync: false
 
   # ── 2. CLOUD BACKGROUND WORKER (24/7 Sync + Scheduler) ───────────────────
   # This is a SEPARATE process. It runs even when the web server restarts/sleeps.
@@ -58,6 +60,8 @@ services:
         value: "5"
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: FIREBASE_SERVICE_ACCOUNT_BASE64
+        sync: false
 
 databases:
   - name: leetcode-tracker-db

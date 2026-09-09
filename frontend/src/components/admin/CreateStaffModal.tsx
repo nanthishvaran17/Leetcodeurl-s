@@ -87,6 +87,8 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
   }, [staffList]);
 
   const roleOptions: DropdownOption[] = [
+    { value: 'Principal', label: 'Principal', badge: 'PRN', sublabel: 'Head of Institution', icon: Building2 },
+    { value: 'Management', label: 'Management', badge: 'MGT', sublabel: 'Institution Trust & Management', icon: Briefcase },
     { value: 'Faculty Mentor', label: 'Faculty Mentor', badge: 'FAC', sublabel: 'Student mentoring & intervention access', icon: GraduationCap },
     { value: 'Staff Mentor', label: 'Staff Mentor', badge: 'STF', sublabel: 'Student support & academic guidance', icon: User },
     { value: 'Department HOD', label: 'Department HOD', badge: 'HOD', sublabel: 'Department-level academic oversight', icon: Building2 },
@@ -96,6 +98,8 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
   const getRoleConfig = (role: string) => {
     const map: Record<string, { icon: React.ElementType; color: string; bgColor: string; borderColor: string; badgeColor: string; desc: string }> = {
+      'Principal': { icon: Building2, color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-50 dark:bg-blue-500/10', borderColor: 'border-blue-200 dark:border-blue-500/30', badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300 border-blue-200 dark:border-blue-500/30', desc: 'Head of Institution' },
+      'Management': { icon: Briefcase, color: 'text-slate-700 dark:text-slate-300', bgColor: 'bg-slate-100 dark:bg-slate-800', borderColor: 'border-slate-300 dark:border-slate-600', badgeColor: 'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600', desc: 'Institution Trust & Management' },
       'Faculty Mentor': { icon: GraduationCap, color: 'text-indigo-600 dark:text-indigo-400', bgColor: 'bg-indigo-50 dark:bg-indigo-500/10', borderColor: 'border-indigo-200 dark:border-indigo-500/30', badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30', desc: 'Student mentoring & intervention access' },
       'Staff Mentor': { icon: User, color: 'text-brand-600 dark:text-brand-400', bgColor: 'bg-brand-50 dark:bg-brand-500/10', borderColor: 'border-brand-200 dark:border-brand-500/30', badgeColor: 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300 border-brand-200 dark:border-brand-500/30', desc: 'Student support & academic guidance' },
       'Department HOD': { icon: Building2, color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-50 dark:bg-purple-500/10', borderColor: 'border-purple-200 dark:border-purple-500/30', badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 border-purple-200 dark:border-purple-500/30', desc: 'Department-level academic oversight' },
@@ -194,7 +198,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
   const strengthStr = strengthScore <= 2 ? 'Weak' : strengthScore <= 4 ? 'Fair' : 'Strong';
   const passwordsMatch = formData.password && formData.password === formData.confirm_password;
 
-  const isGlobalRole = ['Administrator', 'Super Admin'].includes(formData.role);
+  const isGlobalRole = ['Principal', 'Management', 'Administrator', 'Super Admin'].includes(formData.role);
 
   // Validate step completion
   const validateCurrentStep = (step: number): boolean => {
@@ -398,6 +402,11 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                   {createdStaffSummary.academic_year || 'All Years'}
                 </span>
               </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-4 py-2 rounded-lg border border-emerald-200 dark:border-emerald-500/30">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span className="text-xs font-bold">✓ Account setup email sent</span>
             </div>
 
             <div className="flex gap-4 pt-4">
@@ -632,7 +641,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                           type="text"
                           value={formData.designation}
                           onChange={e => setFormData({...formData, designation: e.target.value})}
-                          placeholder="e.g. Assistant Professor / CSE"
+                          placeholder="e.g. Assistant Professor / DEPT"
                           className="w-full h-12 px-4 rounded-2xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none transition-all"
                         />
                       </div>
@@ -681,7 +690,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                           type="text"
                           value={formData.username}
                           onChange={e => setFormData({...formData, username: e.target.value})}
-                          placeholder="e.g. ramanathan.cse"
+                          placeholder="e.g. ramanathan.dept"
                           className={`w-full h-12 px-4 rounded-2xl border ${formErrors.username ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
                         />
                         {formErrors.username && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.username}</p>}
@@ -1030,27 +1039,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                           </div>
                         </label>
 
-                        {/* Inline Content Body Primary Action Button */}
-                        <div className="pt-2">
-                          <button
-                            form="create-staff-form"
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="w-full py-3.5 px-6 rounded-2xl text-xs sm:text-sm font-black text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 transition-all shadow-lg shadow-brand-500/25 flex items-center justify-center gap-2 cursor-pointer active:scale-98 min-h-[48px]"
-                          >
-                            {isSubmitting ? (
-                              <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Creating Account...
-                              </>
-                            ) : (
-                              <>
-                                <ShieldCheck className="w-4 h-4" />
-                                Create Institutional Account
-                              </>
-                            )}
-                          </button>
-                        </div>
+
                       </div>
 
                     </div>
@@ -1122,7 +1111,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                     ) : (
                       <>
                         <ShieldCheck className="w-4 h-4" />
-                        Create Account
+                        Create Institutional Account
                       </>
                     )}
                   </button>

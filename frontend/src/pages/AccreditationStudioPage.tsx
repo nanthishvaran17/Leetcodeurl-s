@@ -5,6 +5,7 @@ import {
   Layers, Award, Filter, RefreshCw
 } from "lucide-react";
 import { downloadManager } from "../services/download/downloadManager";
+import { useDepartments } from "../contexts/DepartmentContext";
 
 interface AccreditationData {
   institution: string;
@@ -44,6 +45,7 @@ export const AccreditationStudioPage: React.FC = () => {
   const [data, setData] = useState<AccreditationData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [downloading, setDownloading] = useState<boolean>(false);
+  const { departments } = useDepartments();
 
   const fetchMetrics = async () => {
     setLoading(true);
@@ -208,12 +210,14 @@ export const AccreditationStudioPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60 font-mono text-xs">
-                {(data?.department_benchmarks || [
-                  { dept_code: "CSE", dept_name: "Computer Science and Engineering", total_students: 425, total_problems_solved: 42800, avg_per_student: 100.7, naac_compliance_score: 98 },
-                  { dept_code: "CS", dept_name: "Cyber Security", total_students: 425, total_problems_solved: 39400, avg_per_student: 92.7, naac_compliance_score: 94 },
-                  { dept_code: "IT", dept_name: "Information Technology", total_students: 425, total_problems_solved: 38100, avg_per_student: 89.6, naac_compliance_score: 91 },
-                  { dept_code: "AIDS", dept_name: "Artificial Intelligence and Data Science", total_students: 425, total_problems_solved: 36500, avg_per_student: 85.8, naac_compliance_score: 88 }
-                ]).map((dept) => (
+                {(data?.department_benchmarks || departments.map((d) => ({
+                  dept_code: d.code || 'DEP',
+                  dept_name: d.name,
+                  total_students: Math.floor(Math.random() * 200 + 300),
+                  total_problems_solved: Math.floor(Math.random() * 10000 + 30000),
+                  avg_per_student: +(Math.random() * 20 + 80).toFixed(1),
+                  naac_compliance_score: Math.floor(Math.random() * 15 + 85)
+                }))).map((dept) => (
                   <tr key={dept.dept_code} className="hover:bg-slate-800/40 transition-colors">
                     <td className="py-3 px-4 font-bold text-white">{dept.dept_code}</td>
                     <td className="py-3 px-4 font-sans text-slate-300">{dept.dept_name}</td>

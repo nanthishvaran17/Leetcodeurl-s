@@ -4,19 +4,15 @@ import { Search, UserPlus, Edit2, Shield, Ban, CheckCircle, RefreshCcw, UserX, A
 import api from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
+import { useDepartments } from '../../contexts/DepartmentContext';
 import { CustomDropdown, DropdownOption } from '../CustomDropdown';
 import { GlobalModalBackdrop } from '../GlobalModalBackdrop';
 import { CreateStaffModal } from './CreateStaffModal';
 import { EditStaffModal } from './EditStaffModal';
 
-const DEFAULT_DEPARTMENTS = [
-  { id: 1, name: 'Computer Science and Engineering (Cyber Security)', code: 'CSE(CS)' },
-  { id: 2, name: 'Computer Science and Engineering (IoT)', code: 'CSE(IOT)' }
-];
-
 export const StaffManagement: React.FC = () => {
   const [staffList, setStaffList] = useState<any[]>([]);
-  const [departments, setDepartments] = useState<any[]>(DEFAULT_DEPARTMENTS);
+  const { departments } = useDepartments();
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -64,11 +60,10 @@ export const StaffManagement: React.FC = () => {
 
   useEffect(() => {
     fetchStaff();
-    fetchDepartments();
   }, []);
 
   const autoGenerateInstId = (deptIdVal: string, roleVal: string) => {
-    const dept = (departments.length > 0 ? departments : DEFAULT_DEPARTMENTS).find(d => String(d.id) === String(deptIdVal));
+    const dept = departments.find(d => String(d.id) === String(deptIdVal));
     const deptCode = (dept?.code || 'GEN').replace(/[\(\)-]/g, '').toUpperCase();
     const rolePrefix = roleVal === 'Faculty' ? 'FAC' : (roleVal === 'Staff' ? 'STF' : (roleVal === 'HOD' ? 'HOD' : 'ADM'));
     const randomNum = Math.floor(100 + Math.random() * 900);
@@ -124,20 +119,6 @@ export const StaffManagement: React.FC = () => {
   const [errorState, setErrorState] = useState<{ type: 'API_ERROR' | 'FORBIDDEN' | 'NETWORK_ERROR'; message: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
-
-  const fetchDepartments = async () => {
-    try {
-      const res = await api.get('/departments');
-      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-        setDepartments(res.data);
-      } else {
-        setDepartments(DEFAULT_DEPARTMENTS);
-      }
-    } catch (err) {
-      console.warn('Using default department fallback list in StaffManagement:', err);
-      setDepartments(DEFAULT_DEPARTMENTS);
-    }
-  };
 
   const fetchStaff = async () => {
     setLoading(true);
@@ -303,6 +284,7 @@ export const StaffManagement: React.FC = () => {
       const payload = {
         institutional_id: formData.institutional_id?.trim() || undefined,
         username: formData.username.trim(),
+        full_name: formData.username.trim(),
         email: formData.email.trim().toLowerCase(),
         phone_number: formData.phone_number.trim(),
         password: formData.password?.trim() || undefined,
@@ -528,7 +510,7 @@ export const StaffManagement: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                          <span>{staff.username}</span>
+                          <span>{staff.full_name || staff.username}</span>
                           {staff.role === 'Super Admin' && (
                             <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
                               ROOT
@@ -538,12 +520,7 @@ export const StaffManagement: React.FC = () => {
                         <div className="text-xs text-slate-500">{staff.email}</div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${staff.department === 'CSE(CS)'
-                          ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
-                          : (staff.department === 'CSE(IOT)'
-                            ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20'
-                            : 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20')
-                          }`}>
+                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
                           {staff.department || 'INSTITUTIONAL'}
                         </span>
                       </td>

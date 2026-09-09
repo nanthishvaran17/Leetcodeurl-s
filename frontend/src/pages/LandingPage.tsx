@@ -451,7 +451,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
 
             <p className="text-sm md:text-base text-slate-300 max-w-2xl leading-relaxed">
-              Institutional competitive programming intelligence across <span className="font-bold text-white">Cyber Security</span> &amp; <span className="font-bold text-white">IoT</span> departments with verified Sunday contest forensics and automated reporting.
+              Institutional competitive programming intelligence across <span className="font-bold text-white">Cyber Security</span>, <span className="font-bold text-white">IoT</span>, &amp; <span className="font-bold text-white">Information Technology</span> departments with verified Sunday contest forensics and automated reporting.
             </p>
           </motion.div>
 

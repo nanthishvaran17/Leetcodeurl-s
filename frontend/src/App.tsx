@@ -132,6 +132,7 @@ export const App: React.FC = () => {
   useCapacitorPush();
 
   const [activeTab, setActiveTab] = useState('landing');
+  const [previousTab, setPreviousTab] = useState<string | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<StudentData | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -387,8 +388,17 @@ export const App: React.FC = () => {
 
   const handleSelectStudent = useCallback((student: StudentData) => {
     if (!student) return;
+    setPreviousTab(activeTab);
     setSelectedStudent(student);
-  }, []);
+  }, [activeTab]);
+
+  const handleCloseProfile = useCallback(() => {
+    if (activeTab === 'profile') {
+      setActiveTab(previousTab || (isAuthenticated ? 'dashboard' : 'landing'));
+    }
+    setPreviousTab(null);
+    setSelectedStudent(null);
+  }, [activeTab, previousTab, isAuthenticated]);
 
   // Lock body scroll securely preserving exact viewport scroll position when selectedStudent modal is open
   useEffect(() => {
@@ -659,7 +669,7 @@ export const App: React.FC = () => {
               {activeTab === 'profile' && selectedStudent && (
                 <StudentProfilePage
                   student={selectedStudent}
-                  onBack={() => setActiveTab(isAuthenticated ? 'dashboard' : 'landing')}
+                  onBack={handleCloseProfile}
                 />
               )}
 
@@ -802,7 +812,7 @@ export const App: React.FC = () => {
             <Suspense fallback={null}>
               <StudentProfilePage
                 student={selectedStudent}
-                onBack={() => setSelectedStudent(null)}
+                onBack={handleCloseProfile}
               />
             </Suspense>
           </div>

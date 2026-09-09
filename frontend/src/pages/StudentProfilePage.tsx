@@ -40,16 +40,22 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
     const targetId = student?.id || student?.student_id;
     if (!targetId) return;
     try {
-      const [stRes, insRes] = await Promise.all([
-        api.get(`/students/${targetId}`),
-        api.get(`/analytics/compare-students?ids=${targetId}`)
-      ]);
+      // 1. Fetch fast student details immediately to unblock UI
+      const stRes = await api.get(`/students/${targetId}`);
       setDetail(stRes.data);
-      if (insRes.data && insRes.data.length > 0) {
-        setInsights(insRes.data[0].insights);
-      }
+      
+      // 2. Fetch heavy AI insights in the background without blocking the modal
+      api.get(`/analytics/compare-students?ids=${targetId}`)
+        .then(insRes => {
+          if (insRes.data && insRes.data.length > 0) {
+            setInsights(insRes.data[0].insights);
+          }
+        })
+        .catch(err => {
+          console.warn("Failed to load background insights:", err);
+        });
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load student detail:", err);
     }
   };
 
@@ -119,19 +125,23 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   const handleLiveFetch = async () => {
     const targetId = student?.id || student?.student_id;
     if (!targetId) {
-      setLiveFetchError("No valid student record ID found.");
+      notify.error('Sync Error', 'No valid student record ID found.', { category: 'LIVE SYNC' });
       return;
     }
     
     setIsLiveFetching(true);
     setLiveFetchError(null);
+    notify.info('Live Sync Started', 'Fetching latest data from LeetCode...', { category: 'LIVE SYNC' });
     try {
       await api.post(`/api/sync/student/${targetId}`);
       const refreshed = await api.get(`/students/${targetId}`);
       setDetail(refreshed.data);
+      notify.success('Sync Complete', 'Student profile has been updated.', { category: 'LIVE SYNC' });
     } catch (err: any) {
       console.error("Live fetch error:", err);
-      setLiveFetchError(err.response?.data?.detail || err.response?.data?.message || "Failed to fetch live stats");
+      const errMsg = err.response?.data?.detail || err.response?.data?.message || "Failed to fetch live stats";
+      setLiveFetchError(errMsg);
+      notify.error('Sync Failed', errMsg, { category: 'LIVE SYNC' });
     } finally {
       setIsLiveFetching(false);
     }
@@ -212,6 +222,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             )}
 
             <button
+              type="button"
               onClick={() => setShowEditOverlay(true)}
               className="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-[10px] flex items-center space-x-1.5 shadow-md transition-all hover:scale-105 cursor-pointer"
             >
@@ -220,6 +231,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             </button>
 
             <button
+              type="button"
               onClick={handleLiveFetch}
               disabled={isLiveFetching}
               className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] flex items-center space-x-1.5 shadow-md shadow-indigo-600/30 transition-all hover:scale-105 disabled:opacity-50 cursor-pointer"
@@ -229,6 +241,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             </button>
 
             <button
+              type="button"
               onClick={handleGenerateCert}
               disabled={downloadingCert}
               className="px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] flex items-center space-x-1.5 shadow-md shadow-amber-600/30 transition-all hover:scale-105 disabled:opacity-50 cursor-pointer"
@@ -238,6 +251,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             </button>
 
             <button
+              type="button"
               onClick={handleDownloadForensicCert}
               disabled={downloadingForensic}
               className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] flex items-center space-x-1.5 shadow-md shadow-emerald-600/30 transition-all hover:scale-105 disabled:opacity-50 cursor-pointer"
@@ -247,6 +261,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             </button>
 
             <button
+              type="button"
               onClick={handleDelete}
               disabled={isDeleting}
               className="px-3 py-2 rounded-xl bg-rose-600/90 hover:bg-rose-600 text-white font-bold text-[10px] flex items-center space-x-1.5 shadow-md shadow-rose-600/30 transition-all hover:scale-105 disabled:opacity-50 cursor-pointer"
@@ -369,7 +384,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         <IDCardGenerator
           studentName={detail?.name || ''}
           regNo={detail?.reg_no || ''}
-          deptName={detail?.department?.name || 'CSE'}
+          deptName={detail?.department?.name || 'Department'}
           yearLevel={detail?.year_level || 'III'}
           totalSolved={detail?.stats?.total_solved || 0}
           collegeRank={detail?.college_rank || 1}

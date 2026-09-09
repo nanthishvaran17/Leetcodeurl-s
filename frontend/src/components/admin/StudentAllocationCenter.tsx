@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Search, UserCheck, Users, RefreshCw, Filter, GraduationCap, Building2, CheckSquare, Square, ArrowRightLeft, Sparkles, X } from 'lucide-react';
 import api from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
+import { useDepartments } from '../../contexts/DepartmentContext';
 import { AllocationConfirmationModal } from './AllocationConfirmationModal';
 
 export const StudentAllocationCenter: React.FC = () => {
@@ -9,6 +10,7 @@ export const StudentAllocationCenter: React.FC = () => {
   const [unassignedStudents, setUnassignedStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const { departments } = useDepartments();
   
   // Filters
   const [selectedDept, setSelectedDept] = useState<string>('ALL');
@@ -62,12 +64,6 @@ export const StudentAllocationCenter: React.FC = () => {
     if (target === 'ALL') return true;
     if (!studentDept) return false;
     const clean = studentDept.toUpperCase().replace(/[\s\(\)-]/g, '');
-    if (target === 'CSE(CS)') {
-      return clean === 'CSECS' || clean.includes('CYBER') || (clean.includes('CS') && !clean.includes('IOT'));
-    }
-    if (target === 'CSE(IOT)') {
-      return clean === 'CSEIOT' || clean.includes('IOT') || clean.includes('INTERNET');
-    }
     return clean.includes(target.toUpperCase().replace(/[\s\(\)-]/g, ''));
   };
 
@@ -100,14 +96,19 @@ export const StudentAllocationCenter: React.FC = () => {
 
   // Accurate Counts for Department Tabs
   const deptCounts = useMemo(() => {
-    let cyber = 0;
-    let iot = 0;
-    unassignedStudents.forEach(s => {
-      if (matchDept(s.department, 'CSE(CS)')) cyber++;
-      else if (matchDept(s.department, 'CSE(IOT)')) iot++;
+    const counts: Record<string, number> = { all: unassignedStudents.length };
+    departments.forEach(d => {
+      counts[d.code] = 0;
     });
-    return { all: unassignedStudents.length, cyber, iot };
-  }, [unassignedStudents]);
+    unassignedStudents.forEach(s => {
+      departments.forEach(d => {
+        if (matchDept(s.department, d.code)) {
+          counts[d.code]++;
+        }
+      });
+    });
+    return counts;
+  }, [unassignedStudents, departments]);
 
   // Accurate Year Counts (scoped dynamically to selected Department)
   const yearCounts = useMemo(() => {
@@ -204,7 +205,7 @@ export const StudentAllocationCenter: React.FC = () => {
               </span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               <button
                 type="button"
                 onClick={() => setSelectedDept('ALL')}
@@ -217,32 +218,21 @@ export const StudentAllocationCenter: React.FC = () => {
                 <span>All Depts</span>
                 <span className="px-1.5 py-0.2 rounded-md text-[10px] bg-black/10 dark:bg-white/10">{deptCounts.all}</span>
               </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedDept('CSE(CS)')}
-                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                  selectedDept === 'CSE(CS)'
-                    ? 'bg-purple-600 text-white shadow-md shadow-purple-500/20'
-                    : 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 hover:bg-purple-500/20'
-                }`}
-              >
-                <span>CSE (CS)</span>
-                <span className="px-1.5 py-0.2 rounded-md text-[10px] bg-purple-500/20">{deptCounts.cyber}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedDept('CSE(IOT)')}
-                className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                  selectedDept === 'CSE(IOT)'
-                    ? 'bg-cyan-600 text-white shadow-md shadow-cyan-500/20'
-                    : 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20'
-                }`}
-              >
-                <span>CSE (IoT)</span>
-                <span className="px-1.5 py-0.2 rounded-md text-[10px] bg-cyan-500/20">{deptCounts.iot}</span>
-              </button>
+              {departments.map(d => (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => setSelectedDept(d.code)}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    selectedDept === d.code
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                      : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20'
+                  }`}
+                >
+                  <span className="truncate max-w-[80px]" title={d.name}>{d.code}</span>
+                  <span className="px-1.5 py-0.2 rounded-md text-[10px] bg-indigo-500/20">{deptCounts[d.code] || 0}</span>
+                </button>
+              ))}
             </div>
 
             {/* Academic Year Cohort Tabs */}
@@ -345,7 +335,6 @@ export const StudentAllocationCenter: React.FC = () => {
 
             {filteredStudents.map((student) => {
               const isSelected = selectedStudents.includes(String(student.id));
-              const isCyber = (student.department || '').toUpperCase().includes('CS');
               const yearBadge = formatYear(student.year_level);
 
               return (
@@ -379,12 +368,8 @@ export const StudentAllocationCenter: React.FC = () => {
 
                   <div className="flex items-center gap-1.5 shrink-0 pl-2">
                     {/* Department Badge */}
-                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border ${
-                      isCyber 
-                        ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20' 
-                        : 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20'
-                    }`}>
-                      {student.department || (isCyber ? 'CSE(CS)' : 'CSE(IOT)')}
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                      {student.department || 'INSTITUTIONAL'}
                     </span>
 
                     {/* Year Badge */}

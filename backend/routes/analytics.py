@@ -92,40 +92,59 @@ def get_analytics_dashboard(
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     start_dt, end_dt = resolve_date_range(period, custom_start, custom_end)
-    students = _filtered_students(db, dept_id, year_level, batch, current_user)
-    if not students:
-        return {"error": "No students found in scope", "data": None}
-        
-    student_ids = [s.id for s in students]
     
-    snapshots = db.query(StudentStatSnapshot).filter(
-        StudentStatSnapshot.student_id.in_(student_ids),
+    # 1. Base query for authorized students
+    base_student_query = db.query(Student.id).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    if dept_id:
+        base_student_query = base_student_query.filter(Student.department_id == dept_id)
+    if year_level and year_level.upper() not in ("", "ALL"):
+        base_student_query = base_student_query.filter(func.upper(Student.year_level) == year_level.upper().replace(" YEAR", ""))
+    if batch and batch.upper() not in ("", "ALL"):
+        base_student_query = base_student_query.filter(Student.batch == batch)
+        
+    if current_user:
+        base_student_query = apply_role_based_student_filter(base_student_query, current_user, db)
+        
+    student_subquery = base_student_query.subquery()
+    
+    # Check if there are any students to avoid expensive subqueries if empty
+    student_count = db.query(func.count(student_subquery.c.id)).scalar()
+    if not student_count or student_count == 0:
+        return {"error": "No students found in scope", "data": None}
+    
+    # 2. Daily Trend Aggregation using PostgreSQL GROUP BY
+    date_col = func.date(StudentStatSnapshot.captured_at).label("date")
+    trend_aggregates = db.query(
+        date_col,
+        func.avg(StudentStatSnapshot.contest_rating).label("avg_rating"),
+        func.avg(StudentStatSnapshot.total_solved).label("avg_solved")
+    ).filter(
+        StudentStatSnapshot.student_id.in_(db.query(student_subquery.c.id)),
         StudentStatSnapshot.captured_at >= start_dt,
         StudentStatSnapshot.captured_at <= end_dt
-    ).order_by(StudentStatSnapshot.captured_at.asc()).all()
-    
-    trend_by_date = defaultdict(lambda: {"total_rating": 0, "rating_count": 0, "total_solved": 0, "solved_count": 0})
-    for snap in snapshots:
-        date_str = snap.captured_at.strftime("%Y-%m-%d")
-        if snap.contest_rating:
-            trend_by_date[date_str]["total_rating"] += snap.contest_rating
-            trend_by_date[date_str]["rating_count"] += 1
-        if snap.total_solved:
-            trend_by_date[date_str]["total_solved"] += snap.total_solved
-            trend_by_date[date_str]["solved_count"] += 1
-            
+    ).group_by(date_col).order_by(date_col.asc()).all()
+
     trend_data = []
-    for date_str in sorted(trend_by_date.keys()):
-        stats = trend_by_date[date_str]
+    for row in trend_aggregates:
         trend_data.append({
-            "date": date_str,
-            "avg_rating": round(stats["total_rating"] / stats["rating_count"], 1) if stats["rating_count"] > 0 else None,
-            "avg_solved": round(stats["total_solved"] / stats["solved_count"], 1) if stats["solved_count"] > 0 else None
+            "date": str(row.date),
+            "avg_rating": round(row.avg_rating, 1) if row.avg_rating is not None else None,
+            "avg_solved": round(row.avg_solved, 1) if row.avg_solved is not None else None
         })
-        
-    current_easy = sum((s.stats.easy_solved or 0) for s in students if s.stats)
-    current_medium = sum((s.stats.medium_solved or 0) for s in students if s.stats)
-    current_hard = sum((s.stats.hard_solved or 0) for s in students if s.stats)
+
+    # 3. Overall Difficulty & Submission Stats Aggregation
+    stats_aggregate = db.query(
+        func.sum(LeetCodeProfileStats.easy_solved).label("easy"),
+        func.sum(LeetCodeProfileStats.medium_solved).label("medium"),
+        func.sum(LeetCodeProfileStats.hard_solved).label("hard")
+    ).join(
+        student_subquery, LeetCodeProfileStats.student_id == student_subquery.c.id
+    ).first()
+
+    current_easy = int(stats_aggregate.easy or 0) if stats_aggregate else 0
+    current_medium = int(stats_aggregate.medium or 0) if stats_aggregate else 0
+    current_hard = int(stats_aggregate.hard or 0) if stats_aggregate else 0
+    total_submissions = 0 # Not supported by LeetCodeProfileStats schema
     
     difficulty_distribution = [
         {"name": "Easy", "value": current_easy},
@@ -133,21 +152,15 @@ def get_analytics_dashboard(
         {"name": "Hard", "value": current_hard}
     ]
     
-    total_submissions_current = 0
-    total_solved_current = current_easy + current_medium + current_hard
-    
-    for s in students:
-        if s.stats and s.stats.total_submission_count:
-            total_submissions_current += s.stats.total_submission_count
-            
-    acceptance_rate = round((total_solved_current / total_submissions_current) * 100, 2) if total_submissions_current > 0 else 0
+    total_solved = current_easy + current_medium + current_hard
+    acceptance_rate = round((total_solved / total_submissions) * 100, 2) if total_submissions > 0 else 0
 
     return {
         "trend_data": trend_data,
         "difficulty_distribution": difficulty_distribution,
         "acceptance_rate": acceptance_rate,
-        "total_submissions": total_submissions_current,
-        "total_solved": total_solved_current
+        "total_submissions": total_submissions,
+        "total_solved": total_solved
     }
 @router.get("/compare-period")
 def get_analytics_compare_period(
@@ -164,45 +177,53 @@ def get_analytics_compare_period(
     duration = current_end - current_start
     prev_start = current_start - duration
     prev_end = current_start - datetime.timedelta(microseconds=1)
-    
-    students = _filtered_students(db, dept_id, year_level, batch, current_user)
-    if not students:
-        return {"error": "No students found in scope", "data": None}
-    student_ids = [s.id for s in students]
-    
-    current_snaps = db.query(StudentStatSnapshot).filter(
-        StudentStatSnapshot.student_id.in_(student_ids),
+
+    # 1. Base query for authorized students
+    base_student_query = db.query(Student.id).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    if dept_id:
+        base_student_query = base_student_query.filter(Student.department_id == dept_id)
+    if year_level and year_level.upper() not in ("", "ALL"):
+        base_student_query = base_student_query.filter(func.upper(Student.year_level) == year_level.upper().replace(" YEAR", ""))
+    if batch and batch.upper() not in ("", "ALL"):
+        base_student_query = base_student_query.filter(Student.batch == batch)
+
+    if current_user:
+        base_student_query = apply_role_based_student_filter(base_student_query, current_user, db)
+
+    student_subquery = base_student_query.subquery()
+
+    # Aggregate for current period
+    current_agg = db.query(
+        func.avg(StudentStatSnapshot.contest_rating).label("avg_rating"),
+        func.sum(StudentStatSnapshot.delta_total).label("solved_delta")
+    ).filter(
+        StudentStatSnapshot.student_id.in_(db.query(student_subquery.c.id)),
         StudentStatSnapshot.captured_at >= current_start,
         StudentStatSnapshot.captured_at <= current_end
-    ).all()
-    
-    prev_snaps = db.query(StudentStatSnapshot).filter(
-        StudentStatSnapshot.student_id.in_(student_ids),
+    ).first()
+
+    # Aggregate for previous period
+    prev_agg = db.query(
+        func.avg(StudentStatSnapshot.contest_rating).label("avg_rating"),
+        func.sum(StudentStatSnapshot.delta_total).label("solved_delta")
+    ).filter(
+        StudentStatSnapshot.student_id.in_(db.query(student_subquery.c.id)),
         StudentStatSnapshot.captured_at >= prev_start,
         StudentStatSnapshot.captured_at <= prev_end
-    ).all()
-    
-    # Calculate simple sums for current vs prev
-    current_total_rating = sum(s.contest_rating for s in current_snaps if s.contest_rating)
-    current_count_rating = sum(1 for s in current_snaps if s.contest_rating)
-    prev_total_rating = sum(s.contest_rating for s in prev_snaps if s.contest_rating)
-    prev_count_rating = sum(1 for s in prev_snaps if s.contest_rating)
-    
-    current_solved_delta = sum(s.delta_total or 0 for s in current_snaps)
-    prev_solved_delta = sum(s.delta_total or 0 for s in prev_snaps)
-    
+    ).first()
+
     return {
         "current_period": {
             "start": current_start,
             "end": current_end,
-            "avg_rating": round(current_total_rating/current_count_rating, 1) if current_count_rating > 0 else 0,
-            "solved_growth": current_solved_delta
+            "avg_rating": round(current_agg.avg_rating, 1) if current_agg and current_agg.avg_rating else 0,
+            "solved_growth": int(current_agg.solved_delta) if current_agg and current_agg.solved_delta else 0
         },
         "previous_period": {
             "start": prev_start,
             "end": prev_end,
-            "avg_rating": round(prev_total_rating/prev_count_rating, 1) if prev_count_rating > 0 else 0,
-            "solved_growth": prev_solved_delta
+            "avg_rating": round(prev_agg.avg_rating, 1) if prev_agg and prev_agg.avg_rating else 0,
+            "solved_growth": int(prev_agg.solved_delta) if prev_agg and prev_agg.solved_delta else 0
         }
     }
 

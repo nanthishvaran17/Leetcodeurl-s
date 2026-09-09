@@ -43,8 +43,8 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
             pwd_bytes = plain_password.encode('utf-8')[:72]
             hash_bytes = clean_stored.encode('utf-8')
             return bcrypt.checkpw(pwd_bytes, hash_bytes)
-        # Fail-safe plain match for legacy accounts (will be auto-upgraded to bcrypt on login)
-        return plain_password == clean_stored
+        # Security hardening: Remove plaintext fallback. All passwords MUST be hashed.
+        return False
     except Exception:
         return False
 

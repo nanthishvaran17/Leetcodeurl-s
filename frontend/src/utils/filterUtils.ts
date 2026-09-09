@@ -216,15 +216,15 @@ export function sortStudents(students: StudentData[], sortBy: SortByKey): Studen
 
     case 'streak':
       return sorted.sort((a, b) => {
-        const streakA = Number((a.stats as any)?.streak_count ?? (a as any).streak ?? 0);
-        const streakB = Number((b.stats as any)?.streak_count ?? (b as any).streak ?? 0);
+        const streakA = Number((a as any).streak_count ?? (a.stats as any)?.streak_count ?? (a as any).streak ?? 0);
+        const streakB = Number((b as any).streak_count ?? (b.stats as any)?.streak_count ?? (b as any).streak ?? 0);
         return streakB - streakA;
       });
 
     case 'rating':
       return sorted.sort((a, b) => {
-        const ratingA = Number(a.stats?.contest_rating ?? 0);
-        const ratingB = Number(b.stats?.contest_rating ?? 0);
+        const ratingA = Number((a.stats as any)?.contest_rating ?? (a as any).contest_rating ?? 0);
+        const ratingB = Number((b.stats as any)?.contest_rating ?? (b as any).contest_rating ?? 0);
         return ratingB - ratingA;
       });
 

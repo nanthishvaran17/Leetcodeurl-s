@@ -80,19 +80,40 @@ def get_paginated_matrix_rows(
         
     if attendance and attendance.upper() != 'ALL':
         att = attendance.upper()
-        if att == 'PUBLIC':
+        # PUBLIC / PUBLIC_ATTENDED — users attended the public official contest
+        if att in ['PUBLIC', 'PUBLIC_ATTENDED', 'ATTENDED']:
             query = query.filter(
                 func.upper(WeeklyPublicResult.participation_status).in_(['PUBLIC', 'PUBLIC_ATTENDED', 'ATTENDED', 'OFFICIAL'])
             )
-        elif att == 'VIRTUAL':
+        # VIRTUAL / VIRTUAL_ATTENDED — users attended via virtual participation
+        elif att in ['VIRTUAL', 'VIRTUAL_ATTENDED']:
             query = query.filter(
                 (func.upper(WeeklyVirtualResult.participation_status) == 'VIRTUAL') |
-                (func.upper(WeeklyPublicResult.participation_status) == 'VIRTUAL') |
+                (func.upper(WeeklyPublicResult.participation_status).in_(['VIRTUAL', 'VIRTUAL_ATTENDED'])) |
                 (WeeklyVirtualResult.total_contest_solved > 0)
             )
-        elif att == 'NOT_ATTENDED':
+        # NOT_ATTENDED — only explicitly marked absent/not-attended; PENDING is NOT included
+        elif att in ['NOT_ATTENDED', 'PUBLIC_NOT_ATTENDED']:
             query = query.filter(
-                func.coalesce(func.upper(WeeklyPublicResult.participation_status), 'NOT_ATTENDED').in_(['NOT_ATTENDED', 'PUBLIC_NOT_ATTENDED', 'ABSENT', 'PENDING'])
+                func.coalesce(func.upper(WeeklyPublicResult.participation_status), '').in_(['NOT_ATTENDED', 'PUBLIC_NOT_ATTENDED', 'ABSENT'])
+            )
+        # DATA_ERROR — matches canonical engine: statuses that are NOT (PUBLIC, VIRTUAL, NOT_ATTENDED)
+        # This INCLUDES PENDING, USERNAME_NOT_FOUND, FETCH_ERROR, DATA_MISMATCH, SOURCE_UNAVAILABLE, etc.
+        elif att in ['DATA_ERROR', 'ERROR', 'UNKNOWN']:
+            clean_statuses = [
+                'PUBLIC', 'PUBLIC_ATTENDED', 'ATTENDED', 'OFFICIAL',
+                'VIRTUAL', 'VIRTUAL_ATTENDED',
+                'NOT_ATTENDED', 'PUBLIC_NOT_ATTENDED', 'ABSENT'
+            ]
+            query = query.filter(
+                ~func.coalesce(func.upper(WeeklyPublicResult.participation_status), 'PENDING').in_(clean_statuses)
+            )
+        # ALL_ATTENDED / PARTICIPATED — public + virtual (all who participated in any form)
+        elif att in ['ALL_ATTENDED', 'TOTAL_ATTENDED', 'PARTICIPATED']:
+            query = query.filter(
+                (func.upper(WeeklyPublicResult.participation_status).in_(['PUBLIC', 'PUBLIC_ATTENDED', 'ATTENDED', 'OFFICIAL', 'VIRTUAL', 'VIRTUAL_ATTENDED'])) |
+                (func.upper(WeeklyVirtualResult.participation_status).in_(['VIRTUAL', 'VIRTUAL_ATTENDED'])) |
+                (WeeklyVirtualResult.total_contest_solved > 0)
             )
 
     total_count = query.count()

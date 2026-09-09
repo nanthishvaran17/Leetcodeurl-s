@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { auth } from '../firebase';
 
 // Authoritative Production Backend Base URL (used by native apps only)
 const PRODUCTION_BACKEND_URL = 'https://leetcodeurl-s-3mig.onrender.com';
@@ -133,13 +132,18 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Periodic background keep-alive ping to prevent Render free-tier cold starts
+// Periodic background keep-alive ping to prevent Render free-tier cold starts (Cross-tab coordinated)
 if (typeof window !== 'undefined') {
   setInterval(() => {
     if (document.visibilityState === 'visible') {
-      originalGet.call(api, '/health').catch(() => {});
+      const lastPing = localStorage.getItem('last_health_ping');
+      const now = Date.now();
+      if (!lastPing || now - parseInt(lastPing) > 7 * 60 * 1000) {
+        localStorage.setItem('last_health_ping', now.toString());
+        originalGet.call(api, '/health').catch(() => {});
+      }
     }
-  }, 8 * 60 * 1000); // Ping every 8 minutes
+  }, 60 * 1000); // Check every minute, but ping at most once every 7 minutes globally across tabs
 }
 
 // ------------------------------------------------------------------

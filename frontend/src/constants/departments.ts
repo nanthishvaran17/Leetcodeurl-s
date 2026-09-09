@@ -10,22 +10,12 @@ export interface DepartmentConfig {
   pillText: string;
 }
 
-export const PRODUCTION_DEPARTMENTS: DepartmentConfig[] = [
-  {
-    id: 1,
-    code: 'CSE(CS)',
-    name: 'Computer Science and Engineering (Cyber Security)',
-    pillText: 'CSE(CS)'
-  },
-  {
-    id: 2,
-    code: 'CSE(IOT)',
-    name: 'Computer Science and Engineering (IoT)',
-    pillText: 'CSE(IOT)'
-  }
-];
-
-export const ALLOWED_DEPT_CODES = ['CSE(CS)', 'CSE(IOT)'];
+export interface DepartmentConfig {
+  id?: number;
+  code: string;
+  name: string;
+  pillText: string;
+}
 
 export function isProductionDepartment(dept: any): boolean {
   if (!dept) return false;
@@ -46,13 +36,5 @@ export function isProductionDepartment(dept: any): boolean {
     return false;
   }
 
-  if (code === 'CSE' && !code.includes('CS') && !code.includes('IOT')) {
-    return false; // reject unspecialized legacy test record
-  }
-
-  // Match canonical codes or names
-  if (code === 'CSE(CS)' || code === 'CSE-CS' || name.includes('CYBER')) return true;
-  if (code === 'CSE(IOT)' || code === 'CSE-IOT' || name.includes('IOT') || name.includes('INTERNET OF THINGS')) return true;
-
-  return false;
+  return true;
 }

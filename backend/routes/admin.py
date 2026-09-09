@@ -746,13 +746,25 @@ def create_staff_user(
         dept_name = dept.name if dept else "N/A"
         
     if staff_user.email and payload.send_email:
+        import jwt
+        import datetime
+        from backend.config import settings
+        
+        setup_payload = {
+            "sub": str(staff_user.id),
+            "email": staff_user.email,
+            "purpose": "account_setup",
+            "exp": datetime.datetime.utcnow() + datetime.timedelta(days=7)
+        }
+        setup_token = jwt.encode(setup_payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
         background_tasks.add_task(
             notify_staff_created,
             staff_email=staff_user.email,
-            staff_name=staff_user.username,
+            staff_name=staff_user.full_name,
             role=staff_user.role,
-            department=dept_name,
-            raw_password=raw_pwd
+            username=staff_user.username,
+            setup_token=setup_token
         )
 
     try:
@@ -760,7 +772,7 @@ def create_staff_user(
         recipients = [staff_user.email, current_user.email, "ADMIN", "STAFF"]
         NotificationService.create_direct_notification(
             title="Staff Account Created",
-            message=f"New staff account for '{staff_user.username}' ({staff_user.role}) was created successfully.",
+            message=f"New staff account for '{staff_user.full_name}' ({staff_user.role}) was created successfully.",
             recipient_user_ids=[r for r in recipients if r],
             notification_type="system",
             priority="normal",
@@ -773,7 +785,7 @@ def create_staff_user(
 
     return {
         "success": True,
-        "message": f"Staff account for '{staff_user.username}' created successfully." + (f" Temporary Password: {raw_pwd}" if not payload.password else ""),
+        "message": f"Staff account for '{staff_user.full_name}' created successfully.",
         "staff": {
             "id": staff_user.id,
             "institutional_id": staff_user.institutional_id,

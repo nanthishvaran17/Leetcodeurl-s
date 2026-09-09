@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { GlobalAnalyticsFilter, AnalyticsPeriod } from './GlobalAnalyticsFilter';
-import api from '../../services/api';
+import api, { getCachedData, setCachedData } from '../../services/api';
 import { Loader2, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import {
   LineChart, Line, AreaChart, Area, BarChart, Bar, ComposedChart,
@@ -14,12 +14,23 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
 
   useEffect(() => {
     let isMounted = true;
-    setLoading(true);
+    const cacheKey = `individual_analytics_${studentId}_${period}`;
+    const url = `/analytics/student/${studentId}?period=${period}`;
+    
+    // 1. Check client cache first for instant load
+    const cached = getCachedData(cacheKey, url);
+    if (cached) {
+      setData(cached);
+      setLoading(false);
+      return;
+    }
 
-    api.get(`/analytics/student/${studentId}?period=${period}`)
+    setLoading(true);
+    api.get(url)
       .then((res) => {
         if (isMounted) {
           setData(res.data);
+          setCachedData(cacheKey, res.data); // 2. Set cache on success
           setLoading(false);
         }
       })

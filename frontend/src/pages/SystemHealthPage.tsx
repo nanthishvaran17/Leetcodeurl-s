@@ -1144,7 +1144,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                       <div>
                         <span className="font-black text-slate-900 dark:text-white">{st.name}</span>
                         <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-bold mt-0.5">
-                          {st.reg_no} • {st.department?.code || 'CSE'} ({st.year_level || 'III'} Year)
+                          {st.reg_no} • {st.department?.code || 'DEPT'} ({st.year_level || 'III'} Year)
                         </span>
                       </div>
                       <span className="text-[10px] font-mono font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-navy-900 px-2.5 py-1 rounded-lg border border-indigo-200 dark:border-navy-700">

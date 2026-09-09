@@ -8,15 +8,19 @@ logger = logging.getLogger(__name__)
 from backend.services.email_templates import generate_professional_template
 
 
-def notify_staff_created(staff_email: str, staff_name: str, role: str, department: str, raw_password: str = None):
-    """Sends a welcome email with credentials to newly created staff."""
-    title = "Welcome to the LeetCode Tracker System"
-    portal_url = f"{settings.FRONTEND_ORIGIN}/"
+def notify_staff_created(staff_email: str, staff_name: str, role: str, username: str, setup_token: str):
+    """Sends a welcome email with secure setup link to newly created staff."""
+    title = "Nandha Engineering College — Institutional Account Created"
+    setup_url = f"{settings.FRONTEND_ORIGIN}/setup-account?token={setup_token}"
 
     content = f"""
-    <p style="margin-top: 0;">Dear {staff_name},</p>
-    <p>Your institutional account has been successfully created. You can now access the faculty and administrative dashboards.</p>
-
+    <p style="margin-top: 0; font-weight: bold;">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</p>
+    <p style="font-weight: bold;">LeetCode Intelligence System</p>
+    <br/>
+    <p>Dear {staff_name},</p>
+    <p>Your institutional account has been successfully created.</p>
+    <br/>
+    <p><strong>Account Details:</strong></p>
     <table class="data-table" role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%;">
         <tr>
             <td>Name</td>
@@ -27,25 +31,33 @@ def notify_staff_created(staff_email: str, staff_name: str, role: str, departmen
             <td>{role}</td>
         </tr>
         <tr>
-            <td>Department</td>
-            <td>{department or "N/A"}</td>
+            <td>Email</td>
+            <td>{staff_email}</td>
         </tr>
         <tr>
-            <td>Email / Username</td>
-            <td style="word-break: break-all;">{staff_email}</td>
+            <td>Username</td>
+            <td>{username}</td>
         </tr>
     </table>
 
     <div class="security-notice">
-        <strong>Security Notice:</strong> Your account has been provisioned securely. Please visit the portal and use the "Forgot Password" feature to set your initial password securely.
+        For security, your password is not included in this email.
     </div>
+    
+    <p style="margin-top: 15px;">If you did not expect this account, please contact the system administrator.</p>
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"/>
+    <p style="font-size: 11px; color: #666; line-height: 1.4;">
+        Nandha Engineering College (Autonomous)<br/>
+        LeetCode Intelligence System<br/><br/>
+        This is an automated notification. Please do not reply directly to this email.
+    </p>
     """
 
-    action_button = f'<a href="{portal_url}" class="btn" target="_blank">Access Portal</a>'
-    html_body = generate_professional_template(title, content, action_button, fallback_url=portal_url)
+    action_button = f'<a href="{setup_url}" class="btn" target="_blank">Set Up My Account</a>'
+    html_body = generate_professional_template(title, content, action_button, fallback_url=setup_url)
 
-    logger.info(f"[NOTIFY] Sending staff creation email to {staff_email} via portal_url: {portal_url}")
-    send_email(staff_email, "Your Institutional Account is Ready", html_body=html_body)
+    logger.info(f"[NOTIFY] Sending staff creation email to {staff_email} with setup_url: {setup_url}")
+    send_email(staff_email, title, html_body=html_body)
 
 
 def notify_staff_updated(staff_email: str, staff_name: str, changes: dict):
@@ -70,12 +82,21 @@ def notify_staff_updated(staff_email: str, staff_name: str, changes: dict):
 
 
 def notify_password_changed(staff_email: str, staff_name: str, new_password: Optional[str] = None):
+    import datetime
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     title = "Password Changed Successfully"
 
     content = f"""
     <p style="margin-top: 0;">Dear {staff_name},</p>
-    <p>This is a confirmation that your account password was successfully updated.</p>
-    <p>If you did not perform this action, please contact the system administrator immediately to secure your account.</p>
+    <p>Your LeetCode Intelligence System password was successfully changed.</p>
+    <br/>
+    <p><strong>Account:</strong> {staff_email}</p>
+    <p><strong>Date & Time:</strong> {timestamp}</p>
+    
+    <div class="security-notice">
+        For your security, your password is never displayed or sent by email.
+    </div>
+    <p>If you did not perform this action, please contact the system administrator immediately.</p>
     """
     html_body = generate_professional_template(title, content)
     send_email(staff_email, "Security Alert: Password Changed", html_body=html_body)

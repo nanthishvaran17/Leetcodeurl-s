@@ -6,14 +6,14 @@ import {
 } from 'lucide-react';
 import { GlobalFilter } from '../components/GlobalFilter';
 import api from '../services/api';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { StudentFlipCard } from '../components/StudentFlipCard';
 import { useGlobalData } from '../context/GlobalDataContext';
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
 import { studentLiveStore } from '../stores/studentLiveStore';
 import { useDepartmentsQuery } from '../hooks/useDashboardQueries';
-import { useFilters, useFilteredStudents } from '../context/FilterContext';
+import { useFilters } from '../context/FilterContext';
 
 // Validation state machine 
 type LcValidationState =
@@ -153,10 +153,9 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   const { notify, confirmAction } = useNotification();
   const queryClient = useQueryClient();
   const { refreshAllData } = useGlobalData();
-  const { data: globalStudents = [] } = useStudentsQuery();
   const { data: globalDepts = [] } = useDepartmentsQuery();
   const filters = useFilters();
-  const filteredStudents = useFilteredStudents();
+  // Removed useFilteredStudents client-side filtering
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -184,26 +183,37 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   const [serverPage, setServerPage] = useState(1);
   const [serverPageSize, setServerPageSize] = useState(50);
 
-  // Derived filtered students locally via global FilterContext
-  // (already handled by useFilteredStudents above)
+  // Use backend paginated API instead of client-side filtering
+  const { data: paginatedData, isLoading: isTableLoading, refetch: refetchStudents } = useQuery({
+    queryKey: ['students-master', serverPage, serverPageSize, filters.department, filters.academicYear, filters.searchQuery],
+    queryFn: async () => {
+      const params: any = { paginated: 'true', page: serverPage, limit: serverPageSize };
+      if (filters.searchQuery) params.search = filters.searchQuery;
+      
+      // Map department CODE to ID
+      if (filters.department !== 'ALL' && departments.length > 0) {
+        const found = departments.find(d => d.code === filters.department || d.name === filters.department);
+        if (found) params.dept_id = found.id;
+      }
+      
+      if (filters.academicYear !== 'ALL') params.year_level = filters.academicYear;
+      
+      const res = await api.get('/students', { params });
+      return res.data;
+    },
+    staleTime: 60000,
+    refetchOnWindowFocus: false
+  });
 
-  const serverTotalCount = filteredStudents.length;
-  
-  // Calculate total pages
-  const totalPages = Math.max(1, Math.ceil(serverTotalCount / serverPageSize));
-  
-  // Enforce valid page bounds when filtering changes total count
+  const displayedStudents = paginatedData?.items || [];
+  const serverTotalCount = paginatedData?.total || 0;
+  const totalPages = Math.max(1, paginatedData?.total_pages || 1);
+
+  // When filters change, reset to page 1
   useEffect(() => {
-    if (serverPage > totalPages) {
-      setServerPage(1);
-    }
-  }, [totalPages, serverPage]);
+    setServerPage(1);
+  }, [filters.department, filters.academicYear, filters.searchQuery]);
 
-  // Local Pagination
-  const displayedStudents = useMemo(() => {
-    const start = (serverPage - 1) * serverPageSize;
-    return filteredStudents.slice(start, start + serverPageSize);
-  }, [filteredStudents, serverPage, serverPageSize]);
 
   // Load departments via global data (if not available, fallback to api)
   useEffect(() => {
@@ -397,7 +407,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
           <div className="space-y-4 max-w-2xl">
             <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black uppercase tracking-wider">
               <UserPlus className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400" />
-              <span>STUDENT DIRECTORY • {globalStudents.length} ENROLLED</span>
+              <span>STUDENT DIRECTORY — {serverTotalCount} ENROLLED</span>
             </div>
 
             <div className="space-y-1.5">
@@ -484,10 +494,10 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
         <div className="flex items-center justify-between px-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
           {filters.isFilteringActive ? (
             <span>
-              Showing <span className="text-slate-900 dark:text-white font-bold">{serverTotalCount}</span> of <span className="text-slate-900 dark:text-white font-bold">{globalStudents.length}</span> students
+              Showing <span className="text-slate-900 dark:text-white font-bold">{displayedStudents.length}</span> of <span className="text-slate-900 dark:text-white font-bold">{serverTotalCount}</span> students
             </span>
           ) : (
-            <span>Showing all {globalStudents.length} students</span>
+            <span>Showing all {serverTotalCount} students</span>
           )}
         </div>
       </div>

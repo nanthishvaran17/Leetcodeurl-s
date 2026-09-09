@@ -11,6 +11,7 @@ import { FilterProvider } from './context/FilterContext'
 import { GlobalNotificationProvider } from './context/GlobalNotificationContext'
 import { GlobalWebSocketProvider } from './context/GlobalWebSocketProvider'
 import { KeyboardShortcutsProvider } from './context/KeyboardContext'
+import { DepartmentProvider } from './contexts/DepartmentContext'
 import './index.css'
 
 import { QueryClientProvider } from '@tanstack/react-query'
@@ -35,20 +36,22 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <ThemeProvider>
         <AuthProvider>
           <GlobalWebSocketProvider>
-            <GlobalDataProvider>
-              <FilterProvider>
-                <NotificationProvider>
-                  <GlobalNotificationProvider>
-                    <KeyboardShortcutsProvider>
-                      <ErrorBoundary>
-                        <App />
-                        <NotificationCenter />
-                      </ErrorBoundary>
-                    </KeyboardShortcutsProvider>
-                  </GlobalNotificationProvider>
-                </NotificationProvider>
-              </FilterProvider>
-            </GlobalDataProvider>
+            <DepartmentProvider>
+              <GlobalDataProvider>
+                <FilterProvider>
+                  <NotificationProvider>
+                    <GlobalNotificationProvider>
+                      <KeyboardShortcutsProvider>
+                        <ErrorBoundary>
+                          <App />
+                          <NotificationCenter />
+                        </ErrorBoundary>
+                      </KeyboardShortcutsProvider>
+                    </GlobalNotificationProvider>
+                  </NotificationProvider>
+                </FilterProvider>
+              </GlobalDataProvider>
+            </DepartmentProvider>
           </GlobalWebSocketProvider>
         </AuthProvider>
       </ThemeProvider>

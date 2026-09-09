@@ -8,6 +8,7 @@ import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import api from '../services/api';
 import { StudentData } from '../components/LeaderboardTable';
 import { getCachedStudents } from '../data/canonicalRoster';
+import { useDepartments } from '../contexts/DepartmentContext';
 
 export const ComparePage: React.FC = () => {
   // Mode: STUDENT vs GROUP
@@ -23,9 +24,8 @@ export const ComparePage: React.FC = () => {
   const [fighterBOpen, setFighterBOpen] = useState<boolean>(false);
   const [groupAOpen, setGroupAOpen] = useState<boolean>(false);
   const [groupBOpen, setGroupBOpen] = useState<boolean>(false);
-
-  // Filters for Student Comparison
-  const [departments, setDepartments] = useState<any[]>([]);
+  
+  const { departments } = useDepartments();
   const [selectedDept, setSelectedDept] = useState<string>('ALL');
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
 
@@ -48,33 +48,8 @@ export const ComparePage: React.FC = () => {
   const [groupBKey, setGroupBKey] = useState<string>('');
 
   useEffect(() => {
-    fetchDepartments();
-    fetchStudents();
-  }, []);
-
-  useEffect(() => {
     fetchStudents();
   }, [selectedDept, selectedYear]);
-
-  const DEFAULT_DEPARTMENTS = [
-
-  ];
-
-  const fetchDepartments = async () => {
-    try {
-      const res = await api.get('/departments');
-      if (res.data && Array.isArray(res.data) && res.data.length >= 1) {
-        const validCodes = ['CSE(CS)', 'CSE(IOT)'];
-        const cleanDepts = res.data.filter((d: any) => d.code && validCodes.includes(d.code.trim().toUpperCase()));
-        setDepartments(cleanDepts.length > 0 ? cleanDepts : DEFAULT_DEPARTMENTS);
-      } else {
-        setDepartments(DEFAULT_DEPARTMENTS);
-      }
-    } catch (err) {
-      console.warn("Using default department fallback list in ComparePage:", err);
-      setDepartments(DEFAULT_DEPARTMENTS);
-    }
-  };
 
   const fetchStudents = async () => {
     setLoading(true);
@@ -160,7 +135,7 @@ export const ComparePage: React.FC = () => {
   // Always ensure A != B to prevent identical group display
   useEffect(() => {
     if (groupDimension === 'DEPT_YEAR' && departments.length >= 2) {
-      // Default: II Year CSE(CS) vs II Year CSE(IOT)
+      // Default: II Year Dept1 vs II Year Dept2
       const dept1 = departments[0];
       const dept2 = departments[1];
       if (dept1 && dept2) {
@@ -989,12 +964,12 @@ export const ComparePage: React.FC = () => {
                     <span className="text-[10px] text-slate-400 font-bold">Quick Pick A:</span>
                     <button
                       onClick={() => {
-                        const opt = groupOptions.find(g => g.key.endsWith('II') && g.key.startsWith('1'));
+                        const opt = groupOptions.find(g => g.key.endsWith('II') && departments[0] && g.key.startsWith(String(departments[0].id)));
                         if (opt) setGroupAKey(opt.key);
                       }}
                       className="px-2 py-0.5 rounded-lg bg-brand-500/10 text-brand-600 dark:text-brand-300 text-[10px] font-bold hover:bg-brand-500 hover:text-white transition-all cursor-pointer"
                     >
-                      2nd Year CSE(CS)
+                      2nd Year {departments[0]?.code || 'Dept 1'}
                     </button>
                   </div>
                 )}
@@ -1049,12 +1024,12 @@ export const ComparePage: React.FC = () => {
                     <span className="text-[10px] text-slate-400 font-bold">Quick Pick B:</span>
                     <button
                       onClick={() => {
-                        const opt = groupOptions.find(g => g.key.endsWith('II') && g.key.startsWith('2'));
+                        const opt = groupOptions.find(g => g.key.endsWith('II') && departments[1] && g.key.startsWith(String(departments[1].id)));
                         if (opt) setGroupBKey(opt.key);
                       }}
                       className="px-2 py-0.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 text-[10px] font-bold hover:bg-indigo-500 hover:text-white transition-all cursor-pointer"
                     >
-                      2nd Year CSE(IOT)
+                      2nd Year {departments[1]?.code || 'Dept 2'}
                     </button>
                   </div>
                 )}

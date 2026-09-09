@@ -451,7 +451,7 @@ def _build_canonical_contest_dataset_internal(
         filtered_rows = [r for r in filtered_rows if r["year"] == year]
 
     if attendance and attendance != "ALL":
-        if attendance in ("ALL_ATTENDED", "TOTAL_ATTENDED"):
+        if attendance in ("ALL_ATTENDED", "TOTAL_ATTENDED", "PARTICIPATED"):
             filtered_rows = [r for r in filtered_rows if r["status"] in ("PUBLIC", "VIRTUAL")]
         elif attendance in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
             filtered_rows = [r for r in filtered_rows if r["status"] == "PUBLIC"]

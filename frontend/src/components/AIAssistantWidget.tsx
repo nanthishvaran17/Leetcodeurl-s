@@ -469,7 +469,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
       title: 'Student Operations', icon: Users, color: 'text-brand-500',
       actions: [
         { label: 'Lookup Student Profile', query: 'Lookup Bharath K profile details' },
-        { label: 'Filter CSE(CS) III Year', query: 'Show Cyber Security III Year students' },
+        { label: 'Filter Department III Year', query: 'Show III Year students by department' },
         { label: 'Compare Top Solvers', query: 'Compare Nanthish S and Bharath K' },
       ],
     },

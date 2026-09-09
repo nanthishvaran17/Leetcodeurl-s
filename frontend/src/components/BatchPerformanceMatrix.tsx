@@ -61,7 +61,7 @@ export const BatchPerformanceMatrix: React.FC = () => {
           <div className="flex items-center space-x-2 text-xs bg-white/10 px-3.5 py-1.5 rounded-xl border border-white/20">
             <UserCheck className="w-4 h-4 text-cyan-300" />
             <span className="font-medium text-slate-200">
-              Name & Designation of the Academic Coordinator: <b className="text-white font-bold">HOD / Academic Lead (CSE)</b>
+              Name & Designation of the Academic Coordinator: <b className="text-white font-bold">HOD / Academic Lead</b>
             </span>
           </div>
         </div>

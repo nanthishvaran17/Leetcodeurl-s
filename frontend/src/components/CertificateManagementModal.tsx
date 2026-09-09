@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import { GlobalModalBackdrop } from './GlobalModalBackdrop';
 import api from '../services/api';
+import { useDepartments } from '../contexts/DepartmentContext';
 import { syncCertificateToFirestoreWeb } from '../services/firebaseSync';
 import { useNotification } from '../context/NotificationContext';
 import { triggerDownload } from '../utils/mobileDownload';
@@ -118,7 +119,7 @@ const CREDENTIAL_TYPES = [
   {
     id: 'Department Excellence',
     title: 'Department Excellence Recognition',
-    badge: 'DEPARTMENT TOPPER • CSE SPECIALIZATION',
+    badge: 'DEPARTMENT TOPPER • SPECIALIZATION',
     desc: 'For leading academic department performance in technical coding benchmarks and inspiring peer engagement in algorithmic problem solving.'
   },
   {
@@ -135,6 +136,7 @@ export const CertificateManagementModal: React.FC<{
   preselectedStudent?: StudentOption | null;
 }> = ({ isOpen, onClose, preselectedStudent }) => {
   const { notify, confirmAction } = useNotification();
+  const { departments } = useDepartments();
   
   // Stepper State: 1 = Recipient, 2 = Design, 3 = Signatures, 4 = Issue, 5 = Verify & Registry
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -154,7 +156,7 @@ export const CertificateManagementModal: React.FC<{
 
   // Signatures State
   const [signatures, setSignatures] = useState<AuthorizedSignature[]>([]);
-  const [uploadType, setUploadType] = useState<'PRINCIPAL' | 'HOD_CSE_CS' | 'HOD_CSE_IOT'>('PRINCIPAL');
+  const [uploadType, setUploadType] = useState<string>('PRINCIPAL');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadPreview, setUploadPreview] = useState<string | null>(null);
   const [isUploadingSig, setIsUploadingSig] = useState(false);
@@ -243,18 +245,16 @@ export const CertificateManagementModal: React.FC<{
 
   // Signatures mapped
   const principalSig = useMemo(() => signatures.find(s => s.signature_type === 'PRINCIPAL' && s.is_active), [signatures]);
-  const csHodSig = useMemo(() => signatures.find(s => s.signature_type === 'HOD_CSE_CS' && s.is_active), [signatures]);
-  const iotHodSig = useMemo(() => signatures.find(s => s.signature_type === 'HOD_CSE_IOT' && s.is_active), [signatures]);
+  
   const currentHodSig = useMemo(() => {
     const code = (selectedStudent?.department?.code || '').toUpperCase();
-    return code.includes('IOT') ? iotHodSig : csHodSig;
-  }, [selectedStudent, csHodSig, iotHodSig]);
+    return signatures.find(s => s.signature_type === `HOD_${code}` && s.is_active);
+  }, [selectedStudent, signatures]);
 
   const resolveDeptFullName = (deptCode?: string) => {
-    if (!deptCode) return "Department of Computer Science and Engineering";
-    const code = deptCode.toUpperCase();
-    if (code.includes('IOT')) return "Department of Computer Science and Engineering (IoT)";
-    return "Department of Computer Science and Engineering (Cyber Security)";
+    if (!deptCode) return "Department";
+    const dept = departments.find(d => d.code.toUpperCase() === deptCode.toUpperCase());
+    return dept ? `Department of ${dept.name}` : `Department of ${deptCode}`;
   };
 
   const currentDeptTitle = resolveDeptFullName(selectedStudent?.department?.code);
@@ -1420,28 +1420,30 @@ export const CertificateManagementModal: React.FC<{
                       </div>
                     </div>
 
-                    <div className="flex bg-slate-100 dark:bg-navy-950 p-1 rounded-2xl border border-slate-300 dark:border-navy-700 text-xs font-bold">
-                      <button
-                        onClick={() => setUploadType('HOD_CSE_CS')}
-                        className={`flex-1 py-2.5 rounded-xl transition-all cursor-pointer text-center text-xs font-black ${
-                          uploadType === 'HOD_CSE_CS' ? 'bg-emerald-700 text-white shadow-md' : 'text-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-800'
-                        }`}
-                      >
-                        Cyber Security {csHodSig ? `(${csHodSig.version})` : ''}
-                      </button>
-                      <button
-                        onClick={() => setUploadType('HOD_CSE_IOT')}
-                        className={`flex-1 py-2.5 rounded-xl transition-all cursor-pointer text-center text-xs font-black ${
-                          uploadType === 'HOD_CSE_IOT' ? 'bg-indigo-700 text-white shadow-md' : 'text-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-800'
-                        }`}
-                      >
-                        IoT {iotHodSig ? `(${iotHodSig.version})` : ''}
-                      </button>
+                    <div className="flex bg-slate-100 dark:bg-navy-950 p-1 rounded-2xl border border-slate-300 dark:border-navy-700 text-xs font-bold overflow-x-auto gap-1">
+                      {departments.map(dept => {
+                        const sigKey = `HOD_${dept.code.toUpperCase()}`;
+                        const sig = signatures.find(s => s.signature_type === sigKey && s.is_active);
+                        return (
+                          <button
+                            key={sigKey}
+                            onClick={() => setUploadType(sigKey)}
+                            className={`flex-1 min-w-[120px] py-2.5 rounded-xl transition-all cursor-pointer text-center text-xs font-black ${
+                              uploadType === sigKey ? 'bg-indigo-700 text-white shadow-md' : 'text-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-800'
+                            }`}
+                          >
+                            {dept.code} {sig ? `(${sig.version})` : ''}
+                          </button>
+                        );
+                      })}
                     </div>
 
                     {(() => {
-                      const activeHod = uploadType === 'HOD_CSE_IOT' ? iotHodSig : csHodSig;
-                      const deptLabel = uploadType === 'HOD_CSE_IOT' ? 'IoT' : 'Cyber Security';
+                      const activeHod = signatures.find(s => s.signature_type === uploadType && s.is_active);
+                      const codeMatch = uploadType.replace('HOD_', '');
+                      const deptMatch = departments.find(d => d.code.toUpperCase() === codeMatch);
+                      const deptLabel = deptMatch ? deptMatch.name : codeMatch;
+                      
                       return (
                         <div className="min-h-28 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 flex flex-col items-center justify-center p-3.5 relative overflow-hidden">
                           {activeHod?.image_preview ? (
@@ -1464,8 +1466,11 @@ export const CertificateManagementModal: React.FC<{
                   </div>
 
                   {(() => {
-                    const activeHod = uploadType === 'HOD_CSE_IOT' ? iotHodSig : csHodSig;
-                    const deptLabel = uploadType === 'HOD_CSE_IOT' ? 'IoT' : 'Cyber Security';
+                    const activeHod = signatures.find(s => s.signature_type === uploadType && s.is_active);
+                    const codeMatch = uploadType.replace('HOD_', '');
+                    const deptMatch = departments.find(d => d.code.toUpperCase() === codeMatch);
+                    const deptLabel = deptMatch ? deptMatch.name : codeMatch;
+                    
                     return (
                       <div className="space-y-3 pt-1">
                         <label className="block text-xs font-black text-slate-900 dark:text-slate-200 uppercase">
@@ -1568,8 +1573,9 @@ export const CertificateManagementModal: React.FC<{
                     className="px-3.5 py-2.5 bg-slate-50 dark:bg-navy-900 border border-slate-300 dark:border-navy-600 rounded-xl text-xs sm:text-sm text-slate-950 dark:text-white font-black cursor-pointer hover:border-amber-400/50 transition-colors shadow-sm"
                   >
                     <option value="all" className="bg-slate-900 text-white dark:bg-navy-950 dark:text-white font-bold py-1">All Departments</option>
-                    <option value="CSE(CS)" className="bg-slate-900 text-white dark:bg-navy-950 dark:text-white font-bold py-1">Cyber Security</option>
-                    <option value="CSE(IOT)" className="bg-slate-900 text-white dark:bg-navy-950 dark:text-white font-bold py-1">IoT</option>
+                    {departments.map(d => (
+                      <option key={d.code} value={d.code} className="bg-slate-900 text-white dark:bg-navy-950 dark:text-white font-bold py-1">{d.name}</option>
+                    ))}
                   </select>
 
                   <select
@@ -1620,7 +1626,7 @@ export const CertificateManagementModal: React.FC<{
                           </td>
                           <td className="py-4 px-4">
                             <span className="px-2.5 py-1 rounded-lg bg-indigo-100 dark:bg-indigo-500/10 text-indigo-900 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-500/30 inline-block font-mono font-bold text-xs sm:text-sm" title={rec.department_name}>
-                              {rec.department || 'CSE'}
+                              {rec.department || 'DEPT'}
                             </span>
                           </td>
                           <td className="py-4 px-4 font-mono text-slate-900 dark:text-slate-100 font-bold text-xs sm:text-sm">

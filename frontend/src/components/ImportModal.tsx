@@ -60,7 +60,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
   // Real-time WebSocket listening for INSTANT progress updates
   useLiveLeaderboard((data) => {
     if (!data) return;
-    if (data.type === 'IMPORT_PROGRESS' || data.type === 'IMPORT_COMPLETED') {
+    if (data.type === 'IMPORT_PROGRESS' || data.type === 'IMPORT_COMPLETED' || data.type === 'IMPORT_FAILED') {
       if (data.job_id === jobId || !jobId) {
         if (data.job_id && !jobId) setJobId(data.job_id);
         setImportStatus(prev => ({
@@ -82,6 +82,10 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
           if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
           refreshAllData();
           onSuccess();
+        } else if (data.type === 'IMPORT_FAILED' || data.status === 'FAILED') {
+          setLoading(false);
+          if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+          notify.error('Import Failed', data.error_summary || 'Excel import encountered errors.', { category: 'EXCEL IMPORT' });
         }
       }
     }

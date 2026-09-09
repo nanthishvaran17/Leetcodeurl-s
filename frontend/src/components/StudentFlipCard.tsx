@@ -229,7 +229,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
               )}
             </span>
             <span className="px-2.5 py-1 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-extrabold text-xs font-mono whitespace-nowrap">
-              {student.department?.code || 'CSE'}
+              {student.department?.code || student.department || 'DEPT'}
             </span>
           </div>
 

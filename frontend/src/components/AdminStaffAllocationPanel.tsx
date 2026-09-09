@@ -812,7 +812,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
            </td>
            <td className="p-1.5 md:p-3 font-bold text-slate-800 dark:text-slate-200 flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">Reg No:</span>{st.reg_no}</td>
            <td className="p-1.5 md:p-3 font-extrabold text-slate-900 dark:text-white flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">Name:</span>{st.name}</td>
-           <td className="p-1.5 md:p-3 font-bold text-sky-700 dark:text-sky-400 flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">Dept:</span>{st.department || 'CSE'}</td>
+           <td className="p-1.5 md:p-3 font-bold text-sky-700 dark:text-sky-400 flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">Dept:</span>{st.department || 'INSTITUTIONAL'}</td>
            <td className="p-1.5 md:p-3 text-slate-600 dark:text-navy-300 flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">Year:</span>{st.year_level || '—'}</td>
            <td className="p-1.5 md:p-3 text-slate-500 dark:text-navy-400 flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">LeetCode:</span><span className="truncate max-w-[150px] md:max-w-none text-right">{st.username || '—'}</span></td>
            <td className="p-1.5 md:p-3 text-right font-bold text-slate-800 dark:text-slate-200 flex justify-between md:table-cell border-t md:border-0 border-slate-100 dark:border-navy-800 pt-3 md:pt-3 mt-2 md:mt-0"><span className="md:hidden font-normal text-slate-500">Problems Solved:</span>{st.total_solved || 0}</td>
@@ -971,7 +971,7 @@ export const AdminStaffAllocationPanel: React.FC = () => {
  <span>{viewRosterModal.staff?.username}'s Mentoring Roster</span>
  </h3>
  <p className="text-xs text-slate-500 dark:text-navy-400">
- {viewRosterModal.staff?.email} • Department: {viewRosterModal.staff?.department || 'CSE'}
+ {viewRosterModal.staff?.email} • Department: {viewRosterModal.staff?.department || 'INSTITUTIONAL'}
  </p>
  </div>
  <button

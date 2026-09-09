@@ -4,7 +4,7 @@ import million from 'million/compiler'
 import path from 'path'
 
 export default defineConfig({
-  plugins: [million.vite({ auto: true }), react()],
+  plugins: [million.vite({ auto: false }), react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
