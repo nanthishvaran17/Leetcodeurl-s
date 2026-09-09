@@ -10,7 +10,6 @@ from backend.database import get_db
 from backend.models import ReportJob
 from backend.security import require_security_access
 from backend.logger import logger
-from backend.services.authorization_service import get_user_access_scope
 from backend.forensic_pdf_generator import generate_forensic_audit_pdf
 from backend.routes.data_issues import generate_data_issues_excel_bytes, generate_data_issues_csv_bytes
 
