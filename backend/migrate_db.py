@@ -157,6 +157,10 @@ def run_db_migrations():
             ("student_contest_participations", "participation_mode", "ALTER TABLE student_contest_participations ADD COLUMN IF NOT EXISTS participation_mode VARCHAR(30)"),
             ("student_contest_participations", "verification_level", "ALTER TABLE student_contest_participations ADD COLUMN IF NOT EXISTS verification_level VARCHAR(50)"),
             ("student_contest_participations", "verification_evidence", "ALTER TABLE student_contest_participations ADD COLUMN IF NOT EXISTS verification_evidence TEXT"),
+            ("student_contest_participations", "official_attendance_state", "ALTER TABLE student_contest_participations ADD COLUMN IF NOT EXISTS official_attendance_state VARCHAR(30)"),
+            ("student_contest_participations", "is_frozen", "ALTER TABLE student_contest_participations ADD COLUMN IF NOT EXISTS is_frozen BOOLEAN DEFAULT FALSE"),
+            ("student_contest_participations", "frozen_at", "ALTER TABLE student_contest_participations ADD COLUMN IF NOT EXISTS frozen_at TIMESTAMP WITH TIME ZONE"),
+            ("student_contest_participations", "post_contest_solves_count", "ALTER TABLE student_contest_participations ADD COLUMN IF NOT EXISTS post_contest_solves_count INTEGER DEFAULT 0"),
             ("student_contest_participations", "updated_at", "ALTER TABLE student_contest_participations ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP"),
             # hod_snapshots 
             ("hod_snapshots", "academic_year", "ALTER TABLE hod_snapshots ADD COLUMN IF NOT EXISTS academic_year VARCHAR(20) DEFAULT '2026-27'"),

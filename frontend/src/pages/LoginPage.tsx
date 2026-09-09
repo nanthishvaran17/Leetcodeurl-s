@@ -443,6 +443,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
 
   return (
     <div className="login-page-container">
+      <img
+        src="/nandha_aerial_bg_mobile.webp"
+        alt="Nandha Campus Aerial View"
+        className="mobile-lcp-hero hide-on-desktop"
+        // @ts-ignore
+        fetchPriority="high"
+        width={828}
+        height={600}
+      />
       {/* ========================================================
           MOBILE HERO / HEADER: Official Floating Institutional Branding
           ======================================================== */}

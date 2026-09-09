@@ -14,7 +14,7 @@
 let heartbeatTimer: any = null;
 let isPinging = false;
 
-const PRODUCTION_BACKEND_URL = 'https://leetcodeurl-s-3mig.onrender.com';
+import { PRODUCTION_BACKEND_URL } from '../config/apiConfig';
 
 const getHealthUrl = (): string => {
   const isNative = typeof window !== 'undefined' && (
@@ -23,20 +23,18 @@ const getHealthUrl = (): string => {
     window.location.origin.includes('capacitor://')
   );
 
+  const origin = PRODUCTION_BACKEND_URL.replace(/\/api\/?$/, '').replace(/\/+$/, '');
+
   if (isNative) {
-    const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || PRODUCTION_BACKEND_URL;
-    const origin = envUrl.replace(/\/api\/?$/, '').replace(/\/+$/, '');
     return `${origin}/health`;
   }
 
-  if (typeof window !== 'undefined' && 
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
-      (window.location.port === '3000' || window.location.port === '5173')) {
+  // Local dev: use relative path (proxied by Vite)
+  if (typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
     return '/api/system/health';
   }
 
-  const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || PRODUCTION_BACKEND_URL;
-  const origin = envUrl.replace(/\/api\/?$/, '').replace(/\/+$/, '');
   return `${origin}/health`;
 };
 

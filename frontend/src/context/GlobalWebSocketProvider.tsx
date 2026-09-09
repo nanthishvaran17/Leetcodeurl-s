@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState, useRef 
 import { useQueryClient } from '@tanstack/react-query';
 import { LiveEventRouter } from '../services/LiveEventRouter';
 import { useAuth } from './AuthContext';
+import { PRODUCTION_BACKEND_URL } from '../config/apiConfig';
 
 export type RealtimeVisualStatus = 'INITIALIZING' | 'LIVE' | 'RECONNECTING' | 'OFFLINE';
 
@@ -67,23 +68,21 @@ export const GlobalWebSocketProvider: React.FC<{ children: React.ReactNode }> = 
       return;
     }
 
-    const PRODUCTION_BACKEND_URL = 'https://leetcodeurl-s-3mig.onrender.com';
     const isNative = typeof window !== 'undefined' && (
       !!(window as any).Capacitor?.isNativePlatform?.() ||
       window.location.protocol === 'capacitor:' ||
       window.location.origin.includes('capacitor://')
     );
 
-    const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || (isNative ? PRODUCTION_BACKEND_URL : null);
+    const baseUrl = import.meta.env.VITE_API_URL || (isNative ? PRODUCTION_BACKEND_URL : null);
     let wsUrl: string;
 
-    if (envUrl) {
-      const targetHost = envUrl.replace(/^https?:\/\//, '').replace(/\/api\/?$/, '').replace(/\/+$/, '');
-      const protocol = envUrl.startsWith('https') ? 'wss:' : 'ws:';
+    if (baseUrl) {
+      const targetHost = baseUrl.replace(/^https?:\/\//, '').replace(/\/api\/?$/, '').replace(/\/+$/, '');
+      const protocol = baseUrl.startsWith('https') ? 'wss:' : 'ws:';
       wsUrl = `${protocol}//${targetHost}/ws/leaderboard`;
-    } else if (typeof window !== 'undefined' && 
-               (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
-               (window.location.port === '3000' || window.location.port === '5173')) {
+    } else if (typeof window !== 'undefined' &&
+               (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
       const loc = window.location;
       wsUrl = `${loc.protocol === 'https:' ? 'wss:' : 'ws:'}//${loc.host}/ws/leaderboard`;
     } else {

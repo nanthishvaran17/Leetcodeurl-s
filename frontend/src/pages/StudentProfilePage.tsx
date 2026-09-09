@@ -10,6 +10,9 @@ import { ExportStatus } from '../components/ExportStatus';
 import { IDCardGenerator } from '../components/IDCardGenerator';
 import { StudentEditOverlay } from '../components/StudentEditOverlay';
 import { IndividualAnalyticsDashboard } from '../components/analytics/IndividualAnalyticsDashboard';
+import { ContestAnalyticsView } from '../components/analytics/ContestAnalyticsView';
+import { ActivityAnalyticsView } from '../components/analytics/ActivityAnalyticsView';
+import { ReportsAnalyticsView } from '../components/analytics/ReportsAnalyticsView';
 
 interface StudentProfilePageProps {
   student: any;
@@ -494,12 +497,16 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         <IndividualAnalyticsDashboard studentId={student?.id || student?.student_id} />
       )}
 
-      {(activeTab === 'contests' || activeTab === 'activity' || activeTab === 'reports') && (
-        <div className="flex flex-col items-center justify-center py-24 text-slate-400">
-          <Clock className="w-12 h-12 mb-4 opacity-20" />
-          <p className="font-bold text-lg text-slate-500">Coming Soon</p>
-          <p className="text-sm">This section is currently under construction.</p>
-        </div>
+      {activeTab === 'contests' && (
+        <ContestAnalyticsView studentId={student?.id || student?.student_id} />
+      )}
+
+      {activeTab === 'activity' && (
+        <ActivityAnalyticsView studentId={student?.id || student?.student_id} />
+      )}
+
+      {activeTab === 'reports' && (
+        <ReportsAnalyticsView studentId={student?.id || student?.student_id} />
       )}
       </div>
 

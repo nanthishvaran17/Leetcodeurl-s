@@ -947,8 +947,8 @@ export const HODCommandCenter: React.FC = () => {
   ];
 
   const deptOptions = [
-    ...(user?.role?.toLowerCase() === 'hod' ? [] : [{ value: 'ALL', label: 'All Departments', icon: Building2, badge: 'ALL', badgeColor: 'bg-brand-500 text-white' }]),
-    ...departments.map(d => ({ value: String(d.id), label: d.code, count: d.student_count, icon: Building2 }))
+    ...(user?.role?.toLowerCase() === 'hod' ? [] : [{ value: 'ALL', label: 'All Departments', icon: Building2, badge: 'ALL', pillText: 'ALL', badgeColor: 'bg-brand-500 text-white' }]),
+    ...departments.map(d => ({ value: String(d.id), label: d.name, pillText: d.code, badge: d.code, count: d.student_count, icon: Building2 }))
   ];
 
   const yearOptions = [
@@ -984,7 +984,7 @@ export const HODCommandCenter: React.FC = () => {
           <div className="space-y-3">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
               <span className="uppercase tracking-tight">
-                {user?.role?.toLowerCase() === 'hod' ? `DEPARTMENT: ${departments[0]?.code || 'Loading...'}` : "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)"}
+                {user?.role?.toLowerCase() === 'hod' ? `DEPARTMENT: ${departments[0]?.name || 'Loading...'}` : "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)"}
               </span>
             </div>
             <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white mt-1 uppercase">

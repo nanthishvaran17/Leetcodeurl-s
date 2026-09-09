@@ -429,3 +429,192 @@ def get_performance_chart(timeframe: str = Query("monthly"), db: Session = Depen
         ]
         
     return {"data": data}
+
+
+@router.get("/contest/aggregate")
+def get_contest_aggregate(
+    period: str = Query("30d"),
+    custom_start: Optional[str] = None,
+    custom_end: Optional[str] = None,
+    dept_id: Optional[int] = None,
+    year_level: Optional[str] = None,
+    batch: Optional[str] = None,
+    student_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    start_dt, end_dt = resolve_date_range(period, custom_start, custom_end)
+    
+    # Base query for authorized students
+    base_student_query = db.query(Student.id).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    if student_id:
+        base_student_query = base_student_query.filter(Student.id == student_id)
+    if dept_id:
+        base_student_query = base_student_query.filter(Student.department_id == dept_id)
+    if year_level and year_level.upper() not in ("", "ALL"):
+        base_student_query = base_student_query.filter(func.upper(Student.year_level) == year_level.upper().replace(" YEAR", ""))
+    if batch and batch.upper() not in ("", "ALL"):
+        base_student_query = base_student_query.filter(Student.batch == batch)
+        
+    if current_user:
+        base_student_query = apply_role_based_student_filter(base_student_query, current_user, db)
+        
+    student_subquery = base_student_query.subquery()
+    student_count = db.query(func.count(student_subquery.c.id)).scalar()
+    
+    if not student_count or student_count == 0:
+        return {"error": "No students found in scope", "data": None}
+
+    # Aggregate stats
+    contests_query = db.query(StudentContestSnapshot).filter(
+        StudentContestSnapshot.student_id.in_(db.query(student_subquery.c.id)),
+        StudentContestSnapshot.captured_at >= start_dt,
+        StudentContestSnapshot.captured_at <= end_dt
+    )
+
+    agg = db.query(
+        func.count(func.distinct(StudentContestSnapshot.contest_name)).label("total_contests"),
+        func.count(StudentContestSnapshot.id).label("total_participations"),
+        func.min(StudentContestSnapshot.contest_rank).label("best_rank"),
+        func.avg(StudentContestSnapshot.contest_rank).label("avg_rank"),
+        func.sum(StudentContestSnapshot.questions_solved).label("problems_solved"),
+        func.avg(StudentContestSnapshot.questions_solved).label("avg_solved"),
+    ).filter(
+        StudentContestSnapshot.student_id.in_(db.query(student_subquery.c.id)),
+        StudentContestSnapshot.captured_at >= start_dt,
+        StudentContestSnapshot.captured_at <= end_dt
+    ).first()
+
+    # Trend data
+    date_col = func.date(StudentContestSnapshot.captured_at).label("date")
+    trend = db.query(
+        date_col,
+        func.avg(StudentContestSnapshot.contest_rating).label("avg_rating"),
+        func.avg(StudentContestSnapshot.contest_rank).label("avg_rank")
+    ).filter(
+        StudentContestSnapshot.student_id.in_(db.query(student_subquery.c.id)),
+        StudentContestSnapshot.captured_at >= start_dt,
+        StudentContestSnapshot.captured_at <= end_dt
+    ).group_by(date_col).order_by(date_col.asc()).all()
+
+    # Top performers
+    top_performers = db.query(
+        StudentContestSnapshot.student_id,
+        func.max(Student.name).label("name"),
+        func.max(Student.reg_no).label("reg_no"),
+        func.max(StudentContestSnapshot.contest_rating).label("rating"),
+        func.min(StudentContestSnapshot.contest_rank).label("best_rank"),
+        func.sum(StudentContestSnapshot.questions_solved).label("solved")
+    ).join(
+        Student, Student.id == StudentContestSnapshot.student_id
+    ).filter(
+        StudentContestSnapshot.student_id.in_(db.query(student_subquery.c.id)),
+        StudentContestSnapshot.captured_at >= start_dt,
+        StudentContestSnapshot.captured_at <= end_dt
+    ).group_by(StudentContestSnapshot.student_id).order_by(desc("rating")).limit(10).all()
+
+    return {
+        "summary": {
+            "total_contests": agg.total_contests or 0,
+            "participations": agg.total_participations or 0,
+            "participation_rate": round((agg.total_participations / (agg.total_contests * student_count)) * 100, 1) if agg.total_contests and student_count else 0,
+            "best_rank": agg.best_rank,
+            "avg_rank": round(agg.avg_rank, 1) if agg.avg_rank else None,
+            "problems_solved": agg.problems_solved or 0,
+            "avg_solved": round(agg.avg_solved, 1) if agg.avg_solved else 0,
+        },
+        "trend": [
+            {"date": str(t.date), "avg_rating": round(t.avg_rating, 1) if t.avg_rating else None, "avg_rank": round(t.avg_rank, 1) if t.avg_rank else None}
+            for t in trend
+        ],
+        "top_performers": [
+            {"student_id": p.student_id, "name": p.name, "reg_no": p.reg_no, "rating": p.rating, "best_rank": p.best_rank, "solved": p.solved}
+            for p in top_performers
+        ]
+    }
+
+
+@router.get("/activity/aggregate")
+def get_activity_aggregate(
+    period: str = Query("30d"),
+    custom_start: Optional[str] = None,
+    custom_end: Optional[str] = None,
+    dept_id: Optional[int] = None,
+    year_level: Optional[str] = None,
+    batch: Optional[str] = None,
+    student_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    start_dt, end_dt = resolve_date_range(period, custom_start, custom_end)
+    
+    base_student_query = db.query(Student.id).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    if student_id:
+        base_student_query = base_student_query.filter(Student.id == student_id)
+    if dept_id:
+        base_student_query = base_student_query.filter(Student.department_id == dept_id)
+    if year_level and year_level.upper() not in ("", "ALL"):
+        base_student_query = base_student_query.filter(func.upper(Student.year_level) == year_level.upper().replace(" YEAR", ""))
+    if batch and batch.upper() not in ("", "ALL"):
+        base_student_query = base_student_query.filter(Student.batch == batch)
+        
+    if current_user:
+        base_student_query = apply_role_based_student_filter(base_student_query, current_user, db)
+        
+    student_subquery = base_student_query.subquery()
+    student_count = db.query(func.count(student_subquery.c.id)).scalar()
+    
+    if not student_count or student_count == 0:
+        return {"error": "No students found in scope", "data": None}
+
+    # Aggregate stats
+    agg = db.query(
+        func.sum(StudentStatSnapshot.delta_total).label("total_submissions"), # total_submissions approximated by delta_total if we don't have submissions
+        func.count(func.distinct(StudentStatSnapshot.student_id)).label("active_students"),
+    ).filter(
+        StudentStatSnapshot.student_id.in_(db.query(student_subquery.c.id)),
+        StudentStatSnapshot.captured_at >= start_dt,
+        StudentStatSnapshot.captured_at <= end_dt
+    ).first()
+
+    # Daily trend
+    date_col = func.date(StudentStatSnapshot.captured_at).label("date")
+    trend = db.query(
+        date_col,
+        func.sum(StudentStatSnapshot.delta_total).label("daily_submissions"),
+        func.count(func.distinct(StudentStatSnapshot.student_id)).label("active_students")
+    ).filter(
+        StudentStatSnapshot.student_id.in_(db.query(student_subquery.c.id)),
+        StudentStatSnapshot.captured_at >= start_dt,
+        StudentStatSnapshot.captured_at <= end_dt
+    ).group_by(date_col).order_by(date_col.asc()).all()
+    
+    # Most active
+    most_active = db.query(
+        StudentStatSnapshot.student_id,
+        func.max(Student.name).label("name"),
+        func.max(Student.reg_no).label("reg_no"),
+        func.sum(StudentStatSnapshot.delta_total).label("total_solved")
+    ).join(
+        Student, Student.id == StudentStatSnapshot.student_id
+    ).filter(
+        StudentStatSnapshot.student_id.in_(db.query(student_subquery.c.id)),
+        StudentStatSnapshot.captured_at >= start_dt,
+        StudentStatSnapshot.captured_at <= end_dt
+    ).group_by(StudentStatSnapshot.student_id).order_by(desc("total_solved")).limit(10).all()
+
+    return {
+        "summary": {
+            "total_submissions": agg.total_submissions or 0,
+            "active_students": agg.active_students or 0,
+            "active_rate": round((agg.active_students / student_count) * 100, 1) if student_count else 0,
+        },
+        "trend": [
+            {"date": str(t.date), "submissions": t.daily_submissions or 0, "active_students": t.active_students or 0}
+            for t in trend
+        ],
+        "most_active": [
+            {"student_id": m.student_id, "name": m.name, "reg_no": m.reg_no, "solved": m.total_solved}
+            for m in most_active
+        ]
+    }

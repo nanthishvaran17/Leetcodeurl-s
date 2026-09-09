@@ -1,35 +1,7 @@
 import axios from 'axios';
+import { API_BASE_URL, getApiUrl as configGetApiUrl } from '../config/apiConfig';
 
-// Authoritative Production Backend Base URL (used by native apps only)
-const PRODUCTION_BACKEND_URL = 'https://leetcodeurl-s-3mig.onrender.com';
-
-// Smart API Base URL Resolution for Local Development vs Native Mobile (Capacitor/Android) vs Production Hosting
-const getApiBaseUrl = () => {
-  // Check if running inside native mobile app container (Capacitor Android / iOS)
-  const isNative = typeof window !== 'undefined' && (
-    !!(window as any).Capacitor?.isNativePlatform?.() ||
-    window.location.protocol === 'capacitor:' ||
-    window.location.origin.includes('capacitor://') ||
-    window.location.origin.includes('ionic://')
-  );
-
-  // Native Android/iOS Capacitor app MUST always use full production HTTPS endpoint (no proxy)
-  if (isNative) {
-    return `${PRODUCTION_BACKEND_URL}/api`;
-  }
-
-  // All web browsers (local dev AND production Vercel) use relative /api
-  // In production: Vercel proxy routes /api/* → Render backend (no CORS needed)
-  // In local dev: Vite dev server or relative path works the same way
-  return '/api';
-};
-
-const API_BASE = getApiBaseUrl();
-
-export const getApiUrl = (path: string) => {
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  return `${API_BASE}${cleanPath}`;
-};
+export const getApiUrl = configGetApiUrl;
 
 export const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
@@ -37,7 +9,7 @@ export const getAuthHeaders = () => {
 };
 
 const api = axios.create({
-  baseURL: API_BASE,
+  baseURL: API_BASE_URL,
   timeout: 45000,
   withCredentials: true,
   headers: {

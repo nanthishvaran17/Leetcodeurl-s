@@ -3,7 +3,7 @@ import { useAuth } from './AuthContext';
 import { useGlobalWebSocket } from './GlobalWebSocketProvider';
 import { useNotification as useToastNotification } from './NotificationContext';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '';
+import { API_BASE_URL } from '../config/apiConfig';
 
 export interface Notification {
   id: string;

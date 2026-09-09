@@ -4,7 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { useAuth } from '../context/AuthContext';
 import { createNotificationChannels, triggerNativeStatusBarNotification } from '../services/pushNotifications';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '';
+import { API_BASE_URL } from '../config/apiConfig';
 
 export const useCapacitorPush = () => {
   const { isAuthenticated, token } = useAuth();

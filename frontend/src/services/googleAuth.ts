@@ -1,6 +1,7 @@
 import { signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider } from 'firebase/auth';
 import { getOrInitAuth, createGoogleProvider } from './firebase';
 import api from './api';
+import { API_BASE_URL } from '../config/apiConfig';
 
 export interface GoogleAuthResult {
   authenticated: boolean;
@@ -302,8 +303,8 @@ const authenticateWithGoogleMobile = async (): Promise<GoogleAuthResult> => {
     bridgeBase = window.location.origin;
   }
 
-  // Authoritative production API endpoint for native mobile app
-  const apiBase = (typeof import.meta !== 'undefined' && (import.meta.env?.VITE_API_URL || import.meta.env?.VITE_API_BASE_URL)) || 'https://leetcodeurl-s-3mig.onrender.com/api';
+  // Authoritative production API endpoint — resolved from centralized config
+  const apiBase = API_BASE_URL;
 
   // 1. Generate PKCE parameters
   const codeVerifier = generateRandomString(64);

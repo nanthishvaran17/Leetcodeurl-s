@@ -41,20 +41,21 @@ from sqlalchemy.pool import NullPool
 engine_kwargs = {}
 if "postgresql" in db_url or "postgres" in db_url:
     engine_kwargs.update({
-        # Render free tier allows ~25 connections max.
-        # Background sync jobs open their own SessionLocal, so reserve headroom.
-        "pool_size": 5,
-        "max_overflow": 5,           # max 10 total active connections
+        # Tuned for 1,500 concurrent staff users
+        "pool_size": int(os.environ.get("DB_POOL_SIZE", 50)),
+        "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", 20)),
         "pool_timeout": 30,          # wait up to 30s to checkout a connection
         "pool_pre_ping": True,       # verify liveness before returning from pool
         "pool_recycle": 300,         # recycle after 5min (Render drops idle connections ~60s)
         "connect_args": {
             "connect_timeout": 10,
             "keepalives": 1,
-            "keepalives_idle": 60,   # probe after 60s idle (sync jobs run for minutes)
+            "keepalives_idle": 60,   # probe after 60s idle
             "keepalives_interval": 5,
             "keepalives_count": 5,
-            "sslmode": "require"
+            "sslmode": "require",
+            # Statement timeout prevents hanging queries from exhausting the pool
+            "options": "-c statement_timeout=15000"
         }
     })
 else:
@@ -190,6 +191,16 @@ def run_migrations():
                         ADD COLUMN IF NOT EXISTS primary_leetcode_id VARCHAR(100),
                         ADD COLUMN IF NOT EXISTS secondary_leetcode_id VARCHAR(100),
                         ADD COLUMN IF NOT EXISTS secondary_status VARCHAR(50) DEFAULT 'none';
+
+                    ALTER TABLE student_contest_participations
+                        ADD COLUMN IF NOT EXISTS official_attendance_state VARCHAR(30),
+                        ADD COLUMN IF NOT EXISTS is_frozen BOOLEAN DEFAULT FALSE,
+                        ADD COLUMN IF NOT EXISTS frozen_at TIMESTAMP WITH TIME ZONE,
+                        ADD COLUMN IF NOT EXISTS post_contest_solves_count INTEGER DEFAULT 0,
+                        ADD COLUMN IF NOT EXISTS solved_problems TEXT,
+                        ADD COLUMN IF NOT EXISTS confidence VARCHAR(50) DEFAULT 'HIGH',
+                        ADD COLUMN IF NOT EXISTS verification_level VARCHAR(50),
+                        ADD COLUMN IF NOT EXISTS verification_evidence TEXT;
                 """))
                 conn.execute(__import__('sqlalchemy').text("""
                     UPDATE students

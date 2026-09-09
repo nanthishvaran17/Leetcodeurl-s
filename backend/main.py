@@ -55,13 +55,50 @@ async def _deferred_startup_tasks():
         """
         try:
             with engine.connect() as conn:
-                # Add primary/secondary LeetCode account columns if missing
-                conn.execute(text("""
-                    ALTER TABLE students
-                        ADD COLUMN IF NOT EXISTS primary_leetcode_id VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS secondary_leetcode_id VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS secondary_status VARCHAR(50) DEFAULT 'none'
-                """))
+                db_url_str = str(engine.url)
+                is_pg = "postgresql" in db_url_str or "postgres" in db_url_str
+
+                if is_pg:
+                    # PostgreSQL IF NOT EXISTS column additions
+                    conn.execute(text("""
+                        ALTER TABLE students
+                            ADD COLUMN IF NOT EXISTS primary_leetcode_id VARCHAR(100),
+                            ADD COLUMN IF NOT EXISTS secondary_leetcode_id VARCHAR(100),
+                            ADD COLUMN IF NOT EXISTS secondary_status VARCHAR(50) DEFAULT 'none';
+
+                        ALTER TABLE student_contest_participations
+                            ADD COLUMN IF NOT EXISTS official_attendance_state VARCHAR(30),
+                            ADD COLUMN IF NOT EXISTS is_frozen BOOLEAN DEFAULT FALSE,
+                            ADD COLUMN IF NOT EXISTS frozen_at TIMESTAMP WITH TIME ZONE,
+                            ADD COLUMN IF NOT EXISTS post_contest_solves_count INTEGER DEFAULT 0,
+                            ADD COLUMN IF NOT EXISTS solved_problems TEXT,
+                            ADD COLUMN IF NOT EXISTS confidence VARCHAR(50) DEFAULT 'HIGH',
+                            ADD COLUMN IF NOT EXISTS verification_level VARCHAR(50),
+                            ADD COLUMN IF NOT EXISTS verification_evidence TEXT;
+
+                        ALTER TABLE weekly_session_snapshots
+                            ADD COLUMN IF NOT EXISTS is_sequence_broken BOOLEAN DEFAULT FALSE;
+                    """))
+                else:
+                    # SQLite dialect fallback column additions
+                    try:
+                        res = conn.execute(text("PRAGMA table_info(student_contest_participations)")).fetchall()
+                        scp_cols = {r[1] for r in res}
+                        if scp_cols:
+                            sqlite_additions = [
+                                ("official_attendance_state", "ALTER TABLE student_contest_participations ADD COLUMN official_attendance_state VARCHAR(30)"),
+                                ("is_frozen", "ALTER TABLE student_contest_participations ADD COLUMN is_frozen BOOLEAN DEFAULT 0"),
+                                ("frozen_at", "ALTER TABLE student_contest_participations ADD COLUMN frozen_at DATETIME"),
+                                ("post_contest_solves_count", "ALTER TABLE student_contest_participations ADD COLUMN post_contest_solves_count INTEGER DEFAULT 0"),
+                                ("solved_problems", "ALTER TABLE student_contest_participations ADD COLUMN solved_problems TEXT"),
+                                ("confidence", "ALTER TABLE student_contest_participations ADD COLUMN confidence VARCHAR(50) DEFAULT 'HIGH'")
+                            ]
+                            for col_name, sql_stmt in sqlite_additions:
+                                if col_name not in scp_cols:
+                                    conn.execute(text(sql_stmt))
+                    except Exception as _sq_err:
+                        logger.warning(f"[STARTUP] SQLite safety column addition note: {_sq_err}")
+
                 # Backfill primary_leetcode_id from username
                 conn.execute(text("""
                     UPDATE students

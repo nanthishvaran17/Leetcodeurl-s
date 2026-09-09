@@ -217,7 +217,7 @@ export const Post930SolversView: React.FC = () => {
             >
               <option value="">All Depts</option>
               {departments.map(d => (
-                <option key={d.id} value={d.code}>{d.code}</option>
+                <option key={d.id} value={d.code}>{d.name}</option>
               ))}
             </select>
 
