@@ -12,7 +12,7 @@ export const ExportStatus: React.FC<ExportStatusProps> = ({ state, onRetry, onCl
 
   const isFailed = state.status === 'FAILED';
   const isGenerating = ['GENERATING', 'PROCESSING', 'QUEUED'].includes(state.status);
-  const isCompleted = state.status === 'COMPLETED' || state.status === 'DOWNLOADED';
+  const isCompleted = state.status === 'COMPLETED';
 
   // We can show a small toast-like overlay or modal
   return (

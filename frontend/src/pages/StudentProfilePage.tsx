@@ -6,7 +6,7 @@ import { SkillRadarChart } from '../components/SkillRadarChart';
 import { BadgeShelf } from '../components/BadgeShelf';
 import { DownloadState } from '../services/download/downloadTypes';
 import { ExportStatus } from '../components/ExportStatus';
-import { ResponsiveDialog } from '../components/ui/ResponsiveDialog';
+
 import { IDCardGenerator } from '../components/IDCardGenerator';
 import { StudentEditOverlay } from '../components/StudentEditOverlay';
 import { IndividualAnalyticsDashboard } from '../components/analytics/IndividualAnalyticsDashboard';

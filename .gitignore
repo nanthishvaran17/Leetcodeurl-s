@@ -110,4 +110,7 @@ classes.txt
 db.sqlite3
 *.apk
 
-
+# Local college data & dump files
+Clg Work/
+students_dump.json
+scratch_*.py

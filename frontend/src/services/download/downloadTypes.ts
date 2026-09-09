@@ -15,7 +15,10 @@ export type DownloadStatus =
   | 'CANCELLED'
   | 'EXPIRED'
   | 'UNAUTHORIZED'
-  | 'FORBIDDEN';
+  | 'FORBIDDEN'
+  | 'QUEUED'
+  | 'PROCESSING'
+  | 'GENERATING';
 
 export interface DownloadOptions {
   /** Target backend endpoint (e.g. "/api/reports/export-excel" or relative path) */

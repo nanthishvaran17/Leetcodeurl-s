@@ -58,7 +58,7 @@ export const FastStudentRow = memo(({
   const totalSolved = (student && isVerified) ? (student.stats?.total_solved ?? 0) : null;
   const isSolver = isVerified && (totalSolved ?? 0) > 0;
   
-  const effectiveCollegeRank = student?.college_rank || (isSolver ? index + 1 : undefined);
+  const effectiveCollegeRank = isSolver ? index + 1 : undefined;
   const isSyncing = syncState === 'fetching';
 
   const [flashSolved, setFlashSolved] = React.useState(false);

@@ -41,18 +41,19 @@ from sqlalchemy.pool import NullPool
 engine_kwargs = {}
 if "postgresql" in db_url or "postgres" in db_url:
     engine_kwargs.update({
-        # Render free tier allows ~25 connections max; keep headroom for other processes
-        "pool_size": 10,
-        "max_overflow": 10,         # max 20 total active connections
-        "pool_timeout": 30,         # wait up to 30s to checkout a connection
-        "pool_pre_ping": True,      # verify liveness before returning from pool
-        "pool_recycle": 300,        # recycle after 5min (Render drops idle connections ~60s)
+        # Render free tier allows ~25 connections max.
+        # Background sync jobs open their own SessionLocal, so reserve headroom.
+        "pool_size": 5,
+        "max_overflow": 5,           # max 10 total active connections
+        "pool_timeout": 30,          # wait up to 30s to checkout a connection
+        "pool_pre_ping": True,       # verify liveness before returning from pool
+        "pool_recycle": 300,         # recycle after 5min (Render drops idle connections ~60s)
         "connect_args": {
             "connect_timeout": 10,
             "keepalives": 1,
-            "keepalives_idle": 30,  # probe after 30s idle
+            "keepalives_idle": 60,   # probe after 60s idle (sync jobs run for minutes)
             "keepalives_interval": 5,
-            "keepalives_count": 3,
+            "keepalives_count": 5,
             "sslmode": "require"
         }
     })
@@ -117,11 +118,60 @@ if "postgresql" in db_url or "postgres" in db_url:
 
 
 def get_db():
+    """FastAPI dependency that provides a database session."""
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
+
+from contextlib import contextmanager
+
+@contextmanager
+def get_db_session():
+    """
+    Context manager for use in background tasks (non-FastAPI dependency contexts).
+    Automatically retries once on transient SSL / connection-reset errors.
+    Usage: with get_db_session() as db: ...
+    """
+    import time as _time
+    _max_retries = 2
+    last_exc = None
+    for _attempt in range(_max_retries):
+        db = SessionLocal()
+        try:
+            yield db
+            db.commit()
+            return
+        except Exception as _exc:
+            db.rollback()
+            last_exc = _exc
+            exc_str = str(_exc).lower()
+            _is_transient = any(kw in exc_str for kw in (
+                "ssl connection", "connection reset", "broken pipe",
+                "could not connect", "connection refused", "operationalerror"
+            ))
+            try:
+                import psycopg2
+                if isinstance(_exc, (psycopg2.OperationalError, psycopg2.InterfaceError)):
+                    _is_transient = True
+            except ImportError:
+                pass
+            if _is_transient and _attempt < _max_retries - 1:
+                import logging as _logging
+                _logging.warning(
+                    f"[DB_RETRY] Transient DB error on attempt {_attempt + 1}/{_max_retries}, retrying: "
+                    f"{type(_exc).__name__}: {str(_exc)[:120]}"
+                )
+                _time.sleep(0.3 * (_attempt + 1))
+            else:
+                raise
+        finally:
+            db.close()
+    if last_exc:
+        raise last_exc
+
 
 def run_migrations():
     """Apply any missing column migrations and performance indexes to the existing SQLite database."""

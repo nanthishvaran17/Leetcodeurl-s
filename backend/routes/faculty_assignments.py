@@ -33,6 +33,7 @@ class UnassignStudentsRequest(BaseModel):
 
 class AutoDistributeRequest(BaseModel):
     department_id: int
+    student_ids: Optional[List[int]] = None
 
 
 class NoteCreateRequest(BaseModel):
@@ -287,6 +288,7 @@ def auto_distribute_students(
     return faculty_assignment_service.auto_distribute_department(
         db=db,
         department_id=payload.department_id,
+        student_ids=payload.student_ids,
         assigned_by_id=current_user.id
     )
 

@@ -55,7 +55,7 @@ import {
 import api from '../services/api';
 import { DownloadState } from '../services/download/downloadTypes';
 import { ExportStatus } from '../components/ExportStatus';
-import { ResponsiveDialog } from '../components/ui/ResponsiveDialog';
+
 import { useNotification } from '../context/NotificationContext';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
@@ -1375,7 +1375,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
                   <button
                     type="button"
-                    onClick={handleDownloadForensicPdf}
+                    onClick={handleDownloadPdf}
                     disabled={downloadingPdf}
                     className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all shadow-md hover:scale-105 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                   >
@@ -1946,7 +1946,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={handleDownloadForensicPdf}
+                  onClick={handleDownloadPdf}
                   disabled={downloadingPdf}
                   className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
                 >

@@ -334,6 +334,7 @@ class FacultyAssignmentService:
     def auto_distribute_department(
         db: Session,
         department_id: int,
+        student_ids: Optional[List[int]] = None,
         assigned_by_id: Optional[int] = None
     ) -> Dict[str, Any]:
         """
@@ -370,11 +371,16 @@ class FacultyAssignmentService:
             FacultyStudentAssignment.is_active == True
         ).subquery()
 
-        unassigned_students = db.query(Student).filter(
+        query = db.query(Student).filter(
             Student.department_id == department_id,
             (Student.is_active == True) | (Student.is_active.is_(None)),
             ~Student.id.in_(assigned_subquery)
-        ).order_by(Student.year_level, Student.reg_no).all()
+        )
+        
+        if student_ids:
+            query = query.filter(Student.id.in_(student_ids))
+            
+        unassigned_students = query.order_by(Student.year_level, Student.reg_no).all()
 
         if not unassigned_students:
             return {

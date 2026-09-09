@@ -26,9 +26,10 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // High-Resolution 800 x 480 Canvas
-    canvas.width = 800;
-    canvas.height = 480;
+    // High-Resolution Retina Output 1600 x 960 Canvas (Scale 2x)
+    canvas.width = 1600;
+    canvas.height = 960;
+    ctx.scale(2, 2);
 
     // 1. Deep Cybernetic Executive Background Gradient
     const bgGrad = ctx.createLinearGradient(0, 0, 800, 480);

@@ -57,6 +57,7 @@ class BatchUnassignRequest(BaseModel):
 
 class AutoDistributeRequest(BaseModel):
     department_id: int
+    student_ids: Optional[List[int]] = None
 
 EXCLUDE_DEPT_CODES = {"CSE_TEST", "CSE_AI_TEST", "TEST"}
 
@@ -418,6 +419,7 @@ def auto_distribute_department(
     res = faculty_assignment_service.auto_distribute_department(
         db=db,
         department_id=req.department_id,
+        student_ids=req.student_ids,
         assigned_by_id=1
     )
     connection_manager.broadcast_sync({

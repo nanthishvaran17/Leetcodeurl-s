@@ -224,8 +224,9 @@ def broadcast_sync_event(event_data: Dict[str, Any]):
 
 def get_active_students(db: Session) -> List[Student]:
     """Returns active student roster from database dynamically."""
+    from sqlalchemy.orm import joinedload
     logger.info("[SYNC] Loading active institutional student roster from database...")
-    students = db.query(Student).filter(
+    students = db.query(Student).options(joinedload(Student.stats)).filter(
         or_(Student.is_active == True, Student.is_active.is_(None))
     ).all()
     logger.info(f"[SYNC] Loaded {len(students)} active students")
@@ -507,18 +508,34 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
         )
 
         final_status = "COMPLETED" if summary.get("fetch_failed", 0) == 0 else "PARTIAL_SUCCESS"
-        job_record = db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
-        if job_record:
-            now_t = datetime.datetime.utcnow()
-            job_record.completed_at = now_t
-            job_record.last_synced_at = now_t
-            job_record.success_count = summary.get("full_dataset_synced", 0)
-            job_record.partial_count = summary.get("partial_sync", 0) + summary.get("pending_username", 0)
-            job_record.error_count = summary.get("fetch_failed", 0) + summary.get("invalid_username", 0)
-            job_record.processed_count = job_record.total_records
-            job_record.progress = 100.0
-            job_record.status = final_status
-            db.commit()
+
+        # Use a fresh session for post-sync DB writes to avoid stale SSL connections
+        def _update_job_record(final_status=final_status):
+            for _attempt in range(3):
+                _db = SessionLocal()
+                try:
+                    job_record = _db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
+                    if job_record:
+                        now_t = datetime.datetime.utcnow()
+                        job_record.completed_at = now_t
+                        job_record.last_synced_at = now_t
+                        job_record.success_count = summary.get("full_dataset_synced", 0)
+                        job_record.partial_count = summary.get("partial_sync", 0) + summary.get("pending_username", 0)
+                        job_record.error_count = summary.get("fetch_failed", 0) + summary.get("invalid_username", 0)
+                        job_record.processed_count = job_record.total_records
+                        job_record.progress = 100.0
+                        job_record.status = final_status
+                        _db.commit()
+                    return
+                except Exception as _e:
+                    _db.rollback()
+                    logger.warning(f"[WORKER] Post-sync DB write attempt {_attempt + 1}/3 failed: {_e}")
+                    if _attempt < 2:
+                        import time as _t; _t.sleep(0.5)
+                finally:
+                    _db.close()
+
+        _update_job_record()
 
         # Invalidate all caches so dashboard and leaderboard immediately serve fresh data
         try:
@@ -537,15 +554,34 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
 
     except Exception as exc:
         logger.error(f"[WORKER] Job {job_id} failed: {exc}", exc_info=True)
-        job_record = db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
-        if job_record:
-            now_t = datetime.datetime.utcnow()
-            job_record.completed_at = now_t
-            job_record.status = "FAILED"
-            job_record.error_message = str(exc)
-            db.commit()
+        for _attempt in range(3):
+            _db = SessionLocal()
+            try:
+                job_record = _db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
+                if job_record:
+                    job_record.completed_at = datetime.datetime.utcnow()
+                    job_record.status = "FAILED"
+                    job_record.error_message = str(exc)
+                    _db.commit()
+                break
+            except Exception as _e2:
+                _db.rollback()
+                logger.warning(f"[WORKER] Failed to mark job FAILED (attempt {_attempt + 1}/3): {_e2}")
+                import time as _t; _t.sleep(0.5)
+            finally:
+                _db.close()
     finally:
-        _release_global_lock(db, job_id)
+        # Release lock using a fresh resilient session
+        for _attempt in range(3):
+            _db = SessionLocal()
+            try:
+                _release_global_lock(_db, job_id)
+                break
+            except Exception as _le:
+                logger.warning(f"[WORKER] Lock release attempt {_attempt + 1}/3 failed: {_le}")
+                import time as _t; _t.sleep(0.3)
+            finally:
+                _db.close()
         db.close()
 
 

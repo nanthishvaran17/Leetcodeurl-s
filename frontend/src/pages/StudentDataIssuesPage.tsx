@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { downloadManager } from '../services/download/downloadManager';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertOctagon,

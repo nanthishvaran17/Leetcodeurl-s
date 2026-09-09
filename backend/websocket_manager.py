@@ -142,10 +142,12 @@ class ConnectionManager:
                     email = payload.get("email")
                     role = payload.get("role", "authenticated")
                     dept_id = payload.get("department_id")
+                    numeric_id = payload.get("user_id")  # raw DB integer id (may differ from sub)
                     logger.info(f"[WS-AUTH] Successfully decoded JWT token via PyJWT. sub={sub} email={email} role={role}")
                     return {
                         "user_id": str(sub),
                         "email": email,
+                        "numeric_id": str(numeric_id) if numeric_id is not None else None,
                         "role": role,
                         "department_id": dept_id,
                         "authenticated": True
@@ -161,10 +163,12 @@ class ConnectionManager:
                     email = payload.get("email")
                     role = payload.get("role", "authenticated")
                     dept_id = payload.get("department_id")
+                    numeric_id = payload.get("user_id")  # raw DB integer id
                     logger.info(f"[WS-AUTH] Successfully decoded JWT token via python-jose. sub={sub} email={email} role={role}")
                     return {
                         "user_id": str(sub),
                         "email": email,
+                        "numeric_id": str(numeric_id) if numeric_id is not None else None,
                         "role": role,
                         "department_id": dept_id,
                         "authenticated": True
@@ -327,29 +331,42 @@ class ConnectionManager:
         logger.info(f"[NOTIF-DEBUG] WEBSOCKET_SEND_STARTED target={target} active_total={len(self.active_connections)}")
 
         for ws, ctx in list(self._ws_user.items()):
-            ws_uid = str(ctx.get("user_id") or "").strip().lower()
-            ws_email = str(ctx.get("email") or "").strip().lower()
-            
-            # Check match against user_id, email, or substring match
+            ws_uid = str(ctx.get("user_id") or "").strip().lower()        # sub / username
+            ws_email = str(ctx.get("email") or "").strip().lower()         # email claim
+            ws_num_id = str(ctx.get("numeric_id") or "").strip().lower()   # DB integer id
+
+            # Match against: username/sub, email, numeric DB id, STAFF_{id} synthetic key
             is_match = (
-                ws_uid == target or 
-                ws_email == target or 
-                (ws_uid and target in ws_uid) or 
-                (ws_email and target in ws_email) or
-                (target.startswith("staff_") and target.replace("staff_", "") == ws_uid)
+                ws_uid == target
+                or ws_email == target
+                or (ws_num_id and ws_num_id == target)
+                or (ws_uid and target in ws_uid)
+                or (ws_email and target in ws_email)
+                or (target.startswith("staff_") and target.replace("staff_", "") == ws_num_id)
+                or (target.startswith("staff_") and target.replace("staff_", "") == ws_uid)
             )
 
             if is_match:
                 try:
                     await ws.send_text(payload)
                     sent_count += 1
-                    logger.info(f"[NOTIF-DEBUG] WEBSOCKET_SEND_SUCCESS target={target} ws_uid={ws_uid} ws_email={ws_email}")
+                    logger.info(
+                        f"[NOTIF-DEBUG] WEBSOCKET_SEND_SUCCESS target={target} "
+                        f"ws_uid={ws_uid} ws_email={ws_email} ws_num_id={ws_num_id}"
+                    )
                 except Exception as e:
                     logger.warning(f"[WS_SEND_USER] Error sending to user {user_id}: {e}")
                     disconnected.append(ws)
 
         if sent_count == 0:
-            logger.warning(f"[NOTIF-DEBUG] WEBSOCKET_SEND_FAILED target={target} - No active matching WebSocket connection found!")
+            connected_ctx = [
+                {"uid": str(c.get("user_id") or ""), "email": str(c.get("email") or ""), "num_id": str(c.get("numeric_id") or "")}
+                for c in self._ws_user.values()
+            ]
+            logger.warning(
+                f"[NOTIF-DEBUG] WEBSOCKET_SEND_FAILED target={target} - "
+                f"No matching connection found. Active contexts: {connected_ctx}"
+            )
 
         for conn in disconnected:
             self.disconnect(conn)
