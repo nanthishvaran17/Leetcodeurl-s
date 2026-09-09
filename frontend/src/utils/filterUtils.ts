@@ -33,17 +33,21 @@ export function normalizeDepartment(dept: any): string {
     if (dept.id === 2 || combined.includes('IOT') || combined.includes('CSE(IOT)') || combined.includes('CSE-IOT') || combined.includes('CSE (IOT)') || combined.includes('INTERNET')) {
       return 'cse_iot';
     }
+    if (dept.id === 7 || code === 'IT' || combined.includes('INFORMATION TECHNOLOGY') || combined.includes('INFO TECH') || combined.includes('B.TECH IT') || combined.includes('B.TECH (IT)')) {
+      return 'it';
+    }
 
     if (code) return code.toLowerCase().replace(/[^a-z0-9]/g, '_');
     if (name) return name.toLowerCase().replace(/[^a-z0-9]/g, '_');
     if (dept.id) return String(dept.id);
   }
 
-  // If numeric ID (1 = Cyber Security, 2 = IoT)
+  // If numeric ID (1 = Cyber Security, 2 = IoT, 7 = Information Technology)
   if (typeof dept === 'number' || (!isNaN(Number(dept)) && String(dept).trim() !== '')) {
     const numId = Number(dept);
     if (numId === 1) return 'cse_cs';
     if (numId === 2) return 'cse_iot';
+    if (numId === 7) return 'it';
     return String(dept);
   }
 
@@ -58,12 +62,51 @@ export function normalizeDepartment(dept: any): string {
     if (clean.includes('IOT') || clean.includes('CSE(IOT)') || clean.includes('CSE-IOT') || clean.includes('CSE (IOT)') || clean.includes('INTERNET')) {
       return 'cse_iot';
     }
+    if (clean === 'IT' || clean === '7' || clean.includes('INFORMATION TECHNOLOGY') || clean.includes('INFO TECH') || clean.includes('B.TECH IT') || clean.includes('B.TECH (IT)')) {
+      return 'it';
+    }
 
     return clean.toLowerCase().replace(/[^a-z0-9]/g, '_');
   }
 
   return 'unknown';
 }
+
+/**
+ * Formats department for user display (Full Name)
+ */
+export function formatDepartmentName(dept: any): string {
+  const norm = normalizeDepartment(dept);
+  if (norm === 'cse_cs') return 'Computer Science and Engineering (Cyber Security)';
+  if (norm === 'cse_iot') return 'Computer Science and Engineering (IoT)';
+  if (norm === 'it') return 'Information Technology';
+  if (typeof dept === 'object' && dept) {
+    return dept.name || dept.code || String(dept);
+  }
+  if (typeof dept === 'string' && dept.trim()) {
+    if (dept.toUpperCase() === 'IT') return 'Information Technology';
+    return dept;
+  }
+  return String(dept || '');
+}
+
+/**
+ * Formats department for short pill display (Code)
+ */
+export function formatDepartmentCode(dept: any): string {
+  const norm = normalizeDepartment(dept);
+  if (norm === 'cse_cs') return 'CSE(CS)';
+  if (norm === 'cse_iot') return 'CSE(IOT)';
+  if (norm === 'it') return 'IT';
+  if (typeof dept === 'object' && dept) {
+    return dept.code || dept.name || String(dept);
+  }
+  if (typeof dept === 'string' && dept.trim()) {
+    return dept;
+  }
+  return String(dept || '');
+}
+
 
 /**
  * Normalizes academic year variations to canonical 'I' | 'II' | 'III' | 'IV' | 'all'
