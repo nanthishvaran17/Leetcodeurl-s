@@ -44,7 +44,7 @@ def get_report_download_info(
     status: Optional[str] = Query("ALL"),
     search: Optional[str] = Query(""),
     db: Session = Depends(get_db),
-    current_user = Depends(require_security_access(resource_name="Get Report Download Info", dept_scoped=True))
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     """
     INSTANT REPORT PRE-FLIGHT LOOKUP (< 30ms)

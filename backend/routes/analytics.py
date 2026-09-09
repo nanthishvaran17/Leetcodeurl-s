@@ -444,8 +444,8 @@ def get_contest_aggregate(
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     start_dt, end_dt = resolve_date_range(period, custom_start, custom_end)
-    
-    # Base query for authorized students
+    try:
+        # Base query for authorized students
     base_student_query = db.query(Student.id).filter((Student.is_active == True) | (Student.is_active.is_(None)))
     if student_id:
         base_student_query = base_student_query.filter(Student.id == student_id)
@@ -532,6 +532,10 @@ def get_contest_aggregate(
             for p in top_performers
         ]
     }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"error": f"Backend Error: {str(e)}"}
 
 
 @router.get("/activity/aggregate")
@@ -547,8 +551,8 @@ def get_activity_aggregate(
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     start_dt, end_dt = resolve_date_range(period, custom_start, custom_end)
-    
-    base_student_query = db.query(Student.id).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    try:
+        base_student_query = db.query(Student.id).filter((Student.is_active == True) | (Student.is_active.is_(None)))
     if student_id:
         base_student_query = base_student_query.filter(Student.id == student_id)
     if dept_id:
@@ -618,3 +622,7 @@ def get_activity_aggregate(
             for m in most_active
         ]
     }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {"error": f"Backend Error: {str(e)}"}
