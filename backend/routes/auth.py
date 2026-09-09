@@ -1260,7 +1260,10 @@ def forgot_password_verify_dob(req: VerifyDobRequest, db: Session = Depends(get_
         
     # Verify DOB if we added the column and it is populated
     if hasattr(entity, "date_of_birth") and entity.date_of_birth:
-        if entity.date_of_birth != req.date_of_birth:
+        # Normalize both sides to YYYY-MM-DD string for comparison
+        entity_dob_str = str(entity.date_of_birth)[:10] if entity.date_of_birth else ""
+        req_dob_str = (req.date_of_birth or "").strip()[:10]
+        if entity_dob_str != req_dob_str:
             raise HTTPException(status_code=400, detail="Date of Birth does not match our records.")
     else:
         # Legacy accounts without DOB must be completed by an administrator.
@@ -1276,9 +1279,19 @@ async def forgot_password_request(req: ForgotPasswordRequest, request: Request, 
     inst_id_clean = (req.institutional_id or "").strip()
     dob_clean = (req.date_of_birth or "").strip()
 
+    import datetime as _dt
+    dob_parsed = None
+    if dob_clean:
+        for fmt in ("%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y"):
+            try:
+                dob_parsed = _dt.datetime.strptime(dob_clean, fmt).date()
+                break
+            except ValueError:
+                continue
+
     user = db.query(User).filter(
         User.email.ilike(email_clean),
-        User.date_of_birth == dob_clean
+        User.date_of_birth == dob_parsed
     ).filter(
         (User.institutional_id.ilike(inst_id_clean)) | (User.username.ilike(inst_id_clean))
     ).first()

@@ -13,6 +13,22 @@ from backend.logger import logger
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Operations & Audit"])
 
+def _parse_dob(dob_str: Optional[str]) -> Optional[datetime.date]:
+    """Safely parse a date-of-birth string (YYYY-MM-DD or DD-MM-YYYY) to a date object.
+    Returns None for blank/invalid values so the DB DATE column is never sent a string."""
+    if not dob_str:
+        return None
+    s = dob_str.strip()
+    if not s:
+        return None
+    for fmt in ("%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y", "%Y/%m/%d"):
+        try:
+            return datetime.datetime.strptime(s, fmt).date()
+        except ValueError:
+            continue
+    return None  # Unparseable string → store NULL, never crash import
+
+
 def get_admin_user_or_default(request: Request, db: Session = Depends(get_db)) -> User:
     user = get_current_user_from_request(request, db)
     if not user:
@@ -723,7 +739,7 @@ def create_staff_user(
         section_id=payload.section_id,
         academic_year=payload.academic_year.strip() if payload.academic_year else None,
         mentoring_role=payload.mentoring_role.strip() if payload.mentoring_role else None,
-        date_of_birth=payload.date_of_birth.strip() if payload.date_of_birth else None,
+        date_of_birth=_parse_dob(payload.date_of_birth),
         require_password_change=payload.require_password_change,
         is_active=payload.is_active,
         reporting_manager_id=payload.reporting_manager_id
@@ -895,7 +911,7 @@ def update_staff_user(
         changes_made["academic_year"] = staff_user.academic_year
 
     if "date_of_birth" in update_data:
-        staff_user.date_of_birth = payload.date_of_birth.strip() if payload.date_of_birth else None
+        staff_user.date_of_birth = _parse_dob(payload.date_of_birth)
         changes_made["date_of_birth"] = staff_user.date_of_birth
 
     if payload.is_active is not None and staff_user.is_active != payload.is_active:

@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import Column, Integer, BigInteger, String, Boolean, DateTime, Float, ForeignKey, Text, JSON, UniqueConstraint, Index
+from sqlalchemy import Column, Integer, BigInteger, String, Boolean, DateTime, Date, Float, ForeignKey, Text, JSON, UniqueConstraint, Index
 from sqlalchemy.orm import relationship, backref
 from backend.database import Base
 
@@ -50,7 +50,7 @@ class Student(Base):
     email = Column(String(150), nullable=True, index=True)
     phone_number = Column(String(30), unique=True, index=True, nullable=True)
     whatsapp_verified = Column(Boolean, default=False)
-    date_of_birth = Column(String(20), nullable=True)
+    date_of_birth = Column(Date, nullable=True)
     
     batch = Column(String(50), nullable=True, index=True)
     institutional_email = Column(String(150), unique=True, index=True, nullable=True)
@@ -457,7 +457,7 @@ class User(Base):
     role = Column(String(30), default="Faculty", index=True) # Super Admin, Admin, Faculty, Staff, CR, Viewer
     phone_number = Column(String(30), unique=True, index=True, nullable=True)
     whatsapp_verified = Column(Boolean, default=False)
-    date_of_birth = Column(String(20), nullable=True)
+    date_of_birth = Column(Date, nullable=True)
     
     department_id = Column(Integer, ForeignKey("departments.id"), nullable=True, index=True)
     section_id = Column(Integer, ForeignKey("sections.id"), nullable=True, index=True)
