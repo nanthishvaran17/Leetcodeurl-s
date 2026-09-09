@@ -28,6 +28,24 @@ export interface AuthUser {
   isProfileLinked: boolean;
   id?: number;
   username?: string;
+  /** HOD multi-department scope: list of department IDs this HOD is authorized to access.
+   *  Empty array means global access (for Admin/Principal/Management roles). */
+  authorized_department_ids?: number[];
+  /** Corresponding department codes for the above IDs (e.g. ["CSE", "IT"]) */
+  authorized_department_codes?: string[];
+}
+
+// Role type-guard helpers
+export function isHodRole(user: AuthUser | null): boolean {
+  if (!user) return false;
+  const r = (user.role || '').trim().toLowerCase();
+  return r === 'hod' || r === 'department hod' || r === 'department_hod';
+}
+
+export function isGlobalAccessRole(user: AuthUser | null): boolean {
+  if (!user) return false;
+  const r = (user.role || '').trim().toLowerCase();
+  return ['admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management'].includes(r);
 }
 
 export interface AuthContextType {
@@ -43,4 +61,12 @@ export interface AuthContextType {
   logout: () => Promise<void>;
   clearAuthError: () => void;
   isAuthenticated: boolean;
+  /** true when current user is HOD role */
+  isHodScoped: boolean;
+  /** true when current user has global (all-department) access */
+  isGlobalAccess: boolean;
+  /** HOD's authorized department IDs, or [] for global-access roles */
+  authorizedDepartmentIds: number[];
+  /** HOD's authorized department codes, or [] for global-access roles */
+  authorizedDepartmentCodes: string[];
 }

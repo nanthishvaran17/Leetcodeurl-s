@@ -1,25 +1,55 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from backend.database import get_db
-from backend.models import Department, Section
+from backend.models import Department, Section, User
 from backend.schemas import DepartmentOut, DepartmentCreate, SectionOut, SectionCreate
-from backend.security import require_security_access
+from backend.security import require_security_access, get_current_user_optional
 
 from backend.constants import is_production_department
 
 router = APIRouter(prefix="/api/departments", tags=["Departments"])
 
+_HOD_ROLES = frozenset({"hod", "department hod", "department_hod"})
+
 @router.get("", response_model=List[DepartmentOut])
 def get_departments(
     all_depts: bool = False,
+    request: Request = None,
     db: Session = Depends(get_db)
 ):
+    """
+    Returns the list of departments.
+    - HOD users: Returns ONLY their authorized departments (from HODDepartmentAllocation).
+    - Admin / Principal / Management / unauthenticated: Returns full production department list.
+    """
     all_d = db.query(Department).order_by(Department.id).all()
-    if all_depts:
-        return all_d
-    return [d for d in all_d if is_production_department(d.code, d.name)]
+    if not all_depts:
+        all_d = [d for d in all_d if is_production_department(d.code, d.name)]
+
+    # Attempt to get current user (optional — public access still works for leaderboard)
+    current_user: Optional[User] = None
+    if request:
+        try:
+            current_user = get_current_user_optional(request, db)
+        except Exception:
+            current_user = None
+
+    # HOD: restrict to allocated departments only
+    if current_user:
+        role = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
+        if role in _HOD_ROLES:
+            from backend.services.authorization_service import get_hod_authorized_department_ids
+            authorized_ids = get_hod_authorized_department_ids(db, current_user)
+            if authorized_ids:
+                all_d = [d for d in all_d if d.id in authorized_ids]
+            else:
+                # HOD with no allocations — return empty list (fail closed)
+                all_d = []
+
+    return all_d
+
 
 @router.post("", response_model=DepartmentOut)
 def create_department(

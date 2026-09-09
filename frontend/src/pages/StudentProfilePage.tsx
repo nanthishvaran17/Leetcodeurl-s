@@ -4,6 +4,9 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recha
 import api from '../services/api';
 import { SkillRadarChart } from '../components/SkillRadarChart';
 import { BadgeShelf } from '../components/BadgeShelf';
+import { DownloadState } from '../services/download/downloadTypes';
+import { ExportStatus } from '../components/ExportStatus';
+import { ResponsiveDialog } from '../components/ui/ResponsiveDialog';
 import { IDCardGenerator } from '../components/IDCardGenerator';
 import { StudentEditOverlay } from '../components/StudentEditOverlay';
 import { IndividualAnalyticsDashboard } from '../components/analytics/IndividualAnalyticsDashboard';
@@ -61,6 +64,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
 
   const [downloadingCert, setDownloadingCert] = useState(false);
   const [downloadingForensic, setDownloadingForensic] = useState(false);
+  const [downloadState, setDownloadState] = useState<DownloadState | null>(null);
 
   const handleGenerateCert = async () => {
     const targetId = student?.id || student?.student_id;
@@ -98,19 +102,21 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
     const targetId = student?.id || student?.student_id;
     if (!targetId) return;
     setDownloadingForensic(true);
-    notify.info('Generating Forensic Report', 'Compiling official contest forensic audit PDF...', { category: 'FORENSIC AUDIT' });
+    notify.dismissCategory('FORENSIC AUDIT');
     try {
       const cleanReg = (student.reg_no || '').replace(/[^A-Za-z0-9]+/g, '').toUpperCase();
       const reportTargetId = cleanReg ? `CERT-${cleanReg}-FORENSIC` : `CERT-${targetId}-FORENSIC`;
       const filename = `Forensic_Audit_Report_${reportTargetId}.pdf`;
 
-      const dlResult = await downloadManager.download({
-        endpoint: `/certificates/${encodeURIComponent(reportTargetId)}/download-forensic-pdf?student_id=${targetId}`,
+      const dlResult = await downloadManager.downloadJob({
+        report_type: 'CERTIFICATE_FORENSIC_PDF',
+        format: 'pdf',
+        filters: { student_id: targetId },
         filename,
-        mimeType: 'application/pdf',
+        onStateChange: (state) => setDownloadState(state)
       });
       if (dlResult.success) {
-        notify.success('Forensic Report Downloaded', `Audit report ${filename} saved.`, { category: 'FORENSIC AUDIT' });
+        // notification is handled by downloadManager
       } else {
         notify.error('Forensic Error', dlResult.error || 'Failed to download report.', { category: 'FORENSIC AUDIT' });
       }
@@ -313,6 +319,11 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             </button>
           ))}
         </div>
+        
+        <ExportStatus 
+          state={downloadState} 
+          onClose={() => setDownloadState(null)} 
+        />
       </div>
 
       {/* Scrollable Body Content */}

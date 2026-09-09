@@ -309,8 +309,8 @@ def require_security_access(
         effective_role = role_alias_map.get(user_role_clean, user_role_clean)
 
         # 2. ROLE & PERMISSION CHECK
-        # Admins and Super Admins get universal bypass (they can access anything)
-        if effective_role in ["admin", "super admin", "super_admin"]:
+        # Global roles get universal bypass (they can access anything)
+        if effective_role in ["admin", "super admin", "super_admin", "principal", "management", "administrator"]:
             log_security_access_event(
                 db, request, user, action="ACCESS_RESOURCE",
                 resource=target_resource, result="SUCCESS", session_id=session_id
@@ -350,7 +350,37 @@ def require_security_access(
         # 3. DEPARTMENT SCOPE CHECK FOR HOD / FACULTY / STAFF
         if dept_scoped and effective_role in ["hod", "faculty", "staff", "professor"]:
             req_dept = request.query_params.get("dept") or request.query_params.get("department") or request.query_params.get("dept_id")
-            if req_dept and user.department_id:
+            if req_dept and effective_role == "hod":
+                # HOD: validate against HODDepartmentAllocation (multi-dept aware)
+                from backend.services.authorization_service import get_hod_authorized_department_ids, get_hod_authorized_department_codes
+                authorized_dept_ids = get_hod_authorized_department_ids(db, user)
+                authorized_dept_codes = get_hod_authorized_department_codes(db, user)
+                req_dept_str = str(req_dept).strip()
+
+                # Allow MY_DEPARTMENTS sentinel (means all assigned depts)
+                if req_dept_str.upper() in ("MY_DEPARTMENTS", "ALL_MY_DEPARTMENTS"):
+                    pass  # Allowed — backend will further filter by authorized_dept_ids
+                else:
+                    # Check if requested dept is within authorized set
+                    is_match = (
+                        any(req_dept_str.upper() == c.upper() for c in authorized_dept_codes) or
+                        any(req_dept_str == str(did) for did in authorized_dept_ids)
+                    )
+                    if not is_match and authorized_dept_ids:
+                        log_security_access_event(
+                            db, request, user, action="ACCESS_RESOURCE",
+                            resource=target_resource, result="BLOCKED",
+                            denial_reason="DEPT_OUT_OF_SCOPE", session_id=session_id
+                        )
+                        evaluate_security_alert_threshold(
+                            db, hashed_ip, f"User {user.username} ({user.role})", target_resource, contest_info, "DEPT_OUT_OF_SCOPE"
+                        )
+                        raise HTTPException(
+                            status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Access restricted: You are only authorized to access data within your assigned department(s)."
+                        )
+            elif req_dept and user.department_id:
+                # Faculty/Staff: original single-dept check
                 user_dept_code = user.department.code if user.department else None
                 user_dept_id = str(user.department_id)
                 req_dept_str = str(req_dept).strip()
@@ -420,19 +450,22 @@ def get_current_user_optional(request: Request, db: Session = Depends(get_db)) -
 def get_authenticated_user_scope(db: Session, user: User) -> dict:
     """
     Derives the authoritative data scope from the authenticated user's ID and role.
+    HOD: Returns multi-dept scope from HODDepartmentAllocation.
     """
     if not user:
         return {"type": "RESTRICTED"}
         
-    role = (user.role or "").strip().lower()
+    role = (getattr(user, "override_role", None) or user.role or "").strip().lower()
     
-    if role in ["admin", "super admin", "super_admin"]:
+    if role in ["admin", "super admin", "super_admin", "administrator", "principal", "management", "placement coordinator"]:
         return {"type": "GLOBAL"}
         
-    elif role == "hod":
-        return {"type": "DEPARTMENT", "dept_id": user.department_id}
+    elif role in ["hod", "department hod", "department_hod"]:
+        from backend.services.authorization_service import get_hod_authorized_department_ids
+        dept_ids = get_hod_authorized_department_ids(db, user)
+        return {"type": "DEPARTMENT", "dept_ids": dept_ids, "dept_id": dept_ids[0] if dept_ids else None}
         
-    elif role in ["faculty", "staff", "professor"]:
+    elif role in ["faculty", "staff", "professor", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"]:
         from backend.services.faculty_assignment_service import FacultyAssignmentService
         assigned_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, user.id)
         return {"type": "FACULTY", "student_ids": assigned_ids}
@@ -446,6 +479,7 @@ def apply_scope_to_student_query(query: Any, model: Any, scope: dict) -> Any:
     """
     Applies the appropriate filters to a SQLAlchemy query targeting a Student-related model.
     The model must either be `Student` or have a foreign key / relationship referencing `student_id`.
+    HOD DEPARTMENT scope: uses dept_ids (list) for multi-dept IN filter.
     """
     scope_type = scope.get("type")
     
@@ -454,23 +488,19 @@ def apply_scope_to_student_query(query: Any, model: Any, scope: dict) -> Any:
         
     elif scope_type == "DEPARTMENT":
         from backend.models import Student
-        dept_id = scope.get("dept_id")
-        if not dept_id:
-            # Fallback fail-closed
+        # Support both new multi-dept list (dept_ids) and legacy scalar (dept_id)
+        dept_ids = scope.get("dept_ids") or ([scope["dept_id"]] if scope.get("dept_id") else [])
+        if not dept_ids:
+            # No authorized departments — fail closed
             from sqlalchemy import false
             return query.filter(false())
             
         if hasattr(model, "department_id"):
-            return query.filter(model.department_id == dept_id)
-        elif hasattr(model, "student_id"):
-            # Needs a join if not already joined, but safely assuming it's simpler to filter using ANY or joining.
-            # Best practice: the caller should join Student if they pass model != Student.
-            # For robustness:
-            if model == Student:
-                return query.filter(Student.department_id == dept_id)
-            return query.join(Student, model.student_id == Student.id).filter(Student.department_id == dept_id)
+            return query.filter(model.department_id.in_(dept_ids))
         elif model == Student:
-            return query.filter(Student.department_id == dept_id)
+            return query.filter(Student.department_id.in_(dept_ids))
+        elif hasattr(model, "student_id"):
+            return query.join(Student, model.student_id == Student.id).filter(Student.department_id.in_(dept_ids))
         else:
             from sqlalchemy import false
             return query.filter(false())

@@ -588,10 +588,10 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                   menuWidthClass="w-full min-w-full"
                   triggerClassName="w-full h-11 sm:h-10 flex items-center justify-between px-3.5 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white text-sm sm:text-xs font-bold shadow-xs cursor-pointer"
                   options={[
-                    { value: "I", label: "1st Year", badge: "I YEAR", icon: Calendar },
-                    { value: "II", label: "2nd Year", badge: "II YEAR", icon: Calendar },
-                    { value: "III", label: "3rd Year", badge: "III YEAR", icon: Calendar },
-                    { value: "IV", label: "Final Year", badge: "IV YEAR", icon: Calendar }
+                    { value: "1", label: "1st Year", badge: "I YEAR", icon: Calendar },
+                    { value: "2", label: "2nd Year", badge: "II YEAR", icon: Calendar },
+                    { value: "3", label: "3rd Year", badge: "III YEAR", icon: Calendar },
+                    { value: "4", label: "Final Year", badge: "IV YEAR", icon: Calendar }
                   ]}
                   value={yearLevel}
                   onChange={(val) => setYearLevel(val)}

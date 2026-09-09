@@ -483,10 +483,10 @@ export const AdminStaffAllocationPanel: React.FC = () => {
 
  const yearOptions: DropdownOption[] = [
    { value: 'ALL', label: 'All Year Levels' },
-   { value: 'I', label: 'Year I' },
-   { value: 'II', label: 'Year II' },
-   { value: 'III', label: 'Year III' },
-   { value: 'IV', label: 'Year IV' }
+   { value: '1', label: 'Year I' },
+   { value: '2', label: 'Year II' },
+   { value: '3', label: 'Year III' },
+   { value: '4', label: 'Year IV' }
  ];
 
  const staffOptions: DropdownOption[] = [

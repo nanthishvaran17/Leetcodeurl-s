@@ -53,6 +53,9 @@ import {
   Printer
 } from 'lucide-react';
 import api from '../services/api';
+import { DownloadState } from '../services/download/downloadTypes';
+import { ExportStatus } from '../components/ExportStatus';
+import { ResponsiveDialog } from '../components/ui/ResponsiveDialog';
 import { useNotification } from '../context/NotificationContext';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
@@ -83,6 +86,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
   const [copiedEvidence, setCopiedEvidence] = useState<boolean>(false);
   const [downloadingPdf, setDownloadingPdf] = useState<boolean>(false);
   const [showCertPreviewModal, setShowCertPreviewModal] = useState<boolean>(false);
+  const [downloadState, setDownloadState] = useState<DownloadState | null>(null);
   const activeTraceRequestRef = useRef<number>(0);
   const cachedStudentsRef = useRef<any[]>([]);
   const searchDebounceRef = useRef<any>(null);
@@ -465,20 +469,26 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
     setTimeout(() => setCopiedEvidence(false), 3000);
   };
 
-  const handleDownloadForensicPdf = async () => {
+  const handleDownloadPdf = async () => {
     if (!forensicResult) return;
     setDownloadingPdf(true);
+    notify.dismissCategory('FORENSIC AUDIT');
+
     try {
       const studentQuery = forensicResult.student.reg_no || forensicResult.student.username || forensicResult.student.name;
       const sessionId = forensicResult.contest.sessionId;
       const filename = `NEC_Forensic_Contest_Audit_${forensicResult.student.reg_no}_Session_${sessionId}.pdf`;
-      const res = await downloadManager.download({
-        endpoint: `/settings/forensic-pdf?search=${encodeURIComponent(studentQuery)}&session_id=${sessionId}`,
+      
+      const res = await downloadManager.downloadJob({
+        report_type: 'FORENSIC_PDF',
+        format: 'pdf',
         filename,
-        mimeType: 'application/pdf',
+        filters: { search: studentQuery, session_id: sessionId },
+        onStateChange: (state) => setDownloadState(state)
       });
+      
       if (res.success) {
-        notify.success('Forensic PDF Downloaded', 'Official forensic contest verification report saved.', { category: 'FORENSIC AUDIT' });
+        // notification is handled by downloadManager
       } else {
         notify.error('Download Error', res.error || 'Failed to download official forensic audit PDF.', { category: 'FORENSIC AUDIT' });
       }
@@ -757,6 +767,11 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             </div>
           ))}
         </div>
+
+        <ExportStatus 
+          state={downloadState} 
+          onClose={() => setDownloadState(null)} 
+        />
       </div>
 
       {/* 3. EXCEPTION-FIRST "ATTENTION REQUIRED" & NEXT BEST ACTION */}
@@ -2136,6 +2151,11 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
           </div>
         </div>
       )}
+
+      <ExportStatus 
+        state={downloadState} 
+        onClose={() => setDownloadState(null)} 
+      />
     </div>
   );
 };

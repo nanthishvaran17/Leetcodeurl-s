@@ -482,21 +482,26 @@ def bulk_sync_issues(
     return {"total": len(students), "results": results}
 
 
-@router.get("/export-excel")
-def export_issues_excel(
-    department: Optional[str] = Query("all"),
-    year_level: Optional[str] = Query("all"),
-    issue_type: Optional[str] = Query("all"),
-    search: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
-):
-    """
-    Generates official XLSX export containing exact filtered issue records with all 15 columns.
-    """
+def _sanitize_val(val: Any) -> str:
+    if val is None:
+        return ""
+    if isinstance(val, (int, float)):
+        import math
+        if math.isnan(val) or math.isinf(val):
+            return ""
+        return str(val)
+    # Remove illegal excel XML characters
+    s = str(val)
+    import re
+    # ILLEGAL_CHARACTERS_RE = re.compile(r'[\000-\010]|[\013-\014]|[\016-\037]')
+    s = re.sub(r'[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F-\x9F]', '', s)
+    return s
+
+def generate_data_issues_excel_bytes(db: Session, department: str, year_level: str, issue_type: str, search: str) -> bytes:
     import openpyxl
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
-    res = get_data_issues_students(department, year_level, issue_type, search, limit=1000, db=db)
+    res = get_data_issues_students(department, year_level, issue_type, search, limit=5000, db=db)
     students_data = res["students"]
 
     wb = openpyxl.Workbook()
@@ -553,20 +558,20 @@ def export_issues_excel(
     for idx, st in enumerate(students_data, start=1):
         row_data = [
             idx,
-            st["name"],
-            st["reg_no"],
-            st["department_short"],
-            st["year_level"],
-            st["username"] or "—",
-            st["leetcode_url"] or "—",
-            st["url_status"],
-            st["issue_label"],
-            st["severity"],
-            st["error_description"],
-            st["total_solved"],
-            st["contest_rating"] if st["contest_rating"] else "—",
-            st["last_sync"],
-            st["recommended_action"]
+            _sanitize_val(st.get("name")),
+            _sanitize_val(st.get("reg_no")),
+            _sanitize_val(st.get("department_short")),
+            _sanitize_val(st.get("year_level")),
+            _sanitize_val(st.get("username")) or "—",
+            _sanitize_val(st.get("leetcode_url")) or "—",
+            _sanitize_val(st.get("url_status")),
+            _sanitize_val(st.get("issue_label")),
+            _sanitize_val(st.get("severity")),
+            _sanitize_val(st.get("error_description")),
+            _sanitize_val(st.get("total_solved")),
+            _sanitize_val(st.get("contest_rating")) if st.get("contest_rating") else "—",
+            _sanitize_val(st.get("last_sync")),
+            _sanitize_val(st.get("recommended_action"))
         ]
         ws.append(row_data)
         current_row = ws[ws.max_row]
@@ -574,9 +579,10 @@ def export_issues_excel(
         # Row styling & Zebra striping
         is_even = idx % 2 == 0
         bg_color = "F8FAFC" if is_even else "FFFFFF"
-        if st["severity"] == "CRITICAL":
+        severity = st.get("severity")
+        if severity == "CRITICAL":
             bg_color = "FFF1F2" if is_even else "FFE4E6"
-        elif st["severity"] == "WARNING":
+        elif severity == "WARNING":
             bg_color = "FFFBEB" if is_even else "FEF3C7"
 
         row_fill = PatternFill(start_color=bg_color, end_color=bg_color, fill_type="solid")
@@ -599,34 +605,16 @@ def export_issues_excel(
 
     buf = io.BytesIO()
     wb.save(buf)
-    buf.seek(0)
-
-    filename = f"Student_Data_Issues_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-    return StreamingResponse(
-        buf,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
-    )
+    return buf.getvalue()
 
 
-@router.get("/export-csv")
-def export_issues_csv(
-    department: Optional[str] = Query("all"),
-    year_level: Optional[str] = Query("all"),
-    issue_type: Optional[str] = Query("all"),
-    search: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
-):
-    """
-    Generates standard CSV export for filtered issue records.
-    """
+def generate_data_issues_csv_bytes(db: Session, department: str, year_level: str, issue_type: str, search: str) -> bytes:
     import csv
-
-    res = get_data_issues_students(department, year_level, issue_type, search, limit=1000, db=db)
+    res = get_data_issues_students(department, year_level, issue_type, search, limit=5000, db=db)
     students_data = res["students"]
 
     buf = io.StringIO()
-    writer = csv.writer(buf)
+    writer = csv.writer(buf, quoting=csv.QUOTE_MINIMAL)
 
     writer.writerow([
         "S.No", "Student Name", "Register Number", "Department", "Academic Year",
@@ -638,26 +626,46 @@ def export_issues_csv(
     for idx, st in enumerate(students_data, start=1):
         writer.writerow([
             idx,
-            st["name"],
-            st["reg_no"],
-            st["department_name"],
-            st["year_level"],
-            st["username"] or "",
-            st["leetcode_url"] or "",
-            st["url_status"],
-            st["issue_label"],
-            st["severity"],
-            st["error_description"],
-            st["total_solved"],
-            st["contest_rating"] or "",
-            st["last_sync"],
-            st["recommended_action"]
+            _sanitize_val(st.get("name")),
+            _sanitize_val(st.get("reg_no")),
+            _sanitize_val(st.get("department_name")),
+            _sanitize_val(st.get("year_level")),
+            _sanitize_val(st.get("username")),
+            _sanitize_val(st.get("leetcode_url")),
+            _sanitize_val(st.get("url_status")),
+            _sanitize_val(st.get("issue_label")),
+            _sanitize_val(st.get("severity")),
+            _sanitize_val(st.get("error_description")),
+            _sanitize_val(st.get("total_solved")),
+            _sanitize_val(st.get("contest_rating")),
+            _sanitize_val(st.get("last_sync")),
+            _sanitize_val(st.get("recommended_action"))
         ])
 
-    buf.seek(0)
-    filename = f"Student_Data_Issues_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-    return StreamingResponse(
-        io.BytesIO(buf.getvalue().encode("utf-8-sig")),
-        media_type="text/csv",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
-    )
+    return buf.getvalue().encode("utf-8-sig")
+
+@router.get("/export-excel")
+def export_issues_excel(
+    department: Optional[str] = Query("all"),
+    year_level: Optional[str] = Query("all"),
+    issue_type: Optional[str] = Query("all"),
+    search: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """
+    Deprecated direct export. Use async job engine instead.
+    """
+    raise HTTPException(status_code=400, detail="Deprecated. Use async background export.")
+
+@router.get("/export-csv")
+def export_issues_csv(
+    department: Optional[str] = Query("all"),
+    year_level: Optional[str] = Query("all"),
+    issue_type: Optional[str] = Query("all"),
+    search: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """
+    Deprecated direct export. Use async job engine instead.
+    """
+    raise HTTPException(status_code=400, detail="Deprecated. Use async background export.")

@@ -947,10 +947,10 @@ export const HODCommandCenter: React.FC = () => {
 
   const yearOptions = [
     { value: 'ALL', label: 'All Years', badge: 'ALL', icon: Calendar },
-    { value: 'I', label: 'I Year', badge: '1st', icon: Calendar },
-    { value: 'II', label: 'II Year', badge: '2nd', icon: Calendar },
-    { value: 'III', label: 'III Year', badge: '3rd', icon: Calendar },
-    { value: 'IV', label: 'IV Year', badge: '4th', icon: Calendar }
+    { value: '1', label: 'I Year', badge: '1st', icon: Calendar },
+    { value: '2', label: 'II Year', badge: '2nd', icon: Calendar },
+    { value: '3', label: 'III Year', badge: '3rd', icon: Calendar },
+    { value: '4', label: 'IV Year', badge: '4th', icon: Calendar }
   ];
 
   const sectionOptions = [

@@ -1,0 +1,35 @@
+{
+  "run_at_ist": "2026-09-08T07:30:52.825150+05:30",
+  "contest": {
+    "title": "Weekly Contest 518",
+    "start_unix": 1788661800,
+    "end_unix": 1788667200,
+    "slugs": [
+      "count-rotations-with-exactly-k-equal-adjacent-pairs",
+      "count-good-cyclic-rotations",
+      "count-robot-groups",
+      "minimum-cost-path-with-at-most-k-turns"
+    ],
+    "source": "LIVE"
+  },
+  "summary": {
+    "PUBLIC_LIVE_VERIFIED": 0,
+    "VIRTUAL_PRACTICE_VERIFIED": 0,
+    "PUBLIC_LIVE_UNVERIFIED": 0,
+    "VIRTUAL_PRACTICE_UNVERIFIED": 0,
+    "NOT_ATTENDED": 1,
+    "FETCH_FAILED": 0
+  },
+  "virtual_list": [],
+  "full_results": [
+    {
+      "student_id": 2,
+      "name": "Test Student 1",
+      "reg_no": "TEST_URL_001",
+      "lc_username": "bharath_k",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    }
+  ]
+}

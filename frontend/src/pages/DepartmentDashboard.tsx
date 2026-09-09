@@ -72,9 +72,9 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   // Academic Year Dropdown Options (Removed 1st Year; Batches: 2029, 2028, 2027)
   const yearOptions: DropdownOption[] = [
     { value: 'all', label: 'All Academic Years', badge: 'ALL', icon: GraduationCap },
-    { value: 'II', label: '2nd Year (Batch 2029)', badge: 'II Year', icon: GraduationCap },
-    { value: 'III', label: '3rd Year (Batch 2028)', badge: 'III Year', icon: GraduationCap },
-    { value: 'IV', label: 'Final Year (Batch 2027)', badge: 'IV Year', icon: GraduationCap },
+    { value: '2', label: '2nd Year (Batch 2029)', badge: 'II Year', icon: GraduationCap },
+    { value: '3', label: '3rd Year (Batch 2028)', badge: 'III Year', icon: GraduationCap },
+    { value: '4', label: 'Final Year (Batch 2027)', badge: 'IV Year', icon: GraduationCap },
   ];
 
   // Performance Range Dropdown Options

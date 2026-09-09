@@ -42,8 +42,9 @@ import api from '../services/api';
 import { useDepartments } from '../contexts/DepartmentContext';
 import { syncCertificateToFirestoreWeb } from '../services/firebaseSync';
 import { useNotification } from '../context/NotificationContext';
-import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
+import { DownloadState } from '../services/download/downloadTypes';
+import { ExportStatus } from './ExportStatus';
 
 interface CertificateRecord {
   id: number;
@@ -141,6 +142,7 @@ export const CertificateManagementModal: React.FC<{
   // Stepper State: 1 = Recipient, 2 = Design, 3 = Signatures, 4 = Issue, 5 = Verify & Registry
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [activeMainTab, setActiveMainTab] = useState<'studio' | 'signatures' | 'registry'>('studio');
+  const [downloadState, setDownloadState] = useState<DownloadState | null>(null);
 
   // Student selection
   const [students, setStudents] = useState<StudentOption[]>([]);
@@ -355,13 +357,15 @@ export const CertificateManagementModal: React.FC<{
 
     try {
       const filename = `Forensic_Audit_Report_${idToUse}.pdf`;
-      const res = await downloadManager.download({
-        endpoint: `/certificates/${encodeURIComponent(idToUse)}/download-forensic-pdf`,
+      const res = await downloadManager.downloadJob({
+        report_type: 'CERTIFICATE_FORENSIC_PDF',
+        format: 'pdf',
+        filters: { search: idToUse },
         filename,
-        mimeType: 'application/pdf',
+        onStateChange: (state) => setDownloadState(state)
       });
       if (res.success) {
-        notify.success('Audit Report Saved', `Forensic Audit Report ${filename} saved.`, { category: 'FORENSIC AUDIT' });
+        // notify success happens in downloadManager
       } else {
         notify.error('Download Failed', res.error || 'Failed to generate Forensic Audit Report.', { category: 'FORENSIC AUDIT' });
       }
@@ -923,7 +927,7 @@ export const CertificateManagementModal: React.FC<{
                                 CONFIGURED ({principalSig.version})
                               </span>
                             ) : (
-                              <span className="px-2.5 py-1 rounded-full text-xs font-black bg-amber-100 dark:bg-amber-500/20 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-500/40">
+                              <span className="px-2.5 py-1 rounded-full text-xs font-black bg-amber-100 dark:bg-amber-500/20 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-emerald-500/40">
                                 MISSING
                               </span>
                             )}
@@ -946,7 +950,7 @@ export const CertificateManagementModal: React.FC<{
                                 CONFIGURED ({currentHodSig.version})
                               </span>
                             ) : (
-                              <span className="px-2.5 py-1 rounded-full text-xs font-black bg-amber-100 dark:bg-amber-500/20 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-500/40">
+                              <span className="px-2.5 py-1 rounded-full text-xs font-black bg-amber-100 dark:bg-amber-500/20 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-emerald-500/40">
                                 MISSING
                               </span>
                             )}
@@ -1323,7 +1327,7 @@ export const CertificateManagementModal: React.FC<{
                           ACTIVE ({principalSig.version})
                         </span>
                       ) : (
-                        <span className="px-3 py-1 rounded-full text-xs font-black bg-amber-100 dark:bg-amber-500/20 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30">
+                        <span className="px-3 py-1 rounded-full text-xs font-black bg-amber-100 dark:bg-amber-500/20 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-emerald-500/30">
                           NOT CONFIGURED
                         </span>
                       )}
@@ -1665,7 +1669,7 @@ export const CertificateManagementModal: React.FC<{
                                 href={rec.verification_url || `/verify-certificate/${rec.verification_id}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="p-2 sm:p-2.5 rounded-xl bg-sky-50 dark:bg-navy-800 hover:bg-sky-100 dark:hover:bg-navy-700 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-navy-600 cursor-pointer shadow-xs hover:scale-105 transition-all"
+                                className="p-2 sm:p-2.5 rounded-xl bg-sky-50 dark:bg-navy-800 hover:bg-sky-100 dark:hover:bg-sky-700 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-navy-600 cursor-pointer shadow-xs hover:scale-105 transition-all"
                                 title="Verify Public QR Page"
                               >
                                 <ExternalLink className="w-4 h-4" />
@@ -1693,7 +1697,10 @@ export const CertificateManagementModal: React.FC<{
           )}
 
         </div>
-
+        <ExportStatus 
+          state={downloadState} 
+          onClose={() => setDownloadState(null)} 
+        />
       </motion.div>
 
       {/* REVIEW & CONFIRM ISSUANCE MODAL */}

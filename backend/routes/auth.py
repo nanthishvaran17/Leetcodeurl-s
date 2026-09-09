@@ -9,7 +9,7 @@ import bcrypt
 import jwt
 import urllib.parse
 import re
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response, BackgroundTasks
 from fastapi.security import OAuth2PasswordBearer
@@ -26,6 +26,32 @@ from backend.logger import logger
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token", auto_error=False)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HOD DEPARTMENT SCOPE HELPER
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _get_user_dept_scope(db: Session, user: User) -> dict:
+    """
+    Returns authorized_department_ids and authorized_department_codes for the given user.
+    For HOD: queries HODDepartmentAllocation.
+    For global roles: returns empty lists (frontend interprets empty = global access by role).
+    Called by every login/session endpoint to provide scope to the frontend.
+    """
+    if not user:
+        return {"authorized_department_ids": [], "authorized_department_codes": []}
+    role = (getattr(user, "override_role", None) or user.role or "").strip().lower()
+    if role in ("hod", "department hod", "department_hod"):
+        from backend.services.authorization_service import (
+            get_hod_authorized_department_ids,
+            get_hod_authorized_department_codes
+        )
+        return {
+            "authorized_department_ids": get_hod_authorized_department_ids(db, user),
+            "authorized_department_codes": get_hod_authorized_department_codes(db, user)
+        }
+    return {"authorized_department_ids": [], "authorized_department_codes": []}
 
 
 def _utcnow() -> datetime.datetime:
@@ -610,6 +636,7 @@ def verify_otp(req: VerifyOtpRequest, request: Request, response: Response, db: 
         student = db.query(Student).filter(Student.email.ilike(clean_email)).first()
         if student:
             s_token = create_access_token(data={"sub": student.email, "role": "Student", "email": student.email})
+            dept_scope = _get_user_dept_scope(db, student if hasattr(student, "role") else None)
             return {
                 "success": True,
                 "status": "success",
@@ -621,10 +648,14 @@ def verify_otp(req: VerifyOtpRequest, request: Request, response: Response, db: 
                     "id": student.id,
                     "username": student.name,
                     "email": student.email,
-                    "role": "Student"
+                    "role": "Student",
+                    "authorized_department_ids": [],
+                    "authorized_department_codes": []
                 }
             }
         raise HTTPException(status_code=403, detail="Access denied: No authorized account registered for this email.")
+
+
 
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Access denied: Account is inactive.")
@@ -661,6 +692,7 @@ def verify_otp(req: VerifyOtpRequest, request: Request, response: Response, db: 
         metadata_json=metadata, event_id=event_id
     )
 
+    dept_scope = _get_user_dept_scope(db, user)
     return {
         "success": True,
         "access_token": access_token,
@@ -671,7 +703,8 @@ def verify_otp(req: VerifyOtpRequest, request: Request, response: Response, db: 
             "username": user.username,
             "email": user.email,
             "role": user.role,
-            "is_active": True
+            "is_active": True,
+            **dept_scope
         }
     }
 
@@ -941,6 +974,7 @@ def exchange_google_auth_code(payload: ExchangeGoogleAuthCodeRequest, request: R
 
     access_token = create_access_token(data={"sub": user.username, "role": user.role, "email": user.email, "user_id": user.id})
 
+    dept_scope = _get_user_dept_scope(db, user)
     return {
         "authenticated": True,
         "success": True,
@@ -953,7 +987,8 @@ def exchange_google_auth_code(payload: ExchangeGoogleAuthCodeRequest, request: R
             "email": user.email,
             "role": user.role,
             "department_id": user.department_id,
-            "section_id": user.section_id
+            "section_id": user.section_id,
+            **dept_scope
         }
     }
 
@@ -1082,6 +1117,7 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
 
     access_token = create_access_token(data={"sub": user.username, "role": user.role, "email": user.email, "user_id": user.id})
 
+    dept_scope = _get_user_dept_scope(db, user)
     return {
         "success": True,
         "access_token": access_token,
@@ -1094,7 +1130,8 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
             "role": user.role,
             "department_id": user.department_id,
             "section_id": user.section_id,
-            "require_password_change": getattr(user, "require_password_change", False)
+            "require_password_change": getattr(user, "require_password_change", False),
+            **dept_scope
         }
     }
 
@@ -1106,6 +1143,7 @@ def get_auth_session(request: Request, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=401, detail="Unauthenticated")
 
+    dept_scope = _get_user_dept_scope(db, user)
     return {
         "authenticated": True,
         "user": {
@@ -1116,7 +1154,8 @@ def get_auth_session(request: Request, db: Session = Depends(get_db)):
             "department_id": user.department_id,
             "section_id": user.section_id,
             "is_active": user.is_active,
-            "require_password_change": getattr(user, "require_password_change", False)
+            "require_password_change": getattr(user, "require_password_change", False),
+            **dept_scope
         }
     }
 

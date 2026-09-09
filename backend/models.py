@@ -13,6 +13,28 @@ class Department(Base):
 
     students = relationship("Student", back_populates="department")
     users = relationship("User", back_populates="department")
+    hod_allocations = relationship("HODDepartmentAllocation", back_populates="department")
+
+
+class HODDepartmentAllocation(Base):
+    """Join table: maps HOD users to one or more departments.
+    Supports multi-department HOD allocation (e.g. CSE + IT HOD).
+    This is the AUTHORITATIVE source of truth for HOD department scope.
+    """
+    __tablename__ = "hod_department_allocations"
+    __table_args__ = (
+        UniqueConstraint("user_id", "department_id", name="uix_hod_dept_allocation"),
+        Index("ix_hod_alloc_user", "user_id"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    department_id = Column(Integer, ForeignKey("departments.id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # admin who made the allocation
+
+    user = relationship("User", foreign_keys=[user_id], back_populates="hod_department_allocations")
+    department = relationship("Department", back_populates="hod_allocations")
 
 class AcademicYear(Base):
     __tablename__ = "academic_years"
@@ -480,6 +502,14 @@ class User(Base):
         foreign_keys="FacultyStudentAssignment.faculty_id",
         back_populates="faculty",
         cascade="all, delete-orphan"
+    )
+    # HOD multi-department allocations (authoritative scope for HOD role)
+    hod_department_allocations = relationship(
+        "HODDepartmentAllocation",
+        foreign_keys="HODDepartmentAllocation.user_id",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        lazy="select"
     )
 
 class PasswordResetOTP(Base):
@@ -2803,5 +2833,29 @@ class SubmissionLog(Base):
     title_slug = Column(String(150), index=True, nullable=False)
     submitted_at = Column(BigInteger, index=True, nullable=False) # Unix epoch from LeetCode
     fetched_at = Column(BigInteger, nullable=False) # Unix epoch when we cached it
+
+
+class ReportJob(Base):
+    """
+    Tracks the status and metadata of asynchronous report generation tasks.
+    Used by the Centralized Report Job Engine to handle polling and prevent 502 timeouts.
+    """
+    __tablename__ = "report_jobs"
+    __table_args__ = {"extend_existing": True}
+
+    job_id = Column(String(100), primary_key=True, index=True)
+    report_type = Column(String(100), index=True, nullable=False)
+    requested_by = Column(String(100), index=True, nullable=False)
+    status = Column(String(50), index=True, nullable=False, default="QUEUED") # QUEUED, PROCESSING, COMPLETED, FAILED
+    progress = Column(Integer, default=0)
+    error_code = Column(String(100), nullable=True)
+    error_message = Column(Text, nullable=True)
+    file_path = Column(String(1024), nullable=True)
+    download_url = Column(String(1024), nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+    expires_at = Column(DateTime, nullable=True, index=True)
+
 
 

@@ -2385,7 +2385,10 @@ async def sync_public_participants(
     Execute single-flight, fail-closed, complete leaderboard sync for Official Public Participants.
     Requires Admin, HOD, or Staff authorization.
     """
-    if current_user.role not in ("Admin", "SuperAdmin", "Principal", "HOD", "Staff", "Faculty"):
+    if (current_user.role or "").strip() not in (
+        "Admin", "SuperAdmin", "Super Admin", "Principal", "Management",
+        "HOD", "Department HOD", "hod", "Staff", "Faculty"
+    ):
         raise HTTPException(status_code=403, detail="Unauthorized to trigger contest synchronization.")
 
     success, result = await PublicContestEngine.sync_public_participants(db=db, session_id=session_id, force_resync=force)
@@ -2426,7 +2429,10 @@ def get_public_participants_audits(
     Get operational audit log trajectory for Public Contest Leaderboard synchronizations.
     Requires Admin, Principal, or HOD role.
     """
-    if current_user.role not in ("Admin", "SuperAdmin", "Principal", "HOD"):
+    if (current_user.role or "").strip() not in (
+        "Admin", "SuperAdmin", "Super Admin", "Principal", "Management",
+        "HOD", "Department HOD", "hod"
+    ):
         raise HTTPException(status_code=403, detail="Unauthorized to view contest audit history.")
 
     from backend.models import PublicContestSyncAudit

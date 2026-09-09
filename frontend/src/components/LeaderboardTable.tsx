@@ -496,9 +496,9 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
       )}
 
 
-      <div className="responsive-table-container w-full min-w-0max-w-full overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm bg-white dark:bg-navy-950 flex flex-col">
+      <div className="responsive-table-container w-full min-w-0 overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm bg-white dark:bg-navy-950 flex flex-col">
         {/* Table Header Wrapper (Sticky) */}
-        <div className="flex bg-slate-50 dark:bg-navy-950 text-slate-500 dark:text-slate-400 font-black border-b border-slate-200 dark:border-navy-800 uppercase tracking-widest text-[10px] w-[1450px] min-w-full items-center">
+        <div className="hidden md:flex bg-slate-50 dark:bg-navy-950 text-slate-500 dark:text-slate-400 font-black border-b border-slate-200 dark:border-navy-800 uppercase tracking-widest text-[10px] w-[1450px] min-w-full items-center">
           <div className="flex-none w-10 py-3 px-3 text-center">
              <input type="checkbox" checked={sortedStudents.length > 0 && selectedIds.length === sortedStudents.length} onChange={toggleAll} className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer" />
           </div>
@@ -516,7 +516,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
         </div>
         
         {/* Virtualized Body */}
-        <div className="flex-1 w-[1450px] min-w-full" style={{ height: '600px' }}>
+        <div className="flex-1 w-full md:w-[1450px] md:min-w-full" style={{ height: '600px' }}>
           {loading ? (
             <div className="flex flex-col items-center justify-center space-y-2 h-full py-12">
               <RefreshCw className="w-6 h-6 animate-spin text-brand-500" />

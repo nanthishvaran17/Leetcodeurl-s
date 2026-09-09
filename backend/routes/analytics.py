@@ -296,28 +296,72 @@ def get_individual_analytics(
     }
 
 @router.get("/department-comparison")
-def get_department_comparison(db: Session = Depends(get_db)):
+def get_department_comparison(
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
     departments = db.query(Department).all()
     res = []
     for dept in departments:
-        students = db.query(Student).filter(Student.department_id == dept.id, Student.is_active == True).all()
+        # Base query for students in this department
+        query = db.query(Student).filter(Student.department_id == dept.id, Student.is_active == True)
+        
+        # Apply RBAC (HOD scoped)
+        if current_user:
+            query = apply_role_based_student_filter(query, current_user, db)
+            
+        students = query.all()
         student_ids = [s.id for s in students]
-        if not student_ids:
+        total_students = len(student_ids)
+        
+        if total_students == 0:
+            res.append({
+                "department_id": dept.id,
+                "department_name": dept.name,
+                "department_code": dept.code,
+                "total_students": 0,
+                "active_students": 0,
+                "active_count": 0,
+                "participation_rate": 0,
+                "avg_solved": 0,
+                "avg_rating": 0,
+                "top_performer": None
+            })
             continue
             
         stats = db.query(
+            func.count(LeetCodeProfileStats.id).filter(LeetCodeProfileStats.total_solved > 0).label("active_count"),
             func.avg(LeetCodeProfileStats.total_solved).label("avg_solved"),
             func.avg(LeetCodeProfileStats.contest_rating).label("avg_rating")
         ).filter(LeetCodeProfileStats.student_id.in_(student_ids)).first()
         
+        active_count = stats.active_count or 0
+        participation_rate = round((active_count / total_students) * 100, 2) if total_students > 0 else 0
+        
+        # Find top performer
+        top_student_stat = db.query(LeetCodeProfileStats).filter(
+            LeetCodeProfileStats.student_id.in_(student_ids)
+        ).order_by(LeetCodeProfileStats.total_solved.desc()).first()
+        
+        top_performer = None
+        if top_student_stat and top_student_stat.student:
+            top_performer = {
+                "name": top_student_stat.student.name or top_student_stat.student.username,
+                "reg_no": top_student_stat.student.reg_no,
+                "solved": top_student_stat.total_solved or 0
+            }
+        
         res.append({
-            "id": dept.id,
-            "name": dept.name,
-            "code": dept.code,
-            "total_students": len(student_ids),
-            "active_students": len(student_ids),
+            "department_id": dept.id,
+            "department_name": dept.name,
+            "department_code": dept.code,
+            "total_students": total_students,
+            "active_students": active_count,
+            "active_count": active_count,
+            "participation_rate": participation_rate,
             "avg_solved": round(stats.avg_solved or 0, 1),
-            "avg_rating": round(stats.avg_rating or 0, 1)
+            "avg_rating": round(stats.avg_rating or 0, 1),
+            "top_performer": top_performer
         })
     return res
 

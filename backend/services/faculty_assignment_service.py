@@ -138,12 +138,13 @@ class FacultyAssignmentService:
                     "year_level": st_obj.year_level or "N/A"
                 })
 
-                existing_assignment = db.query(FacultyStudentAssignment).filter(
+                existing_assignments = db.query(FacultyStudentAssignment).filter(
                     FacultyStudentAssignment.student_id == sid
-                ).first()
+                ).all()
 
                 prev_faculty_id = None
-                if existing_assignment:
+                if existing_assignments:
+                    existing_assignment = existing_assignments[0]
                     prev_faculty_id = existing_assignment.faculty_id
                     if existing_assignment.faculty_id != faculty_id:
                         reassigned_count += 1
@@ -151,6 +152,10 @@ class FacultyAssignmentService:
                     existing_assignment.assigned_by_id = assigned_by_id
                     existing_assignment.is_active = True
                     existing_assignment.assigned_at = now
+                    
+                    # Delete any duplicate assignments to enforce 1-to-1 strict relationship
+                    for dup in existing_assignments[1:]:
+                        db.delete(dup)
                 else:
                     new_assignment = FacultyStudentAssignment(
                         faculty_id=faculty_id,

@@ -41,7 +41,8 @@ import {
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { triggerDownload } from '../utils/mobileDownload';
-import { downloadManager } from '../services/download/downloadManager';
+import { DownloadState } from '../services/download/downloadTypes';
+import { ExportStatus } from '../components/ExportStatus';
 import { useDepartments } from '../contexts/DepartmentContext';
 
 interface StudentIssue {
@@ -254,6 +255,7 @@ export const StudentDataIssuesPage: React.FC = () => {
 
   // Export State
   const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [downloadState, setDownloadState] = useState<any | null>(null);
 
   useEffect(() => {
     fetchSummaryData();
@@ -486,29 +488,28 @@ export const StudentDataIssuesPage: React.FC = () => {
   // Download Excel
   const handleDownloadExcel = async () => {
     setIsExporting(true);
-    notify.info('Preparing Excel Export', `Building Excel file for ${students.length} filtered records...`, { category: 'EXPORT CENTER' });
+    notify.dismissCategory('EXPORT CENTER');
     try {
-      const params = new URLSearchParams({
-        department: selectedDept,
-        year_level: selectedYear,
-        issue_type: selectedIssue,
-        ...(searchQuery ? { search: searchQuery } : {})
-      });
-
-      const filename = `Student_Data_Issues_${new Date().toISOString().slice(0, 10)}.xlsx`;
-      const res = await downloadManager.download({
-        endpoint: `/data-issues/export-excel?${params.toString()}`,
+      const filename = `Student_Data_Issues_${new Date().getTime()}.xlsx`;
+      const res = await downloadManager.downloadJob({
+        report_type: 'DATA_ISSUES_EXCEL',
+        format: 'xlsx',
+        filters: {
+          department: selectedDept,
+          year_level: selectedYear,
+          issue_type: selectedIssue,
+          search: searchQuery
+        },
         filename,
-        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        onStateChange: (state) => setDownloadState(state)
       });
 
-      if (res.success) {
-        notify.success('Excel Downloaded', `Exported records to Excel.`, { category: 'EXPORT CENTER' });
-      } else {
+      if (!res.success) {
         notify.error('Export Error', res.error || 'Failed to download Excel report.', { category: 'EXPORT CENTER' });
       }
     } catch (err) {
-      notify.error('Export Error', 'Failed to stream Excel report.', { category: 'EXPORT CENTER' });
+      console.error(err);
+      notify.error('Export Error', 'Failed to schedule Excel report.', { category: 'EXPORT CENTER' });
     } finally {
       setIsExporting(false);
     }
@@ -517,28 +518,28 @@ export const StudentDataIssuesPage: React.FC = () => {
   // Download CSV
   const handleDownloadCsv = async () => {
     setIsExporting(true);
+    notify.dismissCategory('EXPORT CENTER');
     try {
-      const params = new URLSearchParams({
-        department: selectedDept,
-        year_level: selectedYear,
-        issue_type: selectedIssue,
-        ...(searchQuery ? { search: searchQuery } : {})
-      });
-
-      const filename = `Student_Data_Issues_${new Date().toISOString().slice(0, 10)}.csv`;
-      const res = await downloadManager.download({
-        endpoint: `/data-issues/export-csv?${params.toString()}`,
+      const filename = `Student_Data_Issues_${new Date().getTime()}.csv`;
+      const res = await downloadManager.downloadJob({
+        report_type: 'DATA_ISSUES_CSV',
+        format: 'csv',
+        filters: {
+          department: selectedDept,
+          year_level: selectedYear,
+          issue_type: selectedIssue,
+          search: searchQuery
+        },
         filename,
-        mimeType: 'text/csv',
+        onStateChange: (state) => setDownloadState(state)
       });
 
-      if (res.success) {
-        notify.success('CSV Downloaded', `Exported records to CSV.`, { category: 'EXPORT CENTER' });
-      } else {
+      if (!res.success) {
         notify.error('Export Error', res.error || 'Failed to download CSV report.', { category: 'EXPORT CENTER' });
       }
     } catch (err) {
-      notify.error('Export Error', 'Failed to stream CSV report.', { category: 'EXPORT CENTER' });
+      console.error(err);
+      notify.error('Export Error', 'Failed to schedule CSV report.', { category: 'EXPORT CENTER' });
     } finally {
       setIsExporting(false);
     }
@@ -717,10 +718,10 @@ export const StudentDataIssuesPage: React.FC = () => {
               placeholder="All Academic Years"
               icon={<GraduationCap size={16} />}
               options={[
-                { label: 'I Year (1st Year)', value: 'I', badge: 'I', badgeColor: 'bg-slate-100 text-slate-600' },
-                { label: 'II Year (2nd Year)', value: 'II', badge: 'II', badgeColor: 'bg-slate-200 text-slate-700' },
-                { label: 'III Year (3rd Year)', value: 'III', badge: 'III', badgeColor: 'bg-slate-300 text-slate-800' },
-                { label: 'IV Year (Final Year)', value: 'IV', badge: 'IV', badgeColor: 'bg-slate-400 text-slate-900' },
+                { label: 'I Year (1st Year)', value: '1', badge: 'I', badgeColor: 'bg-slate-100 text-slate-600' },
+                { label: 'II Year (2nd Year)', value: '2', badge: 'II', badgeColor: 'bg-slate-200 text-slate-700' },
+                { label: 'III Year (3rd Year)', value: '3', badge: 'III', badgeColor: 'bg-slate-300 text-slate-800' },
+                { label: 'IV Year (Final Year)', value: '4', badge: 'IV', badgeColor: 'bg-slate-400 text-slate-900' },
               ]}
             />
           </div>
@@ -1345,6 +1346,10 @@ export const StudentDataIssuesPage: React.FC = () => {
         )}
       </AnimatePresence>
 
+      <ExportStatus 
+        state={downloadState} 
+        onClose={() => setDownloadState(null)} 
+      />
     </div>
   );
 };

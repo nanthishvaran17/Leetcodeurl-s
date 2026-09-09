@@ -358,7 +358,7 @@ export const ComparePage: React.FC = () => {
                       {selectedYear}
                     </span>
                     <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
-                      {selectedYear === 'ALL' ? 'All Academic Years' : selectedYear === 'II' ? 'II Year (Batch 2025 - 2029)' : selectedYear === 'III' ? 'III Year (Batch 2024 - 2028)' : 'IV Year (Batch 2023 - 2027)'}
+                      {selectedYear === 'ALL' ? 'All Academic Years' : selectedYear === '2' ? 'II Year (Batch 2025 - 2029)' : selectedYear === '3' ? 'III Year (Batch 2024 - 2028)' : 'IV Year (Batch 2023 - 2027)'}
                     </span>
                     <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
                   </button>
@@ -366,9 +366,9 @@ export const ComparePage: React.FC = () => {
                     <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
                       {[
                         { value: 'ALL', code: 'ALL', label: 'All Academic Years' },
-                        { value: 'II',  code: 'II',  label: 'II Year (Batch 2025 - 2029)' },
-                        { value: 'III', code: 'III', label: 'III Year (Batch 2024 - 2028)' },
-                        { value: 'IV',  code: 'IV',  label: 'IV Year (Batch 2023 - 2027)' },
+                        { value: '2',  code: 'II',  label: 'II Year (Batch 2025 - 2029)' },
+                        { value: '3', code: 'III', label: 'III Year (Batch 2024 - 2028)' },
+                        { value: '4',  code: 'IV',  label: 'IV Year (Batch 2023 - 2027)' },
                       ].map((opt) => (
                         <button
                           key={opt.value}

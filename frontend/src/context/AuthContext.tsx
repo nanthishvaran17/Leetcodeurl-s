@@ -51,7 +51,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       id: newUser.id,
       username: newUser.username,
       department_id: newUser.department_id || null,
-      section_id: newUser.section_id || null
+      section_id: newUser.section_id || null,
+      // HOD multi-department scope — populated from backend on every login/session
+      authorized_department_ids: Array.isArray(newUser.authorized_department_ids)
+        ? newUser.authorized_department_ids
+        : [],
+      authorized_department_codes: Array.isArray(newUser.authorized_department_codes)
+        ? newUser.authorized_department_codes
+        : [],
     };
     setUser(formattedUser);
     localStorage.setItem('user', JSON.stringify(formattedUser));
@@ -382,6 +389,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const isHodScoped = !!user && ['hod', 'department hod', 'department_hod'].includes(
+    (user.role || '').trim().toLowerCase()
+  );
+  const isGlobalAccess = !!user && ['admin', 'administrator', 'super admin', 'super_admin', 'principal', 'management'].includes(
+    (user.role || '').trim().toLowerCase()
+  );
+
   const contextValue = useMemo(() => ({
     user,
     token,
@@ -394,8 +408,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     verifyOtp,
     logout,
     clearAuthError,
-    isAuthenticated: authState === 'AUTHORIZED' || !!user
-  }), [user, token, authState, authError, authNotice, login, signInWithGoogle, sendOtp, verifyOtp, logout, clearAuthError]);
+    isAuthenticated: authState === 'AUTHORIZED' || !!user,
+    isHodScoped,
+    isGlobalAccess,
+    authorizedDepartmentIds: user?.authorized_department_ids ?? [],
+    authorizedDepartmentCodes: user?.authorized_department_codes ?? [],
+  }), [user, token, authState, authError, authNotice, login, signInWithGoogle, sendOtp, verifyOtp, logout, clearAuthError, isHodScoped, isGlobalAccess]);
 
   return (
     <AuthContext.Provider value={contextValue}>

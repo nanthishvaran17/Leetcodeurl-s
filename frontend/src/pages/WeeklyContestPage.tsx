@@ -302,7 +302,7 @@ interface WeeklyContestPageProps {
 export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectStudent }) => {
   const { user } = useAuth();
   const { students: cachedStudents, isStale, lastUpdated } = getCachedSummary();
-  const [canonicalData, setCanonicalData] = useState<any>(cachedStudents.length ? { students: cachedStudents } : null);
+  const [canonicalData, setCanonicalData] = useState<any>(cachedStudents?.length ? { students: cachedStudents } : null);
   const { departments } = useDepartments();
   const [sessionsList, setSessionsList] = useState<any[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
@@ -2312,15 +2312,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   <div className="flex items-center gap-1.5 mt-0.5">
                     {selectedYearFilter === 'ALL' ? (
                       <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300">ALL</span>
-                    ) : selectedYearFilter === 'II' ? (
+                    ) : selectedYearFilter === '2' ? (
                       <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300">II</span>
-                    ) : selectedYearFilter === 'III' ? (
+                    ) : selectedYearFilter === '3' ? (
                       <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300">III</span>
                     ) : (
                       <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300">IV</span>
                     )}
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
-                      {selectedYearFilter === 'ALL' ? 'All Academic Years' : selectedYearFilter === 'II' ? 'Year (2025–2029)' : selectedYearFilter === 'III' ? 'Year (2024–2028)' : 'Year (2023–2027)'}
+                      {selectedYearFilter === 'ALL' ? 'All Academic Years' : selectedYearFilter === '2' ? 'Year (2025–2029)' : selectedYearFilter === '3' ? 'Year (2024–2028)' : 'Year (2023–2027)'}
                     </span>
                   </div>
                 )}
@@ -2332,9 +2332,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               <div className="absolute z-[100] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-lg overflow-hidden">
                 {[
                   { value: 'ALL', label: 'All Academic Years', code: 'ALL', color: 'text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300' },
-                  { value: 'II',  label: 'Year (2025–2029)',    code: 'II',  color: 'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
-                  { value: 'III', label: 'Year (2024–2028)',   code: 'III', color: 'text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300' },
-                  { value: 'IV',  label: 'Year (2023–2027)',    code: 'IV',  color: 'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
+                  { value: '2',  label: 'Year (2025–2029)',    code: 'II',  color: 'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
+                  { value: '3', label: 'Year (2024–2028)',   code: 'III', color: 'text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300' },
+                  { value: '4',  label: 'Year (2023–2027)',    code: 'IV',  color: 'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
                 ].map(opt => (
                   <button
                     key={opt.value}

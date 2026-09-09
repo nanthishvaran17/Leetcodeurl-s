@@ -180,14 +180,17 @@ def link_whatsapp_number(
     current_user: User = Depends(require_role("Super Admin", "Admin", "HOD", "hod", "Faculty", "faculty", "Staff"))
 ):
     """Links verified phone number to User or Student record with role boundary guard."""
-    if current_user.role in ["HOD", "hod"] and current_user.department_id:
+    if current_user.role in ["HOD", "hod"]:
         if payload.target_type.upper() == "STUDENT":
             st = db.query(Student).filter(Student.id == payload.target_id).first()
-            if st and st.department_id != current_user.department_id:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="HOD can only link phone numbers for students in their own department."
-                )
+            if st:
+                from backend.services.authorization_service import get_hod_authorized_department_ids
+                authorized_ids = get_hod_authorized_department_ids(db, current_user)
+                if authorized_ids and st.department_id not in authorized_ids:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="HOD can only link phone numbers for students in their authorized department(s)."
+                    )
 
     result = whatsapp_auth_service.link_phone_number(
         db=db,

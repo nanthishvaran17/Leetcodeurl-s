@@ -651,9 +651,9 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                   onChange={(val) => setYearLevel(val)}
                   dropdownWidth="w-full"
                   options={[
-                    { value: "II", label: "II Year" },
-                    { value: "III", label: "III Year" },
-                    { value: "IV", label: "IV Year" }
+                    { value: "2", label: "II Year" },
+                    { value: "3", label: "III Year" },
+                    { value: "4", label: "IV Year" }
                   ]}
                   icon={<Calendar className="w-5 h-5" />}
                 />

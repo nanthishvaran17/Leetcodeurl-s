@@ -1,0 +1,4563 @@
+{
+  "run_at_ist": "2026-09-08T07:47:55.047699+05:30",
+  "contest": {
+    "title": "Weekly Contest 518",
+    "start_unix": 1788661800,
+    "end_unix": 1788667200,
+    "slugs": [
+      "count-rotations-with-exactly-k-equal-adjacent-pairs",
+      "count-good-cyclic-rotations",
+      "count-robot-groups",
+      "minimum-cost-path-with-at-most-k-turns"
+    ],
+    "source": "LIVE"
+  },
+  "summary": {
+    "PUBLIC_LIVE_VERIFIED": 140,
+    "VIRTUAL_PRACTICE_VERIFIED": 5,
+    "PUBLIC_LIVE_UNVERIFIED": 0,
+    "VIRTUAL_PRACTICE_UNVERIFIED": 0,
+    "NOT_ATTENDED": 144,
+    "FETCH_FAILED": 0
+  },
+  "virtual_list": [
+    {
+      "student_id": 225,
+      "name": "RITHANYA S",
+      "reg_no": "732224CI044",
+      "lc_username": "rithanyasivagami",
+      "classification": "VIRTUAL_PRACTICE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788674528,
+          "timestamp_ist": "2026-09-06 11:32:08 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788674556,
+          "timestamp_ist": "2026-09-06 11:32:36 IST"
+        },
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788674577,
+          "timestamp_ist": "2026-09-06 11:32:57 IST"
+        },
+        {
+          "slug": "minimum-cost-path-with-at-most-k-turns",
+          "timestamp_unix": 1788674609,
+          "timestamp_ist": "2026-09-06 11:33:29 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 61,
+      "name": "NIVETHYTHA JR R",
+      "reg_no": "732224CC034",
+      "lc_username": "nivethytha0704",
+      "classification": "VIRTUAL_PRACTICE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788667741,
+          "timestamp_ist": "2026-09-06 09:39:01 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788667775,
+          "timestamp_ist": "2026-09-06 09:39:35 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 37,
+      "name": "GIRIPATHI K",
+      "reg_no": "732224CC009",
+      "lc_username": "giripathi_k",
+      "classification": "VIRTUAL_PRACTICE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788671217,
+          "timestamp_ist": "2026-09-06 10:36:57 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 84,
+      "name": "VISHAANTH M B",
+      "reg_no": "732224CC057",
+      "lc_username": "vishaanth0007",
+      "classification": "VIRTUAL_PRACTICE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788668353,
+          "timestamp_ist": "2026-09-06 09:49:13 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788668397,
+          "timestamp_ist": "2026-09-06 09:49:57 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 41,
+      "name": "HARISH K",
+      "reg_no": "732224CC013",
+      "lc_username": "harish000007",
+      "classification": "VIRTUAL_PRACTICE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788668866,
+          "timestamp_ist": "2026-09-06 09:57:46 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788668966,
+          "timestamp_ist": "2026-09-06 09:59:26 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788668990,
+          "timestamp_ist": "2026-09-06 09:59:50 IST"
+        }
+      ],
+      "fetch_error": null
+    }
+  ],
+  "full_results": [
+    {
+      "student_id": 192,
+      "name": "BHARATH K",
+      "reg_no": "732224CI008",
+      "lc_username": "spidy_42",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 58,
+      "name": "NANTHISH S",
+      "reg_no": "732224CC031",
+      "lc_username": "nanthishvaran_07",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662462,
+          "timestamp_ist": "2026-09-06 08:11:02 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662878,
+          "timestamp_ist": "2026-09-06 08:17:58 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788664195,
+          "timestamp_ist": "2026-09-06 08:39:55 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 225,
+      "name": "RITHANYA S",
+      "reg_no": "732224CI044",
+      "lc_username": "rithanyasivagami",
+      "classification": "VIRTUAL_PRACTICE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788674528,
+          "timestamp_ist": "2026-09-06 11:32:08 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788674556,
+          "timestamp_ist": "2026-09-06 11:32:36 IST"
+        },
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788674577,
+          "timestamp_ist": "2026-09-06 11:32:57 IST"
+        },
+        {
+          "slug": "minimum-cost-path-with-at-most-k-turns",
+          "timestamp_unix": 1788674609,
+          "timestamp_ist": "2026-09-06 11:33:29 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 6,
+      "name": "DEEPAKKUMAR E",
+      "reg_no": "23CC009",
+      "lc_username": "deepak1524",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662196,
+          "timestamp_ist": "2026-09-06 08:06:36 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662491,
+          "timestamp_ist": "2026-09-06 08:11:31 IST"
+        },
+        {
+          "slug": "minimum-cost-path-with-at-most-k-turns",
+          "timestamp_unix": 1788664419,
+          "timestamp_ist": "2026-09-06 08:43:39 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 11,
+      "name": "KANISKA N J",
+      "reg_no": "23CC021",
+      "lc_username": "ka_nizzu29",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664411,
+          "timestamp_ist": "2026-09-06 08:43:31 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 13,
+      "name": "KEERTHANA B",
+      "reg_no": "23CC025",
+      "lc_username": "keerthu-2005",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662985,
+          "timestamp_ist": "2026-09-06 08:19:45 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663899,
+          "timestamp_ist": "2026-09-06 08:34:59 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 4,
+      "name": "BHARATH I",
+      "reg_no": "23CC005",
+      "lc_username": "bharath_77",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662328,
+          "timestamp_ist": "2026-09-06 08:08:48 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662876,
+          "timestamp_ist": "2026-09-06 08:17:56 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788663282,
+          "timestamp_ist": "2026-09-06 08:24:42 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 12,
+      "name": "KAVINRAJAN K",
+      "reg_no": "23CC023",
+      "lc_username": "kavinrajan",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664714,
+          "timestamp_ist": "2026-09-06 08:48:34 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788665006,
+          "timestamp_ist": "2026-09-06 08:53:26 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 28,
+      "name": "WASIM M",
+      "reg_no": "23CC059",
+      "lc_username": "wasim_m",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 8,
+      "name": "ENIYAVAN R",
+      "reg_no": "23CC013",
+      "lc_username": "eniyavan_r",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 25,
+      "name": "STEFFY MARTINA P",
+      "reg_no": "23CC052",
+      "lc_username": "steffy_15",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663927,
+          "timestamp_ist": "2026-09-06 08:35:27 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664637,
+          "timestamp_ist": "2026-09-06 08:47:17 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 15,
+      "name": "PRAVEEN KUMAR J",
+      "reg_no": "23CC038",
+      "lc_username": "praveen360",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664478,
+          "timestamp_ist": "2026-09-06 08:44:38 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788666909,
+          "timestamp_ist": "2026-09-06 09:25:09 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 9,
+      "name": "JANARANSHINI P",
+      "reg_no": "23CC017",
+      "lc_username": "janaranshini_17",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 17,
+      "name": "PRIYADHARSHINI K",
+      "reg_no": "23CC042",
+      "lc_username": "dhars_02",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 2,
+      "name": "S.ABIRAMI",
+      "reg_no": "23CC002",
+      "lc_username": "shtlj6cnjl",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788666308,
+          "timestamp_ist": "2026-09-06 09:15:08 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 14,
+      "name": "MOWNAVARTHINI A L",
+      "reg_no": "23CC031",
+      "lc_username": "mowna_14",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 20,
+      "name": "RATHEESH S",
+      "reg_no": "23CC045",
+      "lc_username": "ratheesh1226",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664180,
+          "timestamp_ist": "2026-09-06 08:39:40 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788665437,
+          "timestamp_ist": "2026-09-06 09:00:37 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 19,
+      "name": "RAM PRAKASH S",
+      "reg_no": "23CC044",
+      "lc_username": "ramprakash5",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664106,
+          "timestamp_ist": "2026-09-06 08:38:26 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788665075,
+          "timestamp_ist": "2026-09-06 08:54:35 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 3,
+      "name": "ASWIN P",
+      "reg_no": "23CC003",
+      "lc_username": "aswinkanin",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 26,
+      "name": "SUBITHA P S",
+      "reg_no": "23CC053",
+      "lc_username": "23cc053",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788665209,
+          "timestamp_ist": "2026-09-06 08:56:49 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788665942,
+          "timestamp_ist": "2026-09-06 09:09:02 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 7,
+      "name": "DEEPAKKUMAR M",
+      "reg_no": "23CC010",
+      "lc_username": "deepak2612",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 10,
+      "name": "KANISHAA.K.S",
+      "reg_no": "23CC020",
+      "lc_username": "kani_shaa",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 24,
+      "name": "SRIRAM.S",
+      "reg_no": "23CC051",
+      "lc_username": "sriram6758",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 194,
+      "name": "ELAVARASAN B",
+      "reg_no": "732224CI011",
+      "lc_username": "prince__11",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 5,
+      "name": "DEEPADHARSHINI C",
+      "reg_no": "23CC007",
+      "lc_username": "deepadharshini_10",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788665432,
+          "timestamp_ist": "2026-09-06 09:00:32 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788665996,
+          "timestamp_ist": "2026-09-06 09:09:56 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 21,
+      "name": "RITHIKA P",
+      "reg_no": "23CC046",
+      "lc_username": "rithikap13",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662147,
+          "timestamp_ist": "2026-09-06 08:05:47 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662400,
+          "timestamp_ist": "2026-09-06 08:10:00 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788663085,
+          "timestamp_ist": "2026-09-06 08:21:25 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 18,
+      "name": "RAGAVAN S",
+      "reg_no": "23CC043",
+      "lc_username": "j123kcmcm",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 1,
+      "name": "AATHAVAN T",
+      "reg_no": "23CC001",
+      "lc_username": "aathavanthiyakeswaran",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 162,
+      "name": "DHARNEESH P",
+      "reg_no": "23CI006",
+      "lc_username": "tdq3hurfei",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662005,
+          "timestamp_ist": "2026-09-06 08:03:25 IST"
+        },
+        {
+          "slug": "minimum-cost-path-with-at-most-k-turns",
+          "timestamp_unix": 1788663780,
+          "timestamp_ist": "2026-09-06 08:33:00 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 212,
+      "name": "NAVANITH S R",
+      "reg_no": "732224CI031",
+      "lc_username": "navanithsenthil",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 203,
+      "name": "LASHMEE SRI C B",
+      "reg_no": "732224CI021",
+      "lc_username": "lash1686",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662441,
+          "timestamp_ist": "2026-09-06 08:10:41 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662845,
+          "timestamp_ist": "2026-09-06 08:17:25 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788663783,
+          "timestamp_ist": "2026-09-06 08:33:03 IST"
+        },
+        {
+          "slug": "minimum-cost-path-with-at-most-k-turns",
+          "timestamp_unix": 1788665733,
+          "timestamp_ist": "2026-09-06 09:05:33 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 166,
+      "name": "HAMSHA N",
+      "reg_no": "23CI013",
+      "lc_username": "hamsha07",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662784,
+          "timestamp_ist": "2026-09-06 08:16:24 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663040,
+          "timestamp_ist": "2026-09-06 08:20:40 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788664079,
+          "timestamp_ist": "2026-09-06 08:37:59 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 207,
+      "name": "MADHESWARAN P",
+      "reg_no": "732224CI025",
+      "lc_username": "madhes_187142_",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662217,
+          "timestamp_ist": "2026-09-06 08:06:57 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664267,
+          "timestamp_ist": "2026-09-06 08:41:07 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 160,
+      "name": "AJAY VISHALESWAR",
+      "reg_no": "23CI002",
+      "lc_username": "ajaysoftware",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788667112,
+          "timestamp_ist": "2026-09-06 09:28:32 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 22,
+      "name": "SARAVANAN R",
+      "reg_no": "23CC047",
+      "lc_username": "saravanan_rolex",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664073,
+          "timestamp_ist": "2026-09-06 08:37:53 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664590,
+          "timestamp_ist": "2026-09-06 08:46:30 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 91,
+      "name": "SRIDHAR S",
+      "reg_no": "732224CCL04",
+      "lc_username": "sridhar320076",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663164,
+          "timestamp_ist": "2026-09-06 08:22:44 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663228,
+          "timestamp_ist": "2026-09-06 08:23:48 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 185,
+      "name": "VICHITHRA.V",
+      "reg_no": "23CI058",
+      "lc_username": "vichithravelusamy",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663019,
+          "timestamp_ist": "2026-09-06 08:20:19 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663803,
+          "timestamp_ist": "2026-09-06 08:33:23 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 61,
+      "name": "NIVETHYTHA JR R",
+      "reg_no": "732224CC034",
+      "lc_username": "nivethytha0704",
+      "classification": "VIRTUAL_PRACTICE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788667741,
+          "timestamp_ist": "2026-09-06 09:39:01 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788667775,
+          "timestamp_ist": "2026-09-06 09:39:35 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 198,
+      "name": "JESRA BEGAM ABDUL RAHUMAN",
+      "reg_no": "732224CI015",
+      "lc_username": "jesra005",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 178,
+      "name": "MOHAMED AQDHAS U",
+      "reg_no": "23CI034",
+      "lc_username": "aqdhas",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 184,
+      "name": "G THEJASWINI",
+      "reg_no": "23CI055",
+      "lc_username": "thejaswini_10",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664312,
+          "timestamp_ist": "2026-09-06 08:41:52 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664673,
+          "timestamp_ist": "2026-09-06 08:47:53 IST"
+        },
+        {
+          "slug": "minimum-cost-path-with-at-most-k-turns",
+          "timestamp_unix": 1788666536,
+          "timestamp_ist": "2026-09-06 09:18:56 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 174,
+      "name": "KAVI ISHWARRYA S K",
+      "reg_no": "23CI027",
+      "lc_username": "s9hxtuaa2e",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664111,
+          "timestamp_ist": "2026-09-06 08:38:31 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 36,
+      "name": "DHARUNRAJ K P",
+      "reg_no": "732224CC008",
+      "lc_username": "k_p_dharunraj",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662272,
+          "timestamp_ist": "2026-09-06 08:07:52 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662628,
+          "timestamp_ist": "2026-09-06 08:13:48 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 32,
+      "name": "BHARATH G",
+      "reg_no": "732224CC004",
+      "lc_username": "bharath1927",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662332,
+          "timestamp_ist": "2026-09-06 08:08:52 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662740,
+          "timestamp_ist": "2026-09-06 08:15:40 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 165,
+      "name": "GOWCIKA U",
+      "reg_no": "23CI012",
+      "lc_username": "gowcika",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663194,
+          "timestamp_ist": "2026-09-06 08:23:14 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663534,
+          "timestamp_ist": "2026-09-06 08:28:54 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 169,
+      "name": "JAYASURYA P",
+      "reg_no": "23CI018",
+      "lc_username": "jayasurya-619",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788666965,
+          "timestamp_ist": "2026-09-06 09:26:05 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 199,
+      "name": "KABILESH R",
+      "reg_no": "732224CI016",
+      "lc_username": "kabilesh_7",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662406,
+          "timestamp_ist": "2026-09-06 08:10:06 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663595,
+          "timestamp_ist": "2026-09-06 08:29:55 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 173,
+      "name": "KARUNYA C",
+      "reg_no": "23CI025",
+      "lc_username": "sivakarunya",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 180,
+      "name": "RAVI BHARATHI.J",
+      "reg_no": "23CI044",
+      "lc_username": "ravi_bharathi509",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664212,
+          "timestamp_ist": "2026-09-06 08:40:12 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788667059,
+          "timestamp_ist": "2026-09-06 09:27:39 IST"
+        },
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788667067,
+          "timestamp_ist": "2026-09-06 09:27:47 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 214,
+      "name": "NAVEEN R",
+      "reg_no": "732224CI033",
+      "lc_username": "naveen2501",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 70,
+      "name": "SABARI N",
+      "reg_no": "732224CC043",
+      "lc_username": "sabari43",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 63,
+      "name": "PRASATH R",
+      "reg_no": "732224CC036",
+      "lc_username": "prasath00156",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 89,
+      "name": "SARAN.R",
+      "reg_no": "732224CCL02",
+      "lc_username": "saranraj_2580",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662400,
+          "timestamp_ist": "2026-09-06 08:10:00 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662753,
+          "timestamp_ist": "2026-09-06 08:15:53 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 49,
+      "name": "KIRUTHIKAA P T",
+      "reg_no": "732224CC021",
+      "lc_username": "kiruthikaa_05",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664883,
+          "timestamp_ist": "2026-09-06 08:51:23 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788665044,
+          "timestamp_ist": "2026-09-06 08:54:04 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 64,
+      "name": "PRITHIKA P",
+      "reg_no": "732224CC037",
+      "lc_username": "pritss2206",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663139,
+          "timestamp_ist": "2026-09-06 08:22:19 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663577,
+          "timestamp_ist": "2026-09-06 08:29:37 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788664049,
+          "timestamp_ist": "2026-09-06 08:37:29 IST"
+        },
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788665409,
+          "timestamp_ist": "2026-09-06 09:00:09 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 86,
+      "name": "YURJEEN J",
+      "reg_no": "732224CC059",
+      "lc_username": "yurjeen26",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662313,
+          "timestamp_ist": "2026-09-06 08:08:33 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662647,
+          "timestamp_ist": "2026-09-06 08:14:07 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788663877,
+          "timestamp_ist": "2026-09-06 08:34:37 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 43,
+      "name": "HARISH N",
+      "reg_no": "732224CC015",
+      "lc_username": "har-ish23",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662369,
+          "timestamp_ist": "2026-09-06 08:09:29 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662759,
+          "timestamp_ist": "2026-09-06 08:15:59 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 45,
+      "name": "JANANI S",
+      "reg_no": "732224CC017",
+      "lc_username": "jananii_26",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662233,
+          "timestamp_ist": "2026-09-06 08:07:13 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663182,
+          "timestamp_ist": "2026-09-06 08:23:02 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788665151,
+          "timestamp_ist": "2026-09-06 08:55:51 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 161,
+      "name": "BHUVANADHARSHINI C",
+      "reg_no": "23CI004",
+      "lc_username": "bhuvanadharshini",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663290,
+          "timestamp_ist": "2026-09-06 08:24:50 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663462,
+          "timestamp_ist": "2026-09-06 08:27:42 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 37,
+      "name": "GIRIPATHI K",
+      "reg_no": "732224CC009",
+      "lc_username": "giripathi_k",
+      "classification": "VIRTUAL_PRACTICE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788671217,
+          "timestamp_ist": "2026-09-06 10:36:57 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 235,
+      "name": "SUSIDHARAN S",
+      "reg_no": "732224CI054",
+      "lc_username": "susidharan_21",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663608,
+          "timestamp_ist": "2026-09-06 08:30:08 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664836,
+          "timestamp_ist": "2026-09-06 08:50:36 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 31,
+      "name": "ANUSHKUMAR R",
+      "reg_no": "732224CC003",
+      "lc_username": "anushkumar_06",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 90,
+      "name": "Shree Sanjay U K",
+      "reg_no": "732224CCL03",
+      "lc_username": "shreesanjay",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662463,
+          "timestamp_ist": "2026-09-06 08:11:03 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662655,
+          "timestamp_ist": "2026-09-06 08:14:15 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 38,
+      "name": "GOKUL P",
+      "reg_no": "732224CC010",
+      "lc_username": "gokul_5405",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662106,
+          "timestamp_ist": "2026-09-06 08:05:06 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662470,
+          "timestamp_ist": "2026-09-06 08:11:10 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 16,
+      "name": "PRAVEEN VENKATESH A",
+      "reg_no": "23CC039",
+      "lc_username": "pravexn",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788665201,
+          "timestamp_ist": "2026-09-06 08:56:41 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788666158,
+          "timestamp_ist": "2026-09-06 09:12:38 IST"
+        },
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788666174,
+          "timestamp_ist": "2026-09-06 09:12:54 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788666178,
+          "timestamp_ist": "2026-09-06 09:12:58 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 228,
+      "name": "RUPESH S NAIR",
+      "reg_no": "732224CI047",
+      "lc_username": "rupesh_08nair_20",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663423,
+          "timestamp_ist": "2026-09-06 08:27:03 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 81,
+      "name": "VARSHINI DEVI K",
+      "reg_no": "732224CC054",
+      "lc_username": "varshini_devi2006",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 177,
+      "name": "KEERTHANA.K",
+      "reg_no": "23CI030",
+      "lc_username": "k_keerthana_",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662896,
+          "timestamp_ist": "2026-09-06 08:18:16 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663548,
+          "timestamp_ist": "2026-09-06 08:29:08 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 48,
+      "name": "KARTHIKEYAN V",
+      "reg_no": "732224CC020",
+      "lc_username": "karthi_2007",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664392,
+          "timestamp_ist": "2026-09-06 08:43:12 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788665120,
+          "timestamp_ist": "2026-09-06 08:55:20 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 216,
+      "name": "NISHANTH S",
+      "reg_no": "732224CI035",
+      "lc_username": "sivanishanth2006",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662486,
+          "timestamp_ist": "2026-09-06 08:11:26 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663062,
+          "timestamp_ist": "2026-09-06 08:21:02 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788663931,
+          "timestamp_ist": "2026-09-06 08:35:31 IST"
+        },
+        {
+          "slug": "minimum-cost-path-with-at-most-k-turns",
+          "timestamp_unix": 1788665781,
+          "timestamp_ist": "2026-09-06 09:06:21 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 40,
+      "name": "HARIHARAN S V",
+      "reg_no": "732224CC012",
+      "lc_username": "x8ggzar6gx",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 213,
+      "name": "NAVEEN KUMAR D",
+      "reg_no": "732224CI032",
+      "lc_username": "naveenkumar1713",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788666812,
+          "timestamp_ist": "2026-09-06 09:23:32 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 80,
+      "name": "SURESH S",
+      "reg_no": "732224CC053",
+      "lc_username": "suresh11092006",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 84,
+      "name": "VISHAANTH M B",
+      "reg_no": "732224CC057",
+      "lc_username": "vishaanth0007",
+      "classification": "VIRTUAL_PRACTICE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788668353,
+          "timestamp_ist": "2026-09-06 09:49:13 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788668397,
+          "timestamp_ist": "2026-09-06 09:49:57 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 87,
+      "name": "YUVANESH S",
+      "reg_no": "732224CC060",
+      "lc_username": "yuvanesh23",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 215,
+      "name": "NISHA S",
+      "reg_no": "732224CI034",
+      "lc_username": "nisha_sivakumar",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662762,
+          "timestamp_ist": "2026-09-06 08:16:02 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664758,
+          "timestamp_ist": "2026-09-06 08:49:18 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 42,
+      "name": "HARISH KUMAAR S",
+      "reg_no": "732224CC014",
+      "lc_username": "harishvichu",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662159,
+          "timestamp_ist": "2026-09-06 08:05:59 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662420,
+          "timestamp_ist": "2026-09-06 08:10:20 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788664430,
+          "timestamp_ist": "2026-09-06 08:43:50 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 46,
+      "name": "JAYAPRAKASH S",
+      "reg_no": "732224CC018",
+      "lc_username": "jayaprakash2007",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 52,
+      "name": "MADAN PRASATH G",
+      "reg_no": "732224CC024",
+      "lc_username": "madan_172007",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663874,
+          "timestamp_ist": "2026-09-06 08:34:34 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664410,
+          "timestamp_ist": "2026-09-06 08:43:30 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 34,
+      "name": "DHARSHINI A M",
+      "reg_no": "732224CC006",
+      "lc_username": "dharshini_1605",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663777,
+          "timestamp_ist": "2026-09-06 08:32:57 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664753,
+          "timestamp_ist": "2026-09-06 08:49:13 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 230,
+      "name": "SANJAY G",
+      "reg_no": "732224CI049",
+      "lc_username": "sanjay_gireesh",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 186,
+      "name": "AAKASH SHIVA KB",
+      "reg_no": "23CI001",
+      "lc_username": "aakashshiva",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662424,
+          "timestamp_ist": "2026-09-06 08:10:24 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662866,
+          "timestamp_ist": "2026-09-06 08:17:46 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 30,
+      "name": "AMRUTHA M",
+      "reg_no": "732224CC002",
+      "lc_username": "amrutha_primary",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 56,
+      "name": "MANOJ KUMAR C",
+      "reg_no": "732224CC028",
+      "lc_username": "manojkumar2315",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 217,
+      "name": "PAVITHRAA M",
+      "reg_no": "732224CI036",
+      "lc_username": "pavithraa_28",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662630,
+          "timestamp_ist": "2026-09-06 08:13:50 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662957,
+          "timestamp_ist": "2026-09-06 08:19:17 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 171,
+      "name": "KARMUKILAN A",
+      "reg_no": "23CI022",
+      "lc_username": "ppprnakl4t",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 23,
+      "name": "SRIVIDHYA S",
+      "reg_no": "23CC050",
+      "lc_username": "srividhya_25",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663875,
+          "timestamp_ist": "2026-09-06 08:34:35 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664156,
+          "timestamp_ist": "2026-09-06 08:39:16 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 72,
+      "name": "SHANDEESH R P",
+      "reg_no": "732224CC045",
+      "lc_username": "shandeeshrp",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 196,
+      "name": "HARISH S",
+      "reg_no": "732224CI013",
+      "lc_username": "harish_48",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663105,
+          "timestamp_ist": "2026-09-06 08:21:45 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 234,
+      "name": "SUDHARSHAN J",
+      "reg_no": "732224CI053",
+      "lc_username": "_sudharshan_j",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663666,
+          "timestamp_ist": "2026-09-06 08:31:06 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664267,
+          "timestamp_ist": "2026-09-06 08:41:07 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788666078,
+          "timestamp_ist": "2026-09-06 09:11:18 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 82,
+      "name": "VEDHASREE P",
+      "reg_no": "732224CC055",
+      "lc_username": "vedhasree_2006",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663523,
+          "timestamp_ist": "2026-09-06 08:28:43 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663959,
+          "timestamp_ist": "2026-09-06 08:35:59 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 233,
+      "name": "SUDHARSAN B",
+      "reg_no": "732224CI052",
+      "lc_username": "sudharsanbalsubramaniyam",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788665100,
+          "timestamp_ist": "2026-09-06 08:55:00 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788666282,
+          "timestamp_ist": "2026-09-06 09:14:42 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 218,
+      "name": "PRAJIN SANKAR A U",
+      "reg_no": "732224CI037",
+      "lc_username": "prajinsankar",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 206,
+      "name": "MADHANRAJ A",
+      "reg_no": "732224CI024",
+      "lc_username": "madhan_11_",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 232,
+      "name": "SIDDAESHWAR K",
+      "reg_no": "732224CI051",
+      "lc_username": "siddaesh_siddu",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 149,
+      "name": "SWETHA JAYASIKA P",
+      "reg_no": "732225CC058",
+      "lc_username": "aukfzzq7aj",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788667018,
+          "timestamp_ist": "2026-09-06 09:26:58 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 227,
+      "name": "ROJASRI S",
+      "reg_no": "732224CI046",
+      "lc_username": "rojasri_007_",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788665264,
+          "timestamp_ist": "2026-09-06 08:57:44 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788665552,
+          "timestamp_ist": "2026-09-06 09:02:32 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788666118,
+          "timestamp_ist": "2026-09-06 09:11:58 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 191,
+      "name": "ANU SRI S",
+      "reg_no": "732224CI007",
+      "lc_username": "anu_07",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662137,
+          "timestamp_ist": "2026-09-06 08:05:37 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662469,
+          "timestamp_ist": "2026-09-06 08:11:09 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788664834,
+          "timestamp_ist": "2026-09-06 08:50:34 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 78,
+      "name": "SUBASH MURUGAN S",
+      "reg_no": "732224CC051",
+      "lc_username": "subashmurugan212",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664381,
+          "timestamp_ist": "2026-09-06 08:43:01 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664706,
+          "timestamp_ist": "2026-09-06 08:48:26 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788665016,
+          "timestamp_ist": "2026-09-06 08:53:36 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 176,
+      "name": "KAVIYARASU S",
+      "reg_no": "23CI029",
+      "lc_username": "kaviyarasu_s123",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662747,
+          "timestamp_ist": "2026-09-06 08:15:47 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663242,
+          "timestamp_ist": "2026-09-06 08:24:02 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 204,
+      "name": "LOGESH M S",
+      "reg_no": "732224CI022",
+      "lc_username": "logesh_1204_",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 205,
+      "name": "MADHANKUMAR K",
+      "reg_no": "732224CI023",
+      "lc_username": "_madan_km_",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 117,
+      "name": "KEERTHEESH K R",
+      "reg_no": "732225CC026",
+      "lc_username": "keertheesh",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 236,
+      "name": "VELMURUGAN T",
+      "reg_no": "732224CI055",
+      "lc_username": "vel_muruga_",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663319,
+          "timestamp_ist": "2026-09-06 08:25:19 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788665108,
+          "timestamp_ist": "2026-09-06 08:55:08 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 229,
+      "name": "SAI SIDDHARDH S",
+      "reg_no": "732224CI048",
+      "lc_username": "saisiddhardh_007",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662898,
+          "timestamp_ist": "2026-09-06 08:18:18 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663381,
+          "timestamp_ist": "2026-09-06 08:26:21 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788664111,
+          "timestamp_ist": "2026-09-06 08:38:31 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 57,
+      "name": "MOHAMED THARIQ J",
+      "reg_no": "732224CC029",
+      "lc_username": "thariq2625",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 238,
+      "name": "SOWMIYA K",
+      "reg_no": "732224CIR01",
+      "lc_username": "sowmiya4306",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788665900,
+          "timestamp_ist": "2026-09-06 09:08:20 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788665910,
+          "timestamp_ist": "2026-09-06 09:08:30 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 189,
+      "name": "AISHWARYA E",
+      "reg_no": "732224CI005",
+      "lc_username": "aishueswaran",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662131,
+          "timestamp_ist": "2026-09-06 08:05:31 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662450,
+          "timestamp_ist": "2026-09-06 08:10:50 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788663496,
+          "timestamp_ist": "2026-09-06 08:28:16 IST"
+        },
+        {
+          "slug": "minimum-cost-path-with-at-most-k-turns",
+          "timestamp_unix": 1788666244,
+          "timestamp_ist": "2026-09-06 09:14:04 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 301,
+      "name": "KIRUTHIKA K",
+      "reg_no": "732224CI020",
+      "lc_username": "kiruthika__23",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663153,
+          "timestamp_ist": "2026-09-06 08:22:33 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663558,
+          "timestamp_ist": "2026-09-06 08:29:18 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 226,
+      "name": "ROHITH S",
+      "reg_no": "732224CI045",
+      "lc_username": "rohith_2006_s",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662507,
+          "timestamp_ist": "2026-09-06 08:11:47 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663277,
+          "timestamp_ist": "2026-09-06 08:24:37 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 220,
+      "name": "PREMKUMAR K",
+      "reg_no": "732224CI039",
+      "lc_username": "prem_kumar_karuna",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664940,
+          "timestamp_ist": "2026-09-06 08:52:20 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788665165,
+          "timestamp_ist": "2026-09-06 08:56:05 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 77,
+      "name": "SUBA SRI B",
+      "reg_no": "732224CC050",
+      "lc_username": "suba_sri10",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 201,
+      "name": "KARTHEESHWAR T",
+      "reg_no": "732224CI018",
+      "lc_username": "kartheeshwar",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663119,
+          "timestamp_ist": "2026-09-06 08:21:59 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663724,
+          "timestamp_ist": "2026-09-06 08:32:04 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788665223,
+          "timestamp_ist": "2026-09-06 08:57:03 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 193,
+      "name": "DIVYA S",
+      "reg_no": "732224CI010",
+      "lc_username": "divya_sd",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663082,
+          "timestamp_ist": "2026-09-06 08:21:22 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663409,
+          "timestamp_ist": "2026-09-06 08:26:49 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 134,
+      "name": "ROKITHKISHOR R S",
+      "reg_no": "732225CC043",
+      "lc_username": "rokithkishor",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 197,
+      "name": "JANANI PRIYA V",
+      "reg_no": "732224CI014",
+      "lc_username": "janani_08_",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788665094,
+          "timestamp_ist": "2026-09-06 08:54:54 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788665573,
+          "timestamp_ist": "2026-09-06 09:02:53 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 190,
+      "name": "AKKSHAYAA K",
+      "reg_no": "732224CI006",
+      "lc_username": "akkshayaak",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 167,
+      "name": "HAREE D",
+      "reg_no": "23CI014",
+      "lc_username": "haree05",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663257,
+          "timestamp_ist": "2026-09-06 08:24:17 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663554,
+          "timestamp_ist": "2026-09-06 08:29:14 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788664437,
+          "timestamp_ist": "2026-09-06 08:43:57 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 129,
+      "name": "PRIYADHARSHINI D",
+      "reg_no": "732225CC038",
+      "lc_username": "priyaa_27",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 239,
+      "name": "AARTHI R S",
+      "reg_no": "732225CI001",
+      "lc_username": "aarthi-rs",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 136,
+      "name": "SAHANAJ BANU M",
+      "reg_no": "732225CC045",
+      "lc_username": "sahanajbanu",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662045,
+          "timestamp_ist": "2026-09-06 08:04:05 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 200,
+      "name": "KANNIGA PARAMESWARI S B",
+      "reg_no": "732224CI017",
+      "lc_username": "kanniga_sb",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662172,
+          "timestamp_ist": "2026-09-06 08:06:12 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662516,
+          "timestamp_ist": "2026-09-06 08:11:56 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788665072,
+          "timestamp_ist": "2026-09-06 08:54:32 IST"
+        },
+        {
+          "slug": "minimum-cost-path-with-at-most-k-turns",
+          "timestamp_unix": 1788665333,
+          "timestamp_ist": "2026-09-06 08:58:53 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 188,
+      "name": "ABISHEK C",
+      "reg_no": "732224CI004",
+      "lc_username": "abishek0007",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 111,
+      "name": "JAYEL CHRISTINA SCUDD",
+      "reg_no": "732225CC020",
+      "lc_username": "jayel_18",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 187,
+      "name": "BHARATH K",
+      "reg_no": "732224CI001",
+      "lc_username": "bharath_primary",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 133,
+      "name": "RAVIBHARATHI R",
+      "reg_no": "732225CC042",
+      "lc_username": "ravibharathi1234",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664185,
+          "timestamp_ist": "2026-09-06 08:39:45 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788667596,
+          "timestamp_ist": "2026-09-06 09:36:36 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 286,
+      "name": "SHARMATHA K",
+      "reg_no": "732225CI048",
+      "lc_username": "sharmatha_k",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662720,
+          "timestamp_ist": "2026-09-06 08:15:20 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663254,
+          "timestamp_ist": "2026-09-06 08:24:14 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 210,
+      "name": "MYTHREYAN K",
+      "reg_no": "732224CI029",
+      "lc_username": "mythreyan_64",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664212,
+          "timestamp_ist": "2026-09-06 08:40:12 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788665050,
+          "timestamp_ist": "2026-09-06 08:54:10 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788666115,
+          "timestamp_ist": "2026-09-06 09:11:55 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 125,
+      "name": "NAVEEN.R",
+      "reg_no": "732225CC034",
+      "lc_username": "hr1lfjuadf",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 130,
+      "name": "PRIYADHARSHINI G",
+      "reg_no": "732225CC039",
+      "lc_username": "f0gm3izrgv",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664974,
+          "timestamp_ist": "2026-09-06 08:52:54 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 222,
+      "name": "RAGUL J M",
+      "reg_no": "732224CI041",
+      "lc_username": "ragul_006",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 105,
+      "name": "GOKULRAJ R",
+      "reg_no": "732225CC014",
+      "lc_username": "gokulraj14",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 153,
+      "name": "YOGESH P",
+      "reg_no": "732225CC062",
+      "lc_username": "yogesh_062",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 107,
+      "name": "HARISH B",
+      "reg_no": "732225CC016",
+      "lc_username": "732225cc016",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 123,
+      "name": "MUKESH S",
+      "reg_no": "732225CC032",
+      "lc_username": "mukeshmukesh123",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 277,
+      "name": "ROHITH P",
+      "reg_no": "732225CI039",
+      "lc_username": "rohith_pannirselvam",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 95,
+      "name": "ABINAYA S",
+      "reg_no": "732225CC004",
+      "lc_username": "abi_cc004",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663173,
+          "timestamp_ist": "2026-09-06 08:22:53 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 163,
+      "name": "DIVYA A",
+      "reg_no": "23CI007",
+      "lc_username": "divi_arul",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663399,
+          "timestamp_ist": "2026-09-06 08:26:39 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664047,
+          "timestamp_ist": "2026-09-06 08:37:27 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 294,
+      "name": "THAMARAIKANNAN M R",
+      "reg_no": "732225CI056",
+      "lc_username": "thamaraikannan_mr_2007",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663036,
+          "timestamp_ist": "2026-09-06 08:20:36 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663472,
+          "timestamp_ist": "2026-09-06 08:27:52 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788665178,
+          "timestamp_ist": "2026-09-06 08:56:18 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 113,
+      "name": "JEEVITHA S",
+      "reg_no": "732225CC022",
+      "lc_username": "jeevi_algoqueen",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 259,
+      "name": "KIRAN CHANTH T L",
+      "reg_no": "732225CI021",
+      "lc_username": "kiranchanth_21",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 195,
+      "name": "GUHAN D",
+      "reg_no": "732224CI012",
+      "lc_username": "guhan_12_",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662649,
+          "timestamp_ist": "2026-09-06 08:14:09 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663897,
+          "timestamp_ist": "2026-09-06 08:34:57 IST"
+        },
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663938,
+          "timestamp_ist": "2026-09-06 08:35:38 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663949,
+          "timestamp_ist": "2026-09-06 08:35:49 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 110,
+      "name": "JAYASRI R",
+      "reg_no": "732225CC019",
+      "lc_username": "jayasri3103",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 268,
+      "name": "NISHA C",
+      "reg_no": "732225CI030",
+      "lc_username": "732225ci030-nisha-c",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 144,
+      "name": "SUBILNATH G",
+      "reg_no": "732225CC053",
+      "lc_username": "wbckc8kob8",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788665841,
+          "timestamp_ist": "2026-09-06 09:07:21 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 146,
+      "name": "SURUTHI S",
+      "reg_no": "732225CC055",
+      "lc_username": "zyi7qeg6oo",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 249,
+      "name": "GOBIKRISHNA M",
+      "reg_no": "732225CI011",
+      "lc_username": "gobi_krishna",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 208,
+      "name": "MEENA E",
+      "reg_no": "732224CI026",
+      "lc_username": "meenaelangovan",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664041,
+          "timestamp_ist": "2026-09-06 08:37:21 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664334,
+          "timestamp_ist": "2026-09-06 08:42:14 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 237,
+      "name": "VIJAY PRABHU.M",
+      "reg_no": "732224CI056",
+      "lc_username": "vijayprabhu56",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 202,
+      "name": "KAVINRAJ R",
+      "reg_no": "732224CI019",
+      "lc_username": "kavin629",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663162,
+          "timestamp_ist": "2026-09-06 08:22:42 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788666087,
+          "timestamp_ist": "2026-09-06 09:11:27 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788666916,
+          "timestamp_ist": "2026-09-06 09:25:16 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 98,
+      "name": "DEEPIKA G L",
+      "reg_no": "732225CC007",
+      "lc_username": "deepika1013",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663696,
+          "timestamp_ist": "2026-09-06 08:31:36 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664207,
+          "timestamp_ist": "2026-09-06 08:40:07 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 119,
+      "name": "LALITHKUMAR B V",
+      "reg_no": "732225CC028",
+      "lc_username": "lalithkumar19",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 131,
+      "name": "PRIYADHARSHINI P",
+      "reg_no": "732225CC040",
+      "lc_username": "mn6vcywjan",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 59,
+      "name": "NISHANTH J S",
+      "reg_no": "732224CC032",
+      "lc_username": "nishanth_2",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 211,
+      "name": "NANDHINI G",
+      "reg_no": "732224CI030",
+      "lc_username": "gnandhini_09",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662768,
+          "timestamp_ist": "2026-09-06 08:16:08 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663582,
+          "timestamp_ist": "2026-09-06 08:29:42 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 224,
+      "name": "RANJITH KUMAR C",
+      "reg_no": "732224CI043",
+      "lc_username": "ranjith_2006",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 250,
+      "name": "GOKULKRISHNA M",
+      "reg_no": "732225CI012",
+      "lc_username": "gokulkrishna_26",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 170,
+      "name": "KAMALA VISHNU G",
+      "reg_no": "23CI021",
+      "lc_username": "kamal_vishnu",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 264,
+      "name": "MONISHA C",
+      "reg_no": "732225CI026",
+      "lc_username": "mw9qujlajo",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663700,
+          "timestamp_ist": "2026-09-06 08:31:40 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663876,
+          "timestamp_ist": "2026-09-06 08:34:36 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 272,
+      "name": "PRAVEENA S",
+      "reg_no": "732225CI034",
+      "lc_username": "praveena_selvaraj",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 245,
+      "name": "DHARSHAN S",
+      "reg_no": "732225CI007",
+      "lc_username": "dharshan_x0",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663146,
+          "timestamp_ist": "2026-09-06 08:22:26 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788665283,
+          "timestamp_ist": "2026-09-06 08:58:03 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788666825,
+          "timestamp_ist": "2026-09-06 09:23:45 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 280,
+      "name": "SALINI S",
+      "reg_no": "732225CI042",
+      "lc_username": "salini-25",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 300,
+      "name": "YAZHINI M P",
+      "reg_no": "732225CI062",
+      "lc_username": "yazhini-0508",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 41,
+      "name": "HARISH K",
+      "reg_no": "732224CC013",
+      "lc_username": "harish000007",
+      "classification": "VIRTUAL_PRACTICE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788668866,
+          "timestamp_ist": "2026-09-06 09:57:46 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788668966,
+          "timestamp_ist": "2026-09-06 09:59:26 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788668990,
+          "timestamp_ist": "2026-09-06 09:59:50 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 298,
+      "name": "VANITHA S",
+      "reg_no": "732225CI060",
+      "lc_username": "vanitha_07",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663259,
+          "timestamp_ist": "2026-09-06 08:24:19 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663453,
+          "timestamp_ist": "2026-09-06 08:27:33 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 248,
+      "name": "GEERTHANA A S",
+      "reg_no": "732225CI010",
+      "lc_username": "geerthanaas_2008",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662712,
+          "timestamp_ist": "2026-09-06 08:15:12 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663889,
+          "timestamp_ist": "2026-09-06 08:34:49 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788664703,
+          "timestamp_ist": "2026-09-06 08:48:23 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 104,
+      "name": "GIBSON KENLEY S",
+      "reg_no": "732225CC013",
+      "lc_username": "n1j49ovita",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662592,
+          "timestamp_ist": "2026-09-06 08:13:12 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664463,
+          "timestamp_ist": "2026-09-06 08:44:23 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 221,
+      "name": "RAGHAVAN G",
+      "reg_no": "732224CI040",
+      "lc_username": "raghavan_0116_",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 231,
+      "name": "SATHYANARAYANAN R",
+      "reg_no": "732224CI050",
+      "lc_username": "sathyanarayanan_11062006",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788665456,
+          "timestamp_ist": "2026-09-06 09:00:56 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 140,
+      "name": "SASINESAN T",
+      "reg_no": "732225CC049",
+      "lc_username": "rudwij8wgl",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662605,
+          "timestamp_ist": "2026-09-06 08:13:25 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663746,
+          "timestamp_ist": "2026-09-06 08:32:26 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 285,
+      "name": "SATHISH M",
+      "reg_no": "732225CI047",
+      "lc_username": "sathish_chml",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 254,
+      "name": "INIYA A",
+      "reg_no": "732225CI016",
+      "lc_username": "zdhinxs03z",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 257,
+      "name": "KARUPPUSAMYDEEPAK P",
+      "reg_no": "732225CI019",
+      "lc_username": "deepak_2d",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662328,
+          "timestamp_ist": "2026-09-06 08:08:48 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662671,
+          "timestamp_ist": "2026-09-06 08:14:31 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 183,
+      "name": "SUJITH K",
+      "reg_no": "23CI053",
+      "lc_username": "sujith2006",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664397,
+          "timestamp_ist": "2026-09-06 08:43:17 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 295,
+      "name": "THIVYASRUTHI G D",
+      "reg_no": "732225CI057",
+      "lc_username": "thivyasruthi_20",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662065,
+          "timestamp_ist": "2026-09-06 08:04:25 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662346,
+          "timestamp_ist": "2026-09-06 08:09:06 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 260,
+      "name": "KISHORE KANNA S",
+      "reg_no": "732225CI022",
+      "lc_username": "kishore_kanna_s",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 263,
+      "name": "MOHAMMED YUNUS A",
+      "reg_no": "732225CI025",
+      "lc_username": "md_yunus025",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662702,
+          "timestamp_ist": "2026-09-06 08:15:02 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663961,
+          "timestamp_ist": "2026-09-06 08:36:01 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 266,
+      "name": "NAVIN V",
+      "reg_no": "732225CI028",
+      "lc_username": "navin_iot_28",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 273,
+      "name": "PRIYADHARSHINI K M",
+      "reg_no": "732225CI035",
+      "lc_username": "priyadharshini_0506",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662368,
+          "timestamp_ist": "2026-09-06 08:09:28 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662870,
+          "timestamp_ist": "2026-09-06 08:17:50 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 278,
+      "name": "ROSHAN AKTHAR K",
+      "reg_no": "732225CI040",
+      "lc_username": "roshan_v46",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 265,
+      "name": "NANTHEES N S",
+      "reg_no": "732225CI027",
+      "lc_username": "nanthees_ns-14",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663221,
+          "timestamp_ist": "2026-09-06 08:23:41 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664246,
+          "timestamp_ist": "2026-09-06 08:40:46 IST"
+        },
+        {
+          "slug": "minimum-cost-path-with-at-most-k-turns",
+          "timestamp_unix": 1788667090,
+          "timestamp_ist": "2026-09-06 09:28:10 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 296,
+      "name": "THIYA S",
+      "reg_no": "732225CI058",
+      "lc_username": "thiya2026",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664104,
+          "timestamp_ist": "2026-09-06 08:38:24 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664638,
+          "timestamp_ist": "2026-09-06 08:47:18 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 251,
+      "name": "GOKUL P S",
+      "reg_no": "732225CI013",
+      "lc_username": "gokulps",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788665186,
+          "timestamp_ist": "2026-09-06 08:56:26 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788665515,
+          "timestamp_ist": "2026-09-06 09:01:55 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 29,
+      "name": "AJAY A",
+      "reg_no": "732224CC001",
+      "lc_username": "ajay_primary",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 33,
+      "name": "DHANUSHYA GK",
+      "reg_no": "732224CC005",
+      "lc_username": "dhanu003",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662198,
+          "timestamp_ist": "2026-09-06 08:06:38 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662627,
+          "timestamp_ist": "2026-09-06 08:13:47 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788663618,
+          "timestamp_ist": "2026-09-06 08:30:18 IST"
+        },
+        {
+          "slug": "minimum-cost-path-with-at-most-k-turns",
+          "timestamp_unix": 1788664786,
+          "timestamp_ist": "2026-09-06 08:49:46 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 244,
+      "name": "DHARANI I",
+      "reg_no": "732225CI006",
+      "lc_username": "dharani_0404",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 255,
+      "name": "JANANI D",
+      "reg_no": "732225CI017",
+      "lc_username": "janannn_iiiiii",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788667111,
+          "timestamp_ist": "2026-09-06 09:28:31 IST"
+        },
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788667406,
+          "timestamp_ist": "2026-09-06 09:33:26 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 182,
+      "name": "SATHISHKUMAR.S",
+      "reg_no": "23CI050",
+      "lc_username": "sathishsaravanan_33",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663322,
+          "timestamp_ist": "2026-09-06 08:25:22 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 150,
+      "name": "TAMILARASAN S",
+      "reg_no": "732225CC059",
+      "lc_username": "_tamilarasan_",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788666410,
+          "timestamp_ist": "2026-09-06 09:16:50 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 132,
+      "name": "RAJABALAN B",
+      "reg_no": "732225CC041",
+      "lc_username": "b_rajabalan",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662552,
+          "timestamp_ist": "2026-09-06 08:12:32 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664797,
+          "timestamp_ist": "2026-09-06 08:49:57 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 288,
+      "name": "SHREEDHARSHAN S",
+      "reg_no": "732225CI050",
+      "lc_username": "shreedharshan_s",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 85,
+      "name": "YAZHINI SHREE A",
+      "reg_no": "732224CC058",
+      "lc_username": "yazhu1203",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662757,
+          "timestamp_ist": "2026-09-06 08:15:57 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663045,
+          "timestamp_ist": "2026-09-06 08:20:45 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 145,
+      "name": "SUJITH A",
+      "reg_no": "732225CC054",
+      "lc_username": "sujithnandha",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 44,
+      "name": "INIYA K",
+      "reg_no": "732224CC016",
+      "lc_username": "iniya_26",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663227,
+          "timestamp_ist": "2026-09-06 08:23:47 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664892,
+          "timestamp_ist": "2026-09-06 08:51:32 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788665428,
+          "timestamp_ist": "2026-09-06 09:00:28 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 128,
+      "name": "PRADEEPA M",
+      "reg_no": "732225CC037",
+      "lc_username": "pradeepam_",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 142,
+      "name": "SIDDHDEV V R",
+      "reg_no": "732225CC051",
+      "lc_username": "siddhdev",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664691,
+          "timestamp_ist": "2026-09-06 08:48:11 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788665760,
+          "timestamp_ist": "2026-09-06 09:06:00 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 290,
+      "name": "SORNA RIYAS J",
+      "reg_no": "732225CI052",
+      "lc_username": "riyas18",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788666079,
+          "timestamp_ist": "2026-09-06 09:11:19 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 292,
+      "name": "SURYAKUMAR J",
+      "reg_no": "732225CI054",
+      "lc_username": "suryalic",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 246,
+      "name": "DHARSHINI G",
+      "reg_no": "732225CI008",
+      "lc_username": "dharshini_ramya",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663419,
+          "timestamp_ist": "2026-09-06 08:26:59 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664122,
+          "timestamp_ist": "2026-09-06 08:38:42 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 35,
+      "name": "DHARSHINI S M",
+      "reg_no": "732224CC007",
+      "lc_username": "dharshini75028",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663533,
+          "timestamp_ist": "2026-09-06 08:28:53 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664375,
+          "timestamp_ist": "2026-09-06 08:42:55 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788665073,
+          "timestamp_ist": "2026-09-06 08:54:33 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 109,
+      "name": "JANARTHANAN R",
+      "reg_no": "732225CC018",
+      "lc_username": "rjanarthanan",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663332,
+          "timestamp_ist": "2026-09-06 08:25:32 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664438,
+          "timestamp_ist": "2026-09-06 08:43:58 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 261,
+      "name": "MADHU BALA P",
+      "reg_no": "732225CI023",
+      "lc_username": "madhubala_45",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 124,
+      "name": "NAVASAKTHI K K",
+      "reg_no": "732225CC033",
+      "lc_username": "nava_sakthi",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 60,
+      "name": "NITHIN S",
+      "reg_no": "732224CC033",
+      "lc_username": "nithin_3126",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662737,
+          "timestamp_ist": "2026-09-06 08:15:37 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788667219,
+          "timestamp_ist": "2026-09-06 09:30:19 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 275,
+      "name": "RAGUL T",
+      "reg_no": "732225CI037",
+      "lc_username": "ragul_bruce",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 293,
+      "name": "SWEDHAN S",
+      "reg_no": "732225CI055",
+      "lc_username": "swedhan_s",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 247,
+      "name": "GAYATHRI R",
+      "reg_no": "732225CI009",
+      "lc_username": "gayathri_vp",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664241,
+          "timestamp_ist": "2026-09-06 08:40:41 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664929,
+          "timestamp_ist": "2026-09-06 08:52:09 IST"
+        },
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664941,
+          "timestamp_ist": "2026-09-06 08:52:21 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664949,
+          "timestamp_ist": "2026-09-06 08:52:29 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 47,
+      "name": "JAYASURYA S",
+      "reg_no": "732224CC019",
+      "lc_username": "jayasurya1212",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 51,
+      "name": "LAKSANA S",
+      "reg_no": "732224CC023",
+      "lc_username": "useless678",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662974,
+          "timestamp_ist": "2026-09-06 08:19:34 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663425,
+          "timestamp_ist": "2026-09-06 08:27:05 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788664580,
+          "timestamp_ist": "2026-09-06 08:46:20 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 284,
+      "name": "SANTHOSH KUMAR S",
+      "reg_no": "732225CI046",
+      "lc_username": "santhosh_mahi",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 116,
+      "name": "KAVIN B",
+      "reg_no": "732225CC025",
+      "lc_username": "kavin019",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662516,
+          "timestamp_ist": "2026-09-06 08:11:56 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663906,
+          "timestamp_ist": "2026-09-06 08:35:06 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 121,
+      "name": "MIDESH KP",
+      "reg_no": "732225CC030",
+      "lc_username": "2007mitesh",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663507,
+          "timestamp_ist": "2026-09-06 08:28:27 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 127,
+      "name": "POOVARASU.A",
+      "reg_no": "732225CC036",
+      "lc_username": "poodurai",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663825,
+          "timestamp_ist": "2026-09-06 08:33:45 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664278,
+          "timestamp_ist": "2026-09-06 08:41:18 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 75,
+      "name": "SOWMIYA S",
+      "reg_no": "732224CC048",
+      "lc_username": "jiyasowmiya",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662934,
+          "timestamp_ist": "2026-09-06 08:18:54 IST"
+        },
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663372,
+          "timestamp_ist": "2026-09-06 08:26:12 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663391,
+          "timestamp_ist": "2026-09-06 08:26:31 IST"
+        },
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663405,
+          "timestamp_ist": "2026-09-06 08:26:45 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663414,
+          "timestamp_ist": "2026-09-06 08:26:54 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788664808,
+          "timestamp_ist": "2026-09-06 08:50:08 IST"
+        },
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788665030,
+          "timestamp_ist": "2026-09-06 08:53:50 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788665043,
+          "timestamp_ist": "2026-09-06 08:54:03 IST"
+        },
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788665418,
+          "timestamp_ist": "2026-09-06 09:00:18 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788665428,
+          "timestamp_ist": "2026-09-06 09:00:28 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788665439,
+          "timestamp_ist": "2026-09-06 09:00:39 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 147,
+      "name": "SUSITHA U",
+      "reg_no": "732225CC056",
+      "lc_username": "susithau",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662718,
+          "timestamp_ist": "2026-09-06 08:15:18 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664235,
+          "timestamp_ist": "2026-09-06 08:40:35 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 39,
+      "name": "HARDIKA M",
+      "reg_no": "732224CC011",
+      "lc_username": "hardi889",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788665126,
+          "timestamp_ist": "2026-09-06 08:55:26 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788665830,
+          "timestamp_ist": "2026-09-06 09:07:10 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788667416,
+          "timestamp_ist": "2026-09-06 09:33:36 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 156,
+      "name": "KATHIR V",
+      "reg_no": "732225CCL03",
+      "lc_username": "kathir260",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 269,
+      "name": "NITHISH KUMAR B",
+      "reg_no": "732225CI031",
+      "lc_username": "nithishkumar_a_2602",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 135,
+      "name": "SABARI T",
+      "reg_no": "732225CC044",
+      "lc_username": "sabari_044",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662798,
+          "timestamp_ist": "2026-09-06 08:16:38 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 71,
+      "name": "SAKTHI S",
+      "reg_no": "732224CC044",
+      "lc_username": "sakthisaravanan666",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662318,
+          "timestamp_ist": "2026-09-06 08:08:38 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662965,
+          "timestamp_ist": "2026-09-06 08:19:25 IST"
+        },
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664194,
+          "timestamp_ist": "2026-09-06 08:39:54 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 76,
+      "name": "Sriselvan P",
+      "reg_no": "732224CC049",
+      "lc_username": "sriselvan_p",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 83,
+      "name": "VIGNESH T",
+      "reg_no": "732224CC056",
+      "lc_username": "vignesh_1712",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 172,
+      "name": "KARTHIK.V",
+      "reg_no": "23CI023",
+      "lc_username": "karthik_v3",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 55,
+      "name": "MANJUNATH D",
+      "reg_no": "732224CC027",
+      "lc_username": "bynxf6idwn",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 65,
+      "name": "RADHISRI",
+      "reg_no": "732224CC038",
+      "lc_username": "radhisr007",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788664271,
+          "timestamp_ist": "2026-09-06 08:41:11 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664563,
+          "timestamp_ist": "2026-09-06 08:46:03 IST"
+        },
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664898,
+          "timestamp_ist": "2026-09-06 08:51:38 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 66,
+      "name": "RAJESH R",
+      "reg_no": "732224CC039",
+      "lc_username": "rajeshr123",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662058,
+          "timestamp_ist": "2026-09-06 08:04:18 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662377,
+          "timestamp_ist": "2026-09-06 08:09:37 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788664039,
+          "timestamp_ist": "2026-09-06 08:37:19 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 73,
+      "name": "SHANMUGA PRIYA J",
+      "reg_no": "732224CC046",
+      "lc_username": "shanmugapriya_1410",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663825,
+          "timestamp_ist": "2026-09-06 08:33:45 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664680,
+          "timestamp_ist": "2026-09-06 08:48:00 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788665269,
+          "timestamp_ist": "2026-09-06 08:57:49 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 74,
+      "name": "SHARMILA P",
+      "reg_no": "732224CC047",
+      "lc_username": "sharmila___07",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664187,
+          "timestamp_ist": "2026-09-06 08:39:47 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664466,
+          "timestamp_ist": "2026-09-06 08:44:26 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 143,
+      "name": "STALIN A",
+      "reg_no": "732225CC052",
+      "lc_username": "stalin09",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662242,
+          "timestamp_ist": "2026-09-06 08:07:22 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662859,
+          "timestamp_ist": "2026-09-06 08:17:39 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 100,
+      "name": "DHARSHAN G",
+      "reg_no": "732225CC009",
+      "lc_username": "dharshan_2912",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662563,
+          "timestamp_ist": "2026-09-06 08:12:43 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663074,
+          "timestamp_ist": "2026-09-06 08:21:14 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 79,
+      "name": "K.supriya",
+      "reg_no": "732224CC052",
+      "lc_username": "k_supriya_01",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664209,
+          "timestamp_ist": "2026-09-06 08:40:09 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 53,
+      "name": "MAGUDAPATHI S",
+      "reg_no": "732224CC025",
+      "lc_username": "magudapathi2007",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788661860,
+          "timestamp_ist": "2026-09-06 08:01:00 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788661925,
+          "timestamp_ist": "2026-09-06 08:02:05 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788666226,
+          "timestamp_ist": "2026-09-06 09:13:46 IST"
+        },
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788668586,
+          "timestamp_ist": "2026-09-06 09:53:06 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788668599,
+          "timestamp_ist": "2026-09-06 09:53:19 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788668613,
+          "timestamp_ist": "2026-09-06 09:53:33 IST"
+        },
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788678022,
+          "timestamp_ist": "2026-09-06 12:30:22 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788678038,
+          "timestamp_ist": "2026-09-06 12:30:38 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788678057,
+          "timestamp_ist": "2026-09-06 12:30:57 IST"
+        },
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788752646,
+          "timestamp_ist": "2026-09-07 09:14:06 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788752661,
+          "timestamp_ist": "2026-09-07 09:14:21 IST"
+        },
+        {
+          "slug": "count-robot-groups",
+          "timestamp_unix": 1788752675,
+          "timestamp_ist": "2026-09-07 09:14:35 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 137,
+      "name": "SAJAN VENKAT M",
+      "reg_no": "732225CC046",
+      "lc_username": "sajan0713",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662822,
+          "timestamp_ist": "2026-09-06 08:17:02 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788664092,
+          "timestamp_ist": "2026-09-06 08:38:12 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 159,
+      "name": "SHYNTH ABRAHAM C",
+      "reg_no": "732225CCL06",
+      "lc_username": "shynthabraham",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 151,
+      "name": "THARANYA.L",
+      "reg_no": "732225CC060",
+      "lc_username": "tharanya0_0",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788664263,
+          "timestamp_ist": "2026-09-06 08:41:03 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 155,
+      "name": "JEEVADHARSAN M",
+      "reg_no": "732225CCL02",
+      "lc_username": "jeevadharsan12",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663188,
+          "timestamp_ist": "2026-09-06 08:23:08 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 88,
+      "name": "MOHAMMED AFFAN.JA",
+      "reg_no": "732224CCL01",
+      "lc_username": "affan_mohammed_ja",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 219,
+      "name": "PRAVEEN S",
+      "reg_no": "732224CI038",
+      "lc_username": "praveen___234",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 94,
+      "name": "ABHISHEK M",
+      "reg_no": "732225CC003",
+      "lc_username": "abhishek_cc003",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 175,
+      "name": "KAVIN V",
+      "reg_no": "23CI028",
+      "lc_username": "kavin-v",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 54,
+      "name": "MAHILNETHRA S K",
+      "reg_no": "732224CC026",
+      "lc_username": "mahil2313",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788662062,
+          "timestamp_ist": "2026-09-06 08:04:22 IST"
+        },
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662508,
+          "timestamp_ist": "2026-09-06 08:11:48 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 126,
+      "name": "NIVETHAA S B",
+      "reg_no": "732225CC035",
+      "lc_username": "nivethaa_baskaran",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 27,
+      "name": "VIGNESH J",
+      "reg_no": "23CC056",
+      "lc_username": "vignesh_2397",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788662185,
+          "timestamp_ist": "2026-09-06 08:06:25 IST"
+        },
+        {
+          "slug": "count-good-cyclic-rotations",
+          "timestamp_unix": 1788663038,
+          "timestamp_ist": "2026-09-06 08:20:38 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 62,
+      "name": "POOMITHA KS",
+      "reg_no": "732224CC035",
+      "lc_username": "poomitha_236",
+      "classification": "PUBLIC_LIVE_VERIFIED",
+      "evidence": [
+        {
+          "slug": "count-rotations-with-exactly-k-equal-adjacent-pairs",
+          "timestamp_unix": 1788663325,
+          "timestamp_ist": "2026-09-06 08:25:25 IST"
+        }
+      ],
+      "fetch_error": null
+    },
+    {
+      "student_id": 93,
+      "name": "AARSIKA M",
+      "reg_no": "732225CC002",
+      "lc_username": "aarsika_m",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 240,
+      "name": "BHARANITHARAN R",
+      "reg_no": "732225CI002",
+      "lc_username": "732225ci002-bharanitharan-r",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 241,
+      "name": "BHUPESH S A",
+      "reg_no": "732225CI003",
+      "lc_username": "732225ci003-bhupesh-s-a",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 106,
+      "name": "GOWRIPRIYA M",
+      "reg_no": "732225CC015",
+      "lc_username": "81juyqrrql",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 252,
+      "name": "HARIPRIYA S",
+      "reg_no": "732225CI014",
+      "lc_username": "haripriya_14",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 108,
+      "name": "HARISH M S",
+      "reg_no": "732225CC017",
+      "lc_username": "harishms2007",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 253,
+      "name": "HARSHINI R",
+      "reg_no": "732225CI015",
+      "lc_username": "harshini_cn",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 256,
+      "name": "JAYASURIYA V",
+      "reg_no": "732225CI018",
+      "lc_username": "jayasuriya_27",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 114,
+      "name": "KARMUGIL V",
+      "reg_no": "732225CC023",
+      "lc_username": "p4j1zkdzxp",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 258,
+      "name": "KAVIYA JAYA CHITRA A",
+      "reg_no": "732225CI020",
+      "lc_username": "kaviya_jaya_chitra",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 262,
+      "name": "MALAVIKA G",
+      "reg_no": "732225CI024",
+      "lc_username": "malavika_24",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 271,
+      "name": "POOJANA R",
+      "reg_no": "732225CI033",
+      "lc_username": "pooja_ap",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 274,
+      "name": "PUGAZHENTHI G",
+      "reg_no": "732225CI036",
+      "lc_username": "pugazhenthi123",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 69,
+      "name": "ROHITH R",
+      "reg_no": "732224CC042",
+      "lc_username": "rohith_2682006",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 282,
+      "name": "SANJAY KUMAR M",
+      "reg_no": "732225CI044",
+      "lc_username": "sk21_sanjay",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 283,
+      "name": "SANJEEV R T",
+      "reg_no": "732225CI045",
+      "lc_username": "gagrm4ykwn",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 287,
+      "name": "SHIVAN SUNDAR V",
+      "reg_no": "732225CI049",
+      "lc_username": "gagrm4ykwn",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 291,
+      "name": "SUDHARSHAN E",
+      "reg_no": "732225CI053",
+      "lc_username": "sudharshan_e-01",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 299,
+      "name": "YALENEY POOFSIN C",
+      "reg_no": "732225CI061",
+      "lc_username": "yaleneypoofsin",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 92,
+      "name": "AARATHANA L",
+      "reg_no": "732225CC001",
+      "lc_username": "lqatii0xhaq",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 154,
+      "name": "ANVAR AHAMED S",
+      "reg_no": "732225CCL01",
+      "lc_username": "anvarahamed1234",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 96,
+      "name": "ASHVIK AKHIL RAJAN R",
+      "reg_no": "732225CC005",
+      "lc_username": "ashvikakilrajan",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 97,
+      "name": "DEEPAK T",
+      "reg_no": "732225CC006",
+      "lc_username": "0mgvasbmsd",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 242,
+      "name": "DEVI SHREE M",
+      "reg_no": "732225CI004",
+      "lc_username": "devishree2026",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 99,
+      "name": "DHARANEESH SABARI N",
+      "reg_no": "732225CC008",
+      "lc_username": "8fr8zz0vdvq",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 102,
+      "name": "FARVAESH MUSHRAF M",
+      "reg_no": "732225CC011",
+      "lc_username": "6oyrbp7cn",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 112,
+      "name": "JEBARSON K",
+      "reg_no": "732225CC021",
+      "lc_username": "7rhm08knyy",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 115,
+      "name": "KAVI PRIYA T",
+      "reg_no": "732225CC024",
+      "lc_username": "rbjc1qgtsb",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 50,
+      "name": "KISHORE C",
+      "reg_no": "732224CC022",
+      "lc_username": "kishore_chand",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 120,
+      "name": "LIGITH SANJAY G",
+      "reg_no": "732225CC029",
+      "lc_username": "cbzx47n2af",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 157,
+      "name": "LINGESWARAN M",
+      "reg_no": "732225CCL04",
+      "lc_username": "lingeswaran_6",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 209,
+      "name": "MOHANA PRASATH S",
+      "reg_no": "732224CI028",
+      "lc_username": "aesath_2028",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 122,
+      "name": "MOUNESH G",
+      "reg_no": "732225CC031",
+      "lc_username": "j01ut4om0t",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 267,
+      "name": "NIKILAN S",
+      "reg_no": "732225CI029",
+      "lc_username": "nirai_nikilan",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 270,
+      "name": "NOUSHAL HASHIM A",
+      "reg_no": "732225CI032",
+      "lc_username": "qxusu2zg8m",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 179,
+      "name": "PRABHAKARAN . S",
+      "reg_no": "23CI038",
+      "lc_username": "prabha_1503",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 67,
+      "name": "RITHANIKA V",
+      "reg_no": "732224CC040",
+      "lc_username": "rithanika_venakatac",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 68,
+      "name": "RITHIKA J",
+      "reg_no": "732224CC041",
+      "lc_username": "rithu16122006",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 279,
+      "name": "SAHA N",
+      "reg_no": "732225CI041",
+      "lc_username": "saha_nc",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 281,
+      "name": "SANJAI B",
+      "reg_no": "732225CI043",
+      "lc_username": "sanjaaiiii_",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 138,
+      "name": "SANTHOSH M",
+      "reg_no": "732225CC047",
+      "lc_username": "zawxjcjouw",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 139,
+      "name": "SARATHY S",
+      "reg_no": "732225CC048",
+      "lc_username": "m2gqcjuz57",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 141,
+      "name": "SHRUTI S",
+      "reg_no": "732225CC050",
+      "lc_username": "rmkhpsqth6",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 148,
+      "name": "SUVATHI V",
+      "reg_no": "732225CC057",
+      "lc_username": "00uzqprwkt",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    },
+    {
+      "student_id": 152,
+      "name": "VETRIVEL G",
+      "reg_no": "732225CC061",
+      "lc_username": "2m4wmu7icq",
+      "classification": "NOT_ATTENDED",
+      "evidence": [],
+      "fetch_error": null
+    }
+  ]
+}

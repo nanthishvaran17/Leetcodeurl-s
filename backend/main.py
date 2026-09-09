@@ -30,7 +30,7 @@ from backend.routes import (
     audit, public, sync, history, risk, goals, system_health, weekly_contests,
     scheduled_reports, certificates, data_issues, faculty_assignments, institutional_dashboards,
     email_campaigns, bot_notifications, anti_cheat, placement_eligibility, gamification, accreditation,
-    deep_tech_intelligence, url_import, contest_integrity, notifications, messaging, downloads
+    deep_tech_intelligence, url_import, contest_integrity, notifications, messaging, downloads, report_jobs
 )
 from backend.routes import admin, email_reports, ai_assistant, leetcode, ai_control_center, intelligence
 from backend.routes import command_center, scheduler
@@ -597,6 +597,7 @@ app.include_router(analytics.router)
 app.include_router(downloads.router)
 # reports: prefix="/api/reports" (self-prefixed)
 app.include_router(reports.router)
+app.include_router(report_jobs.router)
 # settings: prefix="/api/settings" (self-prefixed)
 app.include_router(settings_route.router)
 # audit: prefix="/api/audit" (self-prefixed)

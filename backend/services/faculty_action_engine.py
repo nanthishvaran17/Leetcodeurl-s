@@ -62,6 +62,46 @@ class FacultyActionEngine:
         db.refresh(item)
         return item
 
+    @staticmethod
+    def get_faculty_kpis(db: Session, department_id: Optional[int] = None, faculty_id: Optional[int] = None, year_level: Optional[str] = None, search: Optional[str] = None) -> dict:
+        query = db.query(FacultyActionItem)
+        
+        # We need to join with Student to filter by department_id, year_level, search
+        if department_id or faculty_id or year_level or search:
+            query = query.join(Student, FacultyActionItem.student_id == Student.id)
+            
+        if department_id:
+            query = query.filter(Student.department_id == department_id)
+        if faculty_id:
+            from backend.models import FacultyStudentAssignment
+            query = query.join(FacultyStudentAssignment, Student.id == FacultyStudentAssignment.student_id).filter(
+                FacultyStudentAssignment.faculty_id == faculty_id
+            )
+        if year_level and year_level.upper() not in ["ALL", ""]:
+            query = query.filter(Student.year_level == year_level)
+        if search:
+            query = query.filter(Student.name.ilike(f"%{search}%") | Student.reg_no.ilike(f"%{search}%"))
+            
+        items = query.all()
+        
+        kpis = {
+            "Critical": 0, "High": 0, "Monitoring": 0, "In Progress": 0, 
+            "Completed": 0, "Resolved": 0, "Overdue": 0, "Escalated": 0, "total": 0
+        }
+        
+        for item in items:
+            kpis["total"] += 1
+            if item.status in kpis:
+                kpis[item.status] += 1
+            
+            # Simple priority bucket logic based on signal_type or status
+            if item.signal_type == "RISK_ALERT":
+                kpis["Critical"] += 1
+            elif item.signal_type == "INTEGRITY_REVIEW":
+                kpis["High"] += 1
+                
+        return kpis
+
 class FacultyActionIngestion:
     """Ingests items from multiple sources into the Faculty Action Queue."""
     

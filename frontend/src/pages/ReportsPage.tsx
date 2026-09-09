@@ -10,6 +10,8 @@ import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { downloadFromUrl } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
+import { ExportStatus } from '../components/ExportStatus';
+import { DownloadState } from '../services/download/downloadTypes';
 
 export const ReportsPage: React.FC = () => {
   const { notify } = useNotification();
@@ -29,6 +31,7 @@ export const ReportsPage: React.FC = () => {
   const [selectedOutputScope, setSelectedOutputScope] = useState<string>('COLLEGE');
   // Track which download is currently in progress (filename → boolean)
   const [downloadingFiles, setDownloadingFiles] = useState<Record<string, boolean>>({});
+  const [downloadState, setDownloadState] = useState<DownloadState | null>(null);
 
   const [rptYearOpen, setRptYearOpen] = useState<boolean>(false);
   const [rptScopeOpen, setRptScopeOpen] = useState<boolean>(false);
@@ -124,9 +127,32 @@ export const ReportsPage: React.FC = () => {
     notify.dismissCategory('REPORTS');
     setDownloadingFiles(prev => ({ ...prev, [filename]: true }));
 
-    const result = await downloadManager.download({
-      endpoint,
+    // Map endpoint to report_type and format
+    let report_type = 'STUDENT_PERFORMANCE';
+    let format = 'excel';
+    
+    if (endpoint.includes('export-official-college-summary')) { report_type = 'COLLEGE_EXECUTIVE'; format = 'excel'; }
+    else if (endpoint.includes('export-student-performance-detail')) { report_type = 'STUDENT_PERFORMANCE'; format = 'excel'; }
+    else if (endpoint.includes('export-weekly-contest-matrix')) { report_type = 'BATCH_PERFORMANCE'; format = 'excel'; } 
+    else if (endpoint.includes('export-master-tracker')) { report_type = 'STUDENT_MASTER'; format = 'excel'; }
+    else if (endpoint.includes('export-pdf')) { report_type = selectedReportType || 'STUDENT_PERFORMANCE'; format = 'pdf'; }
+    else if (endpoint.includes('export-word')) { report_type = selectedReportType || 'STUDENT_PERFORMANCE'; format = 'word'; }
+    else if (endpoint.includes('export-csv')) { report_type = selectedReportType || 'STUDENT_PERFORMANCE'; format = 'csv'; }
+
+    // Parse query params from endpoint to filters
+    const urlParts = endpoint.split('?');
+    const filters: any = { department: selectedDept, year: selectedYear, output_scope: selectedOutputScope };
+    if (urlParts.length > 1) {
+      const params = new URLSearchParams(urlParts[1]);
+      params.forEach((val, key) => { filters[key] = val; });
+    }
+
+    const result = await downloadManager.downloadJob({
+      report_type,
+      format,
+      filters,
       filename,
+      onStateChange: (state) => setDownloadState(state)
     });
 
     setDownloadingFiles(prev => ({ ...prev, [filename]: false }));
@@ -134,18 +160,14 @@ export const ReportsPage: React.FC = () => {
     if (result.success) {
       setReportError(null);
       notify.dismissCategory('REPORTS');
-      notify.success('Report Downloaded', `${filename} downloaded successfully.`, { category: 'REPORTS' });
+      // notify.success is handled by downloadManager
     } else {
       const userFacingMsg = result.error && !result.error.includes('500') && !result.error.includes('status code')
         ? result.error
         : 'Please try again.';
 
       setReportError(userFacingMsg);
-      notify.error('Unable to generate report', userFacingMsg, {
-        category: 'REPORTS',
-        duration: 5000,
-        onClose: () => setReportError(null),
-      });
+      // Status modal will show error, so we don't necessarily need a duplicate toast
     }
   };
 
@@ -536,15 +558,15 @@ export const ReportsPage: React.FC = () => {
                     <GraduationCap className="w-3.5 h-3.5 text-brand-500 shrink-0" />
                     {selectedYear === 'ALL' ? (
                       <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300">ALL</span>
-                    ) : selectedYear === 'II' ? (
+                    ) : selectedYear === '2' ? (
                       <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300">II</span>
-                    ) : selectedYear === 'III' ? (
+                    ) : selectedYear === '3' ? (
                       <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300">III</span>
                     ) : (
                       <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300">IV</span>
                     )}
                     <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
-                      {selectedYear === 'ALL' ? 'All Academic Years' : selectedYear === 'II' ? 'Year (2025–2029)' : selectedYear === 'III' ? 'Year (2024–2028)' : 'Year (2023–2027)'}
+                      {selectedYear === 'ALL' ? 'All Academic Years' : selectedYear === '2' ? 'Year (2025–2029)' : selectedYear === '3' ? 'Year (2024–2028)' : 'Year (2023–2027)'}
                     </span>
                     <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${rptYearOpen ? 'rotate-180' : ''}`} />
                   </button>
@@ -552,9 +574,9 @@ export const ReportsPage: React.FC = () => {
                     <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
                       {[
                         { value: 'ALL', code: 'ALL', label: 'All Academic Years', color: 'text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300' },
-                        { value: 'II', code: 'II', label: 'Year (2025–2029)', color: 'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
-                        { value: 'III', code: 'III', label: 'Year (2024–2028)', color: 'text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300' },
-                        { value: 'IV', code: 'IV', label: 'Year (2023–2027)', color: 'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
+                        { value: '2', code: 'II', label: 'Year (2025–2029)', color: 'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
+                        { value: '3', code: 'III', label: 'Year (2024–2028)', color: 'text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300' },
+                        { value: '4', code: 'IV', label: 'Year (2023–2027)', color: 'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
                       ].map(opt => (
                         <button key={opt.value} type="button"
                           onMouseDown={(e) => e.preventDefault()}
@@ -685,6 +707,11 @@ export const ReportsPage: React.FC = () => {
               </div>
             </div>
           )}
+
+          <ExportStatus 
+            state={downloadState} 
+            onClose={() => setDownloadState(null)} 
+          />
         </>
       )}
 

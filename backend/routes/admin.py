@@ -1355,3 +1355,147 @@ def approve_secondary_account(
     
     return {"status": "success", "message": f"Secondary account {payload.action}d."}
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HOD DEPARTMENT ALLOCATION MANAGEMENT
+# ─────────────────────────────────────────────────────────────────────────────
+
+class HODAllocationPayload(BaseModel):
+    department_ids: List[int]
+
+@router.get("/hod/{user_id}/departments")
+def get_hod_allocations(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_security_access(
+        resource_name="View HOD Allocations",
+        required_roles=["admin", "super admin", "principal", "management"]
+    ))
+):
+    """Returns all department allocations for a given HOD user."""
+    from backend.models import HODDepartmentAllocation, Department
+    hod_user = db.query(User).filter(User.id == user_id).first()
+    if not hod_user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    allocations = (
+        db.query(HODDepartmentAllocation)
+        .filter(HODDepartmentAllocation.user_id == user_id)
+        .all()
+    )
+    dept_ids = [a.department_id for a in allocations]
+    depts = db.query(Department).filter(Department.id.in_(dept_ids)).all() if dept_ids else []
+    return {
+        "user_id": user_id,
+        "username": hod_user.username,
+        "role": hod_user.role,
+        "allocated_departments": [
+            {"id": d.id, "code": d.code, "name": d.name} for d in depts
+        ]
+    }
+
+
+@router.put("/hod/{user_id}/departments")
+def set_hod_allocations(
+    user_id: int,
+    payload: HODAllocationPayload,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_security_access(
+        resource_name="Manage HOD Allocations",
+        required_roles=["admin", "super admin", "principal", "management"]
+    ))
+):
+    """
+    Replaces all department allocations for a given HOD user.
+    After updating, invalidates the HOD's auth cache so the new scope takes effect immediately.
+    """
+    from backend.models import HODDepartmentAllocation, Department
+
+    hod_user = db.query(User).filter(User.id == user_id).first()
+    if not hod_user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    # Validate department IDs
+    valid_depts = db.query(Department.id).filter(Department.id.in_(payload.department_ids)).all()
+    valid_ids = {row[0] for row in valid_depts}
+    invalid_ids = [did for did in payload.department_ids if did not in valid_ids]
+    if invalid_ids:
+        raise HTTPException(status_code=400, detail=f"Invalid department IDs: {invalid_ids}")
+
+    # Replace all existing allocations atomically
+    db.query(HODDepartmentAllocation).filter(HODDepartmentAllocation.user_id == user_id).delete()
+    for dept_id in payload.department_ids:
+        alloc = HODDepartmentAllocation(
+            user_id=user_id,
+            department_id=dept_id,
+            created_by=current_user.id
+        )
+        db.add(alloc)
+    db.commit()
+
+    # Invalidate HOD's auth cache so new scope takes effect on next request
+    try:
+        from backend.cache import cache
+        cache.delete(f"auth_res_{user_id}")
+        # Also invalidate by username/email patterns if cache uses token-based keys
+        cache.delete_pattern(f"*user_{user_id}*")
+    except Exception:
+        pass  # Cache invalidation is best-effort; the DB change is authoritative
+
+    # Audit trail
+    try:
+        log_admin_action(
+            db,
+            action="UPDATE_HOD_DEPARTMENT_ALLOCATION",
+            action_type="USER_MANAGEMENT",
+            description=f"HOD dept allocation for {hod_user.username} set to dept IDs: {payload.department_ids}",
+            current_user=current_user,
+            target_type="User",
+            target_id=str(user_id)
+        )
+    except Exception:
+        pass
+
+    return {
+        "success": True,
+        "message": f"HOD allocation updated for {hod_user.username}.",
+        "user_id": user_id,
+        "allocated_department_ids": payload.department_ids
+    }
+
+
+@router.delete("/hod/{user_id}/departments/{dept_id}")
+def remove_hod_allocation(
+    user_id: int,
+    dept_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_security_access(
+        resource_name="Manage HOD Allocations",
+        required_roles=["admin", "super admin", "principal", "management"]
+    ))
+):
+    """Removes a single department from an HOD user's allocation."""
+    from backend.models import HODDepartmentAllocation
+
+    hod_user = db.query(User).filter(User.id == user_id).first()
+    if not hod_user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    deleted = db.query(HODDepartmentAllocation).filter(
+        HODDepartmentAllocation.user_id == user_id,
+        HODDepartmentAllocation.department_id == dept_id
+    ).delete()
+    db.commit()
+
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Allocation not found.")
+
+    # Invalidate cache
+    try:
+        from backend.cache import cache
+        cache.delete(f"auth_res_{user_id}")
+        cache.delete_pattern(f"*user_{user_id}*")
+    except Exception:
+        pass
+
+    return {"success": True, "message": f"Department {dept_id} removed from HOD allocation for user {user_id}."}

@@ -160,6 +160,159 @@ class DownloadManager {
   }
 
   /**
+   * Async Job Engine Download Flow
+   * Posts to /api/report-jobs, polls status, and downloads when complete.
+   */
+  async downloadJob(options: { 
+    report_type: string; 
+    format: string; 
+    filters?: any; 
+    filename?: string;
+    onStateChange?: (state: DownloadState) => void 
+  }): Promise<{ success: boolean; downloadId: string; error?: string }> {
+    const startTime = performance.now();
+    const endpoint = '/api/report-jobs';
+    const filename = sanitizeFilename(options.filename || `${options.report_type}.${options.format}`);
+    const mimeType = getMimeTypeFromFilename(filename);
+
+    const downloadId = `job:${options.report_type}:${Date.now()}`;
+
+    const state: DownloadState = {
+      downloadId,
+      endpoint,
+      filename,
+      mimeType,
+      status: 'QUEUED',
+      startTime: Date.now(),
+    };
+
+    this.updateState(state, options.onStateChange);
+
+    try {
+      const token = localStorage.getItem('token') || '';
+      
+      // 1. Create Job
+      const createRes = await api.post(endpoint, {
+        report_type: options.report_type,
+        format: options.format,
+        filters: options.filters || {}
+      }, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+
+      const jobId = createRes.data?.job_id;
+      if (!jobId) throw new Error("Failed to create report job");
+
+      state.downloadId = jobId; // Update to the real reference ID
+      this.updateState(state, options.onStateChange);
+
+      // 2. Poll Status
+      let isComplete = false;
+      let finalFilePath = '';
+      
+      while (!isComplete) {
+        await new Promise(r => setTimeout(r, 2000)); // Poll every 2 seconds
+        
+        const statusRes = await api.get(`${endpoint}/${jobId}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        
+        const jobStatus = statusRes.data?.status;
+        
+        if (jobStatus === 'COMPLETED') {
+          isComplete = true;
+          state.status = 'DOWNLOADING';
+          this.updateState(state, options.onStateChange);
+        } else if (jobStatus === 'FAILED') {
+          throw new Error(statusRes.data?.error_message || "Report generation failed");
+        } else {
+          state.status = jobStatus === 'PROCESSING' ? 'PROCESSING' : 'GENERATING';
+          state.progress = statusRes.data?.progress || 0;
+          this.updateState(state, options.onStateChange);
+        }
+      }
+
+      // 3. Download the actual file
+      const downloadUrl = `${endpoint}/${jobId}/download`;
+      
+      const response = await api.request({
+        url: downloadUrl,
+        method: 'GET',
+        responseType: 'blob',
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+
+      const blob = response.data;
+      const validation = await validateFileBlob(blob, mimeType);
+      if (!validation.valid) {
+        throw new Error(validation.error || 'Generated report payload is invalid or empty.');
+      }
+
+      // 4. File Saving & Dispatch
+      if (isNativeMobile()) {
+        const { Filesystem, Directory } = await import('@capacitor/filesystem');
+        const base64Data = await blobToBase64(blob);
+
+        const writeResult = await Filesystem.writeFile({
+          path: filename,
+          data: base64Data,
+          directory: Directory.Cache,
+          recursive: true,
+        });
+
+        state.status = 'COMPLETED';
+        state.localPath = writeResult.uri;
+        this.updateState(state, options.onStateChange);
+
+        await downloadNotification.notifySuccess({
+          filename,
+          localFileUri: writeResult.uri,
+          mimeType,
+          fileSizeBytes: blob.size,
+          reportId: jobId
+        });
+
+        setTimeout(() => {
+          if (writeResult.uri) {
+            shareOrOpenFile(writeResult.uri, filename, mimeType);
+          }
+        }, 250);
+
+        return { success: true, downloadId: jobId };
+      }
+
+      state.status = 'STARTED';
+      this.updateState(state, options.onStateChange);
+
+      const typedBlob = blob instanceof Blob && blob.type ? blob : new Blob([blob], { type: mimeType });
+      const blobUrl = URL.createObjectURL(typedBlob);
+      await triggerBrowserAnchorDownload(blobUrl, filename, mimeType);
+
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+
+      state.status = 'COMPLETED';
+      this.updateState(state, options.onStateChange);
+
+      await downloadNotification.notifySuccess({
+        filename,
+        localFileUri: blobUrl,
+        mimeType,
+        fileSizeBytes: blob.size,
+        reportId: jobId
+      });
+
+      return { success: true, downloadId: jobId };
+
+    } catch (err: any) {
+      return await this.handleDownloadError(err, state, filename, options.onStateChange);
+    } finally {
+      setTimeout(() => {
+        this.activeDownloads.delete(downloadId);
+      }, 5000);
+    }
+  }
+
+  /**
    * Helper method for downloading client-generated Blobs (e.g. settings export, audit log CSV).
    */
   async downloadBlob(blob: Blob, filename: string, mimeType?: string): Promise<{ success: boolean; downloadId: string; error?: string }> {
