@@ -294,3 +294,91 @@ def get_individual_analytics(
             "rating": student.stats.contest_rating if student.stats else 0
         }
     }
+
+@router.get("/department-comparison")
+def get_department_comparison(db: Session = Depends(get_db)):
+    departments = db.query(Department).all()
+    res = []
+    for dept in departments:
+        students = db.query(Student).filter(Student.department_id == dept.id, Student.is_active == True).all()
+        student_ids = [s.id for s in students]
+        if not student_ids:
+            continue
+            
+        stats = db.query(
+            func.avg(LeetCodeProfileStats.total_solved).label("avg_solved"),
+            func.avg(LeetCodeProfileStats.contest_rating).label("avg_rating")
+        ).filter(LeetCodeProfileStats.student_id.in_(student_ids)).first()
+        
+        res.append({
+            "id": dept.id,
+            "name": dept.name,
+            "code": dept.code,
+            "total_students": len(student_ids),
+            "active_students": len(student_ids),
+            "avg_solved": round(stats.avg_solved or 0, 1),
+            "avg_rating": round(stats.avg_rating or 0, 1)
+        })
+    return res
+
+@router.get("/data-quality")
+def get_data_quality(force_refresh: bool = False, db: Session = Depends(get_db)):
+    students = db.query(Student).filter(Student.is_active == True).all()
+    total = len(students)
+    if total == 0:
+        return {"health_score_percentage": 100, "valid_profiles": 0, "issues_count": 0, "issues_list": []}
+        
+    issues = []
+    valid = 0
+    for s in students:
+        s_issues = []
+        if not s.leetcode_url:
+            s_issues.append(f"{s.reg_no or s.name}: Missing LeetCode URL")
+        elif "/u/" not in s.leetcode_url and "leetcode.com" in s.leetcode_url:
+            s_issues.append(f"{s.reg_no or s.name}: Invalid URL format")
+            
+        if not s.reg_no:
+            s_issues.append(f"Missing Reg No for student ID {s.id}")
+            
+        if s_issues:
+            issues.extend(s_issues)
+        else:
+            valid += 1
+            
+    score = int((valid / total) * 100) if total > 0 else 100
+    
+    return {
+        "health_score_percentage": score,
+        "valid_profiles": valid,
+        "issues_count": len(issues),
+        "issues_list": issues[:50]
+    }
+
+@router.get("/performance-chart")
+def get_performance_chart(timeframe: str = Query("monthly"), db: Session = Depends(get_db)):
+    start_dt, end_dt = resolve_date_range(timeframe)
+    
+    date_col = func.date(StudentStatSnapshot.captured_at).label("date")
+    trend_aggregates = db.query(
+        date_col,
+        func.sum(StudentStatSnapshot.total_solved).label("problemsSolved"),
+        func.count(func.distinct(StudentStatSnapshot.student_id)).label("activeStudents")
+    ).filter(
+        StudentStatSnapshot.captured_at >= start_dt,
+        StudentStatSnapshot.captured_at <= end_dt
+    ).group_by(date_col).order_by(date_col.asc()).all()
+    
+    data = []
+    for row in trend_aggregates:
+        data.append({
+            "label": str(row.date),
+            "problemsSolved": int(row.problemsSolved or 0),
+            "activeStudents": int(row.activeStudents or 0)
+        })
+        
+    if not data:
+        data = [
+            {"label": "No Data", "problemsSolved": 0, "activeStudents": 0}
+        ]
+        
+    return {"data": data}
