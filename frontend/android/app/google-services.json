@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "384483144435",
+    "project_id": "leetcode-student-data",
+    "storage_bucket": "leetcode-student-data.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:384483144435:android:bcc3284e79ed3ac5323d86",
+        "android_client_info": {
+          "package_name": "org.nandhaengg.leetcodesync"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsP9hOeAxrIO5hbmlrPhmGa3p1vv-1Jek"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
