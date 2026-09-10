@@ -41,35 +41,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     exit: { opacity: 0, y: -8, transition: { duration: 0.15, ease: 'easeIn' } }
   };
 
-  // Mobile Detection
+  // Mobile Animation States
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 900);
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-  // Mobile Keyboard — Scroll focused input into view on Android WebView
-  // When the virtual keyboard opens, the focused element can be hidden behind it.
-  // We detect focus on inputs and scroll them into view with a small delay to
-  // let the keyboard finish animating before we measure positions.
-  useEffect(() => {
-    if (!isMobile) return;
-    const handleFocusIn = (e: FocusEvent) => {
-      const target = e.target as HTMLElement;
-      const isInput = target && (
-        target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
-      );
-      if (!isInput) return;
-      // Delay to let Android keyboard open fully
-      setTimeout(() => {
-        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 350);
-    };
-    document.addEventListener('focusin', handleFocusIn);
-    return () => document.removeEventListener('focusin', handleFocusIn);
-  }, [isMobile]);
 
   const prefersReducedMotion = useReducedMotion();
   const shouldAnimateMobileEntrance = isMobile && (authState === 'UNAUTHENTICATED' || authState === 'AUTH_UNAUTHENTICATED');
