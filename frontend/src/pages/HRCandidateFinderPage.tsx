@@ -173,7 +173,41 @@ function evaluateNumeric(val: number, filter: NumericFilter): boolean {
   }
 }
 
-export function HRCandidateFinderPage() {
+const BadgeCard = ({ badge }: { badge: any }) => {
+  const [imgError, setImgError] = useState(false);
+  const rawUrl = badge.icon_url || "";
+  const iconUrl = useMemo(() => {
+    if (!rawUrl) return "";
+    if (rawUrl.startsWith("/")) return `https://leetcode.com${rawUrl}`;
+    return rawUrl;
+  }, [rawUrl]);
+
+  const displayName = badge.display_name || badge.badge_id || "Badge";
+  const awardedAt = badge.awarded_at || "Earned";
+
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-navy-900 border border-slate-200/60 dark:border-navy-700 shadow-2xs hover:shadow-xs transition-all">
+      {iconUrl && !imgError ? (
+        <img
+          src={iconUrl}
+          alt={displayName}
+          onError={() => setImgError(true)}
+          className="w-10 h-10 rounded-xl object-contain bg-slate-50 dark:bg-navy-800 p-1 flex-shrink-0 border border-slate-200/50 dark:border-navy-700"
+        />
+      ) : (
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 via-purple-600 to-indigo-600 text-white flex items-center justify-center font-black text-xs shadow-xs flex-shrink-0 border border-white/20">
+          {displayName.slice(0, 2).toUpperCase()}
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-bold text-slate-900 dark:text-white truncate" title={displayName}>{displayName}</p>
+        <p className="text-[10px] text-slate-400 font-medium">{awardedAt}</p>
+      </div>
+    </div>
+  );
+};
+
+export const HRCandidateFinderPage: React.FC = () => {
   const [departments, setDepartments] = useState<any[]>([]);
   const [filters, setFilters] = useState<AdvancedFilters>(defaultFilters);
   const [allCandidates, setAllCandidates] = useState<Candidate[]>([]);
@@ -1214,7 +1248,8 @@ export function HRCandidateFinderPage() {
                       {(() => {
                         const rawSec = intelData?.student?.section || selectedCandidate?.section;
                         const secStr = typeof rawSec === "object" ? (rawSec?.name || "A") : String(rawSec || "A");
-                        return secStr ? <span>• Sec {secStr}</span> : null;
+                        const cleanSec = secStr.trim().toUpperCase() === "NEC" ? "A" : secStr.trim();
+                        return cleanSec ? <span>• Sec {cleanSec}</span> : null;
                       })()}
                     </div>
                     <div className="flex items-center gap-3 text-xs text-slate-400 mt-1">
@@ -1663,19 +1698,9 @@ export function HRCandidateFinderPage() {
                           <Award className="w-4 h-4 text-purple-500" /> Badges & Achievements
                         </p>
                         {intelData?.badges && intelData.badges.length > 0 ? (
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {intelData.badges.map((b: any, idx: number) => (
-                              <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-navy-900 border border-slate-200/60 dark:border-navy-700">
-                                {b.icon_url ? (
-                                  <img src={b.icon_url} alt={b.display_name} className="w-8 h-8 rounded-lg object-contain" />
-                                ) : (
-                                  <Award className="w-8 h-8 text-purple-500" />
-                                )}
-                                <div>
-                                  <p className="text-xs font-bold text-slate-900 dark:text-white">{b.display_name}</p>
-                                  <p className="text-[10px] text-slate-400">{b.awarded_at}</p>
-                                </div>
-                              </div>
+                              <BadgeCard key={idx} badge={b} />
                             ))}
                           </div>
                         ) : (

@@ -69,12 +69,23 @@ def extract_section_name(student_obj: Any) -> str:
     if not sec:
         return "A"
     if hasattr(sec, "name") and sec.name:
-        return str(sec.name)
+        s_name = str(sec.name).strip()
+        return "A" if s_name.upper() == "NEC" else s_name
     if isinstance(sec, dict) and sec.get("name"):
-        return str(sec.get("name"))
+        s_name = str(sec.get("name")).strip()
+        return "A" if s_name.upper() == "NEC" else s_name
     if isinstance(sec, str) and sec:
-        return sec
+        s_name = sec.strip()
+        return "A" if s_name.upper() == "NEC" else s_name
     return "A"
+
+def normalize_icon_url(url: Optional[str]) -> str:
+    if not url:
+        return ""
+    cleaned = url.strip()
+    if cleaned.startswith("/"):
+        return f"https://leetcode.com{cleaned}"
+    return cleaned
 
 def resolve_language_stats_for_student(db: Session, student_id: int) -> tuple[str, List[Dict[str, Any]], Dict[str, int]]:
     """
@@ -355,7 +366,7 @@ def get_student_intelligence(
         {
             "badge_id": b.badge_id,
             "display_name": b.display_name or b.badge_id,
-            "icon_url": b.icon_url,
+            "icon_url": normalize_icon_url(b.icon_url),
             "awarded_at": b.awarded_at.strftime("%Y-%m-%d") if b.awarded_at else "Earned"
         }
         for b in badge_records
