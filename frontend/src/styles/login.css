@@ -1196,14 +1196,19 @@
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    /* NOT space-between — items sit compactly from top */
     justify-content: flex-start !important;
     gap: 10px !important;
+    /* Multi-stop gradient:
+       - Top 0–15%: nearly transparent → campus sky shows naturally
+       - 15–45%: soft sky-blue tint → branding area readable
+       - 45–100%: deeper navy → card sits on solid readable surface */
     background: linear-gradient(
-      170deg,
-      rgba(6, 18, 38, 0.52) 0%,
-      rgba(8, 22, 46, 0.68) 55%,
-      rgba(5, 14, 30, 0.80) 100%
+      180deg,
+      rgba(4, 12, 28, 0.08)  0%,
+      rgba(5, 15, 34, 0.18) 15%,
+      rgba(7, 20, 44, 0.42) 38%,
+      rgba(8, 22, 50, 0.65) 58%,
+      rgba(6, 16, 38, 0.78) 100%
     ) !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
@@ -1214,9 +1219,11 @@
 
   .dark .login-page-container {
     background: linear-gradient(
-      170deg,
-      rgba(2, 7, 16, 0.62) 0%,
-      rgba(4, 11, 24, 0.78) 55%,
+      180deg,
+      rgba(2, 6, 14, 0.14)  0%,
+      rgba(3, 8, 18, 0.30) 15%,
+      rgba(4, 10, 24, 0.55) 38%,
+      rgba(4, 11, 26, 0.75) 58%,
       rgba(3, 8, 18, 0.88) 100%
     ) !important;
   }
