@@ -7,7 +7,7 @@
 export const PRODUCTION_BACKEND_URL = 
   import.meta.env.VITE_API_URL || 
   import.meta.env.VITE_API_BASE_URL || 
-  'https://leetcodeurl-s-3mig.onrender.com';
+  'http://10.12.19.10:8000';
 
 /**
  * Resolves the API Base URL dynamically based on execution environment:
