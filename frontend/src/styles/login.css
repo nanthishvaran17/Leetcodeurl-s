@@ -1167,14 +1167,27 @@
     flex-direction: column !important;
     justify-content: space-between !important;
     align-items: center !important;
-    background: linear-gradient(180deg, rgba(6, 29, 54, 0.70) 0%, rgba(6, 42, 77, 0.85) 100%) !important;
+    background: transparent !important;
     overflow-y: hidden !important;
     -webkit-overflow-scrolling: touch !important;
     box-sizing: border-box !important;
   }
 
+  .login-page-container::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(6, 29, 54, 0.70) 0%, rgba(6, 42, 77, 0.85) 100%);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .dark .login-page-container::after {
+    background: linear-gradient(180deg, rgba(3, 10, 20, 0.75) 0%, rgba(7, 19, 36, 0.85) 100%);
+  }
+
   .dark .login-page-container {
-    background: linear-gradient(180deg, rgba(3, 10, 20, 0.75) 0%, rgba(7, 19, 36, 0.85) 100%) !important;
+    background: transparent !important;
   }
 
   .mobile-lcp-hero {
