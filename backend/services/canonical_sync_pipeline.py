@@ -482,7 +482,7 @@ async def _sync_single_student_canonical_impl(
                     "timestamp": datetime.datetime.utcnow().isoformat()
                 }
                 if not defer_commit:
-                    await broadcast_sync_event(payload)
+                    broadcast_sync_event(payload)
                 return payload
 
         except sqlalchemy.exc.OperationalError:
@@ -535,7 +535,7 @@ async def _sync_single_student_canonical_impl(
                     "timestamp": datetime.datetime.utcnow().isoformat()
                 }
                 if not defer_commit:
-                    await broadcast_sync_event(payload)
+                    broadcast_sync_event(payload)
                 return payload
         finally:
             if not db_session:
@@ -692,10 +692,10 @@ async def run_full_pipeline(
                                 "updates": student_updates,
                                 "timestamp": datetime.datetime.utcnow().isoformat() + "Z"
                             }
-                            await broadcast_sync_event(batch_payload)
+                            broadcast_sync_event(batch_payload)
                             
                         # Broadcast the sync progress for the UI progress bar
-                        await broadcast_sync_event(last_payload)
+                        broadcast_sync_event(last_payload)
                 except Exception as e:
                     db_chunk.rollback()
                     logger.error(f"[CANONICAL_PIPELINE] Chunk commit failed: {e}")
@@ -742,7 +742,7 @@ async def run_full_pipeline(
         }
 
         # Broadcast SYNC_COMPLETED to all connected WebSocket clients
-        await broadcast_sync_event({
+        broadcast_sync_event({
             "type": "SYNC_COMPLETED",
             "job_id": effective_job_id,
             "summary": summary
