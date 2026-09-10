@@ -27,7 +27,8 @@ import {
   Flame,
   Radio,
   X,
-  MessageSquare
+  MessageSquare,
+  Brain
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -102,6 +103,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
         { id: 'reports', label: 'Reports & Export', icon: FileSpreadsheet },
         { id: 'public', label: 'Public Shareable View', icon: Globe },
       ]
+    },
+    {
+      title: 'RECRUITMENT',
+      items: [
+        { id: 'hr-candidate-finder', label: 'HR Candidate Finder', icon: Brain, badge: 'NEW', badgeColor: 'purple' },
+      ]
     }
   ];
 
@@ -134,6 +141,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
       items: [
         { id: 'reports', label: 'Reports & Export', icon: FileSpreadsheet },
         { id: 'public', label: 'Public Shareable View', icon: Globe },
+      ]
+    },
+    {
+      title: 'RECRUITMENT',
+      items: [
+        { id: 'hr-candidate-finder', label: 'HR Candidate Finder', icon: Brain, badge: 'NEW', badgeColor: 'purple' },
       ]
     }
   ];
@@ -169,6 +182,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
         { id: 'public', label: 'Public Shareable View', icon: Globe },
         { id: 'settings', label: 'Admin Settings', icon: Settings },
         { id: 'audit', label: 'Audit Log', icon: ShieldAlert },
+      ]
+    },
+    {
+      title: 'RECRUITMENT',
+      items: [
+        { id: 'hr-candidate-finder', label: 'HR Candidate Finder', icon: Brain, badge: 'NEW', badgeColor: 'purple' },
       ]
     }
   ];

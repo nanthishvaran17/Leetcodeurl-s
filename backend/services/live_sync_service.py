@@ -213,8 +213,8 @@ class LiveSyncTracker:
 sync_tracker = LiveSyncTracker()
 
 
-def broadcast_sync_event(event_data: Dict[str, Any]):
-    """Broadcasts sync events over WebSocket safely and synchronously."""
+async def broadcast_sync_event(event_data: Dict[str, Any]):
+    """Broadcasts sync events over WebSocket safely and asynchronously."""
     try:
         from backend.websocket_manager import manager
         manager.broadcast_sync(event_data)
@@ -1068,7 +1068,7 @@ def sync_single_student(student_id: int, db: Session, force_refresh: bool = True
 
         # Broadcast WebSocket update
         try:
-            broadcast_sync_event({
+            dispatch_background_task(broadcast_sync_event({
                 "type": "STUDENT_UPDATED",
                 "student_id": student.id,
                 "version": student.version,
@@ -1083,7 +1083,7 @@ def sync_single_student(student_id: int, db: Session, force_refresh: bool = True
                         "last_verified_at": student.stats.last_verified_at.isoformat() if student.stats and student.stats.last_verified_at else None
                     }
                 }
-            })
+            }))
         except Exception:
             pass
 

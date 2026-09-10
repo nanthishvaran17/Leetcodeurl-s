@@ -17,7 +17,10 @@ export const useDepartmentsQuery = () => {
     queryKey: ['dashboard', 'departments'],
     queryFn: async () => {
       const res = await api.get('/analytics/department-comparison');
-      return res.data;
+      if (Array.isArray(res.data)) return res.data;
+      if (Array.isArray(res.data?.departments)) return res.data.departments;
+      if (Array.isArray(res.data?.data)) return res.data.data;
+      return [];
     },
     staleTime: 5 * 60 * 1000,
   });

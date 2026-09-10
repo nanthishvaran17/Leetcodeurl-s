@@ -7,7 +7,7 @@
 export const PRODUCTION_BACKEND_URL = 
   import.meta.env.VITE_API_URL || 
   import.meta.env.VITE_API_BASE_URL || 
-  'http://10.12.19.10:8000';
+  'http://localhost:8000';
 
 /**
  * Resolves the API Base URL dynamically based on execution environment:
@@ -27,7 +27,12 @@ export const getApiBaseUrl = (): string => {
     return `${base}/api`;
   }
 
-  // Web Browser context
+  // Web Browser context:
+  // On localhost / 127.0.0.1, always use relative '/api' so requests are same-origin and proxied cleanly by Vite dev server
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return '/api';
+  }
+
   if (import.meta.env.VITE_API_URL) {
     const envBase = import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '');
     return `${envBase}/api`;

@@ -99,6 +99,9 @@ export const getRequestKey = (url: string, config?: any): string => {
 
 // Asynchronous sub-millisecond request header dispatch
 api.interceptors.request.use(async (config) => {
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    config.baseURL = '/api';
+  }
   try {
     const auth = getAuthInstance() || getOrInitAuth();
     if (auth.currentUser) {
@@ -106,9 +109,14 @@ api.interceptors.request.use(async (config) => {
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+    } else {
+      const jwtToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      if (jwtToken && !config.headers.Authorization) {
+        config.headers.Authorization = `Bearer ${jwtToken}`;
+      }
     }
   } catch (e) {
-    console.warn('[API] Could not attach Firebase token:', e);
+    console.warn('[API] Could not attach auth token:', e);
   }
   return config;
 });

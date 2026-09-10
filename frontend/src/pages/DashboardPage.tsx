@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Users, Trophy, Activity, AlertTriangle, FileSpreadsheet,
   RefreshCw, Plus, Building2, PieChart, ShieldCheck,
   FileText, CheckCircle2, Play, Clock, History,
-  AlertOctagon, TrendingUp, Database
+  AlertOctagon, TrendingUp, Database, Brain
 } from 'lucide-react';
 import { StatCard } from '../components/StatCard';
 import { CountdownTimer } from '../components/CountdownTimer';
@@ -43,7 +43,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const { loading: contextLoading, refreshAllData } = useGlobalData();
 
   const { data: summary } = useSummaryQuery();
-  const { data: departments = [] } = useDepartmentsQuery();
+  const { data: rawDepartments } = useDepartmentsQuery();
+  const departments = useMemo(() => {
+    if (Array.isArray(rawDepartments)) return rawDepartments;
+    if (Array.isArray((rawDepartments as any)?.departments)) return (rawDepartments as any).departments;
+    if (Array.isArray((rawDepartments as any)?.data)) return (rawDepartments as any).data;
+    return [];
+  }, [rawDepartments]);
   const { data: dataQuality } = useDataQualityQuery();
   const { data: systemHealth } = useSystemHealthQuery();
   const { data: syncStatus } = useSyncStatusQuery();
@@ -366,6 +372,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               >
                 <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span className="truncate">Export Excel</span>
+              </button>
+              <button
+                onClick={() => onNavigateTab('hr-candidate-finder')}
+                className="min-h-[52px] sm:min-h-[44px] sm:min-w-[44px] px-3 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-lg shadow-purple-600/30 flex items-center justify-center space-x-2 transition-all cursor-pointer focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                aria-label="Open HR Candidate Finder"
+                title="Open HR Candidate Finder Recruitment Intelligence workspace"
+              >
+                <Brain className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                <span className="truncate">HR Candidate Finder</span>
               </button>
               <button
                 onClick={handleGenerateReport}

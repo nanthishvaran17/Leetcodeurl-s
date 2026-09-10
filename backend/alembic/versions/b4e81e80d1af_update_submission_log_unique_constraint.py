@@ -21,8 +21,14 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     """Upgrade schema."""
     with op.batch_alter_table('submission_log') as batch_op:
-        batch_op.drop_constraint('uix_submission_log_student_slug', type_='unique')
-        batch_op.create_unique_constraint('uix_sublog_all', ['student_id', 'contest_id', 'title_slug', 'submitted_at'])
+        try:
+            batch_op.drop_constraint('uix_submission_log_student_slug', type_='unique')
+        except ValueError:
+            pass
+        try:
+            batch_op.create_unique_constraint('uix_sublog_all', ['student_id', 'contest_id', 'title_slug', 'submitted_at'])
+        except Exception:
+            pass
 
 
 def downgrade() -> None:

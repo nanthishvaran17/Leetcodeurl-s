@@ -32,7 +32,7 @@ from backend.routes import (
     email_campaigns, bot_notifications, anti_cheat, placement_eligibility, gamification, accreditation,
     deep_tech_intelligence, url_import, contest_integrity, notifications, messaging, downloads, report_jobs
 )
-from backend.routes import admin, email_reports, ai_assistant, leetcode, ai_control_center, intelligence
+from backend.routes import admin, email_reports, ai_assistant, leetcode, ai_control_center, intelligence, nlci, hr_candidate_finder
 from backend.routes import command_center, scheduler
 from backend import leetcode_tracker
 from backend.services.heartbeat_service import get_deep_health_telemetry
@@ -494,7 +494,7 @@ def _add_cors_headers_to_response(request, response_headers) -> None:
             response_headers["Access-Control-Allow-Origin"] = origin
             response_headers["Access-Control-Allow-Credentials"] = "true"
             response_headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-            response_headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept, Origin, User-Agent, DNT, Cache-Control, X-Mx-ReqToken, X-Requested-With"
+            response_headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept, Origin, User-Agent, DNT, Cache-Control, X-Mx-ReqToken, X-Requested-With, Bypass-Tunnel-Reminder"
             response_headers["Access-Control-Expose-Headers"] = "Content-Disposition, Content-Length, Content-Type, X-Cache"
 
 @app.middleware("http")
@@ -526,11 +526,9 @@ async def ultra_fast_memory_cache_middleware(request, call_next):
         if cached_item and now < cached_item["expires_at"]:
             record_cache_hit()
             from fastapi.responses import Response as FastResponse
-            res_headers = {
-                "Content-Type": cached_item["content_type"],
-                "X-Cache": "HIT-FASTAPI-RAM",
-                "Cache-Control": f"private, max-age={_CACHE_TTL_MAP[path]}"
-            }
+            res_headers = dict(cached_item.get("headers", {}))
+            res_headers["X-Cache"] = "HIT-FASTAPI-RAM"
+            res_headers["Cache-Control"] = f"private, max-age={_CACHE_TTL_MAP[path]}"
             _add_cors_headers_to_response(request, res_headers)
             return FastResponse(
                 content=cached_item["body"],
@@ -559,6 +557,7 @@ async def ultra_fast_memory_cache_middleware(request, call_next):
                 "body": full_body,
                 "status": response.status_code,
                 "content_type": content_type,
+                "headers": dict(response.headers),
                 "expires_at": now + _CACHE_TTL_MAP[path]
             }
             from fastapi.responses import Response as FastResponse
@@ -619,6 +618,7 @@ app.include_router(messaging.router)
 app.include_router(admin.router)
 # students: prefix="/api/students" (self-prefixed) — mount once
 app.include_router(students.router)
+app.include_router(hr_candidate_finder.router)
 # sync: typically short prefix — keep both mounts
 app.include_router(sync.router, prefix="/api")
 app.include_router(sync.router)
@@ -670,6 +670,8 @@ app.include_router(ai_control_center.router, prefix="/api")
 app.include_router(ai_control_center.router)
 # intelligence: prefix="/api/intelligence" (self-prefixed)
 app.include_router(intelligence.router)
+# nlci: prefix="/api/nlci" (self-prefixed)
+app.include_router(nlci.router)
 # data_issues: prefix="/api/data-issues" (self-prefixed)
 app.include_router(data_issues.router)
 # command_center — short prefix

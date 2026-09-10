@@ -74,6 +74,7 @@ const AccessDeniedPage = safeLazy(() => import('./pages/AccessDeniedPage').then(
 const ContestIntegrityMonitor = safeLazy(() => import('./pages/ContestIntegrityMonitor').then(m => ({ default: m.ContestIntegrityMonitor })));
 const PrivacyPolicyPage = safeLazy(() => import('./pages/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })));
 const TermsOfServicePage = safeLazy(() => import('./pages/TermsOfServicePage').then(m => ({ default: m.TermsOfServicePage })));
+const HRCandidateFinderPage = safeLazy(() => import('./pages/HRCandidateFinderPage').then(m => ({ default: m.HRCandidateFinderPage })));
 
 const PageSkeleton = () => (
   <div className="p-8 text-center py-20 text-brand-600 dark:text-brand-400 font-bold space-y-3 animate-pulse">
@@ -719,6 +720,10 @@ export const App: React.FC = () => {
                 isTabAllowed('ai-control')
                   ? <AIControlCenterPage />
                   : renderAccessDenied('AI Control Center — Admin Only')
+              )}
+
+              {activeTab === 'hr-candidate-finder' && (
+                <HRCandidateFinderPage />
               )}
             </Suspense>
           </ErrorBoundary>

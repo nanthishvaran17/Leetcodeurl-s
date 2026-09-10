@@ -48,7 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = useCallback((newToken: string | null, newUser: any) => {
     if (newToken) {
       setToken(newToken);
-      // Removed localStorage.setItem('token', newToken); to rely on Firebase Auth
+      localStorage.setItem('token', newToken);
     }
     const formattedUser: AuthUser = {
       uid: newUser.uid || `user_${newUser.id || '1'}`,

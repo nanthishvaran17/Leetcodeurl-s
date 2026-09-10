@@ -2873,3 +2873,121 @@ class FCMDevice(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     last_seen = Column(DateTime, default=datetime.datetime.utcnow)
+
+# ==========================================
+# NLCI v3.1 DATA MODEL
+# ==========================================
+
+class NLCICoreProfile(Base):
+    __tablename__ = 'nlci_profiles'
+    student_id = Column(Integer, ForeignKey('students.id'), primary_key=True)
+    leetcode_username = Column(String(255), unique=True, index=True)
+    ranking = Column(Integer)
+    total_solved = Column(Integer, index=True)
+    easy_solved = Column(Integer)
+    medium_solved = Column(Integer)
+    hard_solved = Column(Integer)
+    total_submissions = Column(Integer)
+    total_accepted = Column(Integer)
+    acceptance_rate = Column(Float)
+    contest_rating = Column(Float, index=True)
+    contest_global_rank = Column(Integer)
+    contests_attended = Column(Integer)
+    current_streak = Column(Integer)
+    total_active_days = Column(Integer)
+    last_active_date = Column(String(50))
+    fetched_at = Column(String(50))
+    source_hash = Column(String(255))
+    is_valid = Column(Integer, default=1)
+
+class NLCIDailySnapshot(Base):
+    __tablename__ = 'nlci_daily_snapshots'
+    __table_args__ = (UniqueConstraint('student_id', 'snapshot_date'), Index('idx_daily_snapshots_student_date', 'student_id', 'snapshot_date'))
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    student_id = Column(Integer, ForeignKey('students.id'))
+    snapshot_date = Column(String(50))
+    total_solved = Column(Integer)
+    easy_solved = Column(Integer)
+    medium_solved = Column(Integer)
+    hard_solved = Column(Integer)
+    contest_rating = Column(Float)
+    acceptance_rate = Column(Float)
+    active_days = Column(Integer)
+
+class NLCILanguageStat(Base):
+    __tablename__ = 'nlci_language_stats'
+    __table_args__ = (UniqueConstraint('student_id', 'language'), Index('idx_language_stats_lang_solved', 'language', 'solved_count'))
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    student_id = Column(Integer, ForeignKey('students.id'))
+    language = Column(String(100))
+    display_name = Column(String(100))
+    solved_count = Column(Integer)
+    submission_count = Column(Integer)
+    accepted_count = Column(Integer)
+    updated_at = Column(String(50))
+
+class NLCIContest(Base):
+    __tablename__ = 'nlci_contests'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    contest_slug = Column(String(255), unique=True)
+    contest_name = Column(String(255))
+    contest_type = Column(String(50))
+    start_time = Column(String(50))
+    end_time = Column(String(50))
+    is_upcoming = Column(Integer)
+    fetched_at = Column(String(50))
+
+class NLCIContestParticipation(Base):
+    __tablename__ = 'nlci_contest_participations'
+    __table_args__ = (UniqueConstraint('student_id', 'contest_id'), Index('idx_contest_participations_contest_rank', 'contest_id', 'rank'))
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    student_id = Column(Integer, ForeignKey('students.id'))
+    contest_id = Column(Integer, ForeignKey('nlci_contests.id'))
+    rank = Column(Integer)
+    problems_solved = Column(Integer)
+    rating_after = Column(Float)
+    rating_delta = Column(Float)
+    finish_time_seconds = Column(Integer)
+
+class NLCIStudentAnalytic(Base):
+    __tablename__ = 'nlci_student_analytics'
+    student_id = Column(Integer, ForeignKey('students.id'), primary_key=True)
+    performance_score = Column(Float)
+    placement_readiness = Column(Float)
+    interview_readiness = Column(Float)
+    risk_level = Column(String(50))
+    trend = Column(String(50))
+    profile_class = Column(String(50))
+    primary_language = Column(String(100))
+    computed_at = Column(String(50))
+    score_version = Column(String(50))
+
+class NLCIRbacScope(Base):
+    __tablename__ = 'nlci_rbac_scopes'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    scope_type = Column(String(50))
+    scope_ref = Column(String(255))
+    granted_at = Column(String(50))
+
+class NLCISyncLog(Base):
+    __tablename__ = 'nlci_sync_log'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    started_at = Column(String(50))
+    finished_at = Column(String(50))
+    status = Column(String(50))
+    students_attempted = Column(Integer)
+    students_succeeded = Column(Integer)
+    students_failed = Column(Integer)
+    error_summary = Column(Text)
+    triggered_by = Column(String(100))
+
+class NLCIExportAudit(Base):
+    __tablename__ = 'nlci_export_audit'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    export_type = Column(String(50))
+    filter_snapshot = Column(Text)
+    row_count = Column(Integer)
+    generated_at = Column(String(50))
+
