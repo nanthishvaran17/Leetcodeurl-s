@@ -23,6 +23,7 @@ import {
 import { simulateWhatIfScenario, askAIDepartmentQuery } from '../services/intelligenceService';
 import { CustomDropdown } from '../components/CustomDropdown';
 import { AnalyticsDashboard } from '../components/analytics/AnalyticsDashboard';
+import { useDebounce } from '../hooks/useDebounce';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import api from '../services/api';

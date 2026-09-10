@@ -995,7 +995,7 @@ def exchange_google_auth_code(payload: ExchangeGoogleAuthCodeRequest, request: R
 
 
 @router.post("/login")
-def login(login_data: UserLogin, request: Request, response: Response, db: Session = Depends(get_db)):
+async def login(login_data: UserLogin, request: Request, response: Response, db: Session = Depends(get_db)):
     validate_csrf_origin(request)
     clean_username = login_data.username.strip()
     clean_password = login_data.password.strip()
@@ -1030,7 +1030,11 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
                 )
             ).first()
 
-    if not user or not verify_password(clean_password, str(user.hashed_password or "")):
+    is_pass_valid = False
+    if user:
+        is_pass_valid = await asyncio.to_thread(verify_password, clean_password, str(user.hashed_password or ""))
+        
+    if not user or not is_pass_valid:
         allow_default_pwd = getattr(settings, "ALLOW_DEFAULT_ADMIN_PASSWORD", False)
         
         if allow_default_pwd:

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useScrollLock } from '../hooks/useScrollLock';
 import { createPortal } from 'react-dom';
 import { ShieldAlert, Clock, Search, Filter, RefreshCw, CheckCircle2, AlertTriangle, UserCheck, X, Eye, Laptop, Terminal } from 'lucide-react';
 import api from '../services/api';

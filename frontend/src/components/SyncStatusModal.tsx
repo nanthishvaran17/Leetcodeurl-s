@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
+import { useScrollLock } from '../hooks/useScrollLock';
 import { Activity, RefreshCw, X, AlertTriangle, CheckCircle2, Clock, ShieldCheck, Database, UserCheck, AlertCircle, XCircle } from 'lucide-react';
 import { getSyncStatus, getDataFreshness } from '../services/api';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';

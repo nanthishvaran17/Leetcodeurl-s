@@ -51,6 +51,10 @@ export function resolveNotificationDestination(notification: Notification): Noti
     if (routeClean.startsWith('settings')) routeClean = 'settings';
     if (routeClean.startsWith('audit')) routeClean = 'audit';
     if (routeClean.startsWith('reports')) routeClean = 'reports';
+    if (routeClean.startsWith('contest')) routeClean = 'contests';
+    if (routeClean.startsWith('performance')) routeClean = 'students';
+    if (routeClean.startsWith('activity')) routeClean = 'audit';
+    if (routeClean.startsWith('admin')) routeClean = 'admin';
 
     // Override generic dashboard routes for specific types
     if (routeClean === 'dashboard' && (type === 'ACCOUNT_UPDATE' || type === 'PROFILE_UPDATE')) {

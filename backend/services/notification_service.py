@@ -14,7 +14,7 @@ _in_flight_lock = threading.Lock()
 from backend.database import SessionLocal
 from backend.models import (
     Student, User, Department, Section, FacultyStudentAssignment,
-    NotificationRecord, FCMDeviceToken
+    NotificationRecord, FCMDevice
 )
 from backend.logger import logger
 
@@ -407,8 +407,8 @@ class NotificationService:
                     if r.get("email"):
                         target_uids.add(r["email"])
 
-                active_tokens = db.query(FCMDeviceToken).filter(
-                    and_(FCMDeviceToken.user_id.in_(list(target_uids)), FCMDeviceToken.is_active == True)
+                active_tokens = db.query(FCMDevice).filter(
+                    and_(FCMDevice.user_id.in_(list(target_uids)), FCMDevice.is_active == True)
                 ).all()
 
                 if active_tokens:
@@ -569,9 +569,9 @@ class NotificationService:
     ) -> Dict[str, Any]:
         """Registers client FCM device token for targeted & multi-device push delivery."""
         try:
-            tok = db.query(FCMDeviceToken).filter_by(device_token=device_token).first()
+            tok = db.query(FCMDevice).filter_by(device_token=device_token).first()
             if not tok:
-                tok = FCMDeviceToken(
+                tok = FCMDevice(
                     user_id=user_id,
                     device_token=device_token,
                     platform=platform,
@@ -608,7 +608,7 @@ class NotificationService:
     def unregister_device_token(db: Session, user_id: str, device_token: str) -> Dict[str, Any]:
         """Deactivates device token on user logout."""
         try:
-            tok = db.query(FCMDeviceToken).filter_by(device_token=device_token, user_id=user_id).first()
+            tok = db.query(FCMDevice).filter_by(device_token=device_token, user_id=user_id).first()
             if tok:
                 tok.is_active = False
                 db.commit()

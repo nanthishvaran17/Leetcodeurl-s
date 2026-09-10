@@ -65,7 +65,7 @@ export const AskInstitutionPanel: React.FC<{
           query: targetQuery,
           history: currentHistory.map(m => ({ role: m.role, text: m.content })) 
         },
-        { headers: getAuthHeaders() }
+        { headers: await getAuthHeaders() }
       );
       
       if (res.data?.success && res.data?.result) {

@@ -1,4 +1,5 @@
 ﻿import React, { createContext, useContext, useState, useMemo, useCallback, ReactNode } from 'react';
+import { useDebounce } from '../hooks/useDebounce';
 import { studentLiveStore, useStudentListIds, useStudentStoreVersion } from '../stores/studentLiveStore';
 import { StudentEntity } from '../types/student';
 import { matchesNameSearch, matchesAcademicYear, matchesDepartment } from '../utils/filterUtils';
@@ -107,6 +108,7 @@ export const useFilters = () => {
  */
 export const useFilteredStudents = (): StudentEntity[] => {
   const filters = useFilters();
+  const debouncedSearch = useDebounce(filters.searchQuery, 300);
   const storeVersion = useStudentStoreVersion();
   const allIds = useStudentListIds();
 
@@ -118,7 +120,7 @@ export const useFilteredStudents = (): StudentEntity[] => {
       const student = allEntities[allIds[i]];
       if (!student) continue;
 
-      if (filters.searchQuery && !matchesNameSearch(student as any, filters.searchQuery)) continue;
+      if (debouncedSearch && !matchesNameSearch(student as any, debouncedSearch)) continue;
 
       if (
         filters.department !== 'ALL' &&
@@ -148,7 +150,7 @@ export const useFilteredStudents = (): StudentEntity[] => {
       const solvedB = b.stats?.total_solved ?? (b as any).total_solved ?? 0;
       return solvedB - solvedA;
     });
-  }, [storeVersion, allIds, filters.department, filters.academicYear, filters.attendanceStatus, filters.searchQuery]);
+  }, [storeVersion, allIds, filters.department, filters.academicYear, filters.attendanceStatus, debouncedSearch]);
 
   return filteredStudents;
 };

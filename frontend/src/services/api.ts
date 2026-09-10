@@ -1,10 +1,12 @@
 import axios from 'axios';
 import { API_BASE_URL, getApiUrl as configGetApiUrl } from '../config/apiConfig';
+import { getAuthInstance, getOrInitAuth } from './firebase';
 
 export const getApiUrl = configGetApiUrl;
 
-export const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
+export const getAuthHeaders = async () => {
+  const auth = getAuthInstance() || getOrInitAuth();
+  const token = auth.currentUser ? await auth.currentUser.getIdToken() : null;
   return { Authorization: `Bearer ${token}` };
 };
 
@@ -95,11 +97,18 @@ export const getRequestKey = (url: string, config?: any): string => {
   return `get:${userScope}:${url}:${params}`;
 };
 
-// Synchronous sub-millisecond request header dispatch
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+// Asynchronous sub-millisecond request header dispatch
+api.interceptors.request.use(async (config) => {
+  try {
+    const auth = getAuthInstance() || getOrInitAuth();
+    if (auth.currentUser) {
+      const token = await auth.currentUser.getIdToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+  } catch (e) {
+    console.warn('[API] Could not attach Firebase token:', e);
   }
   return config;
 });
@@ -176,11 +185,15 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       return new Promise((resolve, reject) => {
-        // Attempt silent refresh using HttpOnly cookie (or custom mobile header if provided)
-        api.post('/auth/refresh')
-          .then(({ data }) => {
-            const newToken = data.access_token;
-            localStorage.setItem('token', newToken);
+        // Attempt silent refresh using Firebase SDK
+        const auth = getAuthInstance() || getOrInitAuth();
+        if (!auth.currentUser) {
+            processQueue(new Error('No current user'), null);
+            globalLogout();
+            return reject(new Error('No current user'));
+        }
+        auth.currentUser.getIdToken(true)
+          .then((newToken) => {
             config.headers['Authorization'] = 'Bearer ' + newToken;
             processQueue(null, newToken);
             resolve(api(config));

@@ -2857,5 +2857,19 @@ class ReportJob(Base):
     completed_at = Column(DateTime, nullable=True)
     expires_at = Column(DateTime, nullable=True, index=True)
 
+class FCMDevice(Base):
+    __tablename__ = "fcm_devices"
+    __table_args__ = (
+        UniqueConstraint("user_id", "device_token", name="uix_user_device_token"),
+        {"extend_existing": True},
+    )
 
-
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(255), nullable=False, index=True)
+    device_token = Column(String(500), nullable=False, index=True)
+    platform = Column(String(50), nullable=True)
+    app_version = Column(String(50), nullable=True)
+    device_model = Column(String(255), nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    last_seen = Column(DateTime, default=datetime.datetime.utcnow)

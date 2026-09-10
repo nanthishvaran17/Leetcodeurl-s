@@ -58,7 +58,7 @@ export const MessagesPage: React.FC = () => {
 
   const fetchConversations = useCallback(async () => {
     try {
-      const res = await axios.get(getApiUrl('/messaging/conversations'), { headers: getAuthHeaders() });
+      const res = await axios.get(getApiUrl('/messaging/conversations'), { headers: await getAuthHeaders() });
       if (res.data?.success) {
         setConversations(res.data.conversations);
       }
@@ -70,7 +70,7 @@ export const MessagesPage: React.FC = () => {
   const fetchMessages = useCallback(async (conversationId: string) => {
     try {
       const res = await axios.get(getApiUrl(`/messaging/conversations/${conversationId}/messages`), {
-        headers: getAuthHeaders()
+        headers: await getAuthHeaders()
       });
       if (res.data?.success) {
         const uniqueMsgs: Message[] = [];
@@ -96,7 +96,7 @@ export const MessagesPage: React.FC = () => {
   const fetchTransparency = async () => {
     setLoadingTransparency(true);
     try {
-      const res = await axios.get(getApiUrl('/messaging/why-was-i-flagged'), { headers: getAuthHeaders() });
+      const res = await axios.get(getApiUrl('/messaging/why-was-i-flagged'), { headers: await getAuthHeaders() });
       if (res.data?.success) {
         setTransparencyData(res.data.transparency);
       }
@@ -151,7 +151,7 @@ export const MessagesPage: React.FC = () => {
       for (const item of outbox) {
         try {
           // Re-send text payloads
-          const res = await axios.post(getApiUrl('/messaging/messages'), item.payload, { headers: getAuthHeaders() });
+          const res = await axios.post(getApiUrl('/messaging/messages'), item.payload, { headers: await getAuthHeaders() });
           if (res.data?.success) {
             const realMsg = res.data.message;
             setMessages(prev => prev.map(m => m.messageId === item.tempId ? realMsg : m));
@@ -298,7 +298,7 @@ export const MessagesPage: React.FC = () => {
           formData.append('file', attachmentFile);
           const uploadRes = await axios.post(getApiUrl('/messaging/upload'), formData, {
             headers: {
-              ...getAuthHeaders(),
+              ...await getAuthHeaders(),
               'Content-Type': 'multipart/form-data'
             }
           });
@@ -320,7 +320,7 @@ export const MessagesPage: React.FC = () => {
           return;
         }
 
-        const res = await axios.post(getApiUrl('/messaging/messages'), payload, { headers: getAuthHeaders() });
+        const res = await axios.post(getApiUrl('/messaging/messages'), payload, { headers: await getAuthHeaders() });
         if (res.data?.success) {
           const realMsg = res.data.message;
           setMessages(prev => prev.map(m => {
@@ -343,7 +343,7 @@ export const MessagesPage: React.FC = () => {
 
   const handleEditMessage = async (messageId: string, newContent: string) => {
     try {
-      const res = await axios.put(getApiUrl(`/messaging/messages/${messageId}`), { content: newContent }, { headers: getAuthHeaders() });
+      const res = await axios.put(getApiUrl(`/messaging/messages/${messageId}`), { content: newContent }, { headers: await getAuthHeaders() });
       if (res.data?.success) {
         setMessages(prev => prev.map(m => m.messageId === messageId ? res.data.message : m));
       }
@@ -352,7 +352,7 @@ export const MessagesPage: React.FC = () => {
 
   const handleDeleteMessage = async (messageId: string, mode: 'FOR_ME' | 'FOR_EVERYONE') => {
     try {
-      const res = await axios.delete(getApiUrl(`/messaging/messages/${messageId}?mode=${mode}`), { headers: getAuthHeaders() });
+      const res = await axios.delete(getApiUrl(`/messaging/messages/${messageId}?mode=${mode}`), { headers: await getAuthHeaders() });
       if (res.data?.success) {
         if (mode === 'FOR_EVERYONE' && res.data.message) {
           setMessages(prev => prev.map(m => m.messageId === messageId ? res.data.message : m));
@@ -368,7 +368,7 @@ export const MessagesPage: React.FC = () => {
       return { success: true, conversationId };
     }
     try {
-      const res = await axios.delete(getApiUrl(`/messaging/conversations/${conversationId}`), { headers: getAuthHeaders() });
+      const res = await axios.delete(getApiUrl(`/messaging/conversations/${conversationId}`), { headers: await getAuthHeaders() });
       if (res.data?.success) {
         setConversations(prev => prev.filter(c => c.conversationId !== conversationId));
         if (activeConversationId === conversationId) {
@@ -385,7 +385,7 @@ export const MessagesPage: React.FC = () => {
       return { success: true, is_pinned: true, conversationId };
     }
     try {
-      const res = await axios.post(getApiUrl(`/messaging/conversations/${conversationId}/pin`), {}, { headers: getAuthHeaders() });
+      const res = await axios.post(getApiUrl(`/messaging/conversations/${conversationId}/pin`), {}, { headers: await getAuthHeaders() });
       if (res.data?.success) {
         setConversations(prev => prev.map(c => c.conversationId === conversationId ? { ...c, isPinned: res.data.is_pinned } : c));
       }
@@ -398,7 +398,7 @@ export const MessagesPage: React.FC = () => {
       return { success: true, is_archived: false, conversationId };
     }
     try {
-      const res = await axios.post(getApiUrl(`/messaging/conversations/${conversationId}/archive`), {}, { headers: getAuthHeaders() });
+      const res = await axios.post(getApiUrl(`/messaging/conversations/${conversationId}/archive`), {}, { headers: await getAuthHeaders() });
       if (res.data?.success) {
         setConversations(prev => prev.map(c => c.conversationId === conversationId ? { ...c, isArchived: res.data.is_archived } : c));
       }
@@ -414,7 +414,7 @@ export const MessagesPage: React.FC = () => {
       return { success: true, conversationId };
     }
     try {
-      const res = await axios.post(getApiUrl(`/messaging/conversations/${conversationId}/clear`), {}, { headers: getAuthHeaders() });
+      const res = await axios.post(getApiUrl(`/messaging/conversations/${conversationId}/clear`), {}, { headers: await getAuthHeaders() });
       if (res.data?.success) {
         if (activeConversationId === conversationId) {
           setMessages([]);
@@ -427,7 +427,7 @@ export const MessagesPage: React.FC = () => {
 
   const handleBlockUser = async (userId: string) => {
     try {
-      const res = await axios.post(getApiUrl(`/messaging/profile/${userId}/block`), {}, { headers: getAuthHeaders() });
+      const res = await axios.post(getApiUrl(`/messaging/profile/${userId}/block`), {}, { headers: await getAuthHeaders() });
       return res.data;
     } catch (err) { throw err; }
   };
@@ -437,7 +437,7 @@ export const MessagesPage: React.FC = () => {
       return { success: true, unreadCount: 1, conversationId };
     }
     try {
-      const res = await axios.post(getApiUrl(`/messaging/conversations/${conversationId}/unread`), {}, { headers: getAuthHeaders() });
+      const res = await axios.post(getApiUrl(`/messaging/conversations/${conversationId}/unread`), {}, { headers: await getAuthHeaders() });
       if (res.data?.success) {
         setConversations(prev => prev.map(c => c.conversationId === conversationId ? { ...c, unreadCount: res.data.unreadCount || Math.max(1, (c.unreadCount || 0) + 1) } : c));
       }
@@ -450,7 +450,7 @@ export const MessagesPage: React.FC = () => {
       return { success: true, unreadCount: 0, conversationId };
     }
     try {
-      const res = await axios.post(getApiUrl(`/messaging/conversations/${conversationId}/read`), {}, { headers: getAuthHeaders() });
+      const res = await axios.post(getApiUrl(`/messaging/conversations/${conversationId}/read`), {}, { headers: await getAuthHeaders() });
       if (res.data?.success) {
         setConversations(prev => prev.map(c => c.conversationId === conversationId ? { ...c, unreadCount: 0 } : c));
       }
@@ -460,7 +460,7 @@ export const MessagesPage: React.FC = () => {
 
   const handleToggleReaction = async (messageId: string, emoji: string) => {
     try {
-      const res = await axios.post(getApiUrl(`/messaging/messages/${messageId}/reactions`), { emoji }, { headers: getAuthHeaders() });
+      const res = await axios.post(getApiUrl(`/messaging/messages/${messageId}/reactions`), { emoji }, { headers: await getAuthHeaders() });
       if (res.data?.success) {
         setMessages(prev => prev.map(m => m.messageId === messageId ? { ...m, reactions: res.data.reactions } : m));
       }
@@ -481,7 +481,7 @@ export const MessagesPage: React.FC = () => {
         conversation_id: activeConversationId,
         receiver_id: conv.otherUser.id,
         is_typing: isTyping
-      }, { headers: getAuthHeaders() });
+      }, { headers: await getAuthHeaders() });
     } catch (err) {}
   };
 
@@ -495,7 +495,7 @@ export const MessagesPage: React.FC = () => {
           content: `Forwarded: ${targetMsg.content}`,
           receiver_id: recipientId,
           attachment_file_id: targetMsg.attachmentFileId
-        }, { headers: getAuthHeaders() });
+        }, { headers: await getAuthHeaders() });
         if (res.data?.success) {
           await fetchConversations();
           handleSelectConversation(res.data.message.conversationId);
@@ -513,7 +513,7 @@ export const MessagesPage: React.FC = () => {
       const res = await axios.post(getApiUrl('/messaging/messages'), {
         content: 'Hello',
         receiver_id: recipientId
-      }, { headers: getAuthHeaders() });
+      }, { headers: await getAuthHeaders() });
       if (res.data?.success) {
         await fetchConversations();
         handleSelectConversation(res.data.message.conversationId);

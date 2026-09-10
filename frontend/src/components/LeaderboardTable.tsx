@@ -10,6 +10,7 @@ import { ExternalLink, Trophy, RefreshCw, Wifi, Trash2, AlertCircle, Eye, Edit3,
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import api from '../services/api';
 import { StudentEditOverlay } from './StudentEditOverlay';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 function parseUtcTime(ts?: string): number {
   if (!ts) return Date.now();
@@ -207,7 +208,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   
   // Ultra-Fast Paginated Table Viewport Rendering
   const [currentPage, setCurrentPage] = useState(serverPage || 1);
-  const [pageSize, setPageSize] = useState<'25' | '50' | '100' | 'All'>(serverPageSize ? String(serverPageSize) as any : '50');
+  const [pageSize, setPageSize] = useState<'25' | '50' | '100' | '200'>(serverPageSize ? String(serverPageSize) as any : '50');
 
   useEffect(() => {
     if (isServerPaginated) {
@@ -221,10 +222,10 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 
   const totalPages = useMemo(() => {
     if (isServerPaginated) {
-      if (pageSize === 'All') return 1;
+      if (pageSize === '200') return 1;
       return Math.ceil((serverTotalCount || 0) / Number(pageSize)) || 1;
     }
-    if (pageSize === 'All') return 1;
+    if (pageSize === '200') return Math.ceil(sortedStudents.length / 200) || 1;
     return Math.ceil(sortedStudents.length / Number(pageSize)) || 1;
   }, [sortedStudents.length, pageSize, isServerPaginated, serverTotalCount]);
 
@@ -238,7 +239,6 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   const paginatedStudents = useMemo(() => {
     if (isServerPaginated) return effectiveStudents; // The server already paginated them!
     
-    if (pageSize === 'All') return sortedStudents;
     const size = Number(pageSize);
     const start = (currentPage - 1) * size;
     return sortedStudents.slice(start, start + size);
@@ -252,10 +252,10 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
     }
   };
 
-  const handlePageSizeChange = (newSize: '25' | '50' | '100' | 'All') => {
+  const handlePageSizeChange = (newSize: '25' | '50' | '100' | '200') => {
     setPageSize(newSize);
     if (isServerPaginated && onServerPageChange) {
-      onServerPageChange(1, newSize === 'All' ? 4500 : Number(newSize));
+      onServerPageChange(1, Number(newSize));
     } else {
       setCurrentPage(1);
     }
@@ -304,12 +304,11 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 
   // Body scroll lock & layout shift prevention when any modal is open
   // Body scroll lock & layout shift prevention when any modal is open
-  useEffect(() => {
-    const isAnyModalOpen = Boolean(viewingStudent || deletingStudent);
-    if (isAnyModalOpen) {
-      const prevOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
+  const isAnyModalOpen = Boolean(viewingStudent || deletingStudent);
+  useScrollLock(isAnyModalOpen);
 
+  useEffect(() => {
+    if (isAnyModalOpen) {
       const onKey = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           if (!isDeleting) {
@@ -319,13 +318,11 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
         }
       };
       window.addEventListener('keydown', onKey);
-
       return () => {
-        document.body.style.overflow = prevOverflow || '';
         window.removeEventListener('keydown', onKey);
       };
     }
-  }, [viewingStudent, deletingStudent, isDeleting]);
+  }, [viewingStudent, deletingStudent, isDeleting, isAnyModalOpen]);
 
   const toggleStudent = (id: number) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
@@ -529,7 +526,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                 <FastStudentRow
                   key={student.id}
                   studentId={student.id.toString()}
-                  index={idx + (pageSize !== 'All' ? (currentPage - 1) * Number(pageSize) : 0)}
+                  index={idx + (currentPage - 1) * Number(pageSize)}
                   style={{}}
                   isSelected={selectedIds.includes(Number(student.id))}
                   toggleStudent={(id: number) => toggleStudent(id)}
@@ -548,14 +545,14 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
       {effectiveStudents.length > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 mt-3 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-2xl text-xs font-semibold text-slate-600 dark:text-slate-300 shadow-sm">
           <div className="flex items-center space-x-2">
-            <span>Showing <strong className="text-slate-900 dark:text-white font-extrabold">{pageSize === 'All' ? 1 : (currentPage - 1) * Number(pageSize) + 1}</strong> to <strong className="text-slate-900 dark:text-white font-extrabold">{pageSize === 'All' ? effectiveStudents.length : Math.min(currentPage * Number(pageSize), effectiveStudents.length)}</strong> of <strong className="text-brand-600 dark:text-brand-400 font-extrabold">{effectiveStudents.length}</strong> solvers</span>
+            <span>Showing <strong className="text-slate-900 dark:text-white font-extrabold">{(currentPage - 1) * Number(pageSize) + 1}</strong> to <strong className="text-slate-900 dark:text-white font-extrabold">{Math.min(currentPage * Number(pageSize), effectiveStudents.length)}</strong> of <strong className="text-brand-600 dark:text-brand-400 font-extrabold">{effectiveStudents.length}</strong> solvers</span>
           </div>
 
           <div className="flex items-center space-x-4">
             {/* Rows Per Page Selector */}
             <div className="flex items-center space-x-1.5">
               <span className="text-[11px] font-bold text-slate-400">Per Page:</span>
-              {(['25', '50', '100', 'All'] as const).map((size) => (
+              {(['25', '50', '100', '200'] as const).map((size) => (
                 <button
                   key={size}
                   type="button"
@@ -572,7 +569,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
             </div>
 
             {/* Pagination Controls */}
-            {pageSize !== 'All' && totalPages > 1 && (
+            {totalPages > 1 && (
               <div className="flex items-center space-x-1">
                 <button
                   type="button"

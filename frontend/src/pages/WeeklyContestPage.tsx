@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
+import { useScrollLock } from '../hooks/useScrollLock';
 import {
   Trophy, Calendar, RefreshCw, AlertTriangle, Download, FileSpreadsheet,
   FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Zap, Filter, Trash2, Mail, Send, Sparkles, X, Edit3, UserCheck, UserX, Eye, Users, TrendingUp, Award, ChevronDown, ChevronUp,
@@ -885,11 +887,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     });
   };
 
-  useEffect(() => {
-    if (editingStudent || deletingStudent || showPreviewModal || showEmailModal) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
+  const isModalOpen = Boolean(editingStudent || deletingStudent || showPreviewModal || showEmailModal);
+  useScrollLock(isModalOpen);
 
+  useEffect(() => {
+    if (isModalOpen) {
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           if (!isSavingStudent && !isDeletingStudent) {
@@ -900,14 +902,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           }
         }
       };
-
       window.addEventListener('keydown', handleKeyDown);
       return () => {
-        document.body.style.overflow = originalOverflow || 'unset';
         window.removeEventListener('keydown', handleKeyDown);
       };
     }
-  }, [editingStudent, deletingStudent, showPreviewModal, showEmailModal, isSavingStudent, isDeletingStudent]);
+  }, [isModalOpen, editingStudent, deletingStudent, showPreviewModal, showEmailModal, isSavingStudent, isDeletingStudent]);
 
   const downloadReportFile = async (format: string) => {
     if (!selectedSessionId) {
@@ -1398,7 +1398,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <>
                   <span className="text-slate-500">•</span>
                   <span className="text-slate-400">
-                    Last synced: {sessionMetrics?.last_synced || 'Timestamp unavailable'}
+                    Last synced: {sessionMetrics?.last_synced || 'Not synced yet'}
                   </span>
                 </>
               )}
@@ -3038,7 +3038,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               )}
 
               <div className="table-responsive-container w-full min-w-0 max-w-full max-h-[75vh] overflow-y-auto overflow-x-auto">
-                <table className="w-full min-w-[900px] text-left text-xs mobile-card-table">
+                <table className="w-full min-w-[900px] text-left text-xs ">
                   <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 hidden md:table-header-group">
                     <tr>
                       {/* Checkbox Column */}

@@ -13,10 +13,10 @@ import { useAuth } from './context/AuthContext';
 import { useKeyboardContext } from './context/KeyboardContext';
 import { CommandPalette } from './components/CommandPalette';
 import { useGlobalKeyboardShortcuts } from './hooks/useGlobalKeyboardShortcuts';
-import { useCapacitorPush } from './hooks/useCapacitorPush';
-import { initPushNotifications } from './services/pushNotifications';
+import { requestPushPermissionAndSync, listenForForegroundMessages } from './services/pushNotifications';
 import { InstallAppPrompt } from './components/InstallAppPrompt';
 import { AppUpdateNotifier } from './components/AppUpdateNotifier';
+import { useScrollLock } from './hooks/useScrollLock';
 // Safe lazy import wrapper with automatic chunk reload on Vercel deployment update
 function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ default: T }>) {
   return lazy(() =>
@@ -128,9 +128,13 @@ export const App: React.FC = () => {
 
   const { user, isAuthenticated, login } = useAuth();
   
-  // Initialize Native Android Capacitor Push (if applicable)
-  useCapacitorPush();
-
+  // Initialize Web Push Notifications
+  useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      listenForForegroundMessages();
+      requestPushPermissionAndSync(String(user.id));
+    }
+  }, [isAuthenticated, user?.id]);
   const [activeTab, setActiveTab] = useState('landing');
   const [previousTab, setPreviousTab] = useState<string | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<StudentData | null>(null);
@@ -194,22 +198,8 @@ export const App: React.FC = () => {
       }
     }
   }, [isAuthenticated]);
+  useScrollLock(showLoginModal);
 
-  useEffect(() => {
-    if (showLoginModal) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [showLoginModal]);
-
-  // Initialize Native FCM Push Notifications
-  useEffect(() => {
-    initPushNotifications();
-  }, []);
 
   // Handle Global Native Deep Link URLs (including Google OAuth callback)
   // Handles TWO delivery paths:
@@ -788,7 +778,7 @@ export const App: React.FC = () => {
           onMouseEnter={() => {
             import('./components/AIAssistantWidget');
           }}
-          className="fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom,0px))] right-4 sm:right-5 z-[9990] p-3 min-w-[48px] min-h-[48px] rounded-full bg-brand-600 hover:bg-brand-500 text-white shadow-xl shadow-brand-500/30 flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer border border-white/20"
+          className="fixed bottom-[max(2rem,env(safe-area-inset-bottom,2rem))] right-4 sm:right-5 z-[9990] p-3 min-w-[48px] min-h-[48px] rounded-full bg-brand-600 hover:bg-brand-500 text-white shadow-xl shadow-brand-500/30 flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer border border-white/20"
           title="Open AI & Operations Assistant"
           aria-label="Open AI Copilot"
         >

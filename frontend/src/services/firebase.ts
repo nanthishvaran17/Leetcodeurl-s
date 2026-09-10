@@ -2,7 +2,9 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import {
   getAuth,
   GoogleAuthProvider,
-  Auth
+  Auth,
+  initializeAuth,
+  indexedDBLocalPersistence,
 } from 'firebase/auth';
 
 // Read configuration from Vite environment variables with authoritative institutional fallbacks
@@ -34,7 +36,14 @@ export const getOrInitApp = (): FirebaseApp => {
 export const getOrInitAuth = (): Auth => {
   if (!authInstance) {
     const app = getOrInitApp();
-    authInstance = getAuth(app);
+    try {
+      authInstance = initializeAuth(app, {
+        persistence: indexedDBLocalPersistence
+      });
+    } catch (e) {
+      // Fallback if already initialized
+      authInstance = getAuth(app);
+    }
   }
   return authInstance;
 };

@@ -36,7 +36,7 @@ export const SmartGroupModal: React.FC<{
       };
 
       const res = await axios.post(getApiUrl('/messaging/smart-groups'), payload, {
-        headers: getAuthHeaders()
+        headers: await getAuthHeaders()
       });
 
       if (res.data?.success && res.data?.group) {

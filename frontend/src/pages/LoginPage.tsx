@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { motion, AnimatePresence, Variants, useReducedMotion } from 'framer-motion';
 import '../styles/login.css';
 import {
   Lock, Mail, User, Eye, EyeOff, CheckCircle2, AlertCircle,
@@ -18,7 +18,7 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
-  const { user, isAuthenticated, login, authError, clearAuthError } = useAuth();
+  const { user, isAuthenticated, authState, login, authError, clearAuthError } = useAuth();
   
   useEffect(() => {
     if (isAuthenticated || user) {
@@ -28,8 +28,88 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
   
   const pageVariants: Variants = {
     initial: { opacity: 0, y: 8 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: 'easeOut' } },
+    animate: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { 
+        duration: 0.25, 
+        ease: 'easeOut',
+        staggerChildren: 0.08,
+        delayChildren: 0.3
+      } 
+    },
     exit: { opacity: 0, y: -8, transition: { duration: 0.15, ease: 'easeIn' } }
+  };
+
+  // Mobile Animation States
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const prefersReducedMotion = useReducedMotion();
+  const shouldAnimateMobileEntrance = isMobile && (authState === 'UNAUTHENTICATED' || authState === 'AUTH_UNAUTHENTICATED');
+
+  // Mobile Entrance Variants
+  const mobileContainerVariants: Variants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.1
+      }
+    }
+  };
+
+  const mobileLogoVariants: Variants = {
+    hidden: { opacity: 0, y: -35, scale: 0.82, rotate: 0 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      scale: [0.82, 1.035, 1], 
+      rotate: prefersReducedMotion ? 0 : 360,
+      transition: { 
+        duration: prefersReducedMotion ? 0.3 : 0.65, 
+        ease: [0.25, 1, 0.5, 1],
+        scale: { duration: 0.75, times: [0, 0.7, 1] }
+      } 
+    }
+  };
+
+  const mobileTextVariants: Variants = {
+    hidden: { opacity: 0, y: 12 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { duration: 0.4, ease: 'easeOut' } 
+    }
+  };
+
+  const mobileCardVariants: Variants = {
+    hidden: { opacity: 0, y: 20, scale: 0.98 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      scale: 1,
+      transition: { 
+        duration: 0.5, 
+        ease: 'easeOut',
+        staggerChildren: 0.08,
+        delayChildren: 0.2
+      } 
+    }
+  };
+
+  const mobileFormStagger: Variants = {
+    initial: { opacity: 0, y: 10 },
+    animate: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { duration: 0.3, ease: 'easeOut' } 
+    }
   };
 
   // Auth Mode: 'password' | 'otp'
@@ -455,8 +535,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
       {/* ========================================================
           MOBILE HERO / HEADER: Official Floating Institutional Branding
           ======================================================== */}
-      <div className="mobile-top-branding hide-on-desktop" role="banner">
-        <div className="mobile-jubilee-badge">
+      <motion.div 
+        className="mobile-top-branding hide-on-desktop" 
+        role="banner"
+        variants={mobileContainerVariants}
+        initial={shouldAnimateMobileEntrance ? "hidden" : "visible"}
+        animate="visible"
+      >
+        <motion.div className="mobile-jubilee-badge" variants={mobileLogoVariants}>
           <picture>
             <source srcSet="/nec_25_logo.webp" type="image/webp" />
             <img
@@ -473,11 +559,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
               }}
             />
           </picture>
-        </div>
-        <span className="mobile-eyebrow">INSTITUTIONAL PORTAL</span>
-        <h1 className="mobile-title">Nandha Intelligence</h1>
-        <p className="mobile-subtitle">Nandha Engineering College (Autonomous) · Erode</p>
-      </div>
+        </motion.div>
+        <motion.span className="mobile-eyebrow" variants={mobileTextVariants}>INSTITUTIONAL PORTAL</motion.span>
+        <motion.h1 className="mobile-title" variants={mobileTextVariants}>Nandha Intelligence</motion.h1>
+        <motion.p className="mobile-subtitle" variants={mobileTextVariants}>Nandha Engineering College (Autonomous) · Erode</motion.p>
+      </motion.div>
 
       {/* Main Login Frame / Card */}
       <main className="login-frame" role="main">
@@ -541,7 +627,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         {/* ========================================================
             RIGHT LOGIN PANEL (Frosted Glass Card Surface)
             ======================================================== */}
-        <div className={`panel-right ${isShaking ? 'shake-anim' : ''}`}>
+        <motion.div 
+          className={`panel-right ${isShaking ? 'shake-anim' : ''}`}
+          variants={shouldAnimateMobileEntrance ? mobileCardVariants : undefined}
+          initial={shouldAnimateMobileEntrance ? "hidden" : undefined}
+          animate={shouldAnimateMobileEntrance ? "visible" : undefined}
+        >
           <div className="form-head">
             <div className="form-head-title-row">
               <h2>
@@ -629,7 +720,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                 className="view-wrapper"
               >
                 {/* Segmented Control Tabs */}
-                <div className="tabs" role="tablist" aria-label="Login authentication method">
+                <motion.div className="tabs" role="tablist" aria-label="Login authentication method" variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
                   <button
                     type="button"
                     role="tab"
@@ -648,12 +739,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                   >
                     Secure OTP
                   </button>
-                </div>
+                </motion.div>
 
                 {/* Password Form */}
                 {authMode === 'password' ? (
                   <form onSubmit={handlePasswordLogin} noValidate>
-                    <div className="field">
+                    <motion.div className="field" variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
                       <label htmlFor="userId">Institutional Email or User ID</label>
                       <div className="input-wrap">
                         <Mail className="input-icon" size={19} aria-hidden="true" />
@@ -670,9 +761,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                           disabled={loading}
                         />
                       </div>
-                    </div>
+                    </motion.div>
 
-                    <div className="field">
+                    <motion.div className="field" variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
                       <label htmlFor="password">Password</label>
                       <div className="input-wrap">
                         <Lock className="input-icon" size={19} aria-hidden="true" />
@@ -695,9 +786,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                           {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
                         </button>
                       </div>
-                    </div>
+                    </motion.div>
 
-                    <div className="row-between">
+                    <motion.div className="row-between" variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
                       <label className="remember">
                         <input
                           type="checkbox"
@@ -713,9 +804,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                       >
                         Forgot password?
                       </button>
-                    </div>
+                    </motion.div>
 
-                    <button className="submit-btn" type="submit" disabled={loading}>
+                    <motion.button className="submit-btn" type="submit" disabled={loading} variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
                       {loading ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin shrink-0" size={18} />
@@ -727,7 +818,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                           <ArrowRight size={18} strokeWidth={2.5} className="btn-arrow" />
                         </>
                       )}
-                    </button>
+                    </motion.button>
                   </form>
                 ) : (
                   /* OTP Form */
@@ -1116,7 +1207,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
             <ShieldCheck size={16} className="stamp-icon" />
             <span>Secured & audited by institution</span>
           </div>
-        </div>
+        </motion.div>
       </main>
 
       {/* Minimal Unified Footer */}

@@ -397,12 +397,6 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                   >
                     <span>Load More (+32)</span>
                   </button>
-                  <button
-                    onClick={() => setDisplayCount(totalStudents)}
-                    className="px-5 py-3 rounded-2xl glass-card hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
-                  >
-                    Show All {totalStudents} Students
-                  </button>
                 </div>
               </div>
             )}
