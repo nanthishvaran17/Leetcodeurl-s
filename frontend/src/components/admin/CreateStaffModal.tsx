@@ -425,7 +425,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
             
             {/* LEFT STEPPER SIDEBAR */}
             <div className="w-full md:w-72 bg-white dark:bg-navy-950 border-r border-slate-200/80 dark:border-navy-800 p-4 sm:p-6 shrink-0 overflow-x-auto md:overflow-y-auto custom-scrollbar">
-              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4 hidden md:block">
+              <div className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 mb-4 hidden md:block">
                 Provisioning Steps
               </div>
               
@@ -441,33 +441,39 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                       onClick={() => handleStepClick(s.num)}
                       className={`flex items-center gap-3.5 p-3 rounded-2xl transition-all duration-200 text-left cursor-pointer w-full ${
                         isCurrent
-                          ? 'bg-brand-50 dark:bg-brand-500/10 border border-brand-200 dark:border-brand-500/30 shadow-sm ring-1 ring-brand-500/20'
+                          ? 'bg-brand-50 dark:bg-brand-500/10 border-2 border-brand-500 dark:border-brand-400 shadow-sm ring-2 ring-brand-500/20'
                           : isCompleted
-                          ? 'bg-slate-50 dark:bg-navy-800/60 hover:bg-slate-100 dark:hover:bg-navy-800 border border-slate-200/60 dark:border-navy-700/60'
-                          : 'hover:bg-slate-50 dark:hover:bg-navy-800/40 border border-transparent opacity-60'
+                          ? 'bg-emerald-50/80 dark:bg-emerald-950/30 hover:bg-emerald-100/70 border border-emerald-200 dark:border-emerald-800/60'
+                          : 'bg-slate-100/80 dark:bg-navy-900/60 hover:bg-slate-200/80 dark:hover:bg-navy-800 border border-slate-200 dark:border-navy-700'
                       }`}
                     >
                       <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 font-mono text-xs font-black transition-all ${
                         isCurrent
                           ? 'bg-brand-600 text-white shadow-md shadow-brand-500/30'
                           : isCompleted
-                          ? 'bg-emerald-500 text-white'
-                          : 'bg-slate-200 dark:bg-navy-700 text-slate-500 dark:text-slate-400'
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-slate-200 dark:bg-navy-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-navy-600'
                       }`}>
                         {isCompleted ? <Check className="w-4 h-4 stroke-[3]" /> : s.id}
                       </div>
 
                       <div className="hidden md:flex flex-col min-w-0">
-                        <span className={`text-xs font-black truncate ${
+                        <span className={`text-xs truncate ${
                           isCurrent
-                            ? 'text-brand-900 dark:text-brand-200'
+                            ? 'text-brand-950 dark:text-brand-100 font-black'
                             : isCompleted
-                            ? 'text-slate-800 dark:text-slate-200'
-                            : 'text-slate-500 dark:text-slate-400'
+                            ? 'text-slate-900 dark:text-slate-100 font-bold'
+                            : 'text-slate-800 dark:text-slate-200 font-bold'
                         }`}>
                           {s.title}
                         </span>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium truncate">
+                        <span className={`text-[10px] font-medium truncate ${
+                          isCurrent
+                            ? 'text-brand-700 dark:text-brand-300 font-bold'
+                            : isCompleted
+                            ? 'text-emerald-700 dark:text-emerald-400'
+                            : 'text-slate-600 dark:text-slate-400'
+                        }`}>
                           {s.desc}
                         </span>
                       </div>
@@ -477,18 +483,18 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
               </div>
 
               {/* SECURITY SUMMARY PANEL */}
-              <div className="mt-8 hidden md:block p-4 rounded-2xl bg-indigo-50/60 dark:bg-navy-950/50 border border-indigo-100 dark:border-navy-800 space-y-2">
-                <div className="flex items-center gap-2 text-xs font-black text-indigo-900 dark:text-indigo-300">
-                  <Lock className="w-4 h-4 text-indigo-500" /> Institutional Security
+              <div className="mt-8 hidden md:block p-4 rounded-2xl bg-indigo-50/80 dark:bg-navy-950/50 border border-indigo-200/80 dark:border-navy-800 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-black text-indigo-950 dark:text-indigo-300">
+                  <Lock className="w-4 h-4 text-indigo-600 dark:text-indigo-400" /> Institutional Security
                 </div>
-                <p className="text-[10px] text-indigo-700/70 dark:text-indigo-400/70 leading-relaxed font-medium">
+                <p className="text-[10px] text-indigo-900 dark:text-indigo-300/80 leading-relaxed font-semibold">
                   This account will be protected by the college authentication system:
                 </p>
-                <ul className="text-[10px] font-bold text-slate-600 dark:text-slate-400 space-y-1 pt-1">
-                  <li className="flex items-center gap-1.5"><Check className="w-3 h-3 text-emerald-500" /> Secure authentication</li>
-                  <li className="flex items-center gap-1.5"><Check className="w-3 h-3 text-emerald-500" /> Role-based access</li>
-                  <li className="flex items-center gap-1.5"><Check className="w-3 h-3 text-emerald-500" /> Activity auditing</li>
-                  <li className="flex items-center gap-1.5"><Check className="w-3 h-3 text-emerald-500" /> Institutional controls</li>
+                <ul className="text-[10px] font-bold text-slate-700 dark:text-slate-300 space-y-1 pt-1">
+                  <li className="flex items-center gap-1.5"><Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400 stroke-[3]" /> Secure authentication</li>
+                  <li className="flex items-center gap-1.5"><Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400 stroke-[3]" /> Role-based access</li>
+                  <li className="flex items-center gap-1.5"><Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400 stroke-[3]" /> Activity auditing</li>
+                  <li className="flex items-center gap-1.5"><Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400 stroke-[3]" /> Institutional controls</li>
                 </ul>
               </div>
             </div>

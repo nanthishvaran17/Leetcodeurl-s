@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X, User, Award, ShieldAlert, AlertTriangle, CheckCircle2, Clock,
   Calendar, FileText, Send, TrendingUp, TrendingDown, Minus, ExternalLink,
@@ -190,9 +191,17 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
   const displayDept = currentStudent?.department?.code || currentStudent?.department || student?.department?.code || student?.department || 'DEPT';
   const displayYear = currentStudent?.year_level || student?.year_level || 'III';
 
-  return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-0 sm:p-4 bg-black/85 overflow-y-auto animate-fade-in">
-      <div className="w-full h-full sm:h-auto max-w-3xl max-h-[100dvh] sm:max-h-[92vh] flex flex-col sm:rounded-3xl bg-white dark:bg-navy-950 border-0 sm:border border-slate-200 dark:border-navy-700 shadow-lg overflow-hidden my-auto text-slate-900 dark:text-slate-100">
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
+
+  return typeof document !== 'undefined' ? createPortal(
+    <div className="fixed inset-0 z-[100000] flex items-start justify-center p-4 pt-6 sm:pt-7 bg-black/85 backdrop-blur-sm overflow-y-auto animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="w-full h-full sm:h-auto max-w-3xl max-h-[100dvh] sm:max-h-[92vh] flex flex-col sm:rounded-3xl bg-white dark:bg-navy-950 border-0 sm:border border-slate-200 dark:border-navy-700 shadow-lg overflow-hidden text-slate-900 dark:text-slate-100" onClick={e => e.stopPropagation()}>
 
         {/* Modal Header */}
         <div className="p-4 sm:p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-indigo-500/20 safe-area-pt">
@@ -592,6 +601,7 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
           setShowEditOverlay(false);
         }}
       />
-    </div>
-  );
+    </div>,
+    document.body
+  ) : null;
 };

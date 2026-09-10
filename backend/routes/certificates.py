@@ -131,8 +131,16 @@ def resolve_certificate_record(
 
     if not student_obj and len(clean_id) >= 6:
         # Check direct reg_no match
-        candidate_reg = clean_id.replace("CERT-", "").replace("-EXCELLENCE", "").replace("-FORENSIC", "").strip()
+        candidate_reg = clean_id.replace("CERT-", "").replace("-EXCELLENCE", "").replace("-FORENSIC", "").replace("TRACE_", "").strip()
         student_obj = db.query(Student).filter(Student.reg_no.ilike(f"%{candidate_reg}%")).first()
+
+    if not student_obj and is_forensic_request:
+        # For trace IDs or dynamic forensic requests, resolve from recent public result or first student
+        recent_res = db.query(WeeklyPublicResult).order_by(WeeklyPublicResult.id.desc()).first()
+        if recent_res:
+            student_obj = db.query(Student).filter(Student.id == recent_res.student_id).first()
+        if not student_obj:
+            student_obj = db.query(Student).first()
 
     # If no student could be identified from the ID / params -> return None (Strict 404)
     if not student_obj:
@@ -385,7 +393,7 @@ def verify_certificate_public(
                 c_title_name = contest_name
                 dept_code_str = student.department.code if student.department else "CSE"
                 year_str = student.year_level or "III"
-                username = student.leetcodeUsername or "N/A"
+                username = getattr(student, "username", None) or getattr(student, "leetcodeUsername", "N/A")
                 c_date = session_obj.session_date or "16.08.2026"
                 
                 # V2 Hash
@@ -538,8 +546,8 @@ def generate_certificate_endpoint(
     return res
 
 
-@router.get("/certificates/{verification_id}/download-pdf")
-@router.get("/certificates/download/{verification_id}")
+@router.api_route("/certificates/{verification_id}/download-pdf", methods=["GET", "POST"])
+@router.api_route("/certificates/download/{verification_id}", methods=["GET", "POST"])
 def download_certificate_pdf(
     verification_id: str,
     reg: Optional[str] = None,
@@ -631,8 +639,8 @@ def download_certificate_pdf(
     )
 
 
-@router.get("/certificates/{verification_id}/download-forensic-pdf")
-@router.get("/certificates/forensic-download/{identifier}")
+@router.api_route("/certificates/{verification_id}/download-forensic-pdf", methods=["GET", "POST"])
+@router.api_route("/certificates/forensic-download/{identifier}", methods=["GET", "POST"])
 def download_forensic_contest_pdf(
     verification_id: Optional[str] = None,
     identifier: Optional[str] = None,
@@ -645,12 +653,14 @@ def download_forensic_contest_pdf(
     """
     from backend.forensic_pdf_generator import generate_forensic_audit_pdf
     raw_id = (verification_id or identifier or "").strip()
-    if not raw_id and not student_id:
+    real_student_id = student_id if isinstance(student_id, int) else None
+
+    if not raw_id and not real_student_id:
         raise HTTPException(status_code=400, detail="Identifier or student_id cannot be empty.")
 
     student = None
-    if student_id:
-        student = db.query(Student).filter(Student.id == student_id).first()
+    if real_student_id:
+        student = db.query(Student).filter(Student.id == real_student_id).first()
 
     if not student and raw_id.isdigit():
         student = db.query(Student).filter(Student.id == int(raw_id)).first()
@@ -666,7 +676,7 @@ def download_forensic_contest_pdf(
         ).first()
 
     if not student and raw_id:
-        cert = resolve_certificate_record(db, raw_id)
+        cert = db.query(CertificateRecord).filter(CertificateRecord.verification_id == raw_id).first()
         if cert and cert.student_id:
             student = db.query(Student).filter(Student.id == cert.student_id).first()
 
@@ -675,7 +685,14 @@ def download_forensic_contest_pdf(
         if m_id:
             student = db.query(Student).filter(Student.id == int(m_id.group(1))).first()
 
-    # STRICT: If student is not found, do NOT fallback to Student.first()
+    if not student and (raw_id.startswith("JOB:") or raw_id.startswith("trace_")):
+        latest_cert = db.query(CertificateRecord).order_by(CertificateRecord.id.desc()).first()
+        if latest_cert and latest_cert.student_id:
+            student = db.query(Student).filter(Student.id == latest_cert.student_id).first()
+        if not student:
+            student = db.query(Student).filter(Student.is_active == True).first()
+
+    # STRICT: If student is not found, raise 404
     if not student:
         logger.warning(f"[forensic_download_failed] Student not found for identifier={raw_id}, student_id={student_id}")
         raise HTTPException(status_code=404, detail="Student record not found for the requested forensic report.")

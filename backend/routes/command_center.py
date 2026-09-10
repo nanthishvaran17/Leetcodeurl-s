@@ -107,7 +107,7 @@ def get_command_center_summary(
     
     # If Super Admin or Admin, they see global data (unless they explicitly filter). 
     # If HOD/Faculty, they see scoped data. We must include user_id in the cache key for role-based scoping unless they are global admins.
-    is_global_admin = role_clean in ["admin", "super_admin", "super admin"]
+    is_global_admin = role_clean in ["admin", "super_admin", "super admin", "administrator"]
     scope_key = f"global" if is_global_admin else f"user_{uid}"
     
     cache_key = f"cmd_center_summary:{scope_key}:d{dept_id or 'all'}:s{staff_id or 'all'}:y{year_level or 'all'}:sec{section_id or 'all'}"

@@ -711,11 +711,12 @@ app.include_router(deep_tech_intelligence.router)
 app.include_router(scheduler.router)
 
 
-from backend.routes import stats_snapshot
+from backend.routes import stats_snapshot, staff_verification
 app.include_router(stats_snapshot.router, prefix="/api")
 app.include_router(stats_snapshot.router)
 app.include_router(url_import.router, prefix="/api")
 app.include_router(contest_integrity.router, prefix="/api")
+app.include_router(staff_verification.router)
 # Mount Static File Directories
 is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")
 if is_vercel:

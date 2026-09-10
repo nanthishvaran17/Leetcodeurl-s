@@ -109,6 +109,225 @@ def get_upcoming_session_info(db: Session = Depends(get_db)):
 
 
 # 
+# FAST TIERED ENDPOINTS & IN-MEMORY CACHING FOR INSTANT LOAD
+# 
+
+_CONTEST_RAM_CACHE: Dict[str, Dict[str, Any]] = {}
+
+def _extract_contest_number(session: WeeklySession) -> int:
+    """Extracts numeric contest number from contest_id, contest_name or week_number."""
+    if session.contest_id:
+        nums = re.findall(r'\d+', str(session.contest_id))
+        if nums:
+            return int(nums[-1])
+    if session.contest_name:
+        nums = re.findall(r'\d+', str(session.contest_name))
+        if nums:
+            return int(nums[-1])
+    return session.week_number or session.id
+
+def _resolve_session(session_id_or_slug: Any, db: Session) -> Optional[WeeklySession]:
+    """Resolves WeeklySession from numeric id, session_code, contest_id, or contest slug/number."""
+    s_str = str(session_id_or_slug).strip()
+    if s_str.isdigit():
+        sess = db.query(WeeklySession).filter(WeeklySession.id == int(s_str)).first()
+        if sess:
+            return sess
+            
+    sess = db.query(WeeklySession).filter(
+        (WeeklySession.session_code.ilike(s_str)) |
+        (WeeklySession.contest_id.ilike(s_str)) |
+        (WeeklySession.contest_name.ilike(f"%{s_str}%"))
+    ).first()
+    if sess:
+        return sess
+
+    nums = re.findall(r'\d+', s_str)
+    if nums:
+        num = nums[0]
+        sess = db.query(WeeklySession).filter(
+            (WeeklySession.contest_name.ilike(f"%{num}%")) |
+            (WeeklySession.contest_id.ilike(f"%{num}%"))
+        ).first()
+        if sess:
+            return sess
+    return None
+
+def _get_fast_contest_summary(session: WeeklySession, db: Session, current_user: Optional[User] = None) -> Dict[str, Any]:
+    from backend.services.authorization_service import get_authorized_student_ids
+    
+    sess_id = session.id
+    user_key = f"{current_user.id}:{current_user.role}" if current_user else "public"
+    cache_key = f"contest_summary_{sess_id}_{user_key}"
+    
+    now_ts = datetime.datetime.now(datetime.timezone.utc).timestamp()
+    if session.status == "FINALIZED" and cache_key in _CONTEST_RAM_CACHE:
+        cached = _CONTEST_RAM_CACHE[cache_key]
+        if now_ts - cached["ts"] < 1800:
+            return cached["data"]
+
+    authorized_ids = get_authorized_student_ids(db, current_user) if current_user else None
+    
+    q = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == sess_id)
+    if authorized_ids is not None:
+        if not authorized_ids:
+            return {
+                "sessionId": sess_id,
+                "contestNumber": _extract_contest_number(session),
+                "contestName": session.contest_name,
+                "sessionDate": session.session_date,
+                "status": session.status,
+                "participantCount": 0,
+                "totalStudents": 0,
+                "attendanceRate": 0.0,
+                "averageScore": 0.0,
+                "medianScore": 0.0,
+                "bestRank": None,
+                "ratingGainers": 0,
+                "ratingDecliners": 0,
+                "ratingStable": 0,
+                "solvedDistribution": {"q0": 0, "q1": 0, "q2": 0, "q3": 0, "q4": 0},
+                "verificationStatus": "FINALIZED" if session.status == "FINALIZED" else "PENDING",
+                "lastUpdated": datetime.datetime.now().isoformat()
+            }
+        q = q.filter(WeeklyPublicResult.student_id.in_(authorized_ids))
+        total_students = len(authorized_ids)
+    else:
+        total_students = session.total_students or db.query(Student).filter(Student.is_active == True).count() or 1
+        
+    results = q.all()
+    
+    attended = [r for r in results if r.participation_status in (
+        "PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL", "VIRTUAL_ATTENDED"
+    )]
+    participant_count = len(attended)
+    attendance_rate = round((participant_count / max(total_students, 1)) * 100, 2)
+    
+    scores = [r.contest_score for r in attended if r.contest_score is not None]
+    ranks = [r.contest_rank for r in attended if r.contest_rank is not None and r.contest_rank > 0]
+    
+    avg_score = round(sum(scores) / len(scores), 2) if scores else 0.0
+    
+    if scores:
+        sorted_scores = sorted(scores)
+        n = len(sorted_scores)
+        mid = n // 2
+        median_score = float(sorted_scores[mid] if n % 2 == 1 else round((sorted_scores[mid-1] + sorted_scores[mid]) / 2, 2))
+    else:
+        median_score = 0.0
+        
+    best_rank = min(ranks) if ranks else None
+    
+    gainers = 0
+    decliners = 0
+    stable = 0
+    
+    solved_dist = {"q0": 0, "q1": 0, "q2": 0, "q3": 0, "q4": 0}
+    for r in results:
+        tot = getattr(r, "total_contest_solved", 0) or getattr(r, "total_solved", 0) or 0
+        if tot >= 4: solved_dist["q4"] += 1
+        elif tot == 3: solved_dist["q3"] += 1
+        elif tot == 2: solved_dist["q2"] += 1
+        elif tot == 1: solved_dist["q1"] += 1
+        else: solved_dist["q0"] += 1
+        
+        delta = getattr(r, "rating_delta", None)
+        if delta is not None:
+            if delta > 0: gainers += 1
+            elif delta < 0: decliners += 1
+            else: stable += 1
+
+    contest_num = _extract_contest_number(session)
+
+    summary_data = {
+        "sessionId": sess_id,
+        "contestNumber": contest_num,
+        "contestName": session.contest_name or f"Weekly Contest {contest_num}",
+        "sessionDate": session.session_date,
+        "status": session.status,
+        "participantCount": participant_count,
+        "totalStudents": total_students,
+        "attendanceRate": attendance_rate,
+        "averageScore": avg_score,
+        "medianScore": median_score,
+        "bestRank": best_rank,
+        "ratingGainers": gainers,
+        "ratingDecliners": decliners,
+        "ratingStable": stable,
+        "solvedDistribution": solved_dist,
+        "verificationStatus": "FINALIZED" if session.status == "FINALIZED" else ("FULLY_VERIFIED" if participant_count > 0 else "PENDING_VERIFICATION"),
+        "lastUpdated": datetime.datetime.now().isoformat()
+    }
+    
+    if session.status == "FINALIZED":
+        _CONTEST_RAM_CACHE[cache_key] = {
+            "ts": now_ts,
+            "data": summary_data
+        }
+        
+    return summary_data
+
+
+@router.get("/sessions/{session_id}/summary")
+@router.get("/{session_id}/summary")
+def get_contest_fast_summary_endpoint(
+    session_id: str,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    """
+    Tiered API Priority 1 (< 300ms): Ultra-fast KPI summary response.
+    Returns contest number, date, status, participant stats, scores, rank, and solved breakdown.
+    """
+    session = _resolve_session(session_id, db)
+    if not session:
+        raise HTTPException(status_code=404, detail="Contest session not found")
+    return _get_fast_contest_summary(session, db, current_user)
+
+
+@router.get("/sessions/{session_id}/questions")
+@router.get("/{session_id}/questions")
+def get_contest_questions_endpoint(
+    session_id: str,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    """
+    Tiered API Priority 2: Returns Q1-Q4 solve rates, attempts, difficulty, scores, and first solvers.
+    """
+    session = _resolve_session(session_id, db)
+    if not session:
+        raise HTTPException(status_code=404, detail="Contest session not found")
+    return get_contest_question_analytics(session_id=session.id, db=db, current_user=current_user)
+
+
+@router.get("/sessions/{session_id}/analytics")
+@router.get("/{session_id}/analytics")
+def get_contest_deep_analytics_endpoint(
+    session_id: str,
+    dept: Optional[str] = Query(None),
+    year: Optional[str] = Query(None),
+    attendance: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    """
+    Tiered API Priority 4: Deep analytics loaded asynchronously without blocking main dashboard render.
+    """
+    session = _resolve_session(session_id, db)
+    if not session:
+        raise HTTPException(status_code=404, detail="Contest session not found")
+    dept_stats = get_contest_dept_analytics(session_id=session.id, db=db, current_user=current_user)
+    comparison = get_week_comparison(session_id=session.id, dept=dept, year=year, attendance=attendance, db=db, current_user=current_user)
+    return {
+        "sessionId": session.id,
+        "contestNumber": _extract_contest_number(session),
+        "departmentAnalytics": dept_stats,
+        "comparison": comparison
+    }
+
+
+# 
 # PREVIOUS WEEK CONTEST ANALYZER ENDPOINTS
 # 
 

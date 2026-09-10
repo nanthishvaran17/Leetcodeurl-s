@@ -20,6 +20,7 @@ def setup_database():
     user = User(
         username="admin",
         email="admin@nandha.edu.in",
+        hashed_password="fake_hash_pass",
         role="Admin",
         is_active=True
     )

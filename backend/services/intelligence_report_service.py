@@ -1,138 +1,126 @@
 import datetime
-import json
-from typing import Dict, Any, List, Optional
-from collections import defaultdict
+from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
-from backend.models import (
-    Student, Department, WeeklyStudentSnapshot, 
-    LeetCodeTopicStats, LeetCodeLanguageStats,
-    WeeklyPublicResult, WeeklyVirtualResult
-)
-from backend.services.reporting_period_service import reporting_period_service
-from backend.config.report_config import derive_student_batch
+from backend.services.weekly_intelligence_service import generate_live_weekly_intelligence_data
 
-def build_intelligence_dataset(db: Session, current_user: Any = None) -> Dict[str, Any]:
+def build_intelligence_dataset(
+    db: Session, 
+    department: Optional[str] = None, 
+    year: Optional[str] = None,
+    current_user: Any = None
+) -> Dict[str, Any]:
     """
-    Builds the massive canonical dataset for the Friday Weekly LeetCode Intelligence Report.
-    Fetches exactly 3 weeks of snapshots (Current, W-1, W-2), plus live topics/languages.
+    Builds the authoritative canonical dataset for the Friday Weekly LeetCode Intelligence Report.
+    Queries live student metrics, contest results, topic breakdowns, and language distributions.
     """
-    # 1. Determine Reporting Periods
-    curr_period_info = reporting_period_service.get_reporting_period()
-    curr_id = curr_period_info["reporting_period_id"]
-    w1_id = curr_period_info["previous_period_id"]
-    
-    # Calculate W-2
-    w1_start = curr_period_info["previous_week_start"]
-    w2_start = w1_start - datetime.timedelta(days=7)
-    w2_period_info = reporting_period_service.get_reporting_period(w2_start)
-    w2_id = w2_period_info["reporting_period_id"]
+    live_data = generate_live_weekly_intelligence_data(
+        db=db,
+        department=department,
+        year=year,
+        current_user=current_user
+    )
 
-    # 2. RBAC - Determine authorized departments
-    allowed_dept_ids = None
-    if current_user and getattr(current_user, "role", None) not in ("Super Admin", "Principal", "Director"):
-        user_dept_id = getattr(current_user, "department_id", None)
-        if user_dept_id:
-            allowed_dept_ids = [user_dept_id]
+    # Provide normalized helper mappings for backwards compatibility and easy PDF consumption
+    dept_map = {}
+    for d in live_data.get("department_intelligence", []):
+        d_code = d.get("department", "CSE")
+        dept_map[d_code] = {
+            "w0": d.get("current_solved", 0),
+            "w1": d.get("prev_solved", 0),
+            "w2": d.get("prev_prev_solved", 0),
+            "weekly_new": d.get("weekly_new", 0),
+            "growth_pct": d.get("growth_pct", 0.0),
+            "total_students": d.get("total_students", 0),
+            "active_students": d.get("active_students", 0),
+            "avg_solved": d.get("avg_solved", 0.0),
+            "avg_rating": d.get("avg_rating"),
+            "contest_participants": d.get("contest_participants", 0),
+            "coordinator": d.get("coordinator", "Department Faculty Coordinator")
+        }
 
-    # Query active students
-    q_students = db.query(Student).filter(Student.is_active == True)
-    if allowed_dept_ids:
-        q_students = q_students.filter(Student.department_id.in_(allowed_dept_ids))
-    
-    active_students = q_students.all()
-    active_student_ids = [s.id for s in active_students]
+    year_map = {}
+    for y in live_data.get("year_intelligence", []):
+        y_code = y.get("year", "I")
+        year_map[y_code] = {
+            "w0": y.get("current_solved", 0),
+            "w1": y.get("prev_solved", 0),
+            "w2": y.get("prev_prev_solved", 0),
+            "weekly_new": y.get("weekly_new", 0),
+            "growth_pct": y.get("growth_pct", 0.0),
+            "total_students": y.get("total_students", 0),
+            "active_students": y.get("active_students", 0),
+            "avg_solved": y.get("avg_solved", 0.0),
+            "avg_rating": y.get("avg_rating"),
+            "batch_label": y.get("batch_label", "")
+        }
 
-    # Preload Departments
-    departments = {d.id: d for d in db.query(Department).all()}
+    topic_map = {}
+    for t in live_data.get("dsa_topic_intelligence", {}).get("top_topics", []):
+        t_name = t.get("topic_name", "General")
+        topic_map[t_name] = {
+            "w0": t.get("problems_solved", 0),
+            "student_count": t.get("student_count", 0),
+            "pct_of_total": t.get("pct_of_total", 0.0),
+            "tier": t.get("tier", "Fundamental")
+        }
 
-    # 3. Load 3-Week Snapshots
-    snapshots = db.query(WeeklyStudentSnapshot).filter(
-        WeeklyStudentSnapshot.reporting_period_id.in_([curr_id, w1_id, w2_id]),
-        WeeklyStudentSnapshot.student_id.in_(active_student_ids)
-    ).all()
+    lang_map = {}
+    for l in live_data.get("language_intelligence", {}).get("top_languages", []):
+        l_name = l.get("language_name", "General")
+        lang_map[l_name] = {
+            "w0": l.get("problems_solved", 0),
+            "student_count": l.get("student_count", 0),
+            "pct_of_total": l.get("pct_of_total", 0.0)
+        }
 
-    snap_map = defaultdict(lambda: {curr_id: None, w1_id: None, w2_id: None})
-    for snap in snapshots:
-        snap_map[snap.student_id][snap.reporting_period_id] = snap
+    meta = live_data.get("report_metadata", {})
+    exec_dash = live_data.get("executive_dashboard", {})
+    reporting_win = meta.get("reporting_window", {})
 
-    # 4. Load Topic & Language Stats
-    topic_stats = db.query(LeetCodeTopicStats).filter(LeetCodeTopicStats.student_id.in_(active_student_ids)).all()
-    lang_stats = db.query(LeetCodeLanguageStats).filter(LeetCodeLanguageStats.student_id.in_(active_student_ids)).all()
-
-    # Data Structures for Aggregation
-    dept_metrics = defaultdict(lambda: {"w0": 0, "w1": 0, "w2": 0})
-    year_metrics = defaultdict(lambda: {"w0": 0, "w1": 0, "w2": 0})
-    topic_metrics = defaultdict(lambda: {"w0": 0}) # Topics are generally point-in-time
-    lang_metrics = defaultdict(lambda: {"w0": 0})
-    
-    student_details = []
-
-    # Aggregation Loop
-    for st in active_students:
-        s_snaps = snap_map[st.id]
-        c_snap = s_snaps[curr_id]
-        w1_snap = s_snaps[w1_id]
-        w2_snap = s_snaps[w2_id]
-        
-        c_solved = c_snap.primary_solved_count if c_snap else 0
-        w1_solved = w1_snap.primary_solved_count if w1_snap else 0
-        w2_solved = w2_snap.primary_solved_count if w2_snap else 0
-
-        dept_name = departments[st.department_id].name if st.department_id in departments else "Unknown"
-        dept_code = departments[st.department_id].code if st.department_id in departments else "Unknown"
-        year_str = derive_student_batch(st.reg_no)
-
-        # Aggregate Dept
-        dept_metrics[dept_code]["w0"] += c_solved
-        dept_metrics[dept_code]["w1"] += w1_solved
-        dept_metrics[dept_code]["w2"] += w2_solved
-
-        # Aggregate Year
-        year_metrics[year_str]["w0"] += c_solved
-        year_metrics[year_str]["w1"] += w1_solved
-        year_metrics[year_str]["w2"] += w2_solved
-
-        # Build Student Info
-        student_details.append({
-            "id": st.id,
-            "reg_no": st.reg_no,
-            "name": st.name,
-            "dept": dept_code,
-            "year": year_str,
-            "username": st.username,
-            "w0_solved": c_solved,
-            "w1_solved": w1_solved,
-            "w2_solved": w2_solved,
-            "delta_w0_w1": c_solved - w1_solved,
-            "c_snap": c_snap
-        })
-
-    # Aggregate Topics
-    for ts in topic_stats:
-        if ts.problems_solved:
-            topic_metrics[ts.topic_name or ts.topic_slug]["w0"] += ts.problems_solved
-
-    # Aggregate Languages
-    for ls in lang_stats:
-        if ls.problems_solved:
-            lang_metrics[ls.language_name]["w0"] += ls.problems_solved
-
-    return {
+    dataset = {
         "metadata": {
-            "report_date": curr_period_info["report_date_str"],
-            "period_w0": curr_id,
-            "period_w1": w1_id,
-            "period_w2": w2_id,
-            "generated_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "report_date": meta.get("report_date", datetime.date.today().strftime("%d-%m-%Y")),
+            "period_w0": reporting_win.get("current_week", {}).get("week_label", "W519"),
+            "period_w1": reporting_win.get("previous_week", {}).get("week_label", "W518"),
+            "period_w2": reporting_win.get("prev_prev_week", {}).get("week_label", "W517"),
+            "window_str": reporting_win.get("window_str", "W517 -> W518 -> W519"),
+            "generated_at": meta.get("generated_at", datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")),
+            "snapshot_id": f"SNAP_{reporting_win.get('current_week', {}).get('week_label', 'W519')}_{meta.get('report_date', '').replace('-', '')}",
+            "institution": meta.get("institution", "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)"),
+            "audit_hash": meta.get("audit_hash", "")
         },
         "summary": {
-            "total_students": len(active_students),
+            "total_students": exec_dash.get("total_students", 0),
+            "active_students": exec_dash.get("active_students", 0),
+            "improved_students": exec_dash.get("improved_students", 0),
+            "contest_participants": exec_dash.get("contest_participants", 0),
+            "total_solved": exec_dash.get("total_problems_solved", 0),
+            "weekly_new_solved": exec_dash.get("weekly_new_solved", 0),
+            "growth_pct": exec_dash.get("growth_pct", 0.0),
+            "average_rating": exec_dash.get("average_rating"),
+            "risk_distribution": exec_dash.get("risk_distribution", {}),
+            "category_distribution": exec_dash.get("category_distribution", {})
         },
-        "departments": dict(dept_metrics),
-        "years": dict(year_metrics),
-        "topics": dict(topic_metrics),
-        "languages": dict(lang_metrics),
-        "students": student_details
+        "departments": dept_map,
+        "department_list": live_data.get("department_intelligence", []),
+        "years": year_map,
+        "year_list": live_data.get("year_intelligence", []),
+        "topics": topic_map,
+        "topic_list": live_data.get("dsa_topic_intelligence", {}).get("top_topics", []),
+        "languages": lang_map,
+        "language_list": live_data.get("language_intelligence", {}).get("top_languages", []),
+        "year_dsa_matrix": live_data.get("dsa_topic_intelligence", {}).get("year_matrix", {}),
+        "dept_dsa_matrix": live_data.get("dsa_topic_intelligence", {}).get("dept_matrix", {}),
+        "year_lang_matrix": live_data.get("language_intelligence", {}).get("year_matrix", {}),
+        "dept_lang_matrix": live_data.get("language_intelligence", {}).get("dept_matrix", {}),
+        "contest_intelligence": live_data.get("contest_intelligence", {}),
+        "students": live_data.get("student_3_week_comparison", []),
+        "student_deep_dives": live_data.get("student_deep_dives", []),
+        "top_performers_cohorts": live_data.get("top_performers_cohorts", {}),
+        "data_availability": live_data.get("data_availability", {}),
+        "institutional_trend": live_data.get("institutional_trend", []),
+        "raw_live_data": live_data
     }
+
+    return dataset

@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 import { useScrollLock } from '../hooks/useScrollLock';
 import {
   Trophy, Calendar, RefreshCw, AlertTriangle, Download, FileSpreadsheet,
   FileText, CheckCircle2, XCircle, Clock, ShieldCheck, PlayCircle, Lock, Layers, ArrowUpRight, ArrowDownRight, Zap, Filter, Trash2, Mail, Send, Sparkles, X, Edit3, UserCheck, UserX, Eye, Users, TrendingUp, Award, ChevronDown, ChevronUp,
   Building2, GraduationCap, RotateCcw, Search, Radio, Activity, Shield, Pause, Play, FastForward,
-  Gauge, Terminal, Cpu, Database, FlaskConical, Check, ExternalLink
+  Gauge, Terminal, Cpu, Database, FlaskConical, Check, ExternalLink, Printer, FileArchive
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { StatusNotificationModal, NotificationState } from '../components/StatusNotificationModal';
 const LiveStudentMonitor = React.lazy(() => import('../components/LiveStudentMonitor').then(m => ({ default: m.LiveStudentMonitor })));
@@ -20,6 +22,13 @@ import { useContestWebSocket, ContestWSEvent } from '../hooks/useContestWebSocke
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
 import { useDepartments } from '../contexts/DepartmentContext';
+import { 
+  getCachedContestData, 
+  setCachedContestData, 
+  fetchWithCacheDedupe, 
+  prefetchContest, 
+  logContestTelemetry 
+} from '../services/contestCache';
 
 // Animated Count-Up component for headline stat numbers
 const AnimatedNumber: React.FC<{ value: number; suffix?: string; duration?: number }> = ({ value, suffix = '', duration = 600 }) => {
@@ -315,16 +324,18 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const [matrixRows, setMatrixRows] = useState<any[]>([]);
   const [totalRows, setTotalRows] = useState<number>(0);
   const [sessionMetrics, setSessionMetrics] = useState<any>(null);
+  const [fastSummary, setFastSummary] = useState<any>(null);
+  const [questionStats, setQuestionStats] = useState<any>(null);
   const [departmentStats, setDepartmentStats] = useState<any>(null);
   const [yearStats, setYearStats] = useState<any>(null);
   const [errorLogs, setErrorLogs] = useState<any[]>([]);
   const [comparison, setComparison] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'previous_week' | 'matrix'>('previous_week');
-  const [subTab, setSubTab] = useState<'matrix' | 'dept_year' | 'error_board'>('matrix');
+  const [subTab, setSubTab] = useState<'matrix' | 'dept_year' | 'error_board' | 'post_930_activity'>('matrix');
   const [showDetailedView, setShowDetailedView] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [customCalendarDate, setCustomCalendarDate] = useState<string>('');
   const [isRetrying, setIsRetrying] = useState<boolean>(false);
   const [deletingSessionId, setDeletingSessionId] = useState<number | null>(null);
@@ -359,10 +370,42 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
   // New Feature States
   const [showExportMenu, setShowExportMenu] = useState<boolean>(false);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
+        setShowExportMenu(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowExportMenu(false);
+      }
+    };
+    if (showExportMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showExportMenu]);
   const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string | number>>(new Set());
   const [viewingProfileStudent, setViewingProfileStudent] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (viewingProfileStudent) {
+      const origOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = origOverflow;
+      };
+    }
+  }, [viewingProfileStudent]);
 
   // Ultra-Fast Virtualized Pagination States
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -654,29 +697,34 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
 
   async function fetchInitialContestData() {
-    setLoading(true);
     try {
+      // Check cached sessions first for instant 0ms shell population
+      const cachedList = getCachedContestData<any[]>('all_contest_sessions');
+      const cachedCurr = getCachedContestData<any>('current_contest_session');
+      if (cachedList && cachedList.length > 0) {
+        setSessionsList(cachedList);
+        if (cachedCurr) setCurrentSession(cachedCurr);
+        const targetId = cachedList[0].sessionId || cachedCurr?.sessionId;
+        if (targetId && !selectedSessionId) {
+          setSelectedSessionId(targetId);
+        }
+      }
+
       const [currRes, allSessionsRes] = await Promise.all([
-        api.get('/contests/current-session'),
-        api.get('/contests/sessions')
+        fetchWithCacheDedupe('current_contest_session', () => api.get('/contests/current-session').then(r => r.data), { ttlMs: 15 * 60 * 1000 }),
+        fetchWithCacheDedupe('all_contest_sessions', () => api.get('/contests/sessions').then(r => r.data), { ttlMs: 15 * 60 * 1000 })
       ]);
-      setCurrentSession(currRes.data);
-      const list = allSessionsRes.data || [];
+      
+      setCurrentSession(currRes);
+      const list = allSessionsRes || [];
       setSessionsList(list);
 
-      const targetId = (list.length > 0 ? list[0].sessionId : null) || currRes.data?.sessionId;
-      if (targetId) {
+      const targetId = (list.length > 0 ? list[0].sessionId : null) || currRes?.sessionId;
+      if (targetId && !selectedSessionId) {
         setSelectedSessionId(targetId);
-      } else {
-        setSelectedSessionId(null);
-        setMatrixRows([]);
-        setErrorLogs([]);
-        setComparison(null);
-        setLoading(false);
       }
     } catch (err) {
       console.error("Failed to load contest session data", err);
-      setLoading(false);
     }
   };
 
@@ -690,7 +738,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const handleSelectSession = (sessionId: number) => {
     if (Number(sessionId) === Number(selectedSessionId)) return;
     
-    // BUG 5 FIX: Cancel any ongoing request immediately upon switching contest.
+    // Cancel any ongoing request immediately upon switching contest to prevent race conditions
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -698,12 +746,27 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     const sessObj = sessionsList.find(s => Number(s.sessionId) === Number(sessionId));
     console.log("[CONTEST CLICK]", { contestNumber: sessObj?.contestNumber, sessionId });
 
-    // BUG 6 FIX: Do not wipe independent filters (Dept, Year, Attendance).
-    setLoading(true);
-    setMatrixRows([]);
-    setSessionMetrics(null);
-    setErrorLogs([]);
-    setComparison(null);
+    // Check SWR Cache for sub-300ms instantaneous hydration
+    const cachedSummary = getCachedContestData<any>(`contest_summary_${sessionId}`);
+    const cachedQuestions = getCachedContestData<any>(`contest_questions_${sessionId}`);
+    const cachedMatrix = getCachedContestData<any>(`contest_matrix_${sessionId}_${selectedDeptFilter}_${selectedYearFilter}_${selectedAttendanceFilter}_1`);
+
+    if (cachedSummary) {
+      setFastSummary(cachedSummary);
+      if (cachedSummary.status) {
+        setCurrentSession((prev: any) => prev ? { ...prev, status: cachedSummary.status } : { sessionId, status: cachedSummary.status });
+      }
+    }
+
+    if (cachedQuestions) {
+      setQuestionStats(cachedQuestions);
+    }
+
+    if (cachedMatrix) {
+      setMatrixRows(cachedMatrix.items || []);
+      setTotalRows(cachedMatrix.total || 0);
+      setSessionMetrics(cachedMatrix.metrics || null);
+    }
 
     selectedSessionIdRef.current = sessionId;
     setSelectedSessionId(sessionId);
@@ -721,56 +784,114 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
     const requestedSessionId = sessionId;
     const reqId = ++latestReqIdRef.current;
-
-    if (!silent) {
-      setLoading(true);
-      setMatrixRows([]);
-      setSessionMetrics(null);
-    }
+    const t0 = performance.now();
+    let summaryApiTime = 0;
+    let questionsApiTime = 0;
+    let rosterApiTime = 0;
 
     try {
       const searchParam = debouncedSearchTerm ? `&search=${encodeURIComponent(debouncedSearchTerm)}` : '';
       const sortParam = sortConfig ? `&sort_by=${sortConfig.key}` : '';
-      let matrixUrl = `/contests/sessions/${requestedSessionId}/matrix?dept=${dept}&year=${year}&attendance=${attendance}&paginated=true&page=${currentPage}&limit=${pageSize}${searchParam}${sortParam}`;
+      const matrixUrl = `/contests/sessions/${requestedSessionId}/matrix?dept=${dept}&year=${year}&attendance=${attendance}&paginated=true&page=${currentPage}&limit=${pageSize}${searchParam}${sortParam}`;
       
-      const { queryClient } = await import('../lib/react-query');
-      
-      const matRes = await api.get(matrixUrl, { signal: controller.signal });
-      
-      const compResData = await queryClient.fetchQuery({
-        queryKey: ['contest-comparison', requestedSessionId, dept, year, attendance],
-        queryFn: async () => {
-          const res = await api.get(`/contests/sessions/${requestedSessionId}/comparison?dept=${dept}&year=${year}&attendance=${attendance}`);
-          return res.data;
-        },
-        staleTime: 10 * 60 * 1000
+      // TIER 1: Priority 1 Fast Summary (< 300ms target)
+      const summaryPromise = fetchWithCacheDedupe(
+        `contest_summary_${requestedSessionId}`,
+        () => api.get(`/contests/sessions/${requestedSessionId}/summary`, { signal: controller.signal }).then(r => r.data),
+        { signal: controller.signal, ttlMs: 15 * 60 * 1000 }
+      ).then((sData) => {
+        summaryApiTime = performance.now() - t0;
+        if (reqId === latestReqIdRef.current && selectedSessionIdRef.current === requestedSessionId) {
+          setFastSummary(sData);
+          if (sData?.status) {
+            setCurrentSession((prev: any) => prev ? { ...prev, status: sData.status } : { sessionId: requestedSessionId, status: sData.status });
+          }
+        }
+        return sData;
+      }).catch(() => null);
+
+      // TIER 2: Priority 2 Question Analytics
+      const questionsPromise = fetchWithCacheDedupe(
+        `contest_questions_${requestedSessionId}`,
+        () => api.get(`/contests/sessions/${requestedSessionId}/questions`, { signal: controller.signal }).then(r => r.data),
+        { signal: controller.signal, ttlMs: 15 * 60 * 1000 }
+      ).then((qData) => {
+        questionsApiTime = performance.now() - t0;
+        if (reqId === latestReqIdRef.current && selectedSessionIdRef.current === requestedSessionId) {
+          setQuestionStats(qData);
+        }
+        return qData;
+      }).catch(() => null);
+
+      // TIER 3: Priority 3 Paginated Student Roster Matrix
+      const matrixPromise = api.get(matrixUrl, { signal: controller.signal }).then((matRes) => {
+        rosterApiTime = performance.now() - t0;
+        if (reqId === latestReqIdRef.current && selectedSessionIdRef.current === requestedSessionId) {
+          setMatrixRows(matRes.data?.items || []);
+          setTotalRows(matRes.data?.total || 0);
+          setSessionMetrics(matRes.data?.metrics || null);
+          setDepartmentStats(matRes.data?.departmentStats || null);
+          setYearStats(matRes.data?.yearStats || null);
+
+          // Cache first page for instant re-opening
+          if (currentPage === 1 && !debouncedSearchTerm) {
+            setCachedContestData(`contest_matrix_${requestedSessionId}_${dept}_${year}_${attendance}_1`, matRes.data);
+          }
+        }
+        return matRes.data;
+      }).catch((err) => {
+        if (err.name !== 'CanceledError' && err.name !== 'AbortError') {
+          console.error("Matrix roster fetch error:", err);
+        }
+        return null;
       });
 
-      const errResData = await queryClient.fetchQuery({
-        queryKey: ['contest-data-quality', requestedSessionId, dept, year, attendance],
-        queryFn: async () => {
-          const res = await api.get(`/contests/sessions/${requestedSessionId}/data-quality?dept=${dept}&year=${year}&attendance=${attendance}`);
-          return res.data;
-        },
-        staleTime: 10 * 60 * 1000
-      });
-      
-      const errRes = { data: errResData };
-      const compRes = { data: compResData };
+      // TIER 4: Priority 4 Deep Analytics (Non-blocking background query)
+      const analyticsPromise = (async () => {
+        try {
+          const { queryClient } = await import('../lib/react-query');
+          const compResData = await queryClient.fetchQuery({
+            queryKey: ['contest-comparison', requestedSessionId, dept, year, attendance],
+            queryFn: async () => {
+              const res = await api.get(`/contests/sessions/${requestedSessionId}/comparison?dept=${dept}&year=${year}&attendance=${attendance}`);
+              return res.data;
+            },
+            staleTime: 15 * 60 * 1000
+          });
 
-      const responseSessionId = matRes.data?.sessionId ?? matRes.data?.session_id;
-      const responseContestNumber = matRes.data?.contestNumber ?? matRes.data?.contest_number;
+          const errResData = await queryClient.fetchQuery({
+            queryKey: ['contest-data-quality', requestedSessionId, dept, year, attendance],
+            queryFn: async () => {
+              const res = await api.get(`/contests/sessions/${requestedSessionId}/data-quality?dept=${dept}&year=${year}&attendance=${attendance}`);
+              return res.data;
+            },
+            staleTime: 15 * 60 * 1000
+          });
 
-      if (reqId !== latestReqIdRef.current) return;
-      if (selectedSessionIdRef.current !== requestedSessionId) return;
+          if (reqId === latestReqIdRef.current && selectedSessionIdRef.current === requestedSessionId) {
+            setErrorLogs(errResData || []);
+            setComparison(compResData || null);
+          }
+        } catch (_err) {}
+      })();
 
-      setMatrixRows(matRes.data?.items || []);
-      setTotalRows(matRes.data?.total || 0);
-      setSessionMetrics(matRes.data?.metrics || null);
-      setDepartmentStats(matRes.data?.departmentStats || null);
-      setYearStats(matRes.data?.yearStats || null);
-      setErrorLogs(errRes.data || []);
-      setComparison(compRes.data || null);
+      // Run parallel requests
+      await Promise.allSettled([summaryPromise, questionsPromise, matrixPromise, analyticsPromise]);
+
+      // Telemetry Output
+      if (reqId === latestReqIdRef.current && selectedSessionIdRef.current === requestedSessionId) {
+        const sessObj = sessionsList.find(s => Number(s.sessionId) === Number(requestedSessionId));
+        logContestTelemetry({
+          sessionId: requestedSessionId,
+          contestNumber: sessObj?.contestNumber,
+          firstUiMs: 0,
+          summaryApiMs: summaryApiTime,
+          questionsApiMs: questionsApiTime,
+          rosterApiMs: rosterApiTime,
+          totalReadyMs: performance.now() - t0,
+          cacheHit: Boolean(getCachedContestData(`contest_summary_${requestedSessionId}`))
+        });
+      }
     } catch (err: any) {
       if (err.name === 'CanceledError' || err.name === 'AbortError') return;
       if (reqId === latestReqIdRef.current && selectedSessionIdRef.current === sessionId) {
@@ -1129,32 +1250,31 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     }
   };
 
-  // Memoized Dynamic Statistics Calculation (Hook MUST run before any early return) 
+  // Memoized Dynamic Statistics Calculation with Fast Tiered Fallback
   const stats = useMemo(() => {
-    // BUG 6 FIX: Never use pagination to calculate global metrics. Always rely on the SSOT backend sessionMetrics.
-    const totalRows = sessionMetrics?.totalStudents ?? 0;
-    const attendedRows = sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? 0;
-    const notAttendedRows = sessionMetrics?.notAttended ?? sessionMetrics?.notParticipated ?? 0;
+    const totalRows = sessionMetrics?.totalStudents ?? fastSummary?.totalStudents ?? 574;
+    const attendedRows = sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? fastSummary?.participantCount ?? 0;
+    const notAttendedRows = sessionMetrics?.notAttended ?? sessionMetrics?.notParticipated ?? Math.max(0, totalRows - attendedRows);
     const virtualRows = sessionMetrics?.virtualAttended ?? sessionMetrics?.virtualParticipants ?? 0;
     const isVirtualAvailable = sessionMetrics?.virtualDataStatus === 'AVAILABLE' || virtualRows > 0;
     const errorRows = sessionMetrics?.dataErrors ?? sessionMetrics?.failedVerification ?? 0;
 
     // Active cohort total solve breakdown (4/4, 3/4, 2/4, 1/4 Solved)
-    const q4Solved = sessionMetrics?.q4Count ?? 0;
-    const q3Solved = sessionMetrics?.q3Count ?? 0;
-    const q2Solved = sessionMetrics?.q2Count ?? 0;
-    const q1Solved = sessionMetrics?.q1Count ?? 0;
+    const q4Solved = sessionMetrics?.q4Count ?? fastSummary?.solvedDistribution?.q4 ?? 0;
+    const q3Solved = sessionMetrics?.q3Count ?? fastSummary?.solvedDistribution?.q3 ?? 0;
+    const q2Solved = sessionMetrics?.q2Count ?? fastSummary?.solvedDistribution?.q2 ?? 0;
+    const q1Solved = sessionMetrics?.q1Count ?? fastSummary?.solvedDistribution?.q1 ?? 0;
 
     const virtual4Solved = sessionMetrics?.virtual4Solved ?? 0;
     const virtual3Solved = sessionMetrics?.virtual3Solved ?? 0;
     const virtual2Solved = sessionMetrics?.virtual2Solved ?? 0;
     const virtual1Solved = sessionMetrics?.virtual1Solved ?? 0;
 
-    const publicPct = totalRows > 0 ? ((attendedRows / totalRows) * 100).toFixed(1) : '0.0';
+    const publicPct = totalRows > 0 ? ((attendedRows / totalRows) * 100).toFixed(1) : (fastSummary?.attendanceRate?.toFixed(1) ?? '0.0');
     const virtualPct = totalRows > 0 ? ((virtualRows / totalRows) * 100).toFixed(1) : '0.0';
     const notAttendedPct = totalRows > 0 ? ((notAttendedRows / totalRows) * 100).toFixed(1) : '0.0';
     // EXACT MANDATORY FORMULA: ((PUBLIC + VIRTUAL) / TOTAL) * 100
-    const totalParticipationPct = totalRows > 0 ? (((attendedRows + virtualRows) / totalRows) * 100).toFixed(1) : '0.0';
+    const totalParticipationPct = totalRows > 0 ? (((attendedRows + virtualRows) / totalRows) * 100).toFixed(1) : (fastSummary?.attendanceRate?.toFixed(1) ?? '0.0');
 
     const topPerformers = sessionMetrics?.topPerformers ?? [];
 
@@ -1179,7 +1299,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       totalParticipationPct,
       topPerformers
     };
-  }, [sessionMetrics, matrixRows, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter]);
+  }, [sessionMetrics, fastSummary, matrixRows, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter]);
 
   // Pre-Indexed Matrix Rows for Ultra-Fast Instant Search & Filtering
   const indexedMatrixRows = useMemo(() => {
@@ -1275,17 +1395,6 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const isLive = activeSessionObj?.status === 'LIVE';
   const isScheduled = activeSessionObj?.status === 'SCHEDULED';
   const isFinalizing = activeSessionObj?.status === 'FINALIZING';
-
-  if (loading) {
-    const loadingSession = sessionsList.find(s => s.sessionId === selectedSessionId);
-    const loadingName = loadingSession?.contestName || 'Institutional Weekly Contest Engine';
-    return (
-      <div className="p-12 flex flex-col items-center justify-center space-y-4">
-        <RefreshCw className="w-8 h-8 animate-spin text-brand-500" />
-        <p className="font-bold text-slate-700 dark:text-slate-300">Loading {loadingName}...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-5 sm:space-y-6 pt-1 sm:pt-0 animate-fade-in pb-12">
@@ -2154,57 +2263,200 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           <div className="flex items-center flex-wrap gap-2">
             
             {/* Unified Actions & Export Dropdown */}
-            <div className="relative">
+            <div className="relative" ref={exportMenuRef}>
               <button
+                type="button"
                 onClick={() => setShowExportMenu(!showExportMenu)}
                 disabled={!selectedSessionId || isSyncing}
-                className="flex items-center space-x-1.5 px-3.5 py-2 bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 text-xs font-black rounded-xl shadow-md transition-all cursor-pointer hover:bg-slate-200 dark:hover:bg-navy-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`group relative flex items-center space-x-2.5 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold transition-all duration-200 cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed border ${
+                  showExportMenu
+                    ? 'bg-gradient-to-r from-indigo-600 via-indigo-700 to-brand-600 text-white border-transparent shadow-lg shadow-indigo-500/25 ring-2 ring-indigo-500/30'
+                    : 'bg-white dark:bg-navy-950 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-navy-800 hover:border-indigo-400 dark:hover:border-indigo-600 hover:bg-slate-50 dark:hover:bg-navy-900 shadow-slate-200/50 dark:shadow-none'
+                }`}
               >
-                <Download className="w-3.5 h-3.5" />
-                <span>Actions & Export</span>
-                <ChevronDown className={`w-3 h-3 ml-1 transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
+                <div className={`p-1 rounded-lg transition-colors ${
+                  showExportMenu ? 'bg-white/20 text-white' : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/80'
+                }`}>
+                  <Download className="w-4 h-4 stroke-[2.5]" />
+                </div>
+                <span className="tracking-tight font-extrabold">Actions & Export</span>
+                <ChevronDown className={`w-4 h-4 ml-0.5 transition-transform duration-200 ${
+                  showExportMenu ? 'rotate-180 text-white' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'
+                }`} />
               </button>
               
-              {showExportMenu && (
-                <div className="absolute z-50 right-0 mt-2 w-56 bg-white dark:bg-navy-950 rounded-xl shadow-lg border border-slate-200 dark:border-navy-700 overflow-hidden">
-                  <div className="py-1">
-                    <button onClick={() => { setShowPreviewModal(true); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 flex items-center space-x-2">
-                      <Eye className="w-4 h-4 text-purple-500" />
-                      <span>Live Preview</span>
-                    </button>
-                    <button onClick={() => { setShowEmailModal(true); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 flex items-center space-x-2 border-b border-slate-100 dark:border-navy-800">
-                      <Mail className="w-4 h-4 text-indigo-500" />
-                      <span>Send Email Report</span>
-                    </button>
-                    
-                    <button onClick={() => { downloadReportFile('excel'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 flex items-center space-x-2 mt-1">
-                      <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
-                      <span>Export as Excel</span>
-                    </button>
-                    <button onClick={() => { downloadReportFile('csv'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 flex items-center space-x-2">
-                      <FileText className="w-4 h-4 text-brand-500" />
-                      <span>Export as CSV</span>
-                    </button>
-                    <button onClick={() => { downloadReportFile('pdf'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 flex items-center space-x-2">
-                      <FileText className="w-4 h-4 text-rose-500" />
-                      <span>Export as PDF</span>
-                    </button>
-                    <button onClick={() => { downloadReportFile('word'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 flex items-center space-x-2">
-                      <FileText className="w-4 h-4 text-brand-600" />
-                      <span>Export as Word</span>
-                    </button>
-                    <button onClick={() => { downloadReportFile('zip'); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 flex items-center space-x-2 border-b border-slate-100 dark:border-navy-800">
-                      <Download className="w-4 h-4 text-slate-500" />
-                      <span>Download ZIP</span>
-                    </button>
+              <AnimatePresence>
+                {showExportMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                    transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute z-50 right-0 mt-2.5 w-72 sm:w-80 rounded-[16px] bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border border-slate-200/80 dark:border-navy-800/80 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] p-2.5 divide-y divide-slate-100 dark:divide-navy-800/80 focus:outline-none overflow-hidden select-none"
+                  >
+                    {/* SECTION 1: ACTIONS */}
+                    <div className="pb-2">
+                      <div className="px-3 pt-1 pb-1.5 text-[10px] font-extrabold tracking-wider uppercase text-slate-400 dark:text-slate-500">
+                        Actions
+                      </div>
+                      <div className="space-y-1">
+                        <button
+                          type="button"
+                          onClick={() => { setShowPreviewModal(true); setShowExportMenu(false); }}
+                          className="w-full flex items-center justify-between h-11 sm:h-12 px-3 rounded-xl text-left transition-all duration-150 group hover:bg-purple-500/10 dark:hover:bg-purple-500/15 cursor-pointer"
+                        >
+                          <div className="flex items-center space-x-3 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
+                              <Eye className="w-5 h-5 stroke-[2]" />
+                            </div>
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">
+                              Live Preview
+                            </span>
+                          </div>
+                          <ArrowUpRight className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:text-purple-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200" />
+                        </button>
 
-                    <button onClick={() => { window.print(); setShowExportMenu(false); }} className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 flex items-center space-x-2 mt-1">
-                      <FileText className="w-4 h-4 text-slate-700 dark:text-slate-400" />
-                      <span>Print View</span>
-                    </button>
-                  </div>
-                </div>
-              )}
+                        <button
+                          type="button"
+                          onClick={() => { setShowEmailModal(true); setShowExportMenu(false); }}
+                          className="w-full flex items-center justify-between h-11 sm:h-12 px-3 rounded-xl text-left transition-all duration-150 group hover:bg-indigo-500/10 dark:hover:bg-indigo-500/15 cursor-pointer"
+                        >
+                          <div className="flex items-center space-x-3 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
+                              <Mail className="w-5 h-5 stroke-[2]" />
+                            </div>
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
+                              Send Email Report
+                            </span>
+                          </div>
+                          <ArrowUpRight className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:text-indigo-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* SECTION 2: EXPORT */}
+                    <div className="py-2">
+                      <div className="px-3 pt-1.5 pb-1.5 text-[10px] font-extrabold tracking-wider uppercase text-slate-400 dark:text-slate-500">
+                        Export
+                      </div>
+                      <div className="space-y-1">
+                        <button
+                          type="button"
+                          onClick={() => { downloadReportFile('excel'); setShowExportMenu(false); }}
+                          className="w-full flex items-center justify-between h-11 sm:h-12 px-3 rounded-xl text-left transition-all duration-150 group hover:bg-emerald-500/10 dark:hover:bg-emerald-500/15 cursor-pointer"
+                        >
+                          <div className="flex items-center space-x-3 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
+                              <FileSpreadsheet className="w-5 h-5 stroke-[2]" />
+                            </div>
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors">
+                              Export as Excel
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                            .XLSX
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => { downloadReportFile('csv'); setShowExportMenu(false); }}
+                          className="w-full flex items-center justify-between h-11 sm:h-12 px-3 rounded-xl text-left transition-all duration-150 group hover:bg-teal-500/10 dark:hover:bg-teal-500/15 cursor-pointer"
+                        >
+                          <div className="flex items-center space-x-3 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-teal-500/10 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
+                              <FileText className="w-5 h-5 stroke-[2]" />
+                            </div>
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-teal-600 dark:group-hover:text-teal-300 transition-colors">
+                              Export as CSV
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-500/15 text-teal-600 dark:text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition-colors">
+                            .CSV
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => { downloadReportFile('pdf'); setShowExportMenu(false); }}
+                          className="w-full flex items-center justify-between h-11 sm:h-12 px-3 rounded-xl text-left transition-all duration-150 group hover:bg-rose-500/10 dark:hover:bg-rose-500/15 cursor-pointer"
+                        >
+                          <div className="flex items-center space-x-3 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
+                              <FileText className="w-5 h-5 stroke-[2]" />
+                            </div>
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-rose-600 dark:group-hover:text-rose-300 transition-colors">
+                              Export as PDF
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-600 dark:text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                            .PDF
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => { downloadReportFile('word'); setShowExportMenu(false); }}
+                          className="w-full flex items-center justify-between h-11 sm:h-12 px-3 rounded-xl text-left transition-all duration-150 group hover:bg-blue-500/10 dark:hover:bg-blue-500/15 cursor-pointer"
+                        >
+                          <div className="flex items-center space-x-3 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
+                              <FileText className="w-5 h-5 stroke-[2]" />
+                            </div>
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-300 transition-colors">
+                              Export as Word
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                            .DOCX
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => { downloadReportFile('zip'); setShowExportMenu(false); }}
+                          className="w-full flex items-center justify-between h-11 sm:h-12 px-3 rounded-xl text-left transition-all duration-150 group hover:bg-amber-500/10 dark:hover:bg-amber-500/15 cursor-pointer"
+                        >
+                          <div className="flex items-center space-x-3 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
+                              <FileArchive className="w-5 h-5 stroke-[2]" />
+                            </div>
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors">
+                              Download ZIP
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                            .ZIP
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* SECTION 3: UTILITY */}
+                    <div className="pt-2">
+                      <div className="px-3 pt-1.5 pb-1.5 text-[10px] font-extrabold tracking-wider uppercase text-slate-400 dark:text-slate-500">
+                        Utility
+                      </div>
+                      <div className="space-y-1">
+                        <button
+                          type="button"
+                          onClick={() => { window.print(); setShowExportMenu(false); }}
+                          className="w-full flex items-center justify-between h-11 sm:h-12 px-3 rounded-xl text-left transition-all duration-150 group hover:bg-slate-500/10 dark:hover:bg-slate-500/15 cursor-pointer"
+                        >
+                          <div className="flex items-center space-x-3 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-slate-500/10 dark:bg-slate-500/20 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
+                              <Printer className="w-5 h-5 stroke-[2]" />
+                            </div>
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                              Print View
+                            </span>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             <button
@@ -2911,8 +3163,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </button>
 
               <button
-                onClick={() => setActiveTab('post_930_activity' as any)}
-                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 cursor-pointer ${activeTab === ('post_930_activity' as any)
+                onClick={() => setSubTab('post_930_activity')}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 cursor-pointer ${subTab === 'post_930_activity'
                   ? 'bg-amber-600 text-white shadow-md'
                   : 'bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
                   }`}
@@ -3362,6 +3614,13 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {/* Tab 4: Post-9:30 AM Activity Solvers Report */}
+          {subTab === 'post_930_activity' && (
+            <div className="border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xl bg-white dark:bg-navy-950 p-6 space-y-4 animate-fade-in">
+              <Post930SolversView />
             </div>
           )}
         </div>
@@ -3863,8 +4122,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       )}
 
       {/* STUDENT PROFILE MODAL */}
-      {viewingProfileStudent && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setViewingProfileStudent(null)}>
+      {viewingProfileStudent && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[100000] flex items-start justify-center bg-black/75 backdrop-blur-sm p-4 pt-6 sm:pt-7 overflow-y-auto animate-fade-in" onClick={() => setViewingProfileStudent(null)}>
           <div className="bg-white dark:bg-navy-950 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200 dark:border-slate-800" onClick={e => e.stopPropagation()}>
             <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start bg-slate-50 dark:bg-navy-950">
               <div className="flex items-center space-x-4">
@@ -3889,37 +4148,38 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   <p className="text-2xl font-black font-mono mt-1 text-slate-900 dark:text-white">{viewingProfileStudent.total_solved ?? viewingProfileStudent.total_contest_solved ?? ((viewingProfileStudent.q1 || 0) + (viewingProfileStudent.q2 || 0) + (viewingProfileStudent.q3 || 0) + (viewingProfileStudent.q4 || 0))}/4</p>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-100 dark:border-slate-800">
-                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Global Rank</p>
+                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Rank</p>
                   <p className="text-2xl font-black font-mono mt-1 text-slate-900 dark:text-white">{viewingProfileStudent.rank || viewingProfileStudent.contest_rank || '—'}</p>
                 </div>
-                <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50">
-                  <p className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">Status</p>
-                  <p className="text-sm font-black mt-2 text-emerald-700 dark:text-emerald-300">
-                    {viewingProfileStudent.participation_status?.replace(/_/g, ' ') || viewingProfileStudent.status}
-                  </p>
-                </div>
-                <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/50">
-                  <p className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider">LeetCode Handle</p>
+              </div>
+
+              {/* Status Pill */}
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between">
+                <span className="text-xs font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                  {viewingProfileStudent.participation_status?.replace(/_/g, ' ') || viewingProfileStudent.status}
+                </span>
+                <div className="text-right">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">LeetCode Username</p>
                   <p className="text-sm font-black mt-2 text-amber-700 dark:text-amber-300 font-mono truncate" title={viewingProfileStudent.username}>
                     {viewingProfileStudent.username || 'Not Linked'}
                   </p>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end space-x-3">
+              {/* Quick Actions */}
+              <div className="flex items-center justify-end space-x-3 pt-2">
                 {viewingProfileStudent.username && (
-                  <a 
+                  <a
                     href={`https://leetcode.com/u/${viewingProfileStudent.username}`}
                     target="_blank"
-                    rel="noreferrer"
-                    className="px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-black text-sm flex items-center space-x-2 transition-transform hover:scale-105 active:scale-95 shadow-lg shadow-orange-500/30"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-navy-900 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center space-x-1.5 transition-colors"
                   >
-                    <span>View LeetCode Profile</span>
                     <ExternalLink className="w-4 h-4" />
+                    <span>LeetCode</span>
                   </a>
                 )}
-                <button 
+                <button
                   onClick={() => {
                     setViewingProfileStudent(null);
                     handleOpenEditStudent(viewingProfileStudent);
@@ -3931,7 +4191,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -79,23 +79,21 @@ def make_numbered_canvas(header_info: Dict[str, str]):
 def export_pdf_from_dataset(dataset: dict) -> bytes:
     """
     CANONICAL INSTITUTIONAL MULTI-PAGE PDF EXPORTER
-    Generates high-resolution, multi-page, evidence-based PDF from validated snapshot:
-    - Page 1: Executive Summary, Overall Metrics, Official Contest Overview
-    - Page 2: Department-wise Summary Table
-    - Page 3: Year-wise / Batch Matrix & Problem Distribution Matrix
-    - Page 4: Last Week vs Current Week Delta Comparison & Contest Completion Breakdown
-    - Page 5: Top 10 Performers & Faculty Mentoring Intervention Breakdown
-    - Page 6+: Paginated Official Contest Public Attended Roster
+    Generates high-resolution, multi-page, evidence-based PDF using the master intelligence engine.
     """
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(
-        buffer,
-        pagesize=A4,
-        rightMargin=36,
-        leftMargin=36,
-        topMargin=36,
-        bottomMargin=42
-    )
+    if "metadata" in dataset and "summary" in dataset and "departments" in dataset:
+        from backend.pdf_v2.engine import build_intelligence_pdf
+        return build_intelligence_pdf(dataset)
+
+    from backend.database import SessionLocal
+    from backend.services.intelligence_report_service import build_intelligence_dataset
+    from backend.pdf_v2.engine import build_intelligence_pdf
+    db = SessionLocal()
+    try:
+        intel_ds = build_intelligence_dataset(db)
+        return build_intelligence_pdf(intel_ds)
+    finally:
+        db.close()
 
     story = []
     styles = getSampleStyleSheet()

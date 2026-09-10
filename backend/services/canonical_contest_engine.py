@@ -25,33 +25,29 @@ def normalize_participation_status(raw_status: Optional[str], fetch_status: Opti
         return "AUTH_REQUIRED"
     if fetch_status in ("SOURCE_UNAVAILABLE", "NETWORK_ERROR", "TIMEOUT"):
         return "SOURCE_UNAVAILABLE"
-    if fetch_status in ("FETCH_ERROR", "FETCH_FAILED", "SERVER_ERROR"):
-        return "FETCH_ERROR"
 
-    if not raw_status:
-        return "PENDING"
-
-    st = str(raw_status).strip().upper()
+    st = str(raw_status).strip().upper() if raw_status else ""
     if st in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL"):
         return "PUBLIC"
     if st in ("VIRTUAL", "VIRTUAL_ATTENDED"):
         return "VIRTUAL"
     if st in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT"):
         return "NOT_ATTENDED"
-    if st in ("PENDING", "INITIALIZING", "DATA_PENDING"):
-        return "PENDING"
     if st in ("USERNAME_NOT_FOUND", "INVALID_USERNAME"):
         return "USERNAME_NOT_FOUND"
-    if st in ("SOURCE_UNAVAILABLE", "TIMEOUT"):
-        return "SOURCE_UNAVAILABLE"
-    if st in ("AUTH_REQUIRED",):
-        return "AUTH_REQUIRED"
+
+    if st in ("UNKNOWN", "PENDING", "INITIALIZING", "DATA_PENDING", ""):
+        # Default placeholder status for students who did not attend the contest
+        return "NOT_ATTENDED"
+
+    if fetch_status in ("FETCH_ERROR", "FETCH_FAILED", "SERVER_ERROR"):
+        return "FETCH_ERROR"
     if st in ("FETCH_ERROR", "FETCH_FAILED", "DATA_ERROR"):
         return "FETCH_ERROR"
     if st in ("DATA_MISMATCH",):
         return "DATA_MISMATCH"
 
-    return "PENDING"
+    return "NOT_ATTENDED"
 
 
 def invalidate_canonical_cache(session_id: Optional[int] = None):

@@ -52,11 +52,17 @@ export const QuestionAnalyticsPanel: React.FC<QuestionAnalyticsPanelProps> = ({
 
   useEffect(() => {
     if (!sessionId) return;
-    setLoading(true);
-    api.get(`/contests/sessions/${sessionId}/question-analytics`)
-      .then(res => setData(res.data))
-      .catch(() => setData(null))
-      .finally(() => setLoading(false));
+    setLoading(!data);
+    import('../../services/contestCache').then(({ fetchWithCacheDedupe }) => {
+      fetchWithCacheDedupe(
+        `contest_questions_${sessionId}`,
+        () => api.get(`/contests/sessions/${sessionId}/question-analytics`).then(res => res.data),
+        { ttlMs: 15 * 60 * 1000 }
+      )
+        .then(resData => setData(resData))
+        .catch(() => setData(null))
+        .finally(() => setLoading(false));
+    });
   }, [sessionId]);
 
   // Build questions array — prefer DB data, supplement with live telemetry

@@ -150,22 +150,32 @@ def calculate_student_risk_engine(db: Session, student: Student, override_weight
     risk_score = round( (output_risk * w1) + (activity_risk * w2) + (contest_risk * w3), 1 )
     risk_score = min(100.0, max(0.0, risk_score))
 
-    # 5. DETERMINE RISK LEVEL
-    if risk_score >= 75.0:
-        risk_level = "CRITICAL"
-        explanation = f"Student is experiencing severe coding disengagement with low problem output ({total_solved} solved) and zero weekly momentum."
-        action = "Schedule immediate 1-on-1 mentor review, assign 5 mandatory Easy/Medium DSA foundation problems, and track daily progress."
-    elif risk_score >= 50.0:
-        risk_level = "HIGH"
-        explanation = f"Significant drop in problem-solving velocity ({weekly_solved[0]} solved this week) and weak contest participation."
+    # 5. DETERMINE NUANCED RISK STATUS
+    # Statuses: EXCELLENT, IMPROVING, STABLE, WATCH, AT_RISK, INACTIVE, DATA_REVIEW_REQUIRED
+    
+    if total_solved == 0:
+        risk_level = "INACTIVE"
+        explanation = "Student has zero recorded problems solved on the platform."
+        action = "Schedule onboarding session to set up LeetCode profile and assign introductory problem set."
+    elif is_silent_disengaged or (weekly_solved[0] == 0 and weekly_solved[1] == 0 and total_solved < 50):
+        risk_level = "AT_RISK"
+        explanation = f"High engagement drop detected ({drop_pct}% activity decrease) with zero momentum over the past 2 weeks."
+        action = "Schedule immediate 1-on-1 mentor review, assign 5 mandatory Easy/Medium DSA foundation problems."
+    elif total_solved < 30 or (avg_velocity < 1.0 and total_solved < 100):
+        risk_level = "WATCH"
+        explanation = f"Low problem velocity ({avg_velocity:.1f} problems/week) below institutional target."
         action = "Assign targeted topic practice set (Arrays/Strings) and issue mandatory Sunday contest participation notice."
-    elif risk_score >= 25.0:
-        risk_level = "MODERATE"
-        explanation = "Moderate practice activity but requires acceleration towards Medium-level problem solving and contest participation."
-        action = "Encourage solving 3 Medium problems weekly and joining peer study group."
+    elif weekly_solved[0] > 0 and (weekly_solved[0] >= 5 or recent_rating_change > 0):
+        risk_level = "IMPROVING"
+        explanation = f"Positive problem solving velocity ({weekly_solved[0]} solved this week) with active engagement."
+        action = "Encourage continued practice on Medium difficulty problems and contest participation."
+    elif total_solved >= 250 or (total_solved >= 100 and (stats.contest_rating or 0) >= 1500):
+        risk_level = "EXCELLENT"
+        explanation = f"High problem volume ({total_solved:,} total solved) with strong consistency and contest rating."
+        action = "Nominate for advanced competitive programming cohort and technical placement fast-track."
     else:
-        risk_level = "LOW"
-        explanation = f"Student demonstrates consistent problem-solving activity ({total_solved} total solved, {weekly_solved[0]} this week) and healthy velocity."
+        risk_level = "STABLE"
+        explanation = f"Student maintains regular practice ({total_solved} total solved) with consistent baseline activity."
         action = "Maintain regular practice schedule and encourage attempt on Hard-level problems and Weekly Contests."
 
     confidence_pct = round(82.0 + min(16.0, len(weekly_solved) * 4.0), 1)

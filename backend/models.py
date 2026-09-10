@@ -2991,3 +2991,88 @@ class NLCIExportAudit(Base):
     row_count = Column(Integer)
     generated_at = Column(String(50))
 
+
+class WeeklyPipelineStatus(Base):
+    """
+    Tracks state machine and observability logs for Friday Weekly Intelligence Automation Pipeline.
+    Statuses:
+      - WAITING_FOR_OFFICIAL_RESULT
+      - SYNCING
+      - SNAPSHOT_CREATING
+      - ANALYZING
+      - GENERATING_EXCEL
+      - GENERATING_PDF
+      - VALIDATING
+      - FINAL
+      - FAILED
+      - DATA_REVIEW_REQUIRED
+    """
+    __tablename__ = "weekly_pipeline_status"
+    __table_args__ = (
+        Index("ix_weekly_pipeline_period", "period_id"),
+        Index("ix_weekly_pipeline_status", "status"),
+        {"extend_existing": True},
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    period_id = Column(String(50), nullable=False, unique=True, index=True)  # e.g. "W518" or "WEEK-2026-09-06"
+    contest_id = Column(String(100), nullable=True)  # e.g. "weekly-contest-518"
+    contest_number = Column(Integer, nullable=True)  # 518
+    contest_name = Column(String(150), nullable=True)  # "Weekly Contest 518"
+    status = Column(String(50), default="WAITING_FOR_OFFICIAL_RESULT", nullable=False, index=True)
+    stage = Column(String(50), nullable=True)
+    retry_count = Column(Integer, default=0)
+    last_checked_at = Column(DateTime, default=datetime.datetime.utcnow)
+    finalized_at = Column(DateTime, nullable=True)
+    student_count = Column(Integer, nullable=True)
+    participant_count = Column(Integer, nullable=True)
+    pdf_status = Column(String(30), default="PENDING")
+    excel_status = Column(String(30), default="PENDING")
+    pdf_cache_id = Column(Integer, nullable=True)
+    excel_cache_id = Column(Integer, nullable=True)
+    validation_status = Column(String(30), default="PENDING")
+    validation_errors = Column(JSON, nullable=True)
+    audit_trail = Column(JSON, nullable=True)
+    error_message = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+class StaffVerification(Base):
+    """
+    Tracks staff institutional identity verification requests and approval status.
+    Supports Employee ID, Official Email, Department, Designation, Reports To (manager),
+    and secure document storage key/hash.
+    Statuses: PENDING, UNDER_REVIEW, VERIFIED, REJECTED, EXPIRED.
+    """
+    __tablename__ = "staff_verifications"
+    __table_args__ = (
+        Index("ix_staff_verif_user", "user_id"),
+        Index("ix_staff_verif_emp_id", "employee_id"),
+        Index("ix_staff_verif_status", "verification_status"),
+        {"extend_existing": True},
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    employee_id = Column(String(100), nullable=False, index=True)
+    official_email = Column(String(150), nullable=False, index=True)
+    department_id = Column(Integer, ForeignKey("departments.id"), nullable=False, index=True)
+    designation = Column(String(100), nullable=False)
+    reporting_to_user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+
+    document_storage_key = Column(String(500), nullable=True)
+    document_original_name = Column(String(255), nullable=True)
+    document_hash = Column(String(64), nullable=True)
+
+    verification_status = Column(String(30), default="PENDING", index=True, nullable=False)  # PENDING, UNDER_REVIEW, VERIFIED, REJECTED, EXPIRED
+    verified_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    verified_at = Column(DateTime, nullable=True)
+    rejection_reason = Column(Text, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    user = relationship("User", foreign_keys=[user_id], backref="staff_verifications")
+    department = relationship("Department")
+    reporting_to_user = relationship("User", foreign_keys=[reporting_to_user_id])
+    reviewer = relationship("User", foreign_keys=[verified_by])

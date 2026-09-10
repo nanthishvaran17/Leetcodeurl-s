@@ -44,13 +44,7 @@ def notify_staff_created(staff_email: str, staff_name: str, role: str, username:
         For security, your password is not included in this email.
     </div>
     
-    <p style="margin-top: 15px;">If you did not expect this account, please contact the system administrator.</p>
-    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"/>
-    <p style="font-size: 11px; color: #666; line-height: 1.4;">
-        Nandha Engineering College (Autonomous)<br/>
-        LeetCode Intelligence System<br/><br/>
-        This is an automated notification. Please do not reply directly to this email.
-    </p>
+    <p style="margin-top: 15px; color: #334155; font-size: 14px;">If you did not expect this account, please contact the system administrator.</p>
     """
 
     action_button = f'<a href="{setup_url}" class="btn" target="_blank">Set Up My Account</a>'
@@ -357,15 +351,7 @@ def notify_admin_staff_created(admin_email: str, staff_data: dict, admin_data: d
         <h4 style="margin:0 0 8px 0; color:#be123c; font-size:13px; text-transform:uppercase;">Security Notice</h4>
         <p style="margin:0; font-size:13px; color:#9f1239; line-height:1.5;">For security reasons, passwords, OTPs, authentication tokens, API keys, and other confidential credentials must never be included in this email. If any account information is incorrect, the Administrator can review and update the account from the administration panel.</p>
     </div>
-    
     {audit_html}
-    
-    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 32px 0;"/>
-    <div style="text-align:center;">
-        <p style="margin:0 0 8px 0; font-size: 12px; color: #64748b; font-weight:600;">Nandha Engineering College &bull; LeetCode Intelligence System</p>
-        <p style="margin:0 0 16px 0; font-size: 11px; color: #94a3b8;">Student Performance &bull; Contest Intelligence &bull; Analytics &bull; Reports</p>
-        <p style="margin:0; font-size: 10px; color: #cbd5e1;">This is an automated system-generated email. Please do not reply to this message.<br/>&copy; {datetime.datetime.now().year} Nandha Engineering College. All rights reserved.</p>
-    </div>
     """
     
     portal_url = f"{settings.FRONTEND_ORIGIN}/settings"

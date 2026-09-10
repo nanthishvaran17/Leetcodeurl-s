@@ -30,6 +30,14 @@ except Exception:
 from backend.services.live_sync_service import start_full_sync_job
 from backend.logger import logger
 
+try:
+    from backend.services.friday_weekly_pipeline import run_friday_weekly_pipeline
+    FRIDAY_PIPELINE_AVAILABLE = True
+except Exception as _friday_import_err:
+    FRIDAY_PIPELINE_AVAILABLE = False
+    run_friday_weekly_pipeline = None
+    logger.warning(f"[SCHEDULER] friday_weekly_pipeline import failed: {_friday_import_err}")
+
 
 from backend.services.sunday_autopilot import sunday_autopilot
 from backend.services.live_dashboard_tracker import live_dashboard_tracker
@@ -572,6 +580,105 @@ async def submission_sweep_job():
         logger.error(f"[SCHEDULER] Error in submission_sweep_job: {e}", exc_info=True)
 
 
+@with_global_lock('friday_weekly_window_polling_job', timeout_minutes=30)
+async def friday_weekly_window_polling_job():
+    """
+    Friday Reporting Window (18:00 to 23:30 IST, every 30 mins):
+    Monitors official LeetCode contest result publication.
+    - If status is already FINAL with valid cached reports: cleanly skips.
+    - If status is WAITING_FOR_OFFICIAL_RESULT: logs and retries next window.
+    - Once FINALIZED: automatically syncs, creates snapshot, builds intelligence dataset,
+      generates Excel & PDF, cross-validates, and sets status to FINAL.
+    """
+    logger.info("[SCHEDULER] Friday Window Polling Tick: Checking contest finalization...")
+    if not FRIDAY_PIPELINE_AVAILABLE:
+        logger.error("[SCHEDULER] friday_weekly_pipeline not available.")
+        return
+    db = SessionLocal()
+    try:
+        result = run_friday_weekly_pipeline(db=db, force=False)
+        report_status = result.get("report_status", "UNKNOWN")
+        period = result.get("period_id", "UNKNOWN")
+        logger.info(f"[SCHEDULER] Friday Window Polling Tick: status={report_status}, period={period}")
+    except Exception as e:
+        logger.error(f"[SCHEDULER] Friday Window Polling Tick error: {e}", exc_info=True)
+    finally:
+        db.close()
+
+
+@with_global_lock('friday_weekly_report_job', timeout_minutes=60)
+async def friday_weekly_report_job():
+    """
+    Scheduled for every Friday at 23:30 IST.
+    Runs the full 12-stage Friday Weekly LeetCode Intelligence Pipeline:
+      DISCOVER -> GATE -> SYNC -> SNAPSHOT -> INTEL -> EXCEL -> PDF -> QA -> CACHE -> STATUS -> AUDIT -> NOTIFY
+    No hardcoded contest numbers. Idempotent.
+    """
+    logger.info("[SCHEDULER] Friday 23:30 IST: Friday Weekly Intelligence Pipeline STARTING...")
+    if not FRIDAY_PIPELINE_AVAILABLE:
+        logger.error("[SCHEDULER] friday_weekly_pipeline not available. Check import errors.")
+        return
+    db = SessionLocal()
+    try:
+        result = run_friday_weekly_pipeline(db=db, force=False)
+        success = result.get("success", False)
+        period = result.get("period_id", "UNKNOWN")
+        contest = result.get("contest_label", "UNKNOWN")
+        if success:
+            logger.info(
+                f"[SCHEDULER] Friday Pipeline COMPLETE: period={period}, contest={contest}, "
+                f"excel={result.get('stages', {}).get('qa', {}).get('excel', {}).get('ok')}, "
+                f"pdf={result.get('stages', {}).get('qa', {}).get('pdf', {}).get('ok')}"
+            )
+        else:
+            logger.error(
+                f"[SCHEDULER] Friday Pipeline FAILED: period={period}, error={result.get('error', 'Unknown')}"
+            )
+    except Exception as e:
+        logger.error(f"[SCHEDULER] friday_weekly_report_job unhandled error: {e}", exc_info=True)
+    finally:
+        db.close()
+
+
+@with_global_lock('friday_weekly_retry_job', timeout_minutes=60)
+async def friday_weekly_retry_job():
+    """
+    Scheduled for every Saturday at 02:00 IST.
+    Safety retry of the Friday pipeline in case the 23:30 run failed or was interrupted.
+    Idempotent: re-uses same period_id, overwrites existing STALE cache entries.
+    """
+    logger.info("[SCHEDULER] Saturday 02:00 IST: Friday Pipeline Safety Retry STARTING...")
+    if not FRIDAY_PIPELINE_AVAILABLE:
+        logger.warning("[SCHEDULER] friday_weekly_pipeline unavailable — retry skipped.")
+        return
+    db = SessionLocal()
+    try:
+        from backend.models import ReportCache
+        import datetime
+        today = datetime.date.today()
+        # Check if a READY WEEKLY_INTELLIGENCE cache already exists for today's data_version
+        data_version = today.isoformat()
+        existing_ready = db.query(ReportCache).filter(
+            ReportCache.report_type == "WEEKLY_INTELLIGENCE",
+            ReportCache.status == "READY",
+            ReportCache.data_version == data_version,
+        ).first()
+        if existing_ready:
+            logger.info(
+                f"[SCHEDULER] Saturday retry: READY report already exists for data_version={data_version}, "
+                f"cache_id={existing_ready.id}. Skipping re-generation."
+            )
+            return
+        # No READY report for today — run the pipeline
+        logger.info(f"[SCHEDULER] Saturday retry: No READY report for {data_version}. Running pipeline...")
+        result = run_friday_weekly_pipeline(db=db)
+        logger.info(f"[SCHEDULER] Saturday retry result: success={result.get('success')}, period={result.get('period_id')}")
+    except Exception as e:
+        logger.error(f"[SCHEDULER] friday_weekly_retry_job error: {e}", exc_info=True)
+    finally:
+        db.close()
+
+
 def start_scheduler():
     """
     Starts the APScheduler cron jobs under Asia/Kolkata IST timezone.
@@ -811,14 +918,50 @@ def start_scheduler():
         replace_existing=True
     )
 
+    # ── FRIDAY WEEKLY INTELLIGENCE PIPELINE ─────────────────────────────────────
+    # Friday Window Polling: Every 30 mins from 18:00 to 23:30 IST on Fridays
+    scheduler.add_job(
+        friday_weekly_window_polling_job,
+        CronTrigger(day_of_week='fri', hour='18-23', minute='0,30', timezone=IST),
+        id='friday_weekly_window_polling',
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=1800
+    )
+    # Primary Lock & Publication: Every Friday at 23:30 IST
+    scheduler.add_job(
+        friday_weekly_report_job,
+        CronTrigger(day_of_week='fri', hour=23, minute=30, timezone=IST),
+        id='friday_weekly_intelligence_2330',
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=3600
+    )
+    # Safety Retry: Every Saturday at 02:00 IST — skips if Friday run succeeded
+    scheduler.add_job(
+        friday_weekly_retry_job,
+        CronTrigger(day_of_week='sat', hour=2, minute=0, timezone=IST),
+        id='friday_weekly_intelligence_retry_0200',
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=7200
+    )
+
     scheduler.start()
     logger.info(
         "APScheduler started [Asia/Kolkata]: "
         "Sun 8:00 AM Start, 9:30 AM End, 9:45 AM Public Report, "
         "10:00 AM Sunday Report + TRACKER Dual-Sync Morning, "
         "10:00 PM Virtual Final + TRACKER Dual-Sync Evening, "
+        "Fri 18:00-23:30 (30m) Friday Result Window Polling, "
+        "Fri 23:30 Friday Weekly Intelligence Pipeline, "
+        "Sat 02:00 Friday Pipeline Safety Retry, "
         "5m Discovery, 1h Verification, 2am Rating Updater registered."
     )
+
 
 
 

@@ -432,12 +432,22 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
+
   if (!isOpen || !student) return null;
   if (typeof document === 'undefined') return null;
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9999999] flex items-center justify-center p-0 sm:p-4 md:p-6 bg-slate-950/85 backdrop-blur-md modal-overlay-responsive"
+      className="fixed inset-0 z-[9999999] flex items-start justify-center p-4 pt-6 sm:pt-7 overflow-y-auto bg-slate-950/85 backdrop-blur-md modal-overlay-responsive"
       onClick={(e) => { if (e.target === e.currentTarget && !isSaving) handleAttemptClose(); }}
     >
       <div
@@ -572,7 +582,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                     ];
                     return {
                       value: String(d.id),
-                      label: d.code ? `${d.code} - ${d.name}` : d.name,
+                      label: d.name,
                       badge: d.code || 'DEPT',
                       badgeColor: badgeColors[index % badgeColors.length],
                       icon: Building2

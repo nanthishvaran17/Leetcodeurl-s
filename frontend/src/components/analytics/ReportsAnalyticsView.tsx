@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import api from '../../services/api';
 import { FileText, Download, Loader2, CheckCircle2, AlertCircle, FileSpreadsheet } from 'lucide-react';
 
+import { downloadManager } from '../../services/download/downloadManager';
+
 interface ReportsAnalyticsProps {
   studentId?: number;
   deptId?: number | null;
@@ -33,9 +35,23 @@ export const ReportsAnalyticsView: React.FC<ReportsAnalyticsProps> = ({
       
       if (res.data.status === 'READY' && res.data.download_url) {
         setSuccess('Report is ready! Downloading...');
-        window.location.href = res.data.download_url;
+        const dlUrl = res.data.download_url;
+        const ext = format === 'xlsx' ? 'xlsx' : 'pdf';
+        const filename = `${reportType}_report.${ext}`;
+
+        const dlRes = await downloadManager.download({
+          endpoint: dlUrl,
+          filename,
+        });
+
+        if (dlRes.success) {
+          setSuccess('Report downloaded successfully!');
+        } else {
+          setError(dlRes.error || 'Failed to download report file.');
+          setSuccess(null);
+        }
       } else {
-        setSuccess('Report generation started. This may take a few minutes for large datasets. Please check back later.');
+        setSuccess('Report generation started. This may take a few moments. Please try again in a short while.');
       }
     } catch (err: any) {
       setError(err.response?.data?.detail || "Failed to generate report. Please try again.");

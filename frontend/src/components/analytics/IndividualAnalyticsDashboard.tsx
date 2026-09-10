@@ -53,42 +53,39 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
 
   const activityData = useMemo(() => {
     if (!trendData.length) return [];
-    return trendData.map((d: any, i: number, arr: any[]) => {
+    const sorted = [...trendData].sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    return sorted.map((d: any, i: number, arr: any[]) => {
       if (i === 0) return { date: d.date, submissions: 0 };
-      const diff = d.total_solved - arr[i - 1].total_solved;
-      return { date: d.date, submissions: diff > 0 ? diff : 0 };
+      const diff = (d.total_solved || 0) - (arr[i - 1].total_solved || 0);
+      return { date: d.date, submissions: Math.max(0, diff) };
     });
   }, [trendData]);
 
   const weekComparison = useMemo(() => {
-    if (trendData.length < 2) return null;
+    if (!trendData || trendData.length === 0) return null;
     
-    // Simple heuristic: get total solved now, 7 days ago, and 14 days ago from the trend array
-    // Since we don't have guaranteed daily snapshots, we estimate by taking the last snapshot,
-    // the snapshot roughly 7 items back, etc. A real implementation would parse dates.
-    const sorted = [...trendData].reverse(); // newest first
-    const now = sorted[0]?.total_solved || 0;
+    const sorted = [...trendData].sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const nowTotal = data?.current_stats?.total_solved ?? sorted[sorted.length - 1]?.total_solved ?? 0;
+    const latestTime = new Date(sorted[sorted.length - 1].date).getTime();
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
     
-    // Find item ~7 days ago
-    const nowTime = new Date(sorted[0].date).getTime();
-    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+    let sevenDaysAgoItem = [...sorted].reverse().find((d: any) => new Date(d.date).getTime() <= latestTime - sevenDaysMs);
+    let fourteenDaysAgoItem = [...sorted].reverse().find((d: any) => new Date(d.date).getTime() <= latestTime - (sevenDaysMs * 2));
     
-    let sevenDaysAgoItem = sorted.find((d: any) => new Date(d.date).getTime() <= nowTime - sevenDays);
-    let fourteenDaysAgoItem = sorted.find((d: any) => new Date(d.date).getTime() <= nowTime - (sevenDays * 2));
+    const sevenDaysAgo = sevenDaysAgoItem ? sevenDaysAgoItem.total_solved : sorted[0].total_solved;
+    const fourteenDaysAgo = fourteenDaysAgoItem ? fourteenDaysAgoItem.total_solved : (sevenDaysAgoItem ? sevenDaysAgoItem.total_solved : sorted[0].total_solved);
     
-    if (!sevenDaysAgoItem) return null; // Not enough history
-    
-    const sevenDaysAgo = sevenDaysAgoItem.total_solved;
-    const fourteenDaysAgo = fourteenDaysAgoItem ? fourteenDaysAgoItem.total_solved : sevenDaysAgoItem.total_solved;
-    
-    const thisWeek = now - sevenDaysAgo;
-    const lastWeek = sevenDaysAgo - fourteenDaysAgo;
+    const rawThisWeek = nowTotal - sevenDaysAgo;
+    const rawLastWeek = sevenDaysAgo - fourteenDaysAgo;
+
+    const thisWeek = Math.max(0, rawThisWeek);
+    const lastWeek = Math.max(0, rawLastWeek);
     
     let diff = thisWeek - lastWeek;
     let percent = lastWeek === 0 ? (thisWeek > 0 ? 100 : 0) : (diff / lastWeek) * 100;
     
     return { thisWeek, lastWeek, diff, percent };
-  }, [trendData]);
+  }, [trendData, data]);
 
   const EmptyState = ({ message = "No historical data available for this period." }) => (
     <div className="w-full flex items-center justify-center bg-slate-50 dark:bg-navy-900 rounded-xl border border-slate-100 dark:border-navy-700 h-[300px]">
@@ -106,7 +103,7 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
 
   return (
     <div className="space-y-6 animate-fade-in mt-6">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white dark:bg-navy-950 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm sticky top-0 z-10">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white dark:bg-navy-950 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm">
         <div>
           <h2 className="text-lg font-display font-bold text-slate-900 dark:text-white">Performance Analytics</h2>
           <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Comprehensive historical data view</p>
@@ -252,10 +249,34 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
               ) : <EmptyState />}
             </div>
 
-            {/* 6. Acceptance Rate Trend */}
+            {/* 6. Acceptance Rate & Problem Distribution */}
             <div className="bg-white dark:bg-navy-950 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col">
-              <h3 className="font-bold text-slate-800 dark:text-white mb-4">Acceptance Rate Trend</h3>
-              <EmptyState message="No historical data available. Acceptance rate tracking is not currently supported." />
+              <h3 className="font-bold text-slate-800 dark:text-white mb-4">Acceptance Rate & Overview</h3>
+              {data?.current_stats?.total_submissions > 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-navy-900 rounded-xl space-y-3">
+                  <div className="text-4xl font-black text-brand-600 dark:text-brand-400">
+                    {data.current_stats.acceptance_rate}%
+                  </div>
+                  <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Overall Acceptance Rate
+                  </div>
+                  <div className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                    Based on {data.current_stats.total_submissions.toLocaleString()} total submissions
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-navy-900 rounded-xl border border-slate-100 dark:border-navy-800 text-center space-y-3">
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Live Profile Performance</span>
+                  <div className="text-3xl font-black text-slate-900 dark:text-white">
+                    {(data?.current_stats?.total_solved ?? 0).toLocaleString()} <span className="text-xs font-bold text-slate-400">Solved</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs font-bold pt-1">
+                    <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Easy: {data?.current_stats?.easy ?? 0}</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">Medium: {data?.current_stats?.medium ?? 0}</span>
+                    <span className="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">Hard: {data?.current_stats?.hard ?? 0}</span>
+                  </div>
+                </div>
+              )}
             </div>
 
           </div>

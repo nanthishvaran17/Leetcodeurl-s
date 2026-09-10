@@ -265,16 +265,66 @@ def get_individual_analytics(
         StudentContestSnapshot.captured_at <= end_dt
     ).order_by(StudentContestSnapshot.captured_at.asc()).all()
     
+    profile_stats = student.stats
+    current_solved = profile_stats.total_solved if profile_stats else 0
+    current_easy = profile_stats.easy_solved if profile_stats else 0
+    current_medium = profile_stats.medium_solved if profile_stats else 0
+    current_hard = profile_stats.hard_solved if profile_stats else 0
+    current_rating = profile_stats.contest_rating if profile_stats else 1500.0
+
     trend_data = []
     for snap in snapshots:
         trend_data.append({
             "date": snap.captured_at.strftime("%Y-%m-%d"),
-            "rating": snap.contest_rating,
-            "total_solved": snap.total_solved,
-            "easy": snap.easy_solved,
-            "medium": snap.medium_solved,
-            "hard": snap.hard_solved
+            "rating": snap.contest_rating or current_rating,
+            "total_solved": min(snap.total_solved or 0, current_solved) if current_solved > 0 else (snap.total_solved or 0),
+            "easy": snap.easy_solved or 0,
+            "medium": snap.medium_solved or 0,
+            "hard": snap.hard_solved or 0
         })
+
+    # If no snapshots or single snapshot, populate baseline timeline from live profile_stats
+    if not trend_data and profile_stats:
+        today_str = datetime.datetime.now().strftime("%Y-%m-%d")
+        start_str = start_dt.strftime("%Y-%m-%d")
+        trend_data = [
+            {
+                "date": start_str,
+                "rating": current_rating,
+                "total_solved": current_solved,
+                "easy": current_easy,
+                "medium": current_medium,
+                "hard": current_hard
+            },
+            {
+                "date": today_str,
+                "rating": current_rating,
+                "total_solved": current_solved,
+                "easy": current_easy,
+                "medium": current_medium,
+                "hard": current_hard
+            }
+        ]
+    elif len(trend_data) == 1 and profile_stats:
+        today_str = datetime.datetime.now().strftime("%Y-%m-%d")
+        if trend_data[0]["date"] != today_str:
+            trend_data.append({
+                "date": today_str,
+                "rating": current_rating,
+                "total_solved": current_solved,
+                "easy": current_easy,
+                "medium": current_medium,
+                "hard": current_hard
+            })
+
+    # Ensure final point aligns with current stats
+    if trend_data and profile_stats:
+        last_pt = trend_data[-1]
+        if last_pt["total_solved"] < current_solved:
+            last_pt["total_solved"] = current_solved
+            last_pt["easy"] = current_easy
+            last_pt["medium"] = current_medium
+            last_pt["hard"] = current_hard
         
     contest_data = []
     for c in contests:
@@ -285,13 +335,21 @@ def get_individual_analytics(
             "rank": c.contest_rank,
             "solved": c.questions_solved
         })
+
+    total_submissions = getattr(profile_stats, "total_submissions", 0) if profile_stats else 0
+    acceptance_rate = round((current_solved / total_submissions) * 100, 1) if total_submissions > 0 else 0
         
     return {
         "trend_data": trend_data,
         "contest_data": contest_data,
         "current_stats": {
-            "total_solved": student.stats.total_solved if student.stats else 0,
-            "rating": student.stats.contest_rating if student.stats else 0
+            "total_solved": current_solved,
+            "easy": current_easy,
+            "medium": current_medium,
+            "hard": current_hard,
+            "rating": current_rating,
+            "total_submissions": total_submissions,
+            "acceptance_rate": acceptance_rate
         }
     }
 
@@ -367,38 +425,103 @@ def get_department_comparison(
             "top_performer": top_performer
         })
     return res
+from sqlalchemy.orm import Session, joinedload
 
 @router.get("/data-quality")
 def get_data_quality(force_refresh: bool = False, db: Session = Depends(get_db)):
-    students = db.query(Student).filter(Student.is_active == True).all()
+    students = (
+        db.query(Student)
+        .options(joinedload(Student.department), joinedload(Student.stats))
+        .filter(Student.is_active == True)
+        .order_by(Student.name.asc())
+        .all()
+    )
     total = len(students)
     if total == 0:
-        return {"health_score_percentage": 100, "valid_profiles": 0, "issues_count": 0, "issues_list": []}
+        return {
+            "health_score_percentage": 100,
+            "valid_profiles": 0,
+            "total_students": 0,
+            "missing_links": 0,
+            "profile_not_found": 0,
+            "network_errors": 0,
+            "invalid_urls": 0,
+            "issues_count": 0,
+            "issues_list": [],
+            "source_status": "AVAILABLE"
+        }
         
-    issues = []
-    valid = 0
+    issues_list = []
+    valid_count = 0
+    missing_links_count = 0
+    profile_not_found_count = 0
+    network_errors_count = 0
+    invalid_urls_count = 0
+
     for s in students:
-        s_issues = []
-        if not s.leetcode_url:
-            s_issues.append(f"{s.reg_no or s.name}: Missing LeetCode URL")
-        elif "/u/" not in s.leetcode_url and "leetcode.com" in s.leetcode_url:
-            s_issues.append(f"{s.reg_no or s.name}: Invalid URL format")
-            
-        if not s.reg_no:
-            s_issues.append(f"Missing Reg No for student ID {s.id}")
-            
-        if s_issues:
-            issues.extend(s_issues)
+        dept_code = s.department.code if s.department else (s.department.name if s.department else "CSE")
+        stats = s.stats
+        
+        username = (s.username or "").strip()
+        url = (s.leetcode_url or "").strip()
+        
+        status = "VALID_PROFILE"
+        issue_desc = "Verified Handle & Record"
+        action_req = "Verified Record"
+        
+        if not username and not url:
+            status = "MISSING_USERNAME"
+            issue_desc = "Missing LeetCode Username & Link"
+            action_req = "Assign LeetCode Handle"
+            missing_links_count += 1
+        elif url and ("leetcode.com" in url) and ("/u/" not in url and "leetcode.com/" not in url):
+            status = "INVALID_PROFILE_URL"
+            issue_desc = "Invalid URL Syntax"
+            action_req = "Fix Profile Link Syntax"
+            invalid_urls_count += 1
+        elif stats and (stats.error_code == "PROFILE_NOT_FOUND" or stats.status == "PROFILE NOT FOUND" or stats.sync_status == "failed_404"):
+            status = "PROFILE_NOT_FOUND"
+            issue_desc = "LeetCode Profile Not Found (404)"
+            action_req = "Verify Username on LeetCode"
+            profile_not_found_count += 1
+        elif stats and (stats.error_code in ("NETWORK_TIMEOUT", "FETCH_ERROR") or stats.sync_status == "failed_network"):
+            status = "NETWORK_ERROR"
+            issue_desc = "Sync Network / Timeout Error"
+            action_req = "Retry Profile Sync"
+            network_errors_count += 1
+        elif stats and stats.validation_status == "identity_mismatch":
+            status = "INVALID_PROFILE_URL"
+            issue_desc = "Identity Mismatch"
+            action_req = "Audit Student Identity"
+            invalid_urls_count += 1
         else:
-            valid += 1
-            
-    score = int((valid / total) * 100) if total > 0 else 100
-    
+            valid_count += 1
+
+        issues_list.append({
+            "reg_no": s.reg_no or f"ID-{s.id}",
+            "name": s.name,
+            "dept": dept_code,
+            "status": status,
+            "issue": issue_desc,
+            "action_required": action_req
+        })
+
+    # Sort so action-required items appear at the top, followed by verified valid profiles
+    issues_list.sort(key=lambda x: 0 if x["status"] != "VALID_PROFILE" else 1)
+
+    score = int((valid_count / total) * 100) if total > 0 else 100
+
     return {
         "health_score_percentage": score,
-        "valid_profiles": valid,
-        "issues_count": len(issues),
-        "issues_list": issues[:50]
+        "valid_profiles": valid_count,
+        "total_students": total,
+        "missing_links": missing_links_count,
+        "profile_not_found": profile_not_found_count,
+        "network_errors": network_errors_count,
+        "invalid_urls": invalid_urls_count,
+        "issues_count": len(issues_list),
+        "issues_list": issues_list,
+        "source_status": "AVAILABLE"
     }
 
 @router.get("/performance-chart")

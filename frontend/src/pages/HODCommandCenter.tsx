@@ -51,7 +51,7 @@ const StudentDetailDrawer: React.FC<{
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-none animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-md h-full bg-white dark:bg-navy-950 border-l border-slate-200 dark:border-navy-700 shadow-2xl p-6 overflow-y-auto space-y-6 flex flex-col justify-between">
+      <div className="w-full max-w-md h-full bg-white dark:bg-navy-950 border-l border-slate-200 dark:border-navy-700 shadow-2xl p-4 sm:p-6 pt-6 sm:pt-7 overflow-y-auto space-y-6 flex flex-col justify-between">
         <div className="space-y-6">
           {/* Header */}
           <div className="flex items-start justify-between pb-4 border-b border-slate-100 dark:border-navy-800">
@@ -482,7 +482,7 @@ const ReportHubModal: React.FC<{
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-6 sm:pt-7 overflow-y-auto bg-slate-950/80 backdrop-blur-sm animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="w-full max-w-4xl max-h-[88vh] bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-2xl flex flex-col justify-between overflow-hidden text-slate-900 dark:text-white antialiased">
         {/* Header */}
         <div className="px-6 py-4 bg-slate-50 dark:bg-navy-900 border-b border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0">

@@ -66,14 +66,23 @@ def generate_live_weekly_intelligence_data(
     # ─────────────────────────────────────────────────────────────────────────────
     # STEP 1: DYNAMIC REPORTING SESSIONS & 3-WEEK ROLLING WINDOW
     # ─────────────────────────────────────────────────────────────────────────────
-    all_sessions = db.query(WeeklySession).all()
-    valid_sessions = [
-        s for s in all_sessions 
-        if (s.contest_name or "").strip().lower() != "weekly contest test" and not (s.contest_name or "").startswith("TEST_")
-    ]
-    valid_sessions.sort(key=_extract_contest_num, reverse=True)
+    from backend.services.weekly_session_resolver import parse_session_date
+    today_date = now_ist.date()
 
-    if not valid_sessions:
+    all_sessions = db.query(WeeklySession).all()
+    valid_completed_sessions = []
+    for s in all_sessions:
+        if not s or (s.contest_name or "").strip().lower() == "weekly contest test" or (s.contest_name or "").startswith("TEST_"):
+            continue
+        p_date = parse_session_date(s.session_date)
+        if p_date and p_date <= today_date:
+            valid_completed_sessions.append((p_date, _extract_contest_num(s), s))
+
+    # Sort strictly descending by date & contest number
+    valid_completed_sessions.sort(key=lambda x: (x[0], x[1]), reverse=True)
+    past_sessions = [item[2] for item in valid_completed_sessions]
+
+    if not past_sessions:
         curr_session = None
         prev_session = None
         prev_prev_session = None
@@ -81,11 +90,11 @@ def generate_live_weekly_intelligence_data(
         prev_label = "W0"
         prev_prev_label = "W-1"
     else:
-        curr_session = valid_sessions[0]
+        curr_session = past_sessions[0]
         curr_label = _get_week_label(curr_session.contest_name, curr_session.id)
-        prev_session = valid_sessions[1] if len(valid_sessions) > 1 else None
+        prev_session = past_sessions[1] if len(past_sessions) > 1 else None
         prev_label = _get_week_label(prev_session.contest_name, prev_session.id) if prev_session else "W0"
-        prev_prev_session = valid_sessions[2] if len(valid_sessions) > 2 else None
+        prev_prev_session = past_sessions[2] if len(past_sessions) > 2 else None
         prev_prev_label = _get_week_label(prev_prev_session.contest_name, prev_prev_session.id) if prev_prev_session else "W-1"
 
     curr_session_id = curr_session.id if curr_session else None
@@ -111,7 +120,7 @@ def generate_live_weekly_intelligence_data(
             "contest_name": prev_prev_session.contest_name if prev_prev_session else "Historical Contest",
             "session_date": prev_prev_session.session_date if prev_prev_session else ""
         },
-        "window_str": f"{prev_prev_label} → {prev_label} → {curr_label}"
+        "window_str": f"{prev_prev_label} -> {prev_label} -> {curr_label}"
     }
 
     # ─────────────────────────────────────────────────────────────────────────────
@@ -537,6 +546,56 @@ def generate_live_weekly_intelligence_data(
         })
 
     # ─────────────────────────────────────────────────────────────────────────────
+    # STEP 6B: CROSS-MATRICES (YEAR x DSA, DEPT x DSA, YEAR x LANG, DEPT x LANG)
+    # ─────────────────────────────────────────────────────────────────────────────
+    year_dsa_matrix = defaultdict(lambda: defaultdict(int))
+    dept_dsa_matrix = defaultdict(lambda: defaultdict(int))
+    year_lang_matrix = defaultdict(lambda: defaultdict(int))
+    dept_lang_matrix = defaultdict(lambda: defaultdict(int))
+
+    for s in students:
+        s_y = normalize_year_roman(s.year_level)
+        s_d = s.department.code if s.department else "CSE"
+        for t in topics_by_student.get(s.id, []):
+            t_name = t.get("topic_name") or "General"
+            p_cnt = t.get("problems_solved", 0)
+            year_dsa_matrix[s_y][t_name] += p_cnt
+            dept_dsa_matrix[s_d][t_name] += p_cnt
+        for l in languages_by_student.get(s.id, []):
+            l_name = l.get("language_name") or "General"
+            p_cnt = l.get("problems_solved", 0)
+            year_lang_matrix[s_y][l_name] += p_cnt
+            dept_lang_matrix[s_d][l_name] += p_cnt
+
+    # ─────────────────────────────────────────────────────────────────────────────
+    # STEP 6C: TOP PERFORMERS & COHORT ANALYSIS
+    # ─────────────────────────────────────────────────────────────────────────────
+    top_solvers = sorted(student_comparisons, key=lambda x: x["current_solved"], reverse=True)[:10]
+    top_ratings = sorted(
+        [s for s in student_comparisons if s.get("contest_rating") and s["contest_rating"] > 0],
+        key=lambda x: x["contest_rating"],
+        reverse=True
+    )[:10]
+    biggest_improvers = sorted(
+        [s for s in student_comparisons if s["weekly_delta"] > 0],
+        key=lambda x: (x["weekly_delta"], x["growth_pct"]),
+        reverse=True
+    )[:10]
+    attention_cohort = [
+        s for s in student_comparisons
+        if s.get("risk_level") in ("HIGH", "CRITICAL") or (s["current_solved"] == 0 and s["risk_score"] > 60)
+    ][:15]
+    no_activity_cohort = [
+        s for s in student_comparisons
+        if s["current_solved"] == 0
+    ][:15]
+
+    # Data Availability Summary
+    available_cnt = sum(1 for s in students if s.stats and (s.stats.total_solved or 0) > 0)
+    partial_cnt = sum(1 for s in students if s.stats and (s.stats.total_solved or 0) == 0 and s.username)
+    not_avail_cnt = len(students) - (available_cnt + partial_cnt)
+
+    # ─────────────────────────────────────────────────────────────────────────────
     # STEP 7: CONTEST INTELLIGENCE (Page 5)
     # ─────────────────────────────────────────────────────────────────────────────
     total_stud_count = len(students)
@@ -611,17 +670,34 @@ def generate_live_weekly_intelligence_data(
         "department_intelligence": department_matrix,
         "year_intelligence": year_matrix,
         "dsa_topic_intelligence": {
-            "top_topics": sorted_topics[:12],
+            "top_topics": sorted_topics[:15],
             "weak_topics": sorted_topics[-5:] if len(sorted_topics) > 5 else [],
-            "total_dsa_submissions": total_topic_problems
+            "total_dsa_submissions": total_topic_problems,
+            "year_matrix": {y: dict(t) for y, t in year_dsa_matrix.items()},
+            "dept_matrix": {d: dict(t) for d, t in dept_dsa_matrix.items()}
         },
         "language_intelligence": {
-            "top_languages": sorted_languages[:8],
-            "total_language_submissions": total_lang_problems
+            "top_languages": sorted_languages[:10],
+            "total_language_submissions": total_lang_problems,
+            "year_matrix": {y: dict(l) for y, l in year_lang_matrix.items()},
+            "dept_matrix": {d: dict(l) for d, l in dept_lang_matrix.items()}
         },
         "contest_intelligence": contest_intel,
         "student_3_week_comparison": student_comparisons,
         "student_deep_dives": student_deep_dives,
+        "top_performers_cohorts": {
+            "top_solvers": top_solvers,
+            "top_ratings": top_ratings,
+            "biggest_improvers": biggest_improvers,
+            "attention_cohort": attention_cohort,
+            "no_activity_cohort": no_activity_cohort
+        },
+        "data_availability": {
+            "available_count": available_cnt,
+            "partial_count": partial_cnt,
+            "not_available_count": not_avail_cnt,
+            "total_students": len(students)
+        },
         "data_validation": {
             "status": "VALID",
             "cumulative_check_passed": True,
@@ -630,3 +706,4 @@ def generate_live_weekly_intelligence_data(
             "last_audit_timestamp": timestamp_str
         }
     }
+

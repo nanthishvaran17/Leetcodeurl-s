@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { useContestWebSocket } from '../hooks/useContestWebSocket';
+import { fetchWithCacheDedupe, getCachedContestData } from '../services/contestCache';
 
 export interface PreviousWeekSummary {
   session_id: number;
@@ -170,48 +171,74 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     try {
       if (forceSync) {
         setSyncing(true);
-      } else if (!silent) {
+      } else if (!silent && !summary) {
         setLoading(true);
       }
       setError(null);
 
       const latestSessionId = sessionId;
 
+      // Check instant cached summary
+      const cached = getCachedContestData<any>(`contest_summary_${latestSessionId}`);
+      if (cached && !summary) {
+        setSummary({
+          session_id: cached.sessionId,
+          contest_slug: cached.contestId || `weekly-contest-${cached.contestNumber}`,
+          contest_title: cached.contestName,
+          target_date_ist: cached.sessionDate,
+          validation_status: cached.status,
+          publish_status: cached.status,
+          cache_state: 'HIT',
+          dataset_version: 1,
+          sync_id: 'live',
+          sync_started_at: '',
+          metrics: {
+            PUBLIC: cached.participantCount || 0,
+            VIRTUAL: 0,
+            NOT_PARTICIPATED: Math.max(0, (cached.totalStudents || 0) - (cached.participantCount || 0)),
+            NOT_VERIFIED: 0,
+            MISSING_LEETCODE_USERNAME: 0,
+            TOTAL_STUDENTS: cached.totalStudents || 0,
+          }
+        });
+        setLoading(false);
+      }
+
       if (forceSync && latestSessionId) {
         await api.post(`/contests/sessions/${latestSessionId}/sync`);
       }
 
-      const [summaryRes, matrixRes] = await Promise.all([
-        api.get(`/contests/sessions/${latestSessionId}/live-status`),
-        api.get(`/contests/sessions/${latestSessionId}/matrix`)
+      const [summaryData, matrixData] = await Promise.all([
+        fetchWithCacheDedupe(`contest_summary_${latestSessionId}`, () => api.get(`/contests/sessions/${latestSessionId}/summary`).then(r => r.data), { force: forceSync, ttlMs: 15 * 60 * 1000 }),
+        fetchWithCacheDedupe(`contest_matrix_preview_${latestSessionId}`, () => api.get(`/contests/sessions/${latestSessionId}/matrix?paginated=true&page=1&limit=100`).then(r => r.data), { force: forceSync, ttlMs: 15 * 60 * 1000 })
       ]);
 
-      if (summaryRes.data) {
-        const d = summaryRes.data;
+      if (summaryData) {
         setSummary({
-          session_id: d.sessionId,
-          contest_slug: d.contestId,
-          contest_title: d.contestName,
-          target_date_ist: d.sessionDate,
-          validation_status: d.status,
-          publish_status: d.status,
+          session_id: summaryData.sessionId,
+          contest_slug: summaryData.contestId || `weekly-contest-${summaryData.contestNumber}`,
+          contest_title: summaryData.contestName,
+          target_date_ist: summaryData.sessionDate,
+          validation_status: summaryData.status,
+          publish_status: summaryData.status,
           cache_state: 'HIT',
           dataset_version: 1,
           sync_id: 'live',
-          sync_started_at: d.startIso,
+          sync_started_at: '',
           metrics: {
-            PUBLIC: d.metrics?.public || 0,
-            VIRTUAL: d.metrics?.virtual || 0,
-            NOT_PARTICIPATED: d.metrics?.notAttended || 0,
-            NOT_VERIFIED: d.metrics?.notVerified || 0,
-            MISSING_LEETCODE_USERNAME: d.metrics?.sourceError || 0,
-            TOTAL_STUDENTS: d.metrics?.totalStudents || 0,
+            PUBLIC: summaryData.participantCount || 0,
+            VIRTUAL: 0,
+            NOT_PARTICIPATED: Math.max(0, (summaryData.totalStudents || 0) - (summaryData.participantCount || 0)),
+            NOT_VERIFIED: 0,
+            MISSING_LEETCODE_USERNAME: 0,
+            TOTAL_STUDENTS: summaryData.totalStudents || 0,
           }
         });
       }
       
-      if (matrixRes.data && matrixRes.data.rows) {
-        const mappedRecords: ParticipationRecord[] = matrixRes.data.rows.map((row: any) => ({
+      const rows = matrixData?.items || matrixData?.rows || [];
+      if (rows.length > 0) {
+        const mappedRecords: ParticipationRecord[] = rows.map((row: any) => ({
           id: row.s_no,
           session_id: latestSessionId,
           contest_slug: row.contest_id,

@@ -3,7 +3,7 @@ import {
   TrendingUp, Award, Activity, Code, Cpu, AlertTriangle, CheckCircle2,
   RefreshCw, Download, Layers, Search, Filter, Calendar, ChevronRight,
   User, BookOpen, ShieldAlert, Sparkles, Building2, GraduationCap,
-  FileSpreadsheet, ArrowUpRight, ArrowDownRight, Clock, Check, Eye,
+  FileSpreadsheet, FileText, ArrowUpRight, ArrowDownRight, Clock, Check, Eye,
   BarChart3, PieChart, Info, ShieldCheck, Flame, ChevronDown, ExternalLink
 } from 'lucide-react';
 import api from '../services/api';
@@ -48,6 +48,37 @@ export const WeeklyIntelligenceReport: React.FC<WeeklyIntelligenceReportProps> =
   const [lastRefreshedAt, setLastRefreshedAt] = useState<Date>(new Date());
   const [secondsUntilRefresh, setSecondsUntilRefresh] = useState<number>(300);
 
+  const [pipelineStatus, setPipelineStatus] = useState<any>(null);
+  const [isTriggeringPipeline, setIsTriggeringPipeline] = useState<boolean>(false);
+
+  const fetchPipelineStatus = useCallback(async () => {
+    try {
+      const res = await api.get('/reports/friday-pipeline/status');
+      setPipelineStatus(res.data);
+    } catch (err) {
+      console.warn('Pipeline status unavailable:', err);
+    }
+  }, []);
+
+  const handleTriggerPipeline = async () => {
+    setIsTriggeringPipeline(true);
+    try {
+      notify.info('Triggering Friday Weekly Intelligence Pipeline...', 'Pipeline');
+      const res = await api.post('/reports/friday-pipeline/trigger');
+      if (res.data?.success) {
+        notify.success('Friday Weekly Intelligence Pipeline executed successfully!', 'Pipeline');
+        fetchPipelineStatus();
+        fetchReport(true);
+      } else {
+        notify.warning(res.data?.error || 'Pipeline completed with partial status.', 'Pipeline');
+      }
+    } catch (err: any) {
+      notify.error(err.response?.data?.detail || 'Failed to trigger pipeline.', 'Pipeline');
+    } finally {
+      setIsTriggeringPipeline(false);
+    }
+  };
+
   const fetchReport = useCallback(async (isManualRefresh = false) => {
     if (isManualRefresh) setRefreshing(true);
     setError(null);
@@ -62,6 +93,7 @@ export const WeeklyIntelligenceReport: React.FC<WeeklyIntelligenceReportProps> =
       setReportData(res.data);
       setLastRefreshedAt(new Date());
       setSecondsUntilRefresh(300);
+      fetchPipelineStatus();
 
       // Default select first student for deep dive if not set
       if (!inspectStudentId && res.data.student_deep_dives?.length > 0) {
@@ -74,15 +106,17 @@ export const WeeklyIntelligenceReport: React.FC<WeeklyIntelligenceReportProps> =
       setLoading(false);
       setRefreshing(false);
     }
-  }, [selectedDept, selectedYear, inspectStudentId]);
+  }, [selectedDept, selectedYear, inspectStudentId, fetchPipelineStatus]);
 
   useEffect(() => {
     fetchReport();
-  }, [fetchReport]);
+    fetchPipelineStatus();
+  }, [fetchReport, fetchPipelineStatus]);
 
   // Background countdown timer
   useEffect(() => {
     const timer = setInterval(() => {
+
       setSecondsUntilRefresh((prev) => {
         if (prev <= 1) {
           fetchReport();
@@ -314,6 +348,99 @@ export const WeeklyIntelligenceReport: React.FC<WeeklyIntelligenceReportProps> =
           })}
         </div>
       </div>
+
+      {/* ─────────────────────────────────────────────────────────────────────────────
+          1B. FRIDAY AUTOMATION & OFFICIAL PUBLICATION GATEWAY STATUS
+      ───────────────────────────────────────────────────────────────────────────── */}
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-indigo-500/20 rounded-2xl p-5 shadow-xl backdrop-blur-xl">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="flex h-2.5 w-2.5 relative">
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${pipelineStatus?.official_result === 'FINAL' ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${pipelineStatus?.official_result === 'FINAL' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+              </span>
+              <h3 className="text-sm font-bold text-white tracking-wide uppercase">
+                Friday Weekly Intelligence Automation Gateway
+              </h3>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider ${pipelineStatus?.pipeline_status === 'FINAL' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}`}>
+                {pipelineStatus?.pipeline_status || 'CHECKING'}
+              </span>
+            </div>
+            <p className="text-xs text-slate-400">
+              Contest: <b className="text-slate-200">{pipelineStatus?.contest_name || 'Weekly Contest'}</b> • Snapshot ID: <code className="text-indigo-300 font-mono">{pipelineStatus?.snapshot_id || 'PENDING'}</code> • Verified Coverage: <b className="text-emerald-400">{pipelineStatus?.participant_count || 0} Students</b>
+            </p>
+          </div>
+
+          {/* Quick Download & Trigger Actions */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {pipelineStatus?.pdf_download_url && (
+              <a
+                href={pipelineStatus.pdf_download_url}
+                target="_blank"
+                rel="noreferrer"
+                className="px-3.5 py-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-rose-950/40 flex items-center space-x-1.5"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Official PDF</span>
+              </a>
+            )}
+
+            {pipelineStatus?.excel_download_url && (
+              <a
+                href={pipelineStatus.excel_download_url}
+                target="_blank"
+                rel="noreferrer"
+                className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-950/40 flex items-center space-x-1.5"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5" />
+                <span>Official Excel</span>
+              </a>
+            )}
+
+            <button
+              onClick={handleTriggerPipeline}
+              disabled={isTriggeringPipeline}
+              className="px-3.5 py-2 bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 hover:text-white rounded-xl text-xs font-bold transition-all border border-indigo-500/30 flex items-center space-x-1.5 disabled:opacity-50"
+              title="Run complete 12-stage automated pipeline"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isTriggeringPipeline ? 'animate-spin text-indigo-300' : ''}`} />
+              <span>{isTriggeringPipeline ? 'Running Pipeline...' : 'Run Pipeline'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Pipeline Telemetry Pill Indicators */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 mt-4 pt-3 border-t border-slate-800/80">
+          <div className="bg-slate-900/80 p-2 rounded-xl border border-slate-800 text-center">
+            <span className="text-[10px] text-slate-500 uppercase block font-semibold">Contest</span>
+            <span className="text-xs font-bold text-slate-200">{pipelineStatus?.current_contest || 'W518'}</span>
+          </div>
+          <div className="bg-slate-900/80 p-2 rounded-xl border border-slate-800 text-center">
+            <span className="text-[10px] text-slate-500 uppercase block font-semibold">Result Gate</span>
+            <span className={`text-xs font-bold ${pipelineStatus?.official_result === 'FINAL' ? 'text-emerald-400' : 'text-amber-400'}`}>
+              {pipelineStatus?.official_result || 'WAITING'}
+            </span>
+          </div>
+          <div className="bg-slate-900/80 p-2 rounded-xl border border-slate-800 text-center">
+            <span className="text-[10px] text-slate-500 uppercase block font-semibold">Snapshot</span>
+            <span className="text-xs font-bold text-indigo-400">{pipelineStatus?.snapshot_status || 'COMPLETE'}</span>
+          </div>
+          <div className="bg-slate-900/80 p-2 rounded-xl border border-slate-800 text-center">
+            <span className="text-[10px] text-slate-500 uppercase block font-semibold">Data Sync</span>
+            <span className="text-xs font-bold text-emerald-400">{pipelineStatus?.data_sync || 'COMPLETE'}</span>
+          </div>
+          <div className="bg-slate-900/80 p-2 rounded-xl border border-slate-800 text-center">
+            <span className="text-[10px] text-slate-500 uppercase block font-semibold">PDF Report</span>
+            <span className="text-xs font-bold text-rose-400">{pipelineStatus?.pdf_status || 'READY'}</span>
+          </div>
+          <div className="bg-slate-900/80 p-2 rounded-xl border border-slate-800 text-center">
+            <span className="text-[10px] text-slate-500 uppercase block font-semibold">Excel Sheet</span>
+            <span className="text-xs font-bold text-teal-400">{pipelineStatus?.excel_status || 'READY'}</span>
+          </div>
+        </div>
+      </div>
+
 
       {/* ─────────────────────────────────────────────────────────────────────────────
           2. GLOBAL FILTERS BAR

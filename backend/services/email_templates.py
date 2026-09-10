@@ -13,13 +13,13 @@ def generate_professional_template(title: str, content: str, action_button: Opti
         # Check if action_button is a raw tag or full element
         if action_button.strip().startswith("<table") or action_button.strip().startswith("<div"):
             button_html = f"""
-            <div style="margin: 28px 0; text-align: center;">
+            <div style="margin-top: 20px; text-align: center;">
                 {action_button}
             </div>
             """
         else:
             button_html = f"""
-            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 28px 0;">
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 20px;">
                 <tr>
                     <td align="center" style="padding: 0;">
                         {action_button}
@@ -29,7 +29,7 @@ def generate_professional_template(title: str, content: str, action_button: Opti
             """
         if fallback_url:
             button_html += f"""
-            <div style="text-align: center; margin-top: 12px; font-size: 13px; color: #64748b; word-break: break-word; overflow-wrap: anywhere; line-height: 1.4;">
+            <div style="text-align: center; margin-top: 12px; font-size: 13px; color: #475569; word-break: break-word; overflow-wrap: anywhere; line-height: 1.5;">
                 Or copy and paste this link into your browser:<br>
                 <a href="{fallback_url}" style="color: #3b82f6; text-decoration: underline; word-break: break-all;">{fallback_url}</a>
             </div>
@@ -146,14 +146,19 @@ def generate_professional_template(title: str, content: str, action_button: Opti
         }}
         .footer {{
             background-color: #f8fafc;
-            padding: 24px;
+            padding: 24px 20px;
             text-align: center;
-            font-size: 12px;
-            color: #64748b;
+            font-size: 13px;
+            color: #334155;
             border-top: 1px solid #e2e8f0;
             line-height: 1.5;
             word-break: break-word;
             overflow-wrap: anywhere;
+        }}
+        .footer p {{
+            margin: 0;
+            line-height: 1.5;
+            color: #334155;
         }}
         .btn {{
             display: inline-block;
@@ -216,7 +221,7 @@ def generate_professional_template(title: str, content: str, action_button: Opti
             .header {{ padding: 20px 16px !important; }}
             .header h1 {{ font-size: 16px !important; }}
             .email-content h2 {{ font-size: 18px !important; }}
-            .footer {{ padding: 20px 16px !important; }}
+            .footer {{ padding: 24px 18px !important; font-size: 13px !important; }}
             .btn {{ display: block !important; width: 100% !important; padding: 14px 12px !important; box-sizing: border-box !important; }}
             
             /* Enforcing 2-column layout on mobile */
@@ -240,7 +245,8 @@ def generate_professional_template(title: str, content: str, action_button: Opti
             .email-container {{ background-color: #1e293b !important; color: #e2e8f0 !important; }}
             .email-content {{ color: #e2e8f0 !important; }}
             .email-content h2 {{ color: #ffffff !important; }}
-            .footer {{ background-color: #0f172a !important; color: #94a3b8 !important; border-top-color: #334155 !important; }}
+            .footer {{ background-color: #0f172a !important; color: #cbd5e1 !important; border-top-color: #334155 !important; }}
+            .footer p {{ color: #cbd5e1 !important; }}
             .data-table {{ border-color: #334155 !important; }}
             .data-table td, .data-table th {{ border-bottom-color: #334155 !important; }}
             .data-table td:first-child {{ background-color: #0f172a !important; color: #cbd5e1 !important; border-right-color: #334155 !important; }}
@@ -252,7 +258,8 @@ def generate_professional_template(title: str, content: str, action_button: Opti
         [data-ogsc] .email-container {{ background-color: #1e293b !important; }}
         [data-ogsc] .email-content {{ color: #e2e8f0 !important; }}
         [data-ogsc] .email-content h2 {{ color: #ffffff !important; }}
-        [data-ogsc] .footer {{ background-color: #0f172a !important; color: #94a3b8 !important; }}
+        [data-ogsc] .footer {{ background-color: #0f172a !important; color: #cbd5e1 !important; }}
+        [data-ogsc] .footer p {{ color: #cbd5e1 !important; }}
         [data-ogsc] .data-table td:first-child {{ background-color: #0f172a !important; color: #cbd5e1 !important; }}
     </style>
 </head>
@@ -270,21 +277,22 @@ def generate_professional_template(title: str, content: str, action_button: Opti
                         <td class="header" style="background-color: #0f172a; padding: 24px; text-align: center; border-bottom: 4px solid #3b82f6;">
                             <img src="{logo_url}" alt="{settings.COLLEGE_NAME} Logo" class="header-logo" width="140" height="auto" style="width:140px; max-width:140px; height:auto; margin:0 auto 15px auto; display:block; border:0; outline:none; text-decoration:none;" />
                             <h1 style="color: #ffffff; margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 0.5px; line-height: 1.4; word-break: break-word; overflow-wrap: anywhere;">{settings.COLLEGE_NAME}</h1>
-                            <div class="sub-header" style="color: #38bdf8; margin: 4px 0 0 0; font-size: 14px; font-weight: 500;">LeetCode Tracker System</div>
+                            <div class="sub-header" style="color: #38bdf8; margin: 4px 0 0 0; font-size: 14px; font-weight: 500;">LeetCode Intelligence System</div>
                         </td>
                     </tr>
                     <tr>
                         <td class="email-content" style="padding: 32px 24px; line-height: 1.6; font-size: 15px; color: #1e293b; word-break: break-word; overflow-wrap: anywhere;">
                             <h2 style="color: #0f172a; margin-top: 0; margin-bottom: 20px; font-size: 22px; line-height: 1.3; word-break: break-word; overflow-wrap: anywhere;">{title}</h2>
                             {content}
-                            {button_html}
                         </td>
                     </tr>
                     <tr>
-                        <td class="footer" style="background-color: #f8fafc; padding: 24px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; line-height: 1.5; word-break: break-word; overflow-wrap: anywhere;">
-                            <strong style="color: #475569;">{settings.COLLEGE_NAME}</strong><br>
-                            LeetCode Tracker System<br><br>
-                            This is an automated notification. Please do not reply directly to this email.
+                        <td class="footer" style="background-color: #f8fafc; padding: 24px 20px; text-align: center; font-size: 13px; color: #334155; border-top: 1px solid #e2e8f0; line-height: 1.5; word-break: break-word; overflow-wrap: anywhere;">
+                            <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 700; color: #1e293b; line-height: 1.5;">{settings.COLLEGE_NAME} &bull; LeetCode Intelligence System</p>
+                            <p style="margin: 0 0 16px 0; font-size: 13px; font-weight: 600; color: #475569; line-height: 1.5;">Student Performance &bull; Contest Intelligence &bull; Analytics &bull; Reports</p>
+                            <p style="margin: 0 0 4px 0; font-size: 13px; font-weight: 500; color: #334155; line-height: 1.5;">This is an automated system-generated email.<br/>Please do not reply to this message.</p>
+                            <p style="margin: 12px 0 16px 0; font-size: 13px; font-weight: 500; color: #334155; line-height: 1.5;">&copy; 2026 {settings.COLLEGE_NAME}. All rights reserved.</p>
+                            {button_html}
                         </td>
                     </tr>
                 </table>

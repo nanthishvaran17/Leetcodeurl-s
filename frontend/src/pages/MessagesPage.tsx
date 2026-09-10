@@ -579,17 +579,17 @@ export const MessagesPage: React.FC = () => {
     <div className="flex flex-col h-[calc(100dvh-56px)] sm:h-[calc(100dvh-68px)] md:h-[calc(100vh-5rem)] bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-slate-200 sm:rounded-2xl overflow-hidden shadow-2xl dark:shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-800">
       
       {/* Top Institutional Intelligence Hub Header */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-4 shrink-0 shadow-lg border-b border-brand-500/30 z-20">
-        <div className="relative z-10 flex items-center space-x-3.5">
-          <div className="w-10 h-10 bg-brand-500/20 rounded-xl flex items-center justify-center border border-brand-400/30">
-            <Sparkles className="w-5 h-5 text-amber-400" />
+      <div className="relative overflow-hidden bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white px-6 py-5 sm:py-6 flex flex-wrap items-center justify-between gap-4 shrink-0 shadow-lg border-b border-brand-500/30 z-20">
+        <div className="relative z-10 flex items-center space-x-4">
+          <div className="w-12 h-12 bg-brand-500/20 rounded-2xl flex items-center justify-center border border-brand-400/30 shadow-inner shrink-0">
+            <Sparkles className="w-6 h-6 text-amber-400 animate-pulse" />
           </div>
           <div>
-            <h1 className="text-[15px] font-black tracking-widest leading-tight text-white uppercase">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-black tracking-wider leading-tight text-white uppercase">
               INSTITUTIONAL <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">INTELLIGENCE HUB</span>
             </h1>
-            <p className="text-[11px] text-slate-300 font-bold hidden sm:block mt-0.5 tracking-wide">
-              Communication <span className="text-brand-400/50 px-1">•</span> Context <span className="text-brand-400/50 px-1">•</span> Verified Data <span className="text-brand-400/50 px-1">•</span> Intelligence <span className="text-brand-400/50 px-1">•</span> Action
+            <p className="text-xs sm:text-sm text-slate-300 font-bold mt-1 tracking-wide">
+              Communication <span className="text-brand-400/60 px-1.5">•</span> Context <span className="text-brand-400/60 px-1.5">•</span> Verified Data <span className="text-brand-400/60 px-1.5">•</span> Intelligence <span className="text-brand-400/60 px-1.5">•</span> Action
             </p>
           </div>
         </div>

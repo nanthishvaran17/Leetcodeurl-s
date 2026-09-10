@@ -217,7 +217,8 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
         raw_token = auth_header.split(" ")[1].strip()
-
+    elif request.query_params.get("token"):
+        raw_token = request.query_params.get("token", "").strip()
     else:
         # DO NOT fallback to cookie for standard API requests.
         # This enforces the JWT + Refresh Token architecture.

@@ -315,6 +315,7 @@ def get_notification_preferences_endpoint(
 
 
 @router.put("/preferences")
+@router.post("/preferences")
 def update_notification_preferences_endpoint(
     req: PreferenceUpdateRequest,
     db: Session = Depends(get_db),

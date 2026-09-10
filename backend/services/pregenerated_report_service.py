@@ -539,7 +539,13 @@ def generate_report_bytes(
     if fmt in ("excel", "xlsx"):
         return export_excel_from_dataset(dataset)
     elif fmt == "pdf":
-        return export_pdf_from_dataset(dataset)
+        from backend.pdf_generator import generate_pdf_report
+        return generate_pdf_report(
+            db=db,
+            department=dept if dept != "ALL" else None,
+            year=year if year != "ALL" else None,
+            current_user=current_user
+        )
     elif fmt in ("word", "docx"):
         return export_word_from_dataset(dataset)
     elif fmt == "csv":

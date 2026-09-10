@@ -147,7 +147,10 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
           style={{ background: 'linear-gradient(135deg, #0f172a, #1e293b)', borderColor: 'rgba(16,185,129,0.4)' }}
         >
           <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#34d399' }}>Valid Profiles</p>
-          <p className="text-3xl font-black text-white">{data?.valid_profiles || 0}</p>
+          <p className="text-3xl font-black text-white">
+            {data?.valid_profiles || 0}
+            {data?.total_students ? <span className="text-sm font-semibold text-slate-400 font-mono"> / {data.total_students}</span> : null}
+          </p>
           <p className="text-[11px] font-bold text-emerald-400">Strictly Identity Mapped (Click to View)</p>
         </div>
 

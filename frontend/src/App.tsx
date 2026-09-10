@@ -2,7 +2,7 @@ import React, { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRe
 import { createPortal } from 'react-dom';
 import { App as CapacitorApp } from '@capacitor/app';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, LogOut } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { StudentData } from './components/LeaderboardTable';
@@ -143,6 +143,7 @@ export const App: React.FC = () => {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showAlertCenterModal, setShowAlertCenterModal] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [showExitConfirmModal, setShowExitConfirmModal] = useState(false);
   const [summaryData, setSummaryData] = useState<any>(() => getCachedSummary());
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showAiWidget, setShowAiWidget] = useState(false);
@@ -180,13 +181,25 @@ export const App: React.FC = () => {
         if (tab) setActiveTab(tab);
       }
     };
+
+    const handleDeepLinkNav = (e: any) => {
+      const routeStr = e?.detail?.route || '';
+      if (!routeStr) return;
+      const cleanRoute = routeStr.replace('/api', '').replace('#/', '').replace('/', '').trim();
+      if (cleanRoute) {
+        setActiveTab(cleanRoute);
+      }
+    };
+
     window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener('navigate_to_route', handleDeepLinkNav);
     handleHashChange();
 
     return () => {
       if (timer) clearTimeout(timer);
       window.removeEventListener('refresh_dashboard_summary', handleRefresh);
       window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('navigate_to_route', handleDeepLinkNav);
     };
   }, [isAuthenticated]);
 
@@ -256,13 +269,19 @@ export const App: React.FC = () => {
     };
   }, [login]);
 
-  // Handle Capacitor Android Hardware Back Button
+  // Handle Capacitor Android Hardware Back Button & Gestures
   useEffect(() => {
+    let backListenerHandle: any = null;
+
     const initBackButton = async () => {
       try {
-        await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
-          if (isSidebarOpen) {
+        backListenerHandle = await CapacitorApp.addListener('backButton', () => {
+          if (showExitConfirmModal) {
+            setShowExitConfirmModal(false);
+          } else if (isSidebarOpen) {
             setIsSidebarOpen(false);
+          } else if (showCommandPalette) {
+            setShowCommandPalette(false);
           } else if (selectedStudent) {
             setSelectedStudent(null);
           } else if (showLoginModal) {
@@ -273,10 +292,9 @@ export const App: React.FC = () => {
             setShowImportModal(false);
           } else if (activeTab !== 'landing' && activeTab !== 'dashboard') {
             setActiveTab(isAuthenticated ? 'dashboard' : 'landing');
-          } else if (canGoBack) {
-            window.history.back();
           } else {
-            CapacitorApp.exitApp();
+            // User is on ROOT/HOME screen (dashboard or landing) and NO modal is open
+            setShowExitConfirmModal(true);
           }
         });
       } catch (e) {
@@ -285,11 +303,21 @@ export const App: React.FC = () => {
     };
     initBackButton();
     return () => {
-      // Only remove the backButton listener — removing ALL listeners would also
-      // remove the appUrlOpen (warm-start OAuth) listener registered above.
-      CapacitorApp.removeAllListeners().catch(() => {});
+      if (backListenerHandle && typeof backListenerHandle.remove === 'function') {
+        backListenerHandle.remove();
+      }
     };
-  }, [isSidebarOpen, selectedStudent, showLoginModal, showAlertCenterModal, showImportModal, activeTab, isAuthenticated]);
+  }, [
+    showExitConfirmModal,
+    isSidebarOpen,
+    showCommandPalette,
+    selectedStudent,
+    showLoginModal,
+    showAlertCenterModal,
+    showImportModal,
+    activeTab,
+    isAuthenticated
+  ]);
 
 
 
@@ -416,10 +444,11 @@ export const App: React.FC = () => {
     let unregister: (() => void) | null = null;
     let contextPushed = false;
     
-    if (selectedStudent || showLoginModal || showImportModal || showAlertCenterModal) {
+    if (selectedStudent || showLoginModal || showImportModal || showAlertCenterModal || showExitConfirmModal) {
       pushContext('MODAL');
       contextPushed = true;
       unregister = registerEscHandler(() => {
+        if (showExitConfirmModal) setShowExitConfirmModal(false);
         if (selectedStudent) setSelectedStudent(null);
         if (showLoginModal) setShowLoginModal(false);
         if (showImportModal) setShowImportModal(false);
@@ -431,7 +460,7 @@ export const App: React.FC = () => {
       if (unregister) unregister();
       if (contextPushed) popContext('MODAL');
     };
-  }, [selectedStudent, showLoginModal, showImportModal, showAlertCenterModal, pushContext, popContext, registerEscHandler]);
+  }, [selectedStudent, showLoginModal, showImportModal, showAlertCenterModal, showExitConfirmModal, pushContext, popContext, registerEscHandler]);
 
   const handleOpenImport = useCallback(() => setShowImportModal(true), []);
   const handleOpenLogin = useCallback(() => setShowLoginModal(true), []);
@@ -794,14 +823,14 @@ export const App: React.FC = () => {
       {/* Viewport-Centered Student Profile Modal */}
       {selectedStudent && typeof document !== 'undefined' && createPortal(
         <div
-          className="modal-overlay-responsive animate-modal-backdrop"
+          className="fixed inset-0 z-[100000] flex items-start justify-center p-3 sm:p-4 pt-6 sm:pt-7 overflow-y-auto bg-slate-950/80 backdrop-blur-md animate-fade-in"
           onClick={(e) => { if (e.target === e.currentTarget) setSelectedStudent(null); }}
         >
           <div
             role="dialog"
             aria-modal="true"
             aria-label={`Student profile for ${selectedStudent.name}`}
-            className="modal-container-responsive mobile-responsive-modal bg-white dark:bg-navy-950 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 animate-modal-content max-w-4xl"
+            className="w-full max-w-5xl bg-white dark:bg-navy-950 rounded-3xl shadow-2xl border border-slate-200 dark:border-navy-800 flex flex-col overflow-hidden my-auto max-h-[calc(100vh-3.5rem)] text-slate-900 dark:text-slate-100 animate-modal-content"
             onClick={(e) => e.stopPropagation()}
           >
             <Suspense fallback={null}>
@@ -814,6 +843,68 @@ export const App: React.FC = () => {
         </div>,
         document.body
       )}
+
+      {/* EXIT CONFIRMATION DIALOG */}
+      <AnimatePresence>
+        {showExitConfirmModal && (
+          <div
+            className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-fade-in"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowExitConfirmModal(false);
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0, y: 8 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.92, opacity: 0, y: 8 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-3xl shadow-2xl p-6 sm:p-7 w-full max-w-sm font-sans relative text-slate-900 dark:text-white overflow-hidden space-y-5"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40 shrink-0">
+                  <LogOut size={22} className="stroke-[2.2]" />
+                </div>
+                <div>
+                  <h3 className="font-display text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">
+                    Exit App?
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                    LeetCode Tracker
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+                Are you sure you want to exit LeetCode Tracker?
+              </p>
+
+              <div className="flex items-center gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowExitConfirmModal(false)}
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-100 dark:bg-navy-900 hover:bg-slate-200 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-200 font-extrabold text-xs tracking-wider uppercase transition cursor-pointer active:scale-95"
+                >
+                  CANCEL
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowExitConfirmModal(false);
+                    try {
+                      CapacitorApp.exitApp();
+                    } catch (_e) {
+                      // Fallback for non-Capacitor environment
+                    }
+                  }}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs tracking-wider uppercase transition cursor-pointer shadow-md shadow-rose-600/20 active:scale-95"
+                >
+                  EXIT
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* PWA App Install Banner */}
       <InstallAppPrompt />

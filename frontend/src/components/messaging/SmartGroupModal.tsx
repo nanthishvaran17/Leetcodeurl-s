@@ -110,17 +110,17 @@ export const SmartGroupModal: React.FC<{
               <select
                 value={groupType}
                 onChange={(e) => setGroupType(e.target.value)}
-                className="w-full bg-slate-900/50 hover:bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer appearance-none"
+                className="w-full bg-[#0F172A] hover:bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer appearance-none"
                 style={{ backgroundImage: 'url("data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3e%3c/svg%3e")', backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em', paddingRight: '2.5rem' }}
               >
-                <option value="INTERVENTION">Intervention</option>
-                <option value="ACADEMIC">Academic</option>
-                <option value="BATCH">Batch</option>
-                <option value="CONTEST">Contest</option>
-                <option value="FACULTY">Faculty</option>
-                <option value="MENTOR">Mentor</option>
-                <option value="PROJECT">Project</option>
-                <option value="CUSTOM">Custom</option>
+                <option value="INTERVENTION" className="bg-[#0F172A] text-white py-2 font-medium">Intervention</option>
+                <option value="ACADEMIC" className="bg-[#0F172A] text-white py-2 font-medium">Academic</option>
+                <option value="BATCH" className="bg-[#0F172A] text-white py-2 font-medium">Batch</option>
+                <option value="CONTEST" className="bg-[#0F172A] text-white py-2 font-medium">Contest</option>
+                <option value="FACULTY" className="bg-[#0F172A] text-white py-2 font-medium">Faculty</option>
+                <option value="MENTOR" className="bg-[#0F172A] text-white py-2 font-medium">Mentor</option>
+                <option value="PROJECT" className="bg-[#0F172A] text-white py-2 font-medium">Project</option>
+                <option value="CUSTOM" className="bg-[#0F172A] text-white py-2 font-medium">Custom</option>
               </select>
             </div>
 
@@ -148,12 +148,12 @@ export const SmartGroupModal: React.FC<{
                 <select
                   value={ruleType}
                   onChange={(e) => setRuleType(e.target.value)}
-                  className="w-full bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer appearance-none"
+                  className="w-full bg-[#0F172A] hover:bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer appearance-none"
                   style={{ backgroundImage: 'url("data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3e%3cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3e%3c/svg%3e")', backgroundPosition: 'right 0.5rem center', backgroundRepeat: 'no-repeat', backgroundSize: '1.5em 1.5em', paddingRight: '2rem' }}
                 >
-                  <option value="INACTIVE_STUDENTS">Students with zero submissions in X days</option>
-                  <option value="MISSED_CONTEST">Students who missed latest contest session</option>
-                  <option value="DEPARTMENT_BATCH">Department & Year Roster</option>
+                  <option value="INACTIVE_STUDENTS" className="bg-[#0F172A] text-white py-2 font-medium">Students with zero submissions in X days</option>
+                  <option value="MISSED_CONTEST" className="bg-[#0F172A] text-white py-2 font-medium">Students who missed latest contest session</option>
+                  <option value="DEPARTMENT_BATCH" className="bg-[#0F172A] text-white py-2 font-medium">Department & Year Roster</option>
                 </select>
               </div>
 

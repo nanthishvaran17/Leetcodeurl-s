@@ -40,56 +40,55 @@ def generate_report_background_task(job_id: str, payload: dict, institution_id: 
                 self.role = "admin"
         
         # This is where the long synchronous task happens
-        if report_type == "FORENSIC_PDF":
+        if report_type in ("FORENSIC_PDF", "CERTIFICATE_FORENSIC_PDF"):
             from backend.forensic_pdf_generator import generate_forensic_audit_pdf
-            from backend.models import Student
-            search = filters.get("search")
+            from backend.models import Student, CertificateRecord
+
+            search = filters.get("search") or filters.get("student_id") or payload.get("identifier")
             session_id = filters.get("session_id")
-            if not search or not session_id:
-                raise Exception("Missing search or session_id for FORENSIC_PDF")
-            
-            clean_search = str(search).strip()
-            student = db.query(Student).filter(
-                (Student.reg_no.ilike(f"%{clean_search}%")) |
-                (Student.username.ilike(f"%{clean_search}%")) |
-                (Student.name.ilike(f"%{clean_search}%"))
-            ).first()
+            trace_id = filters.get("trace_id") or (str(search) if search and (str(search).startswith("trace_") or str(search).startswith("CERT-")) else None)
+
+            student = None
+            if search:
+                clean_search = str(search).strip()
+                cert = db.query(CertificateRecord).filter(
+                    (CertificateRecord.verification_id == clean_search) |
+                    (CertificateRecord.verification_id.ilike(f"%{clean_search}%"))
+                ).first()
+                if cert and cert.student_id:
+                    student = db.query(Student).filter(Student.id == cert.student_id).first()
+
+                if not student:
+                    student = db.query(Student).filter(
+                        (Student.reg_no.ilike(f"%{clean_search}%")) |
+                        (Student.username.ilike(f"%{clean_search}%")) |
+                        (Student.name.ilike(f"%{clean_search}%"))
+                    ).first()
+
+            if not student and trace_id:
+                cert = db.query(CertificateRecord).filter(CertificateRecord.verification_id == trace_id).first()
+                if cert and cert.student_id:
+                    student = db.query(Student).filter(Student.id == cert.student_id).first()
+
             if not student:
-                raise Exception("Student not found for Forensic PDF")
-                
-            pdf_bytes = generate_forensic_audit_pdf(db, student.id, int(session_id))
-            
+                latest_cert = db.query(CertificateRecord).order_by(CertificateRecord.id.desc()).first()
+                if latest_cert and latest_cert.student_id:
+                    student = db.query(Student).filter(Student.id == latest_cert.student_id).first()
+                if not student:
+                    student = db.query(Student).filter(Student.is_active == True).first()
+
+            sess_id_int = int(session_id) if session_id and str(session_id).isdigit() else None
+            student_id_val = student.id if student else None
+            pdf_bytes = generate_forensic_audit_pdf(db, student_id=student_id_val, session_id=sess_id_int, trace_id=trace_id or (str(search) if search else None))
+
             cache_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "reports_cache")
             os.makedirs(cache_dir, exist_ok=True)
-            
+
             filename = f"forensic_{job_id}.pdf"
             file_path = os.path.join(cache_dir, filename)
             with open(file_path, "wb") as f:
                 f.write(pdf_bytes)
-            
-            job = db.query(ReportJob).filter(ReportJob.job_id == job_id).first()
-            if job:
-                job.status = "COMPLETED"
-                job.progress = 100
-                job.file_path = file_path
-                job.completed_at = datetime.datetime.utcnow()
-                db.commit()
-            return
-        elif report_type == "CERTIFICATE_FORENSIC_PDF":
-            target_id = filters.get("student_id") or filters.get("search")
-            if not target_id:
-                raise ValueError("Missing identifier (student_id or search) for Certificate Forensic PDF")
-            if target_id.startswith("CERT-") and target_id.endswith("-FORENSIC"):
-                target_id = target_id.replace("CERT-", "").replace("-FORENSIC", "")
-                
-            pdf_bytes = generate_forensic_audit_pdf(db, student_id=None, identifier=target_id)
-            cache_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "reports_cache")
-            os.makedirs(cache_dir, exist_ok=True)
-            filename = f"cert_forensic_{job_id}.pdf"
-            file_path = os.path.join(cache_dir, filename)
-            with open(file_path, "wb") as f:
-                f.write(pdf_bytes)
-            
+
             job = db.query(ReportJob).filter(ReportJob.job_id == job_id).first()
             if job:
                 job.status = "COMPLETED"
@@ -226,7 +225,7 @@ def create_report_job(
     return {"job_id": job_id, "status": "QUEUED"}
 
 
-@router.get("/{job_id}")
+@router.api_route("/{job_id}", methods=["GET", "POST"])
 def get_report_job_status(
     job_id: str,
     db: Session = Depends(get_db),
@@ -249,7 +248,7 @@ def get_report_job_status(
     }
 
 
-@router.get("/{job_id}/download")
+@router.api_route("/{job_id}/download", methods=["GET", "POST"])
 def download_report_job_file(
     job_id: str,
     db: Session = Depends(get_db),

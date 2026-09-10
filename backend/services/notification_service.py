@@ -407,9 +407,43 @@ class NotificationService:
                     if r.get("email"):
                         target_uids.add(r["email"])
 
-                active_tokens = db.query(FCMDevice).filter(
+                from backend.models import NotificationPreference
+
+                CHANNEL_MAP = {
+                    "account": "account_security",
+                    "security": "account_security",
+                    "contests": "contest_updates",
+                    "reports": "weekly_reports",
+                    "weekly_reports": "weekly_reports",
+                    "performance": "performance_updates",
+                    "marks": "performance_updates",
+                    "announcements": "academic_announcements",
+                    "academic_announcements": "academic_announcements",
+                    "system": "system_status",
+                    "app_updates": "system_status"
+                }
+                eff_channel_id = CHANNEL_MAP.get(str(category).lower(), "academic_announcements")
+
+                active_tokens_raw = db.query(FCMDevice).filter(
                     and_(FCMDevice.user_id.in_(list(target_uids)), FCMDevice.is_active == True)
                 ).all()
+
+                # Filter out tokens where user opted out of non-critical notification categories
+                active_tokens = []
+                for t_obj in active_tokens_raw:
+                    user_pref = db.query(NotificationPreference).filter_by(user_id=t_obj.user_id).first()
+                    if user_pref:
+                        if not user_pref.push_enabled:
+                            continue
+                        if user_pref.categories_json:
+                            try:
+                                cat_map = json.loads(user_pref.categories_json)
+                                if str(category).lower() not in ("account", "security"):
+                                    if cat_map.get(str(category).lower()) is False:
+                                        continue
+                            except Exception:
+                                pass
+                    active_tokens.append(t_obj)
 
                 if active_tokens:
                     logger.info(f"[FCM] send_started notification_id={eff_event_id} target_tokens={len(active_tokens)}")
@@ -441,7 +475,7 @@ class NotificationService:
                                     sound="default",
                                     default_sound=True,
                                     default_vibrate_timings=True,
-                                    channel_id="leetcode_intelligence_channel",
+                                    channel_id=eff_channel_id,
                                     visibility="public",
                                     notification_count=1,
                                     tag=f"conv_{metadata.get('conversation_id')}" if (metadata and metadata.get("conversation_id")) else eff_event_id

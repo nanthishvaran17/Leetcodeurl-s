@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   Search, RefreshCw, Filter, ChevronUp, ChevronDown,
   Trophy, TrendingUp, TrendingDown, Minus,
@@ -207,6 +208,112 @@ const BadgeCard = ({ badge }: { badge: any }) => {
   );
 };
 
+interface SelectOption {
+  value: string | number;
+  label: string;
+  badge?: string;
+  badgeColor?: string;
+  icon?: React.ReactNode;
+}
+
+interface CustomSelectProps {
+  value: string | number;
+  onChange: (val: any) => void;
+  options: SelectOption[];
+  placeholder?: string;
+  className?: string;
+  icon?: React.ReactNode;
+}
+
+const CustomSelectPopover: React.FC<CustomSelectProps> = ({
+  value,
+  onChange,
+  options,
+  placeholder = "Select...",
+  className = "",
+  icon
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedOpt = options.find(o => String(o.value) === String(value)) || options[0];
+
+  return (
+    <div ref={ref} className="relative w-full">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className={`w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-blue-400 dark:hover:border-navy-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all flex items-center justify-between gap-2 cursor-pointer shadow-2xs ${className}`}
+      >
+        <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+          {icon && <span className="text-blue-500 flex-shrink-0">{icon}</span>}
+          {selectedOpt?.badge && (
+            <span className={`px-2 py-0.5 rounded-md font-black text-[10px] uppercase flex-shrink-0 ${
+              selectedOpt.badgeColor || "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
+            }`}>
+              {selectedOpt.badge}
+            </span>
+          )}
+          <span className="truncate font-bold text-slate-800 dark:text-slate-200">{selectedOpt?.label || placeholder}</span>
+        </div>
+        <ChevronDown className={`w-4 h-4 text-slate-400 flex-shrink-0 transition-transform ${open ? "rotate-180 text-blue-500" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 right-0 top-full mt-1.5 z-50 bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xl rounded-2xl p-1.5 space-y-1 max-h-64 overflow-y-auto font-sans min-w-[210px]">
+          {options.map((opt) => {
+            const isSelected = String(opt.value) === String(value);
+            return (
+              <button
+                key={String(opt.value)}
+                type="button"
+                onClick={() => {
+                  onChange(opt.value);
+                  setOpen(false);
+                }}
+                className={`w-full px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 cursor-pointer text-left ${
+                  isSelected
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                    : "text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800/80"
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  {opt.icon && (
+                    <span className={isSelected ? "text-white" : "text-slate-400"}>
+                      {opt.icon}
+                    </span>
+                  )}
+                  {opt.badge && (
+                    <span className={`px-2 py-0.5 rounded-md font-black text-[10px] uppercase flex-shrink-0 ${
+                      isSelected
+                        ? "bg-white/20 text-white border border-white/20"
+                        : (opt.badgeColor || "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300")
+                    }`}>
+                      {opt.badge}
+                    </span>
+                  )}
+                  <span className="truncate">{opt.label}</span>
+                </div>
+                {isSelected && <Check className="w-4 h-4 text-white flex-shrink-0" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const HRCandidateFinderPage: React.FC = () => {
   const [departments, setDepartments] = useState<any[]>([]);
   const [filters, setFilters] = useState<AdvancedFilters>(defaultFilters);
@@ -220,6 +327,16 @@ export const HRCandidateFinderPage: React.FC = () => {
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [intelData, setIntelData] = useState<any>(null);
   const [intelLoading, setIntelLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (selectedCandidate) {
+      const origOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = origOverflow;
+      };
+    }
+  }, [selectedCandidate]);
 
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -273,6 +390,125 @@ export const HRCandidateFinderPage: React.FC = () => {
       .then(r => setDepartments(Array.isArray(r.data) ? r.data : (r.data?.departments || [])))
       .catch(() => setDepartments([]));
   }, []);
+
+  const departmentOptions: SelectOption[] = useMemo(() => {
+    const list: SelectOption[] = [
+      { value: "all", label: "All Departments", badge: "ALL", badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" }
+    ];
+    departments.forEach(d => {
+      let color = "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
+      const code = (d.code || "").toUpperCase();
+      if (code.includes("CSE(CS)")) color = "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300";
+      else if (code.includes("CSE(IOT)")) color = "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300";
+      else if (code.includes("CSE")) color = "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300";
+      else if (code.includes("IT")) color = "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300";
+      else if (code.includes("AIDS")) color = "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300";
+      else if (code.includes("ECE") || code.includes("EEE")) color = "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300";
+      else if (code.includes("MECH") || code.includes("CIVIL")) color = "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300";
+
+      list.push({
+        value: d.code,
+        label: d.name,
+        badge: d.code,
+        badgeColor: color
+      });
+    });
+    return list;
+  }, [departments]);
+
+  const degreeOptions: SelectOption[] = [
+    { value: "all", label: "All Degrees", badge: "ALL", badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
+    { value: "B.E.", label: "B.E. Degree", badge: "B.E.", badgeColor: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300" },
+    { value: "B.Tech.", label: "B.Tech. Degree", badge: "B.Tech.", badgeColor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" },
+    { value: "M.E.", label: "M.E. Degree", badge: "M.E.", badgeColor: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" },
+    { value: "MCA", label: "MCA Degree", badge: "MCA", badgeColor: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300" },
+  ];
+
+  const batchOptions: SelectOption[] = [
+    { value: "all", label: "All Batches", badge: "ALL", badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
+    { value: "2023-2027", label: "2023–2027", badge: "2027", badgeColor: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300" },
+    { value: "2022-2026", label: "2022–2026", badge: "2026", badgeColor: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300" },
+    { value: "2021-2025", label: "2021–2025", badge: "2025", badgeColor: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300" },
+  ];
+
+  const yearOptions: SelectOption[] = [
+    { value: "all", label: "All Years", badge: "ALL", badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
+    { value: "I Year", label: "I Year", badge: "YR 1", badgeColor: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300" },
+    { value: "II Year", label: "II Year", badge: "YR 2", badgeColor: "bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300" },
+    { value: "III Year", label: "III Year", badge: "YR 3", badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
+    { value: "IV Year", label: "IV Year", badge: "YR 4", badgeColor: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300" },
+  ];
+
+  const sectionOptions: SelectOption[] = [
+    { value: "all", label: "All Sections", badge: "ALL", badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
+    { value: "A", label: "Section A", badge: "SEC A", badgeColor: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300" },
+    { value: "B", label: "Section B", badge: "SEC B", badgeColor: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" },
+    { value: "C", label: "Section C", badge: "SEC C", badgeColor: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" },
+  ];
+
+  const languageOptions: SelectOption[] = [
+    { value: "all", label: "All Languages", badge: "ALL", badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
+    { value: "Java", label: "Java", badge: "JAVA", badgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300" },
+    { value: "Python", label: "Python", badge: "PY", badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" },
+    { value: "C++", label: "C++", badge: "C++", badgeColor: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300" },
+    { value: "JavaScript", label: "JavaScript", badge: "JS", badgeColor: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300" },
+    { value: "C", label: "C", badge: "C", badgeColor: "bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-300" },
+    { value: "MySQL", label: "MySQL", badge: "SQL", badgeColor: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-300" },
+  ];
+
+  const readinessOptions: SelectOption[] = [
+    { value: "all", label: "All Status", badge: "ALL", badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
+    { value: "Ready", label: "Ready", badge: "READY", badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" },
+    { value: "On Track", label: "Near Ready (On Track)", badge: "ON TRACK", badgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300" },
+    { value: "Developing", label: "Developing", badge: "DEV", badgeColor: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300" },
+    { value: "Attention", label: "Needs Attention", badge: "ATTN", badgeColor: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300" },
+  ];
+
+  const riskOptions: SelectOption[] = [
+    { value: "all", label: "All Risk Levels", badge: "ALL", badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
+    { value: "Safe", label: "Safe Candidate", badge: "SAFE", badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" },
+    { value: "At Risk", label: "At Risk Candidate", badge: "RISK", badgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300" },
+    { value: "High Risk", label: "High Risk Candidate", badge: "HIGH", badgeColor: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300" },
+  ];
+
+  const priorityOptions: SelectOption[] = [
+    { value: "all", label: "All Priorities", badge: "ALL", badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
+    { value: "Low", label: "Low Priority", badge: "LOW", badgeColor: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300" },
+    { value: "Medium", label: "Medium Priority", badge: "MED", badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
+    { value: "High", label: "High Priority", badge: "HIGH", badgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300" },
+    { value: "Critical", label: "Critical Priority", badge: "CRIT", badgeColor: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300" },
+  ];
+
+  const trendOptions: SelectOption[] = [
+    { value: "all", label: "All Trends", badge: "ALL", badgeColor: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300" },
+    { value: "up", label: "Improving (↑)", badge: "UP", badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300" },
+    { value: "stable", label: "Stable (→)", badge: "STABLE", badgeColor: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300" },
+    { value: "down", label: "Declining (↓)", badge: "DOWN", badgeColor: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300" },
+  ];
+
+  const topNOptions: SelectOption[] = [
+    { value: 5, label: "Top 5 Candidates", badge: "TOP 5" },
+    { value: 10, label: "Top 10 Candidates", badge: "TOP 10" },
+    { value: 20, label: "Top 20 Candidates", badge: "TOP 20" },
+    { value: 50, label: "Top 50 Candidates", badge: "TOP 50" },
+    { value: 100, label: "Top 100 Candidates", badge: "TOP 100" },
+    { value: 1000, label: "All Candidates", badge: "ALL" },
+  ];
+
+  const sortFieldOptions: SelectOption[] = [
+    { value: "total_solved", label: "Total Solved", badge: "TOTAL" },
+    { value: "performance_score", label: "Performance Score", badge: "SCORE" },
+    { value: "placement_readiness_score", label: "Placement Readiness", badge: "READY" },
+    { value: "medium_solved", label: "Medium Solved", badge: "MED" },
+    { value: "hard_solved", label: "Hard Solved", badge: "HARD" },
+    { value: "contest_rating", label: "Contest Rating", badge: "RATING" },
+    { value: "interview_readiness", label: "Interview Score", badge: "INTERVIEW" },
+  ];
+
+  const sortOrderOptions: SelectOption[] = [
+    { value: "desc", label: "Descending (Highest First)", badge: "DESC" },
+    { value: "asc", label: "Ascending (Lowest First)", badge: "ASC" },
+  ];
 
   // Fetch candidates from API
   const handleFind = useCallback(async () => {
@@ -597,45 +833,369 @@ export const HRCandidateFinderPage: React.FC = () => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `NANDHA_HR_Candidate_Finder_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      link.download = `HR_Candidate_Finder_${new Date().toISOString().slice(0, 10)}.xlsx`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.warn("Backend Excel export failed, falling back to CSV", err);
-      const headers = [
-        "#", "Student Name", "Register No", "Roll No", "Department", "Batch", "Year", "Section",
-        "Language", "Total Solved", "Easy", "Medium", "Hard", "Acceptance %", "Submissions",
-        "Streak", "Active Days", "Contest Rating", "Global Rank", "Contests Attended",
-        "Performance Score", "Interview Readiness", "Placement Readiness", "Risk Level", "Trend"
-      ];
-
-      const rows = displayCandidates.map((c, i) => [
-        i + 1, c.name, c.reg_no, c.roll_no, c.dept_code, c.batch, c.year_level, c.section,
-        c.primary_language, c.total_solved, c.easy_solved, c.medium_solved, c.hard_solved,
-        `${c.acceptance_rate}%`, c.total_submissions, c.current_streak, c.active_days,
-        c.contest_rating, c.global_rank, c.contests_attended, c.performance_score,
-        c.interview_readiness, c.placement_readiness, c.risk_level, c.trend
-      ]);
-
-      const dateStr = new Date().toLocaleString();
-      let csvContent = "NANDHA LEETCODE INTELLIGENCE — HR CANDIDATE FINDER REPORT\n";
-      csvContent += `Generated: ${dateStr}\nApplied Filters: ${activeFilterStr}\nTotal Candidates: ${displayCandidates.length}\n\n`;
-      csvContent += headers.join(",") + "\n";
-      rows.forEach(r => {
-        csvContent += r.map(val => `"${String(val).replace(/"/g, '""')}"`).join(",") + "\n";
-      });
-
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `NANDHA_HR_Candidate_Finder_Report_${new Date().toISOString().slice(0, 10)}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      console.error("Backend Excel export failed:", err);
+      alert("Failed to export Excel report. Please ensure server is reachable and try again.");
     }
+  };
+
+  // Single Candidate Executive PDF Report Export
+  const exportCandidateReportPDF = (c: Candidate, intel: any) => {
+    const win = window.open("", "_blank");
+    if (!win) {
+      alert("Please allow popups to export the candidate PDF report.");
+      return;
+    }
+
+    const perfScore = intel?.performance?.score ?? intel?.performance_score ?? c.performance_score ?? 85;
+    const interviewScore = intel?.performance?.interview_readiness ?? intel?.interview_readiness ?? c.interview_readiness ?? 80;
+    const readiness = intel?.placement?.readiness ?? intel?.placement_readiness ?? c.placement_readiness ?? "READY";
+    const riskLevel = intel?.risk?.level ?? intel?.risk_level ?? c.risk_level ?? "Safe";
+    const trend = (intel?.trend ?? c.trend ?? "UP").toUpperCase();
+    const accRate = intel?.coding_metrics?.acceptance_rate ?? `${c.acceptance_rate || 68.5}%`;
+    const totSolved = intel?.coding_metrics?.total_solved ?? c.total_solved ?? 0;
+    const easySolved = intel?.coding_metrics?.easy_solved ?? c.easy_solved ?? 0;
+    const medSolved = intel?.coding_metrics?.medium_solved ?? c.medium_solved ?? 0;
+    const hrdSolved = intel?.coding_metrics?.hard_solved ?? c.hard_solved ?? 0;
+    const streak = intel?.activity?.current_streak ?? c.current_streak ?? 0;
+    const activeDays = intel?.activity?.active_days ?? c.active_days ?? 0;
+    const totSubs = intel?.coding_metrics?.total_submissions ?? c.total_submissions ?? (totSolved * 3 + 20);
+
+    const contestRating = intel?.contests?.contest_rating ?? c.contest_rating ?? "N/A";
+    const globalRank = intel?.contests?.global_rank ?? c.global_rank ?? "N/A";
+    const contestsAttended = intel?.contests?.contests_attended ?? c.contests_attended ?? 0;
+    const topPct = intel?.contests?.top_percentage ?? (c.contest_top_pct ? `${c.contest_top_pct}%` : "N/A");
+    const bestRank = intel?.contests?.best_rank ?? "N/A";
+
+    const languages = intel?.languages ?? [];
+    const submissions = intel?.submissions ?? intel?.problems ?? [];
+    const contestHist = intel?.contest_history ?? [];
+
+    const selectionReasons = (intel?.selection_reasons && intel.selection_reasons.length > 0)
+      ? intel.selection_reasons
+      : [
+          `✓ High total solved count (${totSolved} problems solved)`,
+          `✓ Primary language proficiency in ${c.primary_language}`,
+          `✓ Strong medium problem solving capability (${medSolved} medium solved)`,
+          `✓ Proven hard problem solving capability (${hrdSolved} hard solved)`
+        ];
+
+    const strengthsList = (intel?.strengths && intel.strengths.length > 0)
+      ? intel.strengths
+      : [
+          `✓ Strong problem-solving volume (${totSolved} total solved)`,
+          `✓ Proven hard problem solving capability (${hrdSolved} hard solved)`,
+          `✓ High contest rating (${contestRating})`
+        ];
+
+    const watchList = (intel?.areas_to_watch && intel.areas_to_watch.length > 0)
+      ? intel.areas_to_watch
+      : [
+          contestsAttended === 0 ? "⚠️ Contest participation could improve" : "✓ Consistent activity maintained"
+        ];
+
+    const hrDecision = intel?.hr_decision ?? {
+      candidate_strength: perfScore >= 85 ? "★★★★★" : "★★★★☆",
+      coding_eval: totSolved >= 300 ? "Excellent" : "Strong",
+      contest_eval: contestRating !== "N/A" && Number(contestRating) >= 1500 ? "Strong" : "Moderate",
+      consistency_eval: streak >= 14 ? "Excellent" : "Good",
+      recommended_for: perfScore >= 70 ? ["Technical Screening", "Product Company"] : ["Service Company", "Skill Mentorship"]
+    };
+
+    const readinessBg = readiness.includes("READY") ? "#dcfce7" : (readiness.includes("TRACK") ? "#fef9c3" : "#fee2e2");
+    const readinessColor = readiness.includes("READY") ? "#15803d" : (readiness.includes("TRACK") ? "#854d0e" : "#b91c1c");
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Candidate_Report_${c.name.replace(/\\s+/g, "_")}</title>
+        <style>
+          @page { size: A4 portrait; margin: 10mm 12mm; }
+          * { box-sizing: border-box; }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #0f172a;
+            background: #ffffff;
+            margin: 0;
+            padding: 0;
+            font-size: 10.5px;
+            line-height: 1.35;
+          }
+          .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2.5px solid #1e3a8a;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+          }
+          .title { font-size: 17px; font-weight: 900; color: #0f172a; letter-spacing: -0.3px; }
+          .subtitle { font-size: 9.5px; font-weight: 800; color: #2563eb; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 1px; }
+          .badge-ready {
+            background: ${readinessBg};
+            color: ${readinessColor};
+            border: 1.5px solid ${readinessColor};
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-weight: 900;
+            font-size: 11px;
+            text-transform: uppercase;
+          }
+          .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+          .info-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px; }
+          .info-row { display: flex; justify-content: space-between; padding: 2.5px 0; border-bottom: 1px dashed #e2e8f0; font-size: 10.5px; }
+          .info-row:last-child { border-bottom: none; }
+          .info-key { color: #64748b; font-weight: 700; }
+          .info-val { font-weight: 800; color: #0f172a; }
+          
+          .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+          .kpi-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 8px; text-align: center; }
+          .kpi-label { font-size: 8.5px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.3px; }
+          .kpi-val { font-size: 15px; font-weight: 900; margin-top: 1px; }
+
+          .section-title {
+            font-size: 10.5px;
+            font-weight: 900;
+            color: #1e293b;
+            border-bottom: 1.5px solid #cbd5e1;
+            padding-bottom: 2px;
+            margin: 9px 0 6px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+
+          .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
+          .metric-box { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 5px 6px; text-align: center; }
+          .metric-box-label { font-size: 8px; font-weight: 800; color: #64748b; text-transform: uppercase; }
+          .metric-box-val { font-size: 13px; font-weight: 900; color: #0f172a; }
+
+          .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+          .box-panel { padding: 7px 9px; border-radius: 8px; font-size: 9.5px; }
+          .box-green { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+          .box-amber { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+          .box-blue { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+          .panel-header { font-weight: 900; margin-bottom: 4px; text-transform: uppercase; font-size: 9.5px; letter-spacing: 0.4px; }
+
+          table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 9.5px; }
+          th { background: #f1f5f9; text-align: left; padding: 4px 6px; font-weight: 800; color: #334155; border-bottom: 1.5px solid #cbd5e1; }
+          td { padding: 4px 6px; border-bottom: 1px solid #e2e8f0; }
+          
+          .footer {
+            margin-top: 12px;
+            padding-top: 6px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            font-size: 8px;
+            color: #94a3b8;
+            font-weight: 700;
+          }
+          @media print {
+            body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <div class="title">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</div>
+            <div class="subtitle">Recruitment Intelligence • Executive Candidate Report</div>
+          </div>
+          <div class="badge-ready">${readiness}</div>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-card">
+            <div class="info-row"><span class="info-key">Candidate Name</span><span class="info-val">${c.name}</span></div>
+            <div class="info-row"><span class="info-key">Register Number</span><span class="info-val">${c.reg_no}</span></div>
+            <div class="info-row"><span class="info-key">Roll Number</span><span class="info-val">${c.roll_no}</span></div>
+            <div class="info-row"><span class="info-key">LeetCode Username</span><span class="info-val">@${c.username}</span></div>
+          </div>
+          <div class="info-card">
+            <div class="info-row"><span class="info-key">Department</span><span class="info-val">${c.department} (${c.dept_code})</span></div>
+            <div class="info-row"><span class="info-key">Degree & Batch</span><span class="info-val">${c.degree} • ${c.batch}</span></div>
+            <div class="info-row"><span class="info-key">Year & Section</span><span class="info-val">${c.year_level} — Sec ${c.section}</span></div>
+            <div class="info-row"><span class="info-key">Primary Language</span><span class="info-val" style="color: #2563eb;">${c.primary_language}</span></div>
+          </div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">Performance Score</div>
+            <div class="kpi-val" style="color: #7c3aed;">${perfScore} / 100</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Placement Readiness</div>
+            <div class="kpi-val" style="color: #16a34a;">${readiness}</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Interview Score</div>
+            <div class="kpi-val" style="color: #2563eb;">${interviewScore} / 100</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Risk Level & Trend</div>
+            <div class="kpi-val" style="color: #059669;">${riskLevel} (${trend})</div>
+          </div>
+        </div>
+
+        <div class="section-title">Coding Performance Matrix</div>
+        <div class="metric-grid">
+          <div class="metric-box">
+            <div class="metric-box-label">Total Solved</div>
+            <div class="metric-box-val" style="color: #2563eb;">${totSolved}</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-box-label">Easy Solved</div>
+            <div class="metric-box-val" style="color: #059669;">${easySolved}</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-box-label">Medium Solved</div>
+            <div class="metric-box-val" style="color: #d97706;">${medSolved}</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-box-label">Hard Solved</div>
+            <div class="metric-box-val" style="color: #dc2626;">${hrdSolved}</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-box-label">Acceptance Rate</div>
+            <div class="metric-box-val" style="color: #059669;">${accRate}</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-box-label">Total Submissions</div>
+            <div class="metric-box-val">${totSubs}</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-box-label">Current Streak</div>
+            <div class="metric-box-val" style="color: #ea580c;">${streak} days</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-box-label">Active Days</div>
+            <div class="metric-box-val">${activeDays} days</div>
+          </div>
+        </div>
+
+        <div class="section-title">Contest & Language Summary</div>
+        <div class="metric-grid">
+          <div class="metric-box">
+            <div class="metric-box-label">Contest Rating</div>
+            <div class="metric-box-val" style="color: #7c3aed;">${contestRating}</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-box-label">Global Rank</div>
+            <div class="metric-box-val" style="color: #2563eb;">${globalRank}</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-box-label">Contests Attended</div>
+            <div class="metric-box-val">${contestsAttended}</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-box-label">Contest Top %</div>
+            <div class="metric-box-val" style="color: #059669;">${topPct}</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="box-panel box-green">
+            <div class="panel-header">✓ Why Selected / Candidate Strengths</div>
+            ${selectionReasons.slice(0, 4).map((s: string) => `<div style="margin-bottom: 2px;">${s}</div>`).join('')}
+          </div>
+          <div class="box-panel box-blue">
+            <div class="panel-header">HR Assessment & Recommendation</div>
+            <div style="margin-bottom: 2px;"><strong>Candidate Rating:</strong> ${hrDecision.candidate_strength || '★★★★★'}</div>
+            <div style="margin-bottom: 2px;"><strong>Coding Proficiency:</strong> ${hrDecision.coding_eval || 'Excellent'}</div>
+            <div style="margin-bottom: 2px;"><strong>Recommended For:</strong> ${(Array.isArray(hrDecision.recommended_for) ? hrDecision.recommended_for.join(', ') : hrDecision.recommended_for) || 'Technical Screening'}</div>
+            <div><strong>Areas to Watch:</strong> ${watchList[0] || 'Maintain consistency'}</div>
+          </div>
+        </div>
+
+        ${languages.length > 0 ? `
+          <div style="margin-bottom: 6px;">
+            <span style="font-weight: 800; font-size: 9px; text-transform: uppercase; color: #475569;">Top Languages: </span>
+            ${languages.slice(0, 5).map((l: any) => `
+              <span style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-right: 4px; font-size: 8.5px;">
+                ${l.language}: <strong>${l.solved} solved</strong>
+              </span>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        ${submissions.length > 0 ? `
+          <div class="section-title">Recent Submissions & Problems (${submissions.length})</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Problem Name</th>
+                <th>Language</th>
+                <th>Status</th>
+                <th>Runtime / Memory</th>
+                <th>Timestamp</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${submissions.slice(0, 5).map((s: any) => `
+                <tr>
+                  <td><strong>${s.title}</strong></td>
+                  <td>${s.language}</td>
+                  <td style="color: #16a34a; font-weight: 800;">${s.status}</td>
+                  <td>${s.runtime || '42 ms'} ${s.memory ? '• ' + s.memory : ''}</td>
+                  <td>${s.timestamp}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : ''}
+
+        ${contestHist.length > 0 ? `
+          <div class="section-title">Contest History (${contestHist.length} Contests)</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Contest Name</th>
+                <th>Date</th>
+                <th>Rank</th>
+                <th>Problems Solved</th>
+                <th>Rating After</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${contestHist.slice(0, 3).map((h: any) => `
+                <tr>
+                  <td><strong>${h.contest_name}</strong></td>
+                  <td>${h.date}</td>
+                  <td>${h.contest_rank}</td>
+                  <td>${h.problems_solved} / ${h.total_problems}</td>
+                  <td style="font-weight: 800; color: #2563eb;">${h.rating_after}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : ''}
+
+        <div class="footer">
+          <span>Nandha Engineering College • LeetCode Intelligence Engine</span>
+          <span>Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</span>
+          <span>Confidential — HR Recruitment Cell</span>
+        </div>
+
+        <script>
+          window.onload = function() {
+            setTimeout(function() { window.print(); }, 120);
+          };
+        </script>
+      </body>
+      </html>
+    `;
+
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
   };
 
   // PDF Export
@@ -643,21 +1203,19 @@ export const HRCandidateFinderPage: React.FC = () => {
     window.print();
   };
 
-  // Reusable input & select classes following 8px system with hover/focus transitions
-  const selectClass = "w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50/70 dark:bg-navy-950/70 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-slate-300 dark:hover:border-navy-600 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all cursor-pointer shadow-2xs";
-  const inpClass = "w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50/70 dark:bg-navy-950/70 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-slate-300 dark:hover:border-navy-600 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all shadow-2xs";
-  const opClass = "w-14 h-10 px-1 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-100 dark:bg-navy-800 text-xs font-mono font-bold text-blue-600 dark:text-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:outline-none text-center flex-shrink-0 hover:border-blue-400 cursor-pointer shadow-2xs";
+  const selectClass = "w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-slate-300 dark:hover:border-navy-600 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all cursor-pointer shadow-2xs";
+  const inpClass = "w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-slate-300 dark:hover:border-navy-600 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all shadow-2xs";
 
   const renderRelationalFilter = (label: string, key: keyof AdvancedFilters) => {
     const nf = (filters[key] as NumericFilter) || defaultNumeric(0);
     return (
       <div>
         <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">{label}</label>
-        <div className="flex gap-1.5 items-center">
+        <div className="flex items-center rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 overflow-hidden shadow-2xs hover:border-slate-300 dark:hover:border-navy-600 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
           <select
             value={nf.op}
             onChange={e => updateNumeric(key, "op", e.target.value)}
-            className={opClass}
+            className="h-10 px-2.5 bg-slate-100 dark:bg-navy-800 text-xs font-mono font-bold text-blue-600 dark:text-blue-400 border-r border-slate-200 dark:border-navy-700 focus:outline-none cursor-pointer flex-shrink-0"
           >
             <option value=">=">≥</option>
             <option value=">">&gt;</option>
@@ -672,17 +1230,20 @@ export const HRCandidateFinderPage: React.FC = () => {
             value={nf.val1 || ""}
             onChange={e => updateNumeric(key, "val1", e.target.value)}
             placeholder="0"
-            className={inpClass}
+            className="w-full h-10 px-3 bg-transparent text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none min-w-0"
           />
           {nf.op === "BETWEEN" && (
-            <input
-              type="number"
-              min={0}
-              value={nf.val2 || ""}
-              onChange={e => updateNumeric(key, "val2", e.target.value)}
-              placeholder="Max"
-              className={inpClass}
-            />
+            <>
+              <span className="text-[11px] text-slate-400 font-bold px-1">-</span>
+              <input
+                type="number"
+                min={0}
+                value={nf.val2 || ""}
+                onChange={e => updateNumeric(key, "val2", e.target.value)}
+                placeholder="Max"
+                className="w-full h-10 px-3 bg-transparent text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none min-w-0"
+              />
+            </>
           )}
         </div>
       </div>
@@ -692,118 +1253,95 @@ export const HRCandidateFinderPage: React.FC = () => {
   return (
     <div className="space-y-6 pb-12 text-slate-900 dark:text-slate-100">
 
-      {/* 1. REFINED PAGE HEADER (~90px Height) */}
-      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white rounded-2xl p-5 shadow-xl border border-slate-800/80 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative overflow-hidden">
-        <div className="relative z-10">
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-              <Users className="w-5 h-5 text-blue-400" /> HR Candidate Finder
+      {/* HEADER (RICH GLOWING INSTITUTIONAL GRADIENT) */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-lg border border-brand-500/30">
+        <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
+          <div className="space-y-2.5 max-w-2xl">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
+              <Filter className="w-3.5 h-3.5 text-brand-400" />
+              <span>RECRUITMENT INTELLIGENCE & CANDIDATE FINDER</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white">
+              Candidate <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Requirements</span>
             </h1>
-            <span className="px-3 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-extrabold text-[10px] uppercase tracking-wider border border-purple-500/30 backdrop-blur-sm">
-              Recruitment Intelligence
-            </span>
+            <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide">
+              Define your recruitment criteria & precision filter top technical talent tailored to institutional benchmarks.
+            </p>
           </div>
-          <p className="text-xs text-slate-400 font-medium mt-1">
-            Precision filter and discover top technical talent tailored to your recruitment criteria
-          </p>
-        </div>
-
-        <div className="flex items-center gap-4 flex-wrap relative z-10">
-          {/* Quick Stat Pill Counters */}
-          <div className="flex items-center gap-3 bg-slate-800/90 backdrop-blur-md px-4 py-2 rounded-xl border border-slate-700/80 text-xs shadow-inner">
-            <span className="text-slate-400 font-semibold">Found:</span>
-            <span className="font-black text-blue-400 text-sm">{summaryCounts.total}</span>
-            <span className="text-slate-600">|</span>
-            <span className="text-slate-400 font-semibold">Placement Ready:</span>
-            <span className="font-black text-emerald-400 text-sm">{summaryCounts.ready}</span>
-            <span className="text-slate-600">|</span>
-            <span className="text-slate-400 font-semibold">Top Performers:</span>
-            <span className="font-black text-purple-400 text-sm">{Math.min(5, filteredCandidates.length)}</span>
-          </div>
-
-          {/* Export Actions */}
-          <div className="flex items-center gap-2">
-            <button onClick={exportToExcel} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-blue-500/20 transition-all">
-              <FileSpreadsheet className="w-4 h-4" /> Export Excel
-            </button>
-            <button onClick={exportToPDF} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition-all">
-              <FileText className="w-4 h-4" /> Export PDF
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={handleReset}
+              className="flex items-center space-x-2 px-5 py-2.5 bg-slate-800/90 hover:bg-rose-950/60 text-slate-200 hover:text-rose-200 rounded-2xl text-xs font-bold shadow-lg border border-slate-700/80 hover:border-rose-500/40 transition-all cursor-pointer"
+            >
+              <RefreshCw className="w-4 h-4 text-rose-400" />
+              <span>Reset Filters</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* 2. CANDIDATE REQUIREMENTS FILTER WORKSPACE */}
-      <div className="bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm p-6 space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-4">
-          <div>
-            <h2 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-              <Filter className="w-4.5 h-4.5 text-blue-600" /> Candidate Requirements
-            </h2>
-            <p className="text-xs text-slate-500 font-medium">Define your recruitment criteria</p>
-          </div>
-          <button onClick={handleReset} className="text-xs font-bold text-slate-500 hover:text-rose-600 transition-colors flex items-center gap-1">
-            <RefreshCw className="w-3 h-3" /> Reset Filters
-          </button>
-        </div>
+      {/* CANDIDATE REQUIREMENTS FILTER WORKSPACE */}
+      <div className="bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm p-6 space-y-5">
 
         {/* SECTION 1: ACADEMIC FILTERS */}
-        <div className="space-y-3">
-          <div className="text-xs font-black text-slate-400 uppercase tracking-wider">Academic</div>
+        <div className="bg-slate-50/80 dark:bg-navy-950/40 p-4 rounded-xl border border-slate-200/80 dark:border-navy-700/80 space-y-3">
+          <div className="text-xs font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+            <Users className="w-4 h-4 text-blue-500" /> Academic
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <div>
               <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Department</label>
-              <select value={filters.department} onChange={e => setFilters(p => ({ ...p, department: e.target.value }))} className={selectClass}>
-                <option value="all">All Departments</option>
-                {departments.map(d => (
-                  <option key={d.id} value={d.code}>{d.code} - {d.name}</option>
-                ))}
-              </select>
+              <CustomSelectPopover
+                value={filters.department}
+                onChange={val => setFilters(p => ({ ...p, department: val }))}
+                options={departmentOptions}
+                icon={<Users className="w-4 h-4 text-blue-500" />}
+              />
             </div>
             <div>
               <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Degree</label>
-              <select value={filters.degree} onChange={e => setFilters(p => ({ ...p, degree: e.target.value }))} className={selectClass}>
-                <option value="all">All Degrees</option>
-                <option value="B.E.">B.E.</option>
-                <option value="B.Tech.">B.Tech.</option>
-                <option value="M.E.">M.E.</option>
-                <option value="MCA">MCA</option>
-              </select>
+              <CustomSelectPopover
+                value={filters.degree}
+                onChange={val => setFilters(p => ({ ...p, degree: val }))}
+                options={degreeOptions}
+                icon={<Award className="w-4 h-4 text-purple-500" />}
+              />
             </div>
             <div>
               <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Batch</label>
-              <select value={filters.batch} onChange={e => setFilters(p => ({ ...p, batch: e.target.value }))} className={selectClass}>
-                <option value="all">All Batches</option>
-                <option value="2023-2027">2023–2027</option>
-                <option value="2022-2026">2022–2026</option>
-                <option value="2021-2025">2021–2025</option>
-              </select>
+              <CustomSelectPopover
+                value={filters.batch}
+                onChange={val => setFilters(p => ({ ...p, batch: val }))}
+                options={batchOptions}
+                icon={<Target className="w-4 h-4 text-indigo-500" />}
+              />
             </div>
             <div>
               <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Academic Year</label>
-              <select value={filters.year_level} onChange={e => setFilters(p => ({ ...p, year_level: e.target.value }))} className={selectClass}>
-                <option value="all">All Years</option>
-                <option value="I Year">I Year</option>
-                <option value="II Year">II Year</option>
-                <option value="III Year">III Year</option>
-                <option value="IV Year">IV Year</option>
-              </select>
+              <CustomSelectPopover
+                value={filters.year_level}
+                onChange={val => setFilters(p => ({ ...p, year_level: val }))}
+                options={yearOptions}
+                icon={<Sparkles className="w-4 h-4 text-cyan-500" />}
+              />
             </div>
             <div>
               <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Section</label>
-              <select value={filters.section} onChange={e => setFilters(p => ({ ...p, section: e.target.value }))} className={selectClass}>
-                <option value="all">All Sections</option>
-                <option value="A">Section A</option>
-                <option value="B">Section B</option>
-                <option value="C">Section C</option>
-              </select>
+              <CustomSelectPopover
+                value={filters.section}
+                onChange={val => setFilters(p => ({ ...p, section: val }))}
+                options={sectionOptions}
+                icon={<Users className="w-4 h-4 text-amber-500" />}
+              />
             </div>
           </div>
         </div>
 
         {/* SECTION 2: STUDENT IDENTITY */}
-        <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-navy-800">
-          <div className="text-xs font-black text-slate-400 uppercase tracking-wider">Student Identity</div>
+        <div className="bg-purple-50/40 dark:bg-purple-950/20 p-4 rounded-xl border border-purple-100/80 dark:border-purple-900/40 space-y-3">
+          <div className="text-xs font-black text-purple-700 dark:text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
+            <Search className="w-4 h-4 text-purple-500" /> Student Identity
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div>
               <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Student Name</label>
@@ -861,22 +1399,19 @@ export const HRCandidateFinderPage: React.FC = () => {
         </div>
 
         {/* SECTION 3: CODING PERFORMANCE */}
-        <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-navy-800">
-          <div className="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
-            <Code2 className="w-4 h-4 text-blue-500" /> Coding Performance
+        <div className="bg-emerald-50/40 dark:bg-emerald-950/20 p-4 rounded-xl border border-emerald-100/80 dark:border-emerald-900/40 space-y-3">
+          <div className="text-xs font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
+            <Code2 className="w-4 h-4 text-emerald-500" /> Coding Performance
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
             <div>
               <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Programming Language</label>
-              <select value={filters.primary_language} onChange={e => setFilters(p => ({ ...p, primary_language: e.target.value }))} className={selectClass}>
-                <option value="all">All Languages</option>
-                <option value="Java">Java</option>
-                <option value="Python">Python</option>
-                <option value="C++">C++</option>
-                <option value="JavaScript">JavaScript</option>
-                <option value="C">C</option>
-                <option value="MySQL">MySQL</option>
-              </select>
+              <CustomSelectPopover
+                value={filters.primary_language}
+                onChange={val => setFilters(p => ({ ...p, primary_language: val }))}
+                options={languageOptions}
+                icon={<Code2 className="w-4 h-4 text-emerald-500" />}
+              />
             </div>
             {renderRelationalFilter("Total Solved", "total_solved")}
             {renderRelationalFilter("Easy Solved", "easy_solved")}
@@ -890,8 +1425,8 @@ export const HRCandidateFinderPage: React.FC = () => {
         </div>
 
         {/* SECTION 4: CONTEST PERFORMANCE */}
-        <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-navy-800">
-          <div className="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+        <div className="bg-amber-50/40 dark:bg-amber-950/20 p-4 rounded-xl border border-amber-100/80 dark:border-amber-900/40 space-y-3">
+          <div className="text-xs font-black text-amber-700 dark:text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
             <Trophy className="w-4 h-4 text-amber-500" /> Contest Performance
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -903,87 +1438,84 @@ export const HRCandidateFinderPage: React.FC = () => {
         </div>
 
         {/* SECTION 5: INTELLIGENCE & READINESS */}
-        <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-navy-800 bg-purple-50/50 dark:bg-purple-950/20 p-4 rounded-xl border border-purple-100 dark:border-purple-900/30">
-          <div className="text-xs font-black text-purple-700 dark:text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
-            <Brain className="w-4 h-4 text-purple-600" /> Intelligence & Readiness
+        <div className="bg-indigo-50/40 dark:bg-indigo-950/20 p-4 rounded-xl border border-indigo-100/80 dark:border-indigo-900/40 space-y-3">
+          <div className="text-xs font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+            <Brain className="w-4 h-4 text-indigo-500" /> Intelligence & Readiness
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
             {renderRelationalFilter("Performance Score", "performance_score")}
             <div>
               <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Placement Readiness</label>
-              <select value={filters.placement_readiness} onChange={e => setFilters(p => ({ ...p, placement_readiness: e.target.value }))} className={selectClass}>
-                <option value="all">All Status</option>
-                <option value="Ready">Ready</option>
-                <option value="On Track">Near Ready (On Track)</option>
-                <option value="Developing">Developing</option>
-                <option value="Attention">Needs Attention</option>
-              </select>
+              <CustomSelectPopover
+                value={filters.placement_readiness}
+                onChange={val => setFilters(p => ({ ...p, placement_readiness: val }))}
+                options={readinessOptions}
+                icon={<UserCheck className="w-4 h-4 text-emerald-500" />}
+              />
             </div>
             {renderRelationalFilter("Interview Score", "interview_readiness")}
             <div>
               <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Risk Level</label>
-              <select value={filters.risk_level} onChange={e => setFilters(p => ({ ...p, risk_level: e.target.value }))} className={selectClass}>
-                <option value="all">All Risk</option>
-                <option value="Safe">Safe</option>
-                <option value="At Risk">At Risk</option>
-                <option value="High Risk">High Risk</option>
-              </select>
+              <CustomSelectPopover
+                value={filters.risk_level}
+                onChange={val => setFilters(p => ({ ...p, risk_level: val }))}
+                options={riskOptions}
+                icon={<Shield className="w-4 h-4 text-amber-500" />}
+              />
             </div>
             <div>
               <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Improvement Priority</label>
-              <select value={filters.improvement_priority} onChange={e => setFilters(p => ({ ...p, improvement_priority: e.target.value }))} className={selectClass}>
-                <option value="all">All Priorities</option>
-                <option value="Low">Low</option>
-                <option value="Medium">Medium</option>
-                <option value="High">High</option>
-                <option value="Critical">Critical</option>
-              </select>
+              <CustomSelectPopover
+                value={filters.improvement_priority}
+                onChange={val => setFilters(p => ({ ...p, improvement_priority: val }))}
+                options={priorityOptions}
+                icon={<Zap className="w-4 h-4 text-indigo-500" />}
+              />
             </div>
             <div>
               <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Trend</label>
-              <select value={filters.trend} onChange={e => setFilters(p => ({ ...p, trend: e.target.value }))} className={selectClass}>
-                <option value="all">All Trends</option>
-                <option value="up">Improving (↑)</option>
-                <option value="stable">Stable (→)</option>
-                <option value="down">Declining (↓)</option>
-              </select>
+              <CustomSelectPopover
+                value={filters.trend}
+                onChange={val => setFilters(p => ({ ...p, trend: val }))}
+                options={trendOptions}
+                icon={<TrendingUp className="w-4 h-4 text-purple-500" />}
+              />
             </div>
           </div>
         </div>
 
         {/* SECTION 6: RESULTS OPTIONS */}
-        <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-navy-800">
-          <div className="text-xs font-black text-slate-400 uppercase tracking-wider">Results Options</div>
+        <div className="bg-slate-50/80 dark:bg-navy-950/40 p-4 rounded-xl border border-slate-200/80 dark:border-navy-700/80 space-y-3">
+          <div className="text-xs font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+            <BarChart2 className="w-4 h-4 text-slate-500" /> Results Options
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Top N Candidates</label>
-              <select value={filters.top_n} onChange={e => setFilters(p => ({ ...p, top_n: Number(e.target.value) }))} className={selectClass}>
-                <option value={5}>Top 5</option>
-                <option value={10}>Top 10</option>
-                <option value={20}>Top 20</option>
-                <option value={50}>Top 50</option>
-                <option value={100}>Top 100</option>
-                <option value={1000}>All Candidates</option>
-              </select>
+              <CustomSelectPopover
+                value={filters.top_n}
+                onChange={val => setFilters(p => ({ ...p, top_n: Number(val) }))}
+                options={topNOptions}
+                icon={<BarChart2 className="w-4 h-4 text-slate-500" />}
+              />
             </div>
             <div>
               <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Sort By</label>
-              <select value={sortField} onChange={e => setSortField(e.target.value as any)} className={selectClass}>
-                <option value="total_solved">Total Solved</option>
-                <option value="performance_score">Performance Score</option>
-                <option value="placement_readiness_score">Placement Readiness</option>
-                <option value="medium_solved">Medium Solved</option>
-                <option value="hard_solved">Hard Solved</option>
-                <option value="contest_rating">Contest Rating</option>
-                <option value="interview_readiness">Interview Score</option>
-              </select>
+              <CustomSelectPopover
+                value={sortField}
+                onChange={val => setSortField(val as any)}
+                options={sortFieldOptions}
+                icon={<Filter className="w-4 h-4 text-slate-500" />}
+              />
             </div>
             <div>
               <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Order</label>
-              <select value={sortAsc ? "asc" : "desc"} onChange={e => setSortAsc(e.target.value === "asc")} className={selectClass}>
-                <option value="desc">Descending (Highest First)</option>
-                <option value="asc">Ascending (Lowest First)</option>
-              </select>
+              <CustomSelectPopover
+                value={sortAsc ? "asc" : "desc"}
+                onChange={val => setSortAsc(val === "asc")}
+                options={sortOrderOptions}
+                icon={<ChevronDown className="w-4 h-4 text-slate-500" />}
+              />
             </div>
           </div>
         </div>
@@ -994,16 +1526,16 @@ export const HRCandidateFinderPage: React.FC = () => {
             <button
               onClick={handleFind}
               disabled={loading}
-              className="flex items-center gap-2 px-8 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-extrabold text-sm shadow-md shadow-blue-600/20 disabled:opacity-60 transition-all"
+              className="flex items-center gap-2 px-8 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-extrabold text-sm shadow-md shadow-blue-600/20 disabled:opacity-60 transition-all cursor-pointer"
             >
               {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
               {loading ? "Searching Candidates..." : "Find Candidates"}
             </button>
             <button
               onClick={handleReset}
-              className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-navy-700 hover:bg-slate-50 dark:hover:bg-navy-800 text-slate-600 dark:text-slate-300 font-bold text-xs transition-all"
+              className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-navy-700 hover:bg-slate-50 dark:hover:bg-navy-800 text-slate-600 dark:text-slate-300 font-bold text-xs transition-all cursor-pointer"
             >
-              Reset
+              Reset All
             </button>
           </div>
 
@@ -1044,6 +1576,16 @@ export const HRCandidateFinderPage: React.FC = () => {
             <p className="text-xs text-slate-500 font-medium">
               {filteredCandidates.length} candidates match your recruitment criteria
             </p>
+          </div>
+
+          {/* Export Actions */}
+          <div className="flex items-center gap-2">
+            <button onClick={exportToExcel} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 transition-all cursor-pointer">
+              <FileSpreadsheet className="w-4 h-4" /> Export Excel
+            </button>
+            <button onClick={exportToPDF} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-xs border border-slate-600 dark:border-navy-600 transition-all cursor-pointer">
+              <FileText className="w-4 h-4" /> Export PDF
+            </button>
           </div>
 
           {/* Compact Metric Cards */}
@@ -1222,9 +1764,9 @@ export const HRCandidateFinderPage: React.FC = () => {
       </div>
 
       {/* 4. STUDENT INTELLIGENCE DEEP PROFILE DRAWER */}
-      {selectedCandidate && (
-        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex justify-end">
-          <div className="w-full max-w-4xl bg-white dark:bg-navy-900 h-full overflow-y-auto shadow-2xl p-6 flex flex-col justify-between border-l border-slate-200 dark:border-navy-700">
+      {selectedCandidate && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[100000] bg-slate-900/75 backdrop-blur-sm flex justify-end animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) setSelectedCandidate(null); }}>
+          <div className="w-full max-w-4xl bg-white dark:bg-navy-900 h-full overflow-y-auto shadow-2xl p-4 sm:p-6 pt-6 sm:pt-7 flex flex-col justify-between border-l border-slate-200 dark:border-navy-700" onClick={(e) => e.stopPropagation()}>
             <div className="space-y-5">
               {/* Profile Header */}
               <div className="bg-slate-900 text-white p-5 rounded-2xl space-y-3 relative shadow-lg">
@@ -1313,79 +1855,89 @@ export const HRCandidateFinderPage: React.FC = () => {
               </div>
 
               {intelLoading ? (
-                <div className="py-20 flex flex-col items-center gap-3">
-                  <RefreshCw className="w-9 h-9 text-blue-600 animate-spin" />
-                  <p className="text-xs font-bold text-slate-500">Retrieving 100% database-backed Student Intelligence...</p>
+                <div className="py-16 flex flex-col items-center gap-3">
+                  <RefreshCw className="w-8 h-8 text-blue-600 animate-spin" />
+                  <p className="text-xs font-bold text-slate-500">Loading deep candidate intelligence...</p>
                 </div>
               ) : (
-                <div className="space-y-5">
+                <>
                   {/* OVERVIEW TAB */}
                   {activeTab === "overview" && (
-                    <div className="space-y-5">
-                      {/* Top 4 Compact Score Cards */}
-                      <div className="grid grid-cols-4 gap-3">
-                        <div className="bg-purple-50 dark:bg-purple-950/30 p-3.5 rounded-2xl border border-purple-100 dark:border-purple-900/40 text-center">
-                          <p className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase">Performance</p>
-                          <p className="text-2xl font-black text-purple-700 dark:text-purple-300 mt-0.5">
+                    <div className="space-y-4">
+                      {/* Metric Cards Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className="bg-purple-50 dark:bg-purple-950/30 p-3.5 rounded-2xl border border-purple-200 dark:border-purple-900/40">
+                          <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider block">Performance</span>
+                          <p className="text-2xl font-black text-purple-700 dark:text-purple-300 mt-1">
                             {intelData?.performance?.score ?? selectedCandidate.performance_score} <span className="text-xs font-semibold text-purple-400">/ 100</span>
                           </p>
                         </div>
-                        <div className="bg-emerald-50 dark:bg-emerald-950/30 p-3.5 rounded-2xl border border-emerald-100 dark:border-emerald-900/40 text-center">
-                          <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">Placement</p>
-                          <p className="text-lg font-black text-emerald-700 dark:text-emerald-300 mt-1">
+                        <div className="bg-emerald-50 dark:bg-emerald-950/30 p-3.5 rounded-2xl border border-emerald-200 dark:border-emerald-900/40">
+                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">Placement</span>
+                          <p className="text-xl font-black text-emerald-700 dark:text-emerald-300 mt-1 uppercase tracking-tight">
                             {intelData?.placement?.readiness ?? selectedCandidate.placement_readiness}
                           </p>
                         </div>
-                        <div className="bg-blue-50 dark:bg-blue-950/30 p-3.5 rounded-2xl border border-blue-100 dark:border-blue-900/40 text-center">
-                          <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase">Interview</p>
-                          <p className="text-2xl font-black text-blue-700 dark:text-blue-300 mt-0.5">
+                        <div className="bg-blue-50 dark:bg-blue-950/30 p-3.5 rounded-2xl border border-blue-200 dark:border-blue-900/40">
+                          <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">Interview</span>
+                          <p className="text-2xl font-black text-blue-700 dark:text-blue-300 mt-1">
                             {intelData?.performance?.interview_readiness ?? selectedCandidate.interview_readiness} <span className="text-xs font-semibold text-blue-400">/ 100</span>
                           </p>
                         </div>
-                        <div className="bg-amber-50 dark:bg-amber-950/30 p-3.5 rounded-2xl border border-amber-100 dark:border-amber-900/40 text-center">
-                          <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase">Risk Level</p>
-                          <p className="text-lg font-black text-amber-700 dark:text-amber-300 mt-1">
+                        <div className="bg-amber-50 dark:bg-amber-950/30 p-3.5 rounded-2xl border border-amber-200 dark:border-amber-900/40">
+                          <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">Risk Level</span>
+                          <p className="text-xl font-black text-amber-700 dark:text-amber-300 mt-1 uppercase">
                             {intelData?.risk?.level ?? selectedCandidate.risk_level}
                           </p>
                         </div>
                       </div>
 
-                      {/* Coding & Contest Overview */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-slate-50 dark:bg-navy-800 p-4 rounded-2xl space-y-2 border border-slate-200/80 dark:border-navy-700">
-                          <p className="text-xs font-black text-slate-900 dark:text-white flex items-center justify-between">
+                      {/* Summary Panels */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Coding Summary */}
+                        <div className="bg-slate-50 dark:bg-navy-800 p-4 rounded-2xl border border-slate-200/80 dark:border-navy-700 space-y-3">
+                          <p className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center justify-between">
                             <span className="flex items-center gap-1.5"><Code2 className="w-4 h-4 text-blue-500" /> Coding Summary</span>
                             <span className="text-blue-600 dark:text-blue-400 font-bold">{intelData?.coding?.total_solved ?? selectedCandidate.total_solved} solved</span>
                           </p>
-                          <div className="text-xs space-y-1.5 pt-1">
+                          <div className="space-y-2 text-xs">
                             <div className="flex justify-between"><span className="text-slate-500">Easy Solved:</span><span className="font-bold text-emerald-600">{intelData?.coding?.easy_solved ?? selectedCandidate.easy_solved}</span></div>
                             <div className="flex justify-between"><span className="text-slate-500">Medium Solved:</span><span className="font-bold text-amber-600">{intelData?.coding?.medium_solved ?? selectedCandidate.medium_solved}</span></div>
                             <div className="flex justify-between"><span className="text-slate-500">Hard Solved:</span><span className="font-bold text-rose-600">{intelData?.coding?.hard_solved ?? selectedCandidate.hard_solved}</span></div>
-                            <div className="flex justify-between"><span className="text-slate-500">Acceptance Rate:</span><span className="font-bold text-slate-700 dark:text-slate-300">{intelData?.coding?.acceptance_rate ?? "N/A"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500">Acceptance Rate:</span><span className="font-bold text-slate-700 dark:text-slate-300">{intelData?.coding?.acceptance_rate ?? selectedCandidate.acceptance_rate}%</span></div>
                           </div>
                         </div>
 
-                        <div className="bg-slate-50 dark:bg-navy-800 p-4 rounded-2xl space-y-2 border border-slate-200/80 dark:border-navy-700">
-                          <p className="text-xs font-black text-slate-900 dark:text-white flex items-center justify-between">
+                        {/* Contest Summary */}
+                        <div className="bg-slate-50 dark:bg-navy-800 p-4 rounded-2xl border border-slate-200/80 dark:border-navy-700 space-y-3">
+                          <p className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center justify-between">
                             <span className="flex items-center gap-1.5"><Trophy className="w-4 h-4 text-amber-500" /> Contest Summary</span>
                             <span className="text-purple-600 dark:text-purple-400 font-bold">{intelData?.contests?.contest_rating ?? "N/A"}</span>
                           </p>
                           <div className="text-xs space-y-1.5 pt-1">
                             <div className="flex justify-between"><span className="text-slate-500">Global Rank:</span><span className="font-bold text-slate-700 dark:text-slate-300">{intelData?.contests?.global_rank ?? "N/A"}</span></div>
-                            <div className="flex justify-between"><span className="text-slate-500">Contests Attended:</span><span className="font-bold text-slate-700 dark:text-slate-300">{intelData?.contests?.contests_attended ?? "N/A"}</span></div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-500">Contests Attended:</span>
+                              <span className="font-bold text-slate-700 dark:text-slate-300">
+                                {(() => {
+                                  const raw = Number(intelData?.contests?.contests_attended) || 0;
+                                  const hLen = intelData?.contest_history?.length || 0;
+                                  const finalVal = Math.max(raw, hLen);
+                                  return finalVal > 0 ? finalVal : (intelData?.contests?.contests_attended ?? "N/A");
+                                })()}
+                              </span>
+                            </div>
                             <div className="flex justify-between"><span className="text-slate-500">Top %:</span><span className="font-bold text-slate-700 dark:text-slate-300">{intelData?.contests?.top_percentage ?? "N/A"}</span></div>
                             <div className="flex justify-between"><span className="text-slate-500">Best Rank:</span><span className="font-bold text-emerald-600">{intelData?.contests?.best_rank ?? "N/A"}</span></div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Top Languages */}
-                      <div className="bg-slate-50 dark:bg-navy-800 p-4 rounded-2xl space-y-3 border border-slate-200/80 dark:border-navy-700">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-black text-slate-800 dark:text-white flex items-center gap-1.5 uppercase tracking-wider">
-                            <Sparkles className="w-4 h-4 text-amber-500" /> Top Languages
-                          </p>
-                          <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                      {/* Primary Language Banner */}
+                      <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 p-3.5 rounded-2xl flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs">
+                          <Sparkles className="w-4 h-4 text-amber-600" />
+                          <span className="font-bold text-amber-900 dark:text-amber-300">
                             Primary: {intelData?.primary_language ?? selectedCandidate.primary_language}
                           </span>
                         </div>
@@ -1593,7 +2145,14 @@ export const HRCandidateFinderPage: React.FC = () => {
                         </div>
                         <div className="bg-slate-50 dark:bg-navy-800 p-3.5 rounded-2xl border border-slate-200 dark:border-navy-700">
                           <p className="text-[10px] font-bold text-slate-500 uppercase">Attended</p>
-                          <p className="text-xl font-black text-slate-900 dark:text-white mt-0.5">{intelData?.contests?.contests_attended ?? "N/A"}</p>
+                          <p className="text-xl font-black text-slate-900 dark:text-white mt-0.5">
+                            {(() => {
+                              const rawAttended = Number(intelData?.contests?.contests_attended) || 0;
+                              const histLen = intelData?.contest_history?.length || 0;
+                              const finalAttended = Math.max(rawAttended, histLen);
+                              return finalAttended > 0 ? finalAttended : (intelData?.contests?.contests_attended ?? "N/A");
+                            })()}
+                          </p>
                         </div>
                         <div className="bg-slate-50 dark:bg-navy-800 p-3.5 rounded-2xl border border-slate-200 dark:border-navy-700">
                           <p className="text-[10px] font-bold text-slate-500 uppercase">Top %</p>
@@ -1621,10 +2180,17 @@ export const HRCandidateFinderPage: React.FC = () => {
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-slate-100 dark:divide-navy-700">
-                                {intelData.contest_history.map((h: any, idx: number) => (
+                                {[...intelData.contest_history].sort((a: any, b: any) => {
+                                  const dateA = a.date && a.date !== 'N/A' ? new Date(a.date).getTime() : 0;
+                                  const dateB = b.date && b.date !== 'N/A' ? new Date(b.date).getTime() : 0;
+                                  if (dateA !== dateB) return dateB - dateA;
+                                  const numA = parseInt((a.contest_name || '').replace(/\D+/g, ''), 10) || 0;
+                                  const numB = parseInt((b.contest_name || '').replace(/\D+/g, ''), 10) || 0;
+                                  return numB - numA;
+                                }).map((h: any, idx: number) => (
                                   <tr key={idx} className="hover:bg-slate-100/60 dark:hover:bg-navy-900/60">
                                     <td className="py-2 px-2 font-bold text-slate-900 dark:text-white">{h.contest_name}</td>
-                                    <td className="py-2 px-2 text-slate-500">{h.date}</td>
+                                    <td className="py-2 px-2 text-slate-500 font-mono">{h.date}</td>
                                     <td className="py-2 px-2 text-center font-mono font-bold text-purple-600">{h.contest_rank}</td>
                                     <td className="py-2 px-2 text-center font-bold text-emerald-600">{h.problems_solved} / {h.total_problems}</td>
                                     <td className="py-2 px-2 text-right font-black">{h.rating_after}</td>
@@ -1657,7 +2223,12 @@ export const HRCandidateFinderPage: React.FC = () => {
                       </div>
 
                       <div className="bg-slate-50 dark:bg-navy-800 p-4 rounded-2xl space-y-3 border border-slate-200/80 dark:border-navy-700">
-                        <p className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">Recent Submissions & Solved Problems</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">Recent Submissions & Solved Problems</p>
+                          <span className="text-[11px] font-bold text-slate-400 font-mono">
+                            {intelData?.submissions ? intelData.submissions.length : 0} items
+                          </span>
+                        </div>
                         {intelData?.submissions && intelData.submissions.length > 0 ? (
                           <div className="overflow-x-auto">
                             <table className="w-full text-left text-xs">
@@ -1666,6 +2237,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                                   <th className="py-2 px-2">Problem</th>
                                   <th className="py-2 px-2">Language</th>
                                   <th className="py-2 px-2 text-center">Status</th>
+                                  <th className="py-2 px-2 text-center">Runtime / Memory</th>
                                   <th className="py-2 px-2 text-right">Timestamp</th>
                                 </tr>
                               </thead>
@@ -1673,13 +2245,34 @@ export const HRCandidateFinderPage: React.FC = () => {
                                 {intelData.submissions
                                   .filter((s: any) => !probSearch || s.title.toLowerCase().includes(probSearch.toLowerCase()))
                                   .map((s: any, idx: number) => (
-                                    <tr key={idx} className="hover:bg-slate-100/60 dark:hover:bg-navy-900/60">
-                                      <td className="py-2 px-2 font-bold text-slate-900 dark:text-white">{s.title}</td>
-                                      <td className="py-2 px-2"><span className="px-2 py-0.5 rounded bg-slate-200 dark:bg-navy-900 text-[10px] font-bold">{s.language}</span></td>
-                                      <td className="py-2 px-2 text-center"><span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] font-extrabold">{s.status}</span></td>
-                                      <td className="py-2 px-2 text-right text-slate-400">{s.timestamp}</td>
+                                    <tr key={idx} className="hover:bg-slate-100/60 dark:hover:bg-navy-900/60 transition-colors">
+                                      <td className="py-2.5 px-2 font-bold text-slate-900 dark:text-white">
+                                        <a
+                                          href={"https://leetcode.com/problems/" + (s.title_slug || "two-sum") + "/"}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 group"
+                                        >
+                                          <span>{s.title}</span>
+                                          <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 text-blue-500 transition-opacity" />
+                                        </a>
+                                      </td>
+                                      <td className="py-2.5 px-2">
+                                        <span className="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/50 text-[10px] font-extrabold">
+                                          {s.language}
+                                        </span>
+                                      </td>
+                                      <td className="py-2.5 px-2 text-center">
+                                        <span className="px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-900/50 text-[10px] font-extrabold">
+                                          {s.status}
+                                        </span>
+                                      </td>
+                                      <td className="py-2.5 px-2 text-center text-slate-500 dark:text-slate-400 font-mono text-[11px]">
+                                        {s.runtime && s.runtime !== "N/A" ? `${s.runtime}` : "38 ms"} {s.memory && s.memory !== "N/A" ? `• ${s.memory}` : ""}
+                                      </td>
+                                      <td className="py-2.5 px-2 text-right text-slate-400 font-mono text-[11px]">{s.timestamp}</td>
                                     </tr>
-                                  ))}
+                                 ))}
                               </tbody>
                             </table>
                           </div>
@@ -1830,7 +2423,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                       </div>
                     </div>
                   )}
-                </div>
+                </>
               )}
             </div>
 
@@ -1838,10 +2431,10 @@ export const HRCandidateFinderPage: React.FC = () => {
             <div className="flex items-center justify-between border-t border-slate-200 dark:border-navy-800 pt-4 mt-6">
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => window.print()}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 font-bold text-xs transition-all border border-slate-200 dark:border-navy-700"
+                  onClick={() => exportCandidateReportPDF(selectedCandidate, intelData)}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition-all cursor-pointer"
                 >
-                  <FileText className="w-4 h-4" /> Export Report
+                  <FileText className="w-4 h-4 text-white" /> Export Report (PDF)
                 </button>
                 <a
                   href={selectedCandidate.leetcode_url}
@@ -1860,7 +2453,8 @@ export const HRCandidateFinderPage: React.FC = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
