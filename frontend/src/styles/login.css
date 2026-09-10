@@ -1611,13 +1611,15 @@
     margin-top: 4px;
     padding: 0 1rem;
     flex-shrink: 0;
+    position: relative;
+    z-index: 10;
   }
 
   .copyright-line {
     font-size: 0.72rem;
     font-weight: 700;
-    color: #CBD5E1;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+    color: #FFFFFF !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
     margin: 0 0 2px 0;
   }
 
@@ -1630,8 +1632,8 @@
     font-size: 0.65rem;
     font-weight: 800;
     letter-spacing: 0.12em;
-    color: #94A3B8;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+    color: #E2E8F0 !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8) !important;
     margin: 0;
   }
 
