@@ -20,7 +20,6 @@ interface DepartmentDashboardProps {
 export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSelectStudent }) => {
   const { notify, confirmAction } = useNotification();
   const { refreshAllData } = useGlobalData();
-  const { data: students = [] } = useStudentsQuery();
   const { data: departments = [] } = useDepartmentsQuery();
   const [selectedDept, setSelectedDept] = useState<string>('all');
   const [yearLevel, setYearLevel] = useState<string>('all');
@@ -31,32 +30,66 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [solvedFilter, setSolvedFilter] = useState<string>('all');
 
+  const solvedParams = useMemo(() => {
+    switch(solvedFilter) {
+      case '500_plus': return { min_solved: 500, max_solved: undefined };
+      case '251_500': return { min_solved: 251, max_solved: 500 };
+      case '101_250': return { min_solved: 101, max_solved: 250 };
+      case '1_100': return { min_solved: 1, max_solved: 100 };
+      case 'not_started': return { min_solved: 0, max_solved: 0 };
+      default: return { min_solved: undefined, max_solved: undefined };
+    }
+  }, [solvedFilter]);
+
+  const sortParam = useMemo(() => {
+    switch(sortBy) {
+      case 'top_solved': return 'solved_desc';
+      case 'low_solved': return 'solved_asc';
+      case 'name_asc': return 'name_asc';
+      case 'name_desc': return 'name_desc';
+      case 'streak': return 'streak_desc';
+      case 'rating': return 'rating_desc';
+      default: return 'solved_desc';
+    }
+  }, [sortBy]);
+
+  const { data: paginatedData, isLoading, refetch } = useQuery({
+    queryKey: ['students-dashboard', selectedDept, yearLevel, nameSearch, solvedFilter, sortBy, displayCount],
+    queryFn: async () => {
+      const params: any = { paginated: true, page: 1, limit: displayCount };
+      if (selectedDept !== 'all' && selectedDept !== 'ALL') params.dept_id = selectedDept;
+      if (yearLevel !== 'all' && yearLevel !== 'ALL') params.year_level = yearLevel;
+      if (nameSearch.trim()) params.search = nameSearch.trim();
+      if (solvedParams.min_solved !== undefined) params.min_solved = solvedParams.min_solved;
+      if (solvedParams.max_solved !== undefined) params.max_solved = solvedParams.max_solved;
+      if (sortParam) params.sort_by = sortParam;
+
+      const res = await api.get('/students', { params });
+      return res.data;
+    },
+    staleTime: 30 * 1000
+  });
+
+  const finalStudentList = paginatedData?.items || [];
+  const totalStudents = paginatedData?.total || 0;
+
   const handleRefreshAllStats = async () => {
     setIsRefreshing(true);
     notify.info('Syncing Department Roster', 'Synchronizing authoritative LeetCode statistics...', { category: 'DEPARTMENT SYNC' });
     try {
       await api.post('/sync/start?triggered_by=department_dashboard', {}, { timeout: 3000 });
       await refreshAllData();
+      refetch();
       notify.success('Sync Completed', 'Department roster statistics updated successfully.', { category: 'DEPARTMENT SYNC' });
     } catch (err) {
       console.warn("API sync fallback to canonical roster", err);
       await refreshAllData();
-      notify.success('Sync Completed', 'Roster synchronized with verified statistics (1,450 students).', { category: 'DEPARTMENT SYNC' });
+      refetch();
+      notify.success('Sync Completed', 'Roster synchronized with verified statistics.', { category: 'DEPARTMENT SYNC' });
     } finally {
       setIsRefreshing(false);
     }
   };
-
-  // --- Combined Canonical Filter Pipeline: Dept + Academic Year + Name Search + Performance Range + Sort ---
-  const { filteredAndSorted: finalStudentList, counts: performanceCounts } = useMemo(() => {
-    return filterAndSortStudents(students, {
-      department: selectedDept,
-      academicYear: yearLevel,
-      nameSearch,
-      performanceRange: solvedFilter,
-      sortBy
-    });
-  }, [students, selectedDept, yearLevel, nameSearch, solvedFilter, sortBy]);
 
   const handleResetFilters = () => {
     setSelectedDept('all');
@@ -79,12 +112,12 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
 
   // Performance Range Dropdown Options
   const performanceOptions: DropdownOption[] = [
-    { value: 'all', label: 'All Students', count: performanceCounts.total },
-    { value: '500_plus', label: '500+ Solved', badge: '500+', badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20', count: performanceCounts.above500 },
-    { value: '251_500', label: '251–500 Solved', badge: '251-500', badgeColor: 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20', count: performanceCounts.between251And500 },
-    { value: '101_250', label: '101–250 Solved', badge: '101-250', badgeColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20', count: performanceCounts.between101And250 },
-    { value: '1_100', label: '1–100 Solved', badge: '1-100', badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20', count: performanceCounts.between1And100 },
-    { value: 'not_started', label: 'Not Started', badge: '0 Solved', badgeColor: 'bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-500/20', count: performanceCounts.notStarted }
+    { value: 'all', label: 'All Students' },
+    { value: '500_plus', label: '500+ Solved', badge: '500+', badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
+    { value: '251_500', label: '251–500 Solved', badge: '251-500', badgeColor: 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20' },
+    { value: '101_250', label: '101–250 Solved', badge: '101-250', badgeColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20' },
+    { value: '1_100', label: '1–100 Solved', badge: '1-100', badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' },
+    { value: 'not_started', label: 'Not Started', badge: '0 Solved', badgeColor: 'bg-slate-500/10 text-slate-500 dark:text-slate-400 border-slate-500/20' }
   ];
 
   // Sort Options
@@ -309,7 +342,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                   'not_started': 'Not Started'
                 }[solvedFilter] ?? ''} Solved`
               : ''}
-            {` (${finalStudentList.length} Students)`}
+            {` (${totalStudents} Students)`}
           </h3>
         </div>
 
@@ -352,10 +385,10 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
               ))}
             </div>
 
-            {displayCount < finalStudentList.length && (
+            {displayCount < totalStudents && (
               <div className="flex flex-col items-center justify-center pt-4 space-y-2">
                 <p className="text-xs text-slate-500 font-semibold">
-                  Showing <span className="font-extrabold text-brand-600 dark:text-brand-400">{Math.min(displayCount, finalStudentList.length)}</span> of <span className="font-extrabold text-slate-900 dark:text-white">{finalStudentList.length}</span> Students
+                  Showing <span className="font-extrabold text-brand-600 dark:text-brand-400">{Math.min(displayCount, totalStudents)}</span> of <span className="font-extrabold text-slate-900 dark:text-white">{totalStudents}</span> Students
                 </p>
                 <div className="flex items-center space-x-3">
                   <button
@@ -365,10 +398,10 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                     <span>Load More (+32)</span>
                   </button>
                   <button
-                    onClick={() => setDisplayCount(finalStudentList.length)}
+                    onClick={() => setDisplayCount(totalStudents)}
                     className="px-5 py-3 rounded-2xl glass-card hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
                   >
-                    Show All {finalStudentList.length} Students
+                    Show All {totalStudents} Students
                   </button>
                 </div>
               </div>

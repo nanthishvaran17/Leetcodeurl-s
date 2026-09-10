@@ -107,7 +107,7 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
           </div>
           <div>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Avg Rank</p>
-            <p className="text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5">{summary.avg_rank || '-'}</p>
+            <p className="text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5">{summary.avg_rank ? Number(summary.avg_rank).toFixed(1) : '-'}</p>
           </div>
         </div>
         <div className="bg-white dark:bg-navy-900 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex items-center">
@@ -125,7 +125,7 @@ export const ContestAnalyticsView: React.FC<ContestAnalyticsProps> = ({
           </div>
           <div>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Avg Solved</p>
-            <p className="text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5">{summary.avg_solved || 0}</p>
+            <p className="text-2xl font-display font-bold text-slate-900 dark:text-white mt-0.5">{summary.avg_solved ? Number(summary.avg_solved).toFixed(1) : 0}</p>
           </div>
         </div>
       </div>

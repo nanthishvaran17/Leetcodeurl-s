@@ -11,6 +11,7 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
   const [period, setPeriod] = useState<AnalyticsPeriod>('30d');
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -26,6 +27,7 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
     }
 
     setLoading(true);
+    setError(null);
     api.get(url)
       .then((res) => {
         if (isMounted) {
@@ -36,7 +38,10 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
       })
       .catch((err) => {
         console.error("Failed to load individual analytics", err);
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setError(err.response?.data?.detail || "Failed to load individual analytics data.");
+          setLoading(false);
+        }
       });
 
     return () => { isMounted = false; };
@@ -80,7 +85,7 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
     const lastWeek = sevenDaysAgo - fourteenDaysAgo;
     
     let diff = thisWeek - lastWeek;
-    let percent = lastWeek === 0 ? 100 : (diff / lastWeek) * 100;
+    let percent = lastWeek === 0 ? (thisWeek > 0 ? 100 : 0) : (diff / lastWeek) * 100;
     
     return { thisWeek, lastWeek, diff, percent };
   }, [trendData]);
@@ -113,9 +118,9 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
         <div className="flex items-center justify-center h-64 bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700">
           <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
         </div>
-      ) : data?.error ? (
+      ) : error || data?.error ? (
         <div className="flex items-center justify-center h-64 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-2xl border border-red-200 dark:border-red-800">
-          <p>{data.error}</p>
+          <p>{error || data?.error}</p>
         </div>
       ) : (
         <div className="space-y-6 pb-6">

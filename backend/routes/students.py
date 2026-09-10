@@ -309,11 +309,15 @@ async def get_students(
 
         if section_id:
             query = query.filter(Student.section_id == section_id)
-
-        if min_solved is not None:
-            query = query.filter(LeetCodeProfileStats.total_solved >= min_solved)
-        if max_solved is not None:
-            query = query.filter(LeetCodeProfileStats.total_solved <= max_solved)
+        if min_solved is not None and max_solved == 0:
+            from sqlalchemy import or_
+            query = query.filter(or_(LeetCodeProfileStats.total_solved <= 0, LeetCodeProfileStats.total_solved.is_(None)))
+        else:
+            if min_solved is not None:
+                query = query.filter(LeetCodeProfileStats.total_solved >= min_solved)
+            if max_solved is not None:
+                query = query.filter(LeetCodeProfileStats.total_solved <= max_solved)
+        
         if verified_only:
             query = query.filter(LeetCodeProfileStats.sync_status.in_(["success", "OK", "verified"]))
 
@@ -339,6 +343,8 @@ async def get_students(
             query = query.order_by(nullslast(asc(LeetCodeProfileStats.total_solved)), Student.name.asc())
         elif sort_by == "name_desc":
             query = query.order_by(Student.name.desc())
+        elif sort_by == "name_asc":
+            query = query.order_by(Student.name.asc())
         elif sort_by == "rating_desc" or sort_by == "rating":
             query = query.order_by(nullslast(desc(LeetCodeProfileStats.contest_rating)), Student.name.asc())
         elif sort_by == "streak_desc" or sort_by == "streak":

@@ -305,16 +305,17 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   // Body scroll lock & layout shift prevention when any modal is open
   // Body scroll lock & layout shift prevention when any modal is open
   useEffect(() => {
-    const isAnyModalOpen = Boolean(viewingStudent || editingStudent || deletingStudent);
+    const isAnyModalOpen = Boolean(viewingStudent || deletingStudent);
     if (isAnyModalOpen) {
       const prevOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
 
       const onKey = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
-          setViewingStudent(null);
-          setEditingStudent(null);
-          setDeletingStudent(null);
+          if (!isDeleting) {
+            setViewingStudent(null);
+            setDeletingStudent(null);
+          }
         }
       };
       window.addEventListener('keydown', onKey);
@@ -324,7 +325,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
         window.removeEventListener('keydown', onKey);
       };
     }
-  }, [viewingStudent, editingStudent, deletingStudent]);
+  }, [viewingStudent, deletingStudent, isDeleting]);
 
   const toggleStudent = (id: number) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
@@ -419,9 +420,6 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 
   useEffect(() => {
     if (editingStudent || deletingStudent) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           if (!isSaving && !isDeleting) {
@@ -430,10 +428,8 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
           }
         }
       };
-
       window.addEventListener('keydown', handleKeyDown);
       return () => {
-        document.body.style.overflow = originalOverflow || 'unset';
         window.removeEventListener('keydown', handleKeyDown);
       };
     }
@@ -516,7 +512,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
         </div>
         
         {/* Virtualized Body */}
-        <div className="flex-1 w-full md:w-[1450px] md:min-w-full" style={{ height: '600px' }}>
+        <div className="flex-1 w-full md:w-[1450px] md:min-w-full">
           {loading ? (
             <div className="flex flex-col items-center justify-center space-y-2 h-full py-12">
               <RefreshCw className="w-6 h-6 animate-spin text-brand-500" />
@@ -528,7 +524,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
               <span className="text-sm font-bold text-slate-800 dark:text-slate-200">No students match the selected filters.</span>
             </div>
           ) : (
-            <div className="flex flex-col space-y-1 overflow-y-auto" style={{ height: '600px' }}>
+            <div className="flex flex-col space-y-1">
               {paginatedStudents.map((student, idx) => (
                 <FastStudentRow
                   key={student.id}

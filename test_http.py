@@ -20,6 +20,6 @@ def mock_require_security_access(resource_name, dept_scoped=False):
 app.dependency_overrides[get_current_user_optional] = mock_get_current_user
 app.dependency_overrides[require_security_access] = mock_require_security_access
 
-response = client.get("/api/analytics/contest/aggregate?period=30d")
-print("Contest Status (NO STUDENT ID):", response.status_code)
-print("Contest Body:", response.text)
+response = client.get("/api/admin/staff-list")
+print("Staff List Status:", response.status_code)
+print("Staff List Body:", response.text)
