@@ -5,29 +5,29 @@
 
 :root {
   --primary-navy: #0B1B33;
-  --secondary-navy: #13294B;
+  --secondary-navy: #162E58;
   --navy-dark: #071324;
-  --blue-accent: #2563EB;
-  --blue-hover: #1D4ED8;
-  --blue-subtle: #EFF6FF;
+  --blue-accent: #0056D2;
+  --blue-hover: #0041A3;
+  --blue-subtle: #F0F4FA;
   
-  --bg-page: #F8FAFC;
+  --bg-page: #F4F7FB;
   --bg-card: #FFFFFF;
-  --field-bg: #F8FAFC;
-  --field-border: #E2E8F0;
-  --field-focus-ring: rgba(37, 99, 235, 0.15);
+  --field-bg: #FFFFFF;
+  --field-border: #D0D7E2;
+  --field-focus-ring: rgba(0, 86, 210, 0.15);
   
-  --text-primary: #172033;
-  --text-secondary: #475569;
-  --text-muted: #475569;
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --text-muted: #6B7280;
   
-  --verify-green: #16A34A;
-  --verify-green-bg: #F0FDF4;
-  --error-red: #DC2626;
+  --verify-green: #10B981;
+  --verify-green-bg: #ECFDF5;
+  --error-red: #EF4444;
   --error-red-bg: #FEF2F2;
   
-  --shadow-card: 0 20px 40px -15px rgba(11, 27, 51, 0.12), 0 0 0 1px rgba(226, 232, 240, 0.8);
-  --shadow-sm: 0 2px 4px rgba(11, 27, 51, 0.04);
+  --shadow-card: 0 12px 32px -8px rgba(11, 27, 51, 0.15), 0 0 0 1px rgba(208, 215, 226, 0.6);
+  --shadow-sm: 0 1px 3px rgba(11, 27, 51, 0.05);
 }
 
 .dark {
@@ -640,25 +640,49 @@
 .submit-btn {
   width: 100%;
   height: 52px;
-  background: #0B1B33;
+  background: linear-gradient(135deg, #0B1B33 0%, #162E58 100%);
   color: #FFFFFF;
   border: none;
   border-radius: 12px;
-  font-size: 0.98rem;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
-  transition: background-color 0.18s ease, transform 0.18s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.18s ease;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: 0 4px 12px rgba(11, 27, 51, 0.2);
   box-sizing: border-box;
+}
+.submit-btn:hover {
+  background: linear-gradient(135deg, #13294B 0%, #0056D2 100%);
+  box-shadow: 0 6px 16px rgba(11, 27, 51, 0.3);
+  transform: translateY(-1px);
 }
 
 .dark .submit-btn {
-  background: #38BDF8;
-  color: #070D18;
-  font-weight: 700;
+  width: 100%;
+  height: 52px;
+  background: linear-gradient(135deg, #0B1B33 0%, #162E58 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: 0 4px 12px rgba(11, 27, 51, 0.2);
+  box-sizing: border-box;
+}
+.submit-btn:hover {
+  background: linear-gradient(135deg, #13294B 0%, #0056D2 100%);
+  box-shadow: 0 6px 16px rgba(11, 27, 51, 0.3);
+  transform: translateY(-1px);
 }
 
 .submit-btn:hover:not(:disabled) {
@@ -1523,15 +1547,28 @@
 
   /* Sign-In Button (Deep Institutional Navy #0B1B33) */
   .submit-btn {
-    height: 44px !important;
-    background: #0B1B33 !important;
-    color: #FFFFFF !important;
-    border-radius: 12px !important;
-    font-size: 0.92rem !important;
-    font-weight: 700 !important;
-    gap: 8px !important;
-    box-shadow: 0 4px 14px rgba(11, 27, 51, 0.2) !important;
-  }
+  width: 100%;
+  height: 52px;
+  background: linear-gradient(135deg, #0B1B33 0%, #162E58 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: 0 4px 12px rgba(11, 27, 51, 0.2);
+  box-sizing: border-box;
+}
+.submit-btn:hover {
+  background: linear-gradient(135deg, #13294B 0%, #0056D2 100%);
+  box-shadow: 0 6px 16px rgba(11, 27, 51, 0.3);
+  transform: translateY(-1px);
+}
 
   .submit-btn:hover:not(:disabled) {
     background: #13294B !important;
@@ -1542,9 +1579,28 @@
   }
 
   .dark .submit-btn {
-    background: #38BDF8 !important;
-    color: #070D18 !important;
-  }
+  width: 100%;
+  height: 52px;
+  background: linear-gradient(135deg, #0B1B33 0%, #162E58 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+  box-shadow: 0 4px 12px rgba(11, 27, 51, 0.2);
+  box-sizing: border-box;
+}
+.submit-btn:hover {
+  background: linear-gradient(135deg, #13294B 0%, #0056D2 100%);
+  box-shadow: 0 6px 16px rgba(11, 27, 51, 0.3);
+  transform: translateY(-1px);
+}
 
   .divider {
     margin: 0.65rem 0 !important;
