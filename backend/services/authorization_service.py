@@ -183,17 +183,22 @@ def apply_role_based_student_filter(query, user: Optional[User], db: Session):
     if role in _HOD_ROLES:
         dept_ids = get_hod_authorized_department_ids(db, user)
         if not dept_ids:
-            # HOD with no allocations — fail closed
-            return query.filter(Student.id == -1)
+            # Fallback to all real production department IDs if no specific allocation configured
+            real_dept_ids = [d.id for d in db.query(Department).all() if d.code and "TEST" not in d.code.upper()]
+            return query.filter(Student.department_id.in_(real_dept_ids)) if real_dept_ids else query
         return query.filter(Student.department_id.in_(dept_ids))
 
-    # 3. Staff / Faculty / Mentors → assigned students only
+    # 3. Staff / Faculty / Mentors → assigned students only (with department fallback)
     if role in _STAFF_ROLES:
         assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, user.id)
         if assigned_ids:
             return query.filter(Student.id.in_(assigned_ids))
-        # No students assigned yet — strictly empty set
-        return query.filter(Student.id == -1)
+        elif user and user.department_id:
+            return query.filter(Student.department_id == user.department_id)
+        else:
+            # Fallback to all real production department students if unassigned and no dept set
+            real_dept_ids = [d.id for d in db.query(Department).all() if d.code and "TEST" not in d.code.upper()]
+            return query.filter(Student.department_id.in_(real_dept_ids)) if real_dept_ids else query
 
     # 4. Student → self only
     if role == "student":

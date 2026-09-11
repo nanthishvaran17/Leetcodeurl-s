@@ -26,7 +26,7 @@ import { AnalyticsDashboard } from '../components/analytics/AnalyticsDashboard';
 import { useDebounce } from '../hooks/useDebounce';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
-import api from '../services/api';
+import api, { clearApiCache } from '../services/api';
 import { useGlobalWebSocket } from '../context/GlobalWebSocketProvider';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
@@ -735,7 +735,7 @@ export const HODCommandCenter: React.FC = () => {
   const [whatIfResult, setWhatIfResult] = useState<any>(null);
 
   // Load Scope Data
-  const loadScopedData = useCallback(async (isInitial = false) => {
+  const loadScopedData = useCallback(async (isInitial = false, isRefresh = false) => {
     if (isInitial) setLoading(true); else setScopeLoading(true);
     setError(null);
 
@@ -744,10 +744,14 @@ export const HODCommandCenter: React.FC = () => {
     const yearLevel = selectedYear !== 'ALL' ? selectedYear : undefined;
 
     try {
+      if (isRefresh || isInitial) {
+        clearApiCache();
+      }
       const summaryData = await getCommandCenterSummary({
         dept_id: deptId,
         staff_id: staffId,
-        year_level: yearLevel
+        year_level: yearLevel,
+        refresh: isRefresh || isInitial
       });
       setSummary(summaryData);
       if (summaryData.staff_list) setStaffList(summaryData.staff_list);
@@ -1038,7 +1042,7 @@ export const HODCommandCenter: React.FC = () => {
             </button>
 
             <button
-              onClick={() => { setRefreshing(true); loadScopedData(false); loadStudents(); }}
+              onClick={() => { setRefreshing(true); clearApiCache(); loadScopedData(false, true); loadStudents(); }}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 text-xs font-bold transition cursor-pointer border border-slate-700/50"
             >
               <RotateCcw size={13} className={refreshing ? 'animate-spin' : ''} />

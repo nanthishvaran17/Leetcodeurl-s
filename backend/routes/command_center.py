@@ -96,6 +96,7 @@ def get_command_center_summary(
     staff_id: Optional[int] = None,
     year_level: Optional[str] = None,
     section_id: Optional[int] = None,
+    refresh: bool = Query(False),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "faculty", "staff"))
 ):
@@ -112,6 +113,10 @@ def get_command_center_summary(
     
     cache_key = f"cmd_center_summary:{scope_key}:d{dept_id or 'all'}:s{staff_id or 'all'}:y{year_level or 'all'}:sec{section_id or 'all'}"
     tags = ["analytics", "dashboard", f"dept_{dept_id}" if dept_id else "global"]
+
+    if refresh:
+        cache_service.invalidate(cache_key)
+        cache_service.invalidate_tag("analytics")
 
     def _compute_summary():
         from backend.services.hod_analytics_engine import (
