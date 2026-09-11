@@ -14,24 +14,21 @@
 let heartbeatTimer: any = null;
 let isPinging = false;
 
-import { PRODUCTION_BACKEND_URL } from '../config/apiConfig';
+import { PRODUCTION_BACKEND_URL, isCapacitorNative } from '../config/apiConfig';
 
 const getHealthUrl = (): string => {
-  const isNative = typeof window !== 'undefined' && (
-    !!(window as any).Capacitor?.isNativePlatform?.() ||
-    window.location.protocol === 'capacitor:' ||
-    window.location.origin.includes('capacitor://')
-  );
-
   const origin = PRODUCTION_BACKEND_URL.replace(/\/api\/?$/, '').replace(/\/+$/, '');
 
-  if (isNative) {
+  if (isCapacitorNative()) {
     return `${origin}/health`;
   }
 
   // Local dev: use relative path (proxied by Vite)
-  if (typeof window !== 'undefined' &&
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+  if (
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
+    (window.location.port === '3000' || window.location.port === '5173')
+  ) {
     return '/api/system/health';
   }
 

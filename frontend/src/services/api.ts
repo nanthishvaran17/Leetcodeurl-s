@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_BASE_URL, getApiUrl as configGetApiUrl } from '../config/apiConfig';
+import { API_BASE_URL, getApiBaseUrl, isCapacitorNative, getApiUrl as configGetApiUrl } from '../config/apiConfig';
 import { getAuthInstance, getOrInitAuth } from './firebase';
 
 export const getApiUrl = configGetApiUrl;
@@ -19,6 +19,7 @@ const api = axios.create({
     'Bypass-Tunnel-Reminder': 'true' // Bypasses localtunnel's "Click to Continue" warning page
   },
 });
+
 
 
 // In-flight GET request deduplication map to prevent redundant concurrent network round-trips
@@ -99,9 +100,7 @@ export const getRequestKey = (url: string, config?: any): string => {
 
 // Asynchronous sub-millisecond request header dispatch
 api.interceptors.request.use(async (config) => {
-  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-    config.baseURL = '/api';
-  }
+  config.baseURL = getApiBaseUrl();
   if (config.url && config.url.startsWith('/api/')) {
     config.url = config.url.substring(4);
   }
