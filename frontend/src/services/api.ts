@@ -5,9 +5,15 @@ import { getAuthInstance, getOrInitAuth } from './firebase';
 export const getApiUrl = configGetApiUrl;
 
 export const getAuthHeaders = async () => {
-  const auth = getAuthInstance() || getOrInitAuth();
-  const token = auth.currentUser ? await auth.currentUser.getIdToken() : null;
-  return { Authorization: `Bearer ${token}` };
+  try {
+    const auth = getAuthInstance() || getOrInitAuth();
+    if (auth.currentUser) {
+      const token = await auth.currentUser.getIdToken();
+      if (token) return { Authorization: `Bearer ${token}` };
+    }
+  } catch (_e) {}
+  const jwtToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  return { Authorization: jwtToken ? `Bearer ${jwtToken}` : '' };
 };
 
 const api = axios.create({

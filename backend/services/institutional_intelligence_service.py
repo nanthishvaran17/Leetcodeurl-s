@@ -362,41 +362,54 @@ class InstitutionalIntelligenceService:
                     "dataConfidence": "VERIFIED"
                 }
 
-        # PASS 1: INTENT CLASSIFICATION
-        intent_prompt = f"""
-        User Query: "{query}"
-        Classify the user's intent into ONE of the following JSON structures:
-        1. {{"intent": "INACTIVE_STUDENTS", "params": {{"days": 7}}}}
-        2. {{"intent": "CONTEST_MISSED", "params": {{}}}}
-        3. {{"intent": "TOP_PERFORMERS", "params": {{"limit": 10}}}}
-        4. {{"intent": "LEARNING_NEEDS", "params": {{}}}}
-        5. {{"intent": "GENERAL_SUMMARY", "params": {{}}}}
-        Output ONLY valid JSON. Do not include markdown blocks.
-        """
-        
-        intent_json_str = LLMService.generate_response(
-            prompt=intent_prompt,
-            system_context="You are an intent classifier. Output ONLY raw JSON with keys 'intent' and 'params'.",
-            history=history[-2:] if history else None, # only need immediate context for intent
-            max_tokens=150
-        )
-        
-        intent_data = {"intent": "GENERAL_SUMMARY", "params": {}}
-        if intent_json_str:
-            try:
-                clean_str = intent_json_str.strip().strip("```json").strip("```").strip()
-                parsed = json.loads(clean_str)
-                if isinstance(parsed, list) and len(parsed) > 0:
-                    parsed = parsed[0]
-                if isinstance(parsed, dict):
-                    intent_data = parsed
-            except Exception as e:
-                logger.error(f"Intent parsing failed: {e}. Fallback to General Summary.")
-                
-        intent = intent_data.get("intent", "GENERAL_SUMMARY")
-        params = intent_data.get("params", {})
-        if not isinstance(params, dict):
+        # PASS 1: INTENT CLASSIFICATION (Rule-based + LLM)
+        if any(w in q_clean for w in ["contest", "missed", "absent", "attendance"]):
+            intent = "CONTEST_MISSED"
             params = {}
+        elif any(w in q_clean for w in ["inactive", "idle", "not active", "zero"]):
+            intent = "INACTIVE_STUDENTS"
+            params = {"days": 7}
+        elif any(w in q_clean for w in ["top", "best", "performer", "highest", "leader", "solver", "solved", "rank"]):
+            intent = "TOP_PERFORMERS"
+            params = {"limit": 10}
+        elif any(w in q_clean for w in ["topic", "difficult", "weak", "learning", "signal", "issue"]):
+            intent = "LEARNING_NEEDS"
+            params = {}
+        else:
+            intent_prompt = f"""
+            User Query: "{query}"
+            Classify the user's intent into ONE of the following JSON structures:
+            1. {{"intent": "INACTIVE_STUDENTS", "params": {{"days": 7}}}}
+            2. {{"intent": "CONTEST_MISSED", "params": {{}}}}
+            3. {{"intent": "TOP_PERFORMERS", "params": {{"limit": 10}}}}
+            4. {{"intent": "LEARNING_NEEDS", "params": {{}}}}
+            5. {{"intent": "GENERAL_SUMMARY", "params": {{}}}}
+            Output ONLY valid JSON. Do not include markdown blocks.
+            """
+            
+            intent_json_str = LLMService.generate_response(
+                prompt=intent_prompt,
+                system_context="You are an intent classifier. Output ONLY raw JSON with keys 'intent' and 'params'.",
+                history=history[-2:] if history else None,
+                max_tokens=150
+            )
+            
+            intent_data = {"intent": "GENERAL_SUMMARY", "params": {}}
+            if intent_json_str:
+                try:
+                    clean_str = intent_json_str.strip().strip("```json").strip("```").strip()
+                    parsed = json.loads(clean_str)
+                    if isinstance(parsed, list) and len(parsed) > 0:
+                        parsed = parsed[0]
+                    if isinstance(parsed, dict):
+                        intent_data = parsed
+                except Exception as e:
+                    logger.error(f"Intent parsing failed: {e}. Fallback to General Summary.")
+                    
+            intent = intent_data.get("intent", "GENERAL_SUMMARY")
+            params = intent_data.get("params", {})
+            if not isinstance(params, dict):
+                params = {}
         
         # EXECUTE RBAC-ENFORCED DB QUERY
         raw_data = []
@@ -487,9 +500,46 @@ class InstitutionalIntelligenceService:
             max_tokens=2048
         )
         
+        # RICH DETERMINISTIC MARKDOWN FALLBACK FORMATTER
+        if not final_markdown:
+            if intent == "CONTEST_MISSED":
+                cname = raw_data.get("contest", "Latest Weekly Contest")
+                absentees = raw_data.get("missed_students", [])
+                if not absentees:
+                    final_markdown = f"### 🏆 Contest Attendance & Absentee Report\n\n**Contest**: {cname}\n\n✅ **100% Participation**: All **{in_scope_count} students** in your authorized scope attended the contest."
+                else:
+                    rows = "\n".join([f"| {i+1} | **{s['name']}** | `{s['reg_no']}` | {s['department']} |" for i, s in enumerate(absentees[:25])])
+                    more_msg = f"\n\n*...and {len(absentees) - 25} more students.*" if len(absentees) > 25 else ""
+                    final_markdown = f"### 🚨 Contest Absentee Audit\n\n**Contest**: {cname}\n\nFound **{len(absentees)} student absentees** out of {in_scope_count} total students in your scope:\n\n| # | Student Name | Register Number | Department |\n|---|---|---|---|\n{rows}{more_msg}"
+            
+            elif intent == "INACTIVE_STUDENTS":
+                inactive_list = raw_data if isinstance(raw_data, list) else []
+                if not inactive_list:
+                    final_markdown = f"### ⚡ Student Activity Audit\n\n✅ **High Engagement**: All **{in_scope_count} students** in your scope have active coding submissions."
+                else:
+                    rows = "\n".join([f"| {i+1} | **{s['name']}** | `{s['reg_no']}` | {s['department']} |" for i, s in enumerate(inactive_list[:25])])
+                    more_msg = f"\n\n*...and {len(inactive_list) - 25} more inactive students.*" if len(inactive_list) > 25 else ""
+                    final_markdown = f"### ⚠️ Inactive Students Audit\n\nFound **{len(inactive_list)} inactive solvers** (0 submissions in current cycle) in your authorized scope:\n\n| # | Student Name | Register Number | Department |\n|---|---|---|---|\n{rows}{more_msg}"
+
+            elif intent == "TOP_PERFORMERS":
+                top_list = raw_data if isinstance(raw_data, list) else []
+                rows = "\n".join([f"| {i+1} | **{s['name']}** | `{s['reg_no']}` | **{s['solved']}** | {round(s['rating'], 1) if s['rating'] else 'Unrated'} |" for i, s in enumerate(top_list)])
+                final_markdown = f"### 🥇 Top Technical Performers Leaderboard\n\nTop performers by verified LeetCode problems solved in your scope:\n\n| Rank | Student Name | Register Number | Problems Solved | Contest Rating |\n|---|---|---|---|---|\n{rows}"
+
+            elif intent == "LEARNING_NEEDS":
+                topics = raw_data.get("difficult_topics", [])
+                if not topics:
+                    final_markdown = "### 🎯 Learning Needs & Weakness Analysis\n\nNo critical weakness signals detected across recent student submission logs."
+                else:
+                    rows = "\n".join([f"| **{t['topic']}** | {t['signals']} weakness markers | High Priority Practice |" for t in topics])
+                    final_markdown = f"### 🎯 Learning Needs & Weakness Analysis\n\nIdentified key problem domains requiring targeted faculty intervention:\n\n| Domain / Topic | Signal Count | Suggested Action |\n|---|---|---|\n{rows}"
+
+            else:
+                final_markdown = f"### 📊 Institutional Intelligence Overview\n\nCurrently monitoring **{in_scope_count} active students** across your authorized institutional scope.\n\n• **Role Scope**: `{user_role}`\n• **Department**: `{dept_name}`\n\n**Example queries you can ask**:\n- *\"Who missed the last contest?\"*\n- *\"Who is inactive this week?\"*\n- *\"Show top 10 solvers in CSE\"*"
+
         return {
             "query": query,
-            "answer": final_markdown or f"Data processed for {intent}. Records found: {len(raw_data) if isinstance(raw_data, list) else 1}",
+            "answer": final_markdown,
             "evidence": evidence,
             "actions": actions,
             "dataConfidence": "HIGH_VERIFIED"

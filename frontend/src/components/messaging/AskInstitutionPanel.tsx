@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import axios from 'axios';
-import { getApiUrl, getAuthHeaders } from '../../services/api';
+import api from '../../services/api';
 import { Sparkles, CheckCircle2, ShieldAlert, ArrowRight, RefreshCw, Send, AlertTriangle, Bot, User } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -59,13 +58,12 @@ export const AskInstitutionPanel: React.FC<{
     setError(null);
 
     try {
-      const res = await axios.post(
-        getApiUrl('/messaging/ask-institution'),
+      const res = await api.post(
+        '/messaging/ask-institution',
         { 
           query: targetQuery,
           history: currentHistory.map(m => ({ role: m.role, text: m.content })) 
-        },
-        { headers: await getAuthHeaders() }
+        }
       );
       
       if (res.data?.success && res.data?.result) {
