@@ -1,5 +1,6 @@
 import datetime
 import hashlib
+import re
 import uuid
 from typing import Optional, List, Dict, Any
 from fastapi import Request, Depends, HTTPException, status
@@ -159,6 +160,91 @@ import threading
 _RECENT_ACCESS_LOGS: Dict[tuple, float] = {}
 _RECENT_ACCESS_LOCK = threading.Lock()
 
+def get_real_client_ip(request: Request) -> tuple[str, str]:
+    """Returns (client_ip, ip_version) observed by backend/proxy."""
+    client_host = "127.0.0.1"
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        client_host = forwarded.split(",")[0].strip()
+    elif request.client and request.client.host:
+        client_host = request.client.host.strip()
+    
+    ip_version = "IPv6" if ":" in client_host else "IPv4"
+    return client_host, ip_version
+
+def parse_user_agent_details(user_agent_str: Optional[str]) -> dict:
+    """Parses raw User-Agent header into browser, browser_version, operating_system, device_type, category."""
+    if not user_agent_str:
+        return {
+            "browser": "API Client",
+            "browser_version": "N/A",
+            "operating_system": "Server Environment",
+            "device_type": "Server",
+            "category": "API Client",
+            "raw": "N/A"
+        }
+    
+    ua = user_agent_str.strip()
+    ua_low = ua.lower()
+    
+    # Device type
+    if "mobile" in ua_low or "android" in ua_low or "iphone" in ua_low:
+        device_type = "Mobile"
+    elif "ipad" in ua_low or "tablet" in ua_low:
+        device_type = "Tablet"
+    else:
+        device_type = "Desktop"
+        
+    # OS
+    if "windows nt 10.0" in ua_low or "windows 11" in ua_low:
+        os_str = "Windows 11"
+    elif "windows" in ua_low:
+        os_str = "Windows"
+    elif "macintosh" in ua_low or "mac os" in ua_low:
+        os_str = "macOS"
+    elif "android" in ua_low:
+        os_str = "Android"
+    elif "iphone" in ua_low or "ipad" in ua_low:
+        os_str = "iOS"
+    elif "linux" in ua_low:
+        os_str = "Linux"
+    else:
+        os_str = "Unknown OS"
+        
+    # Browser
+    browser = "Web Browser"
+    version = "N/A"
+    category = categorize_user_agent(user_agent_str)
+    
+    if "edg/" in ua_low:
+        browser = "Microsoft Edge"
+        m = re.search(r'edg/([\d\.]+)', ua_low)
+        if m: version = m.group(1)
+    elif "chrome/" in ua_low and "edg/" not in ua_low:
+        browser = "Google Chrome"
+        m = re.search(r'chrome/([\d\.]+)', ua_low)
+        if m: version = m.group(1)
+    elif "firefox/" in ua_low:
+        browser = "Mozilla Firefox"
+        m = re.search(r'firefox/([\d\.]+)', ua_low)
+        if m: version = m.group(1)
+    elif "safari/" in ua_low and "chrome" not in ua_low:
+        browser = "Apple Safari"
+        m = re.search(r'version/([\d\.]+)', ua_low)
+        if m: version = m.group(1)
+    elif "postman" in ua_low or "curl" in ua_low or "python" in ua_low or "axios" in ua_low:
+        browser = "Automated API Client"
+        category = "Automated API / Tool"
+        
+    return {
+        "browser": browser,
+        "browser_version": version,
+        "operating_system": os_str,
+        "device_type": device_type,
+        "category": category,
+        "raw": ua[:500]
+    }
+
 def log_security_access_event(
     db: Session,
     request: Request,
@@ -171,10 +257,8 @@ def log_security_access_event(
     debounce_seconds: float = 2.0
 ):
     """
-    Persists a lightweight security access log into AdminAuditLog without
-    logging any credentials, tokens, or sensitive student payload data.
-    Deduplicates identical (admin, action, resource, result) events within debounce window
-    to eliminate duplicate audit logs caused by React StrictMode or concurrent page mounts.
+    Persists a detailed security access audit log into AdminAuditLog with complete
+    forensic traceability, IP version, device breakdown, and SHA-256 hash sealing.
     """
     username = user.username if user else "UNKNOWN"
     user_id = user.id if user else None
@@ -200,12 +284,12 @@ def log_security_access_event(
     # 2. Database safety-net debounce check (within last debounce_seconds)
     try:
         cutoff = datetime.datetime.utcnow() - datetime.timedelta(seconds=debounce_seconds)
-        existing = db.query(AdminAuditLog.id).filter(
+        existing = db.query(AdminAuditLog.audit_id).filter(
             AdminAuditLog.admin_name == username,
             AdminAuditLog.action == action,
             AdminAuditLog.target_id == resource,
             AdminAuditLog.status == result,
-            AdminAuditLog.created_at >= cutoff
+            AdminAuditLog.event_timestamp >= cutoff
         ).first()
         if existing:
             return
@@ -213,8 +297,19 @@ def log_security_access_event(
         pass
 
     hashed_ip = get_hashed_ip(request)
-    ua_category = categorize_user_agent(request.headers.get("User-Agent"))
-    correlation_id = f"req_{uuid.uuid4().hex[:12]}"
+    client_ip_addr, ip_ver = get_real_client_ip(request)
+    ua_info = parse_user_agent_details(request.headers.get("User-Agent"))
+    req_time = datetime.datetime.utcnow()
+    sec_audit_id = f"SEC-{uuid.uuid4().hex[:8].upper()}"
+    req_id = f"req_{uuid.uuid4().hex[:12]}"
+    corr_id = f"corr_{uuid.uuid4().hex[:12]}"
+
+    # Hash chain calculation over stored event values
+    prev_entry = db.query(AdminAuditLog.event_hash).order_by(AdminAuditLog.event_timestamp.desc()).first()
+    prev_hash = prev_entry.event_hash if prev_entry and prev_entry.event_hash else "0000000000000000000000000000000000000000000000000000000000000000"
+
+    raw_hash_payload = f"{sec_audit_id}:{req_time.isoformat()}:{user_id or 0}:{username}:{action}:{resource}:{result}:{client_ip_addr}:{prev_hash}"
+    event_hash = hashlib.sha256(raw_hash_payload.encode()).hexdigest()
     
     desc = f"{action} on {resource} -> {result}"
     if denial_reason:
@@ -222,26 +317,59 @@ def log_security_access_event(
         
     try:
         audit_entry = AdminAuditLog(
-            audit_id=f"SEC-{uuid.uuid4().hex[:8].upper()}",
+            audit_id=sec_audit_id,
+            event_timestamp=req_time,
             admin_user_id=user_id,
             admin_name=username,
             admin_email=user_email,
             admin_role=user_role,
+            access_level="LEVEL_1",
             action=action,
             action_type="SECURITY_ACCESS",
+            action_classification="SECURITY_ACCESS",
+            status=result,
+            severity="WARNING" if result in ("BLOCKED", "FAILED", "DENIED") else "INFO",
             target_type="Resource",
             target_id=resource,
-            description=desc,
+            resource_name=resource,
+            route=request.url.path,
+            http_method=request.method,
             ip_address=hashed_ip,
-            user_agent=ua_category,
-            status=result,
+            client_ip=client_ip_addr,
+            ip_version=ip_ver,
+            session_id=session_id,
+            request_id=req_id,
+            correlation_id=corr_id,
+            browser=ua_info["browser"],
+            browser_version=ua_info["browser_version"],
+            operating_system=ua_info["operating_system"],
+            device_type=ua_info["device_type"],
+            user_agent_category=ua_info["category"],
+            user_agent=ua_info["raw"],
+            authentication_status="AUTHENTICATED" if user else "UNAUTHENTICATED",
+            authorization_result="ALLOWED" if result in ("SUCCESS", "ALLOWED") else "DENIED",
+            permission_checked=action,
+            risk_level="HIGH" if result in ("BLOCKED", "DENIED") else "LOW",
+            denial_reason=denial_reason,
+            request_timestamp=req_time,
+            response_timestamp=datetime.datetime.utcnow(),
+            response_status=200 if result in ("SUCCESS", "ALLOWED") else (401 if denial_reason == "NOT_AUTHENTICATED" else 403),
+            response_time_ms=0.0,
+            trace_id=f"trace_{sec_audit_id.lower()}",
+            event_hash=event_hash,
+            previous_event_hash=prev_hash,
+            integrity_status="VERIFIED",
+            institution_id="NEC",
+            institution_branding_version="v1.0",
+            institution_logo_reference="nandha_emblem.png",
+            description=desc,
             metadata_json={
                 "route": request.url.path,
                 "resource": resource,
                 "session_id": session_id,
                 "denial_reason": denial_reason,
-                "correlation_id": correlation_id,
-                "user_agent_category": ua_category
+                "correlation_id": corr_id,
+                "user_agent_category": ua_info["category"]
             }
         )
         db.add(audit_entry)
@@ -254,6 +382,23 @@ def extract_current_user_optional(request: Request, db: Session) -> Optional[Use
     """Extracts authenticated user from HttpOnly Cookie or Bearer token if present."""
     from backend.routes.auth import get_current_user_from_request
     return get_current_user_from_request(request, db)
+
+def get_current_user_from_token(token: str, db: Session) -> Optional[User]:
+    """Decodes raw JWT or Bearer token string and resolves the authenticated User."""
+    if not token or not str(token).strip():
+        return None
+    raw_token = str(token).strip()
+    if raw_token.lower().startswith("bearer "):
+        raw_token = raw_token[7:].strip()
+    
+    scope = {
+        "type": "http",
+        "headers": [(b"authorization", f"Bearer {raw_token}".encode("utf-8"))],
+        "query_string": b""
+    }
+    mock_req = Request(scope)
+    from backend.routes.auth import get_current_user_from_request
+    return get_current_user_from_request(mock_req, db)
 
 
 def require_security_access(

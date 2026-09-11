@@ -256,10 +256,11 @@ def notify_default_password_reset(staff_email: str, staff_name: str, temp_passwo
     html_body = generate_professional_template(title, content, action_button, fallback_url=portal_url)
     send_email(staff_email, "Account Password Reset (Action Required)", html_body=html_body)
 
-
 def notify_admin_staff_created(admin_email: str, staff_data: dict, admin_data: dict, event_data: dict):
     """Sends a detailed, professional institutional email to the administrator when a staff account is created."""
     import datetime
+    from backend.time_utils import ensure_ist, now_utc
+
     title = "Staff Account Created Successfully"
     subject_line = f"Staff Account Created | {staff_data.get('full_name', '')} | Nandha Engineering College"
     
@@ -270,8 +271,22 @@ def notify_admin_staff_created(admin_email: str, staff_data: dict, admin_data: d
     email = staff_data.get('email')
     account_status = staff_data.get('status', 'Active')
     
-    created_date = staff_data.get('created_date')
-    created_time = staff_data.get('created_time')
+    # Canonical timezone conversion to IST (Asia/Kolkata)
+    raw_created_at = staff_data.get('created_at')
+    if isinstance(raw_created_at, datetime.datetime):
+        created_at_ist = ensure_ist(raw_created_at)
+    elif isinstance(raw_created_at, str) and raw_created_at.strip():
+        try:
+            parsed = datetime.datetime.fromisoformat(raw_created_at.replace("Z", "+00:00"))
+            created_at_ist = ensure_ist(parsed)
+        except Exception:
+            created_at_ist = ensure_ist(now_utc())
+    else:
+        created_at_ist = ensure_ist(now_utc())
+
+    created_date = created_at_ist.strftime("%d %B %Y")
+    created_time = created_at_ist.strftime("%I:%M %p IST")
+    event_timestamp_str = f"{created_date}, {created_time}"
     
     account_id = staff_data.get('account_id')
     staff_id = staff_data.get('staff_id')
@@ -279,19 +294,25 @@ def notify_admin_staff_created(admin_email: str, staff_data: dict, admin_data: d
     
     event_id = event_data.get('event_id')
     created_by = admin_data.get('created_by')
-    timestamp = event_data.get('timestamp')
     
-    # Build Staff Details
-    details = []
-    if staff_name: details.append(f"<tr><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; color:#64748b;'>Staff Name</td><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; font-weight:600;'>{staff_name}</td></tr>")
-    if role: details.append(f"<tr><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; color:#64748b;'>Designation / Role</td><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; font-weight:600;'>{role}</td></tr>")
-    if department and department not in ["None", "N/A", "null"]: details.append(f"<tr><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; color:#64748b;'>Department</td><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; font-weight:600;'>{department}</td></tr>")
-    if email: details.append(f"<tr><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; color:#64748b;'>Email Address</td><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; font-weight:600;'>{email}</td></tr>")
-    details.append(f"<tr><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; color:#64748b;'>Account Status</td><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; font-weight:600;'>{account_status}</td></tr>")
-    if created_date: details.append(f"<tr><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; color:#64748b;'>Created Date</td><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; font-weight:600;'>{created_date}</td></tr>")
-    if created_time: details.append(f"<tr><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; color:#64748b;'>Created Time</td><td style='padding:8px 0; border-bottom:1px solid #f1f5f9; font-weight:600;'>{created_time}</td></tr>")
+    # Standardized 2-Column Table Styles
+    label_style = "padding:10px 12px; border-bottom:1px solid #e2e8f0; color:#64748b; font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; width:170px; min-width:170px; max-width:170px; background-color:#f8fafc; vertical-align:top;"
+    value_style = "padding:10px 12px; border-bottom:1px solid #e2e8f0; color:#0f172a; font-weight:600; font-size:14px; vertical-align:top; word-break:break-word; overflow-wrap:anywhere;"
     
-    details_html = "".join(details)
+    # Build Staff Details Rows
+    details_rows = []
+    if staff_name: details_rows.append(f"<tr><td style='{label_style}'>STAFF NAME</td><td style='{value_style}'>{staff_name}</td></tr>")
+    if role: details_rows.append(f"<tr><td style='{label_style}'>DESIGNATION / ROLE</td><td style='{value_style}'>{role}</td></tr>")
+    if department and department not in ["None", "N/A", "null"]: details_rows.append(f"<tr><td style='{label_style}'>DEPARTMENT</td><td style='{value_style}'>{department}</td></tr>")
+    if email: details_rows.append(f"<tr><td style='{label_style}'>EMAIL ADDRESS</td><td style='{value_style}'>{email}</td></tr>")
+    
+    status_color = "#16a34a" if str(account_status).lower() == "active" else "#dc2626"
+    status_html = f"<span style='color:{status_color}; font-weight:bold;'>{account_status}</span>"
+    details_rows.append(f"<tr><td style='{label_style}'>ACCOUNT STATUS</td><td style='{value_style}'>{status_html}</td></tr>")
+    details_rows.append(f"<tr><td style='{label_style}'>CREATED DATE</td><td style='{value_style}'>{created_date}</td></tr>")
+    details_rows.append(f"<tr><td style='{label_style}'>CREATED TIME</td><td style='{value_style}'>{created_time}</td></tr>")
+    
+    details_html = f'<table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%; border-collapse:separate; border-spacing:0; border:1px solid #e2e8f0; border-radius:6px; margin:16px 0; overflow:hidden;">{"".join(details_rows)}</table>'
     
     # System Access
     if permissions:
@@ -300,27 +321,29 @@ def notify_admin_staff_created(admin_email: str, staff_data: dict, admin_data: d
     else:
         sys_access = "<p style='color:#334155; margin:0;'>The account has been configured according to the assigned role.</p>"
         
-    # Account Info
-    acc_info = []
-    if account_id: acc_info.append(f"<tr><td style='padding:4px 0; width:120px;'>Account ID</td><td style='font-weight:500;'>{account_id}</td></tr>")
-    if staff_id and staff_id not in ["None", "N/A", "null"]: acc_info.append(f"<tr><td style='padding:4px 0;'>Staff ID</td><td style='font-weight:500;'>{staff_id}</td></tr>")
-    if created_by: acc_info.append(f"<tr><td style='padding:4px 0;'>Created By</td><td style='font-weight:500;'>{created_by}</td></tr>")
-    if timestamp: acc_info.append(f"<tr><td style='padding:4px 0;'>Created On</td><td style='font-weight:500;'>{timestamp}</td></tr>")
+    # Account Info Rows
+    acc_rows = []
+    if account_id: acc_rows.append(f"<tr><td style='{label_style}'>ACCOUNT ID</td><td style='{value_style} font-family:monospace;'>{account_id}</td></tr>")
+    if staff_id and staff_id not in ["None", "N/A", "null"]: acc_rows.append(f"<tr><td style='{label_style}'>STAFF ID</td><td style='{value_style} font-family:monospace;'>{staff_id}</td></tr>")
+    if created_by: acc_rows.append(f"<tr><td style='{label_style}'>CREATED BY</td><td style='{value_style}'>{created_by}</td></tr>")
+    acc_rows.append(f"<tr><td style='{label_style}'>CREATED ON</td><td style='{value_style}'>{event_timestamp_str}</td></tr>")
     
-    acc_info_html = ""
-    if acc_info:
-        acc_info_html = f'<table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%; font-size:13px; color:#475569;">{"".join(acc_info)}</table>'
+    acc_info_html = f'<table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%; border-collapse:separate; border-spacing:0; border:1px solid #e2e8f0; border-radius:6px; margin:16px 0; overflow:hidden;">{"".join(acc_rows)}</table>'
     
-    # Audit Info
-    audit_info = []
-    audit_info.append(f"<tr><td style='padding:4px 0; width:120px;'>Event:</td><td style='font-weight:600;'>Staff Account Created</td></tr>")
-    if event_id: audit_info.append(f"<tr><td style='padding:4px 0;'>Event ID:</td><td>{event_id}</td></tr>")
-    if account_id: audit_info.append(f"<tr><td style='padding:4px 0;'>Account ID:</td><td>{account_id}</td></tr>")
-    if created_by: audit_info.append(f"<tr><td style='padding:4px 0;'>Created By:</td><td>{created_by}</td></tr>")
-    if timestamp: audit_info.append(f"<tr><td style='padding:4px 0;'>Timestamp:</td><td>{timestamp}</td></tr>")
-    audit_info.append(f"<tr><td style='padding:4px 0;'>Status:</td><td><span style='color:#16a34a; font-weight:bold;'>Successful</span></td></tr>")
+    # Audit Info Rows
+    audit_label_style = "padding:6px 12px; color:#64748b; font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; width:140px; min-width:140px; max-width:140px; vertical-align:top;"
+    audit_value_style = "padding:6px 12px; color:#334155; vertical-align:top; word-break:break-word; overflow-wrap:anywhere;"
     
-    audit_html = f'<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:16px; margin-top:24px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%; font-size:12px; color:#64748b; font-family:monospace;">{"".join(audit_info)}</table></div>'
+    audit_rows = [
+        f"<tr><td style='{audit_label_style}'>EVENT:</td><td style='{audit_value_style} font-weight:bold; color:#0f172a;'>Staff Account Created</td></tr>"
+    ]
+    if event_id: audit_rows.append(f"<tr><td style='{audit_label_style}'>EVENT ID:</td><td style='{audit_value_style}'>{event_id}</td></tr>")
+    if account_id: audit_rows.append(f"<tr><td style='{audit_label_style}'>ACCOUNT ID:</td><td style='{audit_value_style}'>{account_id}</td></tr>")
+    if created_by: audit_rows.append(f"<tr><td style='{audit_label_style}'>CREATED BY:</td><td style='{audit_value_style}'>{created_by}</td></tr>")
+    audit_rows.append(f"<tr><td style='{audit_label_style}'>TIMESTAMP:</td><td style='{audit_value_style}'>{event_timestamp_str}</td></tr>")
+    audit_rows.append(f"<tr><td style='{audit_label_style}'>STATUS:</td><td style='{audit_value_style}'><span style='color:#16a34a; font-weight:bold;'>Successful</span></td></tr>")
+    
+    audit_html = f'<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:16px; margin-top:24px;"><table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%; font-size:12px; font-family:monospace; border-collapse:collapse;">{"".join(audit_rows)}</table></div>'
     
     content = f"""
     <div style="text-align:center; margin-bottom:32px;">
@@ -332,9 +355,7 @@ def notify_admin_staff_created(admin_email: str, staff_data: dict, admin_data: d
     
     <div style="margin-top:32px;">
         <h4 style="color:#0f172a; margin:0 0 12px 0; font-size:14px; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #e2e8f0; padding-bottom:8px;">Staff Account Details</h4>
-        <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width:100%; font-size:14px;">
-            {details_html}
-        </table>
+        {details_html}
     </div>
     
     <div style="margin-top:32px;">
@@ -358,7 +379,6 @@ def notify_admin_staff_created(admin_email: str, staff_data: dict, admin_data: d
     action_button = f'<a href="{portal_url}" style="display:inline-block; background-color:#2563eb; color:#ffffff; padding:14px 28px; text-decoration:none; border-radius:6px; font-weight:bold; font-size:15px; text-align:center; min-width:200px;">View Staff Account</a>'
     
     html_body = generate_professional_template(title, content, action_button, fallback_url=settings.FRONTEND_ORIGIN)
-    
     send_email(admin_email, subject_line, html_body=html_body)
 
 

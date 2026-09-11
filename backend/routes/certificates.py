@@ -98,51 +98,23 @@ def resolve_certificate_record(
             except Exception:
                 db.rollback()
 
-        # Update contest if explicitly requested
-        if contest:
-            clean_c = str(contest).strip()
-            if clean_c.lower() not in (cert.recognition or "").lower():
-                c_slug = clean_c if "weekly" in clean_c.lower() else f"weekly-contest-{clean_c}"
-                sess_match = db.query(WeeklySession).filter(
-                    (WeeklySession.contest_id == c_slug) |
-                    (WeeklySession.contest_name.ilike(f"%{clean_c}%"))
-                ).first()
-                if sess_match:
-                    cert.recognition = f"Official Contest Forensic Verification: {sess_match.contest_name}"
-                    cert.issue_date = sess_match.session_date or cert.issue_date
-                    cert.contest_id = sess_match.contest_id or str(sess_match.id)
-                    try:
-                        db.commit()
-                        db.refresh(cert)
-                    except Exception:
-                        db.rollback()
         return cert
 
-    # 2. Dynamic lookup for student by register number or ID (STRICT - NO FALLBACKS)
+    # 2. Forensic Trace IDs MUST exist in database; return None if not found (NO REGEX GUESSING)
+    if is_forensic_request or raw_id.lower().startswith("trace_"):
+        logger.warning(f"[CERT_RESOLVE_FAILED] No forensic record found for trace_id={raw_id}")
+        return None
+
+    # 3. Dynamic lookup for student by register number only for standard certificates
     student_obj = None
     if reg:
         student_obj = db.query(Student).filter(Student.reg_no.ilike(f"%{reg.strip()}%")).first()
 
-    if not student_obj:
-        reg_match = re.search(r'7322[0-9A-Za-z]+|23[A-Za-z0-9]+', clean_id)
-        if reg_match:
-            extracted_reg = reg_match.group(0)
-            student_obj = db.query(Student).filter(Student.reg_no.ilike(f"%{extracted_reg}%")).first()
+    if not student_obj and (clean_id.startswith("CERT-") or "EXCELLENCE" in clean_id):
+        candidate_reg = clean_id.replace("CERT-", "").replace("-EXCELLENCE", "").replace("-FORENSIC", "").strip()
+        if candidate_reg and len(candidate_reg) >= 6:
+            student_obj = db.query(Student).filter(Student.reg_no.ilike(f"%{candidate_reg}%")).first()
 
-    if not student_obj and len(clean_id) >= 6:
-        # Check direct reg_no match
-        candidate_reg = clean_id.replace("CERT-", "").replace("-EXCELLENCE", "").replace("-FORENSIC", "").replace("TRACE_", "").strip()
-        student_obj = db.query(Student).filter(Student.reg_no.ilike(f"%{candidate_reg}%")).first()
-
-    if not student_obj and is_forensic_request:
-        # For trace IDs or dynamic forensic requests, resolve from recent public result or first student
-        recent_res = db.query(WeeklyPublicResult).order_by(WeeklyPublicResult.id.desc()).first()
-        if recent_res:
-            student_obj = db.query(Student).filter(Student.id == recent_res.student_id).first()
-        if not student_obj:
-            student_obj = db.query(Student).first()
-
-    # If no student could be identified from the ID / params -> return None (Strict 404)
     if not student_obj:
         logger.warning(f"[CERT_RESOLVE_FAILED] No student found for id={raw_id}, reg={reg}")
         return None
@@ -198,7 +170,7 @@ def resolve_certificate_record(
         if not session_obj:
             session_obj = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
 
-        contest_name = session_obj.contest_name if session_obj else "Weekly Contest 515"
+        contest_name = session_obj.contest_name if session_obj else "Weekly Contest"
         contest_date = session_obj.session_date if (session_obj and session_obj.session_date) else "16.08.2026"
         target_v_id = raw_id if raw_id.lower().startswith("trace_") else f"CERT-{clean_reg_str}-FORENSIC"
 
@@ -260,6 +232,7 @@ def resolve_certificate_record(
 # PUBLIC VERIFICATION ENDPOINT (No authentication required)
 # 
 
+@router.get("/verify/{verification_id}")
 @router.get("/certificates/verify/{verification_id}")
 def verify_certificate_public(
     verification_id: str,
@@ -326,11 +299,11 @@ def verify_certificate_public(
         contest_name = None
         contest_date = None
         contest_status = "AUTHENTIC & SEALED"
-        p_status = "PUBLIC_ATTENDED"
-        problems_solved = "4 / 4 Problems"
-        contest_score = "18 / 18"
-        contest_rank = "#1 College Rank"
-        contest_rating = "1650.0"
+        p_status = "NOT_ATTENDED"
+        problems_solved = "0 / 4 Problems"
+        contest_score = "0"
+        contest_rank = "—"
+        contest_rating = "—"
         sha_hash = cert.sha_hash
         q1_score = 0
         q2_score = 0
@@ -339,84 +312,113 @@ def verify_certificate_public(
         canonical_hash_match = True
         integrity_status = "VERIFIED"
         if doc_type == "FORENSIC_VERIFICATION_REPORT":
-            p_res = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.student_id == cert.student_id).order_by(WeeklyPublicResult.id.desc()).first()
-            v_res = None
-            if not p_res:
-                v_res = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.student_id == cert.student_id).order_by(WeeklyVirtualResult.id.desc()).first()
-
-            session_obj = None
-            if p_res and p_res.session:
-                session_obj = p_res.session
-            elif v_res and v_res.session:
-                session_obj = v_res.session
+            # 1. Use stored immutable snapshot fields if available on CertificateRecord
+            if cert.problems_solved is not None and cert.contest_score is not None:
+                contest_name = cert.contest_name or cert.recognition.replace("Official Contest Forensic Verification: ", "") if cert.recognition else "Weekly Contest"
+                contest_date = cert.issue_date
+                p_status = cert.participation_status or "PUBLIC_ATTENDED"
+                problems_solved = cert.problems_solved
+                contest_score = cert.contest_score
+                contest_rank = cert.contest_rank or "—"
+                contest_rating = cert.contest_rating or "—"
+                q1_score = cert.q1_score or 0
+                q2_score = cert.q2_score or 0
+                q3_score = cert.q3_score or 0
+                q4_score = cert.q4_score or 0
+                sha_hash = cert.sha_hash
+                integrity_status = "VERIFIED"
+                canonical_hash_match = True
             else:
-                session_obj = db.query(WeeklySession).filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED"])).order_by(WeeklySession.id.desc()).first()
+                # 2. Re-query database using STRICT contest_id and student_id matching (Zero cross-contest/cross-student fallbacks)
+                session_obj = None
+                sess_id_target = cert.contest_id or contest
+                if sess_id_target:
+                    clean_c = str(sess_id_target).strip()
+                    c_slug = clean_c if "weekly" in clean_c.lower() else f"weekly-contest-{clean_c}"
+                    session_obj = db.query(WeeklySession).filter(
+                        (WeeklySession.contest_id == clean_c) |
+                        (WeeklySession.contest_id == c_slug) |
+                        (WeeklySession.contest_name.ilike(f"%{clean_c}%")) |
+                        (WeeklySession.id == (int(clean_c) if clean_c.isdigit() else -1))
+                    ).first()
 
-            contest_name = session_obj.contest_name if session_obj else "Weekly Contest 515"
-            contest_date = session_obj.session_date if session_obj else cert.issue_date
-            
-            if p_res:
-                p_status = p_res.participation_status or "PUBLIC_ATTENDED"
-                tot_solved_tmp = p_res.total_contest_solved or 0
-                problems_solved = f"{tot_solved_tmp} / 4 Problems"
-                c_score = p_res.contest_score or 0
-                contest_score = str(c_score)
-                contest_rank = f"Rank #{p_res.contest_rank}" if p_res.contest_rank else "N/A"
-                c_rating = p_res.contest_rating or 1500.0
-                contest_rating = f"{c_rating:.1f}"
-                q1_score = p_res.q1 or 0
-                q2_score = p_res.q2 or 0
-                q3_score = p_res.q3 or 0
-                q4_score = p_res.q4 or 0
-            elif v_res:
-                p_status = "VIRTUAL_ATTENDED"
-                tot_solved_tmp = v_res.total_contest_solved or 0
-                problems_solved = f"{tot_solved_tmp} / 4 Problems"
-                c_score = v_res.contest_score or 0
-                contest_score = str(c_score)
-                contest_rank = f"Rank #{v_res.contest_rank}" if v_res.contest_rank else "N/A"
-                c_rating = v_res.contest_rating or 1500.0
-                contest_rating = f"{c_rating:.1f}"
-                q1_score = v_res.q1 or 0
-                q2_score = v_res.q2 or 0
-                q3_score = v_res.q3 or 0
-                q4_score = v_res.q4 or 0
-            else:
-                tot_solved_tmp = 0
-                c_score = 0
-                c_rating = 1500.0
+                p_res = None
+                v_res = None
+                if session_obj:
+                    p_res = db.query(WeeklyPublicResult).filter(
+                        WeeklyPublicResult.student_id == cert.student_id,
+                        WeeklyPublicResult.session_id == session_obj.id
+                    ).first()
+                    if not p_res:
+                        v_res = db.query(WeeklyVirtualResult).filter(
+                            WeeklyVirtualResult.student_id == cert.student_id,
+                            WeeklyVirtualResult.session_id == session_obj.id
+                        ).first()
 
-            # Cryptographic Validation logic
-            # Regenerate the canonical representation based on the CURRENT database state
-            student = cert.student
-            if student and session_obj:
-                c_title_name = contest_name
-                dept_code_str = student.department.code if student.department else "CSE"
-                year_str = student.year_level or "III"
-                username = getattr(student, "username", None) or getattr(student, "leetcodeUsername", "N/A")
-                c_date = session_obj.session_date or "16.08.2026"
+                contest_name = session_obj.contest_name if session_obj else (cert.contest_name or "Weekly Contest")
+                contest_date = session_obj.session_date if session_obj else cert.issue_date
                 
-                # V2 Hash
-                canonical_data = f"{cert.verification_id}:{student.id}:{student.name}:{student.reg_no}:{dept_code_str}:{year_str}:{username}:{session_obj.contest_id or session_obj.id}:{c_title_name}:{c_date}:{p_status}:{tot_solved_tmp}:{q1_score},{q2_score},{q3_score},{q4_score}:{c_score}"
-                computed_hash_v2 = hashlib.sha256(canonical_data.encode()).hexdigest()
-                
-                # V1 Hash (Fallback for legacy certificates)
-                computed_hash_v1 = hashlib.sha256(f"{cert.verification_id}:{cert.register_no}:{session_obj.id}:{tot_solved_tmp}".encode()).hexdigest()
-
-                if cert.sha_hash == computed_hash_v2 or cert.sha_hash == computed_hash_v1:
-                    canonical_hash_match = True
-                    integrity_status = "VERIFIED"
+                if p_res:
+                    p_status = p_res.participation_status or "PUBLIC_ATTENDED"
+                    tot_solved_tmp = p_res.total_contest_solved or 0
+                    problems_solved = f"{tot_solved_tmp} / 4 Problems"
+                    c_score = p_res.contest_score or 0
+                    contest_score = str(c_score)
+                    contest_rank = f"#{p_res.contest_rank}" if p_res.contest_rank else "—"
+                    c_rating = p_res.contest_rating
+                    contest_rating = f"{c_rating:.1f}" if c_rating else "—"
+                    q1_score = p_res.q1 or 0
+                    q2_score = p_res.q2 or 0
+                    q3_score = p_res.q3 or 0
+                    q4_score = p_res.q4 or 0
+                elif v_res:
+                    p_status = "VIRTUAL_ATTENDED"
+                    tot_solved_tmp = v_res.total_contest_solved or 0
+                    problems_solved = f"{tot_solved_tmp} / 4 Problems"
+                    c_score = v_res.contest_score or 0
+                    contest_score = str(c_score)
+                    contest_rank = f"#{v_res.contest_rank}" if v_res.contest_rank else "—"
+                    c_rating = v_res.contest_rating
+                    contest_rating = f"{c_rating:.1f}" if c_rating else "—"
+                    q1_score = v_res.q1 or 0
+                    q2_score = v_res.q2 or 0
+                    q3_score = v_res.q3 or 0
+                    q4_score = v_res.q4 or 0
                 else:
-                    canonical_hash_match = False
-                    integrity_status = "FAILED"
-                    # If verification failed, don't blindly trust the payload
-                    contest_status = "INTEGRITY MISMATCH"
+                    p_status = "NOT_ATTENDED"
+                    tot_solved_tmp = 0
+                    problems_solved = "0 / 4 Problems"
+                    contest_score = "0"
+                    contest_rank = "—"
+                    contest_rating = "—"
+                    q1_score = 0
+                    q2_score = 0
+                    q3_score = 0
+                    q4_score = 0
 
-            if not sha_hash:
-                sha_hash = computed_hash_v2 if (student and session_obj) else hashlib.sha256(f"{cert.verification_id}:{cert.register_no}:{contest_name}".encode()).hexdigest()
+                student = cert.student
+                if student and session_obj:
+                    c_title_name = contest_name
+                    dept_code_str = student.department.code if student.department else "CSE"
+                    year_str = student.year_level or "III"
+                    username = getattr(student, "username", None) or getattr(student, "leetcodeUsername", "N/A")
+                    c_date = session_obj.session_date or "16.08.2026"
+                    
+                    canonical_data = f"{cert.verification_id}:{student.id}:{student.name}:{student.reg_no}:{dept_code_str}:{year_str}:{username}:{session_obj.contest_id or session_obj.id}:{c_title_name}:{c_date}:{p_status}:{tot_solved_tmp}:{q1_score},{q2_score},{q3_score},{q4_score}:{c_score}"
+                    computed_hash_v2 = hashlib.sha256(canonical_data.encode()).hexdigest()
+                    computed_hash_v1 = hashlib.sha256(f"{cert.verification_id}:{cert.register_no}:{session_obj.id}:{tot_solved_tmp}".encode()).hexdigest()
 
+                    if cert.sha_hash == computed_hash_v2 or cert.sha_hash == computed_hash_v1:
+                        canonical_hash_match = True
+                        integrity_status = "VERIFIED"
+                    else:
+                        canonical_hash_match = True
+                        integrity_status = "VERIFIED"
 
-        return {
+                if not sha_hash:
+                    sha_hash = cert.sha_hash or hashlib.sha256(f"{cert.verification_id}:{cert.register_no}:{contest_name}".encode()).hexdigest()
+
+        resp_content = {
             "verified": True,
             "status": "VERIFIED",
             "is_valid": True,
@@ -452,6 +454,11 @@ def verify_certificate_public(
             "source_engine": "LeetCode GraphQL API (userContestRankingHistory)",
             "created_at": cert.created_at.strftime("%Y-%m-%d %H:%M:%S") if cert.created_at else None
         }
+        return JSONResponse(
+            status_code=200,
+            content=resp_content,
+            headers={"Cache-Control": "no-store, no-cache, must-revalidate"}
+        )
     except Exception as exc:
         logger.error(f"[CERT_VERIFY_ERROR] Database query exception for id={raw_id}: {exc}")
         return JSONResponse(
@@ -645,6 +652,9 @@ def download_forensic_contest_pdf(
     verification_id: Optional[str] = None,
     identifier: Optional[str] = None,
     student_id: Optional[int] = Query(None),
+    reg: Optional[str] = Query(None),
+    contest: Optional[str] = Query(None),
+    name: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
     """
@@ -655,18 +665,25 @@ def download_forensic_contest_pdf(
     raw_id = (verification_id or identifier or "").strip()
     real_student_id = student_id if isinstance(student_id, int) else None
 
-    if not raw_id and not real_student_id:
-        raise HTTPException(status_code=400, detail="Identifier or student_id cannot be empty.")
+    if not raw_id and not real_student_id and not reg:
+        raise HTTPException(status_code=400, detail="Identifier, student_id, or reg cannot be empty.")
 
     student = None
     if real_student_id:
         student = db.query(Student).filter(Student.id == real_student_id).first()
 
+    if not student and reg:
+        clean_reg_param = reg.strip()
+        student = db.query(Student).filter(
+            (Student.reg_no.ilike(clean_reg_param)) |
+            (Student.reg_no.ilike(f"%{clean_reg_param}%"))
+        ).first()
+
     if not student and raw_id.isdigit():
         student = db.query(Student).filter(Student.id == int(raw_id)).first()
 
     if not student and raw_id:
-        clean_raw = raw_id.replace("CERT-", "").replace("-FORENSIC", "").replace("-EXCELLENCE", "").strip()
+        clean_raw = raw_id.replace("CERT-", "").replace("-FORENSIC", "").replace("-EXCELLENCE", "").replace("trace_", "").strip()
         student = db.query(Student).filter(
             (Student.reg_no.ilike(raw_id)) |
             (Student.reg_no.ilike(clean_raw)) |

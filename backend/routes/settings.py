@@ -1185,34 +1185,7 @@ def get_student_forensic_trace(
     if not session_obj:
         raise HTTPException(status_code=404, detail=f"Contest Session ID {session_id} not found.")
 
-    # Auto-provision CertificateRecord for instant QR code verification resolution
-    from backend.models import CertificateRecord
-    try:
-        dept_code_str = student.department.code if student.department else "CSE(CS)"
-        dept_name_str = student.department.name if student.department else "Computer Science and Engineering (Cyber Security)"
-        existing_cert = db.query(CertificateRecord).filter(CertificateRecord.verification_id == trace_id).first()
-        if not existing_cert:
-            c_record = CertificateRecord(
-                verification_id=trace_id,
-                certificate_code=trace_id,
-                certificate_type="Official Forensic Contest Verification",
-                student_id=student.id,
-                student_name=student.name,
-                register_no=student.reg_no,
-                department=dept_code_str,
-                department_name=dept_name_str,
-                program=f"B.E. {dept_name_str}",
-                recognition=f"Official Contest Forensic Verification: {session_obj.contest_name or 'Weekly Contest 515'}",
-                issue_date=session_obj.session_date or "16.08.2026",
-                status="VALID",
-                verification_url=f"https://leetcode-student-data.web.app/verify/{trace_id}?reg={student.reg_no}&contest={session_obj.contest_id or session_id}",
-                created_by="Automated Forensic Engine"
-            )
-            db.add(c_record)
-            db.commit()
-    except Exception as db_err:
-        logger.warning(f"Note on CertificateRecord registration in forensic-trace: {db_err}")
-        db.rollback()
+    # CertificateRecord will be provisioned below after full trace calculation
 
     contest_result = db.query(WeeklyPublicResult).filter(
         WeeklyPublicResult.student_id == student.id,
@@ -1441,6 +1414,80 @@ def get_student_forensic_trace(
         "verificationStatus": "SOURCE_VERIFIED" if evidence_found else "UNAVAILABLE",
         "retrievedAt": (contest_result.last_fetched_at.strftime("%d %b %Y, %I:%M %p IST") if contest_result and contest_result.last_fetched_at else "15 Aug 2026, 03:01 PM IST")
     }
+
+    # Auto-provision CertificateRecord for instant QR code verification resolution
+    from backend.models import CertificateRecord
+    import hashlib
+    try:
+        dept_code_str = student.department.code if student.department else "CSE(CS)"
+        dept_name_str = student.department.name if student.department else "Computer Science and Engineering"
+        existing_cert = db.query(CertificateRecord).filter(CertificateRecord.verification_id == trace_id).first()
+        
+        # Calculate SHA256 checksum for forensic verification
+        c_title_name = session_obj.contest_name or f"Weekly Contest {session_id}"
+        c_date = session_obj.session_date or "16.08.2026"
+        year_str = student.year_level or "III"
+        username_str = getattr(student, "username", None) or "N/A"
+        canonical_data = f"{trace_id}:{student.id}:{student.name}:{student.reg_no}:{dept_code_str}:{year_str}:{username_str}:{session_obj.contest_id or session_obj.id}:{c_title_name}:{c_date}:{canonical_state}:{tot_solved}:{q1},{q2},{q3},{q4}:{contest_score}"
+        sha_hash = hashlib.sha256(canonical_data.encode()).hexdigest()
+
+        if existing_cert:
+            existing_cert.student_name = student.name
+            existing_cert.register_no = student.reg_no
+            existing_cert.department = dept_code_str
+            existing_cert.department_name = dept_name_str
+            existing_cert.leetcode_username = username_str
+            existing_cert.contest_id = session_obj.contest_id or str(session_id)
+            existing_cert.contest_name = c_title_name
+            existing_cert.participation_status = canonical_state
+            existing_cert.problems_solved = f"{tot_solved} / 4 Problems"
+            existing_cert.contest_score = str(contest_score)
+            existing_cert.contest_rank = f"#{contest_rank}" if contest_rank else "—"
+            existing_cert.contest_rating = f"{contest_rating:.2f}" if contest_rating else "—"
+            existing_cert.q1_score = q1
+            existing_cert.q2_score = q2
+            existing_cert.q3_score = q3
+            existing_cert.q4_score = q4
+            existing_cert.sha_hash = sha_hash
+            existing_cert.retrieved_timestamp = source_metadata["retrievedAt"]
+            existing_cert.status = "VALID"
+        else:
+            c_record = CertificateRecord(
+                verification_id=trace_id,
+                certificate_code=trace_id,
+                certificate_type="Official LeetCode Contest Forensic Verification Audit Report",
+                document_type="FORENSIC_VERIFICATION_REPORT",
+                contest_id=session_obj.contest_id or str(session_id),
+                contest_name=c_title_name,
+                sha_hash=sha_hash,
+                student_id=student.id,
+                student_name=student.name,
+                register_no=student.reg_no,
+                department=dept_code_str,
+                department_name=dept_name_str,
+                leetcode_username=username_str,
+                participation_status=canonical_state,
+                problems_solved=f"{tot_solved} / 4 Problems",
+                contest_score=str(contest_score),
+                contest_rank=f"#{contest_rank}" if contest_rank else "—",
+                contest_rating=f"{contest_rating:.2f}" if contest_rating else "—",
+                q1_score=q1,
+                q2_score=q2,
+                q3_score=q3,
+                q4_score=q4,
+                retrieved_timestamp=source_metadata["retrievedAt"],
+                program=f"B.E. {dept_name_str}",
+                recognition=f"Official Contest Forensic Verification: {c_title_name}",
+                issue_date=session_obj.session_date or datetime.date.today().strftime("%d.%m.%Y"),
+                status="VALID",
+                verification_url=f"https://leetcode-student-data.web.app/verify/{trace_id}",
+                created_by="Automated Forensic Engine"
+            )
+            db.add(c_record)
+        db.commit()
+    except Exception as db_err:
+        logger.warning(f"Note on CertificateRecord registration in forensic-trace: {db_err}")
+        db.rollback()
 
     return {
         "status": "SUCCESS",

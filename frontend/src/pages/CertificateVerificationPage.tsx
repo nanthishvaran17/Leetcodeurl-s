@@ -112,6 +112,20 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
       const queryStr = regParam ? `?reg=${encodeURIComponent(regParam)}&contest=${encodeURIComponent(contestParam)}` : '';
       const res = await api.get(`/certificates/verify/${encodeURIComponent(verificationId)}${queryStr}`);
       if (res.data && res.data.verified !== false && res.data.status !== 'NOT_FOUND') {
+        const returnedId = (res.data.verification_id || res.data.certificate_id || '').trim().toLowerCase();
+        const requestedId = verificationId.trim().toLowerCase();
+        if (returnedId && returnedId !== requestedId && !requestedId.includes(returnedId) && !returnedId.includes(requestedId)) {
+          console.error("Verification ID mismatch:", returnedId, "expected:", requestedId);
+          setError('VERIFICATION INTEGRITY ERROR');
+          setData({
+            status: 'NOT_VERIFIED',
+            is_valid: false,
+            verification_id: verificationId,
+            message: 'Verification Integrity Mismatch — Returned record does not match trace ID.'
+          });
+          setLoading(false);
+          return;
+        }
         setData(res.data);
         setLoading(false);
         return;
@@ -165,7 +179,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
 
     try {
       const downloadEndpoint = isForensicDoc
-        ? `/certificates/${encodeURIComponent(verificationId)}/download-forensic-pdf`
+        ? `/certificates/${encodeURIComponent(verificationId)}/download-forensic-pdf${queryStr}`
         : `/certificates/${encodeURIComponent(verificationId)}/download-pdf${queryStr}`;
 
       const cleanStudentName = (data?.student_name || 'Student').replace(/[^A-Za-z0-9_]+/g, '_').toUpperCase();
@@ -308,7 +322,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
                       <span>Contest Event</span>
                     </span>
                     <strong className="text-slate-200 block font-semibold leading-snug">
-                      {data.contest_name || data.recognition || 'Weekly Contest 515'}
+                      {data.contest_name || data.recognition || 'Weekly Contest'}
                     </strong>
                   </div>
 
@@ -318,7 +332,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
                       <span>Participation Status</span>
                     </span>
                     <strong className="text-emerald-400 block font-bold">
-                      {data.participation_status || 'PUBLIC_ATTENDED'}
+                      {data.participation_status || 'NOT_ATTENDED'}
                     </strong>
                   </div>
 
@@ -328,7 +342,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
                       <span>Problems Solved</span>
                     </span>
                     <span className="text-slate-300 block font-medium">
-                      {data.problems_solved || '4 / 4 Problems'} (Score: {data.contest_score || '18'})
+                      {data.problems_solved || '0 / 4 Problems'} (Score: {data.contest_score || '0'})
                     </span>
                   </div>
 
@@ -338,7 +352,7 @@ export const CertificateVerificationPage: React.FC<{ verificationId?: string }> 
                       <span>Verified Date</span>
                     </span>
                     <strong className="text-slate-200 block font-mono">
-                      {data.contest_date || data.issue_date || '16.08.2026'}
+                      {data.contest_date || data.issue_date || '—'}
                     </strong>
                   </div>
                 </div>

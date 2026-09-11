@@ -63,42 +63,55 @@ class FacultyActionEngine:
         return item
 
     @staticmethod
-    def get_faculty_kpis(db: Session, department_id: Optional[int] = None, faculty_id: Optional[int] = None, year_level: Optional[str] = None, search: Optional[str] = None) -> dict:
-        query = db.query(FacultyActionItem)
-        
-        # We need to join with Student to filter by department_id, year_level, search
-        if department_id or faculty_id or year_level or search:
-            query = query.join(Student, FacultyActionItem.student_id == Student.id)
+    def get_faculty_kpis(
+        db: Session,
+        department_id: Optional[int] = None,
+        faculty_id: Optional[int] = None,
+        year_level: Optional[str] = None,
+        search: Optional[str] = None
+    ) -> dict:
+        from backend.models import FacultyActionQueueItem, Student, FacultyStudentAssignment
+        from sqlalchemy import or_
+
+        query = db.query(FacultyActionQueueItem).join(Student, FacultyActionQueueItem.student_id == Student.id)
+
+        if faculty_id:
+            assigned_student_ids = [a.student_id for a in db.query(FacultyStudentAssignment).filter(FacultyStudentAssignment.faculty_id == faculty_id).all()]
+            conds = [FacultyActionQueueItem.faculty_id == faculty_id, FacultyActionQueueItem.faculty_id.is_(None)]
+            if assigned_student_ids:
+                conds.append(FacultyActionQueueItem.student_id.in_(assigned_student_ids))
+            query = query.filter(or_(*conds))
             
         if department_id:
             query = query.filter(Student.department_id == department_id)
-        if faculty_id:
-            from backend.models import FacultyStudentAssignment
-            query = query.join(FacultyStudentAssignment, Student.id == FacultyStudentAssignment.student_id).filter(
-                FacultyStudentAssignment.faculty_id == faculty_id
-            )
         if year_level and year_level.upper() not in ["ALL", ""]:
             query = query.filter(Student.year_level == year_level)
-        if search:
-            query = query.filter(Student.name.ilike(f"%{search}%") | Student.reg_no.ilike(f"%{search}%"))
+        if search and search.strip():
+            search_str = f"%{search.strip()}%"
+            query = query.filter(or_(
+                Student.name.ilike(search_str),
+                Student.reg_no.ilike(search_str),
+                Student.leetcode_username.ilike(search_str)
+            ))
             
         items = query.all()
         
         kpis = {
-            "Critical": 0, "High": 0, "Monitoring": 0, "In Progress": 0, 
-            "Completed": 0, "Resolved": 0, "Overdue": 0, "Escalated": 0, "total": 0
+            "Critical": 0, "High": 0, "Medium": 0, "Low": 0,
+            "Pending": 0, "In Progress": 0, "Monitoring": 0, "Completed": 0, "Resolved": 0,
+            "Overdue": 0, "Escalated": 0, "total": 0
         }
         
         for item in items:
             kpis["total"] += 1
+            if item.priority in kpis:
+                kpis[item.priority] += 1
             if item.status in kpis:
                 kpis[item.status] += 1
-            
-            # Simple priority bucket logic based on signal_type or status
-            if item.signal_type == "RISK_ALERT":
-                kpis["Critical"] += 1
-            elif item.signal_type == "INTEGRITY_REVIEW":
-                kpis["High"] += 1
+            if getattr(item, "is_overdue_followup", False):
+                kpis["Overdue"] += 1
+            if getattr(item, "is_escalated", False):
+                kpis["Escalated"] += 1
                 
         return kpis
 
@@ -191,24 +204,25 @@ def get_faculty_actions_list(
     is_overdue: Optional[bool] = None,
     is_escalated: Optional[bool] = None,
 ) -> dict:
-    from backend.models import FacultyActionQueueItem, Student
+    from backend.models import FacultyActionQueueItem, Student, FacultyStudentAssignment
     from sqlalchemy import or_
 
-    query = db.query(FacultyActionQueueItem)
-    if department_id or year_level or search:
-        query = query.join(Student, FacultyActionQueueItem.student_id == Student.id)
+    query = db.query(FacultyActionQueueItem).join(Student, FacultyActionQueueItem.student_id == Student.id)
 
     if faculty_id:
-        query = query.filter(FacultyActionQueueItem.faculty_id == faculty_id)
-        
-    # Authorized base dataset for total_count
-    base_query = query
-    total_count = base_query.count()
+        assigned_student_ids = [a.student_id for a in db.query(FacultyStudentAssignment).filter(FacultyStudentAssignment.faculty_id == faculty_id).all()]
+        conds = [FacultyActionQueueItem.faculty_id == faculty_id, FacultyActionQueueItem.faculty_id.is_(None)]
+        if assigned_student_ids:
+            conds.append(FacultyActionQueueItem.student_id.in_(assigned_student_ids))
+        query = query.filter(or_(*conds))
+
+    # Base query for total_count
+    total_count = query.count()
 
     # Apply filters
-    if priority:
+    if priority and priority.upper() not in ["ALL", ""]:
         query = query.filter(FacultyActionQueueItem.priority == priority)
-    if status:
+    if status and status.upper() not in ["ALL", ""]:
         query = query.filter(FacultyActionQueueItem.status == status)
     if is_overdue:
         query = query.filter(FacultyActionQueueItem.is_overdue_followup == True)
@@ -218,7 +232,7 @@ def get_faculty_actions_list(
         query = query.filter(Student.department_id == department_id)
     if year_level and year_level.upper() not in ["ALL", ""]:
         query = query.filter(Student.year_level == year_level)
-    if search:
+    if search and search.strip():
         search_str = f"%{search.strip()}%"
         query = query.filter(or_(
             Student.name.ilike(search_str),
@@ -227,10 +241,9 @@ def get_faculty_actions_list(
         ))
 
     filtered_count = query.count()
-    items = query.order_by(FacultyActionQueueItem.created_at.desc()).offset(offset).limit(limit).all()
+    items = query.order_by(FacultyActionQueueItem.priority_score.desc(), FacultyActionQueueItem.created_at.desc()).offset(offset).limit(limit).all()
     
-    # Calculate pages
-    total_pages = max(1, (filtered_count + limit - 1) // limit)
+    total_pages = max(1, (filtered_count + limit - 1) // limit) if limit > 0 else 1
 
     return {
         "items": items,
@@ -243,4 +256,74 @@ def get_faculty_actions_list(
     }
 
 def detect_and_sync_faculty_signals(db: Session, force: bool = False) -> dict:
-    return {"status": "success", "created": 0, "updated": 0}
+    from backend.models import Student, FacultyActionQueueItem, LeetCodeProfileStats
+    from datetime import datetime
+
+    students = db.query(Student).filter(Student.is_active == True).all()
+    created_count = 0
+    updated_count = 0
+
+    for student in students:
+        stats = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id == student.id).first()
+        solved = stats.total_solved if stats and stats.total_solved is not None else 0
+
+        if solved == 0:
+            prio = "Critical"
+            score = 95
+            sig_type = "LOW_SOLVE_COUNT"
+            reason = f"Student {student.name} ({student.reg_no or 'N/A'}) has 0 solved problems on LeetCode. Immediate intervention required."
+            rec_action = "Schedule 1-on-1 mentoring session, guide student through basic LeetCode setup, and assign 3 beginner practice problems."
+        elif solved < 10:
+            prio = "High"
+            score = 75
+            sig_type = "PERFORMANCE_DROP"
+            reason = f"Student {student.name} has solved only {solved} problem(s). Requires guided DSA mentoring."
+            rec_action = "Assign topic-wise practice modules and monitor weekly contest participation."
+        elif solved < 25:
+            prio = "Medium"
+            score = 50
+            sig_type = "WEAK_TOPIC"
+            reason = f"Student {student.name} solved count ({solved}) is below cohort benchmark."
+            rec_action = "Provide structured learning path and conduct bi-weekly progress review."
+        else:
+            prio = "Low"
+            score = 25
+            sig_type = "SILENT_DISENGAGED"
+            reason = f"Student {student.name} active with {solved} solved problems."
+            rec_action = "Continue standard cohort monitoring and track advanced problem progression."
+
+        existing = db.query(FacultyActionQueueItem).filter(
+            FacultyActionQueueItem.student_id == student.id,
+            FacultyActionQueueItem.signal_type == sig_type
+        ).first()
+
+        if not existing:
+            item = FacultyActionQueueItem(
+                student_id=student.id,
+                priority=prio,
+                priority_score=score,
+                signal_type=sig_type,
+                reason=reason,
+                recommended_action=rec_action,
+                status="Pending",
+                category="PERFORMANCE_DROP",
+                created_at=datetime.utcnow()
+            )
+            db.add(item)
+            created_count += 1
+        else:
+            existing.priority = prio
+            existing.priority_score = score
+            existing.reason = reason
+            existing.recommended_action = rec_action
+            existing.updated_at = datetime.utcnow()
+            updated_count += 1
+
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        return {"status": "error", "error": str(e), "created": 0, "updated": 0}
+
+    return {"status": "success", "created": created_count, "updated": updated_count}
+

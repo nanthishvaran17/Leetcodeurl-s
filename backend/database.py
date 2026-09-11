@@ -308,6 +308,77 @@ def run_migrations():
                         print(f"[DB Migration] Added weekly_public_results column: {col_name}")
 
             # Check student_contest_participations columns
+            result_part = conn.execute(
+                __import__('sqlalchemy').text("PRAGMA table_info(student_contest_participations)")
+            )
+            part_cols = {row[1] for row in result_part}
+            if part_cols:
+                part_migrations = [
+                    ("is_public_attended", "ALTER TABLE student_contest_participations ADD COLUMN is_public_attended BOOLEAN DEFAULT 0"),
+                    ("is_virtual_attended", "ALTER TABLE student_contest_participations ADD COLUMN is_virtual_attended BOOLEAN DEFAULT 0"),
+                    ("solved_problems", "ALTER TABLE student_contest_participations ADD COLUMN solved_problems TEXT"),
+                    ("confidence", "ALTER TABLE student_contest_participations ADD COLUMN confidence VARCHAR DEFAULT 'HIGH'"),
+                    ("verification_level", "ALTER TABLE student_contest_participations ADD COLUMN verification_level VARCHAR"),
+                    ("verification_evidence", "ALTER TABLE student_contest_participations ADD COLUMN verification_evidence TEXT"),
+                ]
+                for col_name, sql in part_migrations:
+                    if col_name not in part_cols:
+                        conn.execute(__import__('sqlalchemy').text(sql))
+                        conn.commit()
+
+            # Check admin_audit_logs columns
+            result_audit = conn.execute(
+                __import__('sqlalchemy').text("PRAGMA table_info(admin_audit_logs)")
+            )
+            audit_cols = {row[1] for row in result_audit}
+            if audit_cols:
+                audit_migrations = [
+                    ("event_timestamp", "ALTER TABLE admin_audit_logs ADD COLUMN event_timestamp DATETIME"),
+                    ("access_level", "ALTER TABLE admin_audit_logs ADD COLUMN access_level VARCHAR(50) DEFAULT 'LEVEL_1'"),
+                    ("action_classification", "ALTER TABLE admin_audit_logs ADD COLUMN action_classification VARCHAR(50) DEFAULT 'SECURITY_ACCESS'"),
+                    ("severity", "ALTER TABLE admin_audit_logs ADD COLUMN severity VARCHAR(30) DEFAULT 'INFO'"),
+                    ("resource_name", "ALTER TABLE admin_audit_logs ADD COLUMN resource_name VARCHAR(150)"),
+                    ("route", "ALTER TABLE admin_audit_logs ADD COLUMN route VARCHAR(255)"),
+                    ("http_method", "ALTER TABLE admin_audit_logs ADD COLUMN http_method VARCHAR(10)"),
+                    ("client_ip", "ALTER TABLE admin_audit_logs ADD COLUMN client_ip VARCHAR(50)"),
+                    ("ip_version", "ALTER TABLE admin_audit_logs ADD COLUMN ip_version VARCHAR(10) DEFAULT 'IPv4'"),
+                    ("session_id", "ALTER TABLE admin_audit_logs ADD COLUMN session_id VARCHAR(100)"),
+                    ("request_id", "ALTER TABLE admin_audit_logs ADD COLUMN request_id VARCHAR(100)"),
+                    ("correlation_id", "ALTER TABLE admin_audit_logs ADD COLUMN correlation_id VARCHAR(100)"),
+                    ("browser", "ALTER TABLE admin_audit_logs ADD COLUMN browser VARCHAR(100)"),
+                    ("browser_version", "ALTER TABLE admin_audit_logs ADD COLUMN browser_version VARCHAR(50)"),
+                    ("operating_system", "ALTER TABLE admin_audit_logs ADD COLUMN operating_system VARCHAR(100)"),
+                    ("device_type", "ALTER TABLE admin_audit_logs ADD COLUMN device_type VARCHAR(50)"),
+                    ("user_agent_category", "ALTER TABLE admin_audit_logs ADD COLUMN user_agent_category VARCHAR(100)"),
+                    ("authentication_status", "ALTER TABLE admin_audit_logs ADD COLUMN authentication_status VARCHAR(50) DEFAULT 'AUTHENTICATED'"),
+                    ("authorization_result", "ALTER TABLE admin_audit_logs ADD COLUMN authorization_result VARCHAR(50) DEFAULT 'ALLOWED'"),
+                    ("permission_checked", "ALTER TABLE admin_audit_logs ADD COLUMN permission_checked VARCHAR(100)"),
+                    ("risk_level", "ALTER TABLE admin_audit_logs ADD COLUMN risk_level VARCHAR(30) DEFAULT 'LOW'"),
+                    ("denial_reason", "ALTER TABLE admin_audit_logs ADD COLUMN denial_reason VARCHAR(255)"),
+                    ("request_timestamp", "ALTER TABLE admin_audit_logs ADD COLUMN request_timestamp DATETIME"),
+                    ("response_timestamp", "ALTER TABLE admin_audit_logs ADD COLUMN response_timestamp DATETIME"),
+                    ("response_status", "ALTER TABLE admin_audit_logs ADD COLUMN response_status INTEGER DEFAULT 200"),
+                    ("response_time_ms", "ALTER TABLE admin_audit_logs ADD COLUMN response_time_ms FLOAT DEFAULT 15.0"),
+                    ("trace_id", "ALTER TABLE admin_audit_logs ADD COLUMN trace_id VARCHAR(100)"),
+                    ("event_hash", "ALTER TABLE admin_audit_logs ADD COLUMN event_hash VARCHAR(64)"),
+                    ("previous_event_hash", "ALTER TABLE admin_audit_logs ADD COLUMN previous_event_hash VARCHAR(64)"),
+                    ("integrity_status", "ALTER TABLE admin_audit_logs ADD COLUMN integrity_status VARCHAR(30) DEFAULT 'VERIFIED'"),
+                    ("institution_id", "ALTER TABLE admin_audit_logs ADD COLUMN institution_id VARCHAR(100) DEFAULT 'NEC_AUTONOMOUS_001'"),
+                    ("institution_branding_version", "ALTER TABLE admin_audit_logs ADD COLUMN institution_branding_version VARCHAR(50) DEFAULT 'v2026.1'"),
+                    ("institution_logo_reference", "ALTER TABLE admin_audit_logs ADD COLUMN institution_logo_reference VARCHAR(255) DEFAULT 'assets/nec_logo.png'"),
+                    ("description", "ALTER TABLE admin_audit_logs ADD COLUMN description TEXT"),
+                    ("metadata_json", "ALTER TABLE admin_audit_logs ADD COLUMN metadata_json TEXT"),
+                    ("created_at", "ALTER TABLE admin_audit_logs ADD COLUMN created_at DATETIME"),
+                    ("updated_at", "ALTER TABLE admin_audit_logs ADD COLUMN updated_at DATETIME")
+                ]
+                for col_name, sql in audit_migrations:
+                    if col_name not in audit_cols:
+                        try:
+                            conn.execute(__import__('sqlalchemy').text(sql))
+                            conn.commit()
+                            print(f"[DB Migration] Added admin_audit_logs column: {col_name}")
+                        except Exception:
+                            pass
             result_scp = conn.execute(
                 __import__('sqlalchemy').text("PRAGMA table_info(student_contest_participations)")
             )
@@ -326,6 +397,35 @@ def run_migrations():
                         conn.execute(__import__('sqlalchemy').text(sql))
                         conn.commit()
                         print(f"[DB Migration] Added student_contest_participations column: {col_name}")
+
+            # Check certificate_records columns
+            result_cert = conn.execute(
+                __import__('sqlalchemy').text("PRAGMA table_info(certificate_records)")
+            )
+            cert_cols = {row[1] for row in result_cert}
+            if cert_cols:
+                cert_migrations = [
+                    ("contest_name", "ALTER TABLE certificate_records ADD COLUMN contest_name VARCHAR(128)"),
+                    ("leetcode_username", "ALTER TABLE certificate_records ADD COLUMN leetcode_username VARCHAR(128)"),
+                    ("participation_status", "ALTER TABLE certificate_records ADD COLUMN participation_status VARCHAR(64)"),
+                    ("problems_solved", "ALTER TABLE certificate_records ADD COLUMN problems_solved VARCHAR(64)"),
+                    ("contest_score", "ALTER TABLE certificate_records ADD COLUMN contest_score VARCHAR(32)"),
+                    ("contest_rank", "ALTER TABLE certificate_records ADD COLUMN contest_rank VARCHAR(32)"),
+                    ("contest_rating", "ALTER TABLE certificate_records ADD COLUMN contest_rating VARCHAR(32)"),
+                    ("q1_score", "ALTER TABLE certificate_records ADD COLUMN q1_score INTEGER DEFAULT 0"),
+                    ("q2_score", "ALTER TABLE certificate_records ADD COLUMN q2_score INTEGER DEFAULT 0"),
+                    ("q3_score", "ALTER TABLE certificate_records ADD COLUMN q3_score INTEGER DEFAULT 0"),
+                    ("q4_score", "ALTER TABLE certificate_records ADD COLUMN q4_score INTEGER DEFAULT 0"),
+                    ("retrieved_timestamp", "ALTER TABLE certificate_records ADD COLUMN retrieved_timestamp VARCHAR(64)")
+                ]
+                for col_name, sql in cert_migrations:
+                    if col_name not in cert_cols:
+                        try:
+                            conn.execute(__import__('sqlalchemy').text(sql))
+                            conn.commit()
+                            print(f"[DB Migration] Added certificate_records column: {col_name}")
+                        except Exception:
+                            pass
 
             # Check sync_jobs columns
             result_jobs = conn.execute(

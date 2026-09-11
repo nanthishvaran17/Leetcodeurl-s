@@ -1047,13 +1047,14 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
 
     ALIGN_CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
     ALIGN_LEFT = Alignment(horizontal="left", vertical="center", wrap_text=True)
+    ALIGN_RIGHT = Alignment(horizontal="right", vertical="center")
 
-    FONT_TITLE = Font(name="Calibri", size=15, bold=True, color="FFFFFF")
-    FONT_SUBTITLE = Font(name="Calibri", size=9.5, italic=True, color="FFFFFF")
-    FONT_META = Font(name="Calibri", size=8.5, bold=True, color="475569")
-    FONT_HEADER = Font(name="Calibri", size=9.5, bold=True, color="FFFFFF")
-    FONT_DATA = Font(name="Calibri", size=9.5)
-    FONT_DATA_BOLD = Font(name="Calibri", size=9.5, bold=True)
+    FONT_TITLE = Font(name="Times New Roman", size=15, bold=True, color="FFFFFF")
+    FONT_SUBTITLE = Font(name="Times New Roman", size=9.5, italic=True, color="FFFFFF")
+    FONT_META = Font(name="Times New Roman", size=8.5, bold=True, color="475569")
+    FONT_HEADER = Font(name="Times New Roman", size=9.5, bold=True, color="FFFFFF")
+    FONT_DATA = Font(name="Times New Roman", size=9.5)
+    FONT_DATA_BOLD = Font(name="Times New Roman", size=9.5, bold=True)
 
     tot_cnt = len(candidates)
     ready_cnt = sum(1 for c in candidates if str(c.get("placement_readiness", "")).upper() in ("READY", "PLACEMENT READY"))
@@ -1107,18 +1108,18 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     for c_start, c_end, lbl, val, fill_style in kpis:
         ws1.merge_cells(f"{c_start}5:{c_end}5")
         cl = ws1[f"{c_start}5"]
-        cl.value = lbl; cl.font = Font(name="Calibri", size=8.5, bold=True, color="FFFFFF"); cl.alignment = ALIGN_CENTER; cl.fill = fill_style
+        cl.value = lbl; cl.font = Font(name="Times New Roman", size=8.5, bold=True, color="FFFFFF"); cl.alignment = ALIGN_CENTER; cl.fill = fill_style
 
         ws1.merge_cells(f"{c_start}6:{c_end}6")
         cv = ws1[f"{c_start}6"]
-        cv.value = val; cv.font = Font(name="Calibri", size=13, bold=True, color="FFFFFF"); cv.alignment = ALIGN_CENTER; cv.fill = fill_style
+        cv.value = val; cv.font = Font(name="Times New Roman", size=13, bold=True, color="FFFFFF"); cv.alignment = ALIGN_CENTER; cv.fill = fill_style
 
     ws1.row_dimensions[5].height = 16
     ws1.row_dimensions[6].height = 22
 
     ws1.merge_cells("A8:H8")
     ws1["A8"] = "APPLIED RECRUITMENT CRITERIA & FILTERS"
-    ws1["A8"].font = Font(name="Calibri", size=10, bold=True, color="1B365D")
+    ws1["A8"].font = Font(name="Times New Roman", size=10, bold=True, color="1B365D")
     ws1["A8"].fill = PatternFill(start_color="E2E8F0", end_color="E2E8F0", fill_type="solid")
 
     crit_list = [
@@ -1138,10 +1139,10 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
 
     ws1["Z13"] = "Readiness Band"; ws1["AA13"] = "Count"
     ws1["Z13"].font = FONT_DATA_BOLD; ws1["AA13"].font = FONT_DATA_BOLD
-    ws1["Z14"] = "Ready"; ws1["AA14"] = ready_cnt
-    ws1["Z15"] = "Near Ready"; ws1["AA15"] = near_cnt
-    ws1["Z16"] = "Developing"; ws1["AA16"] = dev_cnt
-    ws1["Z17"] = "High Risk"; ws1["AA17"] = risk_cnt
+    ws1["Z14"] = "Ready"; ws1["Z14"].font = FONT_DATA; ws1["AA14"] = ready_cnt; ws1["AA14"].font = FONT_DATA_BOLD
+    ws1["Z15"] = "Near Ready"; ws1["Z15"].font = FONT_DATA; ws1["AA15"] = near_cnt; ws1["AA15"].font = FONT_DATA_BOLD
+    ws1["Z16"] = "Developing"; ws1["Z16"].font = FONT_DATA; ws1["AA16"] = dev_cnt; ws1["AA16"].font = FONT_DATA_BOLD
+    ws1["Z17"] = "High Risk"; ws1["Z17"].font = FONT_DATA; ws1["AA17"] = risk_cnt; ws1["AA17"].font = FONT_DATA_BOLD
 
     chart1 = DoughnutChart()
     chart1.title = "Placement Readiness Distribution"
@@ -1159,9 +1160,9 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
 
     ws1["Z19"] = "Difficulty"; ws1["AA19"] = "Problems"
     ws1["Z19"].font = FONT_DATA_BOLD; ws1["AA19"].font = FONT_DATA_BOLD
-    ws1["Z20"] = "Easy"; ws1["AA20"] = tot_easy
-    ws1["Z21"] = "Medium"; ws1["AA21"] = tot_med
-    ws1["Z22"] = "Hard"; ws1["AA22"] = tot_hrd
+    ws1["Z20"] = "Easy"; ws1["Z20"].font = FONT_DATA; ws1["AA20"] = tot_easy; ws1["AA20"].font = FONT_DATA_BOLD
+    ws1["Z21"] = "Medium"; ws1["Z21"].font = FONT_DATA; ws1["AA21"] = tot_med; ws1["AA21"].font = FONT_DATA_BOLD
+    ws1["Z22"] = "Hard"; ws1["Z22"].font = FONT_DATA; ws1["AA22"] = tot_hrd; ws1["AA22"].font = FONT_DATA_BOLD
 
     chart2 = BarChart()
     chart2.type = "col"
@@ -1210,6 +1211,10 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
         rat = float(c.get("contest_rating", 0) or 0)
         overall = round((tot * 0.2) + (perf * 0.5) + (rat * 0.02), 1)
 
+        rat_str = f"{rat:.2f}" if rat > 0 else "—"
+        rank_str = clean_cell_value(c.get("global_rank", "—"))
+        if rank_str in ("0", "None", ""): rank_str = "—"
+
         row_vals = [
             i + 1,
             clean_cell_value(c.get("name")),
@@ -1228,12 +1233,12 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
             int(c.get("total_submissions", 0) or 0),
             int(c.get("current_streak", 0) or 0),
             int(c.get("active_days", 0) or 0),
-            rat,
-            clean_cell_value(c.get("global_rank", "N/A")),
+            rat_str,
+            rank_str,
             clean_cell_value(c.get("contests_attended", 0)),
-            f"{c.get('contest_top_pct', 0)}%" if c.get("contest_top_pct") is not None else "N/A",
+            f"{c.get('contest_top_pct', 0)}%" if c.get("contest_top_pct") is not None else "—",
             perf,
-            clean_cell_value(c.get("interview_readiness", "N/A")),
+            clean_cell_value(c.get("interview_readiness", "—")),
             overall,
             clean_cell_value(c.get("placement_readiness", "On Track")),
             clean_cell_value(c.get("risk_level", "Safe")),
@@ -1243,7 +1248,7 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
         for col_idx, val in enumerate(row_vals, start=1):
             cell = ws1.cell(row=r_idx, column=col_idx, value=val)
             cell.font = FONT_DATA_BOLD if col_idx in (1, 2, 10, 22, 24, 25) else FONT_DATA
-            cell.alignment = ALIGN_LEFT if col_idx in (2, 3) else ALIGN_CENTER
+            cell.alignment = ALIGN_LEFT if col_idx in (2, 3, 4, 5) else (ALIGN_RIGHT if col_idx in (1, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24) else ALIGN_CENTER)
             cell.border = _THIN_BORDER
 
             if r_idx % 2 == 1: cell.fill = ALT_ROW_FILL
@@ -1540,9 +1545,18 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
             ws_readme.cell(row=idx, column=col_i).border = _THIN_BORDER
         ws_readme.row_dimensions[idx].height = 22
 
-    for col in ws_readme.columns:
-        col_letter = get_column_letter(col[0].column)
-        ws_readme.column_dimensions[col_letter].width = 25
+    for ws_item in wb.worksheets:
+        for row in ws_item.iter_rows():
+            for cell in row:
+                if cell.value is not None:
+                    curr_font = cell.font
+                    cell.font = Font(
+                        name="Times New Roman",
+                        size=curr_font.size if curr_font and curr_font.size else 10,
+                        bold=curr_font.bold if curr_font else False,
+                        italic=curr_font.italic if curr_font else False,
+                        color=curr_font.color if curr_font else None
+                    )
 
     output = io.BytesIO()
     wb.save(output)

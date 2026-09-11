@@ -28,6 +28,15 @@ def get_departments(
     if not all_depts:
         all_d = [d for d in all_d if is_production_department(d.code, d.name)]
 
+    for d in all_d:
+        if d.code and d.code.upper() == "IT" and d.name != "Information Technology":
+            d.name = "Information Technology"
+            db.add(d)
+            try:
+                db.commit()
+            except Exception:
+                db.rollback()
+
     # Attempt to get current user (optional — public access still works for leaderboard)
     current_user: Optional[User] = None
     if request:

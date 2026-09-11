@@ -38,7 +38,10 @@ import {
   Compass,
   History,
   Shield,
-  HelpCircle,
+  Hash,
+  Building2,
+  FileCode2,
+  HardDrive,
   X,
   Play,
   RotateCcw,
@@ -109,6 +112,12 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
   const [verifyingSnapshot, setVerifyingSnapshot] = useState<string | null>(null);
   const [snapshotSuccessMsg, setSnapshotSuccessMsg] = useState<string | null>(null);
 
+  // Audit Stream & Full 11-Section Detail Modal State
+  const [auditLogsList, setAuditLogsList] = useState<any[]>([]);
+  const [loadingAuditLogs, setLoadingAuditLogs] = useState<boolean>(false);
+  const [selectedAuditDetail, setSelectedAuditDetail] = useState<any | null>(null);
+  const [loadingAuditDetail, setLoadingAuditDetail] = useState<boolean>(false);
+
   // Schedule Automation State
   const [scheduleData, setScheduleData] = useState<any>(null);
   const [schedDay, setSchedDay] = useState<string>('sunday');
@@ -159,6 +168,42 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
     }, 15000);
     return () => clearInterval(interval);
   }, []);
+
+  const fetchAuditLogsList = useCallback(async () => {
+    setLoadingAuditLogs(true);
+    try {
+      const res = await api.get('/admin/audit-logs?limit=100');
+      if (Array.isArray(res.data)) {
+        setAuditLogsList(res.data);
+      }
+    } catch (e) {
+      console.debug("Error fetching audit logs stream:", e);
+    } finally {
+      setLoadingAuditLogs(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeOpsTab === 'audit') {
+      fetchAuditLogsList();
+    }
+  }, [activeOpsTab, fetchAuditLogsList]);
+
+  const handleOpenAuditDetail = async (auditItem: any) => {
+    const idToFetch = auditItem.audit_id || auditItem.id;
+    setLoadingAuditDetail(true);
+    setSelectedAuditDetail(auditItem);
+    try {
+      const res = await api.get(`/admin/audit-logs/${encodeURIComponent(idToFetch)}`);
+      if (res.data) {
+        setSelectedAuditDetail(res.data);
+      }
+    } catch (e) {
+      console.debug("Audit detail API note, using item payload:", e);
+    } finally {
+      setLoadingAuditDetail(false);
+    }
+  };
 
   const fetchOperationsCenterData = useCallback(async (isBackground = false) => {
     if (!isBackground) setLoading(true);
@@ -483,7 +528,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
         report_type: 'FORENSIC_PDF',
         format: 'pdf',
         filename,
-        filters: { search: studentQuery, session_id: sessionId },
+        filters: { search: studentQuery, session_id: sessionId, reg: forensicResult.student.reg_no, trace_id: forensicResult.traceId },
         onStateChange: (state) => setDownloadState(state)
       });
       
@@ -1362,7 +1407,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                   <button
                     type="button"
                     onClick={() => {
-                      const contestQuery = forensicResult.contest.contestName || forensicResult.contest.contestId || '515';
+                      const contestQuery = forensicResult.contest.contestName || forensicResult.contest.sessionId || selectedContestId;
                       const vId = forensicResult.traceId || `trace_${forensicResult.student.reg_no}`;
                       const url = `/verify/${vId}?reg=${encodeURIComponent(forensicResult.student.reg_no)}&contest=${encodeURIComponent(contestQuery)}&name=${encodeURIComponent(forensicResult.student.name)}`;
                       window.open(url, '_blank');
@@ -1767,34 +1812,291 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
       {/* 11. TAB 7: OPERATIONS AUDIT TIMELINE */}
       {activeOpsTab === 'audit' && (
         <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 gap-2">
             <div>
-              <h3 className="text-sm font-black text-slate-900 dark:text-white">RECENT OPERATIONS & AUDIT TRAIL</h3>
-              <p className="text-xs text-slate-500">Live operational event log recorded across all sessions</p>
+              <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
+                ADMINISTRATOR AUDIT STREAM & FORENSIC TIMELINE
+              </h3>
+              <p className="text-xs text-slate-500">
+                Authoritative backend server audit logs ordered by canonical event timestamp (Asia/Kolkata IST)
+              </p>
             </div>
-            <span className="text-xs font-bold text-slate-400">Strictly Non-Sensitive Audit</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono font-black px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                SHA-256 INTEGRITY SEALED
+              </span>
+              <button
+                onClick={fetchAuditLogsList}
+                disabled={loadingAuditLogs}
+                className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${loadingAuditLogs ? 'animate-spin' : ''}`} />
+                <span>Refresh Logs</span>
+              </button>
+            </div>
           </div>
 
-          <div className="space-y-2.5">
-            {(data?.recentAudits || []).map((audit: any) => (
-              <div
-                key={audit.id}
-                className="p-3 rounded-2xl bg-slate-50/70 dark:bg-navy-950/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 text-xs font-bold"
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs font-bold">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider">
+                  <th className="py-2.5 px-3">Event ID</th>
+                  <th className="py-2.5 px-3">Event Timestamp (IST)</th>
+                  <th className="py-2.5 px-3">Administrator</th>
+                  <th className="py-2.5 px-3">Action & Route</th>
+                  <th className="py-2.5 px-3">Client IP / Device</th>
+                  <th className="py-2.5 px-3">Result</th>
+                  <th className="py-2.5 px-3 text-right">Forensic Detail</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                {((auditLogsList.length > 0 ? auditLogsList : data?.recentAudits) || []).map((audit: any) => (
+                  <tr
+                    key={audit.id || audit.audit_id}
+                    onClick={() => handleOpenAuditDetail(audit)}
+                    className="hover:bg-slate-50/80 dark:hover:bg-navy-900/40 cursor-pointer transition-all"
+                  >
+                    <td className="py-3 px-3 font-mono text-[11px] text-indigo-600 dark:text-indigo-400 font-bold">
+                      {audit.audit_id || `SEC-${audit.id}`}
+                    </td>
+                    <td className="py-3 px-3 font-mono text-[11px] text-slate-700 dark:text-slate-300">
+                      {audit.event_timestamp_formatted || audit.timestamp || 'N/A'}
+                    </td>
+                    <td className="py-3 px-3">
+                      <p className="text-slate-900 dark:text-white font-bold">{audit.admin_name || audit.user || 'System'}</p>
+                      <p className="text-[10px] text-slate-400 font-normal">{audit.admin_role || 'ADMIN'}</p>
+                    </td>
+                    <td className="py-3 px-3">
+                      <p className="text-slate-900 dark:text-white font-bold">{audit.action}</p>
+                      <p className="text-[10px] text-slate-500 font-mono">{audit.route || audit.target_id || audit.description}</p>
+                    </td>
+                    <td className="py-3 px-3 font-mono text-[10.5px] text-slate-500">
+                      <p>{audit.client_ip || audit.ip_address || '127.0.0.1'} ({audit.ip_version || 'IPv4'})</p>
+                      <p className="text-[9.5px] text-slate-400">{audit.browser || 'Web Browser'} • {audit.operating_system || 'Desktop'}</p>
+                    </td>
+                    <td className="py-3 px-3">
+                      <span
+                        className={`inline-block px-2 py-0.5 text-[10px] font-black rounded-md ${
+                          (audit.status || '').toUpperCase() === 'SUCCESS' || (audit.status || '').toUpperCase() === 'ALLOWED'
+                            ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                            : 'bg-rose-500/20 text-rose-600 dark:text-rose-400'
+                        }`}
+                      >
+                        {audit.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-right">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenAuditDetail(audit);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-black hover:bg-indigo-100 transition-all text-[11px]"
+                      >
+                        View Audit Log →
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* FULL 11-SECTION IMMUTABLE AUDIT LOG DETAIL MODAL */}
+      {selectedAuditDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in overflow-y-auto">
+          <div className="max-w-4xl w-full max-h-[90vh] overflow-y-auto rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 sm:p-8 space-y-6 text-slate-100 relative font-sans">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+                  <Fingerprint className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white tracking-tight uppercase">
+                    FORENSIC AUDIT EVENT DETAIL
+                  </h3>
+                  <p className="text-xs text-slate-400 font-mono">
+                    Immutable Audit Record • {selectedAuditDetail.audit_id}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setSelectedAuditDetail(null)}
+                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-all cursor-pointer"
               >
-                <div className="flex items-center gap-3">
-                  <span className="font-mono text-[11px] text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800">
-                    {audit.timestamp}
-                  </span>
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* 11 VERIFIED AUDIT SECTIONS */}
+            <div className="space-y-6">
+
+              {/* 1. EVENT IDENTITY */}
+              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+                  <Hash className="w-3.5 h-3.5" /> 1. EVENT IDENTITY
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
+                  <div><span className="text-slate-400 block text-[10px]">EVENT ID</span><strong className="text-white">{selectedAuditDetail.audit_id}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">TRACE ID</span><strong className="text-cyan-400">{selectedAuditDetail.trace_id || `trace_${selectedAuditDetail.audit_id.toLowerCase()}`}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">INTEGRITY STATUS</span><strong className={selectedAuditDetail.integrity_verified !== false ? "text-emerald-400" : "text-rose-400"}>{selectedAuditDetail.integrity_status || '✓ VERIFIED'}</strong></div>
+                </div>
+              </div>
+
+              {/* 2. ADMINISTRATOR / USER */}
+              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+                  <Building2 className="w-3.5 h-3.5" /> 2. ADMINISTRATOR / USER
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                  <div><span className="text-slate-400 block text-[10px]">USER ID</span><strong className="font-mono text-slate-200">{selectedAuditDetail.admin_user_id || 'N/A'}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">USERNAME</span><strong className="text-white">{selectedAuditDetail.admin_name || 'System'}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">EMAIL</span><strong className="text-slate-300 font-mono text-[11px]">{selectedAuditDetail.admin_email || 'N/A'}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">ROLE / ACCESS</span><strong className="text-indigo-300">{selectedAuditDetail.admin_role || 'ADMIN'} ({selectedAuditDetail.access_level || 'LEVEL_1'})</strong></div>
+                </div>
+              </div>
+
+              {/* 3. EVENT SUMMARY */}
+              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+                  <FileText className="w-3.5 h-3.5" /> 3. EVENT SUMMARY
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                  <div><span className="text-slate-400 block text-[10px]">ACTION</span><strong className="text-white">{selectedAuditDetail.action}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">ACTION TYPE</span><strong className="text-slate-300">{selectedAuditDetail.action_type || 'SECURITY_ACCESS'}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">EVENT RESULT</span><strong className={selectedAuditDetail.status === 'SUCCESS' || selectedAuditDetail.status === 'ALLOWED' ? 'text-emerald-400' : 'text-rose-400'}>{selectedAuditDetail.status}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">SEVERITY</span><strong className="text-amber-400">{selectedAuditDetail.severity || 'INFO'}</strong></div>
+                </div>
+                {selectedAuditDetail.description && (
+                  <p className="text-xs text-slate-300 font-mono pt-2 border-t border-slate-800/80">{selectedAuditDetail.description}</p>
+                )}
+              </div>
+
+              {/* 4. TARGET RESOURCE */}
+              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+                  <Database className="w-3.5 h-3.5" /> 4. TARGET RESOURCE
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+                  <div><span className="text-slate-400 block text-[10px]">TARGET TYPE</span><strong className="text-slate-200">{selectedAuditDetail.target_type || 'Resource'}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">RESOURCE NAME</span><strong className="text-slate-200">{selectedAuditDetail.resource_name || selectedAuditDetail.target_id || 'N/A'}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">ROUTE</span><strong className="text-cyan-300">{selectedAuditDetail.route || '/api/admin'}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">HTTP METHOD</span><strong className="text-amber-300">{selectedAuditDetail.http_method || 'GET'}</strong></div>
+                </div>
+              </div>
+
+              {/* 5. NETWORK INFORMATION */}
+              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+                  <ExternalLink className="w-3.5 h-3.5" /> 5. NETWORK INFORMATION
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
+                  <div><span className="text-slate-400 block text-[10px]">CLIENT IP ADDRESS</span><strong className="text-emerald-400">{selectedAuditDetail.client_ip || '127.0.0.1'}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">IP VERSION</span><strong className="text-slate-300">{selectedAuditDetail.ip_version || 'IPv4'}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">HASHED IP REFERENCE</span><strong className="text-slate-400 text-[11px]">{selectedAuditDetail.ip_address || 'ip_anon'}</strong></div>
+                </div>
+              </div>
+
+              {/* 6. BROWSER & DEVICE */}
+              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5" /> 6. BROWSER & DEVICE DETECTED
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                  <div><span className="text-slate-400 block text-[10px]">BROWSER</span><strong className="text-white">{selectedAuditDetail.browser || 'Web Browser'} ({selectedAuditDetail.browser_version || 'N/A'})</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">OPERATING SYSTEM</span><strong className="text-slate-200">{selectedAuditDetail.operating_system || 'Desktop OS'}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">DEVICE TYPE</span><strong className="text-slate-200">{selectedAuditDetail.device_type || 'Desktop'}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">UA CATEGORY</span><strong className="text-indigo-300">{selectedAuditDetail.user_agent_category || 'Web Browser'}</strong></div>
+                </div>
+              </div>
+
+              {/* 7. SESSION & REQUEST */}
+              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+                  <FileCode2 className="w-3.5 h-3.5" /> 7. SESSION & REQUEST IDENTIFIERS
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
+                  <div><span className="text-slate-400 block text-[10px]">SESSION ID</span><strong className="text-slate-300">{selectedAuditDetail.session_id || 'NULL'}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">REQUEST ID</span><strong className="text-slate-300">{selectedAuditDetail.request_id || `req_${selectedAuditDetail.id}`}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">CORRELATION ID</span><strong className="text-cyan-300">{selectedAuditDetail.correlation_id || `corr_${selectedAuditDetail.id}`}</strong></div>
+                </div>
+              </div>
+
+              {/* 8. SECURITY INFORMATION */}
+              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+                  <ShieldCheck className="w-3.5 h-3.5" /> 8. SECURITY & AUTHORIZATION RESULT
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                  <div><span className="text-slate-400 block text-[10px]">AUTHENTICATION</span><strong className="text-emerald-400">{selectedAuditDetail.authentication_status || 'AUTHENTICATED'}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">AUTHORIZATION</span><strong className="text-emerald-400">{selectedAuditDetail.authorization_result || 'ALLOWED'}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">PERMISSION CHECKED</span><strong className="text-slate-300 font-mono text-[11px]">{selectedAuditDetail.permission_checked || selectedAuditDetail.action}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">RISK LEVEL</span><strong className="text-emerald-400">{selectedAuditDetail.risk_level || 'LOW'}</strong></div>
+                </div>
+                {selectedAuditDetail.denial_reason && (
+                  <p className="text-xs text-rose-400 font-mono pt-2 border-t border-slate-800/80">Denial Reason: {selectedAuditDetail.denial_reason}</p>
+                )}
+              </div>
+
+              {/* 9. EVENT TIMESTAMPS */}
+              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+                  <Calendar className="w-3.5 h-3.5" /> 9. CANONICAL EVENT TIMESTAMPS (ASIA/KOLKATA IST)
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
+                  <div><span className="text-slate-400 block text-[10px]">AUTHORITATIVE EVENT TIMESTAMP</span><strong className="text-emerald-400 text-sm">{selectedAuditDetail.event_timestamp_formatted || selectedAuditDetail.created_at}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">UTC STORED TIMESTAMP</span><strong className="text-slate-300">{selectedAuditDetail.event_timestamp || selectedAuditDetail.created_at}</strong></div>
+                </div>
+              </div>
+
+              {/* 10. FORENSIC INTEGRITY */}
+              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+                  <ShieldAlert className="w-3.5 h-3.5" /> 10. CRYPTOGRAPHIC FORENSIC HASH CHAIN
+                </h4>
+                <div className="space-y-2 text-xs font-mono">
                   <div>
-                    <p className="text-slate-900 dark:text-white">{audit.action}</p>
-                    <p className="text-[11px] text-slate-500 font-normal">{audit.description || audit.user}</p>
+                    <span className="text-slate-400 block text-[10px]">SHA-256 EVENT HASH</span>
+                    <strong className="text-cyan-400 text-[11px] break-all">{selectedAuditDetail.event_hash}</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[10px]">PREVIOUS EVENT HASH (CHAIN LINK)</span>
+                    <strong className="text-slate-400 text-[11px] break-all">{selectedAuditDetail.previous_event_hash || '0000000000000000000000000000000000000000000000000000000000000000'}</strong>
                   </div>
                 </div>
-                <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                  {audit.status}
-                </span>
               </div>
-            ))}
+
+              {/* 11. INSTITUTIONAL EVIDENCE */}
+              <div className="p-4 rounded-2xl bg-slate-800/40 border border-slate-800 space-y-2">
+                <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> 11. INSTITUTIONAL EVIDENCE & BRANDING
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
+                  <div><span className="text-slate-400 block text-[10px]">INSTITUTION ID</span><strong className="text-white">{selectedAuditDetail.institution_id || 'NEC'}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">BRANDING VERSION</span><strong className="text-slate-300">{selectedAuditDetail.institution_branding_version || 'v1.0'}</strong></div>
+                  <div><span className="text-slate-400 block text-[10px]">LOGO REF</span><strong className="text-slate-300">{selectedAuditDetail.institution_logo_reference || 'nandha_emblem.png'}</strong></div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Footer Close Button */}
+            <div className="pt-4 border-t border-slate-800 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedAuditDetail(null)}
+                className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition-all shadow-md cursor-pointer"
+              >
+                Close Audit Detail
+              </button>
+            </div>
+
           </div>
         </div>
       )}

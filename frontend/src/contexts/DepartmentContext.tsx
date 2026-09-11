@@ -45,12 +45,19 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       // Backend returns scoped list for HOD, full list for others
       const res = await api.get('/departments');
       if (res.data && Array.isArray(res.data)) {
-        const mappedDepts = res.data.map((d: any) => ({
-          id: d.id,
-          code: d.code || d.name,
-          name: d.name || d.code,
-          pillText: d.code || d.name
-        }));
+        const mappedDepts = res.data.map((d: any) => {
+          const code = d.code || d.name || '';
+          const rawName = d.name || d.code || '';
+          const name = (code.toUpperCase() === 'IT' || rawName.toUpperCase() === 'IT')
+            ? 'Information Technology'
+            : rawName;
+          return {
+            id: d.id,
+            code,
+            name,
+            pillText: code
+          };
+        });
         setDepartments(mappedDepts);
       } else {
         setDepartments([]);

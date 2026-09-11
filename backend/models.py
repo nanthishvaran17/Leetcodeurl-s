@@ -655,6 +655,7 @@ class CertificateRecord(Base):
     certificate_type = Column(String(64), default="Top Performer", nullable=False)
     document_type = Column(String(64), default="CERTIFICATE_OF_EXCELLENCE", nullable=False) # CERTIFICATE_OF_EXCELLENCE, FORENSIC_VERIFICATION_REPORT
     contest_id = Column(String(64), nullable=True)
+    contest_name = Column(String(128), nullable=True)
     sha_hash = Column(String(128), nullable=True)
     
     student_id = Column(Integer, ForeignKey("students.id"), nullable=True)
@@ -662,6 +663,18 @@ class CertificateRecord(Base):
     register_no = Column(String(64), index=True, nullable=False)
     department = Column(String(64), nullable=False) # e.g. CSE(CS) or CSE(IOT)
     department_name = Column(String(255), nullable=False) # Full expanded official name
+    leetcode_username = Column(String(128), nullable=True)
+    
+    participation_status = Column(String(64), nullable=True)
+    problems_solved = Column(String(64), nullable=True)
+    contest_score = Column(String(32), nullable=True)
+    contest_rank = Column(String(32), nullable=True)
+    contest_rating = Column(String(32), nullable=True)
+    q1_score = Column(Integer, default=0)
+    q2_score = Column(Integer, default=0)
+    q3_score = Column(Integer, default=0)
+    q4_score = Column(Integer, default=0)
+    retrieved_timestamp = Column(String(64), nullable=True)
     
     program = Column(String(255), default="Institutional LeetCode Continuous Performance Tracking System", nullable=False)
     recognition = Column(String(128), default="Top Performer", nullable=False)
@@ -932,27 +945,67 @@ class AdminAuditLog(Base):
     __tablename__ = "admin_audit_logs"
 
     id = Column(Integer, primary_key=True, index=True)
-    audit_id = Column(String(100), unique=True, index=True, nullable=False) # AUD-2026-XXXXX
+    audit_id = Column(String(100), unique=True, index=True, nullable=False) # SEC-XXXXX / AUD-XXXXX
+    event_timestamp = Column(DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
     
     admin_user_id = Column(Integer, nullable=True, index=True)
     admin_name = Column(String(150), nullable=True)
     admin_email = Column(String(150), nullable=True)
     admin_role = Column(String(50), default="ADMIN")
+    access_level = Column(String(50), default="LEVEL_1")
 
     action = Column(String(100), nullable=False, index=True)
-    action_type = Column(String(50), default="GENERAL", index=True) # SECURITY, DATA_SYNC, REPORT, EMAIL, RECIPIENT, SETTINGS
+    action_type = Column(String(50), default="GENERAL", index=True) # SECURITY, DATA_SYNC, REPORT, EMAIL, SETTINGS
+    action_classification = Column(String(50), default="SECURITY_ACCESS")
+    status = Column(String(30), default="SUCCESS", index=True) # SUCCESS, FAILED, WARNING, BLOCKED
+    severity = Column(String(30), default="INFO")
     
     target_type = Column(String(50), nullable=True)
     target_id = Column(String(100), nullable=True)
+    resource_name = Column(String(150), nullable=True)
+    route = Column(String(255), nullable=True)
+    http_method = Column(String(10), nullable=True)
+    
+    ip_address = Column(String(50), nullable=True)
+    client_ip = Column(String(50), nullable=True)
+    ip_version = Column(String(10), default="IPv4")
+    
+    session_id = Column(String(100), nullable=True)
+    request_id = Column(String(100), nullable=True)
+    correlation_id = Column(String(100), nullable=True)
+    
+    browser = Column(String(100), nullable=True)
+    browser_version = Column(String(50), nullable=True)
+    operating_system = Column(String(100), nullable=True)
+    device_type = Column(String(50), nullable=True)
+    user_agent_category = Column(String(100), nullable=True)
+    user_agent = Column(String(500), nullable=True)
+    
+    authentication_status = Column(String(50), default="AUTHENTICATED")
+    authorization_result = Column(String(50), default="ALLOWED")
+    permission_checked = Column(String(100), nullable=True)
+    risk_level = Column(String(30), default="LOW")
+    denial_reason = Column(Text, nullable=True)
+    
+    request_timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    response_timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    response_status = Column(Integer, default=200)
+    response_time_ms = Column(Float, default=0.0)
+    
+    trace_id = Column(String(100), nullable=True)
+    event_hash = Column(String(100), nullable=True)
+    previous_event_hash = Column(String(100), nullable=True)
+    integrity_status = Column(String(30), default="VERIFIED")
+    
+    institution_id = Column(String(50), default="NEC")
+    institution_branding_version = Column(String(50), default="v1.0")
+    institution_logo_reference = Column(String(100), default="nandha_emblem.png")
     
     description = Column(Text, nullable=True)
-    ip_address = Column(String(50), nullable=True)
-    user_agent = Column(String(255), nullable=True)
-    
-    status = Column(String(30), default="SUCCESS", index=True) # SUCCESS, FAILED, WARNING
     metadata_json = Column(JSON, nullable=True)
     
     created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
 
 class EmailDelivery(Base):

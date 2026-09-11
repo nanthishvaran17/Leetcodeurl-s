@@ -21,13 +21,13 @@ if not os.path.exists(COLLEGE_LOGO_PATH):
 import re
 
 def derive_clean_contest_name(session_obj) -> str:
-    """Extracts or derives a clean, 100% accurate contest display title (e.g. Weekly Contest 438)."""
+    """Extracts or derives a clean, 100% accurate contest display title."""
     if not session_obj:
-        return "Weekly Contest 438"
+        return "Weekly Contest"
 
-    raw_name = (session_obj.contest_name or "").strip()
-    contest_id = (session_obj.contest_id or "").strip()
-    session_code = (session_obj.session_code or "").strip()
+    raw_name = (getattr(session_obj, "contest_name", "") or "").strip()
+    contest_id = (getattr(session_obj, "contest_id", "") or "").strip()
+    session_code = (getattr(session_obj, "session_code", "") or "").strip()
 
     # 1. Match "Weekly Contest 438" or "Biweekly Contest 140"
     m = re.search(r'(Weekly|Biweekly)\s+Contest\s+(\d+)', raw_name, re.IGNORECASE)
@@ -48,7 +48,7 @@ def derive_clean_contest_name(session_obj) -> str:
     if raw_name and "Test" not in raw_name and raw_name != "Weekly Contest":
         return raw_name
 
-    return "Weekly Contest 438"
+    return raw_name or f"Weekly Contest {getattr(session_obj, 'id', '')}"
 
 
 def generate_forensic_audit_pdf(
@@ -75,6 +75,9 @@ def generate_forensic_audit_pdf(
         ).first()
         if cert and cert.student_id:
             student = db.query(Student).filter(Student.id == cert.student_id).first()
+            if cert.contest_id and not session_id:
+                if str(cert.contest_id).isdigit():
+                    session_id = int(cert.contest_id)
 
     if not student and target_trace:
         clean_search = re.sub(r'[^A-Za-z0-9]+', '', target_trace).replace('CERT', '').replace('FORENSIC', '').replace('EXCELLENCE', '').replace('TRACE', '')
@@ -89,14 +92,15 @@ def generate_forensic_audit_pdf(
         ).first()
 
     if not student:
-        student = db.query(Student).first()
-
-    if not student:
         raise ValueError("No student record found for forensic report generation.")
 
     session_obj = None
     if session_id:
-        session_obj = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+        session_obj = db.query(WeeklySession).filter(
+            (WeeklySession.id == session_id) |
+            (WeeklySession.contest_id == str(session_id)) |
+            (WeeklySession.contest_name.ilike(f"%{session_id}%"))
+        ).first()
 
     if not session_obj:
         session_obj = db.query(WeeklySession).filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED"])).order_by(WeeklySession.id.desc()).first()
@@ -154,11 +158,32 @@ def generate_forensic_audit_pdf(
         dept_name_str = student.department.name if student.department else "Computer Science and Engineering"
         ver_url = f"https://leetcode-student-data.web.app/verify/{trace_id}"
 
+        c_rank = f"#{contest_result.contest_rank}" if contest_result and contest_result.contest_rank else ("—")
+        c_rat = f"{contest_result.contest_rating:.2f}" if contest_result and contest_result.contest_rating else ("—")
+        from backend.time_utils import format_ist_datetime, now_utc
+        ret_ts = format_ist_datetime(now_utc())
+
         if existing_cert:
+            existing_cert.student_name = student.name
+            existing_cert.register_no = student.reg_no
+            existing_cert.department = dept_code_str
+            existing_cert.department_name = dept_name_str
+            existing_cert.leetcode_username = username
             existing_cert.document_type = "FORENSIC_VERIFICATION_REPORT"
             existing_cert.certificate_type = "Official LeetCode Contest Forensic Verification Audit Report"
-            existing_cert.sha_hash = sha_hash
             existing_cert.contest_id = session_obj.contest_id or str(session_obj.id)
+            existing_cert.contest_name = c_title_name
+            existing_cert.participation_status = part_status
+            existing_cert.problems_solved = f"{tot_solved_tmp} / 4 Problems"
+            existing_cert.contest_score = str(score_tmp)
+            existing_cert.contest_rank = c_rank
+            existing_cert.contest_rating = c_rat
+            existing_cert.q1_score = q1_val
+            existing_cert.q2_score = q2_val
+            existing_cert.q3_score = q3_val
+            existing_cert.q4_score = q4_val
+            existing_cert.sha_hash = sha_hash
+            existing_cert.retrieved_timestamp = ret_ts
             existing_cert.status = "VALID"
             existing_cert.verification_url = ver_url
         else:
@@ -168,12 +193,24 @@ def generate_forensic_audit_pdf(
                 certificate_type="Official LeetCode Contest Forensic Verification Audit Report",
                 document_type="FORENSIC_VERIFICATION_REPORT",
                 contest_id=session_obj.contest_id or str(session_obj.id),
+                contest_name=c_title_name,
                 sha_hash=sha_hash,
                 student_id=student.id,
                 student_name=student.name,
                 register_no=student.reg_no,
                 department=dept_code_str,
                 department_name=dept_name_str,
+                leetcode_username=username,
+                participation_status=part_status,
+                problems_solved=f"{tot_solved_tmp} / 4 Problems",
+                contest_score=str(score_tmp),
+                contest_rank=c_rank,
+                contest_rating=c_rat,
+                q1_score=q1_val,
+                q2_score=q2_val,
+                q3_score=q3_val,
+                q4_score=q4_val,
+                retrieved_timestamp=ret_ts,
                 program=f"B.E. {dept_name_str}",
                 recognition=f"Official Contest Forensic Verification: {c_title_name}",
                 issue_date=session_obj.session_date or "16.08.2026",

@@ -398,6 +398,8 @@ export const HRCandidateFinderPage: React.FC = () => {
     departments.forEach(d => {
       let color = "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
       const code = (d.code || "").toUpperCase();
+      const rawName = d.name || d.code || "";
+      const deptName = (code === "IT" || rawName.toUpperCase() === "IT") ? "Information Technology" : rawName;
       if (code.includes("CSE(CS)")) color = "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300";
       else if (code.includes("CSE(IOT)")) color = "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300";
       else if (code.includes("CSE")) color = "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300";
@@ -408,7 +410,7 @@ export const HRCandidateFinderPage: React.FC = () => {
 
       list.push({
         value: d.code,
-        label: d.name,
+        label: deptName,
         badge: d.code,
         badgeColor: color
       });

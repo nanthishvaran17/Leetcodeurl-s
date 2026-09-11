@@ -102,6 +102,9 @@ api.interceptors.request.use(async (config) => {
   if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
     config.baseURL = '/api';
   }
+  if (config.url && config.url.startsWith('/api/')) {
+    config.url = config.url.substring(4);
+  }
   try {
     const auth = getAuthInstance() || getOrInitAuth();
     if (auth.currentUser) {

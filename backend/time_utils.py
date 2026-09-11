@@ -86,6 +86,26 @@ def format_ist(dt: Optional[datetime], fmt: str = "%Y-%m-%d %H:%M:%S IST") -> st
     return dt.astimezone(IST).strftime(fmt)
 
 
+def format_ist_datetime(dt: Optional[datetime], include_ms: bool = False) -> str:
+    """
+    Formats a datetime in Asia/Kolkata (IST) following the master institutional format:
+    11 Sep 2026, 06:26:19 AM IST (or with milliseconds: 11 Sep 2026, 06:26:19.482 AM IST)
+    """
+    if dt is None:
+        return "N/A"
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    ist_dt = dt.astimezone(IST)
+    
+    if include_ms:
+        ms = f"{int(ist_dt.microsecond / 1000):03d}"
+        date_str = ist_dt.strftime("%d %b %Y, %I:%M:%S")
+        ampm = ist_dt.strftime("%p")
+        return f"{date_str}.{ms} {ampm} IST"
+    else:
+        return ist_dt.strftime("%d %b %Y, %I:%M:%S %p IST")
+
+
 def parse_iso_to_utc(iso_str: str) -> Optional[datetime]:
     """Parse ISO formatted datetime string and ensure UTC awareness."""
     if not iso_str:

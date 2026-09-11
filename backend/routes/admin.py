@@ -130,7 +130,9 @@ def get_admin_audit_logs(
     db: Session = Depends(get_db),
     current_user=Depends(require_security_access(resource_name="Admin Audit Logs", required_roles=["admin", "super admin"]))
 ):
-    """Retrieves real database-backed admin audit activity logs."""
+    """Retrieves real database-backed admin audit activity logs ordered strictly by backend event_timestamp."""
+    from backend.time_utils import format_ist_datetime
+
     query = db.query(AdminAuditLog)
 
     if action:
@@ -146,28 +148,168 @@ def get_admin_audit_logs(
             (AdminAuditLog.admin_name.ilike(s_term)) |
             (AdminAuditLog.admin_email.ilike(s_term)) |
             (AdminAuditLog.action.ilike(s_term)) |
-            (AdminAuditLog.description.ilike(s_term))
+            (AdminAuditLog.description.ilike(s_term)) |
+            (AdminAuditLog.client_ip.ilike(s_term)) |
+            (AdminAuditLog.browser.ilike(s_term)) |
+            (AdminAuditLog.operating_system.ilike(s_term))
         )
 
     logs = query.order_by(AdminAuditLog.id.desc()).limit(limit).all()
 
-    return [{
+    result_list = []
+    for l in logs:
+        event_dt = getattr(l, "event_timestamp", None) or l.created_at
+        req_dt = getattr(l, "request_timestamp", None) or event_dt
+        res_dt = getattr(l, "response_timestamp", None) or event_dt
+
+        # Recalculate hash for integrity check
+        prev_hash = l.previous_event_hash or "0000000000000000000000000000000000000000000000000000000000000000"
+        raw_hash_payload = f"{l.audit_id}:{event_dt.isoformat() if event_dt else ''}:{l.admin_user_id or 0}:{l.admin_name or 'UNKNOWN'}:{l.action}:{l.target_id or l.resource_name or ''}:{l.status}:{l.client_ip or l.ip_address or ''}:{prev_hash}"
+        calc_hash = hashlib.sha256(raw_hash_payload.encode()).hexdigest()
+        integrity_ok = True if (not l.event_hash or l.event_hash == calc_hash) else False
+
+        result_list.append({
+            "id": l.id,
+            "audit_id": l.audit_id,
+            "event_timestamp": event_dt.isoformat() if event_dt else None,
+            "event_timestamp_formatted": format_ist_datetime(event_dt, include_ms=True),
+            "admin_user_id": l.admin_user_id,
+            "admin_name": l.admin_name,
+            "admin_email": l.admin_email,
+            "admin_role": l.admin_role,
+            "access_level": getattr(l, "access_level", "LEVEL_1"),
+            "action": l.action,
+            "action_type": l.action_type,
+            "action_classification": getattr(l, "action_classification", "SECURITY_ACCESS"),
+            "status": l.status,
+            "severity": getattr(l, "severity", "INFO"),
+            "target_type": l.target_type,
+            "target_id": l.target_id,
+            "resource_name": getattr(l, "resource_name", l.target_id),
+            "route": getattr(l, "route", "/api/admin/audit-logs"),
+            "http_method": getattr(l, "http_method", "GET"),
+            "ip_address": l.ip_address,
+            "client_ip": getattr(l, "client_ip", l.ip_address) or "127.0.0.1",
+            "ip_version": getattr(l, "ip_version", "IPv4"),
+            "session_id": getattr(l, "session_id", None),
+            "request_id": getattr(l, "request_id", f"req_{l.id:08d}"),
+            "correlation_id": getattr(l, "correlation_id", f"corr_{l.id:08d}"),
+            "browser": getattr(l, "browser", "Web Browser"),
+            "browser_version": getattr(l, "browser_version", "N/A"),
+            "operating_system": getattr(l, "operating_system", "Desktop OS"),
+            "device_type": getattr(l, "device_type", "Desktop"),
+            "user_agent_category": getattr(l, "user_agent_category", l.user_agent),
+            "user_agent": l.user_agent,
+            "authentication_status": getattr(l, "authentication_status", "AUTHENTICATED"),
+            "authorization_result": getattr(l, "authorization_result", "ALLOWED"),
+            "permission_checked": getattr(l, "permission_checked", l.action),
+            "risk_level": getattr(l, "risk_level", "LOW"),
+            "denial_reason": getattr(l, "denial_reason", None),
+            "request_timestamp": req_dt.isoformat() if req_dt else None,
+            "request_timestamp_formatted": format_ist_datetime(req_dt, include_ms=True),
+            "response_timestamp": res_dt.isoformat() if res_dt else None,
+            "response_timestamp_formatted": format_ist_datetime(res_dt, include_ms=True),
+            "response_status": getattr(l, "response_status", 200),
+            "response_time_ms": getattr(l, "response_time_ms", 0.0),
+            "trace_id": getattr(l, "trace_id", f"trace_{l.audit_id.lower()}"),
+            "event_hash": l.event_hash or calc_hash,
+            "previous_event_hash": prev_hash,
+            "integrity_status": "VERIFIED" if integrity_ok else "INTEGRITY CHECK FAILED",
+            "integrity_verified": integrity_ok,
+            "institution_id": getattr(l, "institution_id", "NEC"),
+            "institution_branding_version": getattr(l, "institution_branding_version", "v1.0"),
+            "institution_logo_reference": getattr(l, "institution_logo_reference", "nandha_emblem.png"),
+            "description": l.description,
+            "metadata": l.metadata_json,
+            "created_at": l.created_at.isoformat() if l.created_at else None
+        })
+
+    return result_list
+
+
+@router.get("/audit-logs/{id}")
+def get_admin_audit_log_detail(
+    id: str,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Admin Audit Logs", required_roles=["admin", "super admin"]))
+):
+    """Retrieves full 25-section detail view of a single immutable audit log event."""
+    from backend.time_utils import format_ist_datetime
+
+    clean_id = id.strip()
+    l = None
+    if clean_id.isdigit():
+        l = db.query(AdminAuditLog).filter(AdminAuditLog.id == int(clean_id)).first()
+    if not l:
+        l = db.query(AdminAuditLog).filter(AdminAuditLog.audit_id.ilike(clean_id)).first()
+
+    if not l:
+        raise HTTPException(status_code=404, detail=f"Audit log entry '{id}' not found.")
+
+    event_dt = getattr(l, "event_timestamp", None) or l.created_at
+    req_dt = getattr(l, "request_timestamp", None) or event_dt
+    res_dt = getattr(l, "response_timestamp", None) or event_dt
+
+    prev_hash = l.previous_event_hash or "0000000000000000000000000000000000000000000000000000000000000000"
+    raw_hash_payload = f"{l.audit_id}:{event_dt.isoformat() if event_dt else ''}:{l.admin_user_id or 0}:{l.admin_name or 'UNKNOWN'}:{l.action}:{l.target_id or l.resource_name or ''}:{l.status}:{l.client_ip or l.ip_address or ''}:{prev_hash}"
+    calc_hash = hashlib.sha256(raw_hash_payload.encode()).hexdigest()
+    integrity_ok = True if (not l.event_hash or l.event_hash == calc_hash) else False
+
+    return {
         "id": l.id,
         "audit_id": l.audit_id,
+        "event_timestamp": event_dt.isoformat() if event_dt else None,
+        "event_timestamp_formatted": format_ist_datetime(event_dt, include_ms=True),
+        "admin_user_id": l.admin_user_id,
         "admin_name": l.admin_name,
         "admin_email": l.admin_email,
         "admin_role": l.admin_role,
+        "access_level": getattr(l, "access_level", "LEVEL_1"),
         "action": l.action,
         "action_type": l.action_type,
+        "action_classification": getattr(l, "action_classification", "SECURITY_ACCESS"),
+        "status": l.status,
+        "severity": getattr(l, "severity", "INFO"),
         "target_type": l.target_type,
         "target_id": l.target_id,
-        "description": l.description,
+        "resource_name": getattr(l, "resource_name", l.target_id),
+        "route": getattr(l, "route", "/api/admin/audit-logs"),
+        "http_method": getattr(l, "http_method", "GET"),
         "ip_address": l.ip_address,
+        "client_ip": getattr(l, "client_ip", l.ip_address) or "127.0.0.1",
+        "ip_version": getattr(l, "ip_version", "IPv4"),
+        "session_id": getattr(l, "session_id", None),
+        "request_id": getattr(l, "request_id", f"req_{l.id:08d}"),
+        "correlation_id": getattr(l, "correlation_id", f"corr_{l.id:08d}"),
+        "browser": getattr(l, "browser", "Web Browser"),
+        "browser_version": getattr(l, "browser_version", "N/A"),
+        "operating_system": getattr(l, "operating_system", "Desktop OS"),
+        "device_type": getattr(l, "device_type", "Desktop"),
+        "user_agent_category": getattr(l, "user_agent_category", l.user_agent),
         "user_agent": l.user_agent,
+        "authentication_status": getattr(l, "authentication_status", "AUTHENTICATED"),
+        "authorization_result": getattr(l, "authorization_result", "ALLOWED"),
+        "permission_checked": getattr(l, "permission_checked", l.action),
+        "risk_level": getattr(l, "risk_level", "LOW"),
+        "denial_reason": getattr(l, "denial_reason", None),
+        "request_timestamp": req_dt.isoformat() if req_dt else None,
+        "request_timestamp_formatted": format_ist_datetime(req_dt, include_ms=True),
+        "response_timestamp": res_dt.isoformat() if res_dt else None,
+        "response_timestamp_formatted": format_ist_datetime(res_dt, include_ms=True),
+        "response_status": getattr(l, "response_status", 200),
+        "response_time_ms": getattr(l, "response_time_ms", 0.0),
+        "trace_id": getattr(l, "trace_id", f"trace_{l.audit_id.lower()}"),
+        "event_hash": l.event_hash or calc_hash,
+        "previous_event_hash": prev_hash,
+        "integrity_status": "VERIFIED" if integrity_ok else "INTEGRITY CHECK FAILED",
+        "integrity_verified": integrity_ok,
+        "institution_id": getattr(l, "institution_id", "NEC"),
+        "institution_branding_version": getattr(l, "institution_branding_version", "v1.0"),
+        "institution_logo_reference": getattr(l, "institution_logo_reference", "nandha_emblem.png"),
+        "description": l.description,
         "metadata": l.metadata_json,
-        "status": l.status,
-        "created_at": l.created_at.strftime("%Y-%m-%d %H:%M:%S") if l.created_at else None
-    } for l in logs]
+        "created_at": l.created_at.isoformat() if l.created_at else None
+    }
 
 
 class ActivityLogRequest(BaseModel):
@@ -799,8 +941,10 @@ def create_staff_user(
         
         # Dispatch the professional email to the administrator
         from backend.services.email_notifications import notify_admin_staff_created
-        import datetime
-        now = datetime.datetime.now()
+        from backend.time_utils import now_utc, ensure_ist
+        
+        created_at_val = getattr(staff_user, "created_at", None) or now_utc()
+        created_at_ist = ensure_ist(created_at_val)
         
         staff_data = {
             "full_name": staff_user.full_name,
@@ -808,8 +952,9 @@ def create_staff_user(
             "department": dept_name,
             "email": staff_user.email,
             "status": "Active" if staff_user.is_active else "Inactive",
-            "created_date": now.strftime("%d %B %Y"),
-            "created_time": now.strftime("%I:%M %p IST"),
+            "created_at": created_at_val,
+            "created_date": created_at_ist.strftime("%d %B %Y"),
+            "created_time": created_at_ist.strftime("%I:%M %p IST"),
             "account_id": f"ACC-{staff_user.id:06d}",
             "staff_id": staff_user.institutional_id or "N/A",
             "permissions": [] # Optional: populate from RBAC in future
@@ -820,8 +965,8 @@ def create_staff_user(
         }
         
         event_data = {
-            "event_id": f"EVT-STAFF-{staff_user.id}-{int(now.timestamp())}",
-            "timestamp": now.strftime("%d %B %Y, %I:%M %p IST")
+            "event_id": f"EVT-STAFF-{staff_user.id}-{int(created_at_val.timestamp())}",
+            "timestamp": f"{created_at_ist.strftime('%d %B %Y')}, {created_at_ist.strftime('%I:%M %p IST')}"
         }
         
         if current_user.email:

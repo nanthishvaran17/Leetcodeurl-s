@@ -3,8 +3,6 @@ import {
   getAuth,
   GoogleAuthProvider,
   Auth,
-  initializeAuth,
-  indexedDBLocalPersistence,
 } from 'firebase/auth';
 
 // Read configuration from Vite environment variables with authoritative institutional fallbacks
@@ -36,21 +34,14 @@ export const getOrInitApp = (): FirebaseApp => {
 export const getOrInitAuth = (): Auth => {
   if (!authInstance) {
     const app = getOrInitApp();
-    try {
-      authInstance = initializeAuth(app, {
-        persistence: indexedDBLocalPersistence
-      });
-    } catch (e) {
-      // Fallback if already initialized
-      authInstance = getAuth(app);
-    }
+    authInstance = getAuth(app);
   }
   return authInstance;
 };
 
 // Lazy getter for auth instance — initialized on demand
 export const getAuthInstance = (): Auth | null => {
-  return authInstance;
+  return getOrInitAuth();
 };
 
 export const getOrInitDbAsync = async (): Promise<any> => {
@@ -69,11 +60,15 @@ export const getOrInitStorageAsync = async (): Promise<any> => {
   return storageInstance;
 };
 
+// Direct reference getter for auth
 export const auth = new Proxy({} as Auth, {
   get(_target, prop) {
     const authObj = getOrInitAuth();
     const val = (authObj as any)[prop];
     return typeof val === 'function' ? val.bind(authObj) : val;
+  },
+  has(_target, prop) {
+    return prop in getOrInitAuth();
   }
 });
 
@@ -96,7 +91,11 @@ export const googleProvider = new Proxy({} as GoogleAuthProvider, {
     const provider = getGoogleProvider();
     const val = (provider as any)[prop];
     return typeof val === 'function' ? val.bind(provider) : val;
+  },
+  has(_target, prop) {
+    return prop in getGoogleProvider();
   }
 });
 
 export default appInstance;
+

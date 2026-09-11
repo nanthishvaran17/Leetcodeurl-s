@@ -733,10 +733,11 @@ def get_departments(db: Session = Depends(get_db), current_user: User = Depends(
             continue
         
         count = dept_counts.get(d.id, 0)
+        name = "Information Technology" if (d.code and d.code.upper() == "IT") else d.name
         
         result.append({
             "id": d.id,
-            "name": d.name,
+            "name": name,
             "code": d.code,
             "student_count": count,
         })
