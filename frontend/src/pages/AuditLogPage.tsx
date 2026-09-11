@@ -110,7 +110,7 @@ export const AuditLogPage: React.FC = () => {
           </div>
           <div className="flex items-center space-x-3">
             <button
-              onClick={fetchLogs}
+              onClick={() => fetchLogs()}
               disabled={loading}
               className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 disabled:opacity-50 text-white rounded-2xl text-xs font-bold shadow-lg shadow-brand-600/30 transition-all cursor-pointer"
             >
