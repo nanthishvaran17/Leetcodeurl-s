@@ -33,28 +33,36 @@ export const AuditLogPage: React.FC = () => {
   const [selectedLog, setSelectedLog] = useState<any | null>(null);
 
   useEffect(() => {
-    fetchLogs();
-  }, [roleFilter, statusFilter]);
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      fetchLogs(controller.signal);
+    }, 300);
 
-  const fetchLogs = async () => {
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [searchTerm, roleFilter, statusFilter]);
+
+  const fetchLogs = async (signal?: AbortSignal) => {
     setLoading(true);
     try {
-      let url = '/admin/audit-logs?limit=100';
+      let url = '/admin/audit-logs?limit=50';
       if (roleFilter !== 'ALL') url += `&role=${encodeURIComponent(roleFilter)}`;
       if (statusFilter !== 'ALL') url += `&status=${encodeURIComponent(statusFilter)}`;
       if (searchTerm.trim()) url += `&search=${encodeURIComponent(searchTerm.trim())}`;
       
-      const res = await api.get(url);
+      const res = await api.get(url, { signal });
       const sorted = (res.data || []).sort((a: any, b: any) => {
         const da = new Date(a.created_at || 0).getTime();
         const db = new Date(b.created_at || 0).getTime();
         if (da !== db) return db - da; // Descending by timestamp
-        // Tie-breaker
         if (a.id && b.id) return b.id - a.id; 
         return 0;
       });
       setLogs(sorted);
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.name === 'CanceledError' || err?.code === 'ERR_CANCELED') return;
       console.error("Failed to fetch admin audit logs:", err);
     } finally {
       setLoading(false);

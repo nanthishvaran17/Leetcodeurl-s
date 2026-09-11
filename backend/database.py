@@ -762,7 +762,14 @@ def run_migrations():
                 ("idx_email_otp_request_id", "CREATE INDEX IF NOT EXISTS idx_email_otp_request_id ON email_otp_records(request_id)"),
                 ("idx_email_otp_created_at", "CREATE INDEX IF NOT EXISTS idx_email_otp_created_at ON email_otp_records(created_at)"),
                 ("idx_admin_sessions_token_hash", "CREATE INDEX IF NOT EXISTS idx_admin_sessions_token_hash ON admin_sessions(token_hash)"),
-                ("idx_admin_sessions_expires_at", "CREATE INDEX IF NOT EXISTS idx_admin_sessions_expires_at ON admin_sessions(expires_at)")
+                ("idx_admin_sessions_expires_at", "CREATE INDEX IF NOT EXISTS idx_admin_sessions_expires_at ON admin_sessions(expires_at)"),
+                ("idx_audit_user_timestamp", "CREATE INDEX IF NOT EXISTS idx_audit_user_timestamp ON admin_audit_logs(user_id, event_timestamp)"),
+                ("idx_audit_event_timestamp", "CREATE INDEX IF NOT EXISTS idx_audit_event_timestamp ON admin_audit_logs(event_timestamp)"),
+                ("idx_audit_trace_id", "CREATE INDEX IF NOT EXISTS idx_audit_trace_id ON admin_audit_logs(trace_id)"),
+                ("idx_audit_correlation_id", "CREATE INDEX IF NOT EXISTS idx_audit_correlation_id ON admin_audit_logs(correlation_id)"),
+                ("idx_cert_verification_code", "CREATE INDEX IF NOT EXISTS idx_cert_verification_code ON certificate_records(verification_code)"),
+                ("idx_cert_trace_id", "CREATE INDEX IF NOT EXISTS idx_cert_trace_id ON certificate_records(trace_id)"),
+                ("idx_scp_stud_contest", "CREATE INDEX IF NOT EXISTS idx_scp_stud_contest ON student_contest_participations(student_id, contest_id)")
             ]
             for idx_name, idx_sql in indexes:
                 try:
