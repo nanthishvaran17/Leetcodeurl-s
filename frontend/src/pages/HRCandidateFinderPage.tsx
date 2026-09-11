@@ -327,6 +327,19 @@ export const HRCandidateFinderPage: React.FC = () => {
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [intelData, setIntelData] = useState<any>(null);
   const [intelLoading, setIntelLoading] = useState<boolean>(false);
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState<boolean>(false);
+  const [mobileAccordions, setMobileAccordions] = useState<Record<string, boolean>>({
+    academic: false,
+    identity: false,
+    coding: false,
+    contest: false,
+    readiness: false,
+    results: false,
+  });
+
+  const toggleMobileAccordion = (section: string) => {
+    setMobileAccordions(prev => ({ ...prev, [section]: !prev[section] }));
+  };
 
   useEffect(() => {
     if (selectedCandidate) {
@@ -1251,6 +1264,306 @@ export const HRCandidateFinderPage: React.FC = () => {
       </div>
     );
   };
+  const renderAcademicSection = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+      <div>
+        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Department</label>
+        <CustomSelectPopover
+          value={filters.department}
+          onChange={val => setFilters(p => ({ ...p, department: val }))}
+          options={departmentOptions}
+          icon={<Users className="w-4 h-4 text-blue-500" />}
+        />
+      </div>
+      <div>
+        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Degree</label>
+        <CustomSelectPopover
+          value={filters.degree}
+          onChange={val => setFilters(p => ({ ...p, degree: val }))}
+          options={degreeOptions}
+          icon={<Award className="w-4 h-4 text-purple-500" />}
+        />
+      </div>
+      <div>
+        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Batch</label>
+        <CustomSelectPopover
+          value={filters.batch}
+          onChange={val => setFilters(p => ({ ...p, batch: val }))}
+          options={batchOptions}
+          icon={<Target className="w-4 h-4 text-indigo-500" />}
+        />
+      </div>
+      <div>
+        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Academic Year</label>
+        <CustomSelectPopover
+          value={filters.year_level}
+          onChange={val => setFilters(p => ({ ...p, year_level: val }))}
+          options={yearOptions}
+          icon={<Sparkles className="w-4 h-4 text-cyan-500" />}
+        />
+      </div>
+      <div>
+        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Section</label>
+        <CustomSelectPopover
+          value={filters.section}
+          onChange={val => setFilters(p => ({ ...p, section: val }))}
+          options={sectionOptions}
+          icon={<Users className="w-4 h-4 text-amber-500" />}
+        />
+      </div>
+    </div>
+  );
+
+  const renderIdentitySection = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div>
+        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Student Name</label>
+        <div className="relative">
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={filters.name_search}
+            onChange={e => setFilters(p => ({ ...p, name_search: e.target.value }))}
+            placeholder="Search student name..."
+            className={`${inpClass} pl-8`}
+          />
+        </div>
+      </div>
+      <div>
+        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Register Number</label>
+        <div className="relative">
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={filters.reg_no_search}
+            onChange={e => setFilters(p => ({ ...p, reg_no_search: e.target.value }))}
+            placeholder="Search register number..."
+            className={`${inpClass} pl-8`}
+          />
+        </div>
+      </div>
+      <div>
+        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Roll Number</label>
+        <div className="relative">
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={filters.roll_no_search}
+            onChange={e => setFilters(p => ({ ...p, roll_no_search: e.target.value }))}
+            placeholder="Search roll number..."
+            className={`${inpClass} pl-8`}
+          />
+        </div>
+      </div>
+      <div>
+        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">LeetCode Username</label>
+        <div className="relative">
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={filters.username_search}
+            onChange={e => setFilters(p => ({ ...p, username_search: e.target.value }))}
+            placeholder="Search username..."
+            className={`${inpClass} pl-8`}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderCodingSection = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+      <div>
+        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Programming Language</label>
+        <CustomSelectPopover
+          value={filters.primary_language}
+          onChange={val => setFilters(p => ({ ...p, primary_language: val }))}
+          options={languageOptions}
+          icon={<Code2 className="w-4 h-4 text-emerald-500" />}
+        />
+      </div>
+      {renderRelationalFilter("Total Solved", "total_solved")}
+      {renderRelationalFilter("Easy Solved", "easy_solved")}
+      {renderRelationalFilter("Medium Solved", "medium_solved")}
+      {renderRelationalFilter("Hard Solved", "hard_solved")}
+      {renderRelationalFilter("Acceptance Rate %", "acceptance_rate")}
+      {renderRelationalFilter("Submissions", "total_submissions")}
+      {renderRelationalFilter("Current Streak", "current_streak")}
+      {renderRelationalFilter("Active Days", "active_days")}
+    </div>
+  );
+
+  const renderContestSection = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      {renderRelationalFilter("Contest Rating", "contest_rating")}
+      {renderRelationalFilter("Global Rank", "global_rank")}
+      {renderRelationalFilter("Contests Attended", "contests_attended")}
+      {renderRelationalFilter("Contest Top %", "contest_top_pct")}
+    </div>
+  );
+
+  const renderReadinessSection = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+      {renderRelationalFilter("Performance Score", "performance_score")}
+      <div>
+        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Placement Readiness</label>
+        <CustomSelectPopover
+          value={filters.placement_readiness}
+          onChange={val => setFilters(p => ({ ...p, placement_readiness: val }))}
+          options={readinessOptions}
+          icon={<UserCheck className="w-4 h-4 text-emerald-500" />}
+        />
+      </div>
+      {renderRelationalFilter("Interview Score", "interview_readiness")}
+      <div>
+        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Risk Level</label>
+        <CustomSelectPopover
+          value={filters.risk_level}
+          onChange={val => setFilters(p => ({ ...p, risk_level: val }))}
+          options={riskOptions}
+          icon={<Shield className="w-4 h-4 text-amber-500" />}
+        />
+      </div>
+      <div>
+        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Improvement Priority</label>
+        <CustomSelectPopover
+          value={filters.improvement_priority}
+          onChange={val => setFilters(p => ({ ...p, improvement_priority: val }))}
+          options={priorityOptions}
+          icon={<Zap className="w-4 h-4 text-indigo-500" />}
+        />
+      </div>
+      <div>
+        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Trend</label>
+        <CustomSelectPopover
+          value={filters.trend}
+          onChange={val => setFilters(p => ({ ...p, trend: val }))}
+          options={trendOptions}
+          icon={<TrendingUp className="w-4 h-4 text-purple-500" />}
+        />
+      </div>
+    </div>
+  );
+
+  const renderResultsSection = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div>
+        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Top N Candidates</label>
+        <CustomSelectPopover
+          value={filters.top_n}
+          onChange={val => setFilters(p => ({ ...p, top_n: Number(val) }))}
+          options={topNOptions}
+          icon={<BarChart2 className="w-4 h-4 text-slate-500" />}
+        />
+      </div>
+      <div>
+        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Sort By</label>
+        <CustomSelectPopover
+          value={sortField}
+          onChange={val => setSortField(val as any)}
+          options={sortFieldOptions}
+          icon={<Filter className="w-4 h-4 text-slate-500" />}
+        />
+      </div>
+      <div>
+        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Order</label>
+        <CustomSelectPopover
+          value={sortAsc ? "asc" : "desc"}
+          onChange={val => setSortAsc(val === "asc")}
+          options={sortOrderOptions}
+          icon={<ChevronDown className="w-4 h-4 text-slate-500" />}
+        />
+      </div>
+    </div>
+  );
+
+  const accordionSections = [
+    {
+      id: "academic",
+      title: "Academic",
+      icon: <Users className="w-4 h-4 text-blue-500" />,
+      badgeColor: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800",
+      activeCount: [
+        filters.department !== "all",
+        filters.degree !== "all",
+        filters.batch !== "all",
+        filters.year_level !== "all",
+        filters.section !== "all",
+      ].filter(Boolean).length,
+      render: renderAcademicSection,
+    },
+    {
+      id: "identity",
+      title: "Student Identity",
+      icon: <Search className="w-4 h-4 text-purple-500" />,
+      badgeColor: "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800",
+      activeCount: [
+        !!filters.name_search.trim(),
+        !!filters.reg_no_search.trim(),
+        !!filters.roll_no_search.trim(),
+        !!filters.username_search.trim(),
+      ].filter(Boolean).length,
+      render: renderIdentitySection,
+    },
+    {
+      id: "coding",
+      title: "Coding Performance",
+      icon: <Code2 className="w-4 h-4 text-emerald-500" />,
+      badgeColor: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800",
+      activeCount: [
+        filters.primary_language !== "all",
+        filters.total_solved.active && filters.total_solved.val1 > 0,
+        filters.easy_solved.active && filters.easy_solved.val1 > 0,
+        filters.medium_solved.active && filters.medium_solved.val1 > 0,
+        filters.hard_solved.active && filters.hard_solved.val1 > 0,
+        filters.acceptance_rate.active && filters.acceptance_rate.val1 > 0,
+        filters.total_submissions.active && filters.total_submissions.val1 > 0,
+        filters.current_streak.active && filters.current_streak.val1 > 0,
+        filters.active_days.active && filters.active_days.val1 > 0,
+      ].filter(Boolean).length,
+      render: renderCodingSection,
+    },
+    {
+      id: "contest",
+      title: "Contest Performance",
+      icon: <Trophy className="w-4 h-4 text-amber-500" />,
+      badgeColor: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800",
+      activeCount: [
+        filters.contest_rating.active && filters.contest_rating.val1 > 0,
+        filters.global_rank.active && filters.global_rank.val1 > 0,
+        filters.contests_attended.active && filters.contests_attended.val1 > 0,
+        filters.contest_top_pct.active && filters.contest_top_pct.val1 > 0,
+      ].filter(Boolean).length,
+      render: renderContestSection,
+    },
+    {
+      id: "readiness",
+      title: "Intelligence & Readiness",
+      icon: <Brain className="w-4 h-4 text-indigo-500" />,
+      badgeColor: "text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800",
+      activeCount: [
+        filters.performance_score.active && filters.performance_score.val1 > 0,
+        filters.placement_readiness !== "all",
+        filters.interview_readiness.active && filters.interview_readiness.val1 > 0,
+        filters.risk_level !== "all",
+        filters.improvement_priority !== "all",
+        filters.trend !== "all",
+      ].filter(Boolean).length,
+      render: renderReadinessSection,
+    },
+    {
+      id: "results",
+      title: "Results Options",
+      icon: <BarChart2 className="w-4 h-4 text-slate-500" />,
+      badgeColor: "text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700",
+      activeCount: [
+        filters.top_n !== 50,
+        sortField !== "total_solved",
+        sortAsc !== false,
+      ].filter(Boolean).length,
+      render: renderResultsSection,
+    },
+  ];
 
   return (
     <div className="space-y-6 pb-12 text-slate-900 dark:text-slate-100">
@@ -1282,61 +1595,165 @@ export const HRCandidateFinderPage: React.FC = () => {
         </div>
       </div>
 
-      {/* CANDIDATE REQUIREMENTS FILTER WORKSPACE */}
-      <div className="bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm p-6 space-y-5">
+      {/* MOBILE COMPACT FILTER BAR TRIGGER */}
+      <div className="md:hidden space-y-3">
+        <div className="bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-navy-700 p-3.5 shadow-2xs flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => setIsMobileFilterOpen(true)}
+            className="flex-1 min-h-[44px] px-4 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800 text-slate-800 dark:text-slate-200 font-extrabold text-xs hover:border-blue-400 transition-all flex items-center justify-between cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-blue-500" />
+              <span>🔎 Filters</span>
+              {activeChips.length > 0 ? (
+                <span className="px-2.5 py-0.5 rounded-full bg-blue-600 text-white font-black text-[10px]">
+                  [{activeChips.length} Applied]
+                </span>
+              ) : (
+                <span className="text-[11px] font-bold text-slate-400">[0 Applied]</span>
+              )}
+            </div>
+            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isMobileFilterOpen ? "rotate-180 text-blue-500" : ""}`} />
+          </button>
+
+          <button
+            type="button"
+            onClick={handleFind}
+            disabled={loading}
+            className="h-11 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-600/20 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+          >
+            {loading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
+            <span>Apply</span>
+          </button>
+        </div>
+
+        {/* Active Filters Summary Pills on Mobile */}
+        {activeChips.length > 0 && (
+          <div className="bg-blue-50/60 dark:bg-blue-950/30 p-3 rounded-2xl border border-blue-100 dark:border-blue-900/40 flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">Active:</span>
+            {activeChips.map(c => (
+              <span key={c.key} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white dark:bg-navy-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[11px] font-bold shadow-2xs">
+                {c.label}
+                <button onClick={() => removeChip(c.key)} className="hover:text-red-500">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+            <button onClick={handleReset} className="text-[11px] font-bold text-rose-500 hover:underline ml-1">
+              Clear All
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* MOBILE FILTER DRAWER PORTAL */}
+      {isMobileFilterOpen && createPortal(
+        <div className="fixed inset-0 z-50 flex flex-col justify-end md:hidden bg-slate-900/60 backdrop-blur-sm transition-all animate-fadeIn">
+          {/* Backdrop */}
+          <div className="absolute inset-0" onClick={() => setIsMobileFilterOpen(false)} />
+
+          {/* Drawer Panel */}
+          <div className="relative z-10 w-full max-h-[88vh] bg-white dark:bg-navy-900 rounded-t-3xl shadow-2xl border-t border-slate-200 dark:border-navy-700 flex flex-col min-h-0 overflow-hidden">
+            
+            {/* Header */}
+            <div className="pt-4 pb-3 px-5 flex items-center justify-between border-b border-slate-100 dark:border-navy-800 flex-shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+                  <Filter className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white leading-tight">
+                    Candidate Filters
+                  </h3>
+                  <p className="text-[11px] font-bold text-slate-500">
+                    {activeChips.length > 0 ? `${activeChips.length} Filter Criteria Applied` : "Select requirements to filter"}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMobileFilterOpen(false)}
+                className="w-9 h-9 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Scrollable Accordions */}
+            <div className="p-4 overflow-y-auto space-y-3 flex-1 min-h-0">
+              {accordionSections.map(sec => {
+                const isOpen = !!mobileAccordions[sec.id];
+                return (
+                  <div
+                    key={sec.id}
+                    className="rounded-2xl border border-slate-200 dark:border-navy-800 bg-slate-50/50 dark:bg-navy-950/40 overflow-hidden transition-all shadow-2xs"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => toggleMobileAccordion(sec.id)}
+                      className="w-full min-h-[48px] px-4 py-3 flex items-center justify-between gap-3 text-left font-extrabold text-xs text-slate-800 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-navy-900/60 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {sec.icon}
+                        <span className="truncate font-black">{sec.title}</span>
+                        {sec.activeCount > 0 && (
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black border ${sec.badgeColor}`}>
+                            {sec.activeCount}
+                          </span>
+                        )}
+                      </div>
+                      <ChevronDown className={`w-4 h-4 text-slate-400 flex-shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180 text-blue-500" : ""}`} />
+                    </button>
+
+                    {isOpen && (
+                      <div className="p-4 border-t border-slate-200/80 dark:border-navy-800 bg-white dark:bg-navy-900 space-y-3">
+                        {sec.render()}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Sticky Action Footer */}
+            <div className="p-4 bg-white dark:bg-navy-900 border-t border-slate-200 dark:border-navy-800 flex items-center gap-3 flex-shrink-0 shadow-lg">
+              <button
+                type="button"
+                onClick={handleReset}
+                className="flex-1 h-12 rounded-xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-800 text-slate-700 dark:text-slate-200 font-bold text-xs hover:bg-slate-100 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <RefreshCw className="w-4 h-4 text-rose-500" />
+                <span>Reset Filters</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleFind();
+                  setIsMobileFilterOpen(false);
+                }}
+                disabled={loading}
+                className="flex-1 h-12 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-blue-600/20 disabled:opacity-60 transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                <span>Apply Filters</span>
+              </button>
+            </div>
+
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* DESKTOP CANDIDATE REQUIREMENTS FILTER WORKSPACE (Hidden on mobile) */}
+      <div className="hidden md:block bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm p-6 space-y-5">
 
         {/* SECTION 1: ACADEMIC FILTERS */}
         <div className="bg-slate-50/80 dark:bg-navy-950/40 p-4 rounded-xl border border-slate-200/80 dark:border-navy-700/80 space-y-3">
           <div className="text-xs font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
             <Users className="w-4 h-4 text-blue-500" /> Academic
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-            <div>
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Department</label>
-              <CustomSelectPopover
-                value={filters.department}
-                onChange={val => setFilters(p => ({ ...p, department: val }))}
-                options={departmentOptions}
-                icon={<Users className="w-4 h-4 text-blue-500" />}
-              />
-            </div>
-            <div>
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Degree</label>
-              <CustomSelectPopover
-                value={filters.degree}
-                onChange={val => setFilters(p => ({ ...p, degree: val }))}
-                options={degreeOptions}
-                icon={<Award className="w-4 h-4 text-purple-500" />}
-              />
-            </div>
-            <div>
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Batch</label>
-              <CustomSelectPopover
-                value={filters.batch}
-                onChange={val => setFilters(p => ({ ...p, batch: val }))}
-                options={batchOptions}
-                icon={<Target className="w-4 h-4 text-indigo-500" />}
-              />
-            </div>
-            <div>
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Academic Year</label>
-              <CustomSelectPopover
-                value={filters.year_level}
-                onChange={val => setFilters(p => ({ ...p, year_level: val }))}
-                options={yearOptions}
-                icon={<Sparkles className="w-4 h-4 text-cyan-500" />}
-              />
-            </div>
-            <div>
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Section</label>
-              <CustomSelectPopover
-                value={filters.section}
-                onChange={val => setFilters(p => ({ ...p, section: val }))}
-                options={sectionOptions}
-                icon={<Users className="w-4 h-4 text-amber-500" />}
-              />
-            </div>
-          </div>
+          {renderAcademicSection()}
         </div>
 
         {/* SECTION 2: STUDENT IDENTITY */}
@@ -1344,60 +1761,7 @@ export const HRCandidateFinderPage: React.FC = () => {
           <div className="text-xs font-black text-purple-700 dark:text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
             <Search className="w-4 h-4 text-purple-500" /> Student Identity
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div>
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Student Name</label>
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  value={filters.name_search}
-                  onChange={e => setFilters(p => ({ ...p, name_search: e.target.value }))}
-                  placeholder="Search student name..."
-                  className={`${inpClass} pl-8`}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Register Number</label>
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  value={filters.reg_no_search}
-                  onChange={e => setFilters(p => ({ ...p, reg_no_search: e.target.value }))}
-                  placeholder="Search register number..."
-                  className={`${inpClass} pl-8`}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Roll Number</label>
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  value={filters.roll_no_search}
-                  onChange={e => setFilters(p => ({ ...p, roll_no_search: e.target.value }))}
-                  placeholder="Search roll number..."
-                  className={`${inpClass} pl-8`}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">LeetCode Username</label>
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  value={filters.username_search}
-                  onChange={e => setFilters(p => ({ ...p, username_search: e.target.value }))}
-                  placeholder="Search username..."
-                  className={`${inpClass} pl-8`}
-                />
-              </div>
-            </div>
-          </div>
+          {renderIdentitySection()}
         </div>
 
         {/* SECTION 3: CODING PERFORMANCE */}
@@ -1405,25 +1769,7 @@ export const HRCandidateFinderPage: React.FC = () => {
           <div className="text-xs font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
             <Code2 className="w-4 h-4 text-emerald-500" /> Coding Performance
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-            <div>
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Programming Language</label>
-              <CustomSelectPopover
-                value={filters.primary_language}
-                onChange={val => setFilters(p => ({ ...p, primary_language: val }))}
-                options={languageOptions}
-                icon={<Code2 className="w-4 h-4 text-emerald-500" />}
-              />
-            </div>
-            {renderRelationalFilter("Total Solved", "total_solved")}
-            {renderRelationalFilter("Easy Solved", "easy_solved")}
-            {renderRelationalFilter("Medium Solved", "medium_solved")}
-            {renderRelationalFilter("Hard Solved", "hard_solved")}
-            {renderRelationalFilter("Acceptance Rate %", "acceptance_rate")}
-            {renderRelationalFilter("Submissions", "total_submissions")}
-            {renderRelationalFilter("Current Streak", "current_streak")}
-            {renderRelationalFilter("Active Days", "active_days")}
-          </div>
+          {renderCodingSection()}
         </div>
 
         {/* SECTION 4: CONTEST PERFORMANCE */}
@@ -1431,12 +1777,7 @@ export const HRCandidateFinderPage: React.FC = () => {
           <div className="text-xs font-black text-amber-700 dark:text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
             <Trophy className="w-4 h-4 text-amber-500" /> Contest Performance
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {renderRelationalFilter("Contest Rating", "contest_rating")}
-            {renderRelationalFilter("Global Rank", "global_rank")}
-            {renderRelationalFilter("Contests Attended", "contests_attended")}
-            {renderRelationalFilter("Contest Top %", "contest_top_pct")}
-          </div>
+          {renderContestSection()}
         </div>
 
         {/* SECTION 5: INTELLIGENCE & READINESS */}
@@ -1444,46 +1785,7 @@ export const HRCandidateFinderPage: React.FC = () => {
           <div className="text-xs font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
             <Brain className="w-4 h-4 text-indigo-500" /> Intelligence & Readiness
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-            {renderRelationalFilter("Performance Score", "performance_score")}
-            <div>
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Placement Readiness</label>
-              <CustomSelectPopover
-                value={filters.placement_readiness}
-                onChange={val => setFilters(p => ({ ...p, placement_readiness: val }))}
-                options={readinessOptions}
-                icon={<UserCheck className="w-4 h-4 text-emerald-500" />}
-              />
-            </div>
-            {renderRelationalFilter("Interview Score", "interview_readiness")}
-            <div>
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Risk Level</label>
-              <CustomSelectPopover
-                value={filters.risk_level}
-                onChange={val => setFilters(p => ({ ...p, risk_level: val }))}
-                options={riskOptions}
-                icon={<Shield className="w-4 h-4 text-amber-500" />}
-              />
-            </div>
-            <div>
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Improvement Priority</label>
-              <CustomSelectPopover
-                value={filters.improvement_priority}
-                onChange={val => setFilters(p => ({ ...p, improvement_priority: val }))}
-                options={priorityOptions}
-                icon={<Zap className="w-4 h-4 text-indigo-500" />}
-              />
-            </div>
-            <div>
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Trend</label>
-              <CustomSelectPopover
-                value={filters.trend}
-                onChange={val => setFilters(p => ({ ...p, trend: val }))}
-                options={trendOptions}
-                icon={<TrendingUp className="w-4 h-4 text-purple-500" />}
-              />
-            </div>
-          </div>
+          {renderReadinessSection()}
         </div>
 
         {/* SECTION 6: RESULTS OPTIONS */}
@@ -1491,35 +1793,7 @@ export const HRCandidateFinderPage: React.FC = () => {
           <div className="text-xs font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
             <BarChart2 className="w-4 h-4 text-slate-500" /> Results Options
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Top N Candidates</label>
-              <CustomSelectPopover
-                value={filters.top_n}
-                onChange={val => setFilters(p => ({ ...p, top_n: Number(val) }))}
-                options={topNOptions}
-                icon={<BarChart2 className="w-4 h-4 text-slate-500" />}
-              />
-            </div>
-            <div>
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Sort By</label>
-              <CustomSelectPopover
-                value={sortField}
-                onChange={val => setSortField(val as any)}
-                options={sortFieldOptions}
-                icon={<Filter className="w-4 h-4 text-slate-500" />}
-              />
-            </div>
-            <div>
-              <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Order</label>
-              <CustomSelectPopover
-                value={sortAsc ? "asc" : "desc"}
-                onChange={val => setSortAsc(val === "asc")}
-                options={sortOrderOptions}
-                icon={<ChevronDown className="w-4 h-4 text-slate-500" />}
-              />
-            </div>
-          </div>
+          {renderResultsSection()}
         </div>
 
         {/* PRIMARY ACTION AREA */}
