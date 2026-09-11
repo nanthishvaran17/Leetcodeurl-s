@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { studentLiveStore } from '../stores/studentLiveStore';
 import api from '../services/api';
-import { getCachedStudents, saveCachedStudents } from '../data/canonicalRoster';
+import { getCachedStudents, saveCachedStudents } from '../utils/rosterCache';
 import { StudentEntity } from '../types/student';
 
 function parseUtcTime(timeStr?: string | null): number {

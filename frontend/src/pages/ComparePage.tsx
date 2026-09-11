@@ -7,7 +7,7 @@ import {
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import api from '../services/api';
 import { StudentData } from '../components/LeaderboardTable';
-import { getCachedStudents } from '../data/canonicalRoster';
+import { getCachedStudents } from '../utils/rosterCache';
 import { useDepartments } from '../contexts/DepartmentContext';
 
 export const ComparePage: React.FC = () => {

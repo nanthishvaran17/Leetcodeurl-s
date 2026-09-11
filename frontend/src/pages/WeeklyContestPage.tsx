@@ -14,7 +14,7 @@ import { StatusNotificationModal, NotificationState } from '../components/Status
 const LiveStudentMonitor = React.lazy(() => import('../components/LiveStudentMonitor').then(m => ({ default: m.LiveStudentMonitor })));
 import { Post930SolversView } from './Post930SolversView';
 import { studentLiveStore, useStudentListIds } from '../stores/studentLiveStore';
-import { getCachedSummary } from '../data/canonicalRoster';
+import { getCachedSummary } from '../utils/rosterCache';
 import { StudentEditOverlay } from '../components/StudentEditOverlay';
 import { PreviousWeekContestPanel } from '../components/PreviousWeekContestPanel';
 import { useAuth } from '../context/AuthContext';

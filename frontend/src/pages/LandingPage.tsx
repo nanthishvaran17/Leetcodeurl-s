@@ -10,7 +10,7 @@ import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import api, { triggerFullSync, triggerTargetedSync, getSyncStatus } from '../services/api';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import { filterAndSortStudents } from '../utils/filterUtils';
-import { getCachedStudents, saveCachedStudents } from '../data/canonicalRoster';
+import { getCachedStudents, saveCachedStudents } from '../utils/rosterCache';
 import { CustomDropdown, DropdownOption } from '../components/CustomDropdown';
 
 function parseUtcTime(ts?: string): number {

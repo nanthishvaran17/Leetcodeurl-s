@@ -7,7 +7,7 @@ import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { StudentData } from './components/LeaderboardTable';
 import api, { logActivity } from './services/api';
-import { getCachedSummary, saveCachedSummary } from './data/canonicalRoster';
+import { getCachedSummary, saveCachedSummary } from './utils/rosterCache';
 import { ErrorBoundary } from './ErrorBoundary';
 import { useAuth } from './context/AuthContext';
 import { useKeyboardContext } from './context/KeyboardContext';
