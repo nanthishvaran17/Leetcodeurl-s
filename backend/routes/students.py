@@ -115,9 +115,7 @@ async def get_leaderboard_fast(
             students = query.all()
 
             if not students:
-                empty_bytes = b'[]'
-                from starlette.responses import Response
-                return Response(content=empty_bytes, media_type="application/json")
+                return b'[]'
 
             student_ids = [st.id for st in students]
 
@@ -258,6 +256,8 @@ async def get_leaderboard_fast(
             return json_bytes
     json_bytes = await cache.async_get_or_compute(cache_key, _compute, ttl_seconds=600, stale_ttl_seconds=1200, tags=["students", "leaderboard"])
     from starlette.responses import Response
+    if isinstance(json_bytes, Response):
+        return json_bytes
     return Response(content=json_bytes, media_type="application/json")
 
 from typing import Union
