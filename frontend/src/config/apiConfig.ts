@@ -7,7 +7,7 @@
 export const PRODUCTION_BACKEND_URL = 
   import.meta.env.VITE_API_URL || 
   import.meta.env.VITE_API_BASE_URL || 
-  'http://localhost:8000';
+  'https://leetcodeurl-s-3mig.onrender.com';
 
 /**
  * Resolves the API Base URL dynamically based on execution environment:
@@ -38,7 +38,7 @@ export const getApiBaseUrl = (): string => {
     return `${envBase}/api`;
   }
 
-  return '/api';
+  return 'https://leetcodeurl-s-3mig.onrender.com/api';
 };
 
 export const API_BASE_URL = getApiBaseUrl();
