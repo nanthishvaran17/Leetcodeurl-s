@@ -3,12 +3,12 @@ import { motion, AnimatePresence, Variants, useReducedMotion } from 'framer-moti
 import '../styles/login.css';
 import {
   Lock, Mail, User, Eye, EyeOff, CheckCircle2, AlertCircle,
-  ArrowRight, RefreshCw, Sun, Moon, HelpCircle, ShieldCheck,
+  ArrowRight, RefreshCw, HelpCircle, ShieldCheck,
   KeyRound, X, Check, Calendar, Building2, Sparkles, Shield,
   Cpu, Layers, CheckCircle, ChevronRight, Loader2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { GoogleSignInButton } from '../components/GoogleSignInButton';
+
 import { CollegeLogo } from '../components/CollegeLogo';
 import api from '../services/api';
 
@@ -147,7 +147,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isShaking, setIsShaking] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Live Stats State
   const [liveStats, setLiveStats] = useState<{
@@ -166,11 +165,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     useRef<HTMLInputElement>(null)
   ];
 
-  // Sync Dark Mode state with document element
-  useEffect(() => {
-    const isDark = document.documentElement.classList.contains('dark');
-    setIsDarkMode(isDark);
-  }, []);
+
 
   // Eagerly warm up Render server — deferred by 1s to avoid competing with LCP image fetch
   useEffect(() => {
@@ -212,15 +207,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     return () => { clearTimeout(initialDelay); clearInterval(interval); };
   }, []);
 
-  const toggleTheme = () => {
-    if (isDarkMode) {
-      document.documentElement.classList.remove('dark');
-      setIsDarkMode(false);
-    } else {
-      document.documentElement.classList.add('dark');
-      setIsDarkMode(true);
-    }
-  };
+
 
   // Cooldown timer for OTP resend
   useEffect(() => {
@@ -633,6 +620,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
           initial={shouldAnimateMobileEntrance ? "hidden" : undefined}
           animate={shouldAnimateMobileEntrance ? "visible" : undefined}
         >
+          <div className="login-content-wrapper">
           <div className="form-head">
             <div className="form-head-title-row">
               <h2>
@@ -640,25 +628,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                   ? 'Institutional Help Desk'
                   : (currentView === 'forgot_password' ? 'Reset Workspace Password' : 'Sign in to your workspace')}
               </h2>
-              <button
-                type="button"
-                className="theme-toggle"
-                onClick={toggleTheme}
-                aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
-              >
-                {isDarkMode ? (
-                  <Sun size={18} strokeWidth={2} />
-                ) : (
-                  <Moon size={18} strokeWidth={2} />
-                )}
-              </button>
             </div>
             <p>
               {currentView === 'help'
                 ? 'Support for authorized personnel, faculty, and enrolled students.'
                 : (currentView === 'forgot_password'
                   ? 'Verify your identity to reset your institutional credentials.'
-                  : 'Use your institutional email or authenticate with Google.')}
+                  : 'Use your institutional email to authenticate.')}
             </p>
           </div>
 
@@ -898,14 +874,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                     </button>
                   </form>
                 )}
-
-                {/* Google Divider */}
-                <div className="divider">
-                  <span>OR CONTINUE WITH</span>
-                </div>
-
-                {/* Google Sign In Component */}
-                <GoogleSignInButton onSuccess={onSuccess} />
 
                 {/* Single Institutional Help Row */}
                 <div className="help-card-row">
@@ -1206,6 +1174,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
           <div className="stamp" role="note" aria-label="Security verification notice">
             <ShieldCheck size={16} className="stamp-icon" />
             <span>Secured & audited by institution</span>
+          </div>
           </div>
         </motion.div>
       </main>

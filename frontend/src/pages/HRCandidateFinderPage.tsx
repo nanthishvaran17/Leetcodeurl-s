@@ -235,24 +235,141 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState<{ top: number; left: number; width: number; maxHeight?: number; transformOrigin?: string } | null>(null);
+
+  const updateCoords = useCallback(() => {
+    if (ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      
+      const spaceBelow = viewportHeight - rect.bottom - 80; // Safe area for fixed footer
+      const spaceAbove = rect.top - 60; // Safe area for headers
+      
+      const estimatedHeight = Math.min(options.length * 40 + 16, 256);
+      
+      let top = rect.bottom + 4;
+      let maxHeight = Math.max(100, spaceBelow);
+      let transformOrigin = 'top';
+
+      if (spaceBelow < estimatedHeight && spaceAbove > spaceBelow) {
+        maxHeight = Math.max(100, spaceAbove);
+        top = rect.top - Math.min(estimatedHeight, maxHeight) - 4;
+        transformOrigin = 'bottom';
+      }
+
+      setCoords({
+        top: Math.max(8, top),
+        left: rect.left,
+        width: rect.width,
+        maxHeight: Math.min(maxHeight, 256),
+        transformOrigin
+      });
+    }
+  }, [options.length]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      if (ref.current && ref.current.contains(e.target as Node)) return;
+      if (popoverRef.current && popoverRef.current.contains(e.target as Node)) return;
+      setOpen(false);
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+
+    if (open) {
+      updateCoords();
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+      window.addEventListener("resize", updateCoords);
+      window.addEventListener("scroll", updateCoords, true);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("resize", updateCoords);
+      window.removeEventListener("scroll", updateCoords, true);
+    };
+  }, [open, updateCoords]);
 
   const selectedOpt = options.find(o => String(o.value) === String(value)) || options[0];
+
+  const handleToggle = () => {
+    if (!open) {
+      const rect = ref.current?.getBoundingClientRect();
+      if (rect) {
+        const isNearBottom = window.innerHeight - rect.bottom < 150;
+        const isNearTop = rect.top < 100;
+        if (isNearBottom || isNearTop) {
+          ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+      updateCoords();
+    }
+    setOpen(!open);
+  };
+
+  const popoverMenu = open && coords && typeof document !== 'undefined' ? createPortal(
+    <div
+      ref={popoverRef}
+      style={{
+        position: 'fixed',
+        top: `${coords.top}px`,
+        left: `${coords.left}px`,
+        width: `${coords.width}px`,
+        maxHeight: coords.maxHeight ? `${coords.maxHeight}px` : '256px',
+        transformOrigin: coords.transformOrigin || 'top',
+        zIndex: 9999999
+      }}
+      className="bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xl rounded-2xl p-1.5 space-y-1 overflow-y-auto font-sans min-w-[210px] custom-scrollbar animate-fade-in"
+    >
+      {options.map((opt) => {
+        const isSelected = String(opt.value) === String(value);
+        return (
+          <button
+            key={String(opt.value)}
+            type="button"
+            onClick={() => {
+              onChange(opt.value);
+              setOpen(false);
+            }}
+            className={`w-full px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 cursor-pointer text-left ${
+              isSelected
+                ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                : "text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800/80"
+            }`}
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              {opt.icon && (
+                <span className={isSelected ? "text-white" : "text-slate-400"}>
+                  {opt.icon}
+                </span>
+              )}
+              {opt.badge && (
+                <span className={`px-2 py-0.5 rounded-md font-black text-[10px] uppercase flex-shrink-0 ${
+                  isSelected
+                    ? "bg-white/20 text-white border border-white/20"
+                    : (opt.badgeColor || "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300")
+                }`}>
+                  {opt.badge}
+                </span>
+              )}
+              <span className="truncate">{opt.label}</span>
+            </div>
+            {isSelected && <Check className="w-4 h-4 text-white flex-shrink-0" />}
+          </button>
+        );
+      })}
+    </div>,
+    document.body
+  ) : null;
 
   return (
     <div ref={ref} className="relative w-full">
       <button
         type="button"
-        onClick={() => setOpen(!open)}
+        onClick={handleToggle}
         className={`w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-blue-400 dark:hover:border-navy-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all flex items-center justify-between gap-2 cursor-pointer shadow-2xs ${className}`}
       >
         <div className="flex items-center gap-2 min-w-0 overflow-hidden">
@@ -269,47 +386,7 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
         <ChevronDown className={`w-4 h-4 text-slate-400 flex-shrink-0 transition-transform ${open ? "rotate-180 text-blue-500" : ""}`} />
       </button>
 
-      {open && (
-        <div className="absolute left-0 right-0 top-full mt-1.5 z-50 bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xl rounded-2xl p-1.5 space-y-1 max-h-64 overflow-y-auto font-sans min-w-[210px]">
-          {options.map((opt) => {
-            const isSelected = String(opt.value) === String(value);
-            return (
-              <button
-                key={String(opt.value)}
-                type="button"
-                onClick={() => {
-                  onChange(opt.value);
-                  setOpen(false);
-                }}
-                className={`w-full px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 cursor-pointer text-left ${
-                  isSelected
-                    ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                    : "text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800/80"
-                }`}
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  {opt.icon && (
-                    <span className={isSelected ? "text-white" : "text-slate-400"}>
-                      {opt.icon}
-                    </span>
-                  )}
-                  {opt.badge && (
-                    <span className={`px-2 py-0.5 rounded-md font-black text-[10px] uppercase flex-shrink-0 ${
-                      isSelected
-                        ? "bg-white/20 text-white border border-white/20"
-                        : (opt.badgeColor || "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300")
-                    }`}>
-                      {opt.badge}
-                    </span>
-                  )}
-                  <span className="truncate">{opt.label}</span>
-                </div>
-                {isSelected && <Check className="w-4 h-4 text-white flex-shrink-0" />}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      {popoverMenu}
     </div>
   );
 };

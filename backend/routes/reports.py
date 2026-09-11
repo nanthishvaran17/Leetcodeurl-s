@@ -821,6 +821,8 @@ def _get_dataset_for_id(
         (batch in ("ALL", "", None))
     )
 
+    r_filename = None
+
     # First check ReportHistory if completely unfiltered
     report = db.query(ReportHistory).filter(ReportHistory.report_id == report_id).first()
     if report and not has_active_filters:
@@ -864,8 +866,8 @@ def _get_dataset_for_id(
                     detail="Contest data is unavailable for the selected Weekly Contest."
                 )
 
-            contest_name = ws.contest_name or f"Weekly Contest {session_id}"
-            session_date = ws.session_date or ""
+            contest_name = str(ws.contest_name or f"Weekly Contest {session_id}")
+            session_date = str(ws.session_date or "")
             r_filename = get_contest_filename_base(contest_name, dept=dept, year=year, attendance=effective_att)
 
             from backend.services.canonical_contest_engine import build_canonical_contest_dataset

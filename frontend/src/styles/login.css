@@ -339,31 +339,12 @@
   box-sizing: border-box;
 }
 
-.top-bar {
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  z-index: 10;
-}
-
-.theme-toggle {
+.login-content-wrapper {
+  width: 100%;
+  max-width: 440px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  border: 1px solid var(--field-border);
-  background: var(--field-bg);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.theme-toggle:hover {
-  color: var(--text-primary);
-  border-color: var(--text-muted);
-  background: var(--bg-page);
+  flex-direction: column;
+  margin: 0 auto;
 }
 
 /* Form Header (28–32px desktop title / 15–16px supporting text) */
@@ -1396,25 +1377,6 @@
     color: #94A3B8 !important;
   }
 
-  .mobile-theme-btn {
-    width: 32px !important;
-    height: 32px !important;
-    border-radius: 50% !important;
-    background: #F1F5F9 !important;
-    border: 1px solid #E2E8F0 !important;
-    color: #475569 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-
-  .dark .mobile-theme-btn {
-    background: #152238 !important;
-    border-color: #233550 !important;
-    color: #CBD5E1 !important;
-  }
 
   /* Segmented Tabs (Institutional Light Slate & Clean White Active) */
   .tabs {
@@ -1559,29 +1521,7 @@
     color: #070D18 !important;
   }
 
-  .divider {
-    margin: 0.65rem 0 !important;
-  }
 
-  .divider span {
-    font-size: 0.7rem !important;
-    font-weight: 700 !important;
-    color: #64748B !important;
-    letter-spacing: 0.08em !important;
-  }
-
-  /* Google Button (Clean White with Subtle Border) */
-  .google-signin-btn {
-    height: 44px !important;
-    min-height: 44px !important;
-    background: #FFFFFF !important;
-    border: 1.5px solid #E2E8F0 !important;
-    border-radius: 12px !important;
-    font-size: 0.92rem !important;
-    font-weight: 700 !important;
-    color: #0B1B33 !important;
-    box-shadow: 0 2px 6px rgba(11, 27, 51, 0.04) !important;
-  }
 
   .help-trigger-btn {
     min-height: 44px !important;
@@ -1600,11 +1540,6 @@
     color: #061D36 !important;
   }
 
-  .dark .google-signin-btn {
-    background: #152238 !important;
-    border-color: #233550 !important;
-    color: #F8FAFC !important;
-  }
 
   .login-copyright {
     text-align: center;

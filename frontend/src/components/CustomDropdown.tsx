@@ -45,7 +45,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [coords, setCoords] = useState<{ top: number; left: number; width: number } | null>(null);
+  const [coords, setCoords] = useState<{ top: number; left: number; width: number; maxHeight?: number; transformOrigin?: string } | null>(null);
 
   // Find selected option (ignore empty placeholder options)
   const selectedOption = options.find((opt) => opt.value === value && opt.value !== '' && !opt.label.toLowerCase().startsWith('select'));
@@ -61,16 +61,35 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   const updateCoords = useCallback(() => {
     if (dropdownRef.current) {
       const rect = dropdownRef.current.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      // If close to bottom of viewport, position upwards if space exists
-      const top = (spaceBelow < 250 && rect.top > 250) ? rect.top - 256 : rect.bottom + 4;
+      const viewportHeight = window.innerHeight;
+      
+      const spaceBelow = viewportHeight - rect.bottom - 80; // 80px safe area for bottom buttons/notches
+      const spaceAbove = rect.top - 60; // 60px safe area for top headers
+      
+      // Calculate how much space the options would actually take (approx 44px per option)
+      const estimatedHeight = Math.min(selectableOptions.length * 44 + 16, 256); // max 256px
+      
+      let top = rect.bottom + 4;
+      let maxHeight = Math.max(100, spaceBelow); // default down
+      let transformOrigin = 'top';
+
+      // If space below is not enough for the full estimated height, and space above is greater
+      if (spaceBelow < estimatedHeight && spaceAbove > spaceBelow) {
+        // Open upwards
+        maxHeight = Math.max(100, spaceAbove);
+        top = rect.top - Math.min(estimatedHeight, maxHeight) - 4;
+        transformOrigin = 'bottom';
+      }
+
       setCoords({
-        top: Math.max(10, top),
+        top: Math.max(8, top),
         left: rect.left,
-        width: rect.width
+        width: rect.width,
+        maxHeight: Math.min(maxHeight, 256),
+        transformOrigin
       });
     }
-  }, []);
+  }, [selectableOptions.length]);
 
   // Close dropdown on outside click or scroll
   useEffect(() => {
@@ -122,9 +141,11 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
             top: `${coords.top}px`,
             left: `${coords.left}px`,
             width: `${coords.width}px`,
+            maxHeight: coords.maxHeight ? `${coords.maxHeight}px` : '256px',
+            transformOrigin: coords.transformOrigin || 'top',
             zIndex: 99999999
           }}
-          className="max-h-64 overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] p-1.5 space-y-1 focus:outline-none scrollbar-thin"
+          className="overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] p-1.5 space-y-1 focus:outline-none scrollbar-thin"
         >
           {selectableOptions.map((opt) => {
             const isSelected = opt.value === value;
@@ -204,7 +225,18 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
       <button
         type="button"
         onClick={() => {
-          if (!isOpen) updateCoords();
+          if (!isOpen) {
+            // Scroll to view logic if near bottom or top
+            const rect = dropdownRef.current?.getBoundingClientRect();
+            if (rect) {
+              const isNearBottom = window.innerHeight - rect.bottom < 150;
+              const isNearTop = rect.top < 100;
+              if (isNearBottom || isNearTop) {
+                dropdownRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            }
+            updateCoords();
+          }
           setIsOpen(!isOpen);
         }}
         className={triggerClassName || `w-full min-h-[44px] h-auto py-2 flex items-center justify-between px-3.5 rounded-2xl border transition-all duration-200 text-left cursor-pointer group shadow-sm ${
