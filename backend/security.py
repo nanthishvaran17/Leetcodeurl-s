@@ -294,7 +294,10 @@ def log_security_access_event(
         if existing:
             return
     except Exception:
-        pass
+        try:
+            db.rollback()
+        except Exception:
+            pass
 
     hashed_ip = get_hashed_ip(request)
     client_ip_addr, ip_ver = get_real_client_ip(request)
@@ -304,9 +307,17 @@ def log_security_access_event(
     req_id = f"req_{uuid.uuid4().hex[:12]}"
     corr_id = f"corr_{uuid.uuid4().hex[:12]}"
 
-    # Hash chain calculation over stored event values
-    prev_entry = db.query(AdminAuditLog.event_hash).order_by(AdminAuditLog.event_timestamp.desc()).first()
-    prev_hash = prev_entry.event_hash if prev_entry and prev_entry.event_hash else "0000000000000000000000000000000000000000000000000000000000000000"
+    # Hash chain calculation over stored event values (PostgreSQL transaction-safe)
+    prev_hash = "0000000000000000000000000000000000000000000000000000000000000000"
+    try:
+        prev_entry = db.query(AdminAuditLog.event_hash).order_by(AdminAuditLog.event_timestamp.desc()).first()
+        if prev_entry and prev_entry.event_hash:
+            prev_hash = prev_entry.event_hash
+    except Exception:
+        try:
+            db.rollback()
+        except Exception:
+            pass
 
     raw_hash_payload = f"{sec_audit_id}:{req_time.isoformat()}:{user_id or 0}:{username}:{action}:{resource}:{result}:{client_ip_addr}:{prev_hash}"
     event_hash = hashlib.sha256(raw_hash_payload.encode()).hexdigest()
