@@ -342,7 +342,16 @@ export const App: React.FC = () => {
         (window as any).requestIdleCallback(() => {
           import('./pages/DashboardPage');
           import('./pages/StudentMasterPage');
+          import('./pages/GrowthIntelligencePage');
+          import('./pages/WeeklyContestPage');
         });
+      } else if (typeof window !== 'undefined') {
+        setTimeout(() => {
+          import('./pages/DashboardPage');
+          import('./pages/StudentMasterPage');
+          import('./pages/GrowthIntelligencePage');
+          import('./pages/WeeklyContestPage');
+        }, 2500);
       }
     };
     prefetchLikelyRoutes();
