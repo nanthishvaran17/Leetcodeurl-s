@@ -12,7 +12,6 @@ import { useAuth } from './context/AuthContext';
 import { useKeyboardContext } from './context/KeyboardContext';
 import { CommandPalette } from './components/CommandPalette';
 import { useGlobalKeyboardShortcuts } from './hooks/useGlobalKeyboardShortcuts';
-import { requestPushPermissionAndSync, listenForForegroundMessages } from './services/pushNotifications';
 import { InstallAppPrompt } from './components/InstallAppPrompt';
 import { AppUpdateNotifier } from './components/AppUpdateNotifier';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
@@ -129,11 +128,13 @@ export const App: React.FC = () => {
 
   const { user, isAuthenticated, login } = useAuth();
   
-  // Initialize Web Push Notifications
+  // Initialize Web Push Notifications (Lazy-loaded after authentication)
   useEffect(() => {
     if (isAuthenticated && user?.id) {
-      listenForForegroundMessages();
-      requestPushPermissionAndSync(String(user.id));
+      import('./services/pushNotifications').then(({ listenForForegroundMessages, requestPushPermissionAndSync }) => {
+        listenForForegroundMessages();
+        requestPushPermissionAndSync(String(user.id));
+      }).catch(err => console.warn('[PUSH] Lazy load note:', err));
     }
   }, [isAuthenticated, user?.id]);
   const [activeTab, setActiveTab] = useState('landing');

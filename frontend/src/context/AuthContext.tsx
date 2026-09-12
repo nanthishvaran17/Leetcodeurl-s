@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { onAuthStateChanged, signOut as firebaseSignOut, User as FirebaseUser } from 'firebase/auth';
-import { auth, getOrInitAuth } from '../services/firebase';
+import type { User as FirebaseUser } from 'firebase/auth';
 import api, { clearApiCache } from '../services/api';
 import { AuthState, AuthUser, AuthContextType } from '../services/auth/authTypes';
 import { isMobileBrowser } from '../services/googleAuth';
@@ -97,7 +96,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      const activeAuth = auth || getOrInitAuth();
+      const { getOrInitAuth } = await import('../services/firebase');
+      const { signOut: firebaseSignOut } = await import('firebase/auth');
+      const activeAuth = getOrInitAuth();
       if (activeAuth) {
         await firebaseSignOut(activeAuth);
       }
@@ -142,6 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // Step 3: Bounded wait for onAuthStateChanged / currentUser polling
+    const { onAuthStateChanged } = await import('firebase/auth');
     return new Promise<FirebaseUser | null>((resolve) => {
       let isSettled = false;
 
@@ -203,6 +205,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isMounted) {
           console.warn('[AUTH] Backend verification failed:', err);
           try {
+            const { getOrInitAuth } = await import('../services/firebase');
+            const { signOut: firebaseSignOut } = await import('firebase/auth');
             const authInstance = getOrInitAuth();
             await firebaseSignOut(authInstance);
           } catch (_) {}
@@ -223,6 +227,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           sessionStorage.getItem('nec_mobile_google_redirect') ||
           (typeof window !== 'undefined' && (window.location.search.includes('state=') || window.location.search.includes('code=')))
         );
+
+        const { getOrInitAuth } = await import('../services/firebase');
 
         if (isMobileRedirect) {
           console.log('[MOBILE AUTH] Returning from mobile Google redirect flow');
@@ -248,6 +254,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (!isMounted) return;
           try {
             const authInstance = getOrInitAuth();
+            const { onAuthStateChanged } = await import('firebase/auth');
 
             unsubscribeFirebase = onAuthStateChanged(authInstance, async (fbUser: FirebaseUser | null) => {
               if (!isMounted) return;
