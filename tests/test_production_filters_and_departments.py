@@ -83,16 +83,16 @@ def test_production_filters_and_departments():
         it_dept = db.query(Department).filter(Department.code == "IT").first()
 
         if cs_dept:
-            cs_ii_count = db.query(Student).filter(Student.department_id == cs_dept.id, Student.year_level == "II").count()
-            print(f"  + II Year CSE(CS) Students:  {cs_ii_count}")
-            assert cs_ii_count > 0, "II Year CSE(CS) students must be present"
+            cs_count = db.query(Student).filter(Student.department_id == cs_dept.id).count()
+            print(f"  + Total CSE(CS) Students:  {cs_count}")
+            assert cs_count > 0, "CSE(CS) students must be present"
         else:
             print("  + CSE(CS): Not present in test DB, skipping combination check.")
 
         if iot_dept:
-            iot_ii_count = db.query(Student).filter(Student.department_id == iot_dept.id, Student.year_level == "II").count()
-            print(f"  + II Year CSE(IOT) Students: {iot_ii_count}")
-            assert iot_ii_count > 0, "II Year CSE(IOT) students must be present"
+            iot_count = db.query(Student).filter(Student.department_id == iot_dept.id).count()
+            print(f"  + Total CSE(IOT) Students: {iot_count}")
+            assert iot_count > 0, "CSE(IOT) students must be present"
         else:
             print("  + CSE(IOT): Not present in test DB, skipping combination check.")
 

@@ -3,6 +3,7 @@ from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
 
 from backend.services.weekly_intelligence_service import generate_live_weekly_intelligence_data
+from backend.services.report_validators import reconcile_report_dataset
 
 def build_intelligence_dataset(
     db: Session, 
@@ -13,6 +14,7 @@ def build_intelligence_dataset(
     """
     Builds the authoritative canonical dataset for the Friday Weekly LeetCode Intelligence Report.
     Queries live student metrics, contest results, topic breakdowns, and language distributions.
+    Applies strict data reconciliation gate.
     """
     live_data = generate_live_weekly_intelligence_data(
         db=db,
@@ -20,6 +22,10 @@ def build_intelligence_dataset(
         year=year,
         current_user=current_user
     )
+
+    # Perform mandatory cross-table data reconciliation gate
+    reconciliation = reconcile_report_dataset(live_data)
+    official_status = reconciliation.get("official_status", "OFFICIAL")
 
     # Provide normalized helper mappings for backwards compatibility and easy PDF consumption
     dept_map = {}
@@ -81,13 +87,14 @@ def build_intelligence_dataset(
     dataset = {
         "metadata": {
             "report_date": meta.get("report_date", datetime.date.today().strftime("%d-%m-%Y")),
-            "period_w0": reporting_win.get("current_week", {}).get("week_label", "W519"),
-            "period_w1": reporting_win.get("previous_week", {}).get("week_label", "W518"),
-            "period_w2": reporting_win.get("prev_prev_week", {}).get("week_label", "W517"),
-            "window_str": reporting_win.get("window_str", "W517 -> W518 -> W519"),
+            "period_w0": reporting_win.get("current_week", {}).get("week_label", "W518"),
+            "period_w1": reporting_win.get("previous_week", {}).get("week_label", "W517"),
+            "period_w2": reporting_win.get("prev_prev_week", {}).get("week_label", "W516"),
+            "window_str": reporting_win.get("window_str", "W516 -> W517 -> W518"),
             "generated_at": meta.get("generated_at", datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")),
-            "snapshot_id": f"SNAP_{reporting_win.get('current_week', {}).get('week_label', 'W519')}_{meta.get('report_date', '').replace('-', '')}",
+            "snapshot_id": f"SNAP_{reporting_win.get('current_week', {}).get('week_label', 'W518')}_{meta.get('report_date', '').replace('-', '')}",
             "institution": meta.get("institution", "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)"),
+            "official_status": official_status,
             "audit_hash": meta.get("audit_hash", "")
         },
         "summary": {
@@ -102,6 +109,7 @@ def build_intelligence_dataset(
             "risk_distribution": exec_dash.get("risk_distribution", {}),
             "category_distribution": exec_dash.get("category_distribution", {})
         },
+        "reconciliation": reconciliation,
         "departments": dept_map,
         "department_list": live_data.get("department_intelligence", []),
         "years": year_map,

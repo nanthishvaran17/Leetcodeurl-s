@@ -49,6 +49,32 @@ def _get_week_label(contest_name: Optional[str], default_id: int) -> str:
     return f"W{default_id}"
 
 
+def normalize_dept_code(d_code: Optional[str], d_name: Optional[str] = "") -> str:
+    c = str(d_code or "").upper().strip()
+    n = str(d_name or "").upper().strip()
+    if "IOT" in c or "IOT" in n or "CI" in c:
+        return "CSE(IoT)"
+    if "CYBER" in c or "CYBER" in n or "CC" in c or "CSE(CS)" in c or "CSE (CS)" in c or "(CS)" in c or c == "CS":
+        return "CSE(CS)"
+    if c in ("CSE", "COMPUTER SCIENCE") or "COMPUTER SCIENCE &" in n or "COMPUTER SCIENCE AND" in n:
+        return "CSE"
+    if "IT" in c or "INFORMATION TECH" in n:
+        return "IT"
+    if "AIDS" in c or "ARTIFICIAL" in n:
+        return "AIDS"
+    if "ECE" in c or "ELECTRONICS & COMM" in n or "ELECTRONICS AND COMM" in n:
+        return "ECE"
+    if "EEE" in c or "ELECTRICAL" in n:
+        return "EEE"
+    if "MECH" in c or "MECHANICAL" in n:
+        return "MECH"
+    if "CIVIL" in c:
+        return "CIVIL"
+    if "AGRI" in c or "AGRICULTURAL" in n:
+        return "AGRI"
+    return str(d_code or "CSE").strip()
+
+
 def generate_live_weekly_intelligence_data(
     db: Session,
     department: Optional[str] = None,
@@ -288,9 +314,27 @@ def generate_live_weekly_intelligence_data(
         "q4": {"solved": 0, "attempted": 0, "unattempted": 0}
     }
 
+    prev_snaps: Dict[int, Any] = {}
+    prev_prev_snaps: Dict[int, Any] = {}
+
+    if student_ids:
+        if prev_label:
+            for snap in db.query(WeeklyStudentSnapshot).filter(
+                WeeklyStudentSnapshot.student_id.in_(student_ids),
+                WeeklyStudentSnapshot.reporting_period_id.in_([prev_label, f"2026-{prev_label}", f"W_{prev_session_id}"])
+            ).all():
+                prev_snaps[snap.student_id] = snap
+
+        if prev_prev_label:
+            for snap in db.query(WeeklyStudentSnapshot).filter(
+                WeeklyStudentSnapshot.student_id.in_(student_ids),
+                WeeklyStudentSnapshot.reporting_period_id.in_([prev_prev_label, f"2026-{prev_prev_label}", f"W_{prev_prev_session_id}"])
+            ).all():
+                prev_prev_snaps[snap.student_id] = snap
+
     for idx, s in enumerate(students, start=1):
         st = s.stats
-        dept_code = s.department.code if s.department else "CSE"
+        dept_code = normalize_dept_code(s.department.code if s.department else "", s.department.name if s.department else "")
         dept_name = s.department.name if s.department else "Computer Science and Engineering"
         year_roman = normalize_year_roman(s.year_level)
         batch_label = derive_student_batch(s.year_level)
@@ -309,13 +353,19 @@ def generate_live_weekly_intelligence_data(
         prev_res = prev_pub_results.get(s.id)
         prev_prev_res = prev_prev_pub_results.get(s.id)
 
-        # Weekly Solved & Historical Approximation from progress or snapshots
+        # Weekly Solved & Immutable Historical Snapshots
         curr_w_solved = tot_solved
         
-        # Contest attendance
-        curr_attended = False
-        if curr_res:
-            curr_attended = curr_res.participation_status in ("PUBLIC_ATTENDED", "PUBLIC", "ATTENDED") or (curr_res.total_contest_solved or 0) > 0
+        # Contest attendance & future contest check
+        curr_session_date = parse_session_date(curr_session.session_date) if curr_session else None
+        is_upcoming_contest = bool(curr_session_date and curr_session_date > today_date)
+
+        if is_upcoming_contest:
+            curr_attended = False
+        else:
+            curr_attended = bool(curr_res and (curr_res.participation_status in ("PUBLIC_ATTENDED", "PUBLIC", "ATTENDED") or (curr_res.total_contest_solved or 0) > 0))
+
+        if curr_res and not is_upcoming_contest:
             if (curr_res.q1 or 0) > 0: q_stats["q1"]["solved"] += 1
             if (curr_res.q2 or 0) > 0: q_stats["q2"]["solved"] += 1
             if (curr_res.q3 or 0) > 0: q_stats["q3"]["solved"] += 1
@@ -324,28 +374,46 @@ def generate_live_weekly_intelligence_data(
         if curr_attended:
             contest_participants_count += 1
 
-        # Derive 3-week progression safely from contest delta or database records
-        # Weekly new problem delta = current - prev
-        c_contest_solved = curr_res.total_contest_solved if curr_res and curr_res.total_contest_solved is not None else 0
+        # Contest solved counts
+        c_contest_solved = curr_res.total_contest_solved if curr_res and curr_res.total_contest_solved is not None and not is_upcoming_contest else 0
         p_contest_solved = prev_res.total_contest_solved if prev_res and prev_res.total_contest_solved is not None else 0
         pp_contest_solved = prev_prev_res.total_contest_solved if prev_prev_res and prev_prev_res.total_contest_solved is not None else 0
 
-        # Estimate previous solved totals cleanly
-        prev_w_solved = max(0, curr_w_solved - c_contest_solved) if c_contest_solved > 0 else max(0, curr_w_solved)
-        prev_prev_w_solved = max(0, prev_w_solved - p_contest_solved) if p_contest_solved > 0 else max(0, prev_w_solved)
+        # Immutable Historical Snapshot Resolution
+        prev_snap = prev_snaps.get(s.id)
+        prev_prev_snap = prev_prev_snaps.get(s.id)
 
-        weekly_delta = max(0, curr_w_solved - prev_w_solved)
-        if weekly_delta > 0 or c_contest_solved > 0:
+        if prev_snap and prev_snap.primary_solved_count is not None:
+            prev_w_solved = prev_snap.primary_solved_count
+        elif c_contest_solved > 0:
+            prev_w_solved = max(0, curr_w_solved - c_contest_solved)
+        else:
+            prev_w_solved = None  # Insufficient historical data
+
+        if prev_prev_snap and prev_prev_snap.primary_solved_count is not None:
+            prev_prev_w_solved = prev_prev_snap.primary_solved_count
+        elif prev_w_solved is not None and p_contest_solved > 0:
+            prev_prev_w_solved = max(0, prev_w_solved - p_contest_solved)
+        else:
+            prev_prev_w_solved = None  # Insufficient historical data
+
+        if prev_w_solved is not None:
+            weekly_delta = max(0, curr_w_solved - prev_w_solved)
+            growth_pct = round((weekly_delta / float(max(1, prev_w_solved))) * 100, 1) if prev_w_solved > 0 else (100.0 if weekly_delta > 0 else 0.0)
+        else:
+            weekly_delta = None
+            growth_pct = None
+
+        if (weekly_delta and weekly_delta > 0) or c_contest_solved > 0:
             improved_students_count += 1
 
         if tot_solved > 0:
             active_students_count += 1
 
-        growth_pct = round(((weekly_delta) / float(max(1, prev_w_solved))) * 100, 1) if prev_w_solved > 0 else (100.0 if weekly_delta > 0 else 0.0)
-
-        # Rating & Ranking
-        rating_val = st.contest_rating if st and st.contest_rating and st.contest_rating > 0 else None
-        if rating_val:
+        # Rating & Ranking (1500.0 is unrated default, do not treat as real rating)
+        raw_rating = st.contest_rating if st else None
+        rating_val = round(float(raw_rating), 1) if (raw_rating and float(raw_rating) > 0 and float(raw_rating) != 1500.0) else None
+        if rating_val is not None:
             all_ratings.append(rating_val)
 
         # Dynamic Risk Scoring via existing Risk Engine
@@ -368,9 +436,12 @@ def generate_live_weekly_intelligence_data(
         category_counts[cat_name] += 1
 
         # Accumulate totals
-        total_curr_solved_all += curr_w_solved
-        total_prev_solved_all += prev_w_solved
-        total_prev_prev_solved_all += prev_prev_w_solved
+        if curr_w_solved is not None:
+            total_curr_solved_all += curr_w_solved
+        if prev_w_solved is not None:
+            total_prev_solved_all += prev_w_solved
+        if prev_prev_w_solved is not None:
+            total_prev_prev_solved_all += prev_prev_w_solved
 
         # Student Topics & Languages
         s_topics = topics_by_student.get(s.id, [])
@@ -470,9 +541,9 @@ def generate_live_weekly_intelligence_data(
 
         # Department Grouping
         dept_aggregated[dept_code]["students"].append(s_comp)
-        dept_aggregated[dept_code]["solved_curr"] += curr_w_solved
-        dept_aggregated[dept_code]["solved_prev"] += prev_w_solved
-        dept_aggregated[dept_code]["solved_prev_prev"] += prev_prev_w_solved
+        dept_aggregated[dept_code]["solved_curr"] += (curr_w_solved or 0)
+        dept_aggregated[dept_code]["solved_prev"] += (prev_w_solved or 0)
+        dept_aggregated[dept_code]["solved_prev_prev"] += (prev_prev_w_solved or 0)
         if rating_val: dept_aggregated[dept_code]["ratings"].append(rating_val)
         if curr_attended: dept_aggregated[dept_code]["contest_attended"] += 1
         dept_aggregated[dept_code]["categories"][cat_name] += 1
@@ -480,9 +551,9 @@ def generate_live_weekly_intelligence_data(
 
         # Year Grouping
         year_aggregated[year_roman]["students"].append(s_comp)
-        year_aggregated[year_roman]["solved_curr"] += curr_w_solved
-        year_aggregated[year_roman]["solved_prev"] += prev_w_solved
-        year_aggregated[year_roman]["solved_prev_prev"] += prev_prev_w_solved
+        year_aggregated[year_roman]["solved_curr"] += (curr_w_solved or 0)
+        year_aggregated[year_roman]["solved_prev"] += (prev_w_solved or 0)
+        year_aggregated[year_roman]["solved_prev_prev"] += (prev_prev_w_solved or 0)
         if rating_val: year_aggregated[year_roman]["ratings"].append(rating_val)
         if curr_attended: year_aggregated[year_roman]["contest_attended"] += 1
         year_aggregated[year_roman]["categories"][cat_name] += 1
@@ -578,8 +649,8 @@ def generate_live_weekly_intelligence_data(
         reverse=True
     )[:10]
     biggest_improvers = sorted(
-        [s for s in student_comparisons if s["weekly_delta"] > 0],
-        key=lambda x: (x["weekly_delta"], x["growth_pct"]),
+        [s for s in student_comparisons if s.get("weekly_delta") is not None and s["weekly_delta"] > 0],
+        key=lambda x: (x["weekly_delta"] or 0, x["growth_pct"] or 0.0),
         reverse=True
     )[:10]
     attention_cohort = [

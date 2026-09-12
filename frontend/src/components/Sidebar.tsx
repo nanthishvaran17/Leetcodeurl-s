@@ -28,7 +28,8 @@ import {
   Radio,
   X,
   MessageSquare,
-  Brain
+  Brain,
+  Briefcase
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -82,6 +83,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
         { id: 'dashboard', label: 'My Dashboard', icon: LayoutDashboard, badge: 'MENTOR', badgeColor: 'indigo' },
         { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 'NEW', badgeColor: 'indigo' },
         { id: 'faculty-action-center', label: 'Faculty Action Center', icon: Zap, badge: 'LIVE', badgeColor: 'rose', pulse: true },
+        { id: 'hr-candidate-finder', label: 'Placement & Hiring Portal', icon: Briefcase, badge: 'PLACEMENTS', badgeColor: 'purple' },
         { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
       ]
     },
@@ -103,12 +105,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
         { id: 'reports', label: 'Reports & Export', icon: FileSpreadsheet },
         { id: 'public', label: 'Public Shareable View', icon: Globe },
       ]
-    },
-    {
-      title: 'RECRUITMENT',
-      items: [
-        { id: 'hr-candidate-finder', label: 'HR Candidate Finder', icon: Brain, badge: 'NEW', badgeColor: 'purple' },
-      ]
     }
   ];
 
@@ -121,6 +117,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
         { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 'NEW', badgeColor: 'indigo' },
         { id: 'hod-command-center', label: 'HOD Command Center', icon: Cpu, badge: 'HOD', badgeColor: 'purple' },
         { id: 'faculty-action-center', label: 'Faculty Action Center', icon: Zap, badge: 'FACULTY', badgeColor: 'indigo' },
+        { id: 'hr-candidate-finder', label: 'Placement & Hiring Portal', icon: Briefcase, badge: 'PLACEMENTS', badgeColor: 'purple' },
         { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
       ]
     },
@@ -142,12 +139,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
         { id: 'reports', label: 'Reports & Export', icon: FileSpreadsheet },
         { id: 'public', label: 'Public Shareable View', icon: Globe },
       ]
-    },
-    {
-      title: 'RECRUITMENT',
-      items: [
-        { id: 'hr-candidate-finder', label: 'HR Candidate Finder', icon: Brain, badge: 'NEW', badgeColor: 'purple' },
-      ]
     }
   ];
 
@@ -160,6 +151,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
         { id: 'messages', label: 'Messages', icon: MessageSquare, badge: 'NEW', badgeColor: 'indigo' },
         { id: 'hod-command-center', label: 'HOD Command Center', icon: Cpu, badge: 'HOD', badgeColor: 'purple' },
         { id: 'faculty-action-center', label: 'Faculty Action Center', icon: Zap, badge: 'STAFF', badgeColor: 'indigo' },
+        { id: 'hr-candidate-finder', label: 'Placement & Hiring Portal', icon: Briefcase, badge: 'PLACEMENTS', badgeColor: 'purple' },
         { id: 'growth', label: 'Growth Intelligence', icon: TrendingUp },
       ]
     },
@@ -182,12 +174,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
         { id: 'public', label: 'Public Shareable View', icon: Globe },
         { id: 'settings', label: 'Admin Settings', icon: Settings },
         { id: 'audit', label: 'Audit Log', icon: ShieldAlert },
-      ]
-    },
-    {
-      title: 'RECRUITMENT',
-      items: [
-        { id: 'hr-candidate-finder', label: 'HR Candidate Finder', icon: Brain, badge: 'NEW', badgeColor: 'purple' },
       ]
     }
   ];

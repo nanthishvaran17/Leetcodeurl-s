@@ -338,7 +338,7 @@ const EmptyStateSuggestions: React.FC<{
 
 // --- Main Widget ---
 
-export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void }> = ({ onNavigateTab }) => {
+export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void; onClose?: () => void }> = ({ onNavigateTab, onClose }) => {
   const [isOpen, setIsOpen] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showLaunchers, setShowLaunchers] = useState(false);
@@ -346,13 +346,32 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
   const [activeMode, setActiveMode] = useState<'operations' | 'institutional'>('operations');
   const [scrolledUp, setScrolledUp] = useState(false);
 
+  const handleCloseWidget = () => {
+    setIsOpen(false);
+    if (onClose) {
+      onClose();
+    }
+  };
+
   const { pushContext, popContext, registerEscHandler } = useKeyboardContext();
+
+  useEffect(() => {
+    const handleOpen = () => setIsOpen(true);
+    window.addEventListener('open_ai_widget', handleOpen);
+    window.addEventListener('force_open_ai_widget', handleOpen);
+    window.addEventListener('toggle_ai_assistant', handleOpen);
+    return () => {
+      window.removeEventListener('open_ai_widget', handleOpen);
+      window.removeEventListener('force_open_ai_widget', handleOpen);
+      window.removeEventListener('toggle_ai_assistant', handleOpen);
+    };
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
       pushContext('DRAWER');
       const unregister = registerEscHandler(() => {
-        setIsOpen(false);
+        handleCloseWidget();
       });
       return () => {
         unregister();
@@ -766,31 +785,6 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
   return (
     <div className="ai-floating-widget fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-[calc(1.25rem+env(safe-area-inset-bottom,0px))] right-4 sm:right-6 z-[90000] font-sans pointer-events-auto">
 
-      {/* FAB Toggle */}
-      <AnimatePresence>
-        {!isOpen && (
-          <motion.button
-            drag dragMomentum={false}
-            onDragStart={() => setIsDragging(true)}
-            onDragEnd={() => { setTimeout(() => setIsDragging(false), 150); }}
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-            whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.93 }}
-            onClick={() => { if (!isDragging) setIsOpen(true); }}
-            aria-label="Open AI Assistant"
-            className="w-13 h-13 sm:w-14 sm:h-14 flex items-center justify-center rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-brand-700 text-white shadow-xl hover:shadow-2xl cursor-grab active:cursor-grabbing border border-white/20 transition-shadow duration-200 group"
-            title="Open NEC AI Copilot"
-          >
-            <div className="relative flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-amber-300 transition-transform group-hover:rotate-12 duration-200" />
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-slate-900 shadow-sm animate-pulse" />
-            </div>
-          </motion.button>
-        )}
-      </AnimatePresence>
-
       {/* Chat Window */}
       <AnimatePresence>
         {isOpen && (
@@ -837,7 +831,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                   className="hidden sm:flex p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white transition-all cursor-pointer">
                   {isExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
                 </button>
-                <button type="button" onClick={() => setIsOpen(false)} aria-label="Close assistant"
+                <button type="button" onClick={handleCloseWidget} aria-label="Close assistant"
                   className="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white transition-all cursor-pointer">
                   <X className="w-4 h-4" />
                 </button>

@@ -207,62 +207,83 @@ def _dispatch_internal_endpoint(
 ) -> tuple[bytes, str, str]:
     """
     Internal authoritative file generator dispatcher.
-    Executes core exporters directly using authorized user context.
+    Executes core exporters directly using authorized user context and real database data.
     """
-    clean_endpoint = endpoint.split("?")[0].rstrip("/")
+    from urllib.parse import urlparse, parse_qs
+    from backend.services.pregenerated_report_service import generate_report_bytes
 
-    # 1. Official College Summary Excel
-    if clean_endpoint in ("/api/reports/export-official-college-summary", "/api/reports/export-excel", "/api/reports/export/excel"):
-        from backend.excel_handler import generate_8_sheet_excel_report
-        excel_bytes = generate_8_sheet_excel_report(db, current_user=user)
-        return excel_bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or "Nandha_College_Official_Weekly_Report.xlsx"
+    parsed = urlparse(endpoint)
+    clean_endpoint = parsed.path.rstrip("/")
+    url_params = {k: v[0] for k, v in parse_qs(parsed.query).items()}
+    merged_params = {**url_params, **params}
 
-    # 2. Student Performance Detail Excel
+    rpt_type = merged_params.get("report_type")
+
+    # 1. Master 10-Sheet Institutional Excel
+    if clean_endpoint == "/api/reports/download":
+        file_bytes = generate_report_bytes(db, report_type="MASTER_10_SHEET", format="xlsx", filters=merged_params, current_user=user)
+        return file_bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or "Weekly_LeetCode_Master_Report.xlsx"
+
+    # 2. HOD Department Intelligence Excel
+    elif clean_endpoint == "/api/reports/hod":
+        file_bytes = generate_report_bytes(db, report_type="HOD_DEPARTMENT_INTELLIGENCE", format="xlsx", filters=merged_params, current_user=user)
+        return file_bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or "HOD_Department_Intelligence_Report.xlsx"
+
+    # 3. Faculty Consolidated Performance Excel
+    elif clean_endpoint == "/api/reports/staff":
+        file_bytes = generate_report_bytes(db, report_type="FACULTY_CONSOLIDATED", format="xlsx", filters=merged_params, current_user=user)
+        return file_bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or "Faculty_Consolidated_Performance_Report.xlsx"
+
+    # 4. Principal Executive Intelligence Excel
+    elif clean_endpoint == "/api/reports/principal":
+        file_bytes = generate_report_bytes(db, report_type="PRINCIPAL_EXECUTIVE", format="xlsx", filters=merged_params, current_user=user)
+        return file_bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or "Principal_Executive_Intelligence_Report.xlsx"
+
+    # 5. Generic Excel Exporter (Official Summary, 5-Week Trend, Management Executive, etc.)
+    elif clean_endpoint in ("/api/reports/export-official-college-summary", "/api/reports/export-excel", "/api/reports/export/excel"):
+        target_rpt = rpt_type or "OFFICIAL_SUMMARY"
+        file_bytes = generate_report_bytes(db, report_type=target_rpt, format="xlsx", filters=merged_params, current_user=user)
+        return file_bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or f"Nandha_{target_rpt}_Report.xlsx"
+
+    # 6. Student Performance Detail Excel
     elif clean_endpoint == "/api/reports/export-student-performance-detail":
-        from backend.excel_handler import generate_student_performance_detail_excel
-        excel_bytes = generate_student_performance_detail_excel(db, current_user=user)
-        return excel_bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or "Nandha_Student_Performance_Detail.xlsx"
+        file_bytes = generate_report_bytes(db, report_type="STUDENT_PERFORMANCE", format="xlsx", filters=merged_params, current_user=user)
+        return file_bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or "Nandha_Student_Performance_Detail.xlsx"
 
-    # 3. Master Tracker Excel
+    # 7. Master Tracker Excel
     elif clean_endpoint == "/api/reports/export-master-tracker":
-        from backend.excel_handler import generate_8_sheet_master_tracker
-        excel_bytes = generate_8_sheet_master_tracker(db, current_user=user)
-        return excel_bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or "Full_8_Sheet_Master_Tracker.xlsx"
+        file_bytes = generate_report_bytes(db, report_type="MASTER_TRACKER", format="xlsx", filters=merged_params, current_user=user)
+        return file_bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or "Full_8_Sheet_Master_Tracker.xlsx"
 
-    # 4. Weekly Contest Matrix
+    # 8. Weekly Contest Matrix
     elif clean_endpoint == "/api/reports/export-weekly-contest-matrix":
-        from backend.excel_handler import generate_weekly_contest_matrix_excel
-        batch = params.get("batch", "2028")
-        dept_id = params.get("dept_id")
-        excel_bytes = generate_weekly_contest_matrix_excel(db, batch_label=batch, dept_id=dept_id, current_user=user)
-        return excel_bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or f"LeetCode_Weekly_Contest_Matrix_Batch_{batch}.xlsx"
+        file_bytes = generate_report_bytes(db, report_type="WEEKLY_CONTEST_MATRIX", format="xlsx", filters=merged_params, current_user=user)
+        return file_bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or f"LeetCode_Weekly_Contest_Matrix.xlsx"
 
-    # 5. Executive PDF Report
+    # 9. Executive PDF Report
     elif clean_endpoint == "/api/reports/export-pdf":
-        from backend.pdf_generator import generate_pdf_summary_report
-        dept_id = params.get("dept_id")
-        pdf_bytes = generate_pdf_summary_report(db, dept_id=dept_id, current_user=user)
-        return pdf_bytes, "application/pdf", default_filename or "LeetCode_Weekly_Performance_Summary.pdf"
+        target_rpt = rpt_type or "STUDENT_PERFORMANCE"
+        file_bytes = generate_report_bytes(db, report_type=target_rpt, format="pdf", filters=merged_params, current_user=user)
+        return file_bytes, "application/pdf", default_filename or "Executive_PDF_Summary.pdf"
 
-    # 6. Executive Word Report
+    # 10. Executive Word Report
     elif clean_endpoint == "/api/reports/export-word":
-        from backend.word_generator import generate_word_report
-        dept_id = params.get("dept_id")
-        word_bytes = generate_word_report(db, dept_id=dept_id, current_user=user)
-        return word_bytes, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", default_filename or "LeetCode_Weekly_Performance_Summary.docx"
+        target_rpt = rpt_type or "STUDENT_PERFORMANCE"
+        file_bytes = generate_report_bytes(db, report_type=target_rpt, format="docx", filters=merged_params, current_user=user)
+        return file_bytes, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", default_filename or "Executive_Word_Summary.docx"
 
-    # 7. Student CSV Export
+    # 11. Student CSV Export
     elif clean_endpoint == "/api/reports/export-csv":
-        from backend.routes.reports import download_csv_report
-        resp = download_csv_report(dept_id=params.get("dept_id"), year_level=params.get("year_level"), db=db, current_user=user)
-        return resp.body, "text/csv", default_filename or "LeetCode_Student_Performance_Report.csv"
+        target_rpt = rpt_type or "STUDENT_PERFORMANCE"
+        file_bytes = generate_report_bytes(db, report_type=target_rpt, format="csv", filters=merged_params, current_user=user)
+        return file_bytes, "text/csv", default_filename or "LeetCode_Student_Performance_Report.csv"
 
-    # 8. Certificate PDF Download
+    # 12. Certificate PDF Download
     elif "/certificates/" in clean_endpoint and ("download" in clean_endpoint or "download-pdf" in clean_endpoint):
         from backend.routes.certificates import download_certificate_pdf
         parts = clean_endpoint.split("/")
         cert_id = parts[-1] if parts[-1] not in ("download", "download-pdf") else parts[-2]
-        resp = download_certificate_pdf(verification_id=cert_id, reg=params.get("reg"), contest=params.get("contest"), name=params.get("name"), db=db)
+        resp = download_certificate_pdf(verification_id=cert_id, reg=merged_params.get("reg"), contest=merged_params.get("contest"), name=merged_params.get("name"), db=db)
         out_fn = default_filename or "Certificate.pdf"
         if resp.headers and "Content-Disposition" in resp.headers:
             disp = resp.headers["Content-Disposition"]
@@ -270,21 +291,21 @@ def _dispatch_internal_endpoint(
                 out_fn = disp.split('filename="')[1].rstrip('"')
         return resp.body, "application/pdf", out_fn
 
-    # 9. Forensic Audit PDF Download
+    # 13. Forensic Audit PDF Download
     elif "/certificates/" in clean_endpoint and "forensic" in clean_endpoint:
         from backend.routes.certificates import download_forensic_contest_pdf
         parts = clean_endpoint.split("/")
         identifier = parts[-1]
-        resp = download_forensic_contest_pdf(verification_id=identifier, identifier=identifier, student_id=params.get("student_id"), db=db)
+        resp = download_forensic_contest_pdf(verification_id=identifier, identifier=identifier, student_id=merged_params.get("student_id"), db=db)
         return resp.body, "application/pdf", default_filename or "Forensic_Audit_Report.pdf"
 
-    # 10. Sample Student Import Excel
+    # 14. Sample Student Import Excel
     elif clean_endpoint == "/api/students/sample-excel":
         from backend.routes.students import download_sample_student_excel
         resp = download_sample_student_excel()
         return resp.body, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Student_Import_Sample.xlsx"
 
-    # 11. Database Backup File Download
+    # 15. Database Backup File Download
     elif "/api/settings/backups/" in clean_endpoint and clean_endpoint.endswith("/download"):
         from backend.routes.settings import download_backup_api, BACKUP_DIR
         safe_name = os.path.basename(clean_endpoint.split("/backups/")[1].replace("/download", ""))
@@ -295,20 +316,20 @@ def _dispatch_internal_endpoint(
             b_data = f.read()
         return b_data, "application/x-sqlite3", safe_name
 
-    # 12. Post-9:30 AM Solvers Excel Export
+    # 16. Post-9:30 AM Solvers Excel Export
     elif clean_endpoint == "/api/weekly-contests/post-930-solvers/export":
         from backend.routes.weekly_contests import get_post_930_solvers
         from backend.exporters.excel_exporter import export_excel_from_dataset
         data = get_post_930_solvers(
-            request=None, session_date=params.get("session_date"), dept=params.get("dept"),
-            year_level=params.get("year_level"), section=params.get("section"),
-            min_post_window_solves=params.get("min_post_window_solves", 1),
+            request=None, session_date=merged_params.get("session_date"), dept=merged_params.get("dept"),
+            year_level=merged_params.get("year_level"), section=merged_params.get("section"),
+            min_post_window_solves=merged_params.get("min_post_window_solves", 1),
             sort_by="latest", search=None, student_id=None, db=db
         )
         excel_bytes = export_excel_from_dataset(data) if isinstance(data, dict) else b""
-        return excel_bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or f"Post_930_Solvers_{params.get('session_date', 'Report')}.xlsx"
+        return excel_bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or f"Post_930_Solvers_{merged_params.get('session_date', 'Report')}.xlsx"
 
-    # 13. Cached Report File Download
+    # 17. Cached Report File Download
     elif "/api/reports/cached-download/" in clean_endpoint:
         cache_id = int(clean_endpoint.split("/")[-1])
         from backend.routes.reports import download_cached_report_file
@@ -317,9 +338,9 @@ def _dispatch_internal_endpoint(
             f_bytes = f.read()
         return f_bytes, resp.media_type, os.path.basename(resp.path)
 
-    # General Fallback: Attempt to generate official 8-sheet report
+    # General Fallback: Attempt to generate via generate_report_bytes
     else:
-        logger.warning(f"[DISPATCH FALLBACK] Using standard 8-sheet Excel generator for {clean_endpoint}")
-        from backend.excel_handler import generate_8_sheet_excel_report
-        excel_bytes = generate_8_sheet_excel_report(db, current_user=user)
-        return excel_bytes, default_mime or "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or "LeetCode_Tracker_Export.xlsx"
+        logger.warning(f"[DISPATCH FALLBACK] Using generate_report_bytes for {clean_endpoint}")
+        target_rpt = rpt_type or "OFFICIAL_SUMMARY"
+        file_bytes = generate_report_bytes(db, report_type=target_rpt, format="xlsx", filters=merged_params, current_user=user)
+        return file_bytes, default_mime or "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", default_filename or "LeetCode_Tracker_Export.xlsx"

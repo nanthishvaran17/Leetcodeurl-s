@@ -105,15 +105,11 @@ export const useGlobalKeyboardShortcuts = ({
         return;
       }
 
-      // --- 7. GENERATE REPORT (CTRL/CMD + SHIFT + R) ---
+      // --- 7. DASHBOARD NAVIGATION (CTRL/CMD + SHIFT + R) ---
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'r') {
         e.preventDefault();
-        if (onGenerateReport) {
-          onGenerateReport();
-        } else {
-          onNavigateTab('reports');
-          notify.info('Opening Reports & Exporters', undefined, { duration: 2000 });
-        }
+        onNavigateTab('dashboard');
+        notify.info('Navigating to Dashboard', undefined, { duration: 1500 });
         return;
       }
 
@@ -132,7 +128,6 @@ export const useGlobalKeyboardShortcuts = ({
         let targetTab: string | null = null;
 
         if (key === 'h') targetTab = 'dashboard';
-        else if (key === 'c') targetTab = 'hr-candidate-finder';
         else if (key === 'r') targetTab = 'reports';
         else if (key === 'f') targetTab = 'faculty-action-center';
         else if (key === 'm') targetTab = 'hod-command-center';

@@ -23,8 +23,8 @@ from backend.logger import logger
 def normalize_department_filter(target_dept: Optional[str]) -> Optional[str]:
     if not target_dept:
         return None
-    t = target_dept.strip().upper()
-    if t in ("ALL", "ALL DEPARTMENTS", "ALL DEPT", "ALL DEPTS"):
+    t = str(target_dept).strip().upper()
+    if t in ("ALL", "ALL DEPARTMENTS", "ALL DEPT", "ALL DEPTS", "COLLEGE", "COLLEGE-WIDE", "COLLEGE_WIDE", ""):
         return None
     return t
 
@@ -32,8 +32,8 @@ def normalize_department_filter(target_dept: Optional[str]) -> Optional[str]:
 def normalize_year_filter(target_year: Optional[str]) -> Optional[str]:
     if not target_year:
         return None
-    t = target_year.strip().upper()
-    if t in ("ALL", "ALL YEARS", "ALL BATCHES", "ALL BATCH"):
+    t = str(target_year).strip().upper()
+    if t in ("ALL", "ALL YEARS", "ALL BATCHES", "ALL BATCH", "ALL ACADEMIC YEARS", "ALL ACADEMIC YEAR", ""):
         return None
     return t
 
@@ -43,38 +43,72 @@ def normalize_dept_val(code_raw: Optional[str], name_raw: Optional[str] = "") ->
     n = str(name_raw or "").upper().strip()
     if "IOT" in c or "IOT" in n or "CI" in c:
         return "CSE(IoT)"
-    if "CYBER" in c or "CYBER" in n or "CC" in c or ("CS" in c and "IOT" not in c):
+    if "CYBER" in c or "CYBER" in n or "CC" in c or "CSE(CS)" in c or "CSE (CS)" in c or "(CS)" in c or c == "CS":
         return "CSE(CS)"
-    return str(code_raw or "CSE(CS)")
+    if c in ("CSE", "COMPUTER SCIENCE") or "COMPUTER SCIENCE &" in n or "COMPUTER SCIENCE AND" in n:
+        return "CSE"
+    return str(code_raw or "CSE")
 
 
-def matches_dept(r_dept_code: str, r_dept_name: str, target_dept: Optional[str]) -> bool:
+def matches_dept(r_dept_code: str, r_dept_name: str, target_dept: Optional[str], dept_id: Optional[int] = None) -> bool:
     norm_target = normalize_department_filter(target_dept)
     if norm_target is None:
         return True
+
+    if str(norm_target).isdigit():
+        target_id = int(norm_target)
+        if dept_id is not None and int(dept_id) == target_id:
+            return True
+        id_code_map = {
+            1: "CSE(CS)", 2: "CSE(IOT)", 7: "IT", 8: "CSE", 
+            9: "AGRI", 10: "AIDS", 11: "EEE", 12: "ECE"
+        }
+        if target_id in id_code_map:
+            target_code = id_code_map[target_id]
+            student_norm = normalize_dept_val(r_dept_code, r_dept_name)
+            target_norm = normalize_dept_val(target_code, target_code)
+            return student_norm == target_norm
+
     student_norm = normalize_dept_val(r_dept_code, r_dept_name)
     target_norm = normalize_dept_val(norm_target, norm_target)
     return student_norm == target_norm
 
 
 def normalize_year_val(year_raw: Optional[str]) -> str:
-    y = str(year_raw or "").upper().replace("YEAR", "").replace("", "").strip()
-    if "III" in y or "3" in y:
-        return "III"
-    if "IV" in y or "4" in y:
+    if not year_raw:
+        return ""
+    y = str(year_raw).upper().strip()
+    if "ALL" in y:
+        return "ALL"
+    if "IV" in y or "4" in y or "2023" in y:
         return "IV"
-    if "II" in y or "2" in y:
+    if "III" in y or "3" in y or "2024" in y:
+        return "III"
+    if "II" in y or "2" in y or "2025" in y:
         return "II"
-    if "I" in y or "1" in y:
+    if "I" in y or "1" in y or "2026" in y:
         return "I"
-    return "III"
+    return y
 
 
-def matches_year(r_year: Optional[str], target_year: Optional[str]) -> bool:
+def matches_year(r_year: Optional[str], target_year: Optional[str], reg_no: Optional[str] = "") -> bool:
     norm_target = normalize_year_filter(target_year)
     if norm_target is None:
         return True
-    return normalize_year_val(r_year) == normalize_year_val(norm_target)
+    
+    r_str = str(reg_no or "").strip().upper()
+    if r_str.startswith("732225"):
+        student_year = "II"
+    elif r_str.startswith("732224"):
+        student_year = "III"
+    elif r_str.startswith("732223"):
+        student_year = "IV"
+    elif r_str.startswith("732226"):
+        student_year = "I"
+    else:
+        student_year = normalize_year_val(r_year)
+
+    return student_year == normalize_year_val(norm_target)
 
 
 def build_contest_performance_report(db: Session, config: ReportConfig, current_user: Optional[Any] = None) -> Dict[str, Any]:
@@ -109,20 +143,9 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
     filters = config.filters or {}
     raw_dept = config.department or filters.get("department", "ALL")
     raw_year = config.year or filters.get("year", "ALL")
-    scope = (config.output_scope or filters.get("output_scope", "COLLEGE")).upper()
 
-    if scope in ("COLLEGE", "COLLEGE-WIDE", "COLLEGE_WIDE"):
-        dept_filter = "ALL"
-        year_filter = "ALL"
-    elif scope in ("DEPARTMENT", "DEPARTMENT-WIDE", "DEPARTMENT_WIDE"):
-        dept_filter = raw_dept
-        year_filter = "ALL"
-    elif scope in ("YEAR", "YEAR-WISE", "YEAR_WISE"):
-        dept_filter = "ALL"
-        year_filter = raw_year
-    else:  # DEPARTMENT_YEAR, DEPT_YEAR, CUSTOM
-        dept_filter = raw_dept
-        year_filter = raw_year
+    dept_filter = raw_dept
+    year_filter = raw_year
 
     # 3. Query all active Master Students
     student_query = db.query(Student).filter(
@@ -140,8 +163,9 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         if matches_dept(
             s.department.code if s.department else "",
             s.department.name if s.department else "",
-            dept_filter
-        ) and matches_year(s.year_level, year_filter)
+            dept_filter,
+            getattr(s, "department_id", None)
+        ) and matches_year(s.year_level, year_filter, s.reg_no)
     ]
 
     # 4. Fetch contest participation results for this session
@@ -199,11 +223,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             fetch_st = str(p_res.fetch_status or p_res.data_fetch_status or "").upper()
             part_st = str(p_res.participation_status or "").upper()
 
-            if fetch_st in ("USERNAME_NOT_FOUND", "INVALID_USERNAME", "INVALID_PROFILE", "INVALID_LINK"):
-                status = ContestStatus.INVALID_USERNAME.value
-            elif fetch_st in ("FETCH_FAILED", "FETCH_ERROR", "TIMEOUT", "NETWORK_ERROR", "SERVER_ERROR"):
-                status = ContestStatus.FETCH_FAILED.value
-            elif part_st in ("PUBLIC", "PUBLIC_ATTENDED", "OFFICIAL", "ATTENDED", "PUBLIC_LIVE"):
+            if part_st in ("PUBLIC", "PUBLIC_ATTENDED", "OFFICIAL", "ATTENDED", "PUBLIC_LIVE"):
                 status = ContestStatus.PUBLIC_LIVE.value
                 q1_val = 1 if (p_res.q1 and p_res.q1 >= 1) else 0
                 q2_val = 1 if (p_res.q2 and p_res.q2 >= 1) else 0
@@ -223,10 +243,14 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                 rating_val = p_res.contest_rating
             elif part_st in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT", "NO_PARTICIPATION"):
                 status = ContestStatus.NOT_ATTENDED.value
+            elif fetch_st in ("USERNAME_NOT_FOUND", "INVALID_USERNAME", "INVALID_PROFILE", "INVALID_LINK"):
+                status = ContestStatus.INVALID_USERNAME.value
+            elif fetch_st in ("FETCH_FAILED", "FETCH_ERROR", "TIMEOUT", "NETWORK_ERROR", "SERVER_ERROR"):
+                status = ContestStatus.FETCH_FAILED.value
             elif part_st in ("PENDING", "INITIALIZING", "DATA_PENDING"):
                 status = ContestStatus.PENDING_USERNAME.value
             else:
-                status = ContestStatus.UNKNOWN.value
+                status = ContestStatus.NOT_ATTENDED.value
         elif v_res is not None:
             status = ContestStatus.VIRTUAL_PRACTICE.value
             q1_val = 1 if (v_res.q1 and v_res.q1 >= 1) else 0
@@ -283,26 +307,69 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             q4_val = None
             solved_val = None
 
+        is_att = status in valid_attended_statuses
+
+        q1_time = getattr(p_res, "q1_time", None) if p_res else None
+        q2_time = getattr(p_res, "q2_time", None) if p_res else None
+        q3_time = getattr(p_res, "q3_time", None) if p_res else None
+        q4_time = getattr(p_res, "q4_time", None) if p_res else None
+        tot_time = (getattr(p_res, "total_time_min", None) or getattr(p_res, "total_time", None) or getattr(p_res, "finish_time", None)) if p_res else None
+
+        def format_q_cell(q_val: Optional[int], q_t: Any, attended: bool) -> str:
+            if not attended or q_val is None:
+                return "—"
+            if q_val == 1:
+                if q_t is not None and float(q_t) > 0:
+                    t_val = float(q_t)
+                    t_str = str(int(t_val)) if t_val.is_integer() else str(t_val)
+                    return f"1 ({t_str} min)"
+                return "1 (Not Available)"
+            return "0 (—)"
+
+        q1_disp = format_q_cell(q1_val, q1_time, is_att)
+        q2_disp = format_q_cell(q2_val, q2_time, is_att)
+        q3_disp = format_q_cell(q3_val, q3_time, is_att)
+        q4_disp = format_q_cell(q4_val, q4_time, is_att)
+
+        if is_att:
+            if tot_time is not None and float(tot_time) > 0:
+                t_val = float(tot_time)
+                t_str = str(int(t_val)) if t_val.is_integer() else str(t_val)
+                tot_time_disp = f"{t_str} min"
+            else:
+                tot_time_disp = "Not Available"
+        else:
+            tot_time_disp = "—"
+
         student_rows.append({
             "student_id": s_id,
             "reg_no": reg_no,
             "name": name,
+            "student_name": name,
             "dept": dept_norm,
             "year": yr_norm,
             "username": username,
+            "leetcode_handle": username if (username and len(username) >= 2) else "Not Available",
             "status": status,
             "participation_status": status,
             "contest_name": contest_name,
             "contest_date": contest_date,
             "session_date": contest_date,
-            "q1": q1_val,
-            "q2": q2_val,
-            "q3": q3_val,
-            "q4": q4_val,
+            "q1": q1_val if is_att else None,
+            "q2": q2_val if is_att else None,
+            "q3": q3_val if is_att else None,
+            "q4": q4_val if is_att else None,
+            "q1_display": q1_disp,
+            "q2_display": q2_disp,
+            "q3_display": q3_disp,
+            "q4_display": q4_disp,
+            "total_time_display": tot_time_disp,
             "contest_solved": solved_val,
             "total_solved": solved_val,
-            "rank": rank_val if rank_val is not None else "—",
-            "rating": rating_val,
+            "score": (solved_val * 3) if (is_att and solved_val is not None) else "Not Available",
+            "rank": rank_val if (is_att and rank_val is not None) else "Not Available",
+            "global_rank": rank_val if (is_att and rank_val is not None) else "Not Available",
+            "rating": rating_val if (is_att and rating_val is not None) else "Not Available",
             "contest_rating": rating_val
         })
 
@@ -374,20 +441,140 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
     for idx, r in enumerate(sorted_rows, start=1):
         r["s_no"] = idx
 
+    # 8b. Question-Wise Official Result & Solve Distribution
+    q1_solves = sum(1 for r in participants_list if (r.get("q1") or 0) >= 1)
+    q2_solves = sum(1 for r in participants_list if (r.get("q2") or 0) >= 1)
+    q3_solves = sum(1 for r in participants_list if (r.get("q3") or 0) >= 1)
+    q4_solves = sum(1 for r in participants_list if (r.get("q4") or 0) >= 1)
+
+    denom_part = max(total_participants, 1)
+    question_wise_result = [
+        {"question": "Q1", "solved": q1_solves, "not_solved": max(0, total_participants - q1_solves), "solve_rate": f"{round((q1_solves / denom_part) * 100, 1)}%"},
+        {"question": "Q2", "solved": q2_solves, "not_solved": max(0, total_participants - q2_solves), "solve_rate": f"{round((q2_solves / denom_part) * 100, 1)}%"},
+        {"question": "Q3", "solved": q3_solves, "not_solved": max(0, total_participants - q3_solves), "solve_rate": f"{round((q3_solves / denom_part) * 100, 1)}%"},
+        {"question": "Q4", "solved": q4_solves, "not_solved": max(0, total_participants - q4_solves), "solve_rate": f"{round((q4_solves / denom_part) * 100, 1)}%"},
+    ]
+
+    solve_distribution_list = [
+        {"category": "4/4 Solved", "count": solved_4, "percentage": f"{round((solved_4 / denom_part) * 100, 1)}%"},
+        {"category": "3/4 Solved", "count": solved_3, "percentage": f"{round((solved_3 / denom_part) * 100, 1)}%"},
+        {"category": "2/4 Solved", "count": solved_2, "percentage": f"{round((solved_2 / denom_part) * 100, 1)}%"},
+        {"category": "1/4 Solved", "count": solved_1, "percentage": f"{round((solved_1 / denom_part) * 100, 1)}%"},
+        {"category": "0/4 Solved", "count": solved_0, "percentage": f"{round((solved_0 / denom_part) * 100, 1)}%"},
+    ]
+
+    # 8c. Official Leaderboard & Top Performers
+    def leaderboard_sort_key(r: Dict[str, Any]):
+        sc = r.get("score") if r.get("score") is not None else ((r.get("contest_solved") or 0) * 3)
+        sol = r.get("contest_solved") or 0
+        return (-sc, -sol)
+
+    leaderboard_candidates = sorted(participants_list, key=leaderboard_sort_key)
+    official_leaderboard: List[Dict[str, Any]] = []
+    for idx, r in enumerate(leaderboard_candidates, start=1):
+        official_leaderboard.append({
+            "rank": idx,
+            "student_name": r["name"],
+            "reg_no": r["reg_no"],
+            "dept": r["dept"],
+            "year": r["year"],
+            "q1": r["q1"] if r["q1"] is not None else "Not Available",
+            "q2": r["q2"] if r["q2"] is not None else "Not Available",
+            "q3": r["q3"] if r["q3"] is not None else "Not Available",
+            "q4": r["q4"] if r["q4"] is not None else "Not Available",
+            "solved": r["contest_solved"] if r["contest_solved"] is not None else "Not Available",
+            "score": r.get("score") if r.get("score") is not None else (r["contest_solved"] * 3 if r["contest_solved"] is not None else "Not Available")
+        })
+
+    top_performers = [
+        {
+            "rank": item["rank"],
+            "student": item["student_name"],
+            "student_name": item["student_name"],
+            "reg_no": item["reg_no"],
+            "dept": item["dept"],
+            "year": item["year"],
+            "solved": item["solved"],
+            "score": item["score"]
+        }
+        for item in official_leaderboard[:25]
+    ]
+
+    # 8d. Department-Wise Official Result
+    dept_groups: Dict[str, List[Dict[str, Any]]] = {}
+    for r in sorted_rows:
+        d = r["dept"] or "Not Available"
+        dept_groups.setdefault(d, []).append(r)
+
+    department_results: List[Dict[str, Any]] = []
+    for d_code, d_rows in dept_groups.items():
+        tot_d = len(d_rows)
+        d_parts = [dr for dr in d_rows if dr["status"] in (ContestStatus.PUBLIC_LIVE.value, ContestStatus.VIRTUAL_PRACTICE.value, ContestStatus.PUBLIC_ATTENDED.value, ContestStatus.VIRTUAL_ATTENDED.value)]
+        part_cnt = len(d_parts)
+        part_pct = round((part_cnt / max(tot_d, 1)) * 100, 1)
+        s4 = sum(1 for dr in d_parts if dr["contest_solved"] == 4)
+        s3 = sum(1 for dr in d_parts if dr["contest_solved"] == 3)
+        s2 = sum(1 for dr in d_parts if dr["contest_solved"] == 2)
+        s1 = sum(1 for dr in d_parts if dr["contest_solved"] == 1)
+        s0 = sum(1 for dr in d_parts if dr["contest_solved"] == 0)
+        tot_solves = sum((dr["contest_solved"] or 0) for dr in d_parts)
+        avg_solves = round(tot_solves / max(tot_d, 1), 2)
+        department_results.append({
+            "department": d_code,
+            "total_students": tot_d,
+            "participants": part_cnt,
+            "participation_pct": f"{part_pct}%",
+            "solved_4": s4,
+            "solved_3": s3,
+            "solved_2": s2,
+            "solved_1": s1,
+            "solved_0": s0,
+            "total_solves": tot_solves,
+            "average_solved": avg_solves
+        })
+
+    # 8e. Data Validation Check
+    reg_no_counts = {}
+    has_dup = False
+    for r in student_rows:
+        rg = r.get("reg_no")
+        if rg:
+            reg_no_counts[rg] = reg_no_counts.get(rg, 0) + 1
+            if reg_no_counts[rg] > 1:
+                has_dup = True
+                break
+
+    is_valid_data = not has_dup
+    validation_error = None if is_valid_data else "Official result generation blocked because validated source data contains critical errors."
+
     # 9. Format Title
-    title = f"{contest_name} Performance Report"
+    CONTEST_REPORT_TITLES = {
+        "FRIDAY_OFFICIAL_CONTEST": "Friday Official Contest Result",
+        "OFFICIAL_CONTEST": "Friday Official Contest Result",
+        "WEEKLY_CONTEST_INTELLIGENCE": "Weekly Contest Intelligence Report",
+        "SUNDAY_LIVE_CONTEST": "Sunday Live Contest Report",
+        "CONTEST_ATTENDANCE_PARTICIPATION": "Contest Attendance & Participation Report",
+        "CONTEST_PERFORMANCE_RANKING": "Contest Performance & Ranking Report",
+    }
+    rpt_key = config.report_type or "FRIDAY_OFFICIAL_CONTEST"
+    base_title = CONTEST_REPORT_TITLES.get(rpt_key, f"{contest_name} Official Contest Result")
+    title = base_title
     if dept_filter != "ALL":
         title = f"{dept_filter} - {title}"
     if year_filter != "ALL":
         title = f"{title} ({year_filter} Year)"
 
-    report_id = f"RPT-CONTEST-{datetime.datetime.utcnow().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+    report_id = f"RPT-FRIDAY-{datetime.datetime.utcnow().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+
+    version_str = f"v1.0.0 | Template Rev 3.0 | Contest {contest_id} | Generated {datetime.datetime.utcnow().strftime('%d-%m-%Y')}"
 
     dataset: Dict[str, Any] = {
         "reportId": report_id,
         "report_id": report_id,
-        "reportType": "CONTEST_PERFORMANCE",
-        "report_type": "CONTEST_PERFORMANCE",
+        "reportType": rpt_key,
+        "report_type": rpt_key,
+        "collegeName": "NANDHA ENGINEERING COLLEGE",
+        "reportTitle": "Friday Official Contest Result",
         "title": f"NANDHA ENGINEERING COLLEGE (AUTONOMOUS)\n{title.upper()}",
         "contestName": contest_name,
         "contest_name": contest_name,
@@ -395,10 +582,17 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         "sessionDate": contest_date,
         "session_date": contest_date,
         "contestId": contest_id,
-        "generatedAt": datetime.datetime.utcnow().isoformat(),
+        "academicYear": "Academic Year 2026–2027",
+        "contestWindow": "08:00 AM – 09:30 AM IST",
+        "version": "v1.0.0",
+        "templateRevision": "Rev 3.0",
+        "versionString": version_str,
+        "isValidated": is_valid_data,
+        "validationError": validation_error,
+        "generatedAt": datetime.datetime.utcnow().strftime("%d-%m-%Y %I:%M %p IST"),
         "verifiedAt": datetime.datetime.utcnow().isoformat(),
-        "dataStatus": "READY" if total_students > 0 else "PARTIAL",
-        "data_status": "READY" if total_students > 0 else "PARTIAL",
+        "dataStatus": "READY" if (total_students > 0 and is_valid_data) else ("BLOCKED" if not is_valid_data else "PARTIAL"),
+        "data_status": "READY" if (total_students > 0 and is_valid_data) else ("BLOCKED" if not is_valid_data else "PARTIAL"),
         "config": config.model_dump(),
         "contestSummary": {
             "latestContest": contest_name,
@@ -429,6 +623,11 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             "zeroSolvedParticipated": zero_solved_participated,
             "notParticipated": not_participated
         },
+        "questionWiseResult": question_wise_result,
+        "solveDistributionList": solve_distribution_list,
+        "officialLeaderboard": official_leaderboard,
+        "topPerformers": top_performers,
+        "departmentResults": department_results,
         "performanceTable": accuracy_audit["performance_table"],
         "performance_table": accuracy_audit["performance_table"],
         "metrics": {
@@ -473,7 +672,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         },
         "allStudents": sorted_rows,
         "rows": sorted_rows,
-        "topStudents": [r for r in sorted_rows if r["status"] in (ContestStatus.PUBLIC_LIVE.value, ContestStatus.VIRTUAL_PRACTICE.value, ContestStatus.PUBLIC_ATTENDED.value, ContestStatus.VIRTUAL_ATTENDED.value)][:50]
+        "topStudents": top_performers
     }
 
     # Persist in ReportHistory for auditability and fast exports

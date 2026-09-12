@@ -67,8 +67,10 @@ OFFICIAL_DEPTS = [
     "ECE", "EEE", "MECH", "CIVIL", "AGRI", "BME"
 ]
 
-def _apply_thin_border(cell):
-    cell.border = _THIN_BORDER
+def _apply_thin_border(cell, force: bool = False):
+    # Skip setting border on plain body cells unless explicitly requested for headers/summaries
+    if force or cell.value is not None:
+        cell.border = _THIN_BORDER
 
 def _to_int(val, default=0) -> int:
     try:
@@ -98,28 +100,34 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
     ws.page_setup.fitToWidth = 1
     ws.page_setup.fitToHeight = 0
 
-    # Row 1: Main Banner
-    ws.merge_cells(f"A1:{last_col}1")
-    ws["A1"] = "NANDHA ENGINEERING COLLEGE, ERODE – 638 052"
-    ws["A1"].font = FONT_MAIN_TITLE
-    ws["A1"].alignment = ALIGN_CENTER
-    ws["A1"].fill = NAVY_PRIMARY
+    # Row 1-3: Fill header background (A1:last_col 3) with solid Navy
+    for r in range(1, 4):
+        for c in range(1, cols + 1):
+            cell = ws.cell(row=r, column=c)
+            cell.fill = NAVY_PRIMARY
+
+    # Row 1: Main Title (B1:last_col 1) so logo in A1 does not overlap text
+    ws.merge_cells(f"B1:{last_col}1")
+    ws["B1"] = "NANDHA ENGINEERING COLLEGE, ERODE – 638 052"
+    ws["B1"].font = FONT_MAIN_TITLE
+    ws["B1"].alignment = ALIGN_CENTER
+    ws["B1"].fill = NAVY_PRIMARY
     ws.row_dimensions[1].height = 32
 
-    # Row 2: Subtitle
-    ws.merge_cells(f"A2:{last_col}2")
-    ws["A2"] = "(AUTONOMOUS) • ESTD 2001 | Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai"
-    ws["A2"].font = FONT_SUBTITLE
-    ws["A2"].alignment = ALIGN_CENTER
-    ws["A2"].fill = NAVY_SECONDARY
+    # Row 2: Subtitle (B2:last_col 2)
+    ws.merge_cells(f"B2:{last_col}2")
+    ws["B2"] = "(AUTONOMOUS) • ESTD 2001 | Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai"
+    ws["B2"].font = FONT_SUBTITLE
+    ws["B2"].alignment = ALIGN_CENTER
+    ws["B2"].fill = NAVY_SECONDARY
     ws.row_dimensions[2].height = 20
 
-    # Row 3: Department Context
-    ws.merge_cells(f"A3:{last_col}3")
-    ws["A3"] = dept_text.upper()
-    ws["A3"].font = Font(name=FONT_TNR, size=11, bold=True, color="1B365D")
-    ws["A3"].alignment = ALIGN_CENTER
-    ws["A3"].fill = SUB_FILL
+    # Row 3: Department Context (B3:last_col 3)
+    ws.merge_cells(f"B3:{last_col}3")
+    ws["B3"] = dept_text.upper()
+    ws["B3"].font = Font(name=FONT_TNR, size=11, bold=True, color="1B365D")
+    ws["B3"].alignment = ALIGN_CENTER
+    ws["B3"].fill = SUB_FILL
     ws.row_dimensions[3].height = 22
 
     # Row 4: Report Title
@@ -129,14 +137,21 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
     ws["A4"].alignment = ALIGN_CENTER
     ws.row_dimensions[4].height = 24
 
-    # College Emblem Image
+    # College Emblem Image (Placed in A1:A3 cleanly without overlapping text)
     logo_path = os.path.join(os.path.dirname(__file__), "..", "assets", "nandha_emblem.png")
     if os.path.exists(logo_path):
         try:
             from openpyxl.drawing.image import Image as OpenPyxlImage
             img = OpenPyxlImage(logo_path)
-            img.width = 52
-            img.height = 42
+            orig_w = getattr(img, "width", None)
+            orig_h = getattr(img, "height", None)
+            target_h = 64
+            if orig_w and orig_h and float(orig_h) > 0:
+                target_w = int(target_h * (float(orig_w) / float(orig_h)))
+            else:
+                target_w = 78
+            img.height = target_h
+            img.width = target_w
             ws.add_image(img, "A1")
         except Exception:
             pass
@@ -148,8 +163,8 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
         ws.merge_cells(f"A5:{last_col}5")
         ws["A5"] = meta_str
         ws["A5"].font = FONT_NOTE
-        ws["A5"].alignment = ALIGN_CENTER
-        ws.row_dimensions[5].height = 18
+        ws["A5"].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        ws.row_dimensions[5].height = 30
 
 def normalize_row_data(r: dict) -> dict:
     """Ensures deterministic binary Q1-Q4 (0 or 1) and exact solved calculation."""
@@ -372,7 +387,8 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         for c_i, v in enumerate(vals, 1):
             cell = ws2.cell(row=row_num, column=c_i, value=v)
             cell.font = FONT_BODY
-            cell.alignment = ALIGN_LEFT if c_i in (2, 3, 6) else (ALIGN_RIGHT if c_i in (8, 9, 10, 11) else ALIGN_CENTER)
+            # Center Align: S.No, Register No, Department, Year, Status, Q1-Q4, Solved. Left Align: Student Name, Username
+            cell.alignment = ALIGN_LEFT if c_i in (3, 6) else ALIGN_CENTER
             if r["is_att"] and c_i in (7, 12):
                 cell.font = FONT_SUCCESS
                 cell.fill = FILL_SUCCESS
@@ -380,70 +396,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         ws2.row_dimensions[row_num].height = 22
 
     ws2.auto_filter.ref = f"A{r2_hdr}:L{r2_hdr + tot_students}"
-    ws2.freeze_panes = "D8"
-
-    # 
-    # SHEET 3: HR CANDIDATE FINDER
-    # 
-    ws_hr = wb.create_sheet(title="HR Candidate Finder")
-    _write_college_header(ws_hr, "HR RECRUITMENT INTELLIGENCE & CANDIDATE FINDER", dept_header_text, 17, metadata_block)
-    
-    # Section Header Groups Row
-    ws_hr.merge_cells("A7:D7")
-    ws_hr["A7"] = "STUDENT IDENTITY"; ws_hr["A7"].font = FONT_TBL_HDR; ws_hr["A7"].fill = GRP_ID_FILL; ws_hr["A7"].alignment = ALIGN_CENTER
-    ws_hr.merge_cells("E7:H7")
-    ws_hr["E7"] = "CODING PERFORMANCE"; ws_hr["E7"].font = FONT_TBL_HDR; ws_hr["E7"].fill = GRP_SOLVE_FILL; ws_hr["E7"].alignment = ALIGN_CENTER
-    ws_hr.merge_cells("I7:L7")
-    ws_hr["I7"] = "CONTEST METRICS"; ws_hr["I7"].font = FONT_TBL_HDR; ws_hr["I7"].fill = GRP_CONTEST_FILL; ws_hr["I7"].alignment = ALIGN_CENTER
-    ws_hr.merge_cells("M7:N7")
-    ws_hr["M7"] = "READINESS"; ws_hr["M7"].font = FONT_TBL_HDR; ws_hr["M7"].fill = GRP_SCORE_FILL; ws_hr["M7"].alignment = ALIGN_CENTER
-    ws_hr.merge_cells("O7:Q7")
-    ws_hr["O7"] = "RISK & TREND"; ws_hr["O7"].font = FONT_TBL_HDR; ws_hr["O7"].fill = GRP_RISK_FILL; ws_hr["O7"].alignment = ALIGN_CENTER
-    ws_hr.row_dimensions[7].height = 22
-
-    hr_headers = [
-        "Rank", "Student Name", "Register No", "Department",
-        "Total Solved", "Easy", "Medium", "Hard",
-        "Acceptance %", "Contest Rating", "Global Rank", "Contests Attended",
-        "Performance Score", "Placement Readiness",
-        "Risk Level", "Trend", "Status"
-    ]
-    for c_i, h in enumerate(hr_headers, 1):
-        cell = ws_hr.cell(row=8, column=c_i, value=h)
-        cell.font = FONT_TBL_HDR
-        cell.fill = NAVY_SECONDARY
-        cell.alignment = ALIGN_CENTER
-        _apply_thin_border(cell)
-    ws_hr.row_dimensions[8].height = 28
-
-    hr_sorted = sorted(rows, key=lambda x: (-x["solved"], -x["score"], x["name"]))
-    for idx, r in enumerate(hr_sorted, 1):
-        row_num = 8 + idx
-        vals = [
-            idx, r["name"], r["reg_no"], r["dept"],
-            r["solved"], 1 if r["solved"] >= 1 else 0, 1 if r["solved"] >= 2 else 0, 1 if r["solved"] >= 4 else 0,
-            f"{r['acc_rate']:.1f}%", r["rating"], r["rank"], 1 if r["is_att"] else 0,
-            r["perf_score"], r["readiness"],
-            r["risk"], r["trend"], r["status"]
-        ]
-        for c_i, v in enumerate(vals, 1):
-            cell = ws_hr.cell(row=row_num, column=c_i, value=v)
-            cell.font = FONT_BODY_BOLD if c_i in (1, 2, 5, 13) else FONT_BODY
-            cell.alignment = ALIGN_LEFT if c_i in (2, 3, 4) else (ALIGN_RIGHT if c_i in (1, 5, 6, 7, 8, 9, 10, 11, 12, 13) else ALIGN_CENTER)
-            
-            if c_i in (14, 15):
-                if v in ("Ready", "Safe", "Placement Ready"):
-                    cell.fill = FILL_SUCCESS; cell.font = FONT_SUCCESS
-                elif v in ("Near Ready", "On Track", "Developing"):
-                    cell.fill = FILL_WARNING; cell.font = FONT_WARNING
-                else:
-                    cell.fill = FILL_RISK; cell.font = FONT_RISK
-
-            _apply_thin_border(cell)
-        ws_hr.row_dimensions[row_num].height = 22
-
-    ws_hr.auto_filter.ref = f"A8:Q{8 + tot_students}"
-    ws_hr.freeze_panes = "D9"
+    ws2.freeze_panes = "A8"
 
     # 
     # SHEET 4: CONTEST ATTENDANCE
@@ -471,7 +424,8 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         for c_i, v in enumerate([idx, r["reg_no"], r["name"], r["dept"], r["year"], r["username"], r["status"], live_str, virt_str, ev_label], 1):
             cell = ws3.cell(row=row_num, column=c_i, value=v)
             cell.font = FONT_BODY
-            cell.alignment = ALIGN_LEFT if c_i in (2, 3, 6, 10) else ALIGN_CENTER
+            # Center Align all except Student Name (3), Username (6), and Evidence Summary (10)
+            cell.alignment = ALIGN_LEFT if c_i in (3, 6, 10) else ALIGN_CENTER
             if c_i == 7:
                 cell.fill = FILL_SUCCESS if is_live else (FILL_WARNING if is_virt else FILL_RISK)
                 cell.font = FONT_SUCCESS if is_live else (FONT_WARNING if is_virt else FONT_RISK)
@@ -479,7 +433,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         ws3.row_dimensions[row_num].height = 22
 
     ws3.auto_filter.ref = f"A{r3_hdr}:J{r3_hdr + tot_students}"
-    ws3.freeze_panes = "D8"
+    ws3.freeze_panes = "A8"
 
     # 
     # SHEET 5: CONTEST PERFORMANCE MATRIX (BINARY Q1-Q4)
@@ -501,7 +455,8 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         for c_i, v in enumerate([idx, r["reg_no"], r["name"], r["dept"], r["year"], r["status"], r["q1"], r["q2"], r["q3"], r["q4"], r["solved_str"], r["score"]], 1):
             cell = ws4.cell(row=row_num, column=c_i, value=v)
             cell.font = FONT_BODY
-            cell.alignment = ALIGN_LEFT if c_i in (2, 3) else (ALIGN_RIGHT if c_i in (7, 8, 9, 10, 12) else ALIGN_CENTER)
+            # Center Align all except Student Name (3)
+            cell.alignment = ALIGN_LEFT if c_i == 3 else ALIGN_CENTER
             if r["is_att"] and c_i in (6, 11, 12):
                 cell.fill = FILL_SUCCESS
                 cell.font = FONT_SUCCESS
@@ -509,7 +464,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         ws4.row_dimensions[row_num].height = 22
 
     ws4.auto_filter.ref = f"A{r4_hdr}:L{r4_hdr + tot_students}"
-    ws4.freeze_panes = "D8"
+    ws4.freeze_panes = "A8"
 
     # 
     # SHEET 6: TOP PERFORMERS (RANK ORDER 4/4 -> 3/4 -> 2/4 -> 1/4)
@@ -533,14 +488,15 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
             for c_i, v in enumerate([idx, r["reg_no"], r["name"], r["dept"], r["year"], r["username"], r["q1"], r["q2"], r["q3"], r["q4"], r["solved_str"], r["score"]], 1):
                 cell = ws_t.cell(row=row_num, column=c_i, value=v)
                 cell.font = FONT_BODY
-                cell.alignment = ALIGN_LEFT if c_i in (2, 3, 6) else (ALIGN_RIGHT if c_i in (7, 8, 9, 10, 12) else ALIGN_CENTER)
+                # Center Align all except Student Name (3) and Username (6)
+                cell.alignment = ALIGN_LEFT if c_i in (3, 6) else ALIGN_CENTER
                 if c_i in (1, 11, 12):
                     cell.font = FONT_BODY_BOLD
                 _apply_thin_border(cell)
             ws_t.row_dimensions[row_num].height = 22
 
         ws_t.auto_filter.ref = f"A{rt_hdr}:L{rt_hdr + len(tier_rows)}"
-        ws_t.freeze_panes = "D8"
+        ws_t.freeze_panes = "A8"
 
     all_top_solvers = sorted(attended_rows, key=lambda x: (-x["solved"], -x["score"], x["dept"], x["name"]))
     render_tier_sheet("Top Performers", f"{contest_name.upper()} — TOP PERFORMERS LEADERBOARD (4/4 -> 3/4 -> 2/4 -> 1/4)", all_top_solvers)
@@ -551,269 +507,117 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     render_tier_sheet("2-4 Solvers", f"{contest_name.upper()} — 2/4 SOLVERS ({len(p_2)} STUDENTS)", p_2)
     render_tier_sheet("1-4 Solvers", f"{contest_name.upper()} — 1/4 SOLVERS ({len(p_1)} STUDENTS)", p_1)
 
-    # 
-    # SHEET 11: DEPARTMENT SUMMARY
-    # 
-    ws10 = wb.create_sheet(title="Department Summary")
-    _write_college_header(ws10, f"{contest_name.upper()} — DEPARTMENTS BREAKDOWN", dept_header_text, 11, metadata_block)
-    r10_hdr = 7
-    s10_headers = ["S.No", "Department Name", "Total Students", "Verified Attended", "Not Attended", "Attendance %", "Q1", "Q2", "Q3", "Q4", "Total Solves"]
-    for c_i, h in enumerate(s10_headers, 1):
-        cell = ws10.cell(row=r10_hdr, column=c_i, value=h)
-        cell.font = FONT_TBL_HDR
-        cell.fill = NAVY_PRIMARY
-        cell.alignment = ALIGN_CENTER
-        _apply_thin_border(cell)
-    ws10.row_dimensions[r10_hdr].height = 28
-
-    cur_r = r10_hdr + 1
-    sum_d_stud = sum_d_att = sum_d_not = sum_d_solves = 0
-    sum_q1 = sum_q2 = sum_q3 = sum_q4 = 0
-
-    depts_to_show = depts_present if len(depts_present) > 1 or len(rows) > 100 else OFFICIAL_DEPTS
-    for idx, d_name in enumerate(depts_to_show, 1):
-        d_list = dept_map.get(d_name, [])
-        d_tot = len(d_list)
-        d_att = sum(1 for r in d_list if r["is_att"])
-        d_not = d_tot - d_att
-        d_pct = (d_att / d_tot * 100) if d_tot > 0 else 0.0
-        d_q1 = sum(r["q1"] for r in d_list)
-        d_q2 = sum(r["q2"] for r in d_list)
-        d_q3 = sum(r["q3"] for r in d_list)
-        d_q4 = sum(r["q4"] for r in d_list)
-        d_solves = d_q1 + d_q2 + d_q3 + d_q4
-
-        sum_d_stud += d_tot
-        sum_d_att += d_att
-        sum_d_not += d_not
-        sum_q1 += d_q1
-        sum_q2 += d_q2
-        sum_q3 += d_q3
-        sum_q4 += d_q4
-        sum_d_solves += d_solves
-
-        vals = [idx, d_name, d_tot, d_att, d_not, f"{d_pct:.1f}%", d_q1, d_q2, d_q3, d_q4, d_solves]
-        for c_i, v in enumerate(vals, 1):
-            cell = ws10.cell(row=cur_r, column=c_i, value=v)
-            cell.font = FONT_BODY
-            cell.alignment = ALIGN_LEFT if c_i == 2 else (ALIGN_RIGHT if c_i in (3, 4, 5, 6, 7, 8, 9, 10, 11) else ALIGN_CENTER)
-            _apply_thin_border(cell)
-        ws10.row_dimensions[cur_r].height = 22
-        cur_r += 1
-
-    # Total Row
-    ws10.cell(row=cur_r, column=1, value="")
-    tot_cell = ws10.cell(row=cur_r, column=2, value="TOTAL IN SCOPE")
-    tot_cell.font = FONT_BODY_BOLD
-    tot_cell.alignment = ALIGN_LEFT
-    tot_cell.fill = SUB_FILL
-    _apply_thin_border(tot_cell)
-    tot_vals = [sum_d_stud, sum_d_att, sum_d_not, f"{(sum_d_att/max(1,sum_d_stud)*100):.1f}%", sum_q1, sum_q2, sum_q3, sum_q4, sum_d_solves]
-    for c_i, v in enumerate(tot_vals, 3):
-        cell = ws10.cell(row=cur_r, column=c_i, value=v)
-        cell.font = FONT_NUMERIC_BOLD
-        cell.alignment = ALIGN_RIGHT
-        cell.fill = SUB_FILL
-        _apply_thin_border(cell)
-    ws10.row_dimensions[cur_r].height = 24
-    ws10.freeze_panes = "A8"
-
-    # 
-    # SHEET 12: DEPARTMENT TOP PERFORMERS
-    # 
-    ws11 = wb.create_sheet(title="Department Top Performers")
-    _write_college_header(ws11, f"{contest_name.upper()} — DEPARTMENT TOP PERFORMERS", dept_header_text, 10, metadata_block)
-    r11_cur = 7
-    for d_name in (depts_present if len(depts_present) > 1 or len(rows) > 100 else OFFICIAL_DEPTS):
-        d_att_list = [r for r in dept_map.get(d_name, []) if r["is_att"]]
-        d_att_list.sort(key=lambda x: (-x["solved"], -x["score"], x["name"]))
-
-        ws11.merge_cells(f"A{r11_cur}:J{r11_cur}")
-        c_dh = ws11[f"A{r11_cur}"]
-        c_dh.value = f"DEPARTMENT OF {d_name} — TOP PERFORMERS ({len(d_att_list)} VERIFIED SOLVERS)"
-        c_dh.font = FONT_SECTION_BANNER
-        c_dh.fill = NAVY_PRIMARY
-        c_dh.alignment = ALIGN_LEFT
-        _apply_thin_border(c_dh)
-        r11_cur += 1
-
-        d_hdrs = ["Rank", "Student Name", "Register No", "Year", "Q1", "Q2", "Q3", "Q4", "Solved", "Score"]
-        for c_i, h in enumerate(d_hdrs, 1):
-            cell = ws11.cell(row=r11_cur, column=c_i, value=h)
+    if len(depts_present) > 1:
+        # 
+        # SHEET 11: DEPARTMENT SUMMARY
+        # 
+        ws10 = wb.create_sheet(title="Department Summary")
+        _write_college_header(ws10, f"{contest_name.upper()} — DEPARTMENTS BREAKDOWN", dept_header_text, 11, metadata_block)
+        r10_hdr = 7
+        s10_headers = ["S.No", "Department Name", "Total Students", "Verified Attended", "Not Attended", "Attendance %", "Q1", "Q2", "Q3", "Q4", "Total Solves"]
+        for c_i, h in enumerate(s10_headers, 1):
+            cell = ws10.cell(row=r10_hdr, column=c_i, value=h)
             cell.font = FONT_TBL_HDR
-            cell.fill = NAVY_SECONDARY
+            cell.fill = NAVY_PRIMARY
             cell.alignment = ALIGN_CENTER
             _apply_thin_border(cell)
-        r11_cur += 1
+        ws10.row_dimensions[r10_hdr].height = 28
 
-        if not d_att_list:
+        cur_r = r10_hdr + 1
+        sum_d_stud = sum_d_att = sum_d_not = sum_d_solves = 0
+        sum_q1 = sum_q2 = sum_q3 = sum_q4 = 0
+
+        depts_to_show = depts_present if len(depts_present) > 1 or len(rows) > 100 else OFFICIAL_DEPTS
+        for idx, d_name in enumerate(depts_to_show, 1):
+            d_list = dept_map.get(d_name, [])
+            d_tot = len(d_list)
+            d_att = sum(1 for r in d_list if r["is_att"])
+            d_not = d_tot - d_att
+            d_pct = (d_att / d_tot * 100) if d_tot > 0 else 0.0
+            d_q1 = sum(r["q1"] for r in d_list)
+            d_q2 = sum(r["q2"] for r in d_list)
+            d_q3 = sum(r["q3"] for r in d_list)
+            d_q4 = sum(r["q4"] for r in d_list)
+            d_solves = d_q1 + d_q2 + d_q3 + d_q4
+
+            sum_d_stud += d_tot
+            sum_d_att += d_att
+            sum_d_not += d_not
+            sum_q1 += d_q1
+            sum_q2 += d_q2
+            sum_q3 += d_q3
+            sum_q4 += d_q4
+            sum_d_solves += d_solves
+
+            vals = [idx, d_name, d_tot, d_att, d_not, f"{d_pct:.1f}%", d_q1, d_q2, d_q3, d_q4, d_solves]
+            for c_i, v in enumerate(vals, 1):
+                cell = ws10.cell(row=cur_r, column=c_i, value=v)
+                cell.font = FONT_BODY
+                cell.alignment = ALIGN_LEFT if c_i == 2 else ALIGN_CENTER
+                _apply_thin_border(cell)
+            ws10.row_dimensions[cur_r].height = 22
+            cur_r += 1
+
+        # Total Row
+        ws10.cell(row=cur_r, column=1, value="")
+        tot_cell = ws10.cell(row=cur_r, column=2, value="TOTAL IN SCOPE")
+        tot_cell.font = FONT_BODY_BOLD
+        tot_cell.alignment = ALIGN_LEFT
+        tot_cell.fill = SUB_FILL
+        _apply_thin_border(tot_cell)
+        tot_vals = [sum_d_stud, sum_d_att, sum_d_not, f"{(sum_d_att/max(1,sum_d_stud)*100):.1f}%", sum_q1, sum_q2, sum_q3, sum_q4, sum_d_solves]
+        for c_i, v in enumerate(tot_vals, 3):
+            cell = ws10.cell(row=cur_r, column=c_i, value=v)
+            cell.font = FONT_NUMERIC_BOLD
+            cell.alignment = ALIGN_CENTER
+            cell.fill = SUB_FILL
+            _apply_thin_border(cell)
+        ws10.row_dimensions[cur_r].height = 24
+        ws10.freeze_panes = "A8"
+
+        # 
+        # SHEET 12: DEPARTMENT TOP PERFORMERS
+        # 
+        ws11 = wb.create_sheet(title="Department Top Performers")
+        _write_college_header(ws11, f"{contest_name.upper()} — DEPARTMENT TOP PERFORMERS", dept_header_text, 10, metadata_block)
+        r11_cur = 7
+        target_depts = [d for d in (depts_present if depts_present else OFFICIAL_DEPTS) if dept_map.get(d)]
+        for d_name in target_depts:
+            d_att_list = [r for r in dept_map.get(d_name, []) if r["is_att"]]
+            d_att_list.sort(key=lambda x: (-x["solved"], -x["score"], x["name"]))
+
+            if not d_att_list:
+                continue
+
             ws11.merge_cells(f"A{r11_cur}:J{r11_cur}")
-            c_empty = ws11[f"A{r11_cur}"]
-            c_empty.value = f"No verified contest solvers recorded for {d_name}."
-            c_empty.font = FONT_NOTE
-            c_empty.alignment = ALIGN_CENTER
-            _apply_thin_border(c_empty)
-            r11_cur += 2
-        else:
+            c_dh = ws11[f"A{r11_cur}"]
+            c_dh.value = f"DEPARTMENT OF {d_name} — TOP PERFORMERS ({len(d_att_list)} VERIFIED SOLVERS)"
+            c_dh.font = FONT_SECTION_BANNER
+            c_dh.fill = NAVY_PRIMARY
+            c_dh.alignment = ALIGN_LEFT
+            _apply_thin_border(c_dh)
+            r11_cur += 1
+
+            d_hdrs = ["Rank", "Student Name", "Register No", "Year", "Q1", "Q2", "Q3", "Q4", "Solved", "Score"]
+            for c_i, h in enumerate(d_hdrs, 1):
+                cell = ws11.cell(row=r11_cur, column=c_i, value=h)
+                cell.font = FONT_TBL_HDR
+                cell.fill = NAVY_SECONDARY
+                cell.alignment = ALIGN_CENTER
+                _apply_thin_border(cell)
+            r11_cur += 1
+
             for r_i, s in enumerate(d_att_list[:15], 1):
                 vals = [r_i, s["name"], s["reg_no"], s["year"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved_str"], s["score"]]
                 for c_i, v in enumerate(vals, 1):
                     cell = ws11.cell(row=r11_cur, column=c_i, value=v)
                     cell.font = FONT_BODY
-                    cell.alignment = ALIGN_LEFT if c_i in (2, 3) else (ALIGN_RIGHT if c_i in (5, 6, 7, 8, 10) else ALIGN_CENTER)
+                    cell.alignment = ALIGN_LEFT if c_i == 2 else ALIGN_CENTER
                     _apply_thin_border(cell)
                 r11_cur += 1
             r11_cur += 1
 
-    ws11.freeze_panes = "A8"
-
-    # 
-    # SHEET 13: DIFFICULTY ANALYSIS
-    # 
-    ws_diff = wb.create_sheet(title="Difficulty Analysis")
-    _write_college_header(ws_diff, f"{contest_name.upper()} — CODING DIFFICULTY ANALYSIS", dept_header_text, 5, metadata_block)
-    
-    ws_diff.merge_cells("A7:E7")
-    ws_diff["A7"] = "PROBLEM DIFFICULTY BREAKDOWN & BENCHMARK SUMMARY"
-    ws_diff["A7"].font = FONT_SECTION_BANNER
-    ws_diff["A7"].fill = NAVY_PRIMARY
-    ws_diff["A7"].alignment = ALIGN_CENTER
-    ws_diff.row_dimensions[7].height = 24
-
-    diff_hdrs = ["Difficulty Level", "Total Solved", "Share (%)", "Avg Solved / Student", "Institutional Target"]
-    for c_i, h in enumerate(diff_hdrs, 1):
-        cell = ws_diff.cell(row=8, column=c_i, value=h)
-        cell.font = FONT_TBL_HDR
-        cell.fill = NAVY_SECONDARY
-        cell.alignment = ALIGN_CENTER
-        _apply_thin_border(cell)
-    ws_diff.row_dimensions[8].height = 26
-
-    tot_all_solv = max(1, total_solves)
-    diff_data = [
-        ("Easy Level (Q1)", q1_solves, round((q1_solves / tot_all_solv) * 100, 1), round(q1_solves / max(1, tot_students), 2), "100% Solved"),
-        ("Medium Level (Q2 + Q3)", q2_solves + q3_solves, round(((q2_solves + q3_solves) / tot_all_solv) * 100, 1), round((q2_solves + q3_solves) / max(1, tot_students), 2), "50%+ Target"),
-        ("Hard Level (Q4)", q4_solves, round((q4_solves / tot_all_solv) * 100, 1), round(q4_solves / max(1, tot_students), 2), "15%+ Target"),
-        ("Total Problems Solved", total_solves, 100.0, round(total_solves / max(1, tot_students), 2), "Continuous Growth")
-    ]
-    for idx, (lbl, cnt, pct, avg_s, target) in enumerate(diff_data, 9):
-        row_vals = [lbl, f"{cnt:,}", f"{pct:.1f}%", f"{avg_s:.2f}", target]
-        for c_i, v in enumerate(row_vals, 1):
-            cell = ws_diff.cell(row=idx, column=c_i, value=v)
-            cell.font = FONT_BODY_BOLD if idx == 12 or c_i == 1 else FONT_BODY
-            cell.alignment = ALIGN_LEFT if c_i in (1, 5) else ALIGN_RIGHT
-            cell.border = _THIN_BORDER
-            if idx == 12: cell.fill = SUB_FILL
-        ws_diff.row_dimensions[idx].height = 22
-
-    ws_diff.freeze_panes = "A9"
-
-    # 
-    # SHEET 14: DATA QUALITY & AUDIT
-    # 
-    ws_audit = wb.create_sheet(title="Data Quality & Audit")
-    _write_college_header(ws_audit, f"{contest_name.upper()} — AUDIT TELEMETRY & QUALITY CHECKS", dept_header_text, 6, metadata_block)
-
-    serialized_dataset = json.dumps([
-        {"reg_no": r["reg_no"], "q1": r["q1"], "q2": r["q2"], "q3": r["q3"], "q4": r["q4"], "solved": r["solved"], "score": r["score"]}
-        for r in sorted(rows, key=lambda x: x["reg_no"])
-    ], sort_keys=True)
-    dataset_sha256 = hashlib.sha256(serialized_dataset.encode("utf-8")).hexdigest()
-
-    virt_attended = sum(1 for r in rows if r.get("is_virtual") or r.get("status") == "VIRTUAL")
-    live_attended = tot_attended - virt_attended
-    data_errors = sum(1 for r in rows if r.get("status") in ("DATA_ERROR", "USERNAME_NOT_FOUND", "FETCH_ERROR"))
-
-    audit_entries = [
-        ("Total Students Evaluated", f"{tot_students:,}", "PASS", "Complete cohort snapshot scanned"),
-        ("Register Number Uniqueness", "PASS (0 Duplicates)", "PASS", "100% unique register keys"),
-        ("Department Validation", "PASS (100% Validated)", "PASS", "All register patterns mapped"),
-        ("Live Contest Attendance", f"{live_attended:,} Verified", "PASS", "Confirmed official window participation"),
-        ("Virtual Contest Attendance", f"{virt_attended:,} Verified", "WARNING" if virt_attended > 0 else "PASS", "Practice window evidence detected"),
-        ("Binary Solved Constraints", "PASS (Q1..Q4 in {0,1})", "PASS", "Deterministic binary scores enforced"),
-        ("Mathematical Integrity", "PASS (Solved == Sum Q1..Q4)", "PASS", "Zero calculation discrepancies"),
-        ("SHA-256 Checksum", dataset_sha256, "PASS", "Cryptographic immutable record hash"),
-        ("Data Freshness", gen_time_str, "PASS", "Authoritative backend timestamp")
-    ]
-
-    r_aud = 7
-    ws_audit.merge_cells(f"A{r_aud}:F{r_aud}")
-    ws_audit[f"A{r_aud}"] = "INSTITUTIONAL DATA INTEGRITY TELEMETRY"
-    ws_audit[f"A{r_aud}"].font = FONT_SECTION_BANNER
-    ws_audit[f"A{r_aud}"].fill = NAVY_PRIMARY
-    ws_audit[f"A{r_aud}"].alignment = ALIGN_CENTER
-    ws_audit.row_dimensions[r_aud].height = 24
-
-    aud_hdrs = ["Audit Metric", "Telemetry Value", "Status", "Validation Note"]
-    for c_i, h in enumerate(aud_hdrs, 1):
-        cell = ws_audit.cell(row=8, column=c_i, value=h)
-        cell.font = FONT_TBL_HDR
-        cell.fill = NAVY_SECONDARY
-        cell.alignment = ALIGN_CENTER
-        _apply_thin_border(cell)
-    ws_audit.row_dimensions[8].height = 26
-
-    for idx, (m_lbl, m_val, m_status, m_note) in enumerate(audit_entries, 9):
-        cell_lbl = ws_audit.cell(row=idx, column=1, value=m_lbl)
-        cell_val = ws_audit.cell(row=idx, column=2, value=m_val)
-        cell_stat = ws_audit.cell(row=idx, column=3, value=m_status)
-        cell_note = ws_audit.cell(row=idx, column=4, value=m_note)
-
-        cell_lbl.font = FONT_BODY_BOLD; cell_lbl.alignment = ALIGN_LEFT
-        cell_val.font = Font(name="Consolas" if "SHA-256" in m_lbl else FONT_TNR, size=9.5, bold=True)
-        cell_val.alignment = ALIGN_LEFT
-        
-        cell_stat.font = FONT_SUCCESS if m_status == "PASS" else FONT_WARNING
-        cell_stat.fill = FILL_SUCCESS if m_status == "PASS" else FILL_WARNING
-        cell_stat.alignment = ALIGN_CENTER
-
-        cell_note.font = FONT_NOTE; cell_note.alignment = ALIGN_LEFT
-
-        for c in (cell_lbl, cell_val, cell_stat, cell_note):
-            _apply_thin_border(c)
-        ws_audit.row_dimensions[idx].height = 22
-
-    ws_audit.freeze_panes = "A9"
-
-    # 
-    # SHEET 15: METHODOLOGY & DOCUMENTATION
-    # 
-    ws_meth = wb.create_sheet(title="Methodology")
-    _write_college_header(ws_meth, "INSTITUTIONAL METRICS & METHODOLOGY REFERENCE", dept_header_text, 5, metadata_block)
-
-    ws_meth.merge_cells("A7:E7")
-    ws_meth["A7"] = "ANALYTICAL FRAMEWORK & DEFINITIONS"
-    ws_meth["A7"].font = FONT_SECTION_BANNER
-    ws_meth["A7"].fill = NAVY_PRIMARY
-    ws_meth["A7"].alignment = ALIGN_CENTER
-    ws_meth.row_dimensions[7].height = 24
-
-    meth_sections = [
-        ("DATA SOURCE", "Official LeetCode GraphQL API telemetry & institutional register mappings."),
-        ("BINARY PROBLEM EVALUATION", "Q1..Q4 solved indicators are strictly binary (1 = Accepted during session, 0 = Unsolved/Absent)."),
-        ("CONTEST SCORE FORMULA", "Contest Score = (Q1 * 3) + (Q2 * 4) + (Q3 * 5) + (Q4 * 6). Maximum possible score = 18."),
-        ("PERFORMANCE SCORE", "Performance Score (0–100) = 40% Solved Count + 30% Contest Score + 20% Acceptance Rate + 10% Rating."),
-        ("PLACEMENT READINESS BANDS", "Ready (Score >= 80 or Solved >= 3) | On Track (Score >= 60) | Developing (Score >= 35) | High Risk (Score < 35)."),
-        ("RISK CLASSIFICATION", "High Risk: Solved == 0 or Absent | At Risk: Solved == 1 | Safe: Solved >= 2."),
-        ("MISSING DATA POLICY", "Missing contest ratings or ranks are explicitly formatted as '—' rather than zero to preserve analytical validity.")
-    ]
-
-    for idx, (sec_title, sec_desc) in enumerate(meth_sections, 8):
-        c_t = ws_meth.cell(row=idx, column=1, value=sec_title)
-        c_t.font = FONT_BODY_BOLD
-        c_t.fill = SUB_FILL
-        c_t.alignment = ALIGN_LEFT
-        _apply_thin_border(c_t)
-
-        ws_meth.merge_cells(start_row=idx, start_column=2, end_row=idx, end_column=5)
-        c_d = ws_meth.cell(row=idx, column=2, value=sec_desc)
-        c_d.font = FONT_BODY
-        c_d.alignment = ALIGN_LEFT
-        for col_i in range(2, 6):
-            _apply_thin_border(ws_meth.cell(row=idx, column=col_i))
-        ws_meth.row_dimensions[idx].height = 24
-
-    ws_meth.freeze_panes = "A8"
+        ws11.freeze_panes = "A8"
 
     # 
     # GLOBAL COLUMN WIDTH & SCROLLING FINALIZE
@@ -824,16 +628,30 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
             max_len = 0
             for cell in col:
                 val_s = str(cell.value or "")
-                if len(val_s) > max_len and len(val_s) < 60:
+                # Avoid title block lines in length calculation
+                if cell.row > 6 and len(val_s) > max_len and len(val_s) < 60:
                     max_len = len(val_s)
             
-            # Minimum column widths to guarantee zero text clipping
-            min_w = 12
-            if col_letter in ("A", "H", "I", "J", "K"): min_w = 10
-            elif col_letter in ("B", "C"): min_w = 20
-            elif col_letter == "D": min_w = 18
-            
-            ws_item.column_dimensions[col_letter].width = max(min_w, min(max_len + 4, 45))
+            # Explicit column widths matching optimal layout
+            if col_letter == "A":
+                ws_item.column_dimensions[col_letter].width = 8
+            elif col_letter == "B":
+                ws_item.column_dimensions[col_letter].width = 16  # Exact fit for Register No (e.g. 732224CC007)
+            elif col_letter == "C":
+                ws_item.column_dimensions[col_letter].width = 26  # Student Name
+            elif col_letter == "D":
+                ws_item.column_dimensions[col_letter].width = 14  # Dept
+            elif col_letter == "E":
+                ws_item.column_dimensions[col_letter].width = 10  # Year
+            elif col_letter == "F":
+                ws_item.column_dimensions[col_letter].width = 22  # Username / Status
+            elif col_letter in ("G", "H", "I"):
+                ws_item.column_dimensions[col_letter].width = 10
+            elif col_letter == "J":
+                # Evidence Summary on Attendance sheet needs wider column (42)
+                ws_item.column_dimensions[col_letter].width = 42 if "Attendance" in ws_item.title else 10
+            else:
+                ws_item.column_dimensions[col_letter].width = max(10, min(max_len + 4, 36))
 
     output = io.BytesIO()
     wb.save(output)

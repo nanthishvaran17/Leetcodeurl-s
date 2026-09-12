@@ -45,16 +45,112 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
   const { data: summary } = useSummaryQuery();
   const { data: rawDepartments } = useDepartmentsQuery();
-  const departments = useMemo(() => {
-    if (Array.isArray(rawDepartments)) return rawDepartments;
-    if (Array.isArray((rawDepartments as any)?.departments)) return (rawDepartments as any).departments;
-    if (Array.isArray((rawDepartments as any)?.data)) return (rawDepartments as any).data;
-    return [];
-  }, [rawDepartments]);
   const { data: dataQuality } = useDataQualityQuery();
   const { data: systemHealth } = useSystemHealthQuery();
   const { data: syncStatus } = useSyncStatusQuery();
   const { data: students = [], isLoading: studentsLoading, isError: studentsError, refetch: refetchStudents } = useStudentsQuery();
+
+  const departments = useMemo(() => {
+    let list: any[] = [];
+    if (Array.isArray(rawDepartments)) list = rawDepartments;
+    else if (Array.isArray((rawDepartments as any)?.departments)) list = (rawDepartments as any).departments;
+    else if (Array.isArray((rawDepartments as any)?.data)) list = (rawDepartments as any).data;
+
+    if (!list || list.length === 0) return list;
+
+    // Normalize department strings/objects into canonical keys
+    const normalizeDeptKey = (deptInput: any): string => {
+      if (!deptInput) return '';
+      const str = typeof deptInput === 'string'
+        ? deptInput
+        : `${deptInput.code || deptInput.department_code || ''} ${deptInput.name || deptInput.department_name || ''}`;
+      const clean = str.trim().toUpperCase();
+      if (!clean) return '';
+      if (clean.includes('CYBER') || clean.includes('CSE(CS)') || clean.includes('CSE-CS') || clean.includes('CSE (CS)')) return 'CSE(CS)';
+      if (clean.includes('IOT') || clean.includes('CSE(IOT)') || clean.includes('CSE-IOT') || clean.includes('CSE (IOT)')) return 'CSE(IOT)';
+      if (clean.includes('AIDS') || clean.includes('AI & DS') || clean.includes('ARTIFICIAL INTELLIGENCE')) return 'AIDS';
+      if (clean.includes('AGRI')) return 'AGRI';
+      if (clean.includes('ECE') || clean.includes('ELECTRONICS & COMM')) return 'ECE';
+      if (clean.includes('EEE') || clean.includes('ELECTRICAL & ELECT')) return 'EEE';
+      if (clean.includes('IT') || clean.includes('INFORMATION TECH')) return 'IT';
+      if (clean.includes('CSE') || clean.includes('COMPUTER SCIENCE')) return 'CSE';
+      return clean;
+    };
+
+    // Dynamically aggregate department metrics from live student roster
+    const deptStats: Record<string, {
+      total: number;
+      active: number;
+      totalSolved: number;
+      topStudent: any;
+      topScore: number;
+    }> = {};
+
+    (students || []).forEach((s: any) => {
+      const codeKey = normalizeDeptKey(s.department?.code || s.department_code || s.dept_code || s.department);
+      if (!codeKey) return;
+
+      if (!deptStats[codeKey]) {
+        deptStats[codeKey] = {
+          total: 0,
+          active: 0,
+          totalSolved: 0,
+          topStudent: null,
+          topScore: -1,
+        };
+      }
+
+      const d = deptStats[codeKey];
+      d.total += 1;
+
+      const solved = Number(s.stats?.total_solved ?? (s as any).total_solved ?? 0);
+      const rating = Number(s.stats?.contest_rating ?? (s as any).contest_rating ?? 0);
+      const syncStatus = String(s.stats?.sync_status || '').toLowerCase();
+      const status = String(s.stats?.status || s.status || '').toLowerCase();
+      const hasUsername = Boolean(s.username && String(s.username).trim());
+
+      const isActive = hasUsername && (status === 'verified' || syncStatus === 'success' || solved > 0);
+      if (isActive) {
+        d.active += 1;
+      }
+
+      d.totalSolved += solved;
+
+      const score = rating > 0 ? (rating * 100000) + solved : solved;
+      if (score > d.topScore) {
+        d.topScore = score;
+        d.topStudent = s;
+      }
+    });
+
+    return list.map((dept: any) => {
+      const codeKey = normalizeDeptKey(dept);
+      const ds = deptStats[codeKey];
+
+      const totalStudents = ds ? ds.total : (dept.total_students || 0);
+      const activeStudents = ds ? ds.active : (dept.active_students ?? dept.active_count ?? 0);
+      const partRate = totalStudents > 0 ? Math.round((activeStudents / totalStudents) * 10000) / 100 : (dept.participation_rate || 0);
+
+      const rawAvg = ds && totalStudents > 0 ? (ds.totalSolved / totalStudents) : (dept.avg_solved || 0);
+      // Capped out of 100 max score as requested ("only give to out of 100")
+      const avgSolvedCapped = Math.min(100, Math.round(rawAvg * 10) / 10);
+
+      const topStudentName = ds?.topStudent?.name || ds?.topStudent?.student_name || dept.top_student_name || dept.top_performer?.name || '—';
+      const topStudentId = ds?.topStudent?.id || dept.top_student_id || dept.top_performer?.id || null;
+
+      return {
+        ...dept,
+        total_students: totalStudents,
+        active_students: activeStudents,
+        active_count: activeStudents,
+        participation_rate: partRate,
+        avg_solved: avgSolvedCapped,
+        raw_avg_solved: Math.round(rawAvg * 10) / 10,
+        top_student_name: topStudentName,
+        top_student_id: topStudentId,
+      };
+    });
+  }, [rawDepartments, students]);
 
   const loading = contextLoading || studentsLoading;
 
@@ -248,14 +344,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       const qParam = getFilterQueryParams();
       const deptSlug = department && department !== 'ALL' ? `_${department}` : '';
       const yearSlug = academicYear && academicYear !== 'ALL' ? `_${academicYear}Yr` : '';
-      const filename = `NEC_Master_Report${deptSlug}${yearSlug}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      const filename = `Weekly_LeetCode_Master_Report${deptSlug}${yearSlug}_${new Date().toISOString().slice(0, 10)}.xlsx`;
       const res = await downloadManager.download({
-        endpoint: `/reports/export-official-college-summary${qParam}`,
+        endpoint: `/reports/download${qParam}`,
         filename,
         mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       });
       if (res.success) {
-        notify.success('Excel Workbook Downloaded', 'Weekly Contest workbook downloaded successfully.', { category: 'REPORTS' });
+        notify.success('Master 10-Sheet Excel Workbook Downloaded', 'Weekly LeetCode Master Workbook downloaded successfully.', { category: 'REPORTS' });
       } else {
         notify.error('Unable to generate report', res.error || 'Please try again.', { category: 'REPORTS' });
       }
@@ -280,18 +376,30 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
   filteredStudents.forEach(st => {
     const s = st.stats;
-    const hasValidProfile = s && s.sync_status === 'success' && s.status === 'verified' && s.total_solved !== null;
-    if (hasValidProfile) {
+    const solved = Number(s?.total_solved ?? (st as any).total_solved ?? 0);
+    const syncStatus = String(s?.sync_status || '').toLowerCase();
+    const status = String(s?.status || st.status || '').toLowerCase();
+    const hasUsername = Boolean(st.username && String(st.username).trim());
+
+    // Verified / Active student check: Has username and status is verified/success OR solved > 0
+    const isVerifiedOrActive = hasUsername && (
+      status === 'verified' ||
+      syncStatus === 'success' ||
+      solved > 0
+    );
+
+    if (isVerifiedOrActive) {
       activeStudents++;
       validProfiles++;
     }
-    const isMissingLink = !st.username || !String(st.username).trim() || (s && (s.sync_status === 'pending_username' || s.status === 'PENDING_USERNAME'));
+
+    const isMissingLink = !hasUsername || syncStatus === 'pending_username' || status === 'pending_username';
     if (isMissingLink) {
       missingLinks++;
     }
   });
 
-  const notStartedStudents = totalStudents - activeStudents;
+  const notStartedStudents = Math.max(0, totalStudents - activeStudents);
   const participationRate = totalStudents > 0 ? ((activeStudents / totalStudents) * 100).toFixed(1) : "0";
   const healthScorePercentage = totalStudents > 0 ? Math.round(((totalStudents - missingLinks) / totalStudents) * 100) : 100;
 
@@ -571,7 +679,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <span className="text-base text-slate-900 dark:text-white">
                 {loading
                   ? <span className="inline-block w-10 h-4 bg-slate-200 dark:bg-navy-700 rounded animate-pulse" />
-                  : (canonicalTotal ?? totalStudents).toLocaleString()}
+                  : totalStudents.toLocaleString()}
               </span>
             </div>
           </div>
@@ -716,9 +824,17 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     <div className="flex items-center justify-between pt-1 gap-2">
                       <div className="text-xs min-w-0 flex-1">
                         <span className="text-[10px] text-slate-400 font-bold uppercase block">Top Performer</span>
-                        <span className="font-bold text-amber-600 dark:text-amber-400 truncate block">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (dept.top_student_id && onSelectStudent) {
+                              onSelectStudent(dept.top_student_id);
+                            }
+                          }}
+                          className={`font-bold text-amber-600 dark:text-amber-400 truncate block text-left ${dept.top_student_id && onSelectStudent ? 'hover:underline cursor-pointer' : ''}`}
+                        >
                           {dept.top_student_name || '—'}
-                        </span>
+                        </button>
                       </div>
                       <button
                         onClick={() => onNavigateTab('departments')}
@@ -733,15 +849,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
             {/* DESKTOP MATRIX TABLE (>= 768px) */}
             <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-left text-xs whitespace-nowrap">
+              <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 dark:border-navy-700 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
-                    <th className="py-3 px-4 font-extrabold">Department</th>
-                    <th className="py-3 px-4 font-extrabold">Students</th>
-                    <th className="py-3 px-4 font-extrabold">Active</th>
-                    <th className="py-3 px-4 font-extrabold">Participation</th>
-                    <th className="py-3 px-4 font-extrabold">Avg Solved</th>
-                    <th className="py-3 px-4 font-extrabold text-right">Top Performer</th>
+                  <tr className="border-b border-slate-200 dark:border-navy-700 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[11px]">
+                    <th className="py-2.5 px-3.5 font-extrabold text-left">Department</th>
+                    <th className="py-2.5 px-3.5 font-extrabold text-center" title="Total enrolled students in this department">Students</th>
+                    <th className="py-2.5 px-3.5 font-extrabold text-center" title="Students with active verified LeetCode profiles">Active</th>
+                    <th className="py-2.5 px-3.5 font-extrabold text-center" title="Percentage of active students out of total enrolled">Participation</th>
+                    <th className="py-2.5 px-3.5 font-extrabold text-center cursor-help" title="Average LeetCode problems solved per enrolled student in this department">Avg Solved</th>
+                    <th className="py-2.5 px-3.5 font-extrabold text-right" title="Top student by LeetCode contest rating & problems solved">Top Performer</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-navy-800">
@@ -760,30 +876,41 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     })
                     .map((dept) => (
                       <tr key={dept.department_code || dept.department_id} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors">
-                        <td className="py-3 px-4">
+                        <td className="py-2.5 px-3.5">
                           <div className="font-black text-slate-900 dark:text-white">{dept.department_code}</div>
-                          <div className="text-[10px] text-slate-500 truncate max-w-[200px]">{dept.department_name}</div>
+                          <div className="text-[10px] text-slate-500 truncate max-w-[180px]">{dept.department_name}</div>
                         </td>
-                        <td className="py-3 px-4 font-medium text-slate-600 dark:text-slate-300">{dept.total_students}</td>
-                        <td className="py-3 px-4 font-medium text-emerald-600 dark:text-emerald-400">{dept.active_students ?? dept.active_count ?? Math.round(((dept.participation_rate || 0) / 100) * dept.total_students)}</td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center space-x-2">
-                            <div className="w-16 h-1.5 bg-slate-200 dark:bg-navy-700 rounded-full overflow-hidden">
+                        <td className="py-2.5 px-3.5 font-medium text-slate-600 dark:text-slate-300 text-center">{dept.total_students}</td>
+                        <td className="py-2.5 px-3.5 font-medium text-emerald-600 dark:text-emerald-400 text-center">{dept.active_students ?? dept.active_count ?? Math.round(((dept.participation_rate || 0) / 100) * dept.total_students)}</td>
+                        <td className="py-2.5 px-3.5 text-center">
+                          <div className="flex items-center justify-center space-x-2">
+                            <div className="w-14 h-1.5 bg-slate-200 dark:bg-navy-700 rounded-full overflow-hidden">
                               <div style={{ width: `${dept.participation_rate}%` }} className="h-full bg-indigo-500 rounded-full"></div>
                             </div>
-                            <span className="font-bold text-slate-700 dark:text-slate-300">{dept.participation_rate}%</span>
+                            <span className="font-bold text-slate-700 dark:text-slate-300 text-[11px]">{dept.participation_rate}%</span>
                           </div>
                         </td>
-                        <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">{dept.avg_solved}</td>
-                        <td className="py-3 px-4 text-right">
+                        <td className="py-2.5 px-3.5 font-bold text-slate-900 dark:text-white text-center">{dept.avg_solved}</td>
+                        <td className="py-2.5 px-3.5 text-right">
                           {dept.top_student_name ? (
-                            <div className="flex items-center justify-end space-x-2">
-                              <span className="font-bold text-amber-600 dark:text-amber-400">{dept.top_student_name}</span>
+                            <div className="flex items-center justify-end space-x-1.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (dept.top_student_id && onSelectStudent) {
+                                    onSelectStudent(dept.top_student_id);
+                                  }
+                                }}
+                                className={`font-bold text-amber-600 dark:text-amber-400 ${dept.top_student_id && onSelectStudent ? 'hover:text-amber-700 dark:hover:text-amber-300 hover:underline cursor-pointer' : ''}`}
+                                title={dept.top_student_id && onSelectStudent ? `Click to view profile of ${dept.top_student_name}` : dept.top_student_name}
+                              >
+                                {dept.top_student_name}
+                              </button>
                               {dept.top_student_id && (
                                 <button
                                   onClick={() => handleSingleStudentRefresh(dept.top_student_id, dept.top_student_name)}
                                   disabled={refreshingStudentId === dept.top_student_id}
-                                  className="p-1 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-navy-700 dark:hover:bg-navy-600 text-slate-500 transition-colors disabled:opacity-50"
+                                  className="p-1 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-navy-700 dark:hover:bg-navy-600 text-slate-500 transition-colors disabled:opacity-50 cursor-pointer"
                                   title={`Refresh ${dept.top_student_name}`}
                                 >
                                   <RefreshCw className={`w-3 h-3 ${refreshingStudentId === dept.top_student_id ? 'animate-spin' : ''}`} />

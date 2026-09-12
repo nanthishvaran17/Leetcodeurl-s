@@ -80,7 +80,7 @@ export const FastStudentRow = memo(({
     <div 
       style={style} 
       onClick={() => onView(student)}
-      className="flex flex-col md:flex-row p-4 md:p-0 gap-3 md:gap-0 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10 transition-colors duration-150 group font-medium text-xs border border-slate-100 md:border-t-0 md:border-x-0 md:border-b dark:border-navy-800/60 cursor-pointer w-full md:w-[1450px] md:min-w-full items-start md:items-center bg-white md:bg-transparent dark:bg-navy-950 md:dark:bg-transparent rounded-2xl md:rounded-none shadow-sm md:shadow-none mb-3 md:mb-0"
+      className="flex flex-col md:flex-row p-4 md:py-2.5 md:px-0 gap-3 md:gap-0 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10 transition-colors duration-150 group font-medium text-xs border border-slate-100 md:border-t-0 md:border-x-0 md:border-b dark:border-navy-800/60 cursor-pointer w-full md:w-[1400px] md:min-w-[1400px] items-start md:items-center bg-white md:bg-transparent dark:bg-navy-950 md:dark:bg-transparent rounded-2xl md:rounded-none shadow-sm md:shadow-none mb-3 md:mb-0 min-h-[52px]"
     >
       {/* MOBILE LAYOUT */}
       <div className="flex md:hidden items-center justify-between w-full">
@@ -131,7 +131,7 @@ export const FastStudentRow = memo(({
        </div>
 
       {/* DESKTOP LAYOUT COLUMNS */}
-      <div className="hidden md:block flex-none w-10 text-center px-3" onClick={(e) => e.stopPropagation()}>
+      <div className="hidden md:flex flex-none w-10 items-center justify-center text-center px-3" onClick={(e) => e.stopPropagation()}>
         <input
           type="checkbox"
           checked={isSelected}
@@ -140,7 +140,7 @@ export const FastStudentRow = memo(({
         />
       </div>
 
-      <div className="hidden md:block flex-none w-24 px-3 font-bold" onClick={(e) => e.stopPropagation()}>
+      <div className="hidden md:flex flex-none w-24 items-center justify-start px-3 font-bold" onClick={(e) => e.stopPropagation()}>
         {isSolver
           ? getRankBadge(effectiveCollegeRank)
           : syncState === 'pending'
@@ -151,13 +151,13 @@ export const FastStudentRow = memo(({
         }
       </div>
 
-      <div className="hidden md:block flex-none w-32 px-3">
+      <div className="hidden md:flex flex-none w-32 items-center justify-start px-3">
         <span className="font-mono text-xs font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-navy-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-navy-700">
           {student.reg_no}
         </span>
       </div>
 
-      <div className="hidden md:flex flex-none w-72 px-3 flex-col justify-center text-left py-2">
+      <div className="hidden md:flex flex-none w-52 px-3 items-center justify-start text-left">
         <button onClick={() => onView(student)} className="flex items-center space-x-3 w-full text-left">
           <div className="shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-sm">
             {student.name.charAt(0).toUpperCase()}
@@ -170,20 +170,20 @@ export const FastStudentRow = memo(({
         </button>
       </div>
 
-      <div className="hidden md:block flex-none w-28 px-3 text-[11px] font-bold overflow-hidden">
-        <span className="text-slate-900 dark:text-white block truncate">{student.department?.code || student.department?.name || '—'}</span>
-        <span className="text-slate-500 dark:text-slate-400 block truncate">{student.year_level} Yr</span>
+      <div className="hidden md:flex flex-none w-28 px-3 text-[11px] font-bold flex-col justify-center self-center my-auto overflow-hidden min-h-[44px]">
+        <span className="text-slate-900 dark:text-white block truncate leading-tight">{student.department?.code || student.department?.name || '—'}</span>
+        <span className="text-slate-500 dark:text-slate-400 block truncate leading-tight mt-0.5">{String(student.year_level || '').replace(/\s*Yr\s*/gi, '').replace(/\s*Year\s*/gi, '').trim()} Yr</span>
       </div>
 
-      <div className="hidden md:block flex-none w-40 px-3 overflow-hidden">
+      <div className="hidden md:flex flex-none w-36 px-3 items-center justify-start self-center my-auto overflow-hidden min-h-[44px]">
         {student.username ? (
-          <a href={`https://leetcode.com/u/${student.username}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline block truncate" onClick={(e) => e.stopPropagation()}>
+          <a href={`https://leetcode.com/u/${student.username}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center my-auto leading-normal truncate" onClick={(e) => e.stopPropagation()}>
             @{student.username}
           </a>
-        ) : <span className="text-slate-400 text-[11px] block truncate">Not Linked</span>}
+        ) : <span className="text-slate-400 text-[11px] inline-flex items-center my-auto leading-normal truncate">Not Linked</span>}
       </div>
 
-      <div className={`hidden md:block flex-none w-24 px-3 py-1 rounded-lg text-center transition-colors ${flashSolved ? 'bg-emerald-200 dark:bg-emerald-800/50 duration-75' : 'bg-transparent duration-1000'}`}>
+      <div className={`hidden md:flex flex-none w-24 px-3 py-1 rounded-lg items-center justify-center text-center transition-colors ${flashSolved ? 'bg-emerald-200 dark:bg-emerald-800/50 duration-75' : 'bg-transparent duration-1000'}`}>
         {totalSolved !== null ? (
           <span className="text-base font-black text-emerald-600 dark:text-emerald-400">{totalSolved}</span>
         ) : <span className="text-slate-400">—</span>}
@@ -208,7 +208,7 @@ export const FastStudentRow = memo(({
         })()}
       </div>
 
-      <div className="hidden md:block flex-none w-24 px-3 text-center text-amber-500 font-bold">
+      <div className="hidden md:flex flex-none w-24 px-3 items-center justify-center text-center text-amber-500 font-bold">
         {(() => {
           const rawRating = student.stats?.contest_rating ?? (student as any).contest_rating;
           if (rawRating == null || rawRating <= 0) return '—';
@@ -216,7 +216,7 @@ export const FastStudentRow = memo(({
         })()}
       </div>
 
-      <div className="hidden md:block flex-none w-28 px-3 text-center text-indigo-500 font-bold">
+      <div className="hidden md:flex flex-none w-28 px-3 items-center justify-center text-center text-indigo-500 font-bold">
         {(() => {
           const rawRank = student.stats?.contest_global_ranking ?? (student as any).contest_global_ranking;
           if (rawRank == null || rawRank <= 0 || rawRank === 50000) return '—';
@@ -224,7 +224,7 @@ export const FastStudentRow = memo(({
         })()}
       </div>
 
-      <div className="hidden md:block flex-none w-28 px-3 text-center text-slate-600 font-bold">
+      <div className="hidden md:flex flex-none w-28 px-3 items-center justify-center text-center text-slate-600 font-bold">
         {(() => {
           const rawProfileRank = student.stats?.public_profile_ranking ?? (student as any).public_profile_ranking;
           if (!rawProfileRank || rawProfileRank >= 5000000 || rawProfileRank <= 0) return '—';
@@ -232,7 +232,7 @@ export const FastStudentRow = memo(({
         })()}
       </div>
 
-      <div className="hidden md:block flex-none w-32 px-3 text-center" onClick={(e) => e.stopPropagation()}>
+      <div className="hidden md:flex flex-none w-32 px-3 items-center justify-center text-center" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-center gap-1 transition-opacity">
           <button onClick={() => onView(student)} className="p-1.5 rounded-xl text-brand-600 hover:bg-brand-50" title="View"><Eye className="w-4 h-4" /></button>
           <button onClick={() => onEdit(student)} className="p-1.5 rounded-xl text-amber-600 hover:bg-amber-50" title="Edit"><Edit3 className="w-4 h-4" /></button>

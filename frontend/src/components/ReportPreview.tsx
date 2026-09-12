@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Download, FileText, FileSpreadsheet, RefreshCw, X, AlertTriangle, Trophy, Layers, Award, CheckCircle2, UserCheck, Users, HelpCircle, Flame, Filter } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, RefreshCw, X, AlertTriangle, Trophy, Layers, Award, CheckCircle2, UserCheck, Users, HelpCircle, Flame, Filter, Building2, GraduationCap } from 'lucide-react';
 import api from '../services/api';
 import { FullScreenLoadingOverlay } from './ui/FullScreenLoadingOverlay';
 
@@ -38,17 +38,38 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
     fetchReport();
   }, [reportId]);
 
+  const rType = ((report?.reportType || report?.report_type || '') as string).toUpperCase();
+
   const isContestReport = useMemo(() => {
     if (!report) return false;
     return (
-      report.reportType === 'CONTEST_PERFORMANCE' ||
-      report.report_type === 'CONTEST_PERFORMANCE' ||
-      report.reportType === 'OFFICIAL_CONTEST' ||
-      report.report_type === 'Weekly_Contest' ||
+      rType === 'CONTEST_PERFORMANCE' ||
+      rType === 'OFFICIAL_CONTEST' ||
+      rType === 'WEEKLY_CONTEST' ||
+      rType === 'WEEKLY_CONTEST_INTELLIGENCE' ||
+      rType === 'SUNDAY_LIVE_CONTEST' ||
+      rType === 'CONTEST_ATTENDANCE_PARTICIPATION' ||
+      rType === 'CONTEST_PERFORMANCE_RANKING' ||
+      rType === 'SUNDAY_CONTEST' ||
       !!report.contestSummary ||
       !!report.solveDistribution
     );
-  }, [report]);
+  }, [report, rType]);
+
+  const isSundayLive = useMemo(() => {
+    if (!report) return false;
+    return rType === 'SUNDAY_LIVE_CONTEST' || rType === 'SUNDAY_LIVE' || rType === 'SUNDAY_CONTEST';
+  }, [report, rType]);
+
+  const isFridayOfficial = useMemo(() => {
+    if (!report) return false;
+    return (
+      rType === 'FRIDAY_OFFICIAL_CONTEST' ||
+      rType === 'FRIDAY_OFFICIAL' ||
+      rType === 'OFFICIAL_CONTEST' ||
+      rType === 'WEEKLY_CONTEST_INTELLIGENCE'
+    );
+  }, [report, rType]);
 
   const contestSummary = report?.contestSummary || report?.metrics || {};
   const solveDist = report?.solveDistribution || {};
@@ -62,8 +83,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
     if (!isContestReport || !activeFilter) return allRows;
 
     return allRows.filter((r: any) => {
-      const st = r.status || '';
-      const isPart = st === 'PUBLIC_ATTENDED' || st === 'VIRTUAL_ATTENDED' || st === 'PUBLIC' || st === 'VIRTUAL';
+      const st = (r.status || '').toUpperCase();
+      const isPart = st === 'PUBLIC_ATTENDED' || st === 'VIRTUAL_ATTENDED' || st === 'PUBLIC' || st === 'VIRTUAL' || st === 'PUBLIC_LIVE' || st === 'VIRTUAL_PRACTICE' || st === 'ATTENDED';
       const solved = r.contest_solved !== undefined && r.contest_solved !== null ? Number(r.contest_solved) : (r.total_solved !== undefined && r.total_solved !== null ? Number(r.total_solved) : null);
 
       if (activeFilter === 'SOLVED_4') return isPart && solved === 4;
@@ -71,9 +92,9 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
       if (activeFilter === 'SOLVED_2') return isPart && solved === 2;
       if (activeFilter === 'SOLVED_1') return isPart && solved === 1;
       if (activeFilter === 'SOLVED_0') return isPart && solved === 0;
-      if (activeFilter === 'PUBLIC_ATTENDED') return st === 'PUBLIC_ATTENDED' || st === 'PUBLIC';
-      if (activeFilter === 'VIRTUAL_ATTENDED') return st === 'VIRTUAL_ATTENDED' || st === 'VIRTUAL';
-      if (activeFilter === 'NOT_ATTENDED') return st === 'NOT_ATTENDED' || st === 'PUBLIC_NOT_ATTENDED';
+      if (activeFilter === 'PUBLIC_ATTENDED') return st === 'PUBLIC_ATTENDED' || st === 'PUBLIC' || st === 'PUBLIC_LIVE' || st === 'ATTENDED';
+      if (activeFilter === 'VIRTUAL_ATTENDED') return st === 'VIRTUAL_ATTENDED' || st === 'VIRTUAL' || st === 'VIRTUAL_PRACTICE';
+      if (activeFilter === 'NOT_ATTENDED') return st === 'NOT_ATTENDED' || st === 'PUBLIC_NOT_ATTENDED' || st === 'ABSENT';
       if (activeFilter === 'PENDING_USERNAME') return st === 'PENDING_USERNAME' || st === 'PENDING';
       if (activeFilter === 'FETCH_FAILED') return st === 'FETCH_FAILED' || st === 'FETCH_ERROR';
       if (activeFilter === 'INVALID_USERNAME') return st === 'INVALID_USERNAME' || st === 'USERNAME_NOT_FOUND';
@@ -126,13 +147,13 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
 
   const getStatusBadge = (status: string) => {
     const s = (status || '').toUpperCase();
-    if (s === 'PUBLIC_ATTENDED' || s === 'PUBLIC') {
+    if (s === 'PUBLIC_ATTENDED' || s === 'PUBLIC' || s === 'PUBLIC_LIVE' || s === 'ATTENDED') {
       return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">PUBLIC ATTENDED</span>;
     }
-    if (s === 'VIRTUAL_ATTENDED' || s === 'VIRTUAL') {
+    if (s === 'VIRTUAL_ATTENDED' || s === 'VIRTUAL' || s === 'VIRTUAL_PRACTICE') {
       return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">VIRTUAL ATTENDED</span>;
     }
-    if (s === 'NOT_ATTENDED' || s === 'PUBLIC_NOT_ATTENDED') {
+    if (s === 'NOT_ATTENDED' || s === 'PUBLIC_NOT_ATTENDED' || s === 'ABSENT') {
       return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">NOT ATTENDED</span>;
     }
     if (s === 'PENDING_USERNAME' || s === 'PENDING') {
@@ -309,106 +330,254 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                 </div>
               </div>
 
-              {/* Additional KPI Stats */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-slate-50 dark:bg-navy-950/60 rounded-2xl border border-slate-200 dark:border-slate-800">
-                <div className="text-center">
-                  <p className="text-[10px] text-slate-500 uppercase font-black">Total Contest Solved</p>
-                  <p className="text-lg font-black text-emerald-600 dark:text-emerald-400">{contestSummary.totalContestSolved ?? "—"}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-[10px] text-slate-500 uppercase font-black">Avg Solved (All Students)</p>
-                  <p className="text-lg font-black text-slate-800 dark:text-slate-200">{contestSummary.averageProblemsSolved ?? "—"}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-[10px] text-slate-500 uppercase font-black">Avg Solved (Participants)</p>
-                  <p className="text-lg font-black text-indigo-600 dark:text-indigo-400">{contestSummary.averageSolvedAmongParticipants ?? "—"}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-[10px] text-slate-500 uppercase font-black">Participation Rate</p>
-                  <p className="text-lg font-black text-brand-600 dark:text-brand-400">{contestSummary.participationRate ?? "—"}</p>
-                </div>
-              </div>
 
-              {/* Problem Solve Distribution (Clickable) */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider flex items-center space-x-1.5">
-                    <Flame className="w-4 h-4 text-amber-500" />
-                    <span>Problem Solve Distribution (Clickable Filter)</span>
+              {/* Problem Solve Distribution (Clickable Filter - Hidden for Sunday Live) */}
+              {!isSundayLive && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider flex items-center space-x-1.5">
+                      <Flame className="w-4 h-4 text-amber-500" />
+                      <span>Problem Solve Distribution (Clickable Filter)</span>
+                    </h3>
+                    <span className="text-[11px] text-slate-500 font-medium">Click to filter by exact problems solved</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                    
+                    {/* 4 Problems Solved */}
+                    <div 
+                      onClick={() => toggleFilter('SOLVED_4')}
+                      className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${activeFilter === 'SOLVED_4' ? 'bg-emerald-500/20 border-emerald-500 ring-2 ring-emerald-500/30' : 'bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-400'}`}
+                    >
+                      <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300">4 Problems Solved</div>
+                      <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{solveDist.solved4 ?? report.metrics?.['4 Q Solved'] ?? 0}</div>
+                      <div className="text-[10px] text-slate-500 font-medium mt-0.5">Students</div>
+                    </div>
+
+                    {/* 3 Problems Solved */}
+                    <div 
+                      onClick={() => toggleFilter('SOLVED_3')}
+                      className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${activeFilter === 'SOLVED_3' ? 'bg-teal-500/20 border-teal-500 ring-2 ring-teal-500/30' : 'bg-teal-500/5 border-teal-500/20 hover:border-teal-400'}`}
+                    >
+                      <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300">3 Problems Solved</div>
+                      <div className="text-xl font-black text-teal-600 dark:text-teal-400 mt-1">{solveDist.solved3 ?? report.metrics?.['3 Q Solved'] ?? 0}</div>
+                      <div className="text-[10px] text-slate-500 font-medium mt-0.5">Students</div>
+                    </div>
+
+                    {/* 2 Problems Solved */}
+                    <div 
+                      onClick={() => toggleFilter('SOLVED_2')}
+                      className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${activeFilter === 'SOLVED_2' ? 'bg-brand-500/20 border-brand-500 ring-2 ring-brand-500/30' : 'bg-brand-500/5 border-brand-500/20 hover:border-brand-400'}`}
+                    >
+                      <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300">2 Problems Solved</div>
+                      <div className="text-xl font-black text-brand-600 dark:text-brand-400 mt-1">{solveDist.solved2 ?? report.metrics?.['2 Q Solved'] ?? 0}</div>
+                      <div className="text-[10px] text-slate-500 font-medium mt-0.5">Students</div>
+                    </div>
+
+                    {/* 1 Problem Solved */}
+                    <div 
+                      onClick={() => toggleFilter('SOLVED_1')}
+                      className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${activeFilter === 'SOLVED_1' ? 'bg-amber-500/20 border-amber-500 ring-2 ring-amber-500/30' : 'bg-amber-500/5 border-amber-500/20 hover:border-amber-400'}`}
+                    >
+                      <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300">1 Problem Solved</div>
+                      <div className="text-xl font-black text-amber-600 dark:text-amber-400 mt-1">{solveDist.solved1 ?? report.metrics?.['1 Q Solved'] ?? 0}</div>
+                      <div className="text-[10px] text-slate-500 font-medium mt-0.5">Students</div>
+                    </div>
+
+                    {/* 0 Problems Solved (Participated) */}
+                    <div 
+                      onClick={() => toggleFilter('SOLVED_0')}
+                      className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${activeFilter === 'SOLVED_0' ? 'bg-purple-500/20 border-purple-500 ring-2 ring-purple-500/30' : 'bg-purple-500/5 border-purple-500/20 hover:border-purple-400'}`}
+                    >
+                      <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300">0 Solved (Attended)</div>
+                      <div className="text-xl font-black text-purple-600 dark:text-purple-400 mt-1">{solveDist.solved0 ?? 0}</div>
+                      <div className="text-[10px] text-slate-500 font-medium mt-0.5">Participants</div>
+                    </div>
+
+                    {/* Not Attended */}
+                    <div 
+                      onClick={() => toggleFilter('NOT_ATTENDED')}
+                      className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${activeFilter === 'NOT_ATTENDED' ? 'bg-rose-500/20 border-rose-500 ring-2 ring-rose-500/30' : 'bg-rose-500/5 border-rose-500/20 hover:border-rose-400'}`}
+                    >
+                      <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300">Not Attended</div>
+                      <div className="text-xl font-black text-rose-600 dark:text-rose-400 mt-1">{solveDist.notParticipated ?? contestSummary.notAttended ?? 0}</div>
+                      <div className="text-[10px] text-slate-500 font-medium mt-0.5">Absent</div>
+                    </div>
+
+                  </div>
+                </div>
+              )}
+
+              {/* Critical Data Validation Banner (Section 12) */}
+              {(report.validationError || report.isValidated === false) && (
+                <div className="p-4 rounded-2xl bg-rose-500/10 border-2 border-rose-500 text-rose-700 dark:text-rose-400 font-bold flex items-center space-x-3">
+                  <AlertTriangle className="w-6 h-6 text-rose-600 shrink-0" />
+                  <div>
+                    <p className="text-sm font-black uppercase tracking-wide">Official Result Generation Blocked</p>
+                    <p className="text-xs font-semibold mt-0.5">{report.validationError || "Official result generation blocked because validated source data contains critical errors."}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Question-Wise Official Result (Section 6 - Friday Official) */}
+              {isFridayOfficial && report.questionWiseResult && Array.isArray(report.questionWiseResult) && report.questionWiseResult.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <h3 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider flex items-center space-x-1.5">
+                    <Award className="w-4 h-4 text-brand-500" />
+                    <span>Question-Wise Official Result</span>
                   </h3>
-                  <span className="text-[11px] text-slate-500 font-medium">Click to filter by exact problems solved</span>
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
+                    <table className="w-full text-left text-xs min-w-[500px]">
+                      <thead className="bg-[#16324F] text-white font-black uppercase">
+                        <tr>
+                          <th className="px-4 py-3 text-left">Question</th>
+                          <th className="px-4 py-3 text-center">Solved</th>
+                          <th className="px-4 py-3 text-center">Not Solved</th>
+                          <th className="px-4 py-3 text-right">Solve Rate</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-sans">
+                        {report.questionWiseResult.map((q: any, i: number) => (
+                          <tr key={i} className="hover:bg-slate-50 dark:hover:bg-navy-800/50">
+                            <td className="px-4 py-2.5 font-bold text-slate-900 dark:text-white">{q.question}</td>
+                            <td className="px-4 py-2.5 text-center font-bold text-emerald-600 dark:text-emerald-400">{q.solved}</td>
+                            <td className="px-4 py-2.5 text-center font-bold text-slate-500">{q.not_solved}</td>
+                            <td className="px-4 py-2.5 text-right font-black text-brand-600 dark:text-brand-400">{q.solve_rate}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
+              )}
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-                  
-                  {/* 4 Problems Solved */}
-                  <div 
-                    onClick={() => toggleFilter('SOLVED_4')}
-                    className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${activeFilter === 'SOLVED_4' ? 'bg-emerald-500/20 border-emerald-500 ring-2 ring-emerald-500/30' : 'bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-400'}`}
-                  >
-                    <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300">4 Problems Solved</div>
-                    <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{solveDist.solved4 ?? report.metrics?.['4 Q Solved'] ?? 0}</div>
-                    <div className="text-[10px] text-slate-500 font-medium mt-0.5">Students</div>
+              {/* Solve Distribution Table (Section 7 - Friday Official) */}
+              {isFridayOfficial && report.solveDistributionList && Array.isArray(report.solveDistributionList) && report.solveDistributionList.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <h3 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider flex items-center space-x-1.5">
+                    <Flame className="w-4 h-4 text-amber-500" />
+                    <span>Solve Distribution (4/4 – 0/4)</span>
+                  </h3>
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
+                    <table className="w-full text-left text-xs min-w-[500px]">
+                      <thead className="bg-[#16324F] text-white font-black uppercase">
+                        <tr>
+                          <th className="px-4 py-3 text-left">Category</th>
+                          <th className="px-4 py-3 text-center">Student Count</th>
+                          <th className="px-4 py-3 text-right">Percentage</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-sans">
+                        {report.solveDistributionList.map((sd: any, i: number) => (
+                          <tr key={i} className="hover:bg-slate-50 dark:hover:bg-navy-800/50">
+                            <td className="px-4 py-2.5 font-bold text-slate-900 dark:text-white">{sd.category}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-emerald-600 dark:text-emerald-400">{sd.count}</td>
+                            <td className="px-4 py-2.5 text-right font-black text-indigo-600 dark:text-indigo-400">{sd.percentage}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-
-                  {/* 3 Problems Solved */}
-                  <div 
-                    onClick={() => toggleFilter('SOLVED_3')}
-                    className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${activeFilter === 'SOLVED_3' ? 'bg-teal-500/20 border-teal-500 ring-2 ring-teal-500/30' : 'bg-teal-500/5 border-teal-500/20 hover:border-teal-400'}`}
-                  >
-                    <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300">3 Problems Solved</div>
-                    <div className="text-xl font-black text-teal-600 dark:text-teal-400 mt-1">{solveDist.solved3 ?? report.metrics?.['3 Q Solved'] ?? 0}</div>
-                    <div className="text-[10px] text-slate-500 font-medium mt-0.5">Students</div>
-                  </div>
-
-                  {/* 2 Problems Solved */}
-                  <div 
-                    onClick={() => toggleFilter('SOLVED_2')}
-                    className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${activeFilter === 'SOLVED_2' ? 'bg-brand-500/20 border-brand-500 ring-2 ring-brand-500/30' : 'bg-brand-500/5 border-brand-500/20 hover:border-brand-400'}`}
-                  >
-                    <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300">2 Problems Solved</div>
-                    <div className="text-xl font-black text-brand-600 dark:text-brand-400 mt-1">{solveDist.solved2 ?? report.metrics?.['2 Q Solved'] ?? 0}</div>
-                    <div className="text-[10px] text-slate-500 font-medium mt-0.5">Students</div>
-                  </div>
-
-                  {/* 1 Problem Solved */}
-                  <div 
-                    onClick={() => toggleFilter('SOLVED_1')}
-                    className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${activeFilter === 'SOLVED_1' ? 'bg-amber-500/20 border-amber-500 ring-2 ring-amber-500/30' : 'bg-amber-500/5 border-amber-500/20 hover:border-amber-400'}`}
-                  >
-                    <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300">1 Problem Solved</div>
-                    <div className="text-xl font-black text-amber-600 dark:text-amber-400 mt-1">{solveDist.solved1 ?? report.metrics?.['1 Q Solved'] ?? 0}</div>
-                    <div className="text-[10px] text-slate-500 font-medium mt-0.5">Students</div>
-                  </div>
-
-                  {/* 0 Problems Solved (Participated) */}
-                  <div 
-                    onClick={() => toggleFilter('SOLVED_0')}
-                    className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${activeFilter === 'SOLVED_0' ? 'bg-purple-500/20 border-purple-500 ring-2 ring-purple-500/30' : 'bg-purple-500/5 border-purple-500/20 hover:border-purple-400'}`}
-                  >
-                    <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300">0 Solved (Attended)</div>
-                    <div className="text-xl font-black text-purple-600 dark:text-purple-400 mt-1">{solveDist.solved0 ?? 0}</div>
-                    <div className="text-[10px] text-slate-500 font-medium mt-0.5">Participants</div>
-                  </div>
-
-                  {/* Not Attended */}
-                  <div 
-                    onClick={() => toggleFilter('NOT_ATTENDED')}
-                    className={`p-3.5 rounded-2xl border text-center transition-all cursor-pointer ${activeFilter === 'NOT_ATTENDED' ? 'bg-rose-500/20 border-rose-500 ring-2 ring-rose-500/30' : 'bg-rose-500/5 border-rose-500/20 hover:border-rose-400'}`}
-                  >
-                    <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300">Not Attended</div>
-                    <div className="text-xl font-black text-rose-600 dark:text-rose-400 mt-1">{solveDist.notParticipated ?? contestSummary.notAttended ?? 0}</div>
-                    <div className="text-[10px] text-slate-500 font-medium mt-0.5">Absent</div>
-                  </div>
-
                 </div>
-              </div>
+              )}
 
-              {/* Student Detail Table */}
+              {/* Official Leaderboard & Top Performers (Sections 8 & 9 - Friday Official) */}
+              {isFridayOfficial && report.officialLeaderboard && Array.isArray(report.officialLeaderboard) && report.officialLeaderboard.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <h3 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider flex items-center space-x-1.5">
+                    <Trophy className="w-4 h-4 text-amber-500" />
+                    <span>Official Leaderboard & Top Performers</span>
+                  </h3>
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
+                    <table className="w-full text-left text-xs min-w-[850px]">
+                      <thead className="bg-[#16324F] text-white font-black uppercase">
+                        <tr>
+                          <th className="px-4 py-3 text-center">Rank</th>
+                          <th className="px-4 py-3">Student Name</th>
+                          <th className="px-4 py-3">Register No</th>
+                          <th className="px-4 py-3 text-left">Department</th>
+                          <th className="px-4 py-3 text-center">Year</th>
+                          <th className="px-3 py-3 text-center">Q1</th>
+                          <th className="px-3 py-3 text-center">Q2</th>
+                          <th className="px-3 py-3 text-center">Q3</th>
+                          <th className="px-3 py-3 text-center">Q4</th>
+                          <th className="px-4 py-3 text-center">Solved</th>
+                          <th className="px-4 py-3 text-right">Score</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-sans">
+                        {report.officialLeaderboard.slice(0, 25).map((lb: any, i: number) => (
+                          <tr key={i} className="hover:bg-slate-50 dark:hover:bg-navy-800/50">
+                            <td className="px-4 py-2.5 text-center font-black text-amber-500">#{lb.rank}</td>
+                            <td className="px-4 py-2.5 font-bold text-slate-900 dark:text-white">{lb.student_name || lb.student}</td>
+                            <td className="px-4 py-2.5 font-mono text-slate-700 dark:text-slate-300">{lb.reg_no}</td>
+                            <td className="px-4 py-2.5 text-left font-bold text-indigo-600 dark:text-indigo-400">{lb.dept}</td>
+                            <td className="px-4 py-2.5 text-center">{lb.year}</td>
+                            <td className="px-3 py-2.5 text-center font-bold">{lb.q1 === 1 ? <span className="text-emerald-600">1</span> : <span className="text-slate-400">0</span>}</td>
+                            <td className="px-3 py-2.5 text-center font-bold">{lb.q2 === 1 ? <span className="text-emerald-600">1</span> : <span className="text-slate-400">0</span>}</td>
+                            <td className="px-3 py-2.5 text-center font-bold">{lb.q3 === 1 ? <span className="text-emerald-600">1</span> : <span className="text-slate-400">0</span>}</td>
+                            <td className="px-3 py-2.5 text-center font-bold">{lb.q4 === 1 ? <span className="text-emerald-600">1</span> : <span className="text-slate-400">0</span>}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-emerald-600 text-sm">{lb.solved}</td>
+                            <td className="px-4 py-2.5 text-right font-mono font-bold">{lb.score}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Department-Wise Official Result (Section 10 - Friday Official) */}
+              {isFridayOfficial && report.departmentResults && Array.isArray(report.departmentResults) && report.departmentResults.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <h3 className="text-xs font-black uppercase text-slate-700 dark:text-slate-300 tracking-wider flex items-center space-x-1.5">
+                    <Building2 className="w-4 h-4 text-brand-500" />
+                    <span>Department-Wise Official Result</span>
+                  </h3>
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
+                    <table className="w-full text-left text-xs min-w-[850px]">
+                      <thead className="bg-[#16324F] text-white font-black uppercase">
+                        <tr>
+                          <th className="px-4 py-3 text-left">Department</th>
+                          <th className="px-3.5 py-3 text-center">Total Students</th>
+                          <th className="px-3.5 py-3 text-center">Participants</th>
+                          <th className="px-3.5 py-3 text-center">Participation %</th>
+                          <th className="px-3 py-3 text-center">4/4</th>
+                          <th className="px-3 py-3 text-center">3/4</th>
+                          <th className="px-3 py-3 text-center">2/4</th>
+                          <th className="px-3 py-3 text-center">1/4</th>
+                          <th className="px-3 py-3 text-center">0/4</th>
+                          <th className="px-3.5 py-3 text-right">Total Solves</th>
+                          <th className="px-3.5 py-3 text-right">Average Solved</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-sans">
+                        {report.departmentResults.map((dr: any, i: number) => (
+                          <tr key={i} className="hover:bg-slate-50 dark:hover:bg-navy-800/50">
+                            <td className="px-4 py-2.5 font-bold text-brand-600 dark:text-brand-400">{dr.department}</td>
+                            <td className="px-3.5 py-2.5 text-center font-bold">{dr.total_students}</td>
+                            <td className="px-3.5 py-2.5 text-center font-bold text-emerald-600 dark:text-emerald-400">{dr.participants}</td>
+                            <td className="px-3.5 py-2.5 text-center font-extrabold text-indigo-600 dark:text-indigo-400">{dr.participation_pct}</td>
+                            <td className="px-3 py-2.5 text-center font-bold text-emerald-600">{dr.solved_4}</td>
+                            <td className="px-3 py-2.5 text-center font-bold text-teal-600">{dr.solved_3}</td>
+                            <td className="px-3 py-2.5 text-center font-bold text-brand-600">{dr.solved_2}</td>
+                            <td className="px-3 py-2.5 text-center font-bold text-amber-600">{dr.solved_1}</td>
+                            <td className="px-3 py-2.5 text-center font-bold text-slate-400">{dr.solved_0}</td>
+                            <td className="px-3.5 py-2.5 text-right font-black text-slate-900 dark:text-white">{dr.total_solves?.toLocaleString()}</td>
+                            <td className="px-3.5 py-2.5 text-right font-mono font-bold">{dr.average_solved}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Official Student Result Detail Table (Section 5) */}
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">
-                    Student Contest Detail Table ({displayedStudents.length} Students {activeFilter ? `• Filter: ${activeFilter}` : ''})
+                    {isFridayOfficial ? 'Official Student Result Roster' : isSundayLive ? 'Sunday Live Attendance & Solve Detail Table' : 'Student Contest Detail Table'} ({displayedStudents.length} Students {activeFilter ? `• Filter: ${activeFilter}` : ''})
                   </h3>
                   {activeFilter && (
                     <button
@@ -421,26 +590,169 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                 </div>
 
                 <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto table-responsive-container shadow-sm max-h-[480px] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none">
-                  <table className="w-full text-left text-xs mobile-card-table min-w-[850px] print:min-w-0 print:w-full">
-                    <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 hidden md:table-header-group print:table-header-group print:bg-slate-200 print:text-black">
-                      <tr>
-                        <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black">S.No</th>
-                        <th className="px-3.5 py-3 sticky left-0 bg-navy-950 print:bg-slate-200 print:border-b print:border-black z-20">Register No</th>
-                        <th className="px-3.5 py-3 print:border-b print:border-black">Student Name</th>
-                        <th className="px-3.5 py-3 text-center print:border-b print:border-black">Dept</th>
-                        <th className="px-3.5 py-3 text-center print:border-b print:border-black">Year</th>
-                        <th className="px-4 py-3 text-center print:border-b print:border-black">Status</th>
-                        <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q1</th>
-                        <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q2</th>
-                        <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q3</th>
-                        <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q4</th>
-                        <th className="px-4 py-3 text-center print:border-b print:border-black">Contest Solved</th>
-                      </tr>
+                  <table className="w-full text-left text-xs mobile-card-table min-w-[950px] print:min-w-0 print:w-full">
+                    <thead className="bg-[#16324F] text-white font-black uppercase sticky top-0 z-10 hidden md:table-header-group print:table-header-group print:bg-slate-200 print:text-black">
+                      {isFridayOfficial ? (
+                        <tr>
+                          <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black">S.No</th>
+                          <th className="px-3.5 py-3 sticky left-0 bg-[#16324F] print:bg-slate-200 print:border-b print:border-black z-20">Register No</th>
+                          <th className="px-3.5 py-3 print:border-b print:border-black">Student Name</th>
+                          <th className="px-3.5 py-3 text-left print:border-b print:border-black">Department</th>
+                          <th className="px-3.5 py-3 text-center print:border-b print:border-black">Year</th>
+                          <th className="px-3.5 py-3 text-left print:border-b print:border-black">LeetCode Handle</th>
+                          <th className="px-4 py-3 text-center print:border-b print:border-black">Status</th>
+                          <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q1</th>
+                          <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q2</th>
+                          <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q3</th>
+                          <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q4</th>
+                          <th className="px-4 py-3 text-center print:border-b print:border-black">Contest Solved</th>
+                          <th className="px-3.5 py-3 text-right print:border-b print:border-black">Score</th>
+                          <th className="px-3.5 py-3 text-center print:border-b print:border-black">Global Rank</th>
+                          <th className="px-3.5 py-3 text-right print:border-b print:border-black">Rating</th>
+                        </tr>
+                      ) : isSundayLive ? (
+                        <tr>
+                          <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black">S.No</th>
+                          <th className="px-3.5 py-3 sticky left-0 bg-navy-950 print:bg-slate-200 print:border-b print:border-black z-20">Register No</th>
+                          <th className="px-3.5 py-3 print:border-b print:border-black">Student Name</th>
+                          <th className="px-4 py-3 text-center print:border-b print:border-black">Attendance</th>
+                          <th className="px-3 py-3 text-center print:border-b print:border-black">Q1</th>
+                          <th className="px-3 py-3 text-center print:border-b print:border-black">Q2</th>
+                          <th className="px-3 py-3 text-center print:border-b print:border-black">Q3</th>
+                          <th className="px-3 py-3 text-center print:border-b print:border-black">Q4</th>
+                          <th className="px-4 py-3 text-center print:border-b print:border-black">Contest Solved</th>
+                          <th className="px-4 py-3 text-center print:border-b print:border-black">Total Time</th>
+                        </tr>
+                      ) : (
+                        <tr>
+                          <th className="px-3.5 py-3 text-center w-12 print:border-b print:border-black">S.No</th>
+                          <th className="px-3.5 py-3 sticky left-0 bg-navy-950 print:bg-slate-200 print:border-b print:border-black z-20">Register No</th>
+                          <th className="px-3.5 py-3 print:border-b print:border-black">Student Name</th>
+                          <th className="px-3.5 py-3 text-center print:border-b print:border-black">Dept</th>
+                          <th className="px-3.5 py-3 text-center print:border-b print:border-black">Year</th>
+                          <th className="px-4 py-3 text-center print:border-b print:border-black">Status</th>
+                          <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q1</th>
+                          <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q2</th>
+                          <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q3</th>
+                          <th className="px-3 py-3 text-center w-10 print:border-b print:border-black">Q4</th>
+                          <th className="px-4 py-3 text-center print:border-b print:border-black">Contest Solved</th>
+                          <th className="px-3.5 py-3 text-center print:border-b print:border-black">Global Rank</th>
+                          <th className="px-3.5 py-3 text-right print:border-b print:border-black">Rating</th>
+                        </tr>
+                      )}
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-sans print:divide-black">
                       {displayedStudents.map((s: any, idx: number) => {
-                        const isPart = s.status === 'PUBLIC_ATTENDED' || s.status === 'VIRTUAL_ATTENDED' || s.status === 'PUBLIC' || s.status === 'VIRTUAL';
-                        const cSolved = s.contest_solved !== undefined && s.contest_solved !== null ? s.contest_solved : (isPart && s.total_solved !== undefined && s.total_solved !== null ? s.total_solved : null);
+                        const st = (s.status || '').toUpperCase();
+                        const isPart = st === 'PUBLIC_ATTENDED' || st === 'VIRTUAL_ATTENDED' || st === 'PUBLIC' || st === 'VIRTUAL' || st === 'PUBLIC_LIVE' || st === 'VIRTUAL_PRACTICE' || st === 'ATTENDED';
+                        const cSolved = s.contest_solved !== undefined && s.contest_solved !== null ? s.contest_solved : (isPart && s.total_solved !== undefined && s.total_solved !== null ? s.total_solved : (s.solved !== undefined && s.solved !== null ? s.solved : null));
+
+                        if (isFridayOfficial) {
+                          return (
+                            <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors group">
+                              <td className="px-3.5 py-2.5 text-center text-slate-400 font-mono text-[11px] print:text-black">{idx + 1}</td>
+                              <td className="px-3.5 py-2.5 font-bold text-slate-900 dark:text-white font-mono sticky left-0 bg-white dark:bg-navy-950 group-hover:bg-slate-50 dark:group-hover:bg-navy-800 print:bg-transparent print:text-black z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] print:shadow-none">{s.reg_no}</td>
+                              <td className="px-3.5 py-2.5 font-semibold text-slate-800 dark:text-slate-200 print:text-black">{s.name || s.student_name}</td>
+                              <td className="px-3.5 py-2.5 text-left font-bold text-indigo-600 dark:text-indigo-400">{s.dept}</td>
+                              <td className="px-3.5 py-2.5 text-center font-medium text-slate-600 dark:text-slate-400">{s.year}</td>
+                              <td className="px-3.5 py-2.5 text-left font-mono text-slate-700 dark:text-slate-300">{s.leetcode_handle || s.username || "Not Available"}</td>
+                              <td className="px-4 py-2.5 text-center">
+                                {getStatusBadge(s.status)}
+                              </td>
+                              <td className="px-3 py-2.5 text-center font-bold">
+                                {isPart ? (s.q1 === 1 ? <span className="text-emerald-600 dark:text-emerald-400">1</span> : <span className="text-slate-400">0</span>) : <span className="text-slate-400 font-normal">Not Available</span>}
+                              </td>
+                              <td className="px-3 py-2.5 text-center font-bold">
+                                {isPart ? (s.q2 === 1 ? <span className="text-emerald-600 dark:text-emerald-400">1</span> : <span className="text-slate-400">0</span>) : <span className="text-slate-400 font-normal">Not Available</span>}
+                              </td>
+                              <td className="px-3 py-2.5 text-center font-bold">
+                                {isPart ? (s.q3 === 1 ? <span className="text-emerald-600 dark:text-emerald-400">1</span> : <span className="text-slate-400">0</span>) : <span className="text-slate-400 font-normal">Not Available</span>}
+                              </td>
+                              <td className="px-3 py-2.5 text-center font-bold">
+                                {isPart ? (s.q4 === 1 ? <span className="text-emerald-600 dark:text-emerald-400">1</span> : <span className="text-slate-400">0</span>) : <span className="text-slate-400 font-normal">Not Available</span>}
+                              </td>
+                              <td className="px-4 py-2.5 text-center font-black text-sm">
+                                {isPart && cSolved !== null ? (
+                                  <span className={cSolved >= 3 ? "text-emerald-600 dark:text-emerald-400" : cSolved >= 1 ? "text-brand-600 dark:text-brand-400" : "text-slate-500"}>
+                                    {cSolved}
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-400 font-normal">Not Available</span>
+                                )}
+                              </td>
+                              <td className="px-3.5 py-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
+                                {isPart && s.score !== undefined && s.score !== null ? s.score : "Not Available"}
+                              </td>
+                              <td className="px-3.5 py-2.5 text-center font-mono font-bold text-amber-600 dark:text-amber-400">
+                                {isPart && (s.global_rank || s.rank) && (s.global_rank || s.rank) !== '—' && (s.global_rank || s.rank) !== 'Not Available' ? `#${Number(s.global_rank || s.rank).toLocaleString()}` : "Not Available"}
+                              </td>
+                              <td className="px-3.5 py-2.5 text-right font-mono font-semibold text-slate-800 dark:text-slate-200">
+                                {isPart && (s.rating || s.contest_rating) ? Math.round(Number(s.rating || s.contest_rating)).toLocaleString() : "Not Available"}
+                              </td>
+                            </tr>
+                          );
+                        }
+
+                        if (isSundayLive) {
+                          return (
+                            <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors group">
+                              <td className="px-3.5 py-2.5 text-center text-slate-400 font-mono text-[11px] print:text-black">{idx + 1}</td>
+                              <td className="px-3.5 py-2.5 font-bold text-slate-900 dark:text-white font-mono sticky left-0 bg-white dark:bg-navy-950 group-hover:bg-slate-50 dark:group-hover:bg-navy-800 print:bg-transparent print:text-black z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] print:shadow-none">{s.reg_no}</td>
+                              <td className="px-3.5 py-2.5 font-semibold text-slate-800 dark:text-slate-200 print:text-black">{s.name || s.student_name}</td>
+                              <td className="px-4 py-2.5 text-center">
+                                {getStatusBadge(s.status)}
+                              </td>
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-xs">
+                                {s.q1_display ? (
+                                  <span className={s.q1_display.startsWith('1') ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}>{s.q1_display}</span>
+                                ) : isPart ? (
+                                  s.q1 === 1 ? (
+                                    <span className="text-emerald-600 dark:text-emerald-400">{s.q1_time ? `1 (${s.q1_time} min)` : "1 (Not Available)"}</span>
+                                  ) : <span className="text-slate-400">0 (—)</span>
+                                ) : <span className="text-slate-400">—</span>}
+                              </td>
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-xs">
+                                {s.q2_display ? (
+                                  <span className={s.q2_display.startsWith('1') ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}>{s.q2_display}</span>
+                                ) : isPart ? (
+                                  s.q2 === 1 ? (
+                                    <span className="text-emerald-600 dark:text-emerald-400">{s.q2_time ? `1 (${s.q2_time} min)` : "1 (Not Available)"}</span>
+                                  ) : <span className="text-slate-400">0 (—)</span>
+                                ) : <span className="text-slate-400">—</span>}
+                              </td>
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-xs">
+                                {s.q3_display ? (
+                                  <span className={s.q3_display.startsWith('1') ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}>{s.q3_display}</span>
+                                ) : isPart ? (
+                                  s.q3 === 1 ? (
+                                    <span className="text-emerald-600 dark:text-emerald-400">{s.q3_time ? `1 (${s.q3_time} min)` : "1 (Not Available)"}</span>
+                                  ) : <span className="text-slate-400">0 (—)</span>
+                                ) : <span className="text-slate-400">—</span>}
+                              </td>
+                              <td className="px-3 py-2.5 text-center font-mono font-bold text-xs">
+                                {s.q4_display ? (
+                                  <span className={s.q4_display.startsWith('1') ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400"}>{s.q4_display}</span>
+                                ) : isPart ? (
+                                  s.q4 === 1 ? (
+                                    <span className="text-emerald-600 dark:text-emerald-400">{s.q4_time ? `1 (${s.q4_time} min)` : "1 (Not Available)"}</span>
+                                  ) : <span className="text-slate-400">0 (—)</span>
+                                ) : <span className="text-slate-400">—</span>}
+                              </td>
+                              <td className="px-4 py-2.5 text-center font-black text-sm">
+                                {isPart && cSolved !== null ? (
+                                  <span className={cSolved >= 3 ? "text-emerald-600 dark:text-emerald-400" : cSolved >= 1 ? "text-brand-600 dark:text-brand-400" : "text-slate-500"}>
+                                    {cSolved}
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-400 font-normal">—</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-2.5 text-center font-mono font-bold text-xs text-slate-700 dark:text-slate-300">
+                                {s.total_time_display || (isPart ? (s.total_time ? `${s.total_time} min` : "Not Available") : "—")}
+                              </td>
+                            </tr>
+                          );
+                        }
 
                         return (
                           <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors group">
@@ -480,6 +792,12 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                               ) : (
                                 <span className="text-slate-400 font-normal">—</span>
                               )}
+                            </td>
+                            <td className="px-3.5 py-2.5 text-center font-mono font-bold text-amber-600 dark:text-amber-400">
+                              {isPart && s.rank && s.rank !== '—' ? `#${Number(s.rank).toLocaleString()}` : '—'}
+                            </td>
+                            <td className="px-3.5 py-2.5 text-right font-mono font-semibold text-slate-800 dark:text-slate-200">
+                              {isPart && (s.rating || s.contest_rating) ? Math.round(Number(s.rating || s.contest_rating)).toLocaleString() : '—'}
                             </td>
                           </tr>
                         );
@@ -527,6 +845,143 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                         <div className="text-lg font-black text-purple-700 dark:text-purple-400">{count}</div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* HOD Department Intelligence Summary Table */}
+              {report.departmentSummary && Array.isArray(report.departmentSummary) && report.departmentSummary.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center space-x-1.5">
+                    <Building2 className="w-4 h-4 text-brand-500" />
+                    <span>HOD Department Intelligence Summary</span>
+                  </h3>
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto table-responsive-container shadow-sm">
+                    <table className="w-full text-left text-xs mobile-card-table min-w-[750px]">
+                      <thead className="bg-navy-950 text-white font-black uppercase hidden md:table-header-group">
+                        <tr>
+                          <th className="px-4 py-3 text-center">S.No</th>
+                          <th className="px-4 py-3">Department</th>
+                          <th className="px-4 py-3 text-center">Total Students</th>
+                          <th className="px-4 py-3 text-center">Active Solvers</th>
+                          <th className="px-4 py-3 text-center">Participation %</th>
+                          <th className="px-4 py-3 text-right">Total Solved</th>
+                          <th className="px-4 py-3 text-right">Avg Solved</th>
+                          <th className="px-4 py-3 text-center">4/4 Solvers</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-sans">
+                        {report.departmentSummary.map((d: any, idx: number) => (
+                          <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors">
+                            <td className="px-4 py-2.5 text-center font-mono text-[11px] text-slate-400">{idx + 1}</td>
+                            <td className="px-4 py-2.5 font-black text-brand-600 dark:text-brand-400">{d.department}</td>
+                            <td className="px-4 py-2.5 text-center font-bold">{d.total}</td>
+                            <td className="px-4 py-2.5 text-center font-bold text-emerald-600 dark:text-emerald-400">{d.active_solvers}</td>
+                            <td className="px-4 py-2.5 text-center font-extrabold text-indigo-600 dark:text-indigo-400">{d.attendance_pct}%</td>
+                            <td className="px-4 py-2.5 text-right font-black text-slate-900 dark:text-white">{d.total_solved?.toLocaleString()}</td>
+                            <td className="px-4 py-2.5 text-right font-mono font-bold">{d.avg_solved}</td>
+                            <td className="px-4 py-2.5 text-center font-black text-emerald-600 dark:text-emerald-400">{d.solvers_4}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Faculty / Staff Allocation Performance Table */}
+              {report.facultySummary && Array.isArray(report.facultySummary) && report.facultySummary.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center space-x-1.5">
+                    <GraduationCap className="w-4 h-4 text-emerald-500" />
+                    <span>Faculty & Mentor Consolidated Performance</span>
+                  </h3>
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto table-responsive-container shadow-sm">
+                    <table className="w-full text-left text-xs mobile-card-table min-w-[750px]">
+                      <thead className="bg-navy-950 text-white font-black uppercase hidden md:table-header-group">
+                        <tr>
+                          <th className="px-4 py-3 text-center">S.No</th>
+                          <th className="px-4 py-3">Faculty / Mentor Name</th>
+                          <th className="px-4 py-3 text-center">Dept</th>
+                          <th className="px-4 py-3 text-center">Assigned Students</th>
+                          <th className="px-4 py-3 text-center">Active Solvers</th>
+                          <th className="px-4 py-3 text-center">Active %</th>
+                          <th className="px-4 py-3 text-right">Total Solved</th>
+                          <th className="px-4 py-3 text-right">Avg Solved</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-sans">
+                        {report.facultySummary.map((f: any, idx: number) => (
+                          <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors">
+                            <td className="px-4 py-2.5 text-center font-mono text-[11px] text-slate-400">{idx + 1}</td>
+                            <td className="px-4 py-2.5 font-bold text-slate-900 dark:text-white">{f.staff_name}</td>
+                            <td className="px-4 py-2.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{f.department}</td>
+                            <td className="px-4 py-2.5 text-center font-bold">{f.total_assigned}</td>
+                            <td className="px-4 py-2.5 text-center font-bold text-emerald-600 dark:text-emerald-400">{f.active_solvers}</td>
+                            <td className="px-4 py-2.5 text-center font-extrabold text-brand-600 dark:text-brand-400">{f.active_pct}%</td>
+                            <td className="px-4 py-2.5 text-right font-black text-slate-900 dark:text-white">{f.total_solved?.toLocaleString()}</td>
+                            <td className="px-4 py-2.5 text-right font-mono font-bold">{f.avg_solved}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* 5-Week Performance Trend Matrix Table */}
+              {report.sessionHeaders && Array.isArray(report.sessionHeaders) && report.sessionHeaders.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center space-x-1.5">
+                    <Trophy className="w-4 h-4 text-indigo-500" />
+                    <span>Five-Week Longitudinal Performance Matrix</span>
+                  </h3>
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto table-responsive-container shadow-sm max-h-[480px] overflow-y-auto">
+                    <table className="w-full text-left text-xs mobile-card-table min-w-[950px]">
+                      <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 hidden md:table-header-group">
+                        <tr>
+                          <th className="px-3.5 py-3 text-center w-12">S.No</th>
+                          <th className="px-3.5 py-3">Register No</th>
+                          <th className="px-3.5 py-3">Student Name</th>
+                          <th className="px-3.5 py-3 text-center">Dept</th>
+                          <th className="px-3.5 py-3 text-center">Year</th>
+                          {report.sessionHeaders.map((hdr: string, i: number) => (
+                            <th key={i} className="px-3.5 py-3 text-center">{hdr}</th>
+                          ))}
+                          <th className="px-4 py-3 text-right">5-W Solved</th>
+                          <th className="px-3.5 py-3 text-center">Attendance %</th>
+                          <th className="px-4 py-3 text-center">Trajectory</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-sans">
+                        {(report.allStudents || report.rows || []).map((s: any, idx: number) => (
+                          <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors">
+                            <td className="px-3.5 py-2.5 text-center text-slate-400 font-mono text-[11px]">{idx + 1}</td>
+                            <td className="px-3.5 py-2.5 font-bold text-slate-900 dark:text-white font-mono">{s.reg_no}</td>
+                            <td className="px-3.5 py-2.5 font-semibold text-slate-800 dark:text-slate-200">{s.name}</td>
+                            <td className="px-3.5 py-2.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{s.dept}</td>
+                            <td className="px-3.5 py-2.5 text-center font-medium text-slate-600 dark:text-slate-400">{s.year}</td>
+                            <td className="px-3.5 py-2.5 text-center font-mono font-bold">{s.c1_solved ?? 0}</td>
+                            <td className="px-3.5 py-2.5 text-center font-mono font-bold">{s.c2_solved ?? 0}</td>
+                            <td className="px-3.5 py-2.5 text-center font-mono font-bold">{s.c3_solved ?? 0}</td>
+                            <td className="px-3.5 py-2.5 text-center font-mono font-bold">{s.c4_solved ?? 0}</td>
+                            <td className="px-3.5 py-2.5 text-center font-mono font-bold">{s.c5_solved ?? 0}</td>
+                            <td className="px-4 py-2.5 text-right font-black text-emerald-600 dark:text-emerald-400 text-sm">{s.total_solved ?? 0}</td>
+                            <td className="px-3.5 py-2.5 text-center font-extrabold text-brand-600 dark:text-brand-400">{s.attendance_rate || '0%'}</td>
+                            <td className="px-4 py-2.5 text-center">
+                              <span className={`px-2.5 py-1 text-[10px] font-black rounded-lg border ${
+                                s.trajectory?.includes('IMPROVING') ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' :
+                                s.trajectory?.includes('STABLE') ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20' :
+                                s.trajectory?.includes('DECLINING') ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' :
+                                'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+                              }`}>
+                                {s.trajectory || 'FOLLOW-UP'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               )}

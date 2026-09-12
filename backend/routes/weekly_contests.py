@@ -708,7 +708,18 @@ def list_weekly_sessions(db: Session = Depends(get_db)):
     try:
         from backend.services.weekly_session_manager import get_or_create_current_weekly_session
         get_or_create_current_weekly_session(db)
+        today_ist = get_current_ist_datetime().date()
         sessions = db.query(WeeklySession).all()
+
+        dirty = False
+        for s in sessions:
+            s_date = parse_session_date(s.session_date)
+            if s_date and s_date > today_ist and s.status != "SCHEDULED":
+                s.status = "SCHEDULED"
+                dirty = True
+        if dirty:
+            db.commit()
+
         sessions.sort(
             key=lambda s: int(re.search(r'\d+', s.contest_name).group(0)) if (s.contest_name and re.search(r'\d+', s.contest_name)) else s.id,
             reverse=True

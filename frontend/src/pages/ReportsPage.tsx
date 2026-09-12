@@ -145,25 +145,25 @@ export const ReportsPage: React.FC = () => {
     notify.dismissCategory('REPORTS');
     setDownloadingFiles(prev => ({ ...prev, [filename]: true }));
 
-    // Map endpoint to report_type and format
-    let report_type = 'STUDENT_PERFORMANCE';
-    let format = 'excel';
-    
-    if (endpoint.includes('export-official-college-summary')) { report_type = 'COLLEGE_EXECUTIVE'; format = 'excel'; }
-    else if (endpoint.includes('export-student-performance-detail')) { report_type = 'STUDENT_PERFORMANCE'; format = 'excel'; }
-    else if (endpoint.includes('export-weekly-contest-matrix')) { report_type = 'BATCH_PERFORMANCE'; format = 'excel'; } 
-    else if (endpoint.includes('export-master-tracker')) { report_type = 'STUDENT_MASTER'; format = 'excel'; }
-    else if (endpoint.includes('export-pdf')) { report_type = selectedReportType || 'STUDENT_PERFORMANCE'; format = 'pdf'; }
-    else if (endpoint.includes('export-word')) { report_type = selectedReportType || 'STUDENT_PERFORMANCE'; format = 'word'; }
-    else if (endpoint.includes('export-csv')) { report_type = selectedReportType || 'STUDENT_PERFORMANCE'; format = 'csv'; }
-
-    // Parse query params from endpoint to filters
+    // Parse query params from endpoint to filters first
     const urlParts = endpoint.split('?');
     const filters: any = { department: selectedDept, year: selectedYear, output_scope: selectedOutputScope };
     if (urlParts.length > 1) {
       const params = new URLSearchParams(urlParts[1]);
       params.forEach((val, key) => { filters[key] = val; });
     }
+
+    // Map report_type and format dynamically
+    let report_type = filters.report_type || selectedReportType || 'STUDENT_PERFORMANCE';
+    let format = 'excel';
+    
+    if (endpoint.includes('export-official-college-summary')) { report_type = 'COLLEGE_EXECUTIVE'; format = 'excel'; }
+    else if (endpoint.includes('export-student-performance-detail')) { report_type = 'STUDENT_PERFORMANCE'; format = 'excel'; }
+    else if (endpoint.includes('export-weekly-contest-matrix')) { report_type = 'BATCH_PERFORMANCE'; format = 'excel'; } 
+    else if (endpoint.includes('export-master-tracker')) { report_type = 'STUDENT_MASTER'; format = 'excel'; }
+    else if (endpoint.includes('export-pdf')) { format = 'pdf'; }
+    else if (endpoint.includes('export-word')) { format = 'word'; }
+    else if (endpoint.includes('export-csv')) { format = 'csv'; }
 
     const result = await downloadManager.downloadJob({
       report_type,
@@ -193,9 +193,11 @@ export const ReportsPage: React.FC = () => {
     const params = new URLSearchParams();
     if (selectedDept && selectedDept !== 'ALL') params.append('department', selectedDept);
     if (selectedYear && selectedYear !== 'ALL') params.append('year', selectedYear);
+    if (selectedOutputScope && selectedOutputScope !== 'ALL') params.append('output_scope', selectedOutputScope);
+    if (selectedReportType) params.append('report_type', selectedReportType);
     if (extraParams) {
       Object.entries(extraParams).forEach(([k, v]) => {
-        if (v && v !== 'ALL') params.append(k, v);
+        if (v && v !== 'ALL') params.set(k, v);
       });
     }
     const qs = params.toString();
@@ -306,86 +308,101 @@ export const ReportsPage: React.FC = () => {
 
   const reportCards = [
     {
-      id: 'student-detail',
-      title: 'Student Performance Detail Excel',
-      badge: 'LOGO + PER-DEPT/YEAR SHEETS',
-      badgeColor: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
-      description: 'Multi-sheet workbook: Cover sheet with college logo, separate sheets per department per year (e.g. Dept1-IIYr, Dept1-IIIYr). Contains S.No, Name, Reg No, Dept, Year, LeetCode Profile Link, Username, Easy, Medium, Hard, Total Solved, Contest Rating & Global Rank + Category Summary (Above 500, 250-500, etc.).',
-      filename: 'Nandha_Student_Performance_Detail.xlsx',
+      id: 'master-10-sheet',
+      title: 'Master 10-Sheet Institutional Excel',
+      badge: 'OFFICIAL 10-SHEET WORKBOOK',
+      badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+      description: 'Complete 10-Sheet Master Workbook: 01 Principal Executive, 02 Complete Student Roster, 03 Contest Attendance, 04 Contest Performance, 05 Top Performers, 06 4-4 Perfect Solvers, 07 3-4 Solvers, 08 2-4 Solvers, 09 1-4 Solvers, and 10 Department Intelligence.',
+      filename: 'Weekly_LeetCode_Master_Report.xlsx',
       icon: FileSpreadsheet,
-      iconBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
-      btnGradient: 'from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-purple-600/30',
-      onClick: handleDownloadStudentDetail
+      iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+      btnGradient: 'from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-600/30',
+      onClick: () => {
+        const q = getActiveFilterQueryParams();
+        downloadReportFile(`/reports/download${q}`, 'Weekly_LeetCode_Master_Report.xlsx');
+      }
     },
     {
-      id: 'contest-performance',
-      title: 'Weekly & Friday Contest Performance',
-      badge: 'LIVE + VIRTUAL CONTESTS',
-      badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-      description: 'Comprehensive weekly contest report: Problem solve distribution (4/4, 3/4, 2/4, 1/4, 0/4), attendance breakdown (Public vs Virtual), department-wise rank matrix, and student roster contest performance.',
-      filename: 'Weekly_Contest_Performance_Report.xlsx',
+      id: 'five-week-trend',
+      title: 'Five-Week Performance Trend Report',
+      badge: 'LONGITUDINAL 5-CONTEST WINDOW',
+      badgeColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
+      description: 'Monitors student performance across the latest 5 valid contests. Automatically calculates rolling window metrics and identifies Improving (↑), Stable (→), Declining (↓), and Follow-Up student trajectories.',
+      filename: 'Five_Week_Performance_Trend_Report.xlsx',
       icon: Trophy,
+      iconBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
+      btnGradient: 'from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 shadow-indigo-600/30',
+      onClick: () => {
+        const q = getActiveFilterQueryParams();
+        downloadReportFile(`/reports/export-excel?report_type=FIVE_WEEK_PERFORMANCE_TREND${q}`, 'Five_Week_Performance_Trend_Report.xlsx');
+      }
+    },
+    {
+      id: 'hod-department',
+      title: 'HOD Department Intelligence Report',
+      badge: 'AUTHORIZED DEPARTMENT SCOPE',
+      badgeColor: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+      description: 'Department-level performance review: HOD → Faculty/Mentor → Assigned Students drill-down. Contains department KPIs, solver distribution, faculty group metrics, and student performance roster.',
+      filename: 'HOD_Department_Intelligence_Report.xlsx',
+      icon: FileSpreadsheet,
+      iconBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
+      btnGradient: 'from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 shadow-rose-600/30',
+      onClick: () => {
+        const q = getActiveFilterQueryParams();
+        downloadReportFile(`/reports/hod${q}`, 'HOD_Department_Intelligence_Report.xlsx');
+      }
+    },
+    {
+      id: 'faculty-consolidated',
+      title: 'Faculty Consolidated Performance',
+      badge: 'ASSIGNED STUDENT ROSTER',
+      badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+      description: 'Consolidated review report for faculty and mentors: Includes assigned student attendance %, Q1–Q4 solve status, scores, mentor signals, and 5-week improvement trajectory.',
+      filename: 'Faculty_Consolidated_Performance_Report.xlsx',
+      icon: FileSpreadsheet,
       iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
       btnGradient: 'from-amber-600 to-yellow-600 hover:from-amber-700 hover:to-yellow-700 shadow-amber-600/30',
       onClick: () => {
         const q = getActiveFilterQueryParams();
-        downloadReportFile(`/reports/export-weekly-contest-matrix${q}`, 'Weekly_Contest_Performance_Report.xlsx');
+        downloadReportFile(`/reports/staff${q}`, 'Faculty_Consolidated_Performance_Report.xlsx');
       }
     },
     {
-      id: 'official-summary',
-      title: 'Official College Weekly Excel',
-      badge: 'OFFICIAL TEMPLATE',
-      badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-      description: 'Formatted with official Nandha Engineering College header branding, batch breakdown (2023-2027, 2024-2028, 2025-2029), problem metrics & contest stats on separate sheets for all departments.',
-      filename: 'Nandha_College_Official_Weekly_Report.xlsx',
-      icon: FileSpreadsheet,
-      iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-      btnGradient: 'from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-600/30',
-      onClick: handleDownloadOfficialSummary
-    },
-    {
-      id: 'matrix-2028',
-      title: 'Batch 2028 Contest Matrix Excel',
-      badge: 'III YEAR BATCH',
-      badgeColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
-      description: 'Weekly Contest & Problem Solving Count matrix report for Batch 2028 (III Year) with official college header, August Sunday date blocks, and separate department sheets.',
-      filename: 'Batch_2028_Contest_Matrix.xlsx',
-      icon: FileSpreadsheet,
-      iconBg: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
-      btnGradient: 'from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 shadow-indigo-600/30',
-      onClick: handleDownloadMatrix2028
-    },
-    {
-      id: 'matrix-2029',
-      title: 'Batch 2029 Contest Matrix Excel',
-      badge: 'II YEAR BATCH',
+      id: 'principal-executive',
+      title: 'Principal Executive Intelligence Report',
+      badge: 'INSTITUTION-WIDE OVERVIEW',
       badgeColor: 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20',
-      description: 'Weekly Contest & Problem Solving Count matrix report for Batch 2029 (II Year) with official college header, August Sunday date blocks, and separate department sheets.',
-      filename: 'Batch_2029_Contest_Matrix.xlsx',
+      description: 'High-level executive institutional overview: Total enrolled students (1,569), verified solvers, attendance %, 4/4 solver count, department comparative matrix, and top achievements.',
+      filename: 'Principal_Executive_Intelligence_Report.xlsx',
       icon: FileSpreadsheet,
       iconBg: 'bg-brand-500/10 text-brand-600 dark:text-brand-400',
       btnGradient: 'from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 shadow-brand-600/30',
-      onClick: handleDownloadMatrix2029
+      onClick: () => {
+        const q = getActiveFilterQueryParams();
+        downloadReportFile(`/reports/principal${q}`, 'Principal_Executive_Intelligence_Report.xlsx');
+      }
     },
     {
-      id: 'master-tracker',
-      title: 'Full 8-Sheet Master Tracker Excel',
-      badge: 'ALL-IN-ONE WORKBOOK',
-      badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-      description: 'Complete master tracking workbook containing Student Master, Current Statistics, Session Logs, College Leaderboard, Department Leaderboards, and Audit Error Logs.',
-      filename: 'Full_8_Sheet_Master_Tracker.xlsx',
+      id: 'management-summary',
+      title: 'Management Executive Summary',
+      badge: 'SECRETARY & SENIOR MANAGEMENT',
+      badgeColor: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+      description: 'Concise executive summary for Secretary & Management: High-impact institutional participation rate, performance trajectory, department rank comparison, and key action highlights.',
+      filename: 'Management_Executive_Summary_Report.xlsx',
       icon: FileSpreadsheet,
-      iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-      btnGradient: 'from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 shadow-amber-600/30',
-      onClick: handleDownloadMasterTracker
+      iconBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
+      btnGradient: 'from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-purple-600/30',
+      onClick: () => {
+        const q = getActiveFilterQueryParams();
+        downloadReportFile(`/reports/export-excel?report_type=MANAGEMENT_EXECUTIVE_SUMMARY${q}`, 'Management_Executive_Summary_Report.xlsx');
+      }
     },
     {
       id: 'pdf-summary',
       title: 'Executive PDF Summary Report',
-      badge: 'PRINTABLE PDF (TIMES NEW ROMAN)',
+      badge: 'PRINTABLE PDF (SEGMENTED TYPOGRAPHY)',
       badgeColor: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
-      description: 'High-resolution printable PDF report with official college header branding, executive summary table, department statistics, and top performers styled strictly in Times New Roman.',
+      description: 'High-resolution printable PDF report with official college header branding, executive summary table, department statistics, and top performers formatted for executive review.',
       filename: 'Executive_PDF_Summary.pdf',
       icon: FileText,
       iconBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
@@ -395,9 +412,9 @@ export const ReportsPage: React.FC = () => {
     {
       id: 'word-summary',
       title: 'Executive Word Summary (.DOCX)',
-      badge: 'WORD DOCX (TIMES NEW ROMAN)',
+      badge: 'WORD DOCX (EXECUTIVE TEMPLATE)',
       badgeColor: 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20',
-      description: 'Editable Microsoft Word document report with official Nandha Engineering College header, executive summary table, and student performance roster styled in Times New Roman.',
+      description: 'Editable Microsoft Word document report with official Nandha Engineering College header, executive summary table, and student performance roster formatted for institutional distribution.',
       filename: 'Executive_Word_Summary.docx',
       icon: FileText,
       iconBg: 'bg-brand-500/10 text-brand-600 dark:text-brand-400',
@@ -500,91 +517,152 @@ export const ReportsPage: React.FC = () => {
             </div>
 
             {/* Unified Report Builder Form Controls */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 p-5 bg-white/70 dark:bg-navy-950/70 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-inner">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 p-5 bg-white/70 dark:bg-navy-950/70 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-inner items-start">
 
-              {/* 1. Report Type — Premium Dropdown */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider">
+              {/* 1. Report Type — Premium Dropdown with Custom Colored Badges */}
+              <div className="flex flex-col space-y-1.5 min-w-0 w-full relative z-[35]">
+                <span className="block text-xs font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider truncate">
                   Report Type
-                </label>
+                </span>
                 <div className={`relative ${rptTypeOpen ? 'z-30' : 'z-10'}`}>
-                  <button
-                    type="button"
-                    onClick={() => { setRptTypeOpen(p => !p); setRptYearOpen(false); setRptScopeOpen(false); }}
-                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${rptTypeOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-slate-300 dark:border-slate-700 hover:border-brand-300'
-                      }`}
-                  >
-                    <LayoutTemplate className="w-3.5 h-3.5 text-brand-500 shrink-0" />
-                    <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
-                      {({
-                        'STUDENT_PERFORMANCE': 'Student Performance Detail',
-                        'COLLEGE_EXECUTIVE': 'College Executive Overview',
-                        'DEPARTMENT_PERFORMANCE': 'Department Performance',
-                        'BATCH_PERFORMANCE': 'Batch Performance',
-                        'CONTEST_PERFORMANCE': 'Contest Performance',
-                        'STUDENT_MASTER': 'Student Master (All Roster)',
-                        'LEADERBOARD': 'Leaderboard',
-                        'CUSTOM': 'Custom Report',
-                      } as Record<string, string>)[selectedReportType] || selectedReportType}
-                    </span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${rptTypeOpen ? 'rotate-180' : ''}`} />
-                  </button>
-                  {rptTypeOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
-                      {[
-                        { value: 'STUDENT_PERFORMANCE', label: 'Student Performance Detail', dot: 'bg-brand-500' },
-                        { value: 'COLLEGE_EXECUTIVE', label: 'College Executive Overview', dot: 'bg-indigo-500' },
-                        { value: 'DEPARTMENT_PERFORMANCE', label: 'Department Performance', dot: 'bg-purple-500' },
-                        { value: 'BATCH_PERFORMANCE', label: 'Batch Performance', dot: 'bg-sky-500' },
-                        { value: 'CONTEST_PERFORMANCE', label: 'Contest Performance', dot: 'bg-amber-500' },
-                        { value: 'STUDENT_MASTER', label: 'Student Master (All Roster)', dot: 'bg-teal-500' },
-                        { value: 'LEADERBOARD', label: 'Leaderboard', dot: 'bg-rose-500' },
-                        { value: 'CUSTOM', label: 'Custom Report', dot: 'bg-slate-500' },
-                      ].map(opt => (
-                        <button key={opt.value} type="button"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => { setSelectedReportType(opt.value); setRptTypeOpen(false); }}
-                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${selectedReportType === opt.value ? 'bg-brand-50 dark:bg-brand-950/60' : 'hover:bg-slate-50 dark:hover:bg-navy-800'
-                            }`}
+                  {(() => {
+                    const reportCategories = [
+                      {
+                        title: 'A. CONTEST REPORTS',
+                        titleColor: 'text-brand-600 dark:text-brand-400',
+                        options: [
+                          { value: 'FRIDAY_OFFICIAL_CONTEST', label: 'Friday Official Contest Result', pill: 'OFFICIAL', pillColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-200 border-indigo-300 dark:border-indigo-700' },
+                          { value: 'SUNDAY_LIVE_CONTEST', label: 'Sunday Live Contest Report', pill: 'LIVE', pillColor: 'bg-sky-100 text-sky-800 dark:bg-sky-900/60 dark:text-sky-200 border-sky-300 dark:border-sky-700' },
+                          { value: 'WEEKLY_CONTEST_INTELLIGENCE', label: 'Weekly Contest Intelligence', pill: 'INTELLIGENCE', pillColor: 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200 border-blue-300 dark:border-blue-700' },
+                          { value: 'CONTEST_ATTENDANCE_PARTICIPATION', label: 'Contest Attendance & Participation', pill: 'ATTENDANCE', pillColor: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700' },
+                          { value: 'CONTEST_PERFORMANCE_RANKING', label: 'Contest Performance & Ranking', pill: 'RANKING', pillColor: 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 border-amber-300 dark:border-amber-700' },
+                        ]
+                      },
+                      {
+                        title: 'B. PERFORMANCE REPORTS',
+                        titleColor: 'text-purple-600 dark:text-purple-400',
+                        options: [
+                          { value: 'WEEKLY_STUDENT_PERFORMANCE', label: 'Weekly Student Performance', pill: 'STUDENT', pillColor: 'bg-purple-100 text-purple-800 dark:bg-purple-900/60 dark:text-purple-200 border-purple-300 dark:border-purple-700' },
+                          { value: 'FIVE_WEEK_PERFORMANCE_TREND', label: 'Five-Week Performance Trend', pill: '5-WEEK', pillColor: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-200 border-indigo-300 dark:border-indigo-700' },
+                          { value: 'PROBLEM_DIFFICULTY_INTELLIGENCE', label: 'Problem Difficulty Intelligence', pill: 'DIFFICULTY', pillColor: 'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-200 border-teal-300 dark:border-teal-700' },
+                        ]
+                      },
+                      {
+                        title: 'C. CONSOLIDATED REPORTS',
+                        titleColor: 'text-amber-600 dark:text-amber-400',
+                        options: [
+                          { value: 'FACULTY_CONSOLIDATED', label: 'Faculty Consolidated Performance', pill: 'FACULTY', pillColor: 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 border-amber-300 dark:border-amber-700' },
+                          { value: 'FACULTY_COORDINATOR_CONSOLIDATED', label: 'Faculty Coordinator Consolidated', pill: 'COORDINATOR', pillColor: 'bg-orange-100 text-orange-800 dark:bg-orange-900/60 dark:text-orange-200 border-orange-300 dark:border-orange-700' },
+                          { value: 'HOD_DEPARTMENT_INTELLIGENCE', label: 'HOD Department Intelligence', pill: 'HOD', pillColor: 'bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200 border-rose-300 dark:border-rose-700' },
+                        ]
+                      },
+                      {
+                        title: 'D. EXECUTIVE REPORTS',
+                        titleColor: 'text-indigo-600 dark:text-indigo-400',
+                        options: [
+                          { value: 'PRINCIPAL_EXECUTIVE', label: 'Principal Executive Intelligence', pill: 'PRINCIPAL', pillColor: 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200 border-blue-300 dark:border-blue-700' },
+                          { value: 'MANAGEMENT_EXECUTIVE_SUMMARY', label: 'Management Executive Summary', pill: 'MANAGEMENT', pillColor: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-700' },
+                        ]
+                      }
+                    ];
+
+                    const allOpts = reportCategories.flatMap(c => c.options);
+                    const currentOpt = allOpts.find(o => 
+                      o.value === selectedReportType ||
+                      (selectedReportType === 'STUDENT_PERFORMANCE' && o.value === 'WEEKLY_STUDENT_PERFORMANCE') ||
+                      (selectedReportType === 'COLLEGE_EXECUTIVE' && o.value === 'PRINCIPAL_EXECUTIVE') ||
+                      (selectedReportType === 'DEPARTMENT_PERFORMANCE' && o.value === 'HOD_DEPARTMENT_INTELLIGENCE') ||
+                      (selectedReportType === 'BATCH_PERFORMANCE' && o.value === 'FIVE_WEEK_PERFORMANCE_TREND')
+                    ) || allOpts[0];
+
+                    return (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => { setRptTypeOpen(p => !p); setRptYearOpen(false); setRptScopeOpen(false); }}
+                          className={`w-full flex items-center gap-2.5 px-3.5 py-2 h-11 min-h-[44px] rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none cursor-pointer ${rptTypeOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-slate-200 dark:border-slate-700 hover:border-brand-300'}`}
                         >
-                          <span className={`w-2 h-2 rounded-full shrink-0 ${opt.dot}`} />
-                          <span className={`text-xs truncate flex-1 ${selectedReportType === opt.value ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-slate-700 dark:text-slate-300'}`}>{opt.label}</span>
-                          {selectedReportType === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
+                          <LayoutTemplate className="w-4 h-4 text-brand-500 shrink-0" />
+                          {currentOpt && (
+                            <span className={`shrink-0 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${currentOpt.pillColor}`}>
+                              {currentOpt.pill}
+                            </span>
+                          )}
+                          <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
+                            {currentOpt ? currentOpt.label : selectedReportType}
+                          </span>
+                          <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${rptTypeOpen ? 'rotate-180' : ''}`} />
                         </button>
-                      ))}
-                    </div>
-                  )}
+
+                        {rptTypeOpen && (
+                          <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 min-w-[340px]">
+                            {reportCategories.map(cat => (
+                              <div key={cat.title} className="p-2 space-y-1">
+                                <div className={`text-[10px] font-black uppercase px-2.5 py-1 tracking-wider ${cat.titleColor}`}>
+                                  {cat.title}
+                                </div>
+                                {cat.options.map(opt => {
+                                  const isSelected = selectedReportType === opt.value || 
+                                    (selectedReportType === 'STUDENT_PERFORMANCE' && opt.value === 'WEEKLY_STUDENT_PERFORMANCE') ||
+                                    (selectedReportType === 'COLLEGE_EXECUTIVE' && opt.value === 'PRINCIPAL_EXECUTIVE') ||
+                                    (selectedReportType === 'DEPARTMENT_PERFORMANCE' && opt.value === 'HOD_DEPARTMENT_INTELLIGENCE');
+
+                                  return (
+                                    <button
+                                      key={opt.value}
+                                      type="button"
+                                      onMouseDown={(e) => e.preventDefault()}
+                                      onClick={() => { setSelectedReportType(opt.value); setRptTypeOpen(false); }}
+                                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all ${isSelected ? 'bg-brand-600 text-white font-black shadow-md shadow-brand-500/20' : 'hover:bg-slate-100 dark:hover:bg-navy-800'}`}
+                                    >
+                                      <span className={`w-20 min-w-[5rem] text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border ${isSelected ? 'bg-white/20 text-white border-white/30' : opt.pillColor}`}>
+                                        {opt.pill}
+                                      </span>
+                                      <span className={`text-xs truncate flex-1 ${isSelected ? 'font-black text-white' : 'font-semibold text-slate-700 dark:text-slate-200'}`}>
+                                        {opt.label}
+                                      </span>
+                                      {isSelected && <Check className="w-4 h-4 text-white shrink-0" strokeWidth={3} />}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
 
               {/* 2. Department — Premium Dropdown */}
-              <div className="space-y-1.5 z-20">
+              <div className="flex flex-col min-w-0 w-full z-[30]">
                 <PremiumDepartmentSelect
                   selectedDept={selectedDept}
                   onChange={setSelectedDept}
                   label="Department"
+                  className="!w-full"
                 />
               </div>
 
               {/* 3. Year / Batch — Premium Dropdown */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider">Year / Batch</label>
+              <div className="flex flex-col space-y-1.5 min-w-0 w-full relative z-[25]">
+                <span className="block text-xs font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider truncate">Year / Batch</span>
                 <div className={`relative ${rptYearOpen ? 'z-30' : 'z-10'}`}>
                   <button
                     type="button"
                     onClick={() => { setRptYearOpen(p => !p); setRptTypeOpen(false); setRptScopeOpen(false); }}
-                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${rptYearOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-slate-300 dark:border-slate-700 hover:border-brand-300'
-                      }`}
+                    className={`w-full flex items-center gap-2.5 px-3.5 py-2 h-11 min-h-[44px] rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none cursor-pointer ${rptYearOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-slate-200 dark:border-slate-700 hover:border-brand-300'}`}
                   >
-                    <GraduationCap className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+                    <GraduationCap className="w-4 h-4 text-brand-500 shrink-0" />
                     {selectedYear === 'ALL' ? (
-                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300">ALL</span>
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-md shrink-0 border text-slate-700 bg-slate-100 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700">ALL</span>
                     ) : selectedYear === '2' ? (
-                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300">II</span>
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-md shrink-0 border text-sky-700 bg-sky-100 border-sky-300 dark:bg-sky-900/60 dark:text-sky-200 dark:border-sky-700">II</span>
                     ) : selectedYear === '3' ? (
-                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300">III</span>
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-md shrink-0 border text-violet-700 bg-violet-100 border-violet-300 dark:bg-violet-900/60 dark:text-violet-200 dark:border-violet-700">III</span>
                     ) : (
-                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300">IV</span>
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-md shrink-0 border text-amber-700 bg-amber-100 border-amber-300 dark:bg-amber-900/60 dark:text-amber-200 dark:border-amber-700">IV</span>
                     )}
                     <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
                       {selectedYear === 'ALL' ? 'All Academic Years' : selectedYear === '2' ? 'Year (2025–2029)' : selectedYear === '3' ? 'Year (2024–2028)' : 'Year (2023–2027)'}
@@ -592,68 +670,85 @@ export const ReportsPage: React.FC = () => {
                     <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${rptYearOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {rptYearOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto p-1.5 space-y-1">
                       {[
-                        { value: 'ALL', code: 'ALL', label: 'All Academic Years', color: 'text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300' },
-                        { value: '2', code: 'II', label: 'Year (2025–2029)', color: 'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
-                        { value: '3', code: 'III', label: 'Year (2024–2028)', color: 'text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300' },
-                        { value: '4', code: 'IV', label: 'Year (2023–2027)', color: 'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
-                      ].map(opt => (
-                        <button key={opt.value} type="button"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => { setSelectedYear(opt.value); setRptYearOpen(false); }}
-                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${selectedYear === opt.value ? 'bg-brand-50 dark:bg-brand-950/60' : 'hover:bg-slate-50 dark:hover:bg-navy-800'
-                            }`}
-                        >
-                          <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${opt.color}`}>{opt.code}</span>
-                          <span className={`text-xs truncate flex-1 ${selectedYear === opt.value ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-slate-700 dark:text-slate-300'}`}>{opt.label}</span>
-                          {selectedYear === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
-                        </button>
-                      ))}
+                        { value: 'ALL', code: 'ALL', label: 'All Academic Years', pillColor: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700' },
+                        { value: '2', code: 'II', label: 'Year II (2025–2029)', pillColor: 'bg-sky-100 text-sky-700 border-sky-300 dark:bg-sky-900/60 dark:text-sky-200 dark:border-sky-700' },
+                        { value: '3', code: 'III', label: 'Year III (2024–2028)', pillColor: 'bg-violet-100 text-violet-700 border-violet-300 dark:bg-violet-900/60 dark:text-violet-200 dark:border-violet-700' },
+                        { value: '4', code: 'IV', label: 'Year IV (2023–2027)', pillColor: 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/60 dark:text-amber-200 dark:border-amber-700' },
+                      ].map(opt => {
+                        const isSelected = selectedYear === opt.value;
+                        return (
+                          <button key={opt.value} type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => { setSelectedYear(opt.value); setRptYearOpen(false); }}
+                            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all ${isSelected ? 'bg-brand-600 text-white font-black shadow-md shadow-brand-500/20' : 'hover:bg-slate-100 dark:hover:bg-navy-800'}`}
+                          >
+                            <span className={`w-12 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border ${isSelected ? 'bg-white/20 text-white border-white/30' : opt.pillColor}`}>{opt.code}</span>
+                            <span className={`text-xs truncate flex-1 ${isSelected ? 'font-black text-white' : 'font-semibold text-slate-700 dark:text-slate-200'}`}>{opt.label}</span>
+                            {isSelected && <Check className="w-4 h-4 text-white shrink-0" strokeWidth={3} />}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
               </div>
 
               {/* 4. Output Scope — Premium Dropdown */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider">Output Scope</label>
+              <div className="flex flex-col space-y-1.5 min-w-0 w-full relative z-[20]">
+                <span className="block text-xs font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider truncate">Output Scope</span>
                 <div className={`relative ${rptScopeOpen ? 'z-30' : 'z-10'}`}>
-                  <button
-                    type="button"
-                    onClick={() => { setRptScopeOpen(p => !p); setRptTypeOpen(false); setRptYearOpen(false); }}
-                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${rptScopeOpen ? 'border-purple-400 ring-2 ring-purple-400/20' : 'border-slate-300 dark:border-slate-700 hover:border-purple-300'
-                      }`}
-                  >
-                    <Target className="w-3.5 h-3.5 text-purple-500 shrink-0" />
-                    <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
-                      {{ 'COLLEGE': 'College-wide', 'DEPARTMENT': 'Department-wide', 'YEAR': 'Year-wise', 'DEPT_YEAR': 'Department + Year', 'CUSTOM': 'Custom Filters' }[selectedOutputScope] || selectedOutputScope}
-                    </span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${rptScopeOpen ? 'rotate-180' : ''}`} />
-                  </button>
-                  {rptScopeOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg max-h-64 overflow-y-auto">
-                      {[
-                        { value: 'COLLEGE', label: 'College-wide', dot: 'bg-indigo-500' },
-                        { value: 'DEPARTMENT', label: 'Department-wide', dot: 'bg-purple-500' },
-                        { value: 'YEAR', label: 'Year-wise', dot: 'bg-sky-500' },
-                        { value: 'DEPT_YEAR', label: 'Department + Year', dot: 'bg-emerald-500' },
-                        { value: 'CUSTOM', label: 'Custom Filters', dot: 'bg-amber-500' },
-                      ].map(opt => (
-                        <button key={opt.value} type="button"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => { setSelectedOutputScope(opt.value); setRptScopeOpen(false); }}
-                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${selectedOutputScope === opt.value ? 'bg-purple-50 dark:bg-purple-950/60' : 'hover:bg-slate-50 dark:hover:bg-navy-800'
-                            }`}
+                  {(() => {
+                    const scopeOptions = [
+                      { value: 'COLLEGE', pill: 'COLLEGE', label: 'College-wide', pillColor: 'bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-200 border-purple-300 dark:border-purple-700' },
+                      { value: 'DEPARTMENT', pill: 'DEPT', label: 'Department-wide', pillColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-200 border-blue-300 dark:border-blue-700' },
+                      { value: 'YEAR', pill: 'YEAR', label: 'Year-wise', pillColor: 'bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-200 border-sky-300 dark:border-sky-700' },
+                      { value: 'DEPT_YEAR', pill: 'DEPT+YR', label: 'Department + Year', pillColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700' },
+                      { value: 'CUSTOM', pill: 'CUSTOM', label: 'Custom Filters', pillColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-200 border-amber-300 dark:border-amber-700' },
+                    ];
+                    const currentScope = scopeOptions.find(s => s.value === selectedOutputScope) || scopeOptions[0];
+
+                    return (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => { setRptScopeOpen(p => !p); setRptTypeOpen(false); setRptYearOpen(false); }}
+                          className={`w-full flex items-center gap-2.5 px-3.5 py-2 h-11 min-h-[44px] rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none cursor-pointer ${rptScopeOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-slate-200 dark:border-slate-700 hover:border-brand-300'}`}
                         >
-                          <span className={`w-2 h-2 rounded-full shrink-0 ${opt.dot}`} />
-                          <span className={`text-xs truncate flex-1 ${selectedOutputScope === opt.value ? 'font-black text-purple-700 dark:text-purple-300' : 'font-semibold text-slate-700 dark:text-slate-300'}`}>{opt.label}</span>
-                          {selectedOutputScope === opt.value && <Check className="w-3.5 h-3.5 text-purple-500 shrink-0" />}
+                          <Target className="w-4 h-4 text-purple-500 shrink-0" />
+                          {currentScope && (
+                            <span className={`shrink-0 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${currentScope.pillColor}`}>
+                              {currentScope.pill}
+                            </span>
+                          )}
+                          <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
+                            {currentScope ? currentScope.label : selectedOutputScope}
+                          </span>
+                          <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${rptScopeOpen ? 'rotate-180' : ''}`} />
                         </button>
-                      ))}
-                    </div>
-                  )}
+
+                        {rptScopeOpen && (
+                          <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto p-1.5 space-y-1">
+                            {scopeOptions.map(opt => {
+                              const isSelected = selectedOutputScope === opt.value;
+                              return (
+                                <button key={opt.value} type="button"
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  onClick={() => { setSelectedOutputScope(opt.value); setRptScopeOpen(false); }}
+                                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all ${isSelected ? 'bg-brand-600 text-white font-black shadow-md shadow-brand-500/20' : 'hover:bg-slate-100 dark:hover:bg-navy-800'}`}
+                                >
+                                  <span className={`w-16 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border ${isSelected ? 'bg-white/20 text-white border-white/30' : opt.pillColor}`}>{opt.pill}</span>
+                                  <span className={`text-xs truncate flex-1 ${isSelected ? 'font-black text-white' : 'font-semibold text-slate-700 dark:text-slate-200'}`}>{opt.label}</span>
+                                  {isSelected && <Check className="w-4 h-4 text-white shrink-0" strokeWidth={3} />}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
 

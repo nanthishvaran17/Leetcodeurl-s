@@ -189,13 +189,6 @@ def build_intelligence_pdf(dataset: Dict[str, Any]) -> bytes:
         build_recommendations, dataset, _USABLE_W,
         section_name="Recommendations"
     ))
-    story.append(PageBreak())
-
-    # 13. Data Quality & Audit
-    story.extend(_section_elements_safe(
-        build_methodology_and_audit, dataset, styles, table_style,
-        section_name="Data Quality & Audit"
-    ))
 
     # Build PDF with numbered canvas
     canvas_maker = make_intelligence_numbered_canvas(meta)

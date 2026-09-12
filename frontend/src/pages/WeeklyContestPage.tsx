@@ -704,7 +704,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       if (cachedList && cachedList.length > 0) {
         setSessionsList(cachedList);
         if (cachedCurr) setCurrentSession(cachedCurr);
-        const targetId = cachedList[0].sessionId || cachedCurr?.sessionId;
+        const targetId = cachedCurr?.sessionId || (cachedList.length > 0 ? cachedList[0].sessionId : null);
         if (targetId && !selectedSessionId) {
           setSelectedSessionId(targetId);
         }
@@ -719,7 +719,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       const list = allSessionsRes || [];
       setSessionsList(list);
 
-      const targetId = (list.length > 0 ? list[0].sessionId : null) || currRes?.sessionId;
+      const targetId = currRes?.sessionId || (list.length > 0 ? list[0].sessionId : null);
       if (targetId && !selectedSessionId) {
         setSelectedSessionId(targetId);
       }

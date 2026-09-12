@@ -277,6 +277,50 @@ class TestContestPerformanceReport(unittest.TestCase):
         self.assertIn(b"ALICE", csv_bytes)
         self.assertIn(b"732224CC999", csv_bytes)
 
+    def test_sunday_live_contest_report(self):
+        """Tests Sunday Live Contest report fields, question time formatting, and dynamic solve calculation."""
+        s = Student(name="BOB LIVE", reg_no="732224CC888", department_id=self.dept_cs.id, year_level="III", username="bob_live")
+        self.db.add(s)
+        self.db.commit()
+
+        res = WeeklyPublicResult(
+            session_id=self.session_515.id,
+            student_id=s.id,
+            reg_no=s.reg_no,
+            name=s.name,
+            dept="CSE(CS)",
+            year="III",
+            participation_status="PUBLIC_ATTENDED",
+            q1=1,
+            q2=1,
+            q3=0,
+            q4=1,
+            total_contest_solved=3
+        )
+        res.q1_time = 8.0
+        res.q2_time = 12.0
+        res.q3_time = None
+        res.q4_time = 15.0
+        res.finish_time = 35.0
+
+        self.db.add(res)
+        self.db.commit()
+
+        rep = build_contest_performance_report(self.db, ReportConfig(report_type="SUNDAY_LIVE_CONTEST", department="ALL", year="ALL"))
+        self.assertEqual(rep["reportType"], "SUNDAY_LIVE_CONTEST")
+        students = rep["allStudents"]
+        self.assertEqual(len(students), 1)
+
+        bob = students[0]
+        self.assertEqual(bob["reg_no"], "732224CC888")
+        self.assertEqual(bob["q1_display"], "1 (8 min)")
+        self.assertEqual(bob["q2_display"], "1 (12 min)")
+        self.assertEqual(bob["q3_display"], "0 (—)")
+        self.assertEqual(bob["q4_display"], "1 (15 min)")
+        self.assertEqual(bob["contest_solved"], 3)
+        self.assertEqual(bob["total_time_display"], "35 min")
+
 
 if __name__ == "__main__":
     unittest.main()
+

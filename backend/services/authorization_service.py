@@ -126,7 +126,7 @@ def get_authorized_student_ids(db: Session, user: Optional[User]) -> Optional[Li
     Returns None if the user has GLOBAL/INSTITUTIONAL access (Admin, Principal, Management, etc.).
     """
     if not user:
-        return []
+        return None  # Unrestricted global access for system tasks
 
     role = _normalize_role(user)
 
@@ -170,8 +170,8 @@ def apply_role_based_student_filter(query, user: Optional[User], db: Session):
     HOD: Filters by ALL allocated departments from HODDepartmentAllocation (multi-dept aware).
     """
     if not user:
-        # Unauthenticated — fail closed
-        return query.filter(Student.id == -1)
+        # System engine / Unauthenticated report generation — return full institutional query
+        return query
 
     role = _normalize_role(user)
 

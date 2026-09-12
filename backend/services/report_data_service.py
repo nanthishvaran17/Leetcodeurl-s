@@ -28,9 +28,16 @@ def get_problem_category(total_solved: Optional[int], is_verified: bool = True) 
     return "Data Unavailable"
 
 def resolve_dept_canonical(dept_str: Optional[str]) -> str:
-    if not dept_str or dept_str.upper().strip() in ("ALL", ""):
+    if not dept_str or str(dept_str).upper().strip() in ("ALL", ""):
         return "ALL"
-    su = dept_str.upper().strip()
+    su = str(dept_str).upper().strip()
+    if su.isdigit():
+        id_code_map = {
+            "1": "CSE(CS)", "2": "CSE(IOT)", "7": "IT", "8": "CSE",
+            "9": "AGRI", "10": "AIDS", "11": "EEE", "12": "ECE"
+        }
+        if su in id_code_map:
+            return id_code_map[su]
     dept_map = {
         "CSE(CS)":  ["CSE(CS)", "CYBER SECURITY", "CYBER", "CSE(CYBER", "CSE (CYBER", "(CS)"],
         "CSE(IOT)": ["CSE(IOT)", "IOT", "CSE(IOT", "CSE (IOT", "(IOT)"],
@@ -71,6 +78,7 @@ def fetch_normalized_students(
     """
     from backend.services.authorization_service import apply_role_based_student_filter
     from backend.models import LeetCodeProfileStats
+    from backend.services.contest_performance_service import matches_dept, matches_year
 
     # Resolve aliases from kwargs
     if ("department" in kwargs or "dept" in kwargs) and (dept_filter == "ALL" or not dept_filter):
@@ -105,19 +113,14 @@ def fetch_normalized_students(
     for s in students:
         # 1. Department Filter
         if canon_dept != "ALL":
-            s_dept = resolve_dept_canonical(s.department.code if s.department else "")
-            if s_dept != canon_dept:
+            s_code = s.department.code if s.department else ""
+            s_name = s.department.name if s.department else ""
+            if not matches_dept(s_code, s_name, dept_filter, getattr(s, "department_id", None)):
                 continue
 
         # 2. Year Filter
         if canon_year != "ALL":
-            s_year = str(s.year_level or "").upper().strip()
-            year_match = False
-            if canon_year in ("II", "2", "2ND", "II YEAR") and s_year in ("II", "2"): year_match = True
-            elif canon_year in ("III", "3", "3RD", "III YEAR") and s_year in ("III", "3"): year_match = True
-            elif canon_year in ("IV", "4", "4TH", "IV YEAR") and s_year in ("IV", "4"): year_match = True
-            elif canon_year == s_year: year_match = True
-            if not year_match:
+            if not matches_year(s.year_level, year_filter, s.reg_no):
                 continue
 
         # 3. Section Filter

@@ -184,6 +184,8 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
     if "Sheet" in wb.sheetnames:
         wb.remove(wb["Sheet"])
         
-    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    dir_path = os.path.dirname(filepath)
+    if dir_path:
+        os.makedirs(dir_path, exist_ok=True)
     wb.save(filepath)
     return filepath

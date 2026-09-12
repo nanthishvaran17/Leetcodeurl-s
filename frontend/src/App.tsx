@@ -169,7 +169,7 @@ export const App: React.FC = () => {
     onToggleNotifications: () => window.dispatchEvent(new CustomEvent('toggle_notifications')),
     onToggleSidebar: () => setIsSidebarOpen(prev => !prev),
     onStudentQuickSearch: () => setShowCommandPalette(true),
-    onGenerateReport: () => handleTabChange('reports'),
+    onGenerateReport: () => handleTabChange('dashboard'),
     isTabAllowed: (tab: string) => isTabAllowed(tab),
     userRole: user?.role,
   });
@@ -179,8 +179,14 @@ export const App: React.FC = () => {
       setIsSidebarOpen(prev => !prev);
     };
     window.addEventListener('toggle_sidebar', handleToggleSidebar);
+    const handleOpenAi = () => {
+      setShowAiWidget(true);
+      window.dispatchEvent(new CustomEvent('force_open_ai_widget'));
+    };
+    window.addEventListener('open_ai_widget', handleOpenAi);
     return () => {
       window.removeEventListener('toggle_sidebar', handleToggleSidebar);
+      window.removeEventListener('open_ai_widget', handleOpenAi);
     };
   }, []);
 
@@ -201,8 +207,10 @@ export const App: React.FC = () => {
     const handleHashChange = () => {
       const hash = window.location.hash;
       if (hash && hash.startsWith('#/')) {
-        const tab = hash.replace('#/', '');
+        const tab = hash.replace('#/', '').trim();
         if (tab) setActiveTab(tab);
+      } else if (isAuthenticated) {
+        setActiveTab('dashboard');
       }
     };
 
@@ -231,8 +239,14 @@ export const App: React.FC = () => {
   useEffect(() => {
     if (isAuthenticated) {
       if (showLoginModal) setShowLoginModal(false);
-      if (activeTab === 'landing' && !window.location.hash) {
+      const cleanHash = (window.location.hash || '').replace('#/', '').trim();
+      if (!cleanHash || cleanHash === 'landing') {
         setActiveTab('dashboard');
+        try {
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', '#/dashboard');
+          }
+        } catch (_e) {}
       }
     }
   }, [isAuthenticated]);
@@ -426,6 +440,13 @@ export const App: React.FC = () => {
       return;
     }
     setActiveTab(tab);
+    try {
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, '', `#/${tab}`);
+      } else {
+        window.location.hash = `#/${tab}`;
+      }
+    } catch (_e) {}
     // Robust scroll-to-top: covers window, html, and any scrollable main container
     window.scrollTo(0, 0);
     document.documentElement.scrollTop = 0;
@@ -522,18 +543,18 @@ export const App: React.FC = () => {
   // CENTRALIZED ROLE PERMISSION MATRIX 
   // Single source of truth for all role-based tab access.
   // NEVER duplicate this logic across components.
-  const ALL_ACADEMIC_TABS = useMemo(() => ['dashboard','landing','public','profile','students','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','staff-dashboard','student-dashboard','messages'], []);
+  const ALL_ACADEMIC_TABS = useMemo(() => ['dashboard','landing','public','profile','students','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'], []);
   
   const ROLE_PERMISSIONS = useMemo<Record<string, string[]>>(() => ({
     // Super admin / admin: full system access
-    admin:            ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages'],
-    administrator:    ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages'],
-    super_admin:      ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages'],
-    'super admin':    ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages'],
+    admin:            ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
+    administrator:    ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
+    super_admin:      ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
+    'super admin':    ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
     // HOD: command center + all academic tools
-    hod:              ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports'],
-    'department hod': ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports'],
-    department_hod:   ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports'],
+    hod:              ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
+    'department hod': ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
+    department_hod:   ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
     // FACULTY / STAFF MENTOR: full academic & contest tools
     faculty:          ALL_ACADEMIC_TABS,
     'faculty mentor': ALL_ACADEMIC_TABS,
@@ -768,6 +789,14 @@ export const App: React.FC = () => {
                   : renderAccessDenied('Reports & Exports')
               )}
 
+              {(activeTab === 'hr-candidate-finder' || activeTab === 'candidate-requirements' || activeTab === 'placement-finder' || activeTab === 'hr-finder') && (
+                isTabAllowed('hr-candidate-finder') ? (
+                  <Suspense fallback={<PageSkeleton />}>
+                    <HRCandidateFinderPage />
+                  </Suspense>
+                ) : renderAccessDenied('Placement & Hiring Portal')
+              )}
+
               {activeTab === 'public' && (
                 <PublicLeaderboardPage onSelectStudent={handleSelectStudent} />
               )}
@@ -788,10 +817,6 @@ export const App: React.FC = () => {
                 isTabAllowed('ai-control')
                   ? <AIControlCenterPage />
                   : renderAccessDenied('AI Control Center — Admin Only')
-              )}
-
-              {activeTab === 'hr-candidate-finder' && (
-                <HRCandidateFinderPage />
               )}
             </Suspense>
           </ErrorBoundary>
@@ -846,24 +871,14 @@ export const App: React.FC = () => {
         </Suspense>
       )}
 
-      {/* Floating Global NEC Unified AI Widget (Lazy Loaded on User Intent) */}
-      {showAiWidget ? (
+      {/* Global NEC Unified AI Assistant Drawer (Header-Triggered) */}
+      {showAiWidget && (
         <Suspense fallback={null}>
-          <AIAssistantWidget onNavigateTab={handleTabChange} />
+          <AIAssistantWidget
+            onNavigateTab={handleTabChange}
+            onClose={() => setShowAiWidget(false)}
+          />
         </Suspense>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setShowAiWidget(true)}
-          onMouseEnter={() => {
-            import('./components/AIAssistantWidget');
-          }}
-          className="fixed bottom-[max(2rem,env(safe-area-inset-bottom,2rem))] right-4 sm:right-5 z-[9990] p-3 min-w-[48px] min-h-[48px] rounded-full bg-brand-600 hover:bg-brand-500 text-white shadow-xl shadow-brand-500/30 flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer border border-white/20"
-          title="Open AI & Operations Assistant"
-          aria-label="Open AI Copilot"
-        >
-          <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
-        </button>
       )}
 
       {/* Viewport-Centered Student Profile Modal */}

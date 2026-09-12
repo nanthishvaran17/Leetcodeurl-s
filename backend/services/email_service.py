@@ -218,6 +218,16 @@ def send_email_via_resend(
     attachments: Optional[List[Tuple[str, bytes]]] = None,
     text_body: Optional[str] = None
 ) -> Tuple[bool, Optional[str]]:
+    # === TEMPORARY EMAIL BLOCK ===
+    # Requested by Admin: Stop all automated/report emails EXCEPT ID Creation, Allocation Updates, and Forgot Password.
+    allowed_keywords = ["allocation", "assigned", "removed", "password", "verification", "credentials", "account", "setup", "update"]
+    subject_lower = subject.lower()
+    
+    if not any(k in subject_lower for k in allowed_keywords):
+        logger.info(f"[TEMPORARY_BLOCK_RESEND] Skipped sending non-critical email '{subject}' to {recipient}")
+        return True, "SKIPPED_DUE_TO_TEMPORARY_BLOCK"
+    # =============================
+
     sender = from_email if (from_email and "@" in from_email and "nandha" not in from_email) else "onboarding@resend.dev"
     payload: Dict[str, Any] = {
         "from": f"Nandha Engineering College — LeetCode Tracker <{sender}>",
@@ -376,6 +386,16 @@ def send_email_via_brevo(
     if text_body:
         text_body = strip_all_emojis(text_body)
 
+    # === TEMPORARY EMAIL BLOCK ===
+    # Requested by Admin: Stop all automated/report emails EXCEPT ID Creation, Allocation Updates, and Forgot Password.
+    allowed_keywords = ["allocation", "assigned", "removed", "password", "verification", "credentials", "account", "setup", "update"]
+    subject_lower = subject.lower()
+    
+    if not any(k in subject_lower for k in allowed_keywords):
+        logger.info(f"[TEMPORARY_BLOCK_BREVO] Skipped sending non-critical email '{subject}' to {recipient}")
+        return True, "SKIPPED_DUE_TO_TEMPORARY_BLOCK"
+    # =============================
+
     payload: Dict[str, Any] = {
         "sender": {"name": "Nandha Engineering College — LeetCode Tracker", "email": sender_email},
         "replyTo": {"name": "Nandha Admin Support", "email": recipient if recipient else "nanthishvaran17@gmail.com"},
@@ -529,6 +549,16 @@ def send_email(
     subject = strip_all_emojis(subject)
     if text_body:
         text_body = strip_all_emojis(text_body)
+
+    # === TEMPORARY EMAIL BLOCK ===
+    # Requested by Admin: Stop all automated/report emails EXCEPT ID Creation, Allocation Updates, and Forgot Password.
+    allowed_keywords = ["allocation", "assigned", "removed", "password", "verification", "credentials", "account", "setup", "update"]
+    subject_lower = subject.lower()
+    
+    if not any(k in subject_lower for k in allowed_keywords):
+        logger.info(f"[TEMPORARY_BLOCK] Skipped sending non-critical email '{subject}' to {recipient}")
+        return True, "SKIPPED_DUE_TO_TEMPORARY_BLOCK"
+    # =============================
 
     # Step 1: Pre-flight recipient validation
     is_valid, status_code, val_err = validate_recipient_email(recipient)

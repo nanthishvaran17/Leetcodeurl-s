@@ -22,7 +22,8 @@ import {
   HelpCircle,
   ChevronRight,
   Loader2,
-  GraduationCap
+  GraduationCap,
+  Briefcase
 } from 'lucide-react';
 import { useKeyboardContext } from '../context/KeyboardContext';
 import { useAuth } from '../context/AuthContext';
@@ -213,15 +214,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         category: 'Commands',
         action: () => onNavigate('dashboard')
       },
-      {
-        id: 'nav_hr',
-        type: 'navigation',
-        label: 'HR Candidate Finder',
-        sublabel: 'Filter job-ready candidates by solve count & skills',
-        icon: Users,
-        category: 'Commands',
-        action: () => onNavigate('hr-candidate-finder')
-      },
+
       {
         id: 'nav_reports',
         type: 'navigation',
@@ -257,6 +250,16 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         icon: Trophy,
         category: 'Commands',
         action: () => onNavigate('weekly-contest')
+      },
+      {
+        id: 'nav_placement_intelligence',
+        type: 'navigation',
+        label: 'Placement & Hiring Portal',
+        sublabel: 'Filter candidates by academic criteria, coding solves, and placement readiness',
+        icon: Briefcase,
+        category: 'Commands',
+        badge: 'PLACEMENTS',
+        action: () => onNavigate('hr-candidate-finder')
       },
       {
         id: 'nav_system',

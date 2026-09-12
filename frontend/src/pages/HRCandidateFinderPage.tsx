@@ -35,7 +35,7 @@ export interface Candidate {
   current_streak: number;
   active_days: number;
   contest_rating: number;
-  global_rank: number;
+  global_rank: number | string;
   contests_attended: number;
   contest_top_pct: number;
   performance_score: number;
@@ -121,7 +121,7 @@ const defaultFilters: AdvancedFilters = {
   profile_class: "all",
   improvement_priority: "all",
   trend: "all",
-  top_n: 50,
+  top_n: 10000,
   total_solved: defaultNumeric(0),
   easy_solved: defaultNumeric(0),
   medium_solved: defaultNumeric(0),
@@ -168,16 +168,23 @@ function inferLanguage(s: any): string {
   return "Java";
 }
 
-function evaluateNumeric(val: number | null | undefined, filter: NumericFilter): boolean {
+function evaluateNumeric(val: number | string | null | undefined, filter: NumericFilter): boolean {
   if (!filter.active) return true;
-  if (val == null || isNaN(val)) return false;
+  if (val == null) return false;
+  let numVal: number;
+  if (typeof val === "number") {
+    numVal = val;
+  } else {
+    numVal = parseInt(String(val).replace(/\D/g, ""), 10);
+  }
+  if (isNaN(numVal)) return false;
   switch (filter.op) {
-    case "=": return val === filter.val1;
-    case ">": return val > filter.val1;
-    case ">=": return val >= filter.val1;
-    case "<": return val < filter.val1;
-    case "<=": return val <= filter.val1;
-    case "BETWEEN": return val >= filter.val1 && val <= filter.val2;
+    case "=": return numVal === filter.val1;
+    case ">": return numVal > filter.val1;
+    case ">=": return numVal >= filter.val1;
+    case "<": return numVal < filter.val1;
+    case "<=": return numVal <= filter.val1;
+    case "BETWEEN": return numVal >= filter.val1 && numVal <= filter.val2;
     default: return true;
   }
 }
@@ -637,7 +644,8 @@ export const HRCandidateFinderPage: React.FC = () => {
     { value: 20, label: "Top 20 Candidates", badge: "TOP 20" },
     { value: 50, label: "Top 50 Candidates", badge: "TOP 50" },
     { value: 100, label: "Top 100 Candidates", badge: "TOP 100" },
-    { value: 1000, label: "All Candidates", badge: "ALL" },
+    { value: 500, label: "Top 500 Candidates", badge: "TOP 500" },
+    { value: 10000, label: "All Candidates (Live DB Count)", badge: "ALL" },
   ];
 
   const sortFieldOptions: SelectOption[] = [
@@ -676,7 +684,7 @@ export const HRCandidateFinderPage: React.FC = () => {
           placement_readiness: filters.placement_readiness,
           risk_level: filters.risk_level,
           profile_class: filters.profile_class,
-          top_n: 1000
+          top_n: 10000
         }
       });
 
@@ -688,7 +696,7 @@ export const HRCandidateFinderPage: React.FC = () => {
           department: typeof c.department === "object" ? (c.department?.name || "Computer Science") : String(c.department || "Computer Science")
         }));
       } else {
-        const stRes = await api.get("/students", { params: { limit: 1000 } });
+        const stRes = await api.get("/students", { params: { limit: 10000 } });
         const students = Array.isArray(stRes.data) ? stRes.data : (stRes.data?.students || []);
         rawList = students.map((s: any) => {
           const stats = s.stats || {};
@@ -1055,7 +1063,7 @@ export const HRCandidateFinderPage: React.FC = () => {
       coding_eval: totSolved >= 300 ? "Excellent" : "Strong",
       contest_eval: contestRating !== "N/A" && Number(contestRating) >= 1500 ? "Strong" : "Moderate",
       consistency_eval: streak >= 14 ? "Excellent" : "Good",
-      recommended_for: perfScore >= 70 ? ["Technical Screening", "Product Company"] : ["Service Company", "Skill Mentorship"]
+      recommended_for: perfScore >= 70 ? ["Tier-1 Campus Drives", "Core Engineering Roles"] : ["Standard Campus Drives", "Skill Mentorship"]
     };
 
     const readinessBg = readiness.includes("READY") ? "#dcfce7" : (readiness.includes("TRACK") ? "#fef9c3" : "#fee2e2");
@@ -1258,10 +1266,10 @@ export const HRCandidateFinderPage: React.FC = () => {
             ${selectionReasons.slice(0, 4).map((s: string) => `<div style="margin-bottom: 2px;">${s}</div>`).join('')}
           </div>
           <div class="box-panel box-blue">
-            <div class="panel-header">HR Assessment & Recommendation</div>
+            <div class="panel-header">Placement Cell Assessment & Recommendation</div>
             <div style="margin-bottom: 2px;"><strong>Candidate Rating:</strong> ${hrDecision.candidate_strength || '★★★★★'}</div>
             <div style="margin-bottom: 2px;"><strong>Coding Proficiency:</strong> ${hrDecision.coding_eval || 'Excellent'}</div>
-            <div style="margin-bottom: 2px;"><strong>Recommended For:</strong> ${(Array.isArray(hrDecision.recommended_for) ? hrDecision.recommended_for.join(', ') : hrDecision.recommended_for) || 'Technical Screening'}</div>
+            <div style="margin-bottom: 2px;"><strong>Recommended For:</strong> ${(Array.isArray(hrDecision.recommended_for) ? hrDecision.recommended_for.join(', ') : hrDecision.recommended_for) || 'Tier-1 Campus Drives'}</div>
             <div><strong>Areas to Watch:</strong> ${watchList[0] || 'Maintain consistency'}</div>
           </div>
         </div>
@@ -1332,7 +1340,7 @@ export const HRCandidateFinderPage: React.FC = () => {
         <div class="footer">
           <span>Nandha Engineering College • LeetCode Intelligence Engine</span>
           <span>Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</span>
-          <span>Confidential — HR Recruitment Cell</span>
+          <span>Confidential — Placement & Training Cell</span>
         </div>
 
         <script>
@@ -1690,21 +1698,6 @@ export const HRCandidateFinderPage: React.FC = () => {
       render: renderContestSection,
     },
     {
-      id: "readiness",
-      title: "Intelligence & Readiness",
-      icon: <Brain className="w-4 h-4 text-indigo-500" />,
-      badgeColor: "text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800",
-      activeCount: [
-        filters.performance_score.active && filters.performance_score.val1 > 0,
-        filters.placement_readiness !== "all",
-        filters.interview_readiness.active && filters.interview_readiness.val1 > 0,
-        filters.risk_level !== "all",
-        filters.improvement_priority !== "all",
-        filters.trend !== "all",
-      ].filter(Boolean).length,
-      render: renderReadinessSection,
-    },
-    {
       id: "results",
       title: "Results Options",
       icon: <BarChart2 className="w-4 h-4 text-slate-500" />,
@@ -1727,10 +1720,10 @@ export const HRCandidateFinderPage: React.FC = () => {
           <div className="space-y-2.5 max-w-2xl">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
               <Filter className="w-3.5 h-3.5 text-brand-400" />
-              <span>RECRUITMENT INTELLIGENCE & CANDIDATE FINDER</span>
+              <span>PLACEMENT & HIRING PORTAL</span>
             </div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white">
-              Candidate <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Requirements</span>
+              Placement & <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Hiring Portal</span>
             </h1>
             <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide">
               Define your recruitment criteria & precision filter top technical talent tailored to institutional benchmarks.
@@ -1976,25 +1969,7 @@ export const HRCandidateFinderPage: React.FC = () => {
           {renderContestSection()}
         </div>
 
-        {/* SECTION 5: INTELLIGENCE & READINESS */}
-        <div className="bg-gradient-to-br from-indigo-50/60 via-slate-50/30 to-sky-50/40 dark:from-indigo-950/40 dark:via-navy-950/40 dark:to-navy-900/60 p-5 rounded-2xl border border-indigo-100/90 dark:border-indigo-900/40 shadow-2xs hover:shadow-md hover:border-indigo-300/60 dark:hover:border-indigo-700/50 transition-all space-y-3.5">
-          <div className="flex items-center justify-between">
-            <div className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20 shadow-2xs">
-                <Brain className="w-4 h-4" />
-              </div>
-              <span>Intelligence & Readiness</span>
-            </div>
-            {accordionSections[4].activeCount > 0 && (
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-500 text-white shadow-2xs">
-                {accordionSections[4].activeCount} Active
-              </span>
-            )}
-          </div>
-          {renderReadinessSection()}
-        </div>
-
-        {/* SECTION 6: RESULTS OPTIONS */}
+        {/* SECTION 5: RESULTS OPTIONS */}
         <div className="bg-gradient-to-br from-slate-100/80 via-slate-50/50 to-blue-50/30 dark:from-navy-950/80 dark:via-navy-900/60 dark:to-slate-900/60 p-5 rounded-2xl border border-slate-200/90 dark:border-navy-700 shadow-2xs hover:shadow-md transition-all space-y-3.5">
           <div className="flex items-center justify-between">
             <div className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2.5">
@@ -2003,9 +1978,9 @@ export const HRCandidateFinderPage: React.FC = () => {
               </div>
               <span>Results & Sorting Options</span>
             </div>
-            {accordionSections[5].activeCount > 0 && (
+            {accordionSections[4].activeCount > 0 && (
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-600 text-white shadow-2xs">
-                {accordionSections[5].activeCount} Active
+                {accordionSections[4].activeCount} Active
               </span>
             )}
           </div>
@@ -2145,101 +2120,71 @@ export const HRCandidateFinderPage: React.FC = () => {
             </div>
           ) : (
             <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-              <table className="w-full text-left text-xs whitespace-nowrap">
+              <table className="w-full text-left text-xs whitespace-nowrap table-fixed">
                 <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-800 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   <tr>
-                    <th className="py-3 px-3 text-center w-8">#</th>
-                    <th className="py-3 px-4">Student</th>
-                    <th className="py-3 px-3">Register No</th>
-                    <th className="py-3 px-3">Dept</th>
-                    <th className="py-3 px-3 text-center">Batch</th>
-                    <th className="py-3 px-3 text-center">Language</th>
-                    <th className="py-3 px-3 text-right cursor-pointer hover:text-blue-600" onClick={() => { setSortField("total_solved"); setSortAsc(!sortAsc); }}>Total</th>
-                    <th className="py-3 px-3 text-right">Easy</th>
-                    <th className="py-3 px-3 text-right">Medium</th>
-                    <th className="py-3 px-3 text-right">Hard</th>
-                    <th className="py-3 px-3 text-right">Acc %</th>
-                    <th className="py-3 px-3 text-right">Rating</th>
-                    <th className="py-3 px-3 text-center">Performance</th>
-                    <th className="py-3 px-4 text-center">Readiness</th>
-                    <th className="py-3 px-3 text-center">Risk</th>
-                    <th className="py-3 px-3 text-center">Trend</th>
-                    <th className="py-3 px-4 text-center">Action</th>
+                    <th className="py-3 px-4 text-left w-[22%]">Student</th>
+                    <th className="py-3 px-2 text-center w-[11%]">Register No</th>
+                    <th className="py-3 px-2 text-center w-[8%]">Dept</th>
+                    <th className="py-3 px-2 text-center w-[9%]">Batch</th>
+                    <th className="py-3 px-2 text-center w-[10%] cursor-pointer hover:text-blue-600 transition-colors" onClick={() => { setSortField("global_rank"); setSortAsc(!sortAsc); }}>Global Rank</th>
+                    <th className="py-3 px-2 text-center w-[8%] cursor-pointer hover:text-blue-600 transition-colors" onClick={() => { setSortField("total_solved"); setSortAsc(!sortAsc); }}>Total Solved</th>
+                    <th className="py-3 px-2 text-center w-[6%] cursor-pointer hover:text-emerald-600 transition-colors" onClick={() => { setSortField("easy_solved"); setSortAsc(!sortAsc); }}>Easy</th>
+                    <th className="py-3 px-2 text-center w-[6%] cursor-pointer hover:text-amber-600 transition-colors" onClick={() => { setSortField("medium_solved"); setSortAsc(!sortAsc); }}>Medium</th>
+                    <th className="py-3 px-2 text-center w-[6%] cursor-pointer hover:text-rose-600 transition-colors" onClick={() => { setSortField("hard_solved"); setSortAsc(!sortAsc); }}>Hard</th>
+                    <th className="py-3 px-2 text-center w-[9%] cursor-pointer hover:text-purple-600 transition-colors" onClick={() => { setSortField("contest_rating"); setSortAsc(!sortAsc); }}>Contest Rating</th>
+                    <th className="py-3 px-2 text-center w-[7%]">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
-                  {displayCandidates.map((c, i) => (
+                  {displayCandidates.map((c) => (
                     <tr key={c.id} className="hover:bg-slate-50/80 dark:hover:bg-navy-800/50 transition-colors">
-                      <td className="py-3 px-3 text-center font-bold text-slate-400 text-[11px]">{i + 1}</td>
-                      <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">
+                      <td className="py-3 px-4 text-left font-bold text-slate-900 dark:text-white w-[22%]">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center font-black text-xs shadow-xs">
+                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center font-black text-xs shadow-xs flex-shrink-0">
                             {c.name.charAt(0)}
                           </div>
-                          <div>
-                            <div className="font-bold text-slate-900 dark:text-white">{c.name}</div>
-                            <div className="text-[10px] text-slate-400 font-mono">{c.username}</div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-bold text-slate-900 dark:text-white text-xs leading-tight truncate">{c.name}</div>
+                            <div className="text-[10px] text-slate-400 font-mono leading-none truncate">{c.username}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 px-3 font-mono text-slate-600 dark:text-slate-300 font-medium">{c.reg_no}</td>
-                      <td className="py-3 px-3">
+                      <td className="py-3 px-2 text-center font-mono text-slate-600 dark:text-slate-300 font-medium text-xs w-[11%]">{c.reg_no}</td>
+                      <td className="py-3 px-2 text-center w-[8%]">
                         <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold text-[10px]">
                           {c.dept_code}
                         </span>
                       </td>
-                      <td className="py-3 px-3 text-center font-semibold text-slate-600 dark:text-slate-400">{c.batch}</td>
-                      <td className="py-3 px-3 text-center">
-                        <span className={`px-2 py-0.5 rounded font-bold text-[10px] border ${langCls[c.primary_language] || "bg-slate-100 text-slate-700"}`}>
-                          {c.primary_language}
+                      <td className="py-3 px-2 text-center font-semibold text-slate-600 dark:text-slate-400 text-xs w-[9%]">{c.batch}</td>
+                      <td className="py-3 px-2 text-center w-[10%]">
+                        <span className="px-2.5 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-mono font-black text-xs border border-blue-200/60 dark:border-blue-900/50">
+                          {(() => {
+                            const gr: any = c.global_rank;
+                            if (gr === null || gr === undefined || gr === "" || gr === "N/A" || gr === "—") return "—";
+                            if (typeof gr === "string") {
+                              const s = gr.trim();
+                              if (s.startsWith("#")) return s;
+                              const num = parseInt(s.replace(/\D/g, ""), 10);
+                              return !isNaN(num) && num > 0 ? `#${num.toLocaleString()}` : s;
+                            }
+                            if (typeof gr === "number" && gr > 0) return `#${gr.toLocaleString()}`;
+                            return "—";
+                          })()}
                         </span>
                       </td>
-                      <td className="py-3 px-3 text-right font-black text-slate-900 dark:text-white text-sm">{c.total_solved}</td>
-                      <td className="py-3 px-3 text-right font-semibold text-emerald-600 dark:text-emerald-400">{c.easy_solved}</td>
-                      <td className="py-3 px-3 text-right font-semibold text-amber-600 dark:text-amber-400">{c.medium_solved}</td>
-                      <td className="py-3 px-3 text-right font-semibold text-rose-600 dark:text-rose-400">{c.hard_solved}</td>
-                      <td className="py-3 px-3 text-right font-bold text-slate-700 dark:text-slate-300">{c.acceptance_rate}%</td>
-                      <td className="py-3 px-3 text-right font-extrabold text-purple-600 dark:text-purple-400">
+                      <td className="py-3 px-2 text-center font-black text-slate-900 dark:text-white text-xs font-mono w-[8%]">{c.total_solved}</td>
+                      <td className="py-3 px-2 text-center font-bold text-emerald-600 dark:text-emerald-400 text-xs font-mono w-[6%]">{c.easy_solved}</td>
+                      <td className="py-3 px-2 text-center font-bold text-amber-600 dark:text-amber-400 text-xs font-mono w-[6%]">{c.medium_solved}</td>
+                      <td className="py-3 px-2 text-center font-bold text-rose-600 dark:text-rose-400 text-xs font-mono w-[6%]">{c.hard_solved}</td>
+                      <td className="py-3 px-2 text-center font-extrabold text-purple-600 dark:text-purple-400 text-xs font-mono w-[9%]">
                         {c.contest_rating > 0 ? c.contest_rating.toLocaleString() : "—"}
                       </td>
-                      <td className="py-3 px-3 text-center font-black text-slate-800 dark:text-slate-200">
-                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-bold text-xs">
-                          {c.performance_score} / 100
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <span className={`px-2.5 py-0.5 rounded-full font-extrabold text-[10px] ${
-                          c.placement_readiness === "Ready" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800" :
-                          c.placement_readiness === "On Track" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800" :
-                          c.placement_readiness === "Developing" ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-200 dark:border-orange-800" :
-                          "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-200 dark:border-rose-800"
-                        }`}>
-                          {c.placement_readiness.toUpperCase()}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3 text-center">
-                        <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] ${
-                          c.risk_level === "Safe" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400" :
-                          c.risk_level === "At Risk" ? "bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400" :
-                          "bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400"
-                        }`}>
-                          {c.risk_level}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3 text-center">
-                        {c.trend === "up" ? (
-                          <span className="text-emerald-600 font-bold text-xs flex items-center justify-center gap-0.5">↑ Up</span>
-                        ) : c.trend === "down" ? (
-                          <span className="text-rose-600 font-bold text-xs flex items-center justify-center gap-0.5">↓ Down</span>
-                        ) : (
-                          <span className="text-slate-400 font-bold text-xs flex items-center justify-center gap-0.5">→ Stable</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-center">
+                      <td className="py-3 px-2 text-center w-[7%]">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             onClick={() => setSelectedCandidate(c)}
-                            className="px-3 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white font-bold text-xs border border-blue-200 dark:border-blue-800 transition-all"
+                            className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white font-bold text-xs border border-blue-200 dark:border-blue-800 transition-all cursor-pointer shadow-2xs"
                           >
                             View
                           </button>
@@ -2479,12 +2424,12 @@ export const HRCandidateFinderPage: React.FC = () => {
 
                         <div className="bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 p-4 rounded-2xl space-y-2">
                           <p className="text-xs font-black text-blue-800 dark:text-blue-300 uppercase tracking-wider flex items-center gap-1.5">
-                            <Star className="w-4 h-4 text-blue-600" /> HR Recommendation
+                            <Star className="w-4 h-4 text-blue-600" /> Placement Recommendation
                           </p>
                           <div className="text-xs space-y-1.5 text-blue-900 dark:text-blue-200">
                             <div className="flex justify-between"><span className="text-slate-500">Candidate Strength:</span><span className="font-black text-amber-500">{intelData?.hr_decision?.candidate_strength || "★★★★☆"}</span></div>
                             <div className="flex justify-between"><span className="text-slate-500">Coding Rating:</span><span className="font-bold">{intelData?.hr_decision?.coding_eval || "Strong"}</span></div>
-                            <div className="flex justify-between"><span className="text-slate-500">Recommended For:</span><span className="font-bold text-blue-600 dark:text-blue-400">{intelData?.hr_decision?.recommended_for?.join(", ") || "Technical Screening"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500">Recommended For:</span><span className="font-bold text-blue-600 dark:text-blue-400">{intelData?.hr_decision?.recommended_for?.join(", ") || "Tier-1 Campus Drives"}</span></div>
                           </div>
                         </div>
                       </div>

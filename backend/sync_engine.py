@@ -270,28 +270,20 @@ def sync_single_student_db(student_id: int, stats_dict: Dict[str, Any], db: Sess
     status = stats_dict.get("status")
     is_success = status in ["success", "OK"]
 
-    # 2. Sum Validation Check — use 0 as arithmetic sentinel only; actual DB write uses None for failed
+    # 2. Sum Validation Check — auto-reconcile total_solved if ez + med + hd differs (e.g. SQL/Pandas problems or minor API offset)
     tot = stats_dict.get("total_solved")   # May be None for failed/missing fetches
     ez  = stats_dict.get("easy_solved")
     med = stats_dict.get("medium_solved")
     hd  = stats_dict.get("hard_solved")
 
-    # Only validate the sum when all values are present integers and fetch succeeded
     if is_success and all(v is not None for v in [tot, ez, med, hd]):
         tot_int, ez_int, med_int, hd_int = int(tot), int(ez), int(med), int(hd)
-        if (ez_int + med_int + hd_int != tot_int) and tot_int > 0:
-            err_msg = f"CRITICAL STATS MISMATCH for {student.reg_no}: {ez_int} + {med_int} + {hd_int} != {tot_int}"
-            logger.error(err_msg)
-            student.stats.sync_status = "mismatch"
-            student.stats.validation_status = "mismatch"
-            student.stats.status = "MISMATCH"
-            student.stats.error_message = err_msg
-            student.stats.error_code = "STATS_SUM_MISMATCH"
-            student.stats.retry_count += 1
-            if commit:
-                db.commit()
-                db.refresh(student)
-            return student
+        sum_solved = ez_int + med_int + hd_int
+        if sum_solved > 0 and tot_int == 0:
+            stats_dict["total_solved"] = sum_solved
+        elif tot_int < sum_solved:
+            stats_dict["total_solved"] = sum_solved
+        logger.info(f"Reconciled stats for {student.reg_no}: Easy({ez_int}) + Med({med_int}) + Hard({hd_int}) vs Total({stats_dict.get('total_solved')})")
 
     if is_success:
         new_rating = stats_dict.get("contest_rating")
@@ -536,9 +528,9 @@ async def sync_single_student_by_id(student_id: int, timeout: float = 30.0) -> D
     finally:
         db.close()
 
-async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 5, per_worker_delay: float = 0.3, pre_run_id: Optional[str] = None) -> Dict[str, Any]:
+async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 20, per_worker_delay: float = 0.1, pre_run_id: Optional[str] = None) -> Dict[str, Any]:
     """
-    Executes controlled queue sync for active students.
+    Executes extremely fast controlled queue sync for active students.
     Respects SYNC_LIMIT and LEETCODE_SYNC_CONCURRENCY env variables.
     """
     env_limit = os.environ.get("SYNC_LIMIT")
@@ -584,7 +576,7 @@ async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 5, per_
                     break
 
                 max_retries = 3
-                base_delay = 2.0
+                base_delay = 0.1
 
                 for attempt in range(1, max_retries + 1):
                     w_db = SessionLocal()

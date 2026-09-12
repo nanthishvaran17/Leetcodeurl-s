@@ -862,7 +862,7 @@ def search_candidates(
     accommodation: Optional[str] = Query("all"),
     min_twelfth_cutoff: Optional[float] = Query(0.0),
     search: Optional[str] = Query(""),
-    top_n: Optional[int] = Query(500),
+    top_n: Optional[int] = Query(10000),
     db: Session = Depends(get_db)
 ):
     """
@@ -1021,7 +1021,12 @@ def search_candidates(
             tot_subs = tot
 
         c_rating = contest.contest_rating if contest and contest.contest_rating is not None else (getattr(stats, "contest_rating", None) if stats else getattr(st, "contest_rating", 0.0)) or 0.0
-        c_rank = contest.contest_global_ranking if contest and contest.contest_global_ranking is not None else (getattr(stats, "contest_global_ranking", None) if stats else getattr(st, "global_rank", None))
+        c_rank = (
+            (contest.contest_global_ranking if contest and contest.contest_global_ranking else None)
+            or (stats.contest_global_ranking if stats and stats.contest_global_ranking else None)
+            or (stats.public_profile_ranking if stats and stats.public_profile_ranking else None)
+            or getattr(st, "global_rank", None)
+        )
         c_attended = contest.attended_count if contest and contest.attended_count is not None else (getattr(stats, "attended_contests_count", None) if stats else getattr(st, "contests_attended", None))
         c_top_pct = contest.top_percentage if contest and contest.top_percentage is not None else None
 
@@ -1117,16 +1122,19 @@ def search_candidates(
     # Sort default by total_solved desc
     results.sort(key=lambda x: x["total_solved"], reverse=True)
 
+    total_matching = len(results)
+
     try:
-        top_n_int = int(top_n) if top_n is not None and str(top_n).isdigit() else 500
+        top_n_int = int(top_n) if top_n is not None and str(top_n).isdigit() else 10000
     except (ValueError, TypeError):
-        top_n_int = 500
+        top_n_int = 10000
 
     if top_n_int > 0 and len(results) > top_n_int:
         results = results[:top_n_int]
 
     return {
         "status": "success",
+        "total_matching": total_matching,
         "total_count": len(results),
         "candidates": results
     }

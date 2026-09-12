@@ -208,6 +208,39 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
     if (opt.pillColorClass) return opt.pillColorClass;
     if (opt.value === 'ALL' || opt.value === '' || opt.value === 'all') return 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700';
     
+    const textKey = `${opt.pillText || ''} ${opt.value || ''} ${opt.label || ''}`.toUpperCase();
+    
+    if (textKey.includes('CSE(CS)') || textKey.includes('CYBER') || textKey.includes('CSE-CS') || opt.value === '1') {
+      return 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 border-blue-300 dark:border-blue-700';
+    }
+    if (textKey.includes('CSE(IOT)') || textKey.includes('IOT') || textKey.includes('CSE-IOT') || opt.value === '2') {
+      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border-amber-300 dark:border-amber-700';
+    }
+    if (textKey.includes('IT') || textKey.includes('INFORMATION') || opt.value === '7') {
+      return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700';
+    }
+    if (textKey.includes('CSE') || textKey.includes('COMPUTER SCIENCE')) {
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700';
+    }
+    if (textKey.includes('AGRI')) {
+      return 'bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300 border-rose-300 dark:border-rose-700';
+    }
+    if (textKey.includes('AIDS') || textKey.includes('ARTIFICIAL')) {
+      return 'bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300 border-teal-300 dark:border-teal-700';
+    }
+    if (textKey.includes('EEE') || textKey.includes('ELECTRICAL')) {
+      return 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300 border-orange-300 dark:border-orange-700';
+    }
+    if (textKey.includes('ECE') || textKey.includes('ELECTRONICS')) {
+      return 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 border-red-300 dark:border-red-700';
+    }
+    if (textKey.includes('MECH')) {
+      return 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 border-purple-300 dark:border-purple-700';
+    }
+    if (textKey.includes('CIVIL')) {
+      return 'bg-lime-100 text-lime-800 dark:bg-lime-900/50 dark:text-lime-300 border-lime-300 dark:border-lime-700';
+    }
+
     const colors = [
       'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
       'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
@@ -227,7 +260,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
     <div className={twMerge('flex flex-col space-y-1.5 min-w-0 w-full', className)}>
       {/* Optional Top Label */}
       {label && (
-        <span className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate h-4 leading-4 m-0 p-0">
+        <span className="block text-xs font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider truncate">
           {label}
         </span>
       )}
@@ -239,11 +272,11 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={twMerge(
-            "relative w-full flex items-center justify-between px-3.5 py-2 h-11 min-h-[44px] bg-white dark:bg-slate-800",
-            "border transition-all duration-200 outline-none select-none rounded-2xl cursor-pointer shadow-sm",
+            "relative w-full flex items-center justify-between px-3.5 py-2 h-11 min-h-[44px] bg-white dark:bg-navy-950",
+            "border transition-all duration-200 outline-none select-none rounded-2xl cursor-pointer shadow-sm text-left",
             isOpen 
-              ? "border-brand-500 ring-2 ring-brand-500/20 shadow-md shadow-brand-500/10" 
-              : "border-slate-200 dark:border-slate-700/80 hover:border-brand-500/40 hover:shadow-sm"
+              ? "border-brand-400 ring-2 ring-brand-400/20" 
+              : "border-slate-200 dark:border-slate-700 hover:border-brand-300"
           )}
         >
           <div className="flex items-center space-x-2 overflow-hidden min-w-0 flex-1 pr-2">

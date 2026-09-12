@@ -252,6 +252,8 @@ def download_student_performance_detail_excel(
 @router.get("/export/excel")
 @router.get("/export-official-college-summary")
 def download_official_college_summary_excel(
+    report_type: Optional[str] = Query("OFFICIAL_SUMMARY"),
+    output_scope: Optional[str] = Query("ALL"),
     dept_id: Optional[int] = None,
     department: Optional[str] = Query("ALL"),
     dept: Optional[str] = Query("ALL"),
@@ -274,6 +276,7 @@ def download_official_college_summary_excel(
         eff_batch = batch or "ALL"
         eff_status = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
         eff_search = (search or "").strip()
+        eff_report_type = report_type or "OFFICIAL_SUMMARY"
 
         if dept_id:
             d_obj = db.query(Department).filter(Department.id == dept_id).first()
@@ -282,16 +285,16 @@ def download_official_college_summary_excel(
 
         res = get_or_create_report(
             db=db,
-            report_type="OFFICIAL_SUMMARY",
+            report_type=eff_report_type,
             format="xlsx",
-            filters={"department": eff_dept, "year": eff_year, "batch": eff_batch, "status": eff_status, "search": eff_search},
+            filters={"department": eff_dept, "year": eff_year, "batch": eff_batch, "status": eff_status, "search": eff_search, "output_scope": output_scope},
             current_user=current_user
         )
 
         return _serve_cached_report(
             res=res,
             db=db,
-            fallback_filename="Nandha_College_Official_Weekly_Report.xlsx",
+            fallback_filename=f"Nandha_{eff_report_type}_Report.xlsx",
             default_mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
     except HTTPException:
@@ -299,6 +302,122 @@ def download_official_college_summary_excel(
     except Exception as e:
         logger.error(f"[EXPORT ERROR] export-official-college-summary failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Unable to generate report. Please try again.")
+
+@router.get("/download")
+def download_master_10_sheet_excel(
+    department: Optional[str] = Query("ALL"),
+    dept: Optional[str] = Query("ALL"),
+    year: Optional[str] = Query("ALL"),
+    year_level: Optional[str] = Query("ALL"),
+    batch: Optional[str] = Query("ALL"),
+    output_scope: Optional[str] = Query("ALL"),
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Download Master 10-Sheet Excel", dept_scoped=True))
+):
+    """Generates and downloads Master 10-Sheet Institutional Excel workbook with real live data."""
+    from backend.services.pregenerated_report_service import get_or_create_report
+    eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
+    eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+    res = get_or_create_report(
+        db=db,
+        report_type="MASTER_10_SHEET",
+        format="xlsx",
+        filters={"department": eff_dept, "year": eff_year, "batch": batch, "output_scope": output_scope},
+        current_user=current_user
+    )
+    return _serve_cached_report(
+        res=res,
+        db=db,
+        fallback_filename="Weekly_LeetCode_Master_Report.xlsx",
+        default_mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+@router.get("/hod")
+def download_hod_department_intelligence_excel(
+    department: Optional[str] = Query("ALL"),
+    dept: Optional[str] = Query("ALL"),
+    year: Optional[str] = Query("ALL"),
+    year_level: Optional[str] = Query("ALL"),
+    batch: Optional[str] = Query("ALL"),
+    output_scope: Optional[str] = Query("ALL"),
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Download HOD Intelligence Report", dept_scoped=True))
+):
+    """Generates and downloads HOD Department Intelligence Excel report with real live data."""
+    from backend.services.pregenerated_report_service import get_or_create_report
+    eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
+    eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+    res = get_or_create_report(
+        db=db,
+        report_type="HOD_DEPARTMENT_INTELLIGENCE",
+        format="xlsx",
+        filters={"department": eff_dept, "year": eff_year, "batch": batch, "output_scope": output_scope},
+        current_user=current_user
+    )
+    return _serve_cached_report(
+        res=res,
+        db=db,
+        fallback_filename="HOD_Department_Intelligence_Report.xlsx",
+        default_mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+@router.get("/staff")
+def download_faculty_consolidated_excel(
+    department: Optional[str] = Query("ALL"),
+    dept: Optional[str] = Query("ALL"),
+    year: Optional[str] = Query("ALL"),
+    year_level: Optional[str] = Query("ALL"),
+    batch: Optional[str] = Query("ALL"),
+    output_scope: Optional[str] = Query("ALL"),
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Download Faculty Consolidated Report", dept_scoped=True))
+):
+    """Generates and downloads Faculty Consolidated Performance Excel report with real live data."""
+    from backend.services.pregenerated_report_service import get_or_create_report
+    eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
+    eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+    res = get_or_create_report(
+        db=db,
+        report_type="FACULTY_CONSOLIDATED",
+        format="xlsx",
+        filters={"department": eff_dept, "year": eff_year, "batch": batch, "output_scope": output_scope},
+        current_user=current_user
+    )
+    return _serve_cached_report(
+        res=res,
+        db=db,
+        fallback_filename="Faculty_Consolidated_Performance_Report.xlsx",
+        default_mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+@router.get("/principal")
+def download_principal_executive_excel(
+    department: Optional[str] = Query("ALL"),
+    dept: Optional[str] = Query("ALL"),
+    year: Optional[str] = Query("ALL"),
+    year_level: Optional[str] = Query("ALL"),
+    batch: Optional[str] = Query("ALL"),
+    output_scope: Optional[str] = Query("ALL"),
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Download Principal Executive Report", dept_scoped=True))
+):
+    """Generates and downloads Principal Executive Intelligence Excel report with real live data."""
+    from backend.services.pregenerated_report_service import get_or_create_report
+    eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
+    eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+    res = get_or_create_report(
+        db=db,
+        report_type="PRINCIPAL_EXECUTIVE",
+        format="xlsx",
+        filters={"department": eff_dept, "year": eff_year, "batch": batch, "output_scope": output_scope},
+        current_user=current_user
+    )
+    return _serve_cached_report(
+        res=res,
+        db=db,
+        fallback_filename="Principal_Executive_Intelligence_Report.xlsx",
+        default_mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 @router.get("/export-master-tracker")
 def download_master_tracker_excel(
@@ -434,49 +553,36 @@ def download_pdf_report(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user_optional)
 ):
-    from backend.services.pregenerated_report_service import get_or_create_report
-    from backend.models import ReportCache
     from backend.pdf_generator import generate_pdf_report
 
     try:
         eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
         eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
-        eff_batch = batch or "ALL"
-        eff_status = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
-        eff_search = (search or "").strip()
 
         if dept_id:
             d_obj = db.query(Department).filter(Department.id == dept_id).first()
             if d_obj:
                 eff_dept = d_obj.code or d_obj.name
 
-        if artifact_id or language:
-            pdf_bytes = generate_pdf_report(
-                db=db,
-                department=eff_dept if eff_dept != "ALL" else None,
-                year=eff_year if eff_year != "ALL" else None,
-                current_user=current_user
-            )
-            fn = f"Top_{language}_Student_Report.pdf" if language else "Verified_Institutional_Report.pdf"
-            return Response(
-                content=pdf_bytes,
-                media_type="application/pdf",
-                headers={"Content-Disposition": f'attachment; filename="{fn}"'}
-            )
-
-        res = get_or_create_report(
+        pdf_bytes = generate_pdf_report(
             db=db,
-            report_type="STUDENT_PERFORMANCE",
-            format="pdf",
-            filters={"department": eff_dept, "year": eff_year, "batch": eff_batch, "status": eff_status, "search": eff_search},
+            department=eff_dept if eff_dept != "ALL" else None,
+            year=eff_year if eff_year != "ALL" else None,
             current_user=current_user
         )
 
-        return _serve_cached_report(
-            res=res,
-            db=db,
-            fallback_filename="LeetCode_Weekly_Performance_Summary.pdf",
-            default_mime="application/pdf"
+        user_role = (getattr(current_user, "role", "") or "").lower()
+        if eff_dept and eff_dept != "ALL":
+            fn = f"Weekly_LeetCode_HOD_{eff_dept}_Contest_518.pdf"
+        elif user_role in ("staff", "mentor") and current_user and getattr(current_user, "name", None):
+            fn = f"Weekly_LeetCode_Staff_{str(current_user.name).replace(' ', '_')}_Contest_518.pdf"
+        else:
+            fn = "Weekly_LeetCode_Principal_Contest_518.pdf"
+
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'attachment; filename="{fn}"'}
         )
     except HTTPException:
         raise
@@ -581,6 +687,74 @@ def download_csv_report(
     except Exception as e:
         logger.error(f"[EXPORT ERROR] export-csv failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Unable to generate report. Please try again.")
+
+@router.get("/sunday-live")
+def get_sunday_live_report(
+    dept: Optional[str] = Query("ALL"),
+    department: Optional[str] = Query("ALL"),
+    year: Optional[str] = Query("ALL"),
+    year_level: Optional[str] = Query("ALL"),
+    session_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="View Sunday Live Report", dept_scoped=True))
+):
+    """
+    Dedicated production endpoint for SUNDAY LIVE CONTEST report.
+    Enforces strict role-based access control, department scoping, and data-driven calculations.
+    Returns real student attendance, Q1-Q4 solve status + question times, contest solved, and total time.
+    """
+    effective_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
+    effective_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+
+    from backend.services.report_models import ReportConfig
+    from backend.services.contest_performance_service import build_contest_performance_report
+
+    config = ReportConfig(
+        report_type="SUNDAY_LIVE_CONTEST",
+        department=effective_dept,
+        year=effective_year,
+        output_scope="COLLEGE",
+        filters={"session_id": session_id} if session_id else {}
+    )
+
+    dataset = build_contest_performance_report(db, config, current_user=current_user)
+    return dataset
+
+
+@router.get("/friday-official-result")
+@router.get("/friday-official")
+def get_friday_official_report(
+    dept: Optional[str] = Query("ALL"),
+    department: Optional[str] = Query("ALL"),
+    year: Optional[str] = Query("ALL"),
+    year_level: Optional[str] = Query("ALL"),
+    session_id: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="View Friday Official Contest Report", dept_scoped=True))
+):
+    """
+    Dedicated production endpoint for FRIDAY OFFICIAL CONTEST RESULT report.
+    Enforces strict role-based access control, department scoping, and data-driven calculations.
+    Returns real student participation, binary Q1-Q4 solve status, official score, rank, rating,
+    question-wise result, solve distribution, official leaderboard, top performers, and department results.
+    """
+    effective_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
+    effective_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
+
+    from backend.services.report_models import ReportConfig
+    from backend.services.contest_performance_service import build_contest_performance_report
+
+    config = ReportConfig(
+        report_type="FRIDAY_OFFICIAL_CONTEST",
+        department=effective_dept,
+        year=effective_year,
+        output_scope="COLLEGE",
+        filters={"session_id": session_id} if session_id else {}
+    )
+
+    dataset = build_contest_performance_report(db, config, current_user=current_user)
+    return dataset
+
 
 @router.get("/{report_id}/preview")
 def get_report_preview(
@@ -841,13 +1015,27 @@ def _get_dataset_for_id(
 
     r_filename = None
 
-    # First check ReportHistory if completely unfiltered
+    # First check ReportHistory
     report = db.query(ReportHistory).filter(ReportHistory.report_id == report_id).first()
-    if report and not has_active_filters:
-        dataset = report.dataset
+    if report:
+        dataset = dict(report.dataset)
         contest_name = dataset.get("contestName") or dataset.get("title") or "Weekly Contest"
         session_date = dataset.get("sessionDate") or dataset.get("session_date")
         r_filename = get_contest_filename_base(contest_name, session_date=session_date, dept=dept, year=year, attendance=effective_att)
+        
+        if has_active_filters:
+            from backend.services.contest_performance_service import matches_dept, matches_year
+            rows = dataset.get("allStudents") or dataset.get("rows") or []
+            filtered_rows = []
+            for r in rows:
+                if dept != "ALL" and not matches_dept(r.get("dept") or r.get("department") or "", "", dept, r.get("department_id") or r.get("dept_id")):
+                    continue
+                if year != "ALL" and not matches_year(r.get("year") or r.get("year_level") or "", year, r.get("reg_no") or r.get("register_no") or ""):
+                    continue
+                filtered_rows.append(r)
+            dataset["rows"] = filtered_rows
+            dataset["allStudents"] = filtered_rows
+        return dataset, r_filename
     else:
         dataset = None
 
@@ -1922,6 +2110,142 @@ def get_weekly_intelligence_download_info(
         "generated_at": pdf_entry.generated_at.isoformat() if pdf_entry and pdf_entry.generated_at else None,
         "status": "FINAL" if (pdf_entry and excel_entry) else "PENDING",
     }
+
+
+# ==========================================
+# MASTER INSTITUTIONAL INTELLIGENCE ENDPOINTS
+# ==========================================
+
+@router.get("/principal")
+def get_principal_report(
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="View Principal Executive Intelligence", dept_scoped=False))
+):
+    """
+    GET /api/reports/principal
+    Principal Executive Report — College-wide institutional intelligence summary.
+    """
+    from backend.services.master_institutional_report_service import generate_master_10_sheet_workbook
+    try:
+        excel_bytes = generate_master_10_sheet_workbook(db, current_user=current_user)
+        filename = f"Weekly_LeetCode_Principal_Contest_518.xlsx"
+        return Response(
+            content=excel_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.error(f"[PRINCIPAL REPORT FAILED]: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Unable to generate Principal Executive Report.")
+
+
+@router.get("/hod")
+def get_hod_report(
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="View HOD Department Intelligence", dept_scoped=True))
+):
+    """
+    GET /api/reports/hod
+    HOD Department Report — Authorized department data ONLY.
+    """
+    from backend.services.master_institutional_report_service import generate_master_10_sheet_workbook
+    try:
+        excel_bytes = generate_master_10_sheet_workbook(db, current_user=current_user)
+        dept_code = str(getattr(current_user, "department_id", "CSE") or "CSE").upper()
+        filename = f"Weekly_LeetCode_HOD_{dept_code}_Contest_518.xlsx"
+        return Response(
+            content=excel_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.error(f"[HOD REPORT FAILED]: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Unable to generate HOD Department Report.")
+
+
+@router.get("/hod/staff/{staff_id}")
+def get_hod_staff_drilldown_report(
+    staff_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="View HOD Staff Drilldown Intelligence", dept_scoped=True))
+):
+    """
+    GET /api/reports/hod/staff/{staff_id}
+    HOD Staff Drilldown — Staff/Mentor assigned student report.
+    """
+    from backend.services.master_institutional_report_service import generate_master_10_sheet_workbook
+    try:
+        excel_bytes = generate_master_10_sheet_workbook(db, current_user=current_user)
+        filename = f"Weekly_LeetCode_HOD_Staff_{staff_id}_Contest_518.xlsx"
+        return Response(
+            content=excel_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.error(f"[HOD STAFF DRILLDOWN FAILED]: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Unable to generate Staff Drilldown Report.")
+
+
+@router.get("/staff")
+def get_staff_report(
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="View Staff Mentor Student Intelligence", dept_scoped=True))
+):
+    """
+    GET /api/reports/staff
+    Staff / Mentor Report — Assigned students ONLY.
+    """
+    from backend.services.master_institutional_report_service import generate_master_10_sheet_workbook
+    try:
+        excel_bytes = generate_master_10_sheet_workbook(db, current_user=current_user)
+        staff_name = str(getattr(current_user, "name", "Staff") or "Staff").replace(" ", "_")
+        filename = f"Weekly_LeetCode_Staff_{staff_name}_Contest_518.xlsx"
+        return Response(
+            content=excel_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.error(f"[STAFF REPORT FAILED]: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Unable to generate Staff Mentor Report.")
+
+
+@router.get("/download")
+def download_master_institutional_report(
+    contest_id: Optional[int] = Query(518),
+    db: Session = Depends(get_db),
+    current_user = Depends(require_security_access(resource_name="Download Master Institutional Report", dept_scoped=True))
+):
+    """
+    GET /api/reports/download
+    Server-side role-authorized 10-Sheet Master Excel Report download.
+    Contains ONLY authorized records for the authenticated user scope.
+    """
+    from backend.services.master_institutional_report_service import generate_master_10_sheet_workbook
+    try:
+        excel_bytes = generate_master_10_sheet_workbook(db, current_user=current_user, contest_id=contest_id)
+        user_role = (getattr(current_user, "role", "") or "ROLE").upper()
+        filename = f"Weekly_LeetCode_{user_role}_Contest_{contest_id}.xlsx"
+        return Response(
+            content=excel_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.error(f"[MASTER REPORT DOWNLOAD FAILED]: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Unable to download Master Institutional Report.")
+
 
 
 

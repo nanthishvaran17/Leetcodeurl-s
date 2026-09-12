@@ -11,7 +11,7 @@ from backend.services.intelligence_report_service import build_intelligence_data
 
 
 def generate_pdf_report(
-    db: Session, 
+    db: Any, 
     dept_id: Optional[int] = None, 
     department: Optional[str] = None,
     year: Optional[str] = None,
@@ -21,8 +21,10 @@ def generate_pdf_report(
 ) -> bytes:
     """
     Builds the official landscape Friday Weekly LeetCode Intelligence Report PDF.
-    Grounded 100% in real database metrics.
+    Grounded 100% in real database metrics. Accepts either SQLAlchemy Session or dataset dict.
     """
+    if isinstance(db, dict):
+        return build_intelligence_pdf(db)
     eff_user = current_user or kwargs.get('current_user')
     eff_dept = department or kwargs.get('department')
     eff_year = year or kwargs.get('year')
@@ -50,3 +52,5 @@ def generate_pdf_report(
 generate_pdf_summary_report = generate_pdf_report
 generate_weekly_pdf_report = generate_pdf_report
 generate_snapshot_pdf_report = generate_pdf_report
+build_weekly_performance_pdf = generate_pdf_report
+build_intelligence_pdf_bytes = generate_pdf_report

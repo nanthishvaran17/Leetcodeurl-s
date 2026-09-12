@@ -5,6 +5,11 @@ AY 2026-27 Standardized Batches, Department Coordinators, and Statuses.
 from typing import Optional
 
 BATCH_YEAR_MAP = {
+    "I": "2026 - 2030",
+    "1": "2026 - 2030",
+    "1ST": "2026 - 2030",
+    "1-ST": "2026 - 2030",
+    "FIRST": "2026 - 2030",
     "II": "2025 - 2029",
     "2": "2025 - 2029",
     "2ND": "2025 - 2029",
@@ -23,6 +28,7 @@ BATCH_YEAR_MAP = {
 }
 
 BATCH_CONFIG = [
+    {"key": "2026_2030", "label": "2026 - 2030", "year": "I"},
     {"key": "2023_2027", "label": "2023 - 2027", "year": "IV"},
     {"key": "2024_2028", "label": "2024 - 2028", "year": "III"},
     {"key": "2025_2029", "label": "2025 - 2029", "year": "II"},

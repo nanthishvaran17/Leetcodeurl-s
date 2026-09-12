@@ -508,12 +508,21 @@ def generate_report_bytes(
             res = asyncio.run(report_gen.generate_complete_report(contest_id))
         return res["excel_bytes"]
 
-    # 3. Master 8-Sheet Tracker
-    if rpt == "MASTER_TRACKER" or rpt == "8_SHEET_MASTER_TRACKER":
+    # 3. Master 10-Sheet Institutional Workbook Engine
+    if fmt in ("excel", "xlsx") and rpt in (
+        "MASTER_10_SHEET", "SUNDAY_LIVE_CONTEST", "WEEKLY_CONTEST_INTELLIGENCE",
+        "PRINCIPAL_EXECUTIVE", "HOD_DEPARTMENT_INTELLIGENCE", "FACULTY_CONSOLIDATED",
+        "COLLEGE_EXECUTIVE", "DEPARTMENT_PERFORMANCE"
+    ):
+        from backend.services.master_institutional_report_service import generate_master_10_sheet_workbook
+        return generate_master_10_sheet_workbook(db, current_user=current_user, department=dept, year=year)
+
+    # 4. Master 8-Sheet Tracker Fallback
+    if rpt in ("MASTER_TRACKER", "8_SHEET_MASTER_TRACKER"):
         from backend.excel_handler import generate_8_sheet_master_tracker
         return generate_8_sheet_master_tracker(db, current_user=current_user)
 
-    # 4. Weekly Contest Matrix
+    # 5. Weekly Contest Matrix
     if rpt == "WEEKLY_CONTEST_MATRIX":
         from backend.excel_handler import generate_weekly_contest_matrix_excel
         return generate_weekly_contest_matrix_excel(db, current_user=current_user)
@@ -561,7 +570,7 @@ def pregenerate_all_weekly_reports(db: Session, institution_id: str = "NEC"):
     Pre-generates core institutional reports in background.
     Call on startup, post-sync, or after Sunday contests.
     """
-    formats = ["pdf", "excel", "official_summary", "student_detail", "master_tracker", "weekly_performance"]
+    formats = ["pdf", "excel", "official_summary", "student_detail", "master_tracker", "weekly_performance", "student_performance", "weekly_contest_matrix"]
     curr_version = get_current_data_version(db)
     for ft in formats:
         trigger_background_report_generation(

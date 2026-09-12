@@ -8,18 +8,30 @@ from backend.services.report_data_service import fetch_normalized_students, fetc
 from backend.services.report_validators import validate_data_quality
 from backend.services.contest_performance_service import build_contest_performance_report
 
+from backend.services.report_registry import get_report_definition
+
 def build_universal_report(db: Session, config: ReportConfig, current_user: Optional[Any] = None) -> Dict[str, Any]:
     """
     UNIVERSAL REPORT ENGINE
     Single Source of Truth generator that creates normalized datasets for all report types.
+    Enforces strict report code validation via report_registry.
     """
+    # 1. Validate Report Registry Specification
+    rpt_def = get_report_definition(config.report_type)
+
     CONTEST_REPORT_TYPES = (
+        "FRIDAY_OFFICIAL_CONTEST", "FRIDAY_OFFICIAL", "FRIDAY_OFFICIAL_RESULT",
         "CONTEST_PERFORMANCE", "OFFICIAL_CONTEST", "WEEKLY_CONTEST",
-        "OFFICIAL_SUMMARY", "STUDENT_PERFORMANCE", "EXCEL", "PDF", "WORD", "CSV",
-        "MASTER_TRACKER", "WEEKLY_PERFORMANCE", "DEFAULT"
+        "SUNDAY_LIVE_CONTEST", "WEEKLY_CONTEST_INTELLIGENCE",
+        "CONTEST_ATTENDANCE_PARTICIPATION", "CONTEST_PERFORMANCE_RANKING",
+        "SUNDAY_CONTEST"
     )
-    if not config.report_type or config.report_type.upper() in CONTEST_REPORT_TYPES:
+    if config.report_type and config.report_type.upper() in CONTEST_REPORT_TYPES:
         return build_contest_performance_report(db, config, current_user=current_user)
+
+    if config.report_type and config.report_type.upper() in ("FIVE_WEEK_PERFORMANCE_TREND", "BATCH_PERFORMANCE"):
+        from backend.services.five_week_trend_service import build_five_week_trend_report
+        return build_five_week_trend_report(db, config, current_user=current_user)
 
     from backend.services.authorization_service import apply_role_based_student_filter
     base_query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
@@ -40,6 +52,15 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         performance_range=cfg_filters.get("performanceRange") or cfg_filters.get("range") or "ALL",
         current_user=current_user
     )
+
+    if config.report_type == "LEADERBOARD":
+        students = sorted(
+            students,
+            key=lambda s: (
+                s.college_rank if (s.college_rank is not None and s.college_rank > 0) else 999999,
+                -(s.total_solved or 0)
+            )
+        )
 
     total_students = len(students)
     verified_students = sum(1 for s in students if s.status == "VERIFIED")
@@ -85,11 +106,63 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
     for s in students:
         d = s.dept or "CSE"
         if d not in dept_breakdown:
-            dept_breakdown[d] = {"total": 0, "verified": 0, "total_solved": 0}
+            dept_breakdown[d] = {
+                "department": d,
+                "total": 0,
+                "verified": 0,
+                "active_solvers": 0,
+                "total_solved": 0,
+                "solvers_4": 0
+            }
         dept_breakdown[d]["total"] += 1
-        if s.status == "VERIFIED":
+        if s.status == "VERIFIED" or (s.total_solved or 0) > 0:
             dept_breakdown[d]["verified"] += 1
-            dept_breakdown[d]["total_solved"] += (s.total_solved or 0)
+        t_sol = s.total_solved or 0
+        dept_breakdown[d]["total_solved"] += t_sol
+        if t_sol > 0:
+            dept_breakdown[d]["active_solvers"] += 1
+        if t_sol >= 4:
+            dept_breakdown[d]["solvers_4"] += 1
+
+    dept_summary_list = []
+    for d_code, d_info in sorted(dept_breakdown.items()):
+        tot = d_info["total"]
+        act = d_info["active_solvers"]
+        sol = d_info["total_solved"]
+        d_info["avg_solved"] = round(sol / max(act, 1), 2)
+        d_info["attendance_pct"] = round((act / max(tot, 1)) * 100, 2)
+        dept_summary_list.append(d_info)
+
+    # Faculty / Mentor Breakdown
+    faculty_breakdown = {}
+    for s in students:
+        staff_name = getattr(s, "mentor_name", None) or getattr(s, "staff_name", None) or "Unassigned Faculty"
+        d = s.dept or "CSE"
+        key = (staff_name, d)
+        if key not in faculty_breakdown:
+            faculty_breakdown[key] = {
+                "staff_name": staff_name,
+                "department": d,
+                "total_assigned": 0,
+                "active_solvers": 0,
+                "total_solved": 0,
+                "solvers_4": 0
+            }
+        faculty_breakdown[key]["total_assigned"] += 1
+        t_sol = s.total_solved or 0
+        faculty_breakdown[key]["total_solved"] += t_sol
+        if t_sol > 0:
+            faculty_breakdown[key]["active_solvers"] += 1
+        if t_sol >= 4:
+            faculty_breakdown[key]["solvers_4"] += 1
+
+    faculty_summary_list = []
+    for (staff_name, d_code), f_info in sorted(faculty_breakdown.items(), key=lambda x: (-x[1]["total_solved"], x[0][0])):
+        tot = f_info["total_assigned"]
+        sol = f_info["total_solved"]
+        f_info["avg_solved"] = round(sol / max(tot, 1), 2)
+        f_info["active_pct"] = round((f_info["active_solvers"] / max(tot, 1)) * 100, 2)
+        faculty_summary_list.append(f_info)
 
     # Contest Data if requested
     participations_dict = []
@@ -98,7 +171,23 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         participations_dict = [c.model_dump() for c in contests]
 
     # Title formatting
-    title = f"{config.report_type.replace('_', ' ').title()}"
+    REPORT_TYPE_TITLES = {
+        "WEEKLY_CONTEST_INTELLIGENCE": "Weekly Contest Intelligence Report",
+        "SUNDAY_LIVE_CONTEST": "Sunday Live Contest Report",
+        "CONTEST_ATTENDANCE_PARTICIPATION": "Contest Attendance & Participation Report",
+        "CONTEST_PERFORMANCE_RANKING": "Contest Performance & Ranking Report",
+        "WEEKLY_STUDENT_PERFORMANCE": "Weekly Student Performance Report",
+        "FIVE_WEEK_PERFORMANCE_TREND": "Five-Week Performance Trend Report",
+        "PROBLEM_DIFFICULTY_INTELLIGENCE": "Problem Difficulty Intelligence Report",
+        "FACULTY_CONSOLIDATED": "Faculty Consolidated Performance Report",
+        "FACULTY_COORDINATOR_CONSOLIDATED": "Faculty Coordinator Consolidated Report",
+        "HOD_DEPARTMENT_INTELLIGENCE": "HOD Department Intelligence Report",
+        "PRINCIPAL_EXECUTIVE": "Principal Executive Intelligence Report",
+        "MANAGEMENT_EXECUTIVE_SUMMARY": "Management Executive Summary Report",
+    }
+    rpt_key = (config.report_type or "REPORT").upper()
+    base_title = REPORT_TYPE_TITLES.get(rpt_key, rpt_key.replace('_', ' ').title())
+    title = base_title
     if config.department != "ALL":
         title = f"{config.department} {title}"
     if config.year != "ALL":
@@ -141,7 +230,8 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
             "sessionDate": resolved_cdate
         },
         "distribution": distribution,
-        "departmentSummary": dept_breakdown,
+        "departmentSummary": dept_summary_list,
+        "facultySummary": faculty_summary_list,
         "dataQuality": data_quality.model_dump(),
         "topStudents": top_students,
         "allStudents": all_students_dict,

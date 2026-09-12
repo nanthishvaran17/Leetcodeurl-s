@@ -71,11 +71,11 @@ def test_export_excel_from_dataset_formatting(mock_dataset):
     # Check key sheets
     assert "Executive Summary" in sheet_names
     assert "Complete Student Roster" in sheet_names
-    assert "HR Candidate Finder" in sheet_names
     assert "Contest Performance Matrix" in sheet_names
-    assert "Difficulty Analysis" in sheet_names
-    assert "Data Quality & Audit" in sheet_names
-    assert "Methodology" in sheet_names
+    assert "HR Candidate Finder" not in sheet_names
+    assert "Difficulty Analysis" not in sheet_names
+    assert "Data Quality & Audit" not in sheet_names
+    assert "Methodology" not in sheet_names
 
     # Verify Times New Roman font across all sheets
     non_tnr_cells = []

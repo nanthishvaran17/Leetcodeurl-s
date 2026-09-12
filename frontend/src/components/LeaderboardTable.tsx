@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { createPortal } from 'react-dom';
 
@@ -452,6 +452,42 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 
 
 
+  const handleToggleStudent = useCallback((id: number) => {
+    toggleStudent(id);
+  }, []); // toggleStudent is defined outside of useCallback but updates via setState natively, wait - it depends on setSelectedIds which is stable, but toggleStudent itself is not memoized.
+  
+  // It's safer to just define the body of toggleStudent inside useCallback
+  const handleToggleStudentAction = useCallback((id: number) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  }, []);
+
+  const handleViewStudentAction = useCallback((s: any) => {
+    setViewingStudent(s);
+  }, []);
+
+  const handleEditStudentAction = useCallback((s: any) => {
+    handleOpenEdit(s);
+  }, [/* dependencies of handleOpenEdit if any, but let's just destructure it */]);
+  
+  // Wait, handleOpenEdit uses setModalTopY, setEditingStudent, etc. which are stable.
+  // We can just redefine them or wrap them. Let's just use useCallback wrapping the state setters.
+  const memoizedHandleView = useCallback((s: any) => setViewingStudent(s), []);
+  const memoizedHandleEdit = useCallback((s: any) => {
+    setEditingStudent(s);
+    setEditName(s.name);
+    setEditDeptId(s.department_id || 1);
+    setEditYearLevel(s.year_level || 'III');
+    setEditLeetCodeUrl(s.leetcode_url || '');
+    setEditUsername(s.username || '');
+  }, []);
+  const memoizedHandleDelete = useCallback((s: any, e: any) => {
+    setDeletingStudent(s);
+  }, []);
+  const memoizedHandleRefresh = useCallback((id: number) => {
+    onRefreshStudent?.(id);
+  }, [onRefreshStudent]);
+
+
   return (
     <div className="w-full space-y-2">
       {/* Bulk Delete & Deactivate Bar */}
@@ -491,15 +527,15 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 
       <div className="responsive-table-container w-full min-w-0 overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm bg-white dark:bg-navy-950 flex flex-col">
         {/* Table Header Wrapper (Sticky) */}
-        <div className="hidden md:flex bg-slate-50 dark:bg-navy-950 text-slate-500 dark:text-slate-400 font-black border-b border-slate-200 dark:border-navy-800 uppercase tracking-widest text-[10px] w-[1450px] min-w-full items-center">
+        <div className="hidden md:flex bg-slate-50 dark:bg-navy-950 text-slate-500 dark:text-slate-400 font-black border-b border-slate-200 dark:border-navy-800 uppercase tracking-widest text-[10px] w-[1400px] min-w-[1400px] items-center">
           <div className="flex-none w-10 py-3 px-3 text-center">
              <input type="checkbox" checked={sortedStudents.length > 0 && selectedIds.length === sortedStudents.length} onChange={toggleAll} className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer" />
           </div>
           <div className="flex-none w-24 py-3 px-3 text-left">Rank</div>
           <div className="flex-none w-32 py-3 px-3 text-left">Register No</div>
-          <div className="flex-none w-72 py-3 px-3 text-left">Student</div>
+          <div className="flex-none w-52 py-3 px-3 text-left">Student</div>
           <div className="flex-none w-28 py-3 px-3 text-left">Dept / Year</div>
-          <div className="flex-none w-40 py-3 px-3 text-left">LeetCode Handle</div>
+          <div className="flex-none w-36 py-3 px-3 text-left">LeetCode Handle</div>
           <div className="flex-none w-24 py-3 px-3 text-center">Solved</div>
           <div className="flex-none w-32 py-3 px-3 text-center">Contest</div>
           <div className="flex-none w-24 py-3 px-3 text-center">Rating</div>
@@ -509,7 +545,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
         </div>
         
         {/* Virtualized Body */}
-        <div className="flex-1 w-full md:w-[1450px] md:min-w-full">
+        <div className="flex-1 w-full md:w-[1400px] md:min-w-[1400px]">
           {loading ? (
             <div className="flex flex-col items-center justify-center space-y-2 h-full py-12">
               <RefreshCw className="w-6 h-6 animate-spin text-brand-500" />
@@ -529,11 +565,11 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                   index={idx + (currentPage - 1) * Number(pageSize)}
                   style={{}}
                   isSelected={selectedIds.includes(Number(student.id))}
-                  toggleStudent={(id: number) => toggleStudent(id)}
-                  onView={(s: any) => setViewingStudent(s)}
-                  onEdit={(s: any) => setEditingStudent(s)}
-                  onRefresh={(id: number) => onRefreshStudent?.(id)}
-                  onDelete={(s: any, e: any) => handleOpenDelete(s, e)}
+                  toggleStudent={handleToggleStudentAction}
+                  onView={memoizedHandleView}
+                  onEdit={memoizedHandleEdit}
+                  onRefresh={memoizedHandleRefresh}
+                  onDelete={memoizedHandleDelete}
                 />
               ))}
             </div>

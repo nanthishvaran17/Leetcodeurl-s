@@ -65,14 +65,7 @@ export const GLOBAL_SHORTCUT_REGISTRY: ShortcutDefinition[] = [
     targetTab: 'dashboard',
     allowedRoles: ['admin', 'administrator', 'super_admin', 'hod', 'faculty', 'staff', 'student']
   },
-  {
-    id: 'nav_hr_finder',
-    keys: ['Alt', 'C'],
-    description: 'HR Candidate Finder',
-    category: 'QUICK NAVIGATION',
-    targetTab: 'hr-candidate-finder',
-    allowedRoles: ['admin', 'administrator', 'super_admin', 'hod', 'faculty', 'staff']
-  },
+
   {
     id: 'nav_reports',
     keys: ['Alt', 'R'],
