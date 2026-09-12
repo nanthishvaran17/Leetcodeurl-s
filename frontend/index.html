@@ -40,22 +40,10 @@
   <link rel="dns-prefetch" href="https://apis.google.com" />
   <link rel="preconnect" href="https://apis.google.com" crossorigin />
 
-  <!-- LCP Image Preload — mobile only (max-width: 899px) -->
-  <link rel="preload" as="image" href="/nandha_aerial_bg_mobile.webp" type="image/webp" media="(max-width: 899px)" fetchpriority="high" />
-
-  <!-- Fonts — Non-blocking & Swapped -->
-  <!-- Inter: critical for login page above-the-fold -->
+  <!-- Google Fonts — Single high-performance connection with font-display swap -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-  </noscript>
-  <!-- JetBrains Mono: non-critical, only used in data/code views — load after LCP -->
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&display=swap">
-  </noscript>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 
   <!-- SEO / Page Metadata -->
   <title>Nandha Intelligence</title>

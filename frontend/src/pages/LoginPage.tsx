@@ -53,62 +53,50 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
   const prefersReducedMotion = useReducedMotion();
   const shouldAnimateMobileEntrance = isMobile && (authState === 'UNAUTHENTICATED' || authState === 'AUTH_UNAUTHENTICATED');
 
-  // Mobile Entrance Variants
+  // Mobile Entrance Variants — Lightweight for 0ms TBT
   const mobileContainerVariants: Variants = {
     hidden: {},
     visible: {
       transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.1
+        staggerChildren: 0.05,
+        delayChildren: 0.05
       }
     }
   };
 
   const mobileLogoVariants: Variants = {
-    hidden: { opacity: 0, y: -35, scale: 0.82, rotate: 0 },
+    hidden: { opacity: 0, y: -15 },
     visible: { 
       opacity: 1, 
       y: 0, 
-      scale: [0.82, 1.035, 1], 
-      rotate: prefersReducedMotion ? 0 : 360,
-      transition: { 
-        duration: prefersReducedMotion ? 0.3 : 0.65, 
-        ease: [0.25, 1, 0.5, 1],
-        scale: { duration: 0.75, times: [0, 0.7, 1] }
-      } 
+      transition: { duration: 0.2, ease: 'easeOut' } 
     }
   };
 
   const mobileTextVariants: Variants = {
-    hidden: { opacity: 0, y: 12 },
+    hidden: { opacity: 0, y: 8 },
     visible: { 
       opacity: 1, 
       y: 0, 
-      transition: { duration: 0.4, ease: 'easeOut' } 
+      transition: { duration: 0.2, ease: 'easeOut' } 
     }
   };
 
   const mobileCardVariants: Variants = {
-    hidden: { opacity: 0, y: 20, scale: 0.98 },
+    hidden: { opacity: 0, y: 12 },
     visible: { 
       opacity: 1, 
       y: 0, 
-      scale: 1,
-      transition: { 
-        duration: 0.5, 
-        ease: 'easeOut',
-        staggerChildren: 0.08,
-        delayChildren: 0.2
-      } 
+      transition: { duration: 0.2, ease: 'easeOut' } 
     }
   };
 
   const mobileFormStagger: Variants = {
-    initial: { opacity: 0, y: 10 },
+    initial: { opacity: 0, y: 6 },
     animate: { 
       opacity: 1, 
       y: 0, 
-      transition: { duration: 0.3, ease: 'easeOut' } 
+      transition: { duration: 0.15, ease: 'easeOut' } 
     }
   };
 
@@ -514,8 +502,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         src="/nandha_aerial_bg_mobile.webp"
         alt="Nandha Campus Aerial View"
         className="mobile-lcp-hero hide-on-desktop"
-        // @ts-ignore
-        fetchPriority="high"
+        loading="lazy"
+        decoding="async"
         width={828}
         height={600}
       />
@@ -536,10 +524,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
               src="/nec_25_logo.png"
               alt="25 NEC Silver Jubilee"
               className="mobile-jubilee-img"
+              loading="lazy"
+              decoding="async"
               width={70}
               height={70}
-              // @ts-ignore
-              fetchPriority="high"
               onError={(e) => {
                 // Fallback to CollegeLogo if image fails
                 (e.target as HTMLElement).style.display = 'none';
