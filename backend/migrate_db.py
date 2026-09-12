@@ -101,6 +101,15 @@ def run_db_migrations():
             ("weekly_sessions", "pipeline_state", "ALTER TABLE weekly_sessions ADD COLUMN IF NOT EXISTS pipeline_state VARCHAR(50)"),
             ("weekly_sessions", "pipeline_last_updated", "ALTER TABLE weekly_sessions ADD COLUMN IF NOT EXISTS pipeline_last_updated TIMESTAMP"),
             ("weekly_sessions", "pipeline_error", "ALTER TABLE weekly_sessions ADD COLUMN IF NOT EXISTS pipeline_error TEXT"),
+            ("weekly_sessions", "manual_review_required_at", "ALTER TABLE weekly_sessions ADD COLUMN IF NOT EXISTS manual_review_required_at TIMESTAMP WITH TIME ZONE"),
+            ("weekly_sessions", "manual_review_reason", "ALTER TABLE weekly_sessions ADD COLUMN IF NOT EXISTS manual_review_reason TEXT"),
+            ("weekly_sessions", "last_successful_source_fetch", "ALTER TABLE weekly_sessions ADD COLUMN IF NOT EXISTS last_successful_source_fetch TIMESTAMP WITH TIME ZONE"),
+            ("weekly_sessions", "last_reconciliation_attempt", "ALTER TABLE weekly_sessions ADD COLUMN IF NOT EXISTS last_reconciliation_attempt TIMESTAMP WITH TIME ZONE"),
+            ("weekly_sessions", "reconciliation_failure_count", "ALTER TABLE weekly_sessions ADD COLUMN IF NOT EXISTS reconciliation_failure_count INTEGER DEFAULT 0"),
+            ("weekly_sessions", "last_error_code", "ALTER TABLE weekly_sessions ADD COLUMN IF NOT EXISTS last_error_code VARCHAR(100)"),
+            ("weekly_sessions", "last_error_message_safe", "ALTER TABLE weekly_sessions ADD COLUMN IF NOT EXISTS last_error_message_safe TEXT"),
+            ("weekly_sessions", "finalization_method", "ALTER TABLE weekly_sessions ADD COLUMN IF NOT EXISTS finalization_method VARCHAR(50)"),
+            ("weekly_sessions", "finalized_by", "ALTER TABLE weekly_sessions ADD COLUMN IF NOT EXISTS finalized_by VARCHAR(150)"),
             # leetcode_profile_stats 
             ("leetcode_profile_stats", "source_total_solved", "ALTER TABLE leetcode_profile_stats ADD COLUMN IF NOT EXISTS source_total_solved INTEGER"),
             ("leetcode_profile_stats", "derived_total_solved", "ALTER TABLE leetcode_profile_stats ADD COLUMN IF NOT EXISTS derived_total_solved INTEGER"),
@@ -247,6 +256,15 @@ def run_db_migrations():
                 pg_conn.execute(sql_text("UPDATE weekly_sessions SET status = 'SCHEDULED' WHERE status = 'FINALIZED' AND id NOT IN (SELECT session_id FROM official_weekly_snapshots)"))
         except Exception as _rec_err:
             pass
+
+        # Fix PostgreSQL primary key auto-increment sequences if out of sync
+        seq_tables = ["departments", "students", "users", "weekly_sessions", "student_contest_participations"]
+        for seq_t in seq_tables:
+            try:
+                with engine.begin() as pg_conn:
+                    pg_conn.execute(sql_text(f"SELECT setval(pg_get_serial_sequence('{seq_t}', 'id'), COALESCE(MAX(id), 1)) FROM {seq_t};"))
+            except Exception as _seq_err:
+                pass
 
         print("[PG Migration] PostgreSQL column migrations applied successfully.")
 
