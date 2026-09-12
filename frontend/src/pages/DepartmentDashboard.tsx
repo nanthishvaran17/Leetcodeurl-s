@@ -193,10 +193,10 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           <div className="space-y-1">
             <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center space-x-2">
               <Filter className="w-4 h-4 text-brand-500" />
-              <span>Department Cohort Filtering</span>
+              <span>Department Analytics Filtering</span>
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Select department and cohort criteria to analyze student metrics
+              Select department and academic year criteria to analyze student metrics
             </p>
           </div>
 
@@ -227,7 +227,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
         </div>
 
         {/* 5 Filter & Search Controls — Auto-Fitting Responsive Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-4 items-start">
           
           {/* 1. Department Filter */}
           <PremiumDepartmentSelect
@@ -254,13 +254,13 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           />
 
           {/* 3. Name Search */}
-          <div className="space-y-1.5 min-w-0">
-            <label htmlFor="dept-dashboard-name-search" className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
+          <div className="flex flex-col space-y-1.5 min-w-0 w-full">
+            <label htmlFor="dept-dashboard-name-search" className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate h-4 leading-4 m-0 p-0">
               Search Student Name
             </label>
             <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                <Search className="w-3.5 h-3.5" />
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                <Search className="w-4 h-4" />
               </div>
               <input
                 id="dept-dashboard-name-search"
@@ -271,7 +271,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                   setDisplayCount(32);
                 }}
                 placeholder="Search by name, reg no..."
-                className="w-full h-11 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-bold py-2.5 pl-8 pr-8 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 truncate transition-all"
+                className="w-full h-11 min-h-[44px] bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-bold py-2 pl-9 pr-8 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 truncate transition-all"
               />
               {nameSearch && (
                 <button
@@ -279,7 +279,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                   className="absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                   title="Clear search"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-4 h-4" />
                 </button>
               )}
             </div>
@@ -342,7 +342,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                   'not_started': 'Not Started'
                 }[solvedFilter] ?? ''} Solved`
               : ''}
-            {` (${totalStudents} Students)`}
+            {` (${totalStudents} ${totalStudents === 1 ? 'Student' : 'Students'})`}
           </h3>
         </div>
 

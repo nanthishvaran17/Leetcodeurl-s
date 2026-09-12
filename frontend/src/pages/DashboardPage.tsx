@@ -14,6 +14,7 @@ import { FailedSyncModal } from '../components/FailedSyncModal';
 import api, { triggerSingleStudentSync } from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
+import { AnimatedWelcomeHeading } from '../components/AnimatedWelcomeHeading';
 import { useGlobalData } from '../context/GlobalDataContext';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
@@ -84,6 +85,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   const [triggering, setTriggering] = useState(false);
   const [syncStarting, setSyncStarting] = useState(false);
   const [generatingReport, setGeneratingReport] = useState(false);
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
 
   // Calculate dynamic relative time every 10 seconds without page refresh
   useEffect(() => {
@@ -147,10 +149,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     try {
       await api.post('/sync/start?triggered_by=admin_dashboard', {}, { timeout: 4000 });
       await refreshAllData();
+      window.dispatchEvent(new CustomEvent('dataRefreshed'));
       notify.success('Synchronization Initiated', 'Sync worker is processing verified LeetCode profile statistics.', { category: 'SYNC ENGINE' });
     } catch (err: any) {
       console.warn('API sync fallback to local canonical snapshot', err);
       await refreshAllData();
+      window.dispatchEvent(new CustomEvent('dataRefreshed'));
       notify.success('Sync Completed', 'Synchronized in-memory dataset with authoritative institutional snapshot.', { category: 'SYNC ENGINE' });
     } finally {
       setSyncStarting(false);
@@ -225,7 +229,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         mimeType: 'application/pdf',
       });
       if (res.success) {
-        notify.success(' Weekly report downloaded', 'Weekly PDF report generated and downloaded.', { category: 'REPORTS' });
+        notify.success('Weekly report downloaded', 'Weekly PDF report generated and downloaded.', { category: 'REPORTS' });
       } else {
         notify.error('Unable to generate report', res.error || 'Please try again later.', { category: 'REPORTS' });
       }
@@ -238,20 +242,28 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   };
 
   const handleExportExcel = async () => {
+    setIsExportingExcel(true);
     notify.info('Preparing Excel Export', 'Fetching filtered student performance statistics...', { category: 'REPORTS' });
-    const qParam = getFilterQueryParams();
-    const deptSlug = department && department !== 'ALL' ? `_${department}` : '';
-    const yearSlug = academicYear && academicYear !== 'ALL' ? `_${academicYear}Yr` : '';
-    const filename = `NEC_Master_Report${deptSlug}${yearSlug}_${new Date().toISOString().slice(0, 10)}.xlsx`;
-    const res = await downloadManager.download({
-      endpoint: `/reports/export-official-college-summary${qParam}`,
-      filename,
-      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    });
-    if (res.success) {
-      notify.success(' Weekly report downloaded', 'Weekly Contest workbook downloaded.', { category: 'REPORTS' });
-    } else {
-      notify.error('Unable to generate report', res.error || 'Please try again.', { category: 'REPORTS' });
+    try {
+      const qParam = getFilterQueryParams();
+      const deptSlug = department && department !== 'ALL' ? `_${department}` : '';
+      const yearSlug = academicYear && academicYear !== 'ALL' ? `_${academicYear}Yr` : '';
+      const filename = `NEC_Master_Report${deptSlug}${yearSlug}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      const res = await downloadManager.download({
+        endpoint: `/reports/export-official-college-summary${qParam}`,
+        filename,
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      if (res.success) {
+        notify.success('Excel Workbook Downloaded', 'Weekly Contest workbook downloaded successfully.', { category: 'REPORTS' });
+      } else {
+        notify.error('Unable to generate report', res.error || 'Please try again.', { category: 'REPORTS' });
+      }
+    } catch (err: any) {
+      console.error("Export Excel error", err);
+      notify.error('Unable to generate report', 'Please try again later.', { category: 'REPORTS' });
+    } finally {
+      setIsExportingExcel(false);
     }
   };
 
@@ -291,32 +303,35 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     <div className="space-y-5 sm:space-y-6 pt-1 sm:pt-2 pb-2 animate-page-enter w-full">
       
       {/* 1. INSTITUTIONAL PERFORMANCE OVERVIEW */}
-      <div className="stagger-1 relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-5 sm:p-8 shadow-lg border border-brand-500/30">
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-start justify-between gap-5 lg:gap-8">
+      <div className="stagger-1 relative overflow-hidden rounded-3xl bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-950/95 via-slate-900 to-navy-950 text-white p-6 sm:p-8 shadow-[0_20px_60px_-15px_rgba(15,23,42,0.6)] border border-brand-500/40 backdrop-blur-xl">
+        {/* Glowing Background Glow Orbs */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-start justify-between gap-6 lg:gap-8">
           {/* Left: Title & Description */}
-          <div className="space-y-3 min-w-0 flex-1">
+          <div className="space-y-3.5 min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[11px] font-black tracking-wider uppercase">
-                <Building2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-gradient-to-r from-brand-500/20 to-indigo-500/20 border border-brand-400/40 text-brand-300 text-[11px] font-black tracking-wider uppercase shadow-xs">
+                <Building2 className="w-3.5 h-3.5 text-amber-400 shrink-0 animate-pulse" />
                 <span className="truncate max-w-[180px] sm:max-w-none">NANDHA ENGINEERING COLLEGE • ERODE</span>
               </div>
-              <div className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full border text-[11px] font-black tracking-wider uppercase ${liveStatus.color}`}>
+              <div className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full border text-[11px] font-black tracking-wider uppercase shadow-xs ${liveStatus.color}`}>
                 <span className={`w-2 h-2 rounded-full shrink-0 ${liveStatus.dot}`} />
                 <span>{liveStatus.label}</span>
               </div>
             </div>
 
-            <h1 className="text-xl sm:text-3xl lg:text-4xl font-display font-extrabold tracking-tight text-white uppercase leading-tight break-words">
-              Welcome back,{' '}
-              <span className="text-brand-300 break-words">{user?.name || user?.username || 'Admin'}</span>
-              {' '}👋
-            </h1>
+            <AnimatedWelcomeHeading
+              className="text-2xl sm:text-3xl lg:text-4xl font-display font-extrabold tracking-tight text-white uppercase leading-tight break-words drop-shadow-sm"
+              nameClassName="text-brand-300 break-words"
+            />
 
             {!(user?.role?.toLowerCase() === 'faculty' || user?.role?.toLowerCase() === 'staff') && (
-              <p className="text-slate-300/80 text-xs sm:text-sm font-medium mt-1">Manage your institutional intelligence workspace.</p>
+              <p className="text-slate-300/80 text-xs sm:text-sm font-semibold mt-1">Manage your institutional intelligence workspace.</p>
             )}
 
-            <p className="text-xs sm:text-sm text-slate-300 font-bold tracking-wide leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-300/90 font-medium tracking-wide leading-relaxed max-w-3xl">
               {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') 
                 ? 'Your exclusive mentorship cohort — live sync, contest verification, and analytics.'
                 : loading
@@ -327,10 +342,29 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                       ? `${canonicalTotal.toLocaleString()} enrolled students across all departments — live sync, contest verification, leaderboard analytics, and automated reporting.`
                       : `${totalStudents.toLocaleString()} enrolled students — live sync, contest verification, leaderboard analytics, and automated reporting.`}
             </p>
+
+            {/* Embedded Live Metric Pills */}
+            <div className="pt-2 flex flex-wrap items-center gap-2 text-xs font-bold">
+              <div className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2 backdrop-blur-md">
+                <Users className="w-3.5 h-3.5 text-brand-400" />
+                <span className="text-slate-300">Enrolled:</span>
+                <span className="text-white font-extrabold">{fmtCount(canonicalTotal ?? totalStudents)}</span>
+              </div>
+              <div className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2 backdrop-blur-md">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-slate-300">Active Solvers:</span>
+                <span className="text-emerald-400 font-extrabold">{fmtCount(activeStudents)}</span>
+              </div>
+              <div className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2 backdrop-blur-md">
+                <PieChart className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="text-slate-300">Participation:</span>
+                <span className="text-indigo-300 font-extrabold">{participationRate}%</span>
+              </div>
+            </div>
           </div>
 
           {/* Right: Action Buttons — 2×2 grid on mobile, flex row on ≥640px */}
-          <div className="w-full lg:w-auto shrink-0">
+          <div className="w-full lg:w-auto shrink-0 pt-2 lg:pt-0">
             {studentsError && (
               <div className="mb-2">
                 <button
@@ -339,58 +373,87 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   aria-label="Retry loading student roster data"
                   title="Retry loading student roster data"
                 >
-                  <RefreshCw className="w-3.5 h-3.5" />
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                   <span>Retry Roster</span>
                 </button>
               </div>
             )}
-            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3 sm:items-center">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 items-center">
               <button
                 onClick={handleStartSync}
                 disabled={isSyncing}
-                className="min-h-[52px] sm:min-h-[44px] sm:min-w-[44px] px-3 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-bold text-xs shadow-lg shadow-brand-600/30 flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-500 hover:from-brand-500 hover:to-indigo-400 text-white font-extrabold text-xs shadow-lg shadow-brand-500/30 border border-white/20 flex items-center justify-center space-x-2 transition-all duration-200 cursor-pointer disabled:opacity-50 focus:ring-2 focus:ring-brand-500 focus:outline-none transform hover:scale-[1.04] active:scale-90 group"
                 aria-label="Fetch live LeetCode statistics"
                 title="Synchronize live profile statistics for all students"
               >
-                <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${isSyncing ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${isSyncing ? 'animate-spin text-amber-300' : 'text-white group-hover:rotate-180 transition-transform duration-500'}`} />
                 <span className="truncate">{isSyncing ? 'Syncing...' : 'Fetch Live Data'}</span>
               </button>
+
               <button
                 onClick={onOpenImport}
-                className="min-h-[52px] sm:min-h-[44px] sm:min-w-[44px] px-3 sm:px-4 py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 font-bold text-xs shadow-sm border border-slate-700/50 flex items-center justify-center space-x-2 transition-colors cursor-pointer focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                className="min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 text-slate-100 font-extrabold text-xs shadow-md border border-slate-700/70 hover:border-slate-500 flex items-center justify-center space-x-2 transition-all duration-200 cursor-pointer focus:ring-2 focus:ring-brand-500 focus:outline-none transform hover:scale-[1.04] active:scale-90 group"
                 aria-label="Import student roster from Excel"
                 title="Upload Excel roster (.xlsx) to parse, validate, and update student profiles"
               >
-                <Plus className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                <Plus className="w-3.5 h-3.5 text-brand-400 group-hover:scale-125 transition-transform duration-300 shrink-0" />
                 <span className="truncate">Import Roster</span>
               </button>
+
               <button
                 onClick={handleExportExcel}
-                className="min-h-[52px] sm:min-h-[44px] sm:min-w-[44px] px-3 sm:px-4 py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 font-bold text-xs shadow-sm border border-slate-700/50 flex items-center justify-center space-x-2 transition-colors cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                disabled={isExportingExcel}
+                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-950 via-emerald-900 to-teal-950 hover:from-emerald-900 hover:to-teal-900 text-emerald-200 font-extrabold text-xs shadow-lg shadow-emerald-900/50 border border-emerald-500/60 hover:border-emerald-400 flex items-center justify-center space-x-2 transition-all duration-200 cursor-pointer disabled:opacity-70 focus:ring-2 focus:ring-emerald-400 focus:outline-none transform hover:scale-[1.04] active:scale-90 group"
                 aria-label="Export raw student roster to Excel"
                 title="Export current active student roster & raw LeetCode statistics to Excel workbook (.xlsx)"
               >
-                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span className="truncate">Export Excel</span>
+                <span className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/25 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                {isExportingExcel ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 text-emerald-300 animate-spin shrink-0" />
+                    <span className="truncate tracking-wide font-black">Downloading...</span>
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 animate-pulse" />
+                  </>
+                ) : (
+                  <>
+                    <div className="relative flex items-center justify-center">
+                      <FileSpreadsheet className="w-4 h-4 text-emerald-400 group-hover:scale-115 group-hover:-rotate-12 transition-transform duration-300 shrink-0" />
+                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 animate-ping opacity-75" />
+                    </div>
+                    <span className="truncate tracking-wide font-extrabold group-hover:text-white transition-colors">Export Excel</span>
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-[9px] font-mono text-emerald-300 border border-emerald-500/30 font-bold uppercase tracking-wider hidden sm:inline-block">
+                      XLSX
+                    </span>
+                  </>
+                )}
               </button>
-              <button
-                onClick={() => onNavigateTab('hr-candidate-finder')}
-                className="min-h-[52px] sm:min-h-[44px] sm:min-w-[44px] px-3 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-lg shadow-purple-600/30 flex items-center justify-center space-x-2 transition-all cursor-pointer focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                aria-label="Open HR Candidate Finder"
-                title="Open HR Candidate Finder Recruitment Intelligence workspace"
-              >
-                <Brain className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-                <span className="truncate">HR Candidate Finder</span>
-              </button>
+
               <button
                 onClick={handleGenerateReport}
                 disabled={generatingReport}
-                className="min-h-[52px] sm:min-h-[44px] sm:min-w-[44px] px-3 sm:px-4 py-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 font-bold text-xs shadow-sm border border-slate-700/50 flex items-center justify-center space-x-2 transition-colors cursor-pointer disabled:opacity-50 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-950 via-amber-900 to-orange-950 hover:from-amber-900 hover:to-orange-900 text-amber-200 font-extrabold text-xs shadow-lg shadow-amber-900/50 border border-amber-500/60 hover:border-amber-400 flex items-center justify-center space-x-2 transition-all duration-200 cursor-pointer disabled:opacity-70 focus:ring-2 focus:ring-amber-400 focus:outline-none transform hover:scale-[1.04] active:scale-90 group"
                 aria-label="Generate official weekly institutional report"
                 title="Instant download of pre-generated 8-sheet weekly performance tracker & PDF summary"
               >
-                <FileText className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span className="truncate">{generatingReport ? 'Preparing...' : 'Weekly Report'}</span>
+                <span className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-orange-500/25 to-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                {generatingReport ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 text-amber-300 animate-spin shrink-0" />
+                    <span className="truncate tracking-wide font-black">Preparing PDF...</span>
+                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 via-orange-300 to-amber-400 animate-pulse" />
+                  </>
+                ) : (
+                  <>
+                    <div className="relative flex items-center justify-center">
+                      <FileText className="w-4 h-4 text-amber-400 group-hover:scale-115 group-hover:rotate-12 transition-transform duration-300 shrink-0" />
+                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-400 animate-ping opacity-75" />
+                    </div>
+                    <span className="truncate tracking-wide font-extrabold group-hover:text-white transition-colors">Weekly Report</span>
+                    <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-[9px] font-mono text-amber-300 border border-amber-500/30 font-bold uppercase tracking-wider hidden sm:inline-block">
+                      PDF
+                    </span>
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -420,10 +483,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             </p>
           </div>
 
-          <div className="shrink-0">
+          <div className="shrink-0 sm:self-center">
             <button
               onClick={() => onNavigateTab('growth')}
-              className="min-h-[44px] w-full sm:w-auto px-5 py-3 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-brand-600 dark:hover:bg-brand-500 text-white font-bold text-xs shadow-md shadow-slate-900/20 dark:shadow-brand-500/20 flex items-center justify-center space-x-2 transition-all cursor-pointer transform hover:scale-[1.02]"
+              className="min-h-[44px] w-full sm:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-brand-600/20 flex items-center justify-center space-x-2 transition-all cursor-pointer transform hover:scale-[1.02]"
             >
               <Activity className="w-4 h-4 shrink-0" />
               <span>Launch Growth Engine</span>

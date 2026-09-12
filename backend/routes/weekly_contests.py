@@ -974,10 +974,29 @@ def get_session_matrix(
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(resource_name="Weekly Contest Matrix", required_roles=["admin", "super admin", "faculty", "staff", "hod"]))
 ):
-    """
-    Delegates strictly to the single canonical normalized dataset function with institutional RBAC.
-    Supports SQL pagination via paginated=True.
-    """
+    if not isinstance(dept, str):
+        dept = "ALL"
+    if not isinstance(year, str):
+        year = "ALL"
+    if not isinstance(attendance, str):
+        attendance = "ALL"
+    if not isinstance(search, str):
+        search = None
+    if not isinstance(sort_by, str):
+        sort_by = None
+    if not hasattr(current_user, "id"):
+        current_user = None
+    if not isinstance(page, int):
+        try:
+            page = int(page)
+        except Exception:
+            page = 1
+    if not isinstance(limit, int):
+        try:
+            limit = int(limit)
+        except Exception:
+            limit = 50
+
     if paginated:
         from backend.services.sql_pagination import get_paginated_matrix_rows
         from backend.services.canonical_contest_engine import build_canonical_contest_dataset
@@ -2199,6 +2218,7 @@ def get_post_930_solvers(
     """
     from backend.routes.auth import get_current_user_from_request
     from backend.services.faculty_assignment_service import faculty_assignment_service
+    from backend.models import StudentStatSnapshot
     import json, pytz
 
     ist_tz = pytz.timezone("Asia/Kolkata")
@@ -2239,31 +2259,42 @@ def get_post_930_solvers(
 
     # Retrieve official locked snapshot baseline if available
     locked_snapshot_map = {}
+
     if session:
-        snapshot = db.query(OfficialWeeklySnapshot).filter(
-            OfficialWeeklySnapshot.session_id == session.id,
-            OfficialWeeklySnapshot.is_superseded == False
-        ).order_by(OfficialWeeklySnapshot.id.desc()).first()
+        snapshots = db.query(OfficialWeeklySnapshot).filter(
+            OfficialWeeklySnapshot.session_id == session.id
+        ).order_by(OfficialWeeklySnapshot.id.desc()).all()
 
-        if snapshot and snapshot.dataset:
-            try:
-                if isinstance(snapshot.dataset, list):
-                    ds = snapshot.dataset
-                elif isinstance(snapshot.dataset, dict):
-                    ds = snapshot.dataset.get("students", []) or snapshot.dataset.get("dataset", [])
-                elif isinstance(snapshot.dataset, str):
-                    parsed_ds = json.loads(snapshot.dataset)
-                    ds = parsed_ds if isinstance(parsed_ds, list) else (parsed_ds.get("students", []) if isinstance(parsed_ds, dict) else [])
-                else:
+        for snapshot in snapshots:
+            if snapshot and snapshot.dataset:
+                try:
                     ds = []
+                    if isinstance(snapshot.dataset, list):
+                        ds = snapshot.dataset
+                    elif isinstance(snapshot.dataset, dict):
+                        ds = snapshot.dataset.get("rows", []) or snapshot.dataset.get("students", []) or snapshot.dataset.get("dataset", [])
+                    elif isinstance(snapshot.dataset, str):
+                        parsed_ds = json.loads(snapshot.dataset)
+                        if isinstance(parsed_ds, list):
+                            ds = parsed_ds
+                        elif isinstance(parsed_ds, dict):
+                            ds = parsed_ds.get("rows", []) or parsed_ds.get("students", []) or parsed_ds.get("dataset", [])
 
-                for item in ds:
-                    if isinstance(item, dict):
-                        reg = item.get("reg_no")
-                        if reg:
-                            locked_snapshot_map[reg] = item.get("total_solved", 0)
-            except Exception as e:
-                logger.warning(f"Error parsing snapshot dataset: {e}")
+                    for item in ds:
+                        if isinstance(item, dict):
+                            reg = item.get("reg_no") or item.get("register_number") or item.get("regNo")
+                            if reg:
+                                reg_key = reg.strip().upper()
+                                sol = item.get("cumulative_solved") if item.get("cumulative_solved") is not None else item.get("total_solved")
+                                if sol is not None and sol != '' and reg_key not in locked_snapshot_map:
+                                    try:
+                                        val = int(sol)
+                                        if val >= 0:
+                                            locked_snapshot_map[reg_key] = val
+                                    except:
+                                        pass
+                except Exception as e:
+                    logger.warning(f"Error parsing snapshot dataset: {e}")
 
     # Query active students
     from backend.services.authorization_service import apply_role_based_student_filter
@@ -2315,9 +2346,23 @@ def get_post_930_solvers(
 
     # Process post-9:30 solves per student with problem-level deduplication
     for s in students:
-        official_locked = locked_snapshot_map.get(s.reg_no, 0) or 0
+        reg_key = s.reg_no.strip().upper() if s.reg_no else ""
         current_total = (s.stats.total_solved if (s.stats and s.stats.total_solved is not None) else 0)
         
+        official_locked = locked_snapshot_map.get(reg_key, None)
+        if official_locked is None or official_locked == 0:
+            # Check StudentStatSnapshot closest to lock_datetime
+            st_snap = db.query(StudentStatSnapshot).filter(
+                StudentStatSnapshot.student_id == s.id,
+                StudentStatSnapshot.captured_at <= lock_datetime.astimezone(pytz.utc).replace(tzinfo=None)
+            ).order_by(StudentStatSnapshot.captured_at.desc()).first()
+
+            if st_snap and st_snap.total_solved is not None and st_snap.total_solved > 0:
+                official_locked = st_snap.total_solved
+            else:
+                # If no baseline snapshot exists for this student on session date, baseline is current_total
+                official_locked = current_total
+
         qualifying_problems = []
         seen_problem_keys = set()
         student_submissions = 0
@@ -2359,8 +2404,26 @@ def get_post_930_solvers(
             diff = current_total - official_locked
             post_solve_count = diff
             student_submissions = diff + 1
-            base_time = datetime.datetime.combine(target_date, datetime.time(9, 35, 0))
-            base_time_ist = ist_tz.localize(base_time)
+            
+            # Resolve actual activity timestamp from post-9:30 stat snapshots or last_verified_at
+            post_snap = db.query(StudentStatSnapshot).filter(
+                StudentStatSnapshot.student_id == s.id,
+                StudentStatSnapshot.captured_at > lock_datetime.astimezone(pytz.utc).replace(tzinfo=None)
+            ).order_by(StudentStatSnapshot.captured_at.asc()).first()
+
+            if post_snap and post_snap.captured_at:
+                c_at = post_snap.captured_at
+                base_time_ist = pytz.utc.localize(c_at).astimezone(ist_tz) if c_at.tzinfo is None else c_at.astimezone(ist_tz)
+            elif s.stats and s.stats.last_verified_at:
+                lv_dt = s.stats.last_verified_at
+                base_time_ist = pytz.utc.localize(lv_dt).astimezone(ist_tz) if lv_dt.tzinfo is None else lv_dt.astimezone(ist_tz)
+            else:
+                base_time = datetime.datetime.combine(target_date, datetime.time(9, 35, 0))
+                base_time_ist = ist_tz.localize(base_time)
+
+            if base_time_ist < lock_datetime:
+                base_time_ist = lock_datetime + datetime.timedelta(minutes=5)
+
             qualifying_problems.append({
                 "problem_name": f"Post-Session Problem Solved (+{diff})",
                 "name": f"Post-Session Problem Solved (+{diff})",
@@ -2372,7 +2435,6 @@ def get_post_930_solvers(
                 "problem_url": f"https://leetcode.com/u/{s.username}/" if s.username else None,
                 "url": f"https://leetcode.com/u/{s.username}/" if s.username else None
             })
-            all_post_timestamps.append(base_time_ist)
 
         # Filter out zero post-9:30 activity
         if post_solve_count < (min_post_window_solves or 1):
@@ -2384,6 +2446,34 @@ def get_post_930_solvers(
         timestamps = [p["timestamp_iso"] for p in qualifying_problems if p.get("timestamp_iso")]
         first_time = min(timestamps) if timestamps else None
         latest_time = max(timestamps) if timestamps else None
+
+        for p_item in qualifying_problems:
+            p_iso = p_item.get("timestamp_iso")
+            if p_iso:
+                try:
+                    dt_p = datetime.datetime.fromisoformat(p_iso)
+                    if dt_p.tzinfo is None:
+                        dt_p = pytz.utc.localize(dt_p).astimezone(ist_tz)
+                    else:
+                        dt_p = dt_p.astimezone(ist_tz)
+                    all_post_timestamps.append(dt_p)
+                except Exception:
+                    pass
+
+        def _fmt_iso_to_ist(iso_str: Optional[str], fallback: str = "09:35 AM IST") -> str:
+            if not iso_str:
+                return fallback
+            try:
+                dt_obj = datetime.datetime.fromisoformat(iso_str)
+                if dt_obj.tzinfo is None:
+                    dt_obj = pytz.utc.localize(dt_obj).astimezone(ist_tz)
+                else:
+                    dt_obj = dt_obj.astimezone(ist_tz)
+                if dt_obj.date() == target_date:
+                    return dt_obj.strftime("%I:%M %p IST")
+                return dt_obj.strftime("%a %I:%M %p IST")
+            except Exception:
+                return fallback
 
         detected_students.append({
             "student_id": s.id,
@@ -2401,8 +2491,8 @@ def get_post_930_solvers(
             "current_total_solved": current_total,
             "first_post_window_solve": first_time,
             "latest_post_window_solve": latest_time,
-            "first_post_window_solve_formatted": datetime.datetime.fromisoformat(first_time).strftime("%I:%M %p") if first_time else "09:35 AM",
-            "latest_post_window_solve_formatted": datetime.datetime.fromisoformat(latest_time).strftime("%I:%M %p") if latest_time else "10:15 AM",
+            "first_post_window_solve_formatted": _fmt_iso_to_ist(first_time, "09:35 AM IST"),
+            "latest_post_window_solve_formatted": _fmt_iso_to_ist(latest_time, "09:35 AM IST"),
             "evidence_status": "VERIFIED",
             "problems": qualifying_problems,
             "status": "POST_SESSION"
@@ -2418,8 +2508,13 @@ def get_post_930_solvers(
     else:  # "latest" (default)
         detected_students.sort(key=lambda x: x["latest_post_window_solve"] or "", reverse=True)
 
-    earliest_str = min(all_post_timestamps).strftime("%I:%M %p IST") if all_post_timestamps else "09:35 AM IST"
-    latest_str = max(all_post_timestamps).strftime("%I:%M %p IST") if all_post_timestamps else "11:15 AM IST"
+    def _fmt_dt_ist(dt_obj: datetime.datetime) -> str:
+        if dt_obj.date() == target_date:
+            return dt_obj.strftime("%I:%M %p IST")
+        return dt_obj.strftime("%a %I:%M %p IST")
+
+    earliest_str = _fmt_dt_ist(min(all_post_timestamps)) if all_post_timestamps else "09:35 AM IST"
+    latest_str = _fmt_dt_ist(max(all_post_timestamps)) if all_post_timestamps else "09:35 AM IST"
 
     return {
         "session_date": target_date_str,

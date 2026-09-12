@@ -312,111 +312,70 @@ def verify_certificate_public(
         canonical_hash_match = True
         integrity_status = "VERIFIED"
         if doc_type == "FORENSIC_VERIFICATION_REPORT":
-            # 1. Use stored immutable snapshot fields if available on CertificateRecord
-            if cert.problems_solved is not None and cert.contest_score is not None:
-                contest_name = cert.contest_name or cert.recognition.replace("Official Contest Forensic Verification: ", "") if cert.recognition else "Weekly Contest"
-                contest_date = cert.issue_date
-                p_status = cert.participation_status or "PUBLIC_ATTENDED"
-                problems_solved = cert.problems_solved
-                contest_score = cert.contest_score
-                contest_rank = cert.contest_rank or "—"
-                contest_rating = cert.contest_rating or "—"
-                q1_score = cert.q1_score or 0
-                q2_score = cert.q2_score or 0
-                q3_score = cert.q3_score or 0
-                q4_score = cert.q4_score or 0
-                sha_hash = cert.sha_hash
-                integrity_status = "VERIFIED"
-                canonical_hash_match = True
-            else:
-                # 2. Re-query database using STRICT contest_id and student_id matching (Zero cross-contest/cross-student fallbacks)
-                session_obj = None
-                sess_id_target = cert.contest_id or contest
-                if sess_id_target:
-                    clean_c = str(sess_id_target).strip()
-                    c_slug = clean_c if "weekly" in clean_c.lower() else f"weekly-contest-{clean_c}"
-                    session_obj = db.query(WeeklySession).filter(
-                        (WeeklySession.contest_id == clean_c) |
-                        (WeeklySession.contest_id == c_slug) |
-                        (WeeklySession.contest_name.ilike(f"%{clean_c}%")) |
-                        (WeeklySession.id == (int(clean_c) if clean_c.isdigit() else -1))
-                    ).first()
+            from backend.services.forensic_audit_engine import build_normalized_forensic_report
+            sess_id_target = None
+            if cert.contest_id:
+                clean_c = str(cert.contest_id).replace("weekly-contest-", "").strip()
+                if clean_c.isdigit():
+                    sess_id_target = int(clean_c)
 
-                p_res = None
-                v_res = None
-                if session_obj:
-                    p_res = db.query(WeeklyPublicResult).filter(
-                        WeeklyPublicResult.student_id == cert.student_id,
-                        WeeklyPublicResult.session_id == session_obj.id
-                    ).first()
-                    if not p_res:
-                        v_res = db.query(WeeklyVirtualResult).filter(
-                            WeeklyVirtualResult.student_id == cert.student_id,
-                            WeeklyVirtualResult.session_id == session_obj.id
-                        ).first()
-
-                contest_name = session_obj.contest_name if session_obj else (cert.contest_name or "Weekly Contest")
-                contest_date = session_obj.session_date if session_obj else cert.issue_date
-                
-                if p_res:
-                    p_status = p_res.participation_status or "PUBLIC_ATTENDED"
-                    tot_solved_tmp = p_res.total_contest_solved or 0
-                    problems_solved = f"{tot_solved_tmp} / 4 Problems"
-                    c_score = p_res.contest_score or 0
-                    contest_score = str(c_score)
-                    contest_rank = f"#{p_res.contest_rank}" if p_res.contest_rank else "—"
-                    c_rating = p_res.contest_rating
-                    contest_rating = f"{c_rating:.1f}" if c_rating else "—"
-                    q1_score = p_res.q1 or 0
-                    q2_score = p_res.q2 or 0
-                    q3_score = p_res.q3 or 0
-                    q4_score = p_res.q4 or 0
-                elif v_res:
-                    p_status = "VIRTUAL_ATTENDED"
-                    tot_solved_tmp = v_res.total_contest_solved or 0
-                    problems_solved = f"{tot_solved_tmp} / 4 Problems"
-                    c_score = v_res.contest_score or 0
-                    contest_score = str(c_score)
-                    contest_rank = f"#{v_res.contest_rank}" if v_res.contest_rank else "—"
-                    c_rating = v_res.contest_rating
-                    contest_rating = f"{c_rating:.1f}" if c_rating else "—"
-                    q1_score = v_res.q1 or 0
-                    q2_score = v_res.q2 or 0
-                    q3_score = v_res.q3 or 0
-                    q4_score = v_res.q4 or 0
-                else:
-                    p_status = "NOT_ATTENDED"
-                    tot_solved_tmp = 0
-                    problems_solved = "0 / 4 Problems"
-                    contest_score = "0"
-                    contest_rank = "—"
-                    contest_rating = "—"
-                    q1_score = 0
-                    q2_score = 0
-                    q3_score = 0
-                    q4_score = 0
-
-                student = cert.student
-                if student and session_obj:
-                    c_title_name = contest_name
-                    dept_code_str = student.department.code if student.department else "CSE"
-                    year_str = student.year_level or "III"
-                    username = getattr(student, "username", None) or getattr(student, "leetcodeUsername", "N/A")
-                    c_date = session_obj.session_date or "16.08.2026"
-                    
-                    canonical_data = f"{cert.verification_id}:{student.id}:{student.name}:{student.reg_no}:{dept_code_str}:{year_str}:{username}:{session_obj.contest_id or session_obj.id}:{c_title_name}:{c_date}:{p_status}:{tot_solved_tmp}:{q1_score},{q2_score},{q3_score},{q4_score}:{c_score}"
-                    computed_hash_v2 = hashlib.sha256(canonical_data.encode()).hexdigest()
-                    computed_hash_v1 = hashlib.sha256(f"{cert.verification_id}:{cert.register_no}:{session_obj.id}:{tot_solved_tmp}".encode()).hexdigest()
-
-                    if cert.sha_hash == computed_hash_v2 or cert.sha_hash == computed_hash_v1:
-                        canonical_hash_match = True
-                        integrity_status = "VERIFIED"
-                    else:
-                        canonical_hash_match = True
-                        integrity_status = "VERIFIED"
-
-                if not sha_hash:
-                    sha_hash = cert.sha_hash or hashlib.sha256(f"{cert.verification_id}:{cert.register_no}:{contest_name}".encode()).hexdigest()
+            try:
+                norm_report = build_normalized_forensic_report(
+                    db,
+                    search=cert.verification_id,
+                    session_id=sess_id_target,
+                    trace_id=cert.verification_id,
+                    student_id=cert.student_id
+                )
+                resp_content = {
+                    "verified": True,
+                    "status": "VERIFIED",
+                    "is_valid": True,
+                    "document_type": doc_type,
+                    "verification_id": cert.verification_id,
+                    "certificate_id": cert.verification_id,
+                    "student_name": norm_report["student"]["name"],
+                    "register_no": norm_report["student"]["registerNumber"],
+                    "department": norm_report["student"]["department"],
+                    "department_name": norm_report["student"]["departmentName"],
+                    "program": cert.program or f"B.E. {norm_report['student']['departmentName']}",
+                    "recognition": cert.recognition or f"Official Contest Forensic Verification: {norm_report['contest']['name']}",
+                    "issue_date": norm_report["contest"]["date"],
+                    "certificate_type": cert.certificate_type,
+                    "verification_url": cert.verification_url,
+                    "institution": "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)",
+                    "accreditation": "Approved by AICTE, New Delhi • Affiliated to Anna University, Chennai • Accredited by NAAC with 'A+' Grade",
+                    "contest_name": norm_report["contest"]["name"],
+                    "contest_date": norm_report["contest"]["date"],
+                    "contest_status": "AUTHENTIC & SEALED",
+                    "participation_status": norm_report["participation"]["status"],
+                    "problems_solved": f"{norm_report['participation']['solved']} / {norm_report['participation']['totalProblems']} Problems",
+                    "contest_score": str(norm_report["participation"]["score"]),
+                    "contest_rank": str(norm_report["participation"]["rank"]),
+                    "contest_rating": str(norm_report["participation"]["rating"]),
+                    "q1_score": norm_report["result"]["q1"],
+                    "q2_score": norm_report["result"]["q2"],
+                    "q3_score": norm_report["result"]["q3"],
+                    "q4_score": norm_report["result"]["q4"],
+                    "integrity_status": "VERIFIED",
+                    "canonical_hash_match": True,
+                    "sha_hash": norm_report["verification"]["checksum"],
+                    "source_engine": norm_report["verification"]["sourceEngine"],
+                    "created_at": cert.created_at.strftime("%Y-%m-%d %H:%M:%S") if cert.created_at else None,
+                    "student": norm_report["student"],
+                    "contest": norm_report["contest"],
+                    "participation": norm_report["participation"],
+                    "questions": norm_report["questions"],
+                    "verification": norm_report["verification"],
+                    "result": norm_report["result"]
+                }
+                return JSONResponse(
+                    status_code=200,
+                    content=resp_content,
+                    headers={"Cache-Control": "no-store, no-cache, must-revalidate"}
+                )
+            except Exception as e:
+                logger.error(f"[CERT_VERIFY_FORENSIC_ERROR] Error building normalized report for {cert.verification_id}: {e}")
 
         resp_content = {
             "verified": True,
@@ -597,13 +556,14 @@ def download_certificate_pdf(
 
     if doc_type == "FORENSIC_VERIFICATION_REPORT":
         from backend.forensic_pdf_generator import generate_forensic_audit_pdf
-        session_obj = db.query(WeeklySession).filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED"])).order_by(WeeklySession.id.desc()).first()
-        if not session_obj:
-            session_obj = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
-        session_id = session_obj.id if session_obj else 1
+        session_id = None
+        if cert.contest_id:
+            clean_c = str(cert.contest_id).replace("weekly-contest-", "").strip()
+            if clean_c.isdigit():
+                session_id = int(clean_c)
 
         try:
-            pdf_bytes = generate_forensic_audit_pdf(db, cert.student_id, session_id, trace_id=cert.verification_id)
+            pdf_bytes = generate_forensic_audit_pdf(db, student_id=cert.student_id, session_id=session_id, trace_id=cert.verification_id)
             logger.info(f"[forensic_pdf_generated] Successfully generated {len(pdf_bytes)} bytes for {cert.verification_id}")
         except Exception as gen_err:
             logger.error(f"[forensic_pdf_generation_failed] Exception generating forensic PDF for {cert.verification_id}: {gen_err}", exc_info=True)
@@ -714,14 +674,30 @@ def download_forensic_contest_pdf(
         logger.warning(f"[forensic_download_failed] Student not found for identifier={raw_id}, student_id={student_id}")
         raise HTTPException(status_code=404, detail="Student record not found for the requested forensic report.")
 
-    session_obj = db.query(WeeklySession).filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED"])).order_by(WeeklySession.id.desc()).first()
-    if not session_obj:
-        session_obj = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
-    session_id = session_obj.id if session_obj else 1
+    session_id_val = None
+    if contest:
+        clean_c = str(contest).replace("weekly-contest-", "").strip()
+        if clean_c.isdigit():
+            session_id_val = int(clean_c)
+        else:
+            sess = db.query(WeeklySession).filter(
+                (WeeklySession.contest_id == clean_c) |
+                (WeeklySession.contest_id == f"weekly-contest-{clean_c}") |
+                (WeeklySession.contest_name.ilike(f"%{clean_c}%"))
+            ).first()
+            if sess:
+                session_id_val = sess.id
+
+    if not session_id_val and raw_id:
+        cert = db.query(CertificateRecord).filter(CertificateRecord.verification_id == raw_id).first()
+        if cert and cert.contest_id:
+            clean_c = str(cert.contest_id).replace("weekly-contest-", "").strip()
+            if clean_c.isdigit():
+                session_id_val = int(clean_c)
 
     clean_reg = re.sub(r'[^A-Za-z0-9]+', '', student.reg_no or "").strip().upper()
-    trace_id = f"CERT-{clean_reg}-FORENSIC"
-    pdf_bytes = generate_forensic_audit_pdf(db, student.id, session_id, trace_id=trace_id)
+    trace_id = raw_id if (raw_id and (raw_id.startswith("CERT-") or raw_id.startswith("trace_"))) else f"CERT-{clean_reg}-FORENSIC"
+    pdf_bytes = generate_forensic_audit_pdf(db, student.id, session_id=session_id_val, trace_id=trace_id)
 
     clean_name = re.sub(r'[^A-Za-z0-9]+', '_', (student.name or "STUDENT").strip().upper()).strip('_')
     f_parts = [clean_name, clean_reg, "Forensic_Audit_Report.pdf"]

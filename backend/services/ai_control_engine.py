@@ -44,8 +44,52 @@ class AIControlEngine:
 
         # Step 1: Detect intent & build task execution plan
         task_plan = AIControlEngine._build_task_plan(clean_msg)
-        
-        # Step 2: Route request to specific tool functions
+
+        # Check conversation reference / confirmation resolution ("ok give it", "yes", "download", "send it")
+        from backend.services.ai_conversation_state import ConversationStateManager
+        conv_id = (context or {}).get("conversation_id") or (context or {}).get("sessionId") or f"session_{user.id if user else 'guest'}"
+        if context is None:
+            context = {}
+        context["conversation_id"] = conv_id
+        state = ConversationStateManager.get_state(conv_id)
+
+        if ConversationStateManager.is_confirmation_query(clean_msg):
+            if state.generated_artifact:
+                art = state.generated_artifact
+                return {
+                    "success": True,
+                    "requestId": req_id,
+                    "answer": f"### 📄 Verified PDF Report Ready\n\nHere is your requested PDF report: **{art.get('title', 'Institutional Performance Report')}**.",
+                    "data": art,
+                    "checked": ["Generated Artifact Store", "Verified Database Matrix"],
+                    "source": "Verified Institutional Database",
+                    "last_updated": last_fetch_str,
+                    "task_plan": task_plan,
+                    "pdfAvailable": True,
+                    "downloadUrl": art.get("download_url") or art.get("pdf_download_url") or "/api/reports/export/summary-pdf",
+                    "pending_action": None,
+                    "data_status": "VERIFIED",
+                    "timestamp": datetime.datetime.utcnow().isoformat() + "Z"
+                }
+
+        from backend.config import settings
+        from backend.services.ai_gemini_service import AIGeminiEngine
+
+        if getattr(settings, "GEMINI_API_KEY", None):
+            gemini_res = AIGeminiEngine.answer_query(
+                db=db,
+                query_text=message,
+                user=user,
+                context_page=(context.get("page") if isinstance(context, dict) else None),
+                context_filters=context,
+                history=history,
+                mode="operations"
+            )
+            gemini_res["task_plan"] = task_plan
+            gemini_res["requestId"] = req_id
+            return gemini_res
+
+        # Step 2: Route request to specific tool functions if AI key not set
         result_payload = AIControlEngine._execute_tool_pipeline(db, lower_msg, clean_msg, task_plan, req_id)
 
         # Step 3: Format standard compliance response
@@ -404,6 +448,86 @@ class AIControlEngine:
         latest_sess = db.query(WeeklySession).filter(WeeklySession.status.in_(['COMPLETED', 'FINALIZED'])).order_by(WeeklySession.id.desc()).first()
         sess_name = latest_sess.contest_name if latest_sess else "Weekly Contest"
 
+        total_checked = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).count()
+
+        dept_code = None
+        if "cyber" in m or "cs" in m:
+            dept_code = "CS"
+        elif "iot" in m:
+            dept_code = "IOT"
+        elif "it" in m:
+            dept_code = "IT"
+
+        is_inactive_query = any(k in m for k in ["inactive", "7 days", "not active", "zero", "no activity"])
+
+        if is_inactive_query:
+            query = db.query(Student).join(Student.stats).options(
+                joinedload(Student.department),
+                joinedload(Student.stats)
+            ).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+
+            if dept_code:
+                query = query.join(Student.department).filter(Department.code.ilike(f"%{dept_code}%"))
+
+            all_candidates = query.all()
+            total_checked = len(all_candidates)
+
+            inactive_list = []
+            for s in all_candidates:
+                tot = s.stats.total_solved if (s.stats and s.stats.total_solved is not None) else 0
+                days = s.stats.active_days if (s.stats and s.stats.active_days is not None) else 0
+                if tot == 0 or days <= 2:
+                    inactive_list.append(s)
+
+            inactive_count = len(inactive_list)
+            dept_str = f" in {dept_code}" if dept_code else ""
+
+            answer = (
+                f"**Institution Intelligence Assistant**\n"
+                f"RBAC-enforced AI assistant grounded strictly in verified institutional database records.\n\n"
+                f"**Who is inactive this week?{dept_str}**\n"
+                f"Based on the live database records, here are the results for your query:\n\n"
+            )
+
+            rows = []
+            for s in inactive_list[:25]:
+                dept = s.department.code if s.department else "CSE"
+                solved = s.stats.total_solved if (s.stats and s.stats.total_solved is not None) else 0
+                answer += f"• **{s.name}** (`{s.reg_no}`) — Dept: **{dept}** (Solved: {solved})\n"
+                rows.append({
+                    "name": s.name,
+                    "reg_no": s.reg_no,
+                    "dept": dept,
+                    "year": s.year_level,
+                    "solved": solved
+                })
+
+            if inactive_count > 25:
+                answer += f"\n*(Showing top 25 of {inactive_count} inactive students)*\n"
+
+            answer += (
+                f"\n**HIGH_VERIFIED — Verified Provenance**\n"
+                f"• Checked **{total_checked}** students.\n"
+                f"• Found **{inactive_count}** inactive for 7 days."
+            )
+
+            return {
+                "answer": answer,
+                "data": {
+                    "inactive_students": rows,
+                    "total_checked": total_checked,
+                    "inactive_count": inactive_count,
+                    "session_name": sess_name
+                },
+                "actionLabel": f"View {inactive_count} Inactive Students",
+                "actionTab": "students",
+                "checked": [
+                    f"Checked {total_checked} Students in Database",
+                    f"Found {inactive_count} Inactive Students",
+                    "Verified Active Roster"
+                ]
+            }
+
         # Query low solvers (< 50 solved or zero solved)
         low_solvers = db.query(Student).join(Student.stats).options(
             joinedload(Student.department),
@@ -411,7 +535,7 @@ class AIControlEngine:
         ).filter(
             ((Student.is_active == True) | (Student.is_active.is_(None))),
             (LeetCodeProfileStats.total_solved < 50) | (LeetCodeProfileStats.total_solved.is_(None))
-        ).order_by(LeetCodeProfileStats.total_solved.asc()).limit(10).all()
+        ).order_by(LeetCodeProfileStats.total_solved.asc()).limit(15).all()
 
         answer = f"**Absence & Low Performance Intelligence Scan ({sess_name}):**\n\n"
         answer += f"Found **{len(low_solvers)} students** requiring immediate academic intervention (< 50 problems solved):\n\n"

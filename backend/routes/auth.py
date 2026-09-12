@@ -34,24 +34,54 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token", auto_error=Fals
 
 def _get_user_dept_scope(db: Session, user: User) -> dict:
     """
-    Returns authorized_department_ids and authorized_department_codes for the given user.
+    Returns authorized_department_ids, authorized_department_codes, staff_verification_status,
+    institutional_id, and designation for the given user.
     For HOD: queries HODDepartmentAllocation.
-    For global roles: returns empty lists (frontend interprets empty = global access by role).
-    Called by every login/session endpoint to provide scope to the frontend.
+    Called by every login/session endpoint to provide scope and identity status to the frontend.
     """
     if not user:
-        return {"authorized_department_ids": [], "authorized_department_codes": []}
-    role = (getattr(user, "override_role", None) or user.role or "").strip().lower()
+        return {
+            "authorized_department_ids": [],
+            "authorized_department_codes": [],
+            "staff_verification_status": "NOT_SUBMITTED",
+            "institutional_id": None,
+            "designation": None
+        }
+
+    verif_status = "NOT_SUBMITTED"
+    inst_id = getattr(user, "institutional_id", None)
+    desig = getattr(user, "designation", None)
+
+    if hasattr(user, "id") and user.id:
+        try:
+            from backend.models import StaffVerification
+            v = db.query(StaffVerification).filter(StaffVerification.user_id == user.id).order_by(StaffVerification.created_at.desc()).first()
+            if v:
+                verif_status = v.verification_status
+                if not inst_id and v.employee_id:
+                    inst_id = v.employee_id
+                if not desig and v.designation:
+                    desig = v.designation
+        except Exception:
+            pass
+
+    scope = {
+        "authorized_department_ids": [],
+        "authorized_department_codes": [],
+        "staff_verification_status": verif_status,
+        "institutional_id": inst_id,
+        "designation": desig
+    }
+    role = (getattr(user, "override_role", None) or getattr(user, "role", "") or "").strip().lower()
     if role in ("hod", "department hod", "department_hod"):
         from backend.services.authorization_service import (
             get_hod_authorized_department_ids,
             get_hod_authorized_department_codes
         )
-        return {
-            "authorized_department_ids": get_hod_authorized_department_ids(db, user),
-            "authorized_department_codes": get_hod_authorized_department_codes(db, user)
-        }
-    return {"authorized_department_ids": [], "authorized_department_codes": []}
+        scope["authorized_department_ids"] = get_hod_authorized_department_ids(db, user)
+        scope["authorized_department_codes"] = get_hod_authorized_department_codes(db, user)
+
+    return scope
 
 
 def _utcnow() -> datetime.datetime:

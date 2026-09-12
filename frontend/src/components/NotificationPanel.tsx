@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { resolveNotificationDestination } from '../utils/notificationNavigation';
-import { Bell, Check, Trash2, CheckCircle2, AlertTriangle, AlertCircle, Calendar, FileText, Download, Eye, X, Settings, ChevronRight, ArrowLeft, Send, Smartphone, Loader2 } from 'lucide-react';
+import { Bell, Check, Trash2, CheckCircle2, AlertTriangle, AlertCircle, Calendar, FileText, Download, Eye, X, Settings, ChevronRight, ArrowLeft, Send, Smartphone, Loader2, Sparkles } from 'lucide-react';
 import { useGlobalNotifications, type Notification } from '../context/GlobalNotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { requestPushPermissionAndGetToken } from '../services/firebasePush';
@@ -250,7 +250,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
         }
       }
 
-      const res = await fetch(`${API_BASE_URL}/api/notifications/test-push`, {
+      const res = await fetch(`${API_BASE_URL}/notifications/test-push`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -319,6 +319,38 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
     }
   };
 
+  const handleAskAI = (e: React.MouseEvent, n: Notification) => {
+    e.stopPropagation();
+    if (!n.isRead) markAsRead(n.id);
+    
+    const target = resolveNotificationDestination(n);
+    
+    if (target.path) {
+      if (onNavigateTab) {
+        onNavigateTab(target.path);
+      } else {
+        window.location.hash = `#${target.path}`;
+      }
+    }
+    
+    onClose();
+    
+    window.dispatchEvent(
+      new CustomEvent('open-ai-chat', {
+        detail: {
+          query: target.aiPrompt || `Analyze notification: "${n.title}"`,
+          mode: 'institutional',
+          context: {
+            type: target.contextType || 'GENERAL',
+            id: target.entityId,
+            title: n.title,
+            aiPrompt: target.aiPrompt
+          }
+        }
+      })
+    );
+  };
+
   const handleFileDownload = (fileId: string) => {
     downloadManager.download({
       endpoint: `/notifications/files/${fileId}/download`,
@@ -374,71 +406,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
               )}
             </div>
 
-            {/* OS System Push Notification Status & Test Bar */}
-            <div className="px-3.5 py-2.5 bg-slate-900 text-white border-b border-slate-800 shrink-0 text-xs flex flex-col gap-1.5">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <Smartphone className="w-3.5 h-3.5 text-brand-400 shrink-0" />
-                  <span className="font-bold text-[11px] truncate flex items-center gap-1.5">
-                    <span className={`w-2 h-2 rounded-full ${pushPermState === 'granted' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-                    {pushPermState === 'granted' ? 'OS Push: Enabled' : 'OS Push: Disabled'}
-                  </span>
-                </div>
 
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {pushPermState !== 'granted' ? (
-                    <button
-                      type="button"
-                      onClick={handleEnablePush}
-                      disabled={isEnablingPush}
-                      className="px-2.5 py-1 bg-brand-500 hover:bg-brand-600 disabled:opacity-60 text-white font-bold text-[10px] rounded-lg shadow transition-all cursor-pointer flex items-center gap-1 min-h-[30px]"
-                    >
-                      {isEnablingPush ? (
-                        <>
-                          <Loader2 className="w-3 h-3 animate-spin text-white" />
-                          <span>Enabling Push...</span>
-                        </>
-                      ) : (
-                        <span>Enable Push</span>
-                      )}
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleSendTestSystemPush}
-                      disabled={isSendingTestPush}
-                      className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 disabled:opacity-60 text-brand-300 border border-brand-500/30 font-bold text-[10px] rounded-lg transition-all cursor-pointer flex items-center gap-1 min-h-[30px]"
-                      title="Send a real test push notification to lock screen & system panel"
-                    >
-                      {isSendingTestPush ? (
-                        <>
-                          <Loader2 className="w-3 h-3 animate-spin text-brand-400" />
-                          <span>Sending...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-3 h-3 text-brand-400" />
-                          <span>Test Real Push</span>
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {pushErrorMessage && (
-                <div className="text-[10.5px] text-rose-300 font-semibold bg-rose-950/70 border border-rose-800/60 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 animate-fade-in">
-                  <AlertCircle className="w-3 h-3 text-rose-400 shrink-0" />
-                  <span>{pushErrorMessage}</span>
-                </div>
-              )}
-            </div>
-
-            {testPushStatus && (
-              <div className="px-3.5 py-1.5 bg-brand-500/10 text-brand-600 dark:text-brand-300 text-[10.5px] font-bold border-b border-brand-500/20 text-center animate-fade-in shrink-0">
-                {testPushStatus}
-              </div>
-            )}
 
             {/* Category Filter Pills */}
             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-navy-800 overflow-x-auto overflow-y-hidden whitespace-nowrap shrink-0 bg-white dark:bg-navy-950 touch-pan-x snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -532,17 +500,25 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
                           {n.message}
                         </p>
 
-                        {n.fileId && (
-                          <div className="mt-2 flex items-center gap-2">
+                        <div className="mt-2.5 flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
+                          {n.fileId && (
                             <button
                               type="button"
-                              tabIndex={-1}
-                              className="text-[11px] font-bold text-cyan-600 dark:text-cyan-400 flex items-center justify-center gap-1 bg-cyan-50 dark:bg-cyan-950/40 px-3 py-2 min-h-[44px] min-w-[44px] rounded-xl"
+                              onClick={(e) => { e.stopPropagation(); setActiveFileModal({ fileId: n.fileId!, title: n.title }); }}
+                              className="text-[11px] font-bold text-cyan-600 dark:text-cyan-400 flex items-center gap-1 bg-cyan-50 dark:bg-cyan-950/40 hover:bg-cyan-100 dark:hover:bg-cyan-900/60 px-3 py-1.5 rounded-xl transition-colors cursor-pointer"
                             >
-                              <Eye size={12} /> Preview
+                              <Eye size={13} /> Preview
                             </button>
-                          </div>
-                        )}
+                          )}
+                          <button
+                            type="button"
+                            onClick={(e) => handleAskAI(e, n)}
+                            className="text-[11px] font-extrabold text-brand-600 dark:text-brand-400 flex items-center gap-1.5 bg-brand-50 dark:bg-brand-950/60 hover:bg-brand-100 dark:hover:bg-brand-900/60 border border-brand-200 dark:border-brand-800 px-3 py-1.5 rounded-xl transition-all cursor-pointer shadow-2xs"
+                            title="Ask AI to analyze this alert"
+                          >
+                            <Sparkles size={13} className="text-brand-500 animate-pulse" /> Ask AI
+                          </button>
+                        </div>
                       </div>
 
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200 text-slate-400">

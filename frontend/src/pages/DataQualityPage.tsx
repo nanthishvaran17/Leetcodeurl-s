@@ -1,35 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, CheckCircle2, AlertTriangle, XCircle, RefreshCw, 
-  Layers, Search, FileText, AlertCircle, Sparkles, ExternalLink, Clock
+  Layers, Search, FileText, AlertCircle, Sparkles, ExternalLink, Clock,
+  Building2, GraduationCap, RotateCcw
 } from 'lucide-react';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
+import { useDepartments } from '../contexts/DepartmentContext';
 
 export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }> = ({ onNavigateTab }) => {
   const { notify } = useNotification();
+  const { departments } = useDepartments();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [lastAuditTime, setLastAuditTime] = useState<string>('');
   const [filterCategory, setFilterCategory] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedDept, setSelectedDept] = useState<string>('ALL');
+  const [selectedYear, setSelectedYear] = useState<string>('ALL');
 
   useEffect(() => {
     fetchQualityData(false);
-  }, []);
+  }, [selectedDept, selectedYear]);
 
   const fetchQualityData = async (force: boolean = false) => {
     if (force) {
       setRefreshing(true);
-      notify.info('Initiating Quality Audit', 'Re-evaluating 302 student roster records against canonical schemas...', { category: 'DATA AUDITOR' });
+      notify.info('Initiating Quality Audit', 'Re-evaluating student roster records against canonical schemas...', { category: 'DATA AUDITOR' });
     } else {
       setLoading(true);
     }
 
     try {
       const res = await api.get('/analytics/data-quality', {
-        params: force ? { force_refresh: true } : {}
+        params: {
+          dept: selectedDept,
+          year: selectedYear,
+          ...(force ? { force_refresh: true } : {})
+        }
       });
       setData(res.data);
       const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -127,6 +136,51 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Scope Filter Controls */}
+      <div className="bg-white dark:bg-navy-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center space-x-2">
+            <Building2 className="w-4 h-4 text-indigo-500" />
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Dept:</span>
+            <select
+              value={selectedDept}
+              onChange={(e) => setSelectedDept(e.target.value)}
+              className="bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            >
+              <option value="ALL">All Departments</option>
+              {departments.map(d => (
+                <option key={d.code} value={d.code}>{d.name} ({d.code})</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <GraduationCap className="w-4 h-4 text-purple-500" />
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Year:</span>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
+            >
+              <option value="ALL">All Academic Years</option>
+              <option value="2">2nd Year (II)</option>
+              <option value="3">3rd Year (III)</option>
+              <option value="4">4th Year (IV)</option>
+            </select>
+          </div>
+        </div>
+
+        {(selectedDept !== 'ALL' || selectedYear !== 'ALL') && (
+          <button
+            onClick={() => { setSelectedDept('ALL'); setSelectedYear('ALL'); }}
+            className="text-xs font-bold text-rose-500 hover:text-rose-700 flex items-center space-x-1 cursor-pointer bg-rose-50 dark:bg-rose-950/40 px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-800"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Reset Filters</span>
+          </button>
+        )}
       </div>
 
       {/* Metrics Snapshot Grid */}

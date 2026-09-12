@@ -40,7 +40,14 @@ export const Navbar: React.FC<NavbarProps> = ({
   useEffect(() => {
     loadFreshness();
     const interval = setInterval(loadFreshness, 30000);
-    return () => clearInterval(interval);
+    const handleToggleNotifications = () => {
+      setShowNotifications(prev => !prev);
+    };
+    window.addEventListener('toggle_notifications', handleToggleNotifications);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('toggle_notifications', handleToggleNotifications);
+    };
   }, []);
 
   const loadFreshness = async () => {
@@ -83,8 +90,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <div className="flex items-center space-x-1.5 min-w-0">
                     <span className="font-black text-[10.5px] xs:text-[11.5px] leading-tight sm:text-base sm:leading-tight tracking-tight text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors truncate flex items-center">
                       NANDHA INTELLIGENCE
-                      <span className="hidden sm:inline text-slate-300 dark:text-slate-600 mx-2 font-light">/</span>
-                      <span className="hidden sm:inline text-slate-500 dark:text-slate-400 font-bold text-xs sm:text-sm">LeetCode Intelligence</span>
                     </span>
                     <span className="hidden sm:inline-flex px-1.5 py-0.2 text-[9px] font-black rounded bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 whitespace-nowrap flex-shrink-0">
                       {freshness?.total_students ? `${freshness.total_students} STUDENTS` : '1500+ STUDENTS'}

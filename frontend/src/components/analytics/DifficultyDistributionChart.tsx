@@ -36,13 +36,13 @@ export const DifficultyDistributionChart: React.FC<DifficultyDistributionChartPr
   return (
     <div style={{ width: '100%', height }}>
       <ResponsiveContainer>
-        <PieChart>
+        <PieChart margin={{ top: 0, right: 0, bottom: 10, left: 0 }}>
           <Pie
             data={data}
             cx="50%"
-            cy="50%"
-            innerRadius={60}
-            outerRadius={80}
+            cy="42%"
+            innerRadius={52}
+            outerRadius={75}
             paddingAngle={5}
             dataKey="value"
           >
@@ -60,9 +60,10 @@ export const DifficultyDistributionChart: React.FC<DifficultyDistributionChartPr
             }}
             itemStyle={{ color: '#f8fafc' }}
           />
-          <Legend verticalAlign="bottom" height={36} />
+          <Legend verticalAlign="bottom" height={36} wrapperStyle={{ paddingTop: '10px' }} />
         </PieChart>
       </ResponsiveContainer>
     </div>
   );
+
 };

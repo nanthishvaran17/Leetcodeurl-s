@@ -132,11 +132,12 @@ def generate_live_weekly_intelligence_data(
 
     # Apply presentation query filters if requested (within authorized bounds)
     if department and department.upper() != "ALL":
-        dept_match = db.query(Department).filter(
-            (Department.code == department.upper()) | (Department.name == department)
-        ).first()
-        if dept_match:
-            student_query = student_query.filter(Student.department_id == dept_match.id)
+        dept_matches = db.query(Department).filter(
+            (Department.code.ilike(f"{department}%")) | (Department.name.ilike(f"%{department}%"))
+        ).all()
+        if dept_matches:
+            target_ids = [d.id for d in dept_matches]
+            student_query = student_query.filter(Student.department_id.in_(target_ids))
 
     if year and year.upper() != "ALL":
         student_query = student_query.filter(

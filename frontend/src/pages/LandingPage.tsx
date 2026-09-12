@@ -9,9 +9,10 @@ import { AnimatedNumber } from '../components/AnimatedNumber';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import api, { triggerFullSync, triggerTargetedSync, getSyncStatus } from '../services/api';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
-import { filterAndSortStudents } from '../utils/filterUtils';
+import { filterAndSortStudents, formatDepartmentName, normalizeDepartment } from '../utils/filterUtils';
 import { getCachedStudents, saveCachedStudents } from '../utils/rosterCache';
 import { CustomDropdown, DropdownOption } from '../components/CustomDropdown';
+import { useAuth } from '../context/AuthContext';
 
 function parseUtcTime(ts?: string): number {
   if (!ts) return Date.now();
@@ -47,6 +48,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   onOpenLogin,
   onSelectStudent
 }) => {
+  const { user } = useAuth();
   const [departments, setDepartments] = useState<any[]>([]);
   const [selectedDept, setSelectedDept] = useState<string>('all');
   const [yearLevel, setYearLevel] = useState<string>('all');
@@ -401,6 +403,53 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     { value: 'rating', label: 'Highest Contest Rating', icon: Star }
   ];
 
+  const activeDepartmentDescription = useMemo(() => {
+    // 1. If user selected a specific department from the dropdown filter (not 'all')
+    if (selectedDept && selectedDept !== 'all') {
+      const matchedDept = departments.find(d => 
+        (d.code && d.code.toUpperCase() === selectedDept.toUpperCase()) ||
+        normalizeDepartment(d.code || d.name) === normalizeDepartment(selectedDept)
+      );
+      const deptFullName = matchedDept ? formatDepartmentName(matchedDept) : formatDepartmentName(selectedDept);
+      return (
+        <>
+          across <span className="font-bold text-white">{deptFullName}</span> department
+        </>
+      );
+    }
+
+    // 2. If user is logged in as HOD, Faculty, or Staff with an assigned department
+    const roleLower = (user?.role || '').toLowerCase();
+    const isDeptRole = ['hod', 'faculty', 'staff mentor', 'staff', 'department staff'].includes(roleLower);
+    
+    if (isDeptRole) {
+      let deptName = '';
+      if (user?.authorized_department_codes && user.authorized_department_codes.length === 1) {
+        deptName = formatDepartmentName(user.authorized_department_codes[0]);
+      } else if (user?.department_id && departments.length > 0) {
+        const matched = departments.find(d => d.id === user.department_id);
+        if (matched) deptName = formatDepartmentName(matched);
+      } else if ((user as any)?.department) {
+        deptName = formatDepartmentName((user as any).department);
+      }
+
+      if (deptName) {
+        return (
+          <>
+            across <span className="font-bold text-white">{deptName}</span> department
+          </>
+        );
+      }
+    }
+
+    // 3. Default overall institutional multi-department subtitle banner
+    return (
+      <>
+        across <span className="font-bold text-white">Cyber Security</span>, <span className="font-bold text-white">IoT</span>, &amp; <span className="font-bold text-white">Information Technology</span> departments
+      </>
+    );
+  }, [selectedDept, departments, user]);
+
   return (
     <div className="space-y-6 sm:space-y-8 pt-1 sm:pt-6 pb-6">
 
@@ -451,7 +500,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </div>
 
             <p className="text-sm md:text-base text-slate-300 max-w-2xl leading-relaxed">
-              Institutional competitive programming intelligence across <span className="font-bold text-white">Cyber Security</span>, <span className="font-bold text-white">IoT</span>, &amp; <span className="font-bold text-white">Information Technology</span> departments with verified Sunday contest forensics and automated reporting.
+              Institutional competitive programming intelligence {activeDepartmentDescription} with verified Sunday contest forensics and automated reporting.
             </p>
           </motion.div>
 
@@ -572,15 +621,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <motion.div
                 whileHover={{ y: -5, scale: 1.02 }}
                 transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                className="glass-card p-6 sm:p-7 rounded-3xl space-y-3 border border-slate-200/80 dark:border-slate-800/80 shadow-lg relative overflow-hidden group cursor-default"
+                className="glass-card p-6 sm:p-7 rounded-3xl space-y-2 border border-slate-200/80 dark:border-slate-800/80 shadow-lg relative overflow-hidden group cursor-default"
               >
                 <div className="p-3 w-fit rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 group-hover:scale-110 transition-transform">
                   <Users className="w-7 h-7" />
                 </div>
-                <h4 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                <h4 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
                   <AnimatedNumber value={totalStudents} />
                 </h4>
-                <p className="text-sm font-bold text-slate-500 dark:text-slate-400">Total Enrolled Students</p>
+                <p className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100">Total Enrolled Students</p>
               </motion.div>
 
               <motion.div
@@ -591,16 +640,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <div className="p-3 w-fit rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
-                <h4 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                <h4 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
                   <AnimatedNumber value={verified} />
                 </h4>
-                <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Verified Profiles</p>
+                <p className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100">Verified Profiles</p>
                 {(pending > 0 || failed > 0 || noUsername > 0) && (
-                  <p className="text-[10px] font-bold text-slate-400 flex flex-wrap gap-1 mt-1">
-                    {pending > 0 && <span>{pending} Pending</span>}
-                    {noUsername > 0 && <span>• {noUsername} No Username</span>}
-                    {failed > 0 && <span>• {failed} Failed</span>}
-                  </p>
+                  <div className="text-xs font-bold text-slate-600 dark:text-slate-300 flex flex-wrap items-center gap-1.5 pt-1">
+                    {pending > 0 && <span className="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/50">{pending} Pending</span>}
+                    {noUsername > 0 && <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">{noUsername} No Username</span>}
+                    {failed > 0 && <span className="px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800/50">{failed} Failed</span>}
+                  </div>
                 )}
               </motion.div>
 
@@ -612,11 +661,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <div className="p-3 w-fit rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
                   <Trophy className="w-6 h-6" />
                 </div>
-                <h4 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                <h4 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
                   <AnimatedNumber value={verifiedProblems} />
                 </h4>
-                <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Verified Problems Solved</p>
-                <p className="text-[10px] font-semibold text-slate-400">from {activeSolvers.toLocaleString()} active solvers</p>
+                <p className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100">Verified Problems Solved</p>
+                <p className="text-xs sm:text-sm font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/50 px-2.5 py-1 rounded-lg border border-purple-200/60 dark:border-purple-800/40 w-fit">
+                  from <span className="font-extrabold">{activeSolvers.toLocaleString()}</span> active solvers
+                </p>
               </motion.div>
 
               <motion.div
@@ -627,10 +678,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <div className="p-3 w-fit rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
                   <Trophy className="w-6 h-6 fill-amber-500" />
                 </div>
-                <h4 className="text-2xl font-black text-amber-500 truncate" title={summaryData?.top_college_ranker || (sortedList.length > 0 ? sortedList[0].name : 'Top Ranker')}>
+                <h4 className="text-2xl sm:text-3xl font-black text-amber-500 truncate" title={summaryData?.top_college_ranker || (sortedList.length > 0 ? sortedList[0].name : 'Top Ranker')}>
                   {summaryData?.top_college_ranker || (sortedList.length > 0 ? sortedList[0].name : 'Top Ranker')}
                 </h4>
-                <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Top College Ranker (#1)</p>
+                <p className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100">Top College Ranker (#1)</p>
               </motion.div>
             </>
           );
@@ -909,7 +960,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             >
               {sortedList.slice(0, displayCount).map((st, idx) => {
                 const isSolver = (st.stats?.total_solved || st.total_solved || 0) > 0;
-                const computedRank = (isSolver && sortBy === 'top_solved' && selectedDept === 'all' && (yearLevel === 'ALL' || yearLevel === 'all') && (solvedFilter === 'ALL' || solvedFilter === 'all')) ? idx + 1 : st.college_rank;
+                const computedRank = (isSolver && (sortBy === 'top_solved' || sortBy === 'rating' || sortBy === 'streak') && selectedDept === 'all' && (yearLevel === 'ALL' || yearLevel === 'all') && (solvedFilter === 'ALL' || solvedFilter === 'all')) ? idx + 1 : st.college_rank;
                 return (
                   <motion.div
                     key={st.id}

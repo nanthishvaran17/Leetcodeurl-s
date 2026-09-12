@@ -181,8 +181,41 @@ def run_high_speed_excel_import(db: Session, file_bytes: bytes, job_id: str, tra
 
         codeforces = str(row.get("CODEFORCES", row.get("CODEFORCES USERNAME", ""))).strip() if ("CODEFORCES" in df.columns and pd.notna(row.get("CODEFORCES"))) or ("CODEFORCES USERNAME" in df.columns and pd.notna(row.get("CODEFORCES USERNAME"))) else ""
         hackerrank = str(row.get("HACKERRANK", row.get("HACKERRANK USERNAME", ""))).strip() if ("HACKERRANK" in df.columns and pd.notna(row.get("HACKERRANK"))) or ("HACKERRANK USERNAME" in df.columns and pd.notna(row.get("HACKERRANK USERNAME"))) else ""
+        email = str(row.get("EMAIL", row.get("STUDENT EMAIL", ""))).strip() if ("EMAIL" in df.columns and pd.notna(row.get("EMAIL"))) or ("STUDENT EMAIL" in df.columns and pd.notna(row.get("STUDENT EMAIL"))) else None
 
-        email = str(row.get("EMAIL", "")).strip() if "EMAIL" in df.columns and pd.notna(row.get("EMAIL")) else ""
+        # --- Accommodation Extraction & Validation ---
+        acc_raw = None
+        for col_cand in ["ACCOMMODATION", "HOSTEL/DAY SCHOLAR", "HOSTEL OR DAY SCHOLAR", "LODGING", "ACCOMMODATION TYPE"]:
+            if col_cand in df.columns and pd.notna(row.get(col_cand)):
+                acc_raw = str(row.get(col_cand)).strip()
+                break
+
+        accommodation_val = None
+        if acc_raw and acc_raw.lower() not in ("nan", "none", "null", ""):
+            acc_norm = acc_raw.lower()
+            if "hostel" in acc_norm:
+                accommodation_val = "Hostel"
+            elif "day" in acc_norm or "scholar" in acc_norm:
+                accommodation_val = "Day Scholar"
+            else:
+                raise ValueError(f"Invalid accommodation '{acc_raw}' for student {reg_no}. Allowed values: 'Hostel' or 'Day Scholar'.")
+
+        # --- 12th Cut-off Extraction & Validation ---
+        cutoff_raw = None
+        for col_cand in ["12TH CUT-OFF", "12TH CUTOFF", "12TH CUT OFF", "TWELFTH CUTOFF", "TWELFTH CUT-OFF", "12TH MARK", "12TH CUTOFF MARK", "12TH MARKS"]:
+            if col_cand in df.columns and pd.notna(row.get(col_cand)):
+                cutoff_raw = row.get(col_cand)
+                break
+
+        twelfth_cutoff_val = None
+        if cutoff_raw is not None and not pd.isna(cutoff_raw):
+            val_str = str(cutoff_raw).strip()
+            if val_str and val_str.lower() not in ("nan", "none", "null", ""):
+                try:
+                    parsed_cutoff = float(val_str)
+                    twelfth_cutoff_val = round(parsed_cutoff, 2)
+                except (ValueError, TypeError):
+                    raise ValueError(f"Invalid 12th Cut-off value '{cutoff_raw}' for student {reg_no}. Must be a valid numeric cutoff.")
 
         dept_obj = existing_depts.get(dept_str)
         if not dept_obj and dept_str:
@@ -226,6 +259,8 @@ def run_high_speed_excel_import(db: Session, file_bytes: bytes, job_id: str, tra
                 hackerrank_username=hackerrank if hackerrank else None,
                 is_active=True,
                 batch=batch_str,
+                accommodation=accommodation_val,
+                twelfth_cutoff=twelfth_cutoff_val,
                 institutional_email=email_res.get("email"),
                 email_status=email_res.get("status", "pending")
             )
@@ -243,6 +278,8 @@ def run_high_speed_excel_import(db: Session, file_bytes: bytes, job_id: str, tra
             if year_str: student.year_level = year_str
             if email: student.email = email
             if batch_str: student.batch = batch_str
+            if accommodation_val is not None: student.accommodation = accommodation_val
+            if twelfth_cutoff_val is not None: student.twelfth_cutoff = twelfth_cutoff_val
             
             # Re-verify email if it's pending or error
             if student.email_status in ["pending", "error", "needs_verification"] or not student.institutional_email:
@@ -2132,7 +2169,8 @@ def generate_universal_excel(report_data: dict) -> bytes:
             c.font = font_header; c.fill = navy_fill; c.border = thin_border
         row += 1
         for idx, s in enumerate(top_students, start=1):
-            vals = [idx, s.get("reg_no", ""), s.get("name", ""), s.get("dept", ""), s.get("year", ""), s.get("total_solved", 0), s.get("rating", "—")]
+            r_val = s.get("rating") or s.get("contest_rating") or s.get("contestRating") or "—"
+            vals = [idx, s.get("reg_no", ""), s.get("name", ""), s.get("dept", ""), s.get("year", ""), s.get("total_solved", 0), r_val]
             for col_idx, val in enumerate(vals, start=1):
                 c = ws.cell(row=row, column=col_idx, value=val)
                 c.font = font_normal; c.border = thin_border

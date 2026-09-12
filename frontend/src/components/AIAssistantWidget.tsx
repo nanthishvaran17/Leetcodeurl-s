@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useKeyboardContext } from '../context/KeyboardContext';
 import {
   X,
   Send,
@@ -85,6 +86,9 @@ interface ChatMessage {
   pending_action?: PendingAction;
   action_executed?: boolean;
   action_result?: any;
+  clarifyingOptions?: string[];
+  pdfAvailable?: boolean;
+  downloadUrl?: string;
   timestamp: string;
   isError?: boolean;
   isThinking?: boolean;
@@ -250,20 +254,55 @@ const TypingIndicator: React.FC = () => (
 const EmptyStateSuggestions: React.FC<{
   onSend: (q: string) => void;
   mode: 'operations' | 'institutional';
-}> = ({ onSend, mode }) => {
-  const suggestions = mode === 'operations'
-    ? [
-        { icon: Activity, label: 'Database Audit', desc: 'Run deep bug & duplicate scan', query: 'Check the entire database for bugs, duplicate usernames, and unverified profiles', color: 'text-rose-500' },
-        { icon: Mail, label: 'Draft Warning Email', desc: 'Compose alert for low solvers', query: 'mail panu low solvers-ukku', color: 'text-purple-500' },
-        { icon: Trophy, label: 'Top 10 Solvers', desc: 'College-wide leaderboard', query: 'Who are the top 10 college solvers overall?', color: 'text-amber-500' },
-        { icon: AlertOctagon, label: 'Absentee Scan', desc: 'Find contest absentees', query: 'Find absent students in the latest Weekly Contest', color: 'text-orange-500' },
-      ]
-    : [
-        { icon: BarChart2, label: 'Contest Matrix', desc: 'Compare two contest sessions', query: 'Compare Contest 514 and Contest 515 performance', color: 'text-brand-500' },
-        { icon: Users, label: 'Student Lookup', desc: 'Search any student profile', query: 'Lookup Bharath K profile details', color: 'text-indigo-500' },
-        { icon: BookOpen, label: 'HOD Report', desc: 'Weekly summary for HOD', query: 'Generate HOD weekly summary report', color: 'text-emerald-500' },
-        { icon: GraduationCap, label: 'Performance Analysis', desc: 'Low solver identification', query: 'Find low solvers with less than 50 problems', color: 'text-cyan-500' },
-      ];
+  activeContext?: { type: string; id?: string; title?: string } | null;
+}> = ({ onSend, mode, activeContext }) => {
+  let suggestions = [];
+
+  if (activeContext?.type === 'CONTEST') {
+    const cid = activeContext.id || 'this contest';
+    suggestions = [
+      { icon: Trophy, label: 'Summarize Contest', desc: `Overview of Contest ${cid}`, query: `Summarize Weekly Contest ${cid} and key takeaways`, color: 'text-amber-500' },
+      { icon: Users, label: 'Top Performers', desc: 'Who performed best?', query: `Who performed best in Weekly Contest ${cid}?`, color: 'text-brand-500' },
+      { icon: AlertTriangle, label: 'Identify Weak Areas', desc: 'Find lowest scores', query: `Identify weak areas and low scoring problems in Contest ${cid}`, color: 'text-rose-500' },
+      { icon: BarChart2, label: 'Compare Contests', desc: 'Compare with previous session', query: `Compare Weekly Contest ${cid} with the previous contest session`, color: 'text-indigo-500' },
+    ];
+  } else if (activeContext?.type === 'STUDENT') {
+    const sName = activeContext.title || activeContext.id || 'this student';
+    suggestions = [
+      { icon: User, label: 'Analyze Student', desc: `Deep dive into ${sName}`, query: `Analyze student performance and activity for ${sName}`, color: 'text-indigo-500' },
+      { icon: GraduationCap, label: 'Placement Readiness', desc: 'Assess coding readiness', query: `Assess placement readiness and skill level for ${sName}`, color: 'text-emerald-500' },
+      { icon: TrendingUp, label: 'Strengths & Weaknesses', desc: 'Topic proficiency', query: `Identify topic strengths and weaknesses for ${sName}`, color: 'text-brand-500' },
+      { icon: BookOpen, label: 'Practice Plan', desc: 'Recommend next targets', query: `Recommend a targeted 30-day practice plan for ${sName}`, color: 'text-cyan-500' },
+    ];
+  } else if (activeContext?.type === 'REPORT') {
+    suggestions = [
+      { icon: FileText, label: 'Summarize Report', desc: 'Executive overview', query: 'Summarize this official weekly report and key findings', color: 'text-cyan-500' },
+      { icon: BarChart2, label: 'Key Highlights', desc: 'Extract metrics & counts', query: 'What are the main performance highlights and statistics in this report?', color: 'text-emerald-500' },
+      { icon: AlertOctagon, label: 'Identify Risks', desc: 'Flag low solvers & inactive', query: 'Identify risk factors and inactive student groups in this report', color: 'text-rose-500' },
+      { icon: Mail, label: 'Draft HOD Summary', desc: 'Executive briefing email', query: 'Draft an executive briefing email for HOD based on this report', color: 'text-purple-500' },
+    ];
+  } else if (activeContext?.type === 'QUALITY') {
+    suggestions = [
+      { icon: AlertOctagon, label: 'Quality Audit', desc: 'Explain validation alerts', query: 'Explain the active data quality alerts and profile discrepancies', color: 'text-rose-500' },
+      { icon: Users, label: 'Missing Handles', desc: 'Students with no LeetCode handle', query: 'List students missing LeetCode username handles', color: 'text-amber-500' },
+      { icon: ShieldAlert, label: 'Unverified Profiles', desc: 'Find failing sync profiles', query: 'Which student profiles failed live synchronization verification?', color: 'text-purple-500' },
+      { icon: RefreshCw, label: 'Trigger Fix Scan', desc: 'Scan and repair issues', query: 'Run a deep audit to repair invalid student profiles', color: 'text-cyan-500' },
+    ];
+  } else {
+    suggestions = mode === 'operations'
+      ? [
+          { icon: Activity, label: 'Database Audit', desc: 'Run deep bug & duplicate scan', query: 'Check the entire database for bugs, duplicate usernames, and unverified profiles', color: 'text-rose-500' },
+          { icon: Mail, label: 'Draft Warning Email', desc: 'Compose alert for low solvers', query: 'mail panu low solvers-ukku', color: 'text-purple-500' },
+          { icon: Trophy, label: 'Top 10 Solvers', desc: 'College-wide leaderboard', query: 'Who are the top 10 college solvers overall?', color: 'text-amber-500' },
+          { icon: AlertOctagon, label: 'Absentee Scan', desc: 'Find contest absentees', query: 'Find absent students in the latest Weekly Contest', color: 'text-orange-500' },
+        ]
+      : [
+          { icon: BarChart2, label: 'Contest Matrix', desc: 'Compare two contest sessions', query: 'Compare Contest 514 and Contest 515 performance', color: 'text-brand-500' },
+          { icon: Users, label: 'Student Lookup', desc: 'Search any student profile', query: 'Lookup Bharath K profile details', color: 'text-indigo-500' },
+          { icon: BookOpen, label: 'HOD Report', desc: 'Weekly summary for HOD', query: 'Generate HOD weekly summary report', color: 'text-emerald-500' },
+          { icon: GraduationCap, label: 'Performance Analysis', desc: 'Low solver identification', query: 'Find low solvers with less than 50 problems', color: 'text-cyan-500' },
+        ];
+  }
 
   return (
     <div className="flex flex-col items-center justify-center h-full py-6 px-4 space-y-5">
@@ -272,7 +311,7 @@ const EmptyStateSuggestions: React.FC<{
           <Sparkles className="w-5 h-5 text-white" />
         </div>
         <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 pt-1">
-          Ask anything about NEC student data
+          {activeContext ? `Ask AI about ${activeContext.type.toLowerCase()} context ${activeContext.id ? `#${activeContext.id}` : ''}` : 'Ask anything about NEC student data'}
         </p>
       </div>
 
@@ -300,12 +339,27 @@ const EmptyStateSuggestions: React.FC<{
 // --- Main Widget ---
 
 export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void }> = ({ onNavigateTab }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showLaunchers, setShowLaunchers] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [activeMode, setActiveMode] = useState<'operations' | 'institutional'>('operations');
   const [scrolledUp, setScrolledUp] = useState(false);
+
+  const { pushContext, popContext, registerEscHandler } = useKeyboardContext();
+
+  useEffect(() => {
+    if (isOpen) {
+      pushContext('DRAWER');
+      const unregister = registerEscHandler(() => {
+        setIsOpen(false);
+      });
+      return () => {
+        unregister();
+        popContext('DRAWER');
+      };
+    }
+  }, [isOpen, pushContext, popContext, registerEscHandler]);
 
   const [telemetry, setTelemetry] = useState<any>({
     total_students: 302,
@@ -323,26 +377,10 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
   const [briefDismissed, setBriefDismissed] = useState(false);
 
   const makeWelcomeMsg = (): ChatMessage => {
-    let savedUser: any = null;
-    try { savedUser = JSON.parse(localStorage.getItem('user') || '{}'); } catch {}
-    const role = (savedUser?.role || '').toLowerCase();
-    const name = savedUser?.name || savedUser?.username || '';
-    const greeting = name ? `Hello, ${name}!` : 'Hello!';
-
-    let text = '';
-    if (role.includes('admin')) {
-      text = `${greeting} I've run an institution-wide intelligence scan. Your proactive brief is ready above — review sync health, contest status, and key alerts.`;
-    } else if (role === 'hod') {
-      text = `${greeting} I've prepared a department-wide intelligence snapshot for you. Review the brief cards above for active solver rates and performance highlights.`;
-    } else if (role === 'faculty' || role === 'staff' || role === 'cr') {
-      text = `${greeting} I've analysed your assigned students. Your personalised brief above highlights inactives, top performers, and contest data.`;
-    } else {
-      text = `${greeting} I am the official Nandha Engineering College AI & Operations Copilot.\n\nI can analyze student LeetCode performance, execute database integrity audits, draft email alerts, and compare contest rankings in real time.`;
-    }
     return {
       id: 'welcome_1',
       sender: 'ai',
-      text,
+      text: `### Institutional Intelligence Assistant\n*RBAC-enforced AI assistant grounded strictly in verified institutional database records.*\n\n**How can I help you today?**\nAsk me to generate reports, find inactive students, or analyze performance. All answers are verified against live DB records.`,
       source: 'NEC Institutional AI Engine',
       dataStatus: 'VERIFIED',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -354,9 +392,18 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
   const [loading, setLoading] = useState(false);
   const [confirmingActionId, setConfirmingActionId] = useState<string | null>(null);
 
+  const conversationIdRef = useRef<string>(`conv_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto';
+      inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 120)}px`;
+    }
+  };
 
   const isEmptyConversation = messages.length === 1 && messages[0].id.startsWith('welcome_');
 
@@ -440,19 +487,43 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
     if (isOpen && !scrolledUp) scrollToBottom();
   }, [messages, loading]);
 
+  const [activeContext, setActiveContext] = useState<{
+    type: string;
+    id?: string;
+    title?: string;
+    aiPrompt?: string;
+  } | null>(null);
+
   useEffect(() => {
     const handleCustomOpen = (e: Event) => {
       const customEvent = e as CustomEvent;
       setIsOpen(true);
       if (customEvent.detail?.mode) setActiveMode(customEvent.detail.mode);
+      if (customEvent.detail?.context) setActiveContext(customEvent.detail.context);
       if (customEvent.detail?.query) {
         setTimeout(() => {
           handleSend(customEvent.detail.query, customEvent.detail?.mode || 'operations');
         }, 150);
+      } else {
+        setTimeout(() => {
+          inputRef.current?.focus();
+        }, 100);
       }
     };
+    const handleToggleOpen = () => {
+      setIsOpen(prev => !prev);
+    };
+
     window.addEventListener('open-ai-chat', handleCustomOpen);
-    return () => window.removeEventListener('open-ai-chat', handleCustomOpen);
+    window.addEventListener('openAIChatWithContext', handleCustomOpen);
+    window.addEventListener('open_ai_assistant', handleCustomOpen);
+    window.addEventListener('toggle_ai_assistant', handleToggleOpen);
+    return () => {
+      window.removeEventListener('open-ai-chat', handleCustomOpen);
+      window.removeEventListener('openAIChatWithContext', handleCustomOpen);
+      window.removeEventListener('open_ai_assistant', handleCustomOpen);
+      window.removeEventListener('toggle_ai_assistant', handleToggleOpen);
+    };
   }, [messages]);
 
   const quickActionsOps = [
@@ -528,8 +599,14 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
 
     const newHistory = [...messages, userMsg].map((m) => ({ sender: m.sender, text: m.text }));
     setMessages((prev) => [...prev, userMsg]);
-    if (!textToSend) setInput('');
+    if (textToSend === undefined) {
+      setInput('');
+      if (inputRef.current) {
+        inputRef.current.style.height = 'auto';
+      }
+    }
     setLoading(true);
+    setTimeout(() => inputRef.current?.focus(), 50);
 
     const isOpsQuery =
       currentMode === 'operations' ||
@@ -538,7 +615,12 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
     // Operations queries use the standard JSON endpoint (unchanged)
     if (isOpsQuery) {
       try {
-        const payload = { message: queryText, history: newHistory.slice(-4), context: { page: window.location.pathname, role: 'admin' } };
+        const payload = {
+          message: queryText,
+          conversation_id: conversationIdRef.current,
+          history: newHistory.slice(-4),
+          context: { page: window.location.pathname, role: 'admin', activeContext, conversation_id: conversationIdRef.current }
+        };
         const res = await api.post('/ai/control/request', payload, { timeout: 20000 });
         const aiMsg: ChatMessage = {
           id: res.data.requestId || `ai_${Date.now()}`,
@@ -554,6 +636,9 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
           pending_action: res.data.pending_action,
           source: res.data.source || 'Verified Institutional Database',
           dataStatus: res.data.dataStatus || res.data.data_status || 'VERIFIED',
+          clarifyingOptions: res.data.clarifyingOptions,
+          pdfAvailable: res.data.pdfAvailable,
+          downloadUrl: res.data.downloadUrl,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         };
         setMessages((prev) => [...prev, aiMsg]);
@@ -582,7 +667,13 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
     setMessages((prev) => [...prev, thinkingMsg]);
 
     try {
-      const payload = { message: queryText, mode: currentMode, history: newHistory.slice(-6), context: { page: window.location.pathname, role: 'admin' } };
+      const payload = {
+        message: queryText,
+        mode: currentMode,
+        conversation_id: conversationIdRef.current,
+        history: newHistory.slice(-6),
+        context: { page: window.location.pathname, role: 'admin', activeContext, conversation_id: conversationIdRef.current }
+      };
       const token = localStorage.getItem('token');
       const streamUrl = `${import.meta.env.VITE_API_URL || ''}/api/ai/assistant/stream`;
 
@@ -624,6 +715,9 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                 actionTab: event.actionTab,
                 source: event.source || 'NEC Institutional Intelligence Engine',
                 dataStatus: event.dataStatus || 'VERIFIED',
+                clarifyingOptions: event.clarifyingOptions,
+                pdfAvailable: event.pdfAvailable,
+                downloadUrl: event.downloadUrl,
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               };
               // Replace thinking bubble with real answer
@@ -644,6 +738,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
       } : m));
     } finally {
       setLoading(false);
+      setTimeout(() => inputRef.current?.focus(), 50);
     }
   };
 
@@ -748,6 +843,26 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                 </button>
               </div>
             </div>
+
+            {/* ACTIVE CONTEXT BANNER */}
+            {activeContext && (
+              <div className="px-3 py-1.5 bg-gradient-to-r from-brand-900 via-indigo-950 to-navy-950 text-white border-b border-brand-800 flex items-center justify-between text-[11px] shrink-0">
+                <div className="flex items-center gap-2 min-w-0 font-medium">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                  <span className="font-bold text-emerald-300 uppercase tracking-wider text-[10px]">Context:</span>
+                  <span className="truncate font-semibold text-slate-100">
+                    {activeContext.type} {activeContext.id ? `#${activeContext.id}` : ''} {activeContext.title ? `— ${activeContext.title}` : ''}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveContext(null)}
+                  className="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white/80 hover:text-white text-[10px] font-semibold transition-colors cursor-pointer shrink-0 ml-2"
+                >
+                  Clear Context
+                </button>
+              </div>
+            )}
 
             {/* TELEMETRY STRIP */}
             <div className="px-4 py-1.5 bg-slate-900 dark:bg-[#070d1a] text-white border-b border-slate-800 flex items-center justify-between shrink-0 overflow-x-auto no-scrollbar">
@@ -959,7 +1074,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                         </motion.div>
                       </div>
                       <div className="flex-1">
-                        <EmptyStateSuggestions onSend={(q) => handleSend(q)} mode={activeMode} />
+                        <EmptyStateSuggestions onSend={(q) => handleSend(q)} mode={activeMode} activeContext={activeContext} />
                       </div>
                     </div>
                   ) : (
@@ -1086,7 +1201,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                                   </div>
                                 )}
 
-                                {/* Navigation link */}
+                                 {/* Navigation link */}
                                 {msg.actionLabel && (
                                   <button type="button"
                                     onClick={() => { if (msg.actionTab && onNavigateTab) { onNavigateTab(msg.actionTab); setIsOpen(false); } }}
@@ -1094,6 +1209,42 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                                     <span>{msg.actionLabel}</span>
                                     <ChevronRight className="w-3.5 h-3.5" />
                                   </button>
+                                )}
+
+                                {/* Clarification Choice Chips */}
+                                {msg.clarifyingOptions && msg.clarifyingOptions.length > 0 && (
+                                  <div className="mt-3 pt-2 border-t border-slate-200 dark:border-navy-800 space-y-1.5">
+                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Select Clarification Metric:</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {msg.clarifyingOptions.map((opt, i) => (
+                                        <button
+                                          key={i}
+                                          type="button"
+                                          onClick={() => handleSend(`Show top students by ${opt}`)}
+                                          className="px-2.5 py-1 rounded-lg bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-brand-300 font-bold text-[10.5px] border border-brand-500/30 transition-all cursor-pointer shadow-xs"
+                                        >
+                                          {opt}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* PDF Download Button */}
+                                {msg.pdfAvailable && (
+                                  <div className="mt-3 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 font-extrabold text-[11px]">
+                                      <FileText className="w-4 h-4 text-emerald-500" />
+                                      <span>Official PDF Report</span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => window.open(msg.downloadUrl || '/api/reports/export/summary-pdf', '_blank')}
+                                      className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-sm transition-all cursor-pointer"
+                                    >
+                                      Download PDF
+                                    </button>
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -1136,33 +1287,50 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
               </div>
             )}
 
-            {/* INPUT AREA */}
-            <div className="px-3 py-3 bg-white dark:bg-navy-950 border-t border-slate-200 dark:border-navy-800 shrink-0">
-              <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-all duration-150 bg-slate-50 dark:bg-navy-900 ${
+            {/* INPUT AREA / COMPOSER */}
+            <div className="px-3 py-2 bg-white dark:bg-navy-950 border-t border-slate-200 dark:border-navy-800 shrink-0 space-y-1">
+              <div className={`flex items-end gap-2 px-3 py-1.5 rounded-xl border transition-all duration-150 bg-slate-50 dark:bg-navy-900 ${
                 loading
                   ? 'border-slate-200 dark:border-navy-700 opacity-70'
                   : 'border-slate-200 dark:border-navy-700 focus-within:border-brand-400 dark:focus-within:border-brand-600 focus-within:ring-2 focus-within:ring-brand-500/10'
               }`}>
-                <input
+                <textarea
                   ref={inputRef}
-                  type="text"
+                  rows={1}
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+                  onChange={handleTextareaChange}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setIsOpen(false);
+                    } else if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      if (!loading && input.trim()) {
+                        handleSend();
+                      }
+                    }
+                  }}
                   disabled={loading}
                   placeholder={activeMode === 'operations' ? 'Ask copilot — audit, email, contest compare…' : 'Ask about contest rankings, student stats…'}
-                  aria-label="Message input"
-                  className="flex-1 bg-transparent text-[12.5px] font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none min-w-0"
+                  aria-label="Ask AI assistant"
+                  className="flex-1 bg-transparent text-[12.5px] font-medium text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none min-w-0 resize-none max-h-28 overflow-y-auto leading-relaxed py-1"
                 />
-                <button type="button" onClick={() => handleSend()}
-                  disabled={loading || !input.trim()} aria-label="Send message"
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-150 ${
+                <button
+                  type="button"
+                  onClick={() => handleSend()}
+                  disabled={loading || !input.trim()}
+                  aria-label="Send message"
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mb-0.5 transition-all duration-150 ${
                     !input.trim() || loading
                       ? 'bg-slate-100 dark:bg-navy-800 text-slate-300 dark:text-slate-600 cursor-not-allowed'
                       : 'bg-gradient-to-br from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white shadow-sm cursor-pointer active:scale-95'
-                  }`}>
+                  }`}
+                >
                   {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                 </button>
+              </div>
+              <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 px-1 font-medium select-none">
+                <span>Enter to send · Shift+Enter for new line</span>
+                {input.trim().length > 0 && <span>{input.trim().length} chars</span>}
               </div>
             </div>
 

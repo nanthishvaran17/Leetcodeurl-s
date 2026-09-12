@@ -17,6 +17,28 @@ def get_paginated_matrix_rows(
     sort_by: Optional[str] = None,
     current_user: Optional[User] = None
 ) -> Dict[str, Any]:
+    if not isinstance(dept, str):
+        dept = None
+    if not isinstance(year, str):
+        year = None
+    if not isinstance(attendance, str):
+        attendance = None
+    if not isinstance(search, str):
+        search = None
+    if not isinstance(sort_by, str):
+        sort_by = None
+    if not hasattr(current_user, "id"):
+        current_user = None
+    if not isinstance(page, int):
+        try:
+            page = int(page)
+        except Exception:
+            page = 1
+    if not isinstance(limit, int):
+        try:
+            limit = int(limit)
+        except Exception:
+            limit = 50
     
     query = db.query(Student, WeeklyPublicResult, WeeklyVirtualResult).outerjoin(
         WeeklyPublicResult, 
@@ -92,21 +114,28 @@ def get_paginated_matrix_rows(
                 (func.upper(WeeklyPublicResult.participation_status).in_(['VIRTUAL', 'VIRTUAL_ATTENDED'])) |
                 (WeeklyVirtualResult.total_contest_solved > 0)
             )
-        # NOT_ATTENDED — only explicitly marked absent/not-attended; PENDING is NOT included
+        # NOT_ATTENDED / PUBLIC_NOT_ATTENDED — students with valid usernames who did not participate
         elif att in ['NOT_ATTENDED', 'PUBLIC_NOT_ATTENDED']:
             query = query.filter(
-                func.coalesce(func.upper(WeeklyPublicResult.participation_status), '').in_(['NOT_ATTENDED', 'PUBLIC_NOT_ATTENDED', 'ABSENT'])
+                (Student.username.isnot(None)) &
+                (Student.username != '') &
+                func.coalesce(func.upper(WeeklyPublicResult.participation_status), 'NOT_ATTENDED').in_(['NOT_ATTENDED', 'PUBLIC_NOT_ATTENDED', 'ABSENT', 'PENDING', 'INITIALIZING', 'DATA_PENDING', 'UNKNOWN', '']) &
+                func.coalesce(func.upper(WeeklyPublicResult.fetch_status), '').notin_(['FETCH_ERROR', 'USERNAME_NOT_FOUND', 'BLOCKED', 'AUTH_REQUIRED', 'DATA_MISMATCH']) &
+                (
+                    WeeklyVirtualResult.id.is_(None) |
+                    (
+                        func.coalesce(func.upper(WeeklyVirtualResult.participation_status), '').notin_(['VIRTUAL', 'VIRTUAL_ATTENDED']) &
+                        (func.coalesce(WeeklyVirtualResult.total_contest_solved, 0) == 0)
+                    )
+                )
             )
-        # DATA_ERROR — matches canonical engine: statuses that are NOT (PUBLIC, VIRTUAL, NOT_ATTENDED)
-        # This INCLUDES PENDING, USERNAME_NOT_FOUND, FETCH_ERROR, DATA_MISMATCH, SOURCE_UNAVAILABLE, etc.
+        # DATA_ERROR — matches actionable errors: missing username or explicit fetch/verification error
         elif att in ['DATA_ERROR', 'ERROR', 'UNKNOWN']:
-            clean_statuses = [
-                'PUBLIC', 'PUBLIC_ATTENDED', 'ATTENDED', 'OFFICIAL',
-                'VIRTUAL', 'VIRTUAL_ATTENDED',
-                'NOT_ATTENDED', 'PUBLIC_NOT_ATTENDED', 'ABSENT'
-            ]
             query = query.filter(
-                ~func.coalesce(func.upper(WeeklyPublicResult.participation_status), 'PENDING').in_(clean_statuses)
+                (Student.username.is_(None)) |
+                (Student.username == '') |
+                (func.upper(WeeklyPublicResult.participation_status).in_(['DATA_ERROR', 'FETCH_ERROR', 'USERNAME_NOT_FOUND', 'DATA_MISMATCH', 'AUTH_REQUIRED', 'SOURCE_UNAVAILABLE', 'CONFLICT', 'ERROR', 'INVALID'])) |
+                (func.upper(WeeklyPublicResult.fetch_status).in_(['FETCH_ERROR', 'USERNAME_NOT_FOUND', 'BLOCKED', 'AUTH_REQUIRED', 'DATA_MISMATCH']))
             )
         # ALL_ATTENDED / PARTICIPATED — public + virtual (all who participated in any form)
         elif att in ['ALL_ATTENDED', 'TOTAL_ATTENDED', 'PARTICIPATED']:
@@ -118,14 +147,20 @@ def get_paginated_matrix_rows(
 
     total_count = query.count()
     
-    if sort_by == "score":
-        query = query.order_by(nullslast(desc(func.coalesce(WeeklyPublicResult.contest_score, WeeklyVirtualResult.contest_score))), Student.name.asc())
+    rank_order_expr = case(
+        (func.coalesce(WeeklyPublicResult.contest_rank, 0) > 0, WeeklyPublicResult.contest_rank),
+        else_=99999999
+    )
+    score_order_expr = func.coalesce(WeeklyPublicResult.contest_score, WeeklyVirtualResult.contest_score, 0)
+
+    if sort_by == "score" or sort_by == "solved":
+        query = query.order_by(nullslast(desc(score_order_expr)), rank_order_expr.asc(), Student.name.asc())
     elif sort_by == "rank":
-        query = query.order_by(nullslast(asc(func.coalesce(WeeklyPublicResult.contest_rank, WeeklyVirtualResult.contest_rank))), Student.name.asc())
+        query = query.order_by(rank_order_expr.asc(), nullslast(desc(score_order_expr)), Student.name.asc())
     else:
         query = query.order_by(
-            nullslast(asc(WeeklyPublicResult.contest_rank)), 
-            nullslast(desc(WeeklyPublicResult.contest_score)), 
+            nullslast(desc(score_order_expr)), 
+            rank_order_expr.asc(), 
             Student.name.asc()
         )
 
@@ -194,8 +229,8 @@ def get_paginated_matrix_rows(
                 elif sv == 7: q1_val = 1; q2_val = 1
                 elif sv == 3: q1_val = 1
             if not score_val: score_val = (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
-            rank_val = p_res.contest_rank
-            rating_val = p_res.contest_rating
+            rank_val = p_res.contest_rank if (p_res.contest_rank and p_res.contest_rank > 0) else None
+            rating_val = p_res.contest_rating if (p_res.contest_rating and float(p_res.contest_rating) > 0) else None
         elif canon_status == "VIRTUAL":
             source_res = v_res if v_res else p_res
             if source_res:
@@ -211,8 +246,12 @@ def get_paginated_matrix_rows(
                     elif sv == 7: q1_val = 1; q2_val = 1
                     elif sv == 3: q1_val = 1
                 if not score_val: score_val = (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
-                rank_val = getattr(source_res, "contest_rank", None)
-                rating_val = getattr(source_res, "contest_rating", None)
+                rv = getattr(source_res, "contest_rank", None)
+                rank_val = rv if (rv and rv > 0) else None
+                rtv = getattr(source_res, "contest_rating", None)
+                rating_val = rtv if (rtv and float(rtv) > 0) else None
+
+        tot_solved_val = (q1_val + q2_val + q3_val + q4_val)
 
         matrix_rows.append({
             "id": student.id,
@@ -223,6 +262,7 @@ def get_paginated_matrix_rows(
             "dept": dept_code,
             "year": year_level,
             "status": canon_status,
+            "participation_status": canon_status,
             "q1": q1_val,
             "q2": q2_val,
             "q3": q3_val,
@@ -230,6 +270,8 @@ def get_paginated_matrix_rows(
             "score": score_val,
             "rank": rank_val,
             "rating": rating_val,
+            "total_solved": tot_solved_val,
+            "total_contest_solved": tot_solved_val,
             "avatar_url": getattr(student.lc_profile, "avatar_url", None) if getattr(student, "lc_profile", None) else None,
             "section": getattr(student.section, "name", None) if getattr(student, "section", None) else None,
         })

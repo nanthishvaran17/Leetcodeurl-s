@@ -61,7 +61,18 @@ def _filtered_growth_students(
             func.upper(Department.code) == effective_dept.upper()
         )
     if effective_year.upper() not in ("", "ALL", "ALL YEARS", "ALL ACADEMIC YEARS"):
-        query = query.filter(func.upper(Student.year_level) == effective_year.upper().replace(" YEAR", ""))
+        clean_y = effective_year.upper().replace(" YEAR", "").strip()
+        valid_matches = [clean_y, f"{clean_y} YEAR"]
+        if clean_y in ("I", "1", "1ST"):
+            valid_matches += ["I", "1", "1ST", "1ST YEAR", "I YEAR"]
+        elif clean_y in ("II", "2", "2ND"):
+            valid_matches += ["II", "2", "2ND", "2ND YEAR", "II YEAR"]
+        elif clean_y in ("III", "3", "3RD"):
+            valid_matches += ["III", "3", "3RD", "3RD YEAR", "III YEAR"]
+        elif clean_y in ("IV", "4", "4TH"):
+            valid_matches += ["IV", "4", "4TH", "4TH YEAR", "IV YEAR"]
+        valid_matches = list(set(valid_matches))
+        query = query.filter(func.upper(Student.year_level).in_(valid_matches))
         
     if current_user:
         query = apply_role_based_student_filter(query, current_user, db)
@@ -360,17 +371,12 @@ def get_growth_options(db: Session = Depends(get_db), current_user: Optional[Use
         
     departments = departments_query.distinct().order_by(Department.name.asc()).all()
     
-    years = db.query(Student.year_level).filter(
-        ((Student.is_active == True) | (Student.is_active.is_(None))) &
-        Student.year_level.isnot(None)
-    ).distinct().order_by(Student.year_level.asc()).all()
-    
     return {
         "departments": [
             {"id": department_id, "code": code, "name": name}
             for department_id, code, name in departments
         ],
-        "years": [year for (year,) in years if year]
+        "years": ["I", "II", "III", "IV"]
     }
 
 

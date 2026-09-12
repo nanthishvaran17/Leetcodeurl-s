@@ -16,6 +16,7 @@ import { useGlobalKeyboardShortcuts } from './hooks/useGlobalKeyboardShortcuts';
 import { requestPushPermissionAndSync, listenForForegroundMessages } from './services/pushNotifications';
 import { InstallAppPrompt } from './components/InstallAppPrompt';
 import { AppUpdateNotifier } from './components/AppUpdateNotifier';
+import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 import { useScrollLock } from './hooks/useScrollLock';
 // Safe lazy import wrapper with automatic chunk reload on Vercel deployment update
 function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ default: T }>) {
@@ -144,22 +145,45 @@ export const App: React.FC = () => {
   const [showAlertCenterModal, setShowAlertCenterModal] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showExitConfirmModal, setShowExitConfirmModal] = useState(false);
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [summaryData, setSummaryData] = useState<any>(() => getCachedSummary());
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showAiWidget, setShowAiWidget] = useState(false);
 
-  useGlobalKeyboardShortcuts(
-    () => setShowCommandPalette(true),
-    () => {
-      // Logic to focus primary search
+  useGlobalKeyboardShortcuts({
+    onOpenCommandPalette: () => setShowCommandPalette(true),
+    onFocusSearch: () => {
       const searchInputs = document.querySelectorAll('input[type="search"], input[placeholder*="Search"]');
       if (searchInputs.length > 0) {
         (searchInputs[0] as HTMLInputElement).focus();
       } else {
         setShowCommandPalette(true);
       }
-    }
-  );
+    },
+    onToggleShortcutsModal: () => setShowShortcutsModal(prev => !prev),
+    onNavigateTab: (tab: string) => handleTabChange(tab),
+    onToggleAiWidget: () => {
+      setShowAiWidget(true);
+      window.dispatchEvent(new CustomEvent('toggle_ai_assistant'));
+    },
+    onToggleNotifications: () => window.dispatchEvent(new CustomEvent('toggle_notifications')),
+    onToggleSidebar: () => setIsSidebarOpen(prev => !prev),
+    onStudentQuickSearch: () => setShowCommandPalette(true),
+    onGenerateReport: () => handleTabChange('reports'),
+    isTabAllowed: (tab: string) => isTabAllowed(tab),
+    userRole: user?.role,
+  });
+
+  useEffect(() => {
+    const handleToggleSidebar = () => {
+      setIsSidebarOpen(prev => !prev);
+    };
+    window.addEventListener('toggle_sidebar', handleToggleSidebar);
+    return () => {
+      window.removeEventListener('toggle_sidebar', handleToggleSidebar);
+    };
+  }, []);
+
 
 
   useEffect(() => {
@@ -480,10 +504,10 @@ export const App: React.FC = () => {
     if (roleClean === 'student') {
       return <StudentDashboardView />;
     }
-    if (roleClean === 'staff' || roleClean === 'faculty') {
+    if (['staff', 'faculty', 'professor', 'faculty mentor', 'faculty_mentor', 'staff mentor', 'staff_mentor'].includes(roleClean)) {
       return <StaffDashboardView />;
     }
-    if (roleClean === 'hod') {
+    if (['hod', 'head of department', 'head_of_department', 'department hod', 'department_hod'].includes(roleClean)) {
       return <HODCommandCenter />;
     }
     return (
@@ -597,6 +621,12 @@ export const App: React.FC = () => {
         isOpen={showCommandPalette}
         onClose={() => setShowCommandPalette(false)}
         onNavigate={(tab) => handleTabChange(tab)}
+        onSelectStudent={handleSelectStudent}
+        onOpenAiWithQuery={(q) => {
+          setShowAiWidget(true);
+          window.dispatchEvent(new CustomEvent('open_ai_assistant', { detail: { query: q } }));
+        }}
+        onOpenShortcutsModal={() => setShowShortcutsModal(true)}
       />
 
       {/* Top Navbar */}
@@ -770,6 +800,13 @@ export const App: React.FC = () => {
 
 
       </div>
+
+      {/* Keyboard Shortcuts Guide Modal */}
+      <KeyboardShortcutsModal
+        isOpen={showShortcutsModal}
+        onClose={() => setShowShortcutsModal(false)}
+        isTabAllowed={(tab) => isTabAllowed(tab)}
+      />
 
       {/* Login Modal (used for re-authentication when already inside the app) */}
       {showLoginModal && (

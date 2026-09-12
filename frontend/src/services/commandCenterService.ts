@@ -132,7 +132,56 @@ export interface FacultyWorkloadItem {
   }>;
 }
 
+export interface HODDashboardHeader {
+  hod_name: string;
+  department_name: string;
+  department_code: string;
+  academic_year: string;
+  health_status: string;
+  last_sync: string;
+}
+
+export interface HODKPISummary {
+  total_staff: number;
+  total_students: number;
+  total_allocated: number;
+  completed: number;
+  pending: number;
+  unassigned: number;
+  overall_progress: number;
+  progress_status: 'GREEN' | 'AMBER' | 'RED' | 'GOOD' | 'WATCH' | 'ACTION';
+  has_data: boolean;
+}
+
+export interface HODActionItem {
+  id: string;
+  severity: 'URGENT' | 'ATTENTION';
+  type: string;
+  title: string;
+  reason: string;
+  count: number;
+  action_label: string;
+  target_tab: string;
+}
+
+export interface HeatmapSectionItem {
+  section: string;
+  student_count: number;
+  progress_pct: number | null;
+  status: 'GREEN' | 'AMBER' | 'RED' | 'NO_DATA';
+}
+
+export interface HeatmapYearRow {
+  year: string;
+  year_level: string;
+  sections: HeatmapSectionItem[];
+}
+
 export interface CommandCenterSummary {
+  header?: HODDashboardHeader;
+  kpi_summary?: HODKPISummary;
+  action_items?: HODActionItem[];
+  heatmap_matrix?: HeatmapYearRow[];
   department_health: DeptHealth;
   executive_brief?: ExecutiveBrief;
   needs_attention?: NeedsAttentionMetrics;
@@ -254,8 +303,15 @@ export async function autoDistributeDepartment(department_id: number): Promise<a
   return res.data;
 }
 
-export async function getReportData(report_type: string, dept_id?: number): Promise<any> {
-  const res = await api.get('/command-center/reports/data', { params: { report_type, dept_id } });
+export async function getReportData(params: {
+  report_type: string;
+  dept_id?: number;
+  year_level?: string;
+  section?: string;
+  staff_id?: number;
+  status_filter?: string;
+}): Promise<any> {
+  const res = await api.get('/command-center/reports/data', { params });
   return res.data;
 }
 

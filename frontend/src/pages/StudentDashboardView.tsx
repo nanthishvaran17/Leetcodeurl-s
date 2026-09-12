@@ -4,6 +4,7 @@ import {
   AlertCircle, Shield, User, Clock, Zap, BookOpen, BarChart2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { AnimatedWelcomeHeading } from '../components/AnimatedWelcomeHeading';
 import { StudentData } from '../components/LeaderboardTable';
 import api from '../services/api';
 
@@ -93,7 +94,10 @@ export const StudentDashboardView: React.FC = () => {
                 <Shield className="w-3.5 h-3.5 text-amber-400" />
                 <span>AUTHENTICATED STUDENT DASHBOARD</span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-black">Welcome back, {user?.name} 👋</h1>
+              <AnimatedWelcomeHeading
+                className="text-2xl md:text-3xl font-black text-white leading-tight break-words uppercase"
+                nameClassName="text-brand-300 break-words"
+              />
               <p className="text-sm md:text-base text-slate-300 font-medium pb-1">Track your LeetCode progress, contests, and learning activity.</p>
               <p className="text-xs text-slate-300 font-mono font-bold">
                 {user?.registerNo ? `Reg No: ${user.registerNo}` : user?.email} • {user?.department || 'Department'} • {user?.year ? `${user.year} Year` : ''}

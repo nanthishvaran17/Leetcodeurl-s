@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Clock, Download, RefreshCw, Search, Users, AlertCircle,
-  ExternalLink, Eye, ArrowUpDown, ChevronRight, X, ShieldAlert, CheckCircle2
+  ExternalLink, Eye, ArrowUpDown, ChevronRight, X, ShieldAlert, CheckCircle2, FileSpreadsheet
 } from 'lucide-react';
 import api from '../services/api';
 import { downloadManager } from '../services/download/downloadManager';
@@ -101,10 +101,10 @@ export const Post930SolversView: React.FC = () => {
           <div className="flex items-center space-x-3">
             <button
               onClick={handleExportExcel}
-              className="px-4 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-lg flex items-center space-x-2 transition-all"
+              className="relative overflow-hidden px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black shadow-lg shadow-emerald-500/30 border border-white/20 flex items-center space-x-2 transition-all duration-200 cursor-pointer transform hover:scale-105 active:scale-90 group"
             >
-              <Download className="w-4 h-4" />
-              <span>Export Excel (.xlsx)</span>
+              <FileSpreadsheet className="w-4 h-4 text-white group-hover:scale-115 group-hover:-rotate-12 transition-transform duration-300 shrink-0" />
+              <span className="font-extrabold tracking-wide">Export Excel (.xlsx)</span>
             </button>
 
             <button
@@ -284,7 +284,7 @@ export const Post930SolversView: React.FC = () => {
                       {st.register_number || st.reg_no}
                     </td>
                     <td className="px-4 py-3.5 text-slate-600 dark:text-slate-300">
-                      {st.department} ({st.year || st.year_level} Year)
+                      {st.department} ({(st.year || st.year_level || '').replace(/year/gi, '').trim()} Year)
                     </td>
                     <td className="px-4 py-3.5 text-right font-bold text-slate-700 dark:text-slate-300">
                       {st.official_locked_solved}

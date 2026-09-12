@@ -6,6 +6,7 @@ import {
   ChevronDown, Check, Filter
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { AnimatedWelcomeHeading } from '../components/AnimatedWelcomeHeading';
 import api, { clearApiCache } from '../services/api';
 import { StaffMentoringDetailModal } from '../components/StaffMentoringDetailModal';
 import { useNotification } from '../context/NotificationContext';
@@ -144,7 +145,10 @@ export const StaffDashboardView: React.FC = () => {
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
               <span>MY MENTORING DASHBOARD</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-black">Welcome back, {user?.name || user?.username} 👋</h1>
+            <AnimatedWelcomeHeading
+              className="text-2xl md:text-3xl font-black text-white leading-tight break-words uppercase"
+              nameClassName="text-indigo-300 break-words"
+            />
             <p className="text-sm md:text-base text-slate-300 font-medium">Your mentoring dashboard is ready.</p>
             <p className="text-xs text-slate-300 flex items-center gap-2">
               <span>Restricted Portfolio • Monitoring {totalAssignedCount === 0 ? '0' : totalAssignedCount} Assigned Students</span>

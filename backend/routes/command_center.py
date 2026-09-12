@@ -102,15 +102,15 @@ def get_command_center_summary(
 ):
     from backend.services.cache_service import cache_service
 
-    # Build a scoped cache key based on the parameters
     uid = current_user.id if current_user else "anon"
     role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
-    
-    # If Super Admin or Admin, they see global data (unless they explicitly filter). 
-    # If HOD/Faculty, they see scoped data. We must include user_id in the cache key for role-based scoping unless they are global admins.
     is_global_admin = role_clean in ["admin", "super_admin", "super admin", "administrator"]
-    scope_key = f"global" if is_global_admin else f"user_{uid}"
     
+    # Strictly enforce server-side department isolation for non-admin HODs
+    if not is_global_admin and role_clean in ["hod", "head of department"] and current_user.department_id:
+        dept_id = current_user.department_id
+
+    scope_key = f"global" if is_global_admin else f"user_{uid}"
     cache_key = f"cmd_center_summary:{scope_key}:d{dept_id or 'all'}:s{staff_id or 'all'}:y{year_level or 'all'}:sec{section_id or 'all'}"
     tags = ["analytics", "dashboard", f"dept_{dept_id}" if dept_id else "global"]
 
@@ -123,7 +123,10 @@ def get_command_center_summary(
             calculate_department_health_score,
             get_executive_brief,
             get_needs_attention_metrics,
-            get_institutional_benchmarks
+            get_institutional_benchmarks,
+            calculate_department_kpi_summary,
+            get_todays_action_items,
+            get_year_section_heatmap
         )
         health = calculate_department_health_score(
             db, current_user, dept_id=dept_id, staff_id=staff_id, year_level=year_level, section_id=section_id
@@ -131,15 +134,27 @@ def get_command_center_summary(
         brief = get_executive_brief(db, current_user, dept_id=dept_id, staff_id=staff_id)
         needs_att = get_needs_attention_metrics(db, current_user, dept_id=dept_id, staff_id=staff_id)
         benchmarks = get_institutional_benchmarks(db, current_user)
-    
-        # Active staff list for Scope Selector
+        
+        kpi_summary = calculate_department_kpi_summary(
+            db, current_user, dept_id=dept_id, staff_id=staff_id, year_level=year_level, section_id=section_id
+        )
+        action_items = get_todays_action_items(db, current_user, dept_id=dept_id)
+        heatmap_matrix = get_year_section_heatmap(db, current_user, dept_id=dept_id)
+
+        # Department metadata
+        dept_obj = db.query(Department).filter(Department.id == dept_id).first() if dept_id else (
+            current_user.department if current_user and current_user.department else None
+        )
+        dept_name = dept_obj.name if dept_obj else "Computer Science & Engineering"
+        dept_code = dept_obj.code if dept_obj else "CSE"
+        hod_name = current_user.username if current_user else "Head of Department"
+
+        # Active staff list for Scope Selector & Performance Table
         staff_users_q = db.query(User).options(joinedload(User.department)).filter(
             or_(User.role.ilike("%Staff%"), User.role.ilike("%Faculty%")),
             User.is_active == True
         )
-        if role_clean == "hod" and current_user.department_id:
-            staff_users_q = staff_users_q.filter(User.department_id == current_user.department_id)
-        elif dept_id:
+        if dept_id:
             staff_users_q = staff_users_q.filter(User.department_id == dept_id)
         staff_users = staff_users_q.all()
         
@@ -160,16 +175,25 @@ def get_command_center_summary(
                 1 for s, st in assigned_rows
                 if st and ((st.total_solved or 0) > 0 or (st.easy_solved or 0) + (st.medium_solved or 0) + (st.hard_solved or 0) > 0)
             )
-            dept_code = u.department.code if u.department else "CSE"
+            completed_cnt = sum(1 for s, st in assigned_rows if st and (st.total_solved or 0) >= 10)
+            pending_cnt = max(0, assigned_cnt - completed_cnt)
+            staff_prog = round((completed_cnt / float(assigned_cnt)) * 100.0, 1) if assigned_cnt > 0 else 0.0
+            
+            traffic_status = "GREEN" if staff_prog >= 80.0 else ("AMBER" if staff_prog >= 60.0 else "RED")
+            d_code = u.department.code if u.department else dept_code
     
             staff_list.append({
                 "id": u.id,
                 "username": u.username,
                 "email": u.email,
                 "department_id": u.department_id,
-                "department_code": dept_code,
+                "department_code": d_code,
                 "assigned_count": assigned_cnt,
                 "active_count": active_cnt,
+                "completed_count": completed_cnt,
+                "pending_count": pending_cnt,
+                "progress_pct": staff_prog,
+                "traffic_status": traffic_status,
                 "max_allowed": MAX_STUDENTS_PER_FACULTY,
                 "workload_status": "NORMAL" if assigned_cnt < 20 else ("AT_RATIO" if assigned_cnt == 20 else "HIGH_WORKLOAD"),
                 "role": u.role or "Faculty",
@@ -192,6 +216,17 @@ def get_command_center_summary(
         unassigned_count = unassigned_q.count()
     
         return {
+            "header": {
+                "hod_name": hod_name,
+                "department_name": dept_name,
+                "department_code": dept_code,
+                "academic_year": "2025–26",
+                "health_status": kpi_summary.get("progress_status", "GOOD"),
+                "last_sync": datetime.datetime.utcnow().strftime("%H:%M IST")
+            },
+            "kpi_summary": kpi_summary,
+            "action_items": action_items,
+            "heatmap_matrix": heatmap_matrix,
             "department_health": health,
             "executive_brief": brief,
             "needs_attention": needs_att,
@@ -201,7 +236,6 @@ def get_command_center_summary(
             "refreshed_at": datetime.datetime.utcnow().strftime("%d %b %Y, %H:%M:%S IST"),
         }
 
-    # 300 seconds (5 minutes) caching to drastically reduce database load
     return cache_service.get_or_compute_sync(
         key=cache_key,
         compute_func=_compute_summary,
@@ -229,7 +263,16 @@ def get_students(
     from backend.services.authorization_service import apply_role_based_student_filter
     from sqlalchemy.orm import joinedload, selectinload
 
-    from backend.services.authorization_service import apply_role_based_student_filter
+    if not isinstance(page, int):
+        try:
+            page = int(page)
+        except (TypeError, ValueError):
+            page = 1
+    if not isinstance(page_size, int):
+        try:
+            page_size = int(page_size)
+        except (TypeError, ValueError):
+            page_size = 20
     real_ids = _real_dept_ids(db)
     q = db.query(Student).filter(Student.department_id.in_(real_ids))
 
@@ -322,7 +365,7 @@ def get_students(
     results = []
     for s in students:
         stats = s.stats
-        total_solved = stats.total_solved if stats else 0
+        total_solved = stats.total_solved if (stats and stats.total_solved is not None) else 0
         weekly_delta = max(0, int(total_solved * 0.05) if total_solved > 20 else 2)
         
         is_active_solver = total_solved > 0
@@ -503,16 +546,21 @@ def get_faculty_workload(
 @router.get("/reports/data")
 def get_report_data(
     report_type: str = Query(..., description="EXECUTIVE, FACULTY_ALLOCATION, INACTIVE_AT_RISK, CONTEST, SKILL_GAP"),
-    dept_id: Optional[int] = None,
+    dept_id: Optional[int] = Query(None),
+    year_level: Optional[str] = Query(None),
+    section: Optional[str] = Query(None),
+    staff_id: Optional[int] = Query(None),
+    status_filter: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("hod", "admin", "super_admin", "super admin", "faculty", "staff"))
 ):
     """
     Returns structured data for on-screen report rendering & multi-format export.
-    HOD's department scope is always enforced server-side — the client-supplied dept_id is ignored.
+    Supports dynamic combined filtering across Department, Year Level, Section, Staff, and Status.
+    Enforces role-based boundaries server-side.
     """
     from backend.services.hod_analytics_engine import calculate_department_health_score, get_institutional_benchmarks
-    from backend.models import Department
+    from backend.models import Department, Section
 
     role_clean = (current_user.role or "").strip().lower()
 
@@ -525,26 +573,60 @@ def get_report_data(
         # Faculty: scope is always their assigned students, dept is advisory only
         eff_dept_id = current_user.department_id or dept_id
     else:
-        # Admin / super_admin: use whatever the client passed (can be None for all)
-        eff_dept_id = dept_id
+        # Admin / super_admin: use whatever the client passed (can be None/0 for all)
+        eff_dept_id = dept_id if dept_id and dept_id != 0 else None
 
-    # Resolve a human-readable department label
+    # Resolve human-readable department label
     if eff_dept_id:
         dept_obj = db.query(Department).filter(Department.id == eff_dept_id).first()
         dept_label = dept_obj.name if dept_obj else f"Department {eff_dept_id}"
     else:
         dept_label = "All Institutional Departments"
 
-    health = calculate_department_health_score(db, current_user, dept_id=eff_dept_id)
+    eff_year = year_level if year_level and year_level != "ALL" else None
+    eff_section = section if section and section != "ALL" else None
+    eff_staff = staff_id if staff_id and staff_id != 0 else None
+    eff_status = status_filter if status_filter and status_filter != "ALL" else None
+
+    # Resolve section ID if section string passed
+    sec_id = None
+    if eff_section:
+        sec_obj = db.query(Section).filter(Section.name.ilike(eff_section)).first()
+        if sec_obj:
+            sec_id = sec_obj.id
+
+    health = calculate_department_health_score(
+        db,
+        current_user,
+        dept_id=eff_dept_id,
+        staff_id=eff_staff,
+        year_level=eff_year,
+        section_id=sec_id
+    )
     benchmarks = get_institutional_benchmarks(db, current_user)
 
     now_str = datetime.datetime.utcnow().strftime("%d %B %Y, %I:%M %p IST")
 
+    # Scope Summary Pills
+    scope_details = [f"Dept: {dept_label}"]
+    if eff_year:
+        scope_details.append(f"Year: {eff_year}")
+    if eff_section:
+        scope_details.append(f"Sec: {eff_section}")
+    if eff_staff:
+        staff_user = db.query(User).filter(User.id == eff_staff).first()
+        if staff_user:
+            scope_details.append(f"Staff: {staff_user.username}")
+    if eff_status:
+        scope_details.append(f"Status: {eff_status}")
+
+    scope_summary_str = " • ".join(scope_details)
+
     if report_type == "EXECUTIVE":
         return {
-            "report_title": "Nandha Executive Institutional Coding Health Report",
+            "report_title": f"Nandha Executive Institutional Coding Health Report ({dept_label})",
             "generated_at": now_str,
-            "department_scope": dept_label,
+            "department_scope": scope_summary_str,
             "health_score": health.get("health_score", 0),
             "summary_metrics": {
                 "Total Students Tracked": health.get("total_students", 0),
@@ -569,12 +651,12 @@ def get_report_data(
         return {
             "report_title": "Faculty Mentorship & Student Allocation Audit Report",
             "generated_at": now_str,
+            "department_scope": scope_summary_str,
             "total_faculty": workload_res["total_faculty"],
             "faculty_records": workload_res["faculty_workload"]
         }
 
     elif report_type == "INACTIVE_AT_RISK":
-        # Pull inactive students
         real_ids = _real_dept_ids(db)
         q = db.query(Student, LeetCodeProfileStats).outerjoin(
             LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
@@ -588,12 +670,24 @@ def get_report_data(
         
         if eff_dept_id:
             q = q.filter(Student.department_id == eff_dept_id)
+        if eff_year:
+            q = q.filter(Student.year_level == eff_year)
+        if eff_section:
+            q = q.filter(Student.section.has(Section.name.ilike(eff_section)))
+        if eff_staff:
+            q = q.join(
+                FacultyStudentAssignment,
+                and_(
+                    FacultyStudentAssignment.student_id == Student.id,
+                    FacultyStudentAssignment.faculty_id == eff_staff,
+                    FacultyStudentAssignment.is_active == True
+                )
+            )
         
         all_rows = q.all()
         inactive_students = []
         for s, st in all_rows:
             if not st or (st.total_solved or 0) == 0:
-                # Find mentor
                 assign = db.query(FacultyStudentAssignment, User).join(
                     User, FacultyStudentAssignment.faculty_id == User.id
                 ).filter(
@@ -612,8 +706,9 @@ def get_report_data(
                 })
 
         return {
-            "report_title": "Inactive & At-Risk Coding Intervention Report",
+            "report_title": f"Inactive & At-Risk Coding Intervention Report ({dept_label})",
             "generated_at": now_str,
+            "department_scope": scope_summary_str,
             "total_inactive": len(inactive_students),
             "students": inactive_students[:100]
         }
@@ -622,6 +717,7 @@ def get_report_data(
         return {
             "report_title": "Standard Institutional Report",
             "generated_at": now_str,
+            "department_scope": scope_summary_str,
             "health": health
         }
 

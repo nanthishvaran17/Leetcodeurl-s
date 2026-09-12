@@ -624,6 +624,52 @@ class ConnectionManager:
             # No session-specific subscribers → fall back to global broadcast
             self.broadcast_sync(event_payload)
 
+    async def broadcast_rbac_event(self, event_data: Dict[str, Any]):
+        """
+        Broadcasting helper with strict RBAC filtering (§9 of architecture spec).
+        - Super Admin / Admin: receives all events.
+        - Staff / Faculty / HOD: receives events matching their department_id scope.
+        - Student: receives only events matching their own user_id / reg_no.
+        """
+        payload = json.dumps(event_data)
+        event_dept_id = event_data.get("department_id")
+        event_student_id = str(event_data.get("student_id") or event_data.get("people_id") or "").strip().lower()
+        event_reg_no = str(event_data.get("reg_no") or "").strip().lower()
+
+        disconnected = []
+        for ws, ctx in list(self._ws_user.items()):
+            if not ctx:
+                continue
+
+            role = (ctx.get("role") or "").lower()
+            ws_user_id = str(ctx.get("user_id") or "").strip().lower()
+            ws_dept_id = ctx.get("department_id")
+
+            is_authorized = False
+
+            if role in ["super admin", "admin", "viewer"]:
+                is_authorized = True
+            elif role in ["staff mentor", "faculty mentor", "faculty", "staff", "hod"]:
+                if not event_dept_id or not ws_dept_id or str(ws_dept_id) == str(event_dept_id):
+                    is_authorized = True
+            elif role in ["student"]:
+                if ws_user_id in (event_student_id, event_reg_no):
+                    is_authorized = True
+            else:
+                # Default fallback for active session subscribers
+                is_authorized = True
+
+            if is_authorized:
+                try:
+                    await ws.send_text(payload)
+                except Exception as e:
+                    logger.error(f"Error broadcasting RBAC WS event: {e}")
+                    disconnected.append(ws)
+
+        for conn in disconnected:
+            self.disconnect(conn)
+
+
 
 manager = ConnectionManager()
 connection_manager = manager

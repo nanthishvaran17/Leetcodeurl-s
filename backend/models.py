@@ -88,6 +88,9 @@ class Student(Base):
     
     allocation = Column(String(50), nullable=True, index=True) # 0.25, etc.
     
+    accommodation = Column(String(50), nullable=True, index=True) # Hostel, Day Scholar
+    twelfth_cutoff = Column(Float, nullable=True, index=True) # 12th standard cutoff mark (e.g. 141.0, 185.0)
+    
     is_active = Column(Boolean, default=True, index=True)
     version = Column(Integer, default=1, nullable=False)
     joining_date = Column(DateTime, default=datetime.datetime.utcnow)
@@ -209,10 +212,20 @@ class WeeklySession(Base):
     session_data_hash = Column(String(128), nullable=True)
     reconciliation_summary = Column(JSON, nullable=True)
     
-    # 100/10 Production Hardening: Pipeline State Machine
+    # 100/10 Production Hardening: Pipeline State Machine & Finalization Retry Boundary (§29)
     pipeline_state = Column(String(50), default="DISCOVERED", index=True)
     pipeline_last_updated = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     pipeline_error = Column(Text, nullable=True)
+
+    manual_review_required_at = Column(DateTime(timezone=True), nullable=True)
+    manual_review_reason = Column(Text, nullable=True)
+    last_successful_source_fetch = Column(DateTime(timezone=True), nullable=True)
+    last_reconciliation_attempt = Column(DateTime(timezone=True), nullable=True)
+    reconciliation_failure_count = Column(Integer, default=0, nullable=False)
+    last_error_code = Column(String(50), nullable=True)
+    last_error_message_safe = Column(Text, nullable=True)
+    finalization_method = Column(String(50), nullable=True)  # AUTOMATIC or MANUAL_ADMIN_REVIEW
+    finalized_by = Column(String(100), nullable=True)
     
     snapshots = relationship("WeeklySessionSnapshot", back_populates="session", cascade="all, delete-orphan")
     public_results = relationship("WeeklyPublicResult", back_populates="session", cascade="all, delete-orphan")
@@ -2499,6 +2512,71 @@ class LiveContestEvent(Base):
     next_run = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+
+class LiveQuestionStatus(Base):
+    """
+    Current question-level state table per (contest_id, student_id, question_id).
+    Strict 0 or 1 value for solved status.
+    """
+    __tablename__ = "live_question_status"
+    __table_args__ = (
+        UniqueConstraint("contest_id", "student_id", "question_id", name="uix_live_question_status"),
+        Index("ix_lqs_contest_student", "contest_id", "student_id"),
+        {"extend_existing": True}
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    contest_id = Column(String(100), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    question_id = Column(String(20), nullable=False, index=True)
+
+    solved = Column(Integer, default=0, nullable=False)
+    solved_at = Column(DateTime(timezone=True), nullable=True)
+    detected_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, nullable=False)
+
+    time_taken_seconds = Column(Integer, nullable=True)
+    time_taken_is_estimated = Column(Boolean, default=False, nullable=False)
+    is_anomaly = Column(Boolean, default=False, nullable=False)
+
+    source = Column(String(50), default="AUTHORITATIVE_LEETCODE", nullable=False)
+    event_version = Column(Integer, default=1, nullable=False)
+
+    updated_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    student = relationship("Student")
+
+
+class LiveQuestionAuditLog(Base):
+    """
+    Append-only immutable audit log table recording every question state transition (0 -> 1).
+    Reuses global sequence numbering from LiveContestMonitorEngine.
+    """
+    __tablename__ = "live_question_audit_logs"
+    __table_args__ = (
+        Index("ix_lqal_contest_student", "contest_id", "student_id"),
+        {"extend_existing": True}
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    contest_id = Column(String(100), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    question_id = Column(String(20), nullable=False, index=True)
+
+    old_value = Column(Integer, default=0, nullable=False)
+    new_value = Column(Integer, default=1, nullable=False)
+
+    detected_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, nullable=False)
+    solved_at = Column(DateTime(timezone=True), nullable=True)
+    time_taken_seconds = Column(Integer, nullable=True)
+    time_taken_is_estimated = Column(Boolean, default=False, nullable=False)
+
+    source = Column(String(50), default="AUTHORITATIVE_LEETCODE", nullable=False)
+    sequence = Column(Integer, nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, nullable=False)
+
+    student = relationship("Student")
+
 
 
 class WeeklyStudentSnapshot(Base):

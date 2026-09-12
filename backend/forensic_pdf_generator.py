@@ -60,169 +60,47 @@ def generate_forensic_audit_pdf(
 ) -> bytes:
     """
     Generates an official institutional PDF Forensic Contest Audit Certificate for Nandha Engineering College.
+    Consumes SINGLE SOURCE OF TRUTH normalized report object to guarantee zero mismatch with UI.
     """
-    target_trace = trace_id or identifier
-    student = None
+    from backend.services.forensic_audit_engine import build_normalized_forensic_report
 
-    if student_id:
-        student = db.query(Student).filter(Student.id == student_id).first()
+    report = build_normalized_forensic_report(
+        db,
+        search=identifier or trace_id,
+        session_id=session_id,
+        trace_id=trace_id,
+        student_id=student_id
+    )
 
-    if not student and target_trace:
-        from backend.models import CertificateRecord
-        cert = db.query(CertificateRecord).filter(
-            (CertificateRecord.verification_id.ilike(target_trace)) |
-            (CertificateRecord.certificate_code.ilike(target_trace))
-        ).first()
-        if cert and cert.student_id:
-            student = db.query(Student).filter(Student.id == cert.student_id).first()
-            if cert.contest_id and not session_id:
-                if str(cert.contest_id).isdigit():
-                    session_id = int(cert.contest_id)
+    st_data = report["student"]
+    c_data = report["contest"]
+    p_data = report["participation"]
+    v_data = report["verification"]
+    res_data = report["result"]
 
-    if not student and target_trace:
-        clean_search = re.sub(r'[^A-Za-z0-9]+', '', target_trace).replace('CERT', '').replace('FORENSIC', '').replace('EXCELLENCE', '').replace('TRACE', '')
-        if clean_search:
-            student = db.query(Student).filter(Student.reg_no.ilike(f"%{clean_search}%")).first()
+    trace_id = v_data["traceId"]
+    c_title_name = c_data["name"]
+    c_date = c_data["date"]
+    part_status = p_data["status"]
+    tot_solved_tmp = p_data["solved"]
+    score_tmp = p_data["score"]
+    c_rank = p_data["rank"]
+    c_rat = p_data["rating"]
+    sha_hash = v_data["checksum"]
 
-    if not student and target_trace:
-        student = db.query(Student).filter(
-            (Student.reg_no.ilike(f"%{target_trace}%")) |
-            (Student.username.ilike(f"%{target_trace}%")) |
-            (Student.name.ilike(f"%{target_trace}%"))
-        ).first()
+    q1_val = res_data["q1"]
+    q2_val = res_data["q2"]
+    q3_val = res_data["q3"]
+    q4_val = res_data["q4"]
 
-    if not student:
-        raise ValueError("No student record found for forensic report generation.")
+    dept_code_str = st_data["department"]
+    dept_name_str = st_data["departmentName"]
+    year_str = st_data["year"]
+    username = st_data["username"]
 
-    session_obj = None
-    if session_id:
-        session_obj = db.query(WeeklySession).filter(
-            (WeeklySession.id == session_id) |
-            (WeeklySession.contest_id == str(session_id)) |
-            (WeeklySession.contest_name.ilike(f"%{session_id}%"))
-        ).first()
+    student_name = st_data["name"]
+    student_reg = st_data["reg_no"]
 
-    if not session_obj:
-        session_obj = db.query(WeeklySession).filter(WeeklySession.status.in_(["FINALIZED", "COMPLETED"])).order_by(WeeklySession.id.desc()).first()
-
-    if not session_obj:
-        session_obj = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
-
-    if not session_obj:
-        class DummySession:
-            id = 1
-            contest_id = "weekly-contest-515"
-            contest_name = "Weekly Contest 515"
-            session_code = "WC515"
-            session_date = datetime.date.today().strftime("%d.%m.%Y")
-        session_obj = DummySession()
-
-    contest_result = db.query(WeeklyPublicResult).filter(
-        WeeklyPublicResult.student_id == student.id,
-        WeeklyPublicResult.session_id == getattr(session_obj, "id", 1)
-    ).first()
-
-    virtual_result = db.query(WeeklyVirtualResult).filter(
-        WeeklyVirtualResult.student_id == student.id,
-        WeeklyVirtualResult.session_id == getattr(session_obj, "id", 1)
-    ).first() if not contest_result or contest_result.participation_status != "PUBLIC_ATTENDED" else None
-
-    clean_reg = "".join(c for c in (student.reg_no or "") if c.isalnum()).upper()
-    if not trace_id:
-        trace_id = target_trace or f"CERT-{clean_reg}-FORENSIC"
-    elif not trace_id.startswith("CERT-") and not trace_id.startswith("trace_"):
-        trace_id = f"CERT-{trace_id.upper()}"
-
-    part_status = contest_result.participation_status if contest_result else ("VIRTUAL_ATTENDED" if virtual_result else "NOT_ATTENDED")
-    tot_solved_tmp = contest_result.total_contest_solved if contest_result else (virtual_result.total_contest_solved if virtual_result else 0)
-    score_tmp = contest_result.contest_score if contest_result else (virtual_result.contest_score if virtual_result else 0)
-    q1_val = contest_result.q1 if contest_result else 0
-    q2_val = contest_result.q2 if contest_result else 0
-    q3_val = contest_result.q3 if contest_result else 0
-    q4_val = contest_result.q4 if contest_result else 0
-    
-    c_title_name = derive_clean_contest_name(session_obj)
-    dept_code_str = student.department.code if student.department else "CSE"
-    year_str = student.year_level or "III"
-    username = getattr(student, "username", None) or getattr(student, "leetcodeUsername", "N/A")
-    c_date = session_obj.session_date or "16.08.2026"
-
-    # Canonical representation for strictly enforced cryptographic verification
-    canonical_data = f"{trace_id}:{student.id}:{student.name}:{student.reg_no}:{dept_code_str}:{year_str}:{username}:{session_obj.contest_id or session_obj.id}:{c_title_name}:{c_date}:{part_status}:{tot_solved_tmp}:{q1_val},{q2_val},{q3_val},{q4_val}:{score_tmp}"
-    sha_hash = hashlib.sha256(canonical_data.encode()).hexdigest()
-
-    # Auto-register CertificateRecord in Database for instant verification resolution
-    try:
-        from backend.models import CertificateRecord
-        existing_cert = db.query(CertificateRecord).filter(CertificateRecord.verification_id == trace_id).first()
-        dept_name_str = student.department.name if student.department else "Computer Science and Engineering"
-        ver_url = f"https://leetcode-student-data.web.app/verify/{trace_id}"
-
-        c_rank = f"#{contest_result.contest_rank}" if contest_result and contest_result.contest_rank else ("—")
-        c_rat = f"{contest_result.contest_rating:.2f}" if contest_result and contest_result.contest_rating else ("—")
-        from backend.time_utils import format_ist_datetime, now_utc
-        ret_ts = format_ist_datetime(now_utc())
-
-        if existing_cert:
-            existing_cert.student_name = student.name
-            existing_cert.register_no = student.reg_no
-            existing_cert.department = dept_code_str
-            existing_cert.department_name = dept_name_str
-            existing_cert.leetcode_username = username
-            existing_cert.document_type = "FORENSIC_VERIFICATION_REPORT"
-            existing_cert.certificate_type = "Official LeetCode Contest Forensic Verification Audit Report"
-            existing_cert.contest_id = session_obj.contest_id or str(session_obj.id)
-            existing_cert.contest_name = c_title_name
-            existing_cert.participation_status = part_status
-            existing_cert.problems_solved = f"{tot_solved_tmp} / 4 Problems"
-            existing_cert.contest_score = str(score_tmp)
-            existing_cert.contest_rank = c_rank
-            existing_cert.contest_rating = c_rat
-            existing_cert.q1_score = q1_val
-            existing_cert.q2_score = q2_val
-            existing_cert.q3_score = q3_val
-            existing_cert.q4_score = q4_val
-            existing_cert.sha_hash = sha_hash
-            existing_cert.retrieved_timestamp = ret_ts
-            existing_cert.status = "VALID"
-            existing_cert.verification_url = ver_url
-        else:
-            c_record = CertificateRecord(
-                verification_id=trace_id,
-                certificate_code=trace_id,
-                certificate_type="Official LeetCode Contest Forensic Verification Audit Report",
-                document_type="FORENSIC_VERIFICATION_REPORT",
-                contest_id=session_obj.contest_id or str(session_obj.id),
-                contest_name=c_title_name,
-                sha_hash=sha_hash,
-                student_id=student.id,
-                student_name=student.name,
-                register_no=student.reg_no,
-                department=dept_code_str,
-                department_name=dept_name_str,
-                leetcode_username=username,
-                participation_status=part_status,
-                problems_solved=f"{tot_solved_tmp} / 4 Problems",
-                contest_score=str(score_tmp),
-                contest_rank=c_rank,
-                contest_rating=c_rat,
-                q1_score=q1_val,
-                q2_score=q2_val,
-                q3_score=q3_val,
-                q4_score=q4_val,
-                retrieved_timestamp=ret_ts,
-                program=f"B.E. {dept_name_str}",
-                recognition=f"Official Contest Forensic Verification: {c_title_name}",
-                issue_date=session_obj.session_date or "16.08.2026",
-                status="VALID",
-                verification_url=ver_url,
-                created_by="Automated Forensic Engine"
-            )
-            db.add(c_record)
-        db.commit()
-    except Exception as db_err:
-        logger.warning(f"Note on CertificateRecord auto-registration: {db_err}")
-        db.rollback()
 
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
@@ -336,40 +214,18 @@ def generate_forensic_audit_pdf(
     story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#1E3A8A'), spaceAfter=10))
 
     # 2. Metadata Bar
-    dept_name = student.department.name if student.department else "Computer Science & Engineering"
-    dept_code = student.department.code if student.department else "CSE"
-    year_str = student.year_level or "III"
-    batch_str = "2025–2029" if year_str == "II" else ("2024–2028" if year_str == "III" else "2023–2027")
-    contest_name = derive_clean_contest_name(session_obj)
-    session_date = session_obj.session_date or "16.08.2026"
+    dept_name = dept_name_str
+    dept_code = dept_code_str
+    batch_str = st_data.get("batch") or ("2025–2029" if year_str == "II" else ("2024–2028" if year_str == "III" else "2023–2027"))
+    contest_name = c_title_name
+    session_date = c_date
 
-    q1_val = contest_result.q1 if contest_result else 0
-    q2_val = contest_result.q2 if contest_result else 0
-    q3_val = contest_result.q3 if contest_result else 0
-    q4_val = contest_result.q4 if contest_result else 0
-    tot_solved = contest_result.total_contest_solved if (contest_result and contest_result.total_contest_solved) else (
-        (1 if q1_val else 0) + (1 if q2_val else 0) + (1 if q3_val else 0) + (1 if q4_val else 0)
-    )
-    contest_score = contest_result.contest_score if (contest_result and contest_result.contest_score) else (
-        (3 if q1_val else 0) + (4 if q2_val else 0) + (5 if q3_val else 0) + (6 if q4_val else 0)
-    )
-
-    is_public = False
-    if contest_result:
-        p_raw = (contest_result.participation_status or "").upper()
-        if p_raw in ("PUBLIC_ATTENDED", "PUBLIC", "ATTENDED", "COMPLETED", "PRESENT") or tot_solved > 0 or contest_score > 0:
-            is_public = True
-
-    p_status = "PUBLIC_ATTENDED" if is_public else (
-        "VIRTUAL_ATTENDED" if virtual_result else (
-            contest_result.participation_status if contest_result else "PUBLIC_NOT_ATTENDED"
-        )
-    )
-
-    contest_rank = f"#{contest_result.contest_rank:,}" if (contest_result and contest_result.contest_rank) else "—"
-    contest_rating = str(round(float(contest_result.contest_rating), 2)) if (contest_result and contest_result.contest_rating) else (
-        str(round(float(student.stats.contest_rating), 2)) if (student.stats and student.stats.contest_rating) else "1392"
-    )
+    tot_solved = tot_solved_tmp
+    contest_score = score_tmp
+    p_status = part_status
+    contest_rank = c_rank
+    contest_rating = c_rat
+    profile_url = st_data.get("profileUrl") or f"https://leetcode.com/u/{username}"
 
     # 3. Student Identification Table
     story.append(Paragraph("1. STUDENT IDENTITY & ACADEMIC REGISTRATION", sec_header_style))
@@ -378,9 +234,9 @@ def generate_forensic_audit_pdf(
     student_data = [
         [
             Paragraph("<b>Student Full Name:</b>", body_style),
-            Paragraph(f"<b>{student.name}</b>", body_bold),
+            Paragraph(f"<b>{student_name}</b>", body_bold),
             Paragraph("<b>Register Number:</b>", body_style),
-            Paragraph(f"<b>{student.reg_no}</b>", body_bold)
+            Paragraph(f"<b>{student_reg}</b>", body_bold)
         ],
         [
             Paragraph("<b>Department:</b>", body_style),
@@ -390,9 +246,9 @@ def generate_forensic_audit_pdf(
         ],
         [
             Paragraph("<b>LeetCode Username:</b>", body_style),
-            Paragraph(f"@{student.username or 'unlinked'}", body_bold),
+            Paragraph(f"@{username}", body_bold),
             Paragraph("<b>Profile URL:</b>", body_style),
-            Paragraph(f"<font color='#2563EB'>{student.leetcode_url or 'https://leetcode.com/u/' + (student.username or '')}</font>", body_style)
+            Paragraph(f"<font color='#2563EB'>{profile_url}</font>", body_style)
         ]
     ]
 
@@ -461,28 +317,28 @@ def generate_forensic_audit_pdf(
             Paragraph("Easy / Foundational", body_style),
             Paragraph("3 Points", body_style),
             Paragraph(f"<b>{'AC (Accepted)' if q1_val == 1 else 'Not Solved'}</b>", body_style),
-            Paragraph(f"<font color='{'#16A34A' if q1_val == 1 else '#94A3B8'}'>{' 1' if q1_val == 1 else '0'}</font>", body_bold)
+            Paragraph(f"<font color='{'#16A34A' if q1_val == 1 else '#94A3B8'}'>{'1' if q1_val == 1 else '0'}</font>", body_bold)
         ],
         [
             Paragraph("Question 2 (Q2)", body_style),
             Paragraph("Medium / Data Structures", body_style),
             Paragraph("4 Points", body_style),
             Paragraph(f"<b>{'AC (Accepted)' if q2_val == 1 else 'Not Solved'}</b>", body_style),
-            Paragraph(f"<font color='{'#16A34A' if q2_val == 1 else '#94A3B8'}'>{' 1' if q2_val == 1 else '0'}</font>", body_bold)
+            Paragraph(f"<font color='{'#16A34A' if q2_val == 1 else '#94A3B8'}'>{'1' if q2_val == 1 else '0'}</font>", body_bold)
         ],
         [
             Paragraph("Question 3 (Q3)", body_style),
             Paragraph("Medium / Algorithms", body_style),
             Paragraph("5 Points", body_style),
             Paragraph(f"<b>{'AC (Accepted)' if q3_val == 1 else 'Not Solved'}</b>", body_style),
-            Paragraph(f"<font color='{'#16A34A' if q3_val == 1 else '#94A3B8'}'>{' 1' if q3_val == 1 else '0'}</font>", body_bold)
+            Paragraph(f"<font color='{'#16A34A' if q3_val == 1 else '#94A3B8'}'>{'1' if q3_val == 1 else '0'}</font>", body_bold)
         ],
         [
             Paragraph("Question 4 (Q4)", body_style),
             Paragraph("Hard / Advanced Optimization", body_style),
             Paragraph("6 Points", body_style),
             Paragraph(f"<b>{'AC (Accepted)' if q4_val == 1 else 'Not Solved'}</b>", body_style),
-            Paragraph(f"<font color='{'#16A34A' if q4_val == 1 else '#94A3B8'}'>{' 1' if q4_val == 1 else '0'}</font>", body_bold)
+            Paragraph(f"<font color='{'#16A34A' if q4_val == 1 else '#94A3B8'}'>{'1' if q4_val == 1 else '0'}</font>", body_bold)
         ]
     ]
 
@@ -502,9 +358,6 @@ def generate_forensic_audit_pdf(
     story.append(Paragraph("3. CRYPTOGRAPHIC EVIDENCE & SOURCE AUDIT TRAIL", sec_header_style))
     story.append(Spacer(1, 4))
 
-    # Use the same canonical_data computed earlier
-    sha_hash = hashlib.sha256(canonical_data.encode()).hexdigest()
-
     audit_data = [
         [
             Paragraph("<b>Forensic Trace ID:</b>", body_style),
@@ -514,15 +367,15 @@ def generate_forensic_audit_pdf(
         ],
         [
             Paragraph("<b>Source Engine:</b>", body_style),
-            Paragraph("LeetCode GraphQL API (userContestRankingHistory)", body_style),
+            Paragraph(v_data.get("sourceEngine", "LeetCode GraphQL API"), body_style),
             Paragraph("<b>Retrieved Timestamp:</b>", body_style),
-            Paragraph(datetime.datetime.now().strftime("%d %b %Y, %I:%M:%S %p IST"), body_style)
+            Paragraph(v_data.get("retrievedAt") or datetime.datetime.now().strftime("%d %b %Y, %I:%M:%S %p IST"), body_style)
         ],
         [
             Paragraph("<b>SHA-256 Checksum:</b>", body_style),
             Paragraph(f"<font size='7' color='#475569'><code>{sha_hash}</code></font>", body_style),
             Paragraph("<b>Audit Engine:</b>", body_style),
-            Paragraph("NEC Automated Verification Pipeline v2.0", body_style)
+            Paragraph(v_data.get("auditEngine", "Nandha Autonomous Forensic Audit Engine"), body_style)
         ]
     ]
 

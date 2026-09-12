@@ -190,7 +190,9 @@ def run_migrations():
                     ALTER TABLE students
                         ADD COLUMN IF NOT EXISTS primary_leetcode_id VARCHAR(100),
                         ADD COLUMN IF NOT EXISTS secondary_leetcode_id VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS secondary_status VARCHAR(50) DEFAULT 'none';
+                        ADD COLUMN IF NOT EXISTS secondary_status VARCHAR(50) DEFAULT 'none',
+                        ADD COLUMN IF NOT EXISTS accommodation VARCHAR(50),
+                        ADD COLUMN IF NOT EXISTS twelfth_cutoff DOUBLE PRECISION;
 
                     ALTER TABLE student_contest_participations
                         ADD COLUMN IF NOT EXISTS official_attendance_state VARCHAR(30),
@@ -337,6 +339,15 @@ def run_migrations():
                     ("created_at",            "ALTER TABLE weekly_sessions ADD COLUMN created_at DATETIME"),
                     ("completed_at",          "ALTER TABLE weekly_sessions ADD COLUMN completed_at DATETIME"),
                     ("finalized_at",          "ALTER TABLE weekly_sessions ADD COLUMN finalized_at DATETIME"),
+                    ("manual_review_required_at", "ALTER TABLE weekly_sessions ADD COLUMN manual_review_required_at DATETIME"),
+                    ("manual_review_reason",  "ALTER TABLE weekly_sessions ADD COLUMN manual_review_reason TEXT"),
+                    ("last_successful_source_fetch", "ALTER TABLE weekly_sessions ADD COLUMN last_successful_source_fetch DATETIME"),
+                    ("last_reconciliation_attempt",  "ALTER TABLE weekly_sessions ADD COLUMN last_reconciliation_attempt DATETIME"),
+                    ("reconciliation_failure_count", "ALTER TABLE weekly_sessions ADD COLUMN reconciliation_failure_count INTEGER DEFAULT 0"),
+                    ("last_error_code",       "ALTER TABLE weekly_sessions ADD COLUMN last_error_code VARCHAR(100)"),
+                    ("last_error_message_safe", "ALTER TABLE weekly_sessions ADD COLUMN last_error_message_safe TEXT"),
+                    ("finalization_method",   "ALTER TABLE weekly_sessions ADD COLUMN finalization_method VARCHAR(50)"),
+                    ("finalized_by",          "ALTER TABLE weekly_sessions ADD COLUMN finalized_by VARCHAR(150)"),
                 ]
                 for col_name, sql in sess_migrations:
                     if col_name not in sess_cols:
@@ -549,6 +560,14 @@ def run_migrations():
                     conn.execute(__import__('sqlalchemy').text("ALTER TABLE students ADD COLUMN email_status VARCHAR(50) DEFAULT 'pending'"))
                     conn.commit()
                     print("[DB Migration] Added students column: email_status")
+                if "accommodation" not in st_cols:
+                    conn.execute(__import__('slate_text' if False else 'sqlalchemy').text("ALTER TABLE students ADD COLUMN accommodation VARCHAR(50)"))
+                    conn.commit()
+                    print("[DB Migration] Added students column: accommodation")
+                if "twelfth_cutoff" not in st_cols:
+                    conn.execute(__import__('sqlalchemy').text("ALTER TABLE students ADD COLUMN twelfth_cutoff FLOAT"))
+                    conn.commit()
+                    print("[DB Migration] Added students column: twelfth_cutoff")
 
             # Check messages table columns for WhatsApp-style messaging
             try:

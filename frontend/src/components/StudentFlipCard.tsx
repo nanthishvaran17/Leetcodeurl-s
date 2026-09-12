@@ -355,19 +355,35 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                   <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 min-w-0">
                     <span className="text-slate-400 font-bold block uppercase tracking-tight">Rating</span>
                     <span className="font-mono font-black text-amber-600 dark:text-amber-400 text-[11px] truncate block">
-                      {isSolver && student.stats?.contest_rating ? student.stats.contest_rating.toLocaleString('en-US', { minimumFractionDigits: 1 }) : '—'}
+                      {(() => {
+                        const status = (student as any).contest_status || 'NOT_ATTENDED';
+                        const isAttended = status === 'PUBLIC_ATTENDED' || status === 'PUBLIC' || status === 'ATTENDED' || status === 'VIRTUAL_ATTENDED' || status === 'VIRTUAL';
+                        const rawRating = student.stats?.contest_rating ?? (student as any).contest_rating;
+                        if (!isAttended || !rawRating) return '—';
+                        return Number(rawRating).toLocaleString('en-US', { minimumFractionDigits: 1 });
+                      })()}
                     </span>
                   </div>
                   <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 min-w-0">
                     <span className="text-slate-400 font-bold block uppercase tracking-tight">Contest Rank</span>
                     <span className="font-mono font-black text-indigo-600 dark:text-indigo-400 text-[11px] truncate block">
-                      {isSolver && student.stats?.contest_global_ranking ? `#${student.stats.contest_global_ranking.toLocaleString('en-US')}` : '—'}
+                      {(() => {
+                        const status = (student as any).contest_status || 'NOT_ATTENDED';
+                        const isAttended = status === 'PUBLIC_ATTENDED' || status === 'PUBLIC' || status === 'ATTENDED' || status === 'VIRTUAL_ATTENDED' || status === 'VIRTUAL';
+                        const rawRank = student.stats?.contest_global_ranking ?? (student as any).contest_global_ranking;
+                        if (!isAttended || !rawRank || rawRank === 50000) return '—';
+                        return `#${Number(rawRank).toLocaleString('en-US')}`;
+                      })()}
                     </span>
                   </div>
                   <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 min-w-0">
-                    <span className="text-slate-400 font-bold block uppercase tracking-tight">Profile Rank</span>
+                    <span className="text-slate-400 font-bold uppercase block tracking-tight">Profile Rank</span>
                     <span className="font-mono font-black text-slate-700 dark:text-slate-300 text-[11px] truncate block">
-                      {isSolver && student.stats?.public_profile_ranking ? `#${student.stats.public_profile_ranking.toLocaleString('en-US')}` : '—'}
+                      {(() => {
+                        const rawProfileRank = student.stats?.public_profile_ranking ?? (student as any).public_profile_ranking;
+                        if (!rawProfileRank || rawProfileRank >= 5000000 || rawProfileRank <= 0) return '—';
+                        return `#${Number(rawProfileRank).toLocaleString('en-US')}`;
+                      })()}
                     </span>
                   </div>
                 </div>

@@ -25,6 +25,49 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
   const [activeStep, setActiveStep] = useState<number>(1);
   const [createdStaffSummary, setCreatedStaffSummary] = useState<any | null>(null);
 
+  // Helper map for Academic Years -> Year designation & styling
+  const getAcademicYearMeta = (y: string) => {
+    const str = y.trim();
+    if (str.includes('2023') || str.includes('2027') || /\b(4|iv)\b/i.test(str)) {
+      return {
+        badge: 'IV Year',
+        label: str,
+        sublabel: 'Final Year Mentorship Roster',
+        badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30'
+      };
+    }
+    if (str.includes('2024') || str.includes('2028') || /\b(3|iii)\b/i.test(str)) {
+      return {
+        badge: 'III Year',
+        label: str,
+        sublabel: 'Pre-Final Year Mentorship Roster',
+        badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30'
+      };
+    }
+    if (str.includes('2025') || str.includes('2029') || /\b(2|ii)\b/i.test(str)) {
+      return {
+        badge: 'II Year',
+        label: str,
+        sublabel: 'Second Year Mentorship Roster',
+        badgeColor: 'bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 border border-sky-200 dark:border-sky-500/30'
+      };
+    }
+    if (str.includes('2026') || str.includes('2030') || /\b(1|i)\b/i.test(str)) {
+      return {
+        badge: 'I Year',
+        label: str,
+        sublabel: 'First Year Mentorship Roster',
+        badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30'
+      };
+    }
+    return {
+      badge: str.length <= 4 ? `${str} Yr` : str.split('-')[0],
+      label: str,
+      sublabel: `Academic Batch (${str})`,
+      badgeColor: 'bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-300 border border-brand-200 dark:border-brand-500/30'
+    };
+  };
+
   // Derive dynamic Academic Year options from live students, with fallback
   const academicYearOptions = useMemo(() => {
     const students = Object.values(studentLiveStore.getAllEntities());
@@ -36,18 +79,23 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
     years.add('2026-2030');
 
     students.forEach((s: any) => {
-      if (s.academic_year) {
+      if (s.academic_year && s.academic_year.trim()) {
         years.add(s.academic_year.trim());
       }
     });
     
     const sortedYears = Array.from(years).sort((a, b) => (a > b ? 1 : -1));
 
-    const options: DropdownOption[] = sortedYears.map(y => ({
-      value: y,
-      label: y.length <= 4 ? `${y} Year` : y,
-      badge: y.substring(0, 5),
-    }));
+    const options: DropdownOption[] = sortedYears.map(y => {
+      const meta = getAcademicYearMeta(y);
+      return {
+        value: y,
+        label: meta.label,
+        badge: meta.badge,
+        badgeColor: meta.badgeColor,
+        sublabel: meta.sublabel,
+      };
+    });
 
     return options;
   }, [storeVersion]);
@@ -142,6 +190,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [roleOpen, setRoleOpen] = useState(false);
   const roleRef = useRef<HTMLDivElement>(null);
+  const formContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -152,6 +201,72 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
     if (roleOpen) document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [roleOpen]);
+
+  // Unique Username Generator (with dynamic candidate cycling on repeated clicks)
+  const generateUniqueUsername = () => {
+    const existing = new Set((staffList || []).map((s: any) => (s.username || '').toLowerCase().trim()));
+    
+    let raw = (formData.full_name || '').trim().toLowerCase();
+    // Strip common honorifics: Dr., Prof., Mr., Mrs., Ms., Er.
+    raw = raw.replace(/^(dr|prof|mr|mrs|ms|er)\.?\s+/i, '');
+    let clean = raw.replace(/[^a-z0-9\s.]/g, '').trim();
+    if (!clean) clean = 'staff';
+    
+    const parts = clean.split(/[\s.]+/).filter(Boolean);
+    const firstName = parts[0] || 'staff';
+    const lastName = parts.length > 1 ? parts[parts.length - 1] : '';
+    
+    const deptObj = departments.find(d => String(d.id) === String(formData.department_id));
+    const deptCode = (deptObj?.code || deptObj?.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    const isMentor = ['Faculty Mentor', 'Staff Mentor'].includes(formData.role);
+    const roleTag = isMentor ? 'fac' : ['Department HOD'].includes(formData.role) ? 'hod' : 'adm';
+
+    const rawCandidates: string[] = [];
+    
+    if (firstName) rawCandidates.push(firstName);
+    if (firstName && lastName) rawCandidates.push(`${firstName}.${lastName}`);
+    if (firstName && deptCode) rawCandidates.push(`${firstName}.${deptCode}`);
+    if (firstName && roleTag) rawCandidates.push(`${firstName}.${roleTag}`);
+    if (firstName && lastName && deptCode) rawCandidates.push(`${firstName}.${lastName}.${deptCode}`);
+    if (firstName) rawCandidates.push(`${firstName}.nec`);
+    if (firstName) rawCandidates.push(`${firstName}01`);
+    if (firstName) rawCandidates.push(`${firstName}02`);
+    if (firstName) rawCandidates.push(`${firstName}03`);
+    if (firstName) rawCandidates.push(`${firstName}.staff`);
+
+    // Deduplicate candidates preserving order & filter out already taken usernames in DB/staffList
+    const validCandidates: string[] = [];
+    const seen = new Set<string>();
+    
+    for (const c of rawCandidates) {
+      const lower = c.toLowerCase();
+      if (!seen.has(lower) && !existing.has(lower)) {
+        seen.add(lower);
+        validCandidates.push(c);
+      }
+    }
+
+    if (validCandidates.length === 0) {
+      let suffix = 1;
+      while (existing.has(`${firstName}${suffix.toString().padStart(2, '0')}`)) {
+        suffix++;
+      }
+      validCandidates.push(`${firstName}${suffix.toString().padStart(2, '0')}`);
+    }
+
+    const currentVal = (formData.username || '').trim().toLowerCase();
+    const currentIndex = validCandidates.findIndex(c => c.toLowerCase() === currentVal);
+
+    let nextIndex = 0;
+    if (currentIndex !== -1) {
+      nextIndex = (currentIndex + 1) % validCandidates.length;
+    }
+
+    const chosen = validCandidates[nextIndex];
+    setFormData(prev => ({ ...prev, username: chosen }));
+    if (formErrors.username) setFormErrors(prev => ({ ...prev, username: '' }));
+  };
 
   // DOB Formatter
   const handleDOBChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -209,14 +324,24 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
       }
     } else if (step === 2) {
       if (!formData.full_name.trim()) errors.full_name = 'Full legal name is required';
-      if (!formData.username.trim()) errors.username = 'Username is required';
+      if (!formData.username.trim()) {
+        errors.username = 'Username is required';
+      } else {
+        const uLower = formData.username.trim().toLowerCase();
+        const exists = (staffList || []).some((s: any) => (s.username || '').toLowerCase().trim() === uLower);
+        if (exists) {
+          errors.username = `Username '@${formData.username.trim()}' is already used by another staff member. Please click 'Suggest Username' or choose another handle.`;
+        }
+      }
       if (!formData.password) errors.password = 'Initial password is required';
       else if (!allReqsMet) errors.password = 'Password does not meet institutional requirements';
       if (formData.password && !passwordsMatch) errors.confirm_password = 'Passwords do not match';
     } else if (step === 3) {
-      if (!formData.email.trim() || !formData.email.includes('@')) errors.email = 'Valid official college email required';
+      if (!formData.email.trim() || !formData.email.includes('@') || !formData.email.includes('.')) errors.email = 'Valid email address required (official or personal)';
       if (!formData.phone_number.trim()) errors.phone_number = 'Phone number is required';
-      if (formData.date_of_birth && !isValidDate(formData.date_of_birth)) errors.date_of_birth = 'Invalid calendar date (DD/MM/YYYY)';
+      if (!formData.institutional_id.trim()) errors.institutional_id = 'Institutional Staff ID is required';
+      if (!formData.date_of_birth.trim()) errors.date_of_birth = 'Date of birth is required';
+      else if (!isValidDate(formData.date_of_birth)) errors.date_of_birth = 'Invalid calendar date (DD/MM/YYYY)';
     } else if (step === 5) {
       if (!formData.consent_checked) errors.consent = 'Please acknowledge the Institutional Compliance & Authorization statement.';
     }
@@ -247,14 +372,22 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
     // Validate all required steps before submit
     const errors: Record<string, string> = {};
     if (!formData.full_name.trim()) errors.full_name = 'Required';
-    if (!formData.username.trim()) errors.username = 'Required';
-    if (!formData.email.trim()) errors.email = 'Required';
+    if (!formData.username.trim()) {
+      errors.username = 'Required';
+    } else {
+      const uLower = formData.username.trim().toLowerCase();
+      const exists = (staffList || []).some((s: any) => (s.username || '').toLowerCase().trim() === uLower);
+      if (exists) {
+        errors.username = `Username '@${formData.username.trim()}' is already taken by another staff member.`;
+      }
+    }
+    if (!formData.email.trim() || !formData.email.includes('@') || !formData.email.includes('.')) errors.email = 'Valid email address required';
     if (!formData.phone_number.trim()) errors.phone_number = 'Required';
+    if (!formData.institutional_id.trim()) errors.institutional_id = 'Required';
+    if (!formData.date_of_birth.trim()) errors.date_of_birth = 'Required';
+    else if (!isValidDate(formData.date_of_birth)) errors.date_of_birth = 'Invalid calendar date';
     if (['Faculty Mentor', 'Staff Mentor'].includes(formData.role) && !formData.academic_year) {
       errors.academic_year = 'Required for Mentors';
-    }
-    if (formData.date_of_birth && !isValidDate(formData.date_of_birth)) {
-      errors.date_of_birth = 'Invalid calendar date';
     }
     if (!allReqsMet) errors.password = 'Password does not meet requirements';
     if (formData.password && !passwordsMatch) errors.confirm_password = 'Passwords do not match';
@@ -262,6 +395,13 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
+      // Auto-jump to earliest step containing an unfulfilled error
+      if (errors.academic_year) setActiveStep(1);
+      else if (errors.full_name || errors.username || errors.password || errors.confirm_password) setActiveStep(2);
+      else if (errors.email || errors.phone_number || errors.institutional_id || errors.date_of_birth) setActiveStep(3);
+      else if (errors.consent) setActiveStep(5);
+
+      formContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
       notify.error('Please fix the highlighted errors before submitting.', '', { category: 'ADMIN' });
       return;
     }
@@ -316,7 +456,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
   const stepsList = [
     { num: 1, id: '01', title: 'Role & Academic Scope', icon: Building2, desc: 'Institutional role & scope' },
-    { num: 2, id: '02', title: 'Identity & Credentials', icon: User, desc: 'Name, login & password' },
+    { num: 2, id: '02', title: 'Identity & Credentials', icon: User, desc: 'Name, login & password (Mandatory)' },
     { num: 3, id: '03', title: 'Contact Information', icon: Mail, desc: 'Email, phone & DOB' },
     { num: 4, id: '04', title: 'Staff Verification', icon: FileCheck, desc: 'ID proof & reporting line' },
     { num: 5, id: '05', title: 'Permissions & Agreement', icon: Shield, desc: 'Permissions & authorization' },
@@ -500,8 +640,27 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
             </div>
 
             {/* RIGHT FORM CONTENT PANEL */}
-            <div className="flex-1 overflow-y-auto p-6 sm:p-8 pb-12 custom-scrollbar">
+            <div ref={formContainerRef} className="flex-1 overflow-y-auto p-6 sm:p-8 pb-12 custom-scrollbar">
               
+              {Object.keys(formErrors).length > 0 && (
+                <div className="mb-6 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border-2 border-rose-400 dark:border-rose-700 flex items-start gap-3 text-rose-900 dark:text-rose-100 shadow-md animate-shake">
+                  <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-rose-950 dark:text-rose-100">
+                      Action Required: Please Fix Highlighted Errors
+                    </h4>
+                    <ul className="text-xs font-bold mt-2 space-y-1.5 text-rose-800 dark:text-rose-300">
+                      {Object.entries(formErrors).map(([key, msg]) => (
+                        <li key={key} className="flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+                          <span>{msg}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
               {submitError && (
                 <div className="mb-6 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 flex items-start gap-3 text-rose-800 dark:text-rose-300 animate-fade-in">
                   <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
@@ -620,9 +779,9 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                         )}
                       </div>
 
-                      {/* Academic Year Cohort */}
+                      {/* Academic Year */}
                       <div className="space-y-1.5">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Academic Year Cohort *</label>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Academic Year *</label>
                         {isGlobalRole ? (
                           <div className="w-full min-h-[48px] flex items-center px-4 py-2.5 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-navy-800/40">
                             <span className="text-xs font-black text-slate-600 dark:text-slate-300">All Years (Global Access)</span>
@@ -642,7 +801,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
                       {/* Mentoring Designation */}
                       <div className="space-y-1.5 col-span-1 sm:col-span-2">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Mentoring Designation</label>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Mentoring Designation (Optional)</label>
                         <input
                           type="text"
                           value={formData.designation}
@@ -692,14 +851,37 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                       {/* Username */}
                       <div className="space-y-1.5 col-span-1 sm:col-span-2">
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Username *</label>
-                        <input
-                          type="text"
-                          value={formData.username}
-                          onChange={e => setFormData({...formData, username: e.target.value})}
-                          placeholder="e.g. ramanathan.dept"
-                          className={`w-full h-12 px-4 rounded-2xl border ${formErrors.username ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
-                        />
-                        {formErrors.username && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.username}</p>}
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={formData.username}
+                            onChange={e => {
+                              const val = e.target.value;
+                              setFormData(prev => ({ ...prev, username: val }));
+                              if (formErrors.username) setFormErrors(prev => ({ ...prev, username: '' }));
+                            }}
+                            placeholder="e.g. ramanathan.dept"
+                            className={`flex-1 h-12 px-4 rounded-2xl border ${formErrors.username ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
+                          />
+                          <button
+                            type="button"
+                            onClick={generateUniqueUsername}
+                            className="h-12 px-4 rounded-2xl bg-brand-100 dark:bg-brand-500/20 text-brand-700 dark:text-brand-300 text-xs font-bold hover:bg-brand-200 transition-all flex items-center shrink-0 cursor-pointer"
+                            title="Auto-suggest unique username"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 mr-1.5" /> Suggest Username
+                          </button>
+                        </div>
+                        {formErrors.username ? (
+                          <p className="text-[10px] text-rose-500 font-bold ml-1 flex items-center gap-1">
+                            <AlertCircle size={12} className="shrink-0" />
+                            <span>{formErrors.username}</span>
+                          </p>
+                        ) : (
+                          <p className="text-[10px] text-slate-400 font-semibold ml-1">
+                            Unique staff login handle. Click "Suggest Username" to generate a unique handle.
+                          </p>
+                        )}
                       </div>
 
                       {/* Password */}
@@ -814,14 +996,14 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       
-                      {/* Official Email */}
+                      {/* Email Address */}
                       <div className="space-y-1.5 col-span-1 sm:col-span-2">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Official College Email *</label>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Email Address (Official / Primary) *</label>
                         <input
                           type="email"
                           value={formData.email}
                           onChange={e => setFormData({...formData, email: e.target.value})}
-                          placeholder="faculty@nandhaengg.org"
+                          placeholder="faculty@nandhaengg.org or name@gmail.com"
                           className={`w-full h-12 px-4 rounded-2xl border ${formErrors.email ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
                         />
                         {formErrors.email && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.email}</p>}
@@ -842,7 +1024,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
                       {/* Date of Birth */}
                       <div className="space-y-1.5">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Date of Birth (Optional)</label>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Date of Birth *</label>
                         <input
                           type="text"
                           name="staff_dob_ignore_autofill"
@@ -858,14 +1040,14 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
                       {/* Institutional ID */}
                       <div className="space-y-1.5 col-span-1 sm:col-span-2">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Institutional Staff ID</label>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-200">Institutional Staff ID *</label>
                         <div className="flex gap-2">
                           <input
                             type="text"
                             value={formData.institutional_id}
                             onChange={e => setFormData({...formData, institutional_id: e.target.value})}
-                            placeholder="e.g. NEC-STAFF-098"
-                            className="flex-1 h-12 px-4 rounded-2xl border border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all"
+                            placeholder="e.g. NEC-STAFF-FAC-098"
+                            className={`flex-1 h-12 px-4 rounded-2xl border ${formErrors.institutional_id ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
                           />
                           <button
                             type="button"
@@ -879,6 +1061,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                             <Sparkles className="w-3.5 h-3.5 mr-1.5" /> Generate ID
                           </button>
                         </div>
+                        {formErrors.institutional_id && <p className="text-[10px] text-rose-500 font-bold ml-1">{formErrors.institutional_id}</p>}
                       </div>
 
                     </div>
@@ -1059,69 +1242,84 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
         {/* FOOTER ACTIONS */}
         {!createdStaffSummary && (
-          <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-slate-50/95 dark:bg-navy-950/95 border-t border-slate-200 dark:border-navy-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 z-20 pb-[calc(0.85rem+env(safe-area-inset-bottom,0px))]">
-            <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
-              <span className="text-xs font-mono font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                Step {activeStep} of 5
-              </span>
-              <div className="flex-1 sm:w-36 h-2 rounded-full bg-slate-200 dark:bg-navy-800 overflow-hidden">
-                <div className="h-full bg-brand-600 transition-all duration-300" style={{ width: `${progressPercent}%` }} />
+          <div className="flex flex-col shrink-0">
+            {Object.keys(formErrors).length > 0 && (
+              <div className="px-6 py-2.5 bg-rose-100/90 dark:bg-rose-950/70 border-t border-rose-300 dark:border-rose-800 text-xs font-extrabold text-rose-900 dark:text-rose-200 flex items-center justify-between gap-2 animate-shake z-30">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                  <span>Form incomplete: Please fix highlighted error(s) above before submitting.</span>
+                </div>
+                {formErrors.consent && (
+                  <span className="text-[11px] font-black uppercase bg-rose-200 dark:bg-rose-900/80 text-rose-800 dark:text-rose-200 px-2 py-0.5 rounded">
+                    Check box on Step 5 required
+                  </span>
+                )}
               </div>
-              <span className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400 whitespace-nowrap">
-                {progressPercent}%
-              </span>
-            </div>
+            )}
+            <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-slate-50/95 dark:bg-navy-950/95 border-t border-slate-200 dark:border-navy-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 z-20 pb-[calc(0.85rem+env(safe-area-inset-bottom,0px))]">
+              <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
+                <span className="text-xs font-mono font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                  Step {activeStep} of 5
+                </span>
+                <div className="flex-1 sm:w-36 h-2 rounded-full bg-slate-200 dark:bg-navy-800 overflow-hidden">
+                  <div className="h-full bg-brand-600 transition-all duration-300" style={{ width: `${progressPercent}%` }} />
+                </div>
+                <span className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400 whitespace-nowrap">
+                  {progressPercent}%
+                </span>
+              </div>
 
-            <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={isSubmitting}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-navy-800 transition-all cursor-pointer min-h-[44px] flex items-center justify-center"
-              >
-                Cancel
-              </button>
+              <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  disabled={isSubmitting}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-navy-800 transition-all cursor-pointer min-h-[44px] flex items-center justify-center"
+                >
+                  Cancel
+                </button>
 
-              <div className="flex items-center gap-2">
-                {activeStep > 1 && (
-                  <button
-                    type="button"
-                    onClick={handlePrevStep}
-                    disabled={isSubmitting}
-                    className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-navy-800 border border-slate-200 dark:border-navy-700 hover:bg-slate-50 transition-all flex items-center gap-1 cursor-pointer min-h-[44px]"
-                  >
-                    <ChevronLeft className="w-4 h-4" /> Back
-                  </button>
-                )}
+                <div className="flex items-center gap-2">
+                  {activeStep > 1 && (
+                    <button
+                      type="button"
+                      onClick={handlePrevStep}
+                      disabled={isSubmitting}
+                      className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-navy-800 border border-slate-200 dark:border-navy-700 hover:bg-slate-50 transition-all flex items-center gap-1 cursor-pointer min-h-[44px]"
+                    >
+                      <ChevronLeft className="w-4 h-4" /> Back
+                    </button>
+                  )}
 
-                {activeStep < 5 ? (
-                  <button
-                    type="button"
-                    onClick={handleNextStep}
-                    className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 transition-all shadow-md shadow-brand-500/20 flex items-center gap-1.5 cursor-pointer min-h-[44px]"
-                  >
-                    Continue <ChevronRight className="w-4 h-4" />
-                  </button>
-                ) : (
-                  <button
-                    form="create-staff-form"
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="px-5 py-2.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 transition-all shadow-lg shadow-brand-500/25 flex items-center gap-2 cursor-pointer min-h-[44px]"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Creating...
-                      </>
-                    ) : (
-                      <>
-                        <ShieldCheck className="w-4 h-4" />
-                        Create Institutional Account
-                      </>
-                    )}
-                  </button>
-                )}
+                  {activeStep < 5 ? (
+                    <button
+                      type="button"
+                      onClick={handleNextStep}
+                      className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 transition-all shadow-md shadow-brand-500/20 flex items-center gap-1.5 cursor-pointer min-h-[44px]"
+                    >
+                      Continue <ChevronRight className="w-4 h-4" />
+                    </button>
+                  ) : (
+                    <button
+                      form="create-staff-form"
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="px-5 py-2.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 transition-all shadow-lg shadow-brand-500/25 flex items-center gap-2 cursor-pointer min-h-[44px]"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Creating...
+                        </>
+                      ) : (
+                        <>
+                          <ShieldCheck className="w-4 h-4" />
+                          Create Institutional Account
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

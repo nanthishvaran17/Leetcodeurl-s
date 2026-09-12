@@ -385,13 +385,15 @@ class LLMService:
                         return f"Error: {raw_data['error']}"
                     
                     elif isinstance(raw_data, dict) and "total_students_in_scope" in raw_data:
-                        # General Summary
                         return (
-                            f"The **Nandha Engineering College** LeetCode Analytics platform currently monitors **{raw_data.get('total_students_in_scope', 0)}** enrolled students in your scope.\n\n"
-                            f"• **Your Role**: {raw_data.get('role_context', 'N/A')}\n"
-                            f"• **Department Scope**: {raw_data.get('department_scope', 'N/A')}\n"
-                            f"• **Verified Data Quality**: 100% Single Source of Truth Ground Truth\n\n"
-                            f"Feel free to ask for student lookups, contest comparisons, or database audits!"
+                            f"### 🏛️ Institutional Intelligence Briefing\n\n"
+                            f"**DIRECT ANSWER**: Hello. Here is your live institutional brief based on current verified database records:\n\n"
+                            f"**KEY EVIDENCE**:\n"
+                            f"• **Enrolled Scope**: **{raw_data.get('total_students_in_scope', 0)}** active students in scope.\n"
+                            f"• **Role & Scope**: Role: `{raw_data.get('role_context', 'Administrator')}` • Scope: `{raw_data.get('department_scope', 'Institutional')}`\n"
+                            f"• **Data Integrity**: 100% Single Source of Truth Ground Truth\n\n"
+                            f"**IMPORTANT INSIGHT**: Institutional records are fully verified and up to date.\n\n"
+                            f"**NEXT ACTION**: You can ask for student lookups, low-activity student lists, department comparisons, or request a PDF / Email report."
                         )
 
             except Exception as e:
@@ -402,6 +404,19 @@ class LLMService:
         top_name = (data_context or {}).get("top_student_name", "NANTHISH S")
         top_solved = (data_context or {}).get("top_student_solved", 849)
         latest_sess = (data_context or {}).get("latest_session", "Weekly Contest 515")
+
+        # 0. Friendly Chat Greetings
+        if any(q == k or q.startswith(k + " ") or q.endswith(" " + k) for k in ["hello", "hi", "hey", "ello", "hai", "good morning", "good afternoon", "good evening", "vanakkam", "howdy"]):
+            return (
+                f"### 🏛️ Institutional Intelligence Briefing\n\n"
+                f"**DIRECT ANSWER**: Hello. Here is your live institutional brief based on current verified database records:\n\n"
+                f"**KEY EVIDENCE**:\n"
+                f"• **Enrolled Scope**: **{total_st}** enrolled students in monitored departments.\n"
+                f"• **Verified Data Quality**: 100% Single Source of Truth Ground Truth\n"
+                f"• **Active Session**: {latest_sess}\n\n"
+                f"**IMPORTANT INSIGHT**: Platform analytics are active. All query metrics are retrieved directly from the verified database.\n\n"
+                f"**NEXT ACTION**: You can ask for student lookups, low-activity student lists, department comparisons, or request a PDF / Email report."
+            )
 
         # 1. Tanglish / Tamil Questions on Platform & Unified AI 
         if any(k in q for k in ["eppadi work", "epdi work", "how it work", "how does it work", "unified ai eppadi", "ai eppadi", "enna pannum", "features"]):

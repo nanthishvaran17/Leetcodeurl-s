@@ -240,7 +240,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     snapshot_id = str(dataset.get("snapshotId") or dataset.get("snapshot_id") or dataset.get("reportId") or f"SESSION_{calculate_contest_number(_prev_sun)}_OFFICIAL")
     gen_time_str = dataset.get("generatedAtIST") or datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")
 
-    depts_present = sorted(list({r["dept"] for r in rows}))
+    depts_present = sorted(list({r["dept"] for r in rows if not ("TEST" in r["dept"].upper())}))
     years_present = sorted(list({r["year"] for r in rows}))
 
     if len(depts_present) == 1 and len(years_present) == 1:

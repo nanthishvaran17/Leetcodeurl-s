@@ -137,6 +137,11 @@ export const ChatWindow: React.FC<Props> = ({
   const [isSending, setIsSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const textInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    textInputRef.current?.focus();
+  }, [conversation?.conversationId]);
   const [chatWallpaper, setChatWallpaper] = useState<ChatWallpaper>(() => {
     return (localStorage.getItem('chat_wallpaper_theme') as ChatWallpaper) || 'default';
   });
@@ -278,6 +283,7 @@ export const ChatWindow: React.FC<Props> = ({
       notify.error('Send Error', err?.response?.data?.detail || 'Failed to send message.');
     } finally {
       setIsSending(false);
+      setTimeout(() => textInputRef.current?.focus(), 30);
     }
   };
 
@@ -887,6 +893,7 @@ export const ChatWindow: React.FC<Props> = ({
           </button>
 
           <input
+            ref={textInputRef}
             type="text"
             placeholder={editingMessage ? "Update message..." : "Type your message..."}
             value={inputText}

@@ -31,12 +31,13 @@ export const GlobalDataProvider: React.FC<{ children: ReactNode }> = ({ children
     }
   }, [queryClient]);
 
-  // Listen for sync-level events only.
-  // STUDENT_UPDATED patching is handled exclusively by LiveEventRouter to avoid dual-write.
+  // Listen for sync and import level events
   const { isConnected } = useLiveLeaderboard((data) => {
-    if (data?.type === 'sync_complete' || data?.type === 'SYNC_COMPLETED') {
+    if (data?.type === 'sync_complete' || data?.type === 'SYNC_COMPLETED' || data?.type === 'IMPORT_COMPLETED' || data?.type === 'DEPARTMENT_CREATED') {
+      queryClient.invalidateQueries({ queryKey: ['departments'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['sync'] });
+      queryClient.invalidateQueries({ queryKey: ['students'] });
     } else if (data?.type === 'sync_progress') {
       queryClient.setQueryData(['dashboard', 'summary'], (prev: any) => {
         if (!prev) return prev;

@@ -78,7 +78,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
   const registerFCMDeviceToken = useCallback(async (fcmToken: string, platform: string = 'web'): Promise<boolean> => {
     if (!token) return false;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/notifications/register-device`, {
+      const res = await fetch(`${API_BASE_URL}/notifications/register-device`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -107,7 +107,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
   const fetchPreferences = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/notifications/preferences`, {
+      const res = await fetch(`${API_BASE_URL}/notifications/preferences`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -122,7 +122,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
   const updatePreferences = async (newPrefs: NotificationPreferences) => {
     if (!token) return false;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/notifications/preferences`, {
+      const res = await fetch(`${API_BASE_URL}/notifications/preferences`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -143,7 +143,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
   const fetchFromBackendAPI = useCallback(async () => {
     if (!token) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/notifications`, {
+      const res = await fetch(`${API_BASE_URL}/notifications`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -331,7 +331,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
 
     if (token) {
       try {
-        await fetch(`${API_BASE_URL}/api/notifications/${notificationId}/read`, {
+        await fetch(`${API_BASE_URL}/notifications/${notificationId}/read`, {
           method: 'PUT',
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -350,7 +350,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
 
     if (token) {
       try {
-        await fetch(`${API_BASE_URL}/api/notifications/mark-all-read`, {
+        await fetch(`${API_BASE_URL}/notifications/mark-all-read`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -369,7 +369,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
 
     if (token) {
       try {
-        await fetch(`${API_BASE_URL}/api/notifications/${notificationId}`, {
+        await fetch(`${API_BASE_URL}/notifications/${notificationId}`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` }
         });

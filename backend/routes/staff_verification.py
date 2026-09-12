@@ -348,7 +348,7 @@ def verify_staff(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Reviewer action: Marks status as VERIFIED."""
+    """Reviewer action: Marks status as VERIFIED and synchronizes verified staff profile & role."""
     if not _is_reviewer(current_user):
         raise HTTPException(status_code=403, detail="Unauthorized verification action.")
 
@@ -362,9 +362,38 @@ def verify_staff(
     v.rejection_reason = None
     v.updated_at = datetime.datetime.utcnow()
 
+    # Synchronize verified attributes to main User profile
+    u = v.user
+    if u:
+        if v.employee_id:
+            u.institutional_id = v.employee_id
+        if v.designation:
+            u.designation = v.designation
+        if v.department_id:
+            u.department_id = v.department_id
+        if v.reporting_to_user_id:
+            u.reporting_manager_id = v.reporting_to_user_id
+        u.is_active = True
+
+        # Role upgrade logic if currently generic/unverified
+        role_clean = (u.role or "").strip().lower()
+        desig_clean = (v.designation or "").strip().lower()
+        if role_clean in ("student", "viewer", "unverified", "pending", "guest"):
+            if "hod" in desig_clean or "head of department" in desig_clean:
+                u.role = "HOD"
+            else:
+                u.role = "Staff"
+
+        # Invalidate fast auth cache
+        try:
+            from backend.cache import cache
+            cache.delete(f"user_auth_{u.id}")
+        except Exception:
+            pass
+
     db.commit()
 
-    return {"message": "Staff verification approved.", "status": "VERIFIED"}
+    return {"message": "Staff verification approved and user profile synchronized.", "status": "VERIFIED"}
 
 
 @router.post("/{verification_id}/reject")

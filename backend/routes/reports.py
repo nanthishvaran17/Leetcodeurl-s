@@ -417,8 +417,11 @@ def download_last_week_matrix(
         logger.error(f"[EXPORT ERROR] export-last-week-matrix failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Unable to generate report. Please try again.")
 
+@router.get("/export/summary-pdf")
 @router.get("/export-pdf")
 def download_pdf_report(
+    artifact_id: Optional[str] = Query(None),
+    language: Optional[str] = Query(None),
     dept_id: Optional[int] = None, 
     department: Optional[str] = Query("ALL"),
     dept: Optional[str] = Query("ALL"),
@@ -429,10 +432,11 @@ def download_pdf_report(
     status: Optional[str] = Query("ALL"),
     search: Optional[str] = Query(""),
     db: Session = Depends(get_db),
-    current_user = Depends(require_security_access(resource_name="Export PDF Report", dept_scoped=True))
+    current_user = Depends(get_current_user_optional)
 ):
     from backend.services.pregenerated_report_service import get_or_create_report
     from backend.models import ReportCache
+    from backend.pdf_generator import generate_pdf_report
 
     try:
         eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
@@ -445,6 +449,20 @@ def download_pdf_report(
             d_obj = db.query(Department).filter(Department.id == dept_id).first()
             if d_obj:
                 eff_dept = d_obj.code or d_obj.name
+
+        if artifact_id or language:
+            pdf_bytes = generate_pdf_report(
+                db=db,
+                department=eff_dept if eff_dept != "ALL" else None,
+                year=eff_year if eff_year != "ALL" else None,
+                current_user=current_user
+            )
+            fn = f"Top_{language}_Student_Report.pdf" if language else "Verified_Institutional_Report.pdf"
+            return Response(
+                content=pdf_bytes,
+                media_type="application/pdf",
+                headers={"Content-Disposition": f'attachment; filename="{fn}"'}
+            )
 
         res = get_or_create_report(
             db=db,

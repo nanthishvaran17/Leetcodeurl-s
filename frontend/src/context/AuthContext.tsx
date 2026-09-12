@@ -52,14 +52,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     const formattedUser: AuthUser = {
       uid: newUser.uid || `user_${newUser.id || '1'}`,
-      name: newUser.username || newUser.name || 'User',
+      name: (newUser.full_name || newUser.name || newUser.displayName || newUser.username || (newUser.email ? newUser.email.split('@')[0] : 'User')).trim(),
       email: newUser.email || '',
       role: newUser.role || 'student',
       isProfileLinked: newUser.isProfileLinked !== undefined ? newUser.isProfileLinked : true,
       id: newUser.id,
       username: newUser.username,
+      full_name: newUser.full_name || newUser.name || null,
+      displayName: newUser.displayName || newUser.name || null,
       department_id: newUser.department_id || null,
       section_id: newUser.section_id || null,
+      institutional_id: newUser.institutional_id || null,
+      designation: newUser.designation || null,
+      staff_verification_status: newUser.staff_verification_status || 'NOT_SUBMITTED',
       // HOD multi-department scope — populated from backend on every login/session
       authorized_department_ids: Array.isArray(newUser.authorized_department_ids)
         ? newUser.authorized_department_ids
@@ -274,7 +279,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         isProfileLinked: true,
                         id: u.id,
                         username: u.username,
-                        department_id: u.department_id || null
+                        department_id: u.department_id || null,
+                        section_id: u.section_id || null,
+                        institutional_id: u.institutional_id || null,
+                        designation: u.designation || null,
+                        staff_verification_status: u.staff_verification_status || 'NOT_SUBMITTED',
+                        authorized_department_ids: Array.isArray(u.authorized_department_ids) ? u.authorized_department_ids : [],
+                        authorized_department_codes: Array.isArray(u.authorized_department_codes) ? u.authorized_department_codes : [],
                       };
                       setUser(formattedUser);
                       localStorage.setItem('user', JSON.stringify(formattedUser));

@@ -203,6 +203,7 @@ def fetch_normalized_students(
             hard=hard,
             total_solved=total_solved,
             contest_rating=round(st.contest_rating, 1) if (is_verified and st and st.contest_rating) else None,
+            rating=round(st.contest_rating, 1) if (is_verified and st and st.contest_rating) else None,
             global_rank=st.contest_global_ranking if (is_verified and st and st.contest_global_ranking) else None,
             category=category,
             status="VERIFIED" if is_verified else "UNVERIFIED"

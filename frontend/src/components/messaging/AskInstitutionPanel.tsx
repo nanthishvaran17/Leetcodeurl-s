@@ -26,8 +26,9 @@ export const AskInstitutionPanel: React.FC<{
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [error, setError] = useState<string | null>(null);
-  
+
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const presetQueries = [
     'Who is inactive this week?',
@@ -40,22 +41,33 @@ export const AskInstitutionPanel: React.FC<{
     endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, []);
+
   const handleSearch = async (queryText?: string) => {
     const targetQuery = typeof queryText === 'string' ? queryText : query;
     if (!targetQuery || !targetQuery.trim()) return;
-    
+
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
       content: targetQuery
     };
-    
+
     // Maintain max history (last 10 messages)
     const currentHistory = [...messages].slice(-10);
     setMessages(prev => [...prev, userMessage]);
     setQuery('');
     setLoading(true);
     setError(null);
+
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        textareaRef.current.style.height = '52px';
+      }
+    }, 30);
 
     try {
       const res = await api.post(
@@ -65,7 +77,7 @@ export const AskInstitutionPanel: React.FC<{
           history: currentHistory.map(m => ({ role: m.role, text: m.content })) 
         }
       );
-      
+
       if (res.data?.success && res.data?.result) {
         const result = res.data.result;
         const assistantMessage: ChatMessage = {
@@ -85,6 +97,9 @@ export const AskInstitutionPanel: React.FC<{
       setError(err.response?.data?.detail || 'Error executing query against institutional database.');
     } finally {
       setLoading(false);
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 50);
     }
   };
 
@@ -99,7 +114,7 @@ export const AskInstitutionPanel: React.FC<{
     <div className="bg-white dark:bg-[#0B1120] text-slate-800 dark:text-slate-200 w-full flex flex-col h-full overflow-hidden relative">
       {/* Premium Header */}
       <div className="flex items-center p-4 md:p-6 bg-white dark:bg-[#0B1120] border-b border-slate-100 dark:border-slate-800/50 shrink-0 relative z-10 w-full">
-        <div className="max-w-4xl mx-auto w-full flex items-center space-x-4">
+        <div className="max-w-5xl mx-auto w-full flex items-center space-x-4">
             <div className="p-3 bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-xl flex items-center justify-center relative overflow-hidden shrink-0">
                 <Sparkles className="w-6 h-6 relative z-10" />
             </div>
@@ -114,26 +129,26 @@ export const AskInstitutionPanel: React.FC<{
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scroll-smooth bg-slate-50/50 dark:bg-[#060B14]">
-        <div className="max-w-4xl mx-auto w-full space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-6 space-y-6 scroll-smooth bg-slate-50/50 dark:bg-[#060B14]">
+        <div className="max-w-5xl mx-auto w-full space-y-6 min-h-full flex flex-col justify-center">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center py-10 animate-in fade-in zoom-in duration-500">
-            <div className="relative w-14 h-14 bg-white dark:bg-slate-800 border border-indigo-100 dark:border-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center shadow-sm mb-4">
-                <Bot className="w-7 h-7" />
+          <div className="flex flex-col items-center justify-center text-center my-auto py-4 animate-in fade-in zoom-in duration-500">
+            <div className="relative w-12 h-12 sm:w-14 sm:h-14 bg-white dark:bg-slate-800 border border-indigo-100 dark:border-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center shadow-sm mb-3">
+                <Bot className="w-6 h-6 sm:w-7 sm:h-7" />
             </div>
-            <h3 className="text-[28px] md:text-[32px] font-bold text-slate-800 dark:text-slate-100 tracking-tight mb-2">How can I help you today?</h3>
-            <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed font-medium mb-6">Ask me to generate reports, find inactive students, or analyze performance. All answers are verified against live DB records.</p>
+            <h3 className="text-2xl sm:text-[28px] md:text-[32px] font-bold text-slate-800 dark:text-slate-100 tracking-tight mb-2">How can I help you today?</h3>
+            <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed font-medium mb-5">Ask me to generate reports, find inactive students, or analyze performance. All answers are verified against live DB records.</p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl">
               {presetQueries.map((preset, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleSearch(preset)}
-                  className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-700 dark:hover:text-indigo-300 text-slate-700 dark:text-slate-300 text-sm font-semibold px-4 py-3 min-h-[56px] rounded-xl transition-colors cursor-pointer text-left flex justify-between items-center group shadow-sm"
+                  className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-700 dark:hover:text-indigo-300 text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-semibold px-4 py-3 min-h-[48px] rounded-xl transition-colors cursor-pointer text-left flex justify-between items-center group shadow-sm"
                 >
                   <span>{preset}</span>
-                  <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ArrowRight className="w-3.5 h-3.5 text-indigo-600" />
+                  <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">
+                    <ArrowRight className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-300" />
                   </div>
                 </button>
               ))}
@@ -142,7 +157,7 @@ export const AskInstitutionPanel: React.FC<{
         ) : (
           messages.map((msg) => (
             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} w-full animate-in fade-in slide-in-from-bottom-3 duration-300`}>
-              <div className={`flex max-w-[90%] sm:max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''} space-x-4`}>
+              <div className={`flex max-w-[92%] sm:max-w-[88%] ${msg.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''} space-x-4`}>
                 
                 {/* Avatar */}
                 <div className="shrink-0 flex items-start pt-1">
@@ -210,6 +225,10 @@ export const AskInstitutionPanel: React.FC<{
                                         onClick={() => {
                                             if (act.action === 'RUN_QUERY') {
                                                 handleSearch(act.params.query);
+                                            } else if (['DOWNLOAD_PDF', 'EXPORT_PDF', 'EXPORT_STUDENT_PDF'].includes(act.action)) {
+                                                const token = localStorage.getItem('token') || '';
+                                                const downloadUrl = `${api.defaults.baseURL || '/api'}/reports/export-pdf?token=${token}`;
+                                                window.open(downloadUrl, '_blank');
                                             } else {
                                                 onActionTrigger && onActionTrigger(act);
                                             }
@@ -262,23 +281,25 @@ export const AskInstitutionPanel: React.FC<{
       </div>
 
       {/* Modern Input Area */}
-      <div className="p-4 md:p-6 bg-white dark:bg-[#0B1120] border-t border-slate-100 dark:border-slate-800/50 shrink-0 w-full">
-        <div className="relative max-w-4xl mx-auto w-full group">
+      <div className="p-3 sm:p-4 md:p-5 bg-white dark:bg-[#0B1120] border-t border-slate-100 dark:border-slate-800/50 shrink-0 w-full">
+        <div className="relative max-w-5xl mx-auto w-full group">
           <textarea
+            ref={textareaRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={loading}
             placeholder="Ask anything (e.g. Who missed the last contest?)..."
-            className="w-full bg-slate-50 dark:bg-[#060B14] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-[15px] font-medium rounded-xl pl-4 pr-14 py-3 min-h-[64px] max-h-32 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 resize-none transition-all placeholder-slate-400 dark:placeholder-slate-600"
+            aria-label="Ask institution intelligence"
+            className="w-full bg-slate-50 dark:bg-[#060B14] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-sm sm:text-base font-medium rounded-2xl pl-4 pr-14 py-3 min-h-[52px] max-h-32 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none transition-all placeholder-slate-400 dark:placeholder-slate-600 shadow-sm"
             rows={1}
             style={{
-                height: query ? 'auto' : '64px',
+                height: query ? 'auto' : '52px',
                 overflowY: query.split('\n').length > 3 ? 'auto' : 'hidden'
             }}
             onInput={(e) => {
                 const target = e.target as HTMLTextAreaElement;
-                target.style.height = '64px';
+                target.style.height = '52px';
                 if (target.value) {
                     target.style.height = `${Math.min(target.scrollHeight, 120)}px`;
                 }
@@ -287,14 +308,15 @@ export const AskInstitutionPanel: React.FC<{
           <button
             onClick={() => handleSearch()}
             disabled={!query.trim() || loading}
-            className="absolute right-2.5 bottom-2.5 w-10 h-10 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white rounded-[10px] transition-colors flex items-center justify-center shadow-sm"
+            aria-label="Send message"
+            className="absolute right-2 bottom-2 w-9 h-9 sm:w-10 sm:h-10 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white rounded-xl transition-all flex items-center justify-center shadow-sm cursor-pointer disabled:cursor-not-allowed"
           >
-            <Send className="w-4 h-4 relative right-[-1px]" />
+            <Send className="w-4 h-4 relative right-[-0.5px]" />
           </button>
         </div>
-        <div className="text-center mt-2 max-w-4xl mx-auto">
-            <span className="text-xs font-medium text-slate-400 dark:text-slate-500">
-                Institution Intelligence verifies all records. Shift+Enter for new line.
+        <div className="text-center mt-2 max-w-5xl mx-auto">
+            <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                Institution Intelligence verifies all records · Enter to send · Shift+Enter for new line
             </span>
         </div>
       </div>

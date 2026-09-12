@@ -9,7 +9,7 @@ Zero hardcoded values. Zero hallucination.
 import datetime
 from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
+from sqlalchemy import and_, or_, func
 
 from backend.models import (
     Student, Department, LeetCodeProfileStats, StudentRiskProfile, FacultyStudentAssignment,
@@ -435,3 +435,270 @@ def simulate_what_if_scenario(
         "students_activated": max(0, int(delta_part * 15.54)),
         "model": "Linear Weighted Regression (Read-Only)"
     }
+
+
+def get_progress_status(progress_pct: float) -> str:
+    """Traffic light status standard: GREEN (GOOD) >= 80, AMBER (WATCH) 60-79, RED (ACTION) < 60."""
+    if progress_pct >= 80.0:
+        return "GREEN"
+    elif progress_pct >= 60.0:
+        return "AMBER"
+    return "RED"
+
+
+def calculate_department_kpi_summary(
+    db: Session,
+    current_user: Optional[User] = None,
+    dept_id: Optional[int] = None,
+    staff_id: Optional[int] = None,
+    year_level: Optional[str] = None,
+    section_id: Optional[int] = None,
+    status_filter: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Authoritative HOD KPI Summary.
+    Overall Progress = Total Completed / Total Allocated * 100
+    Returns 6 main KPI metrics + metadata.
+    """
+    # Force HOD department isolation if current_user is non-admin HOD
+    if current_user:
+        role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
+        if role_clean in ["hod", "head of department"] and current_user.department_id:
+            dept_id = current_user.department_id
+
+    # 1. Total Staff in department
+    staff_q = db.query(User).filter(
+        User.is_active == True,
+        or_(User.role.ilike("%Staff%"), User.role.ilike("%Faculty%"))
+    )
+    if dept_id:
+        staff_q = staff_q.filter(User.department_id == dept_id)
+    total_staff = staff_q.count()
+
+    # 2. Base Student Query
+    st_q = db.query(Student).filter(Student.is_active == True)
+    if dept_id:
+        st_q = st_q.filter(Student.department_id == dept_id)
+    if year_level and year_level != "ALL":
+        st_q = st_q.filter(Student.year_level == year_level)
+    if section_id:
+        st_q = st_q.filter(Student.section_id == section_id)
+
+    st_q = apply_role_based_student_filter(st_q, current_user, db)
+    total_students = st_q.count()
+
+    if total_students == 0:
+        return {
+            "total_staff": total_staff,
+            "total_students": 0,
+            "total_allocated": 0,
+            "completed": 0,
+            "pending": 0,
+            "unassigned": 0,
+            "overall_progress": 0.0,
+            "progress_status": "ACTION",
+            "has_data": False
+        }
+
+    student_ids = [s.id for s in st_q.all()]
+
+    # 3. Allocated students (have an active FacultyStudentAssignment)
+    assigned_rows = db.query(FacultyStudentAssignment.student_id).filter(
+        FacultyStudentAssignment.student_id.in_(student_ids),
+        FacultyStudentAssignment.is_active == True
+    )
+    if staff_id:
+        assigned_rows = assigned_rows.filter(FacultyStudentAssignment.faculty_id == staff_id)
+    
+    allocated_student_ids = list(set(r[0] for r in assigned_rows.all()))
+    total_allocated = len(allocated_student_ids)
+    unassigned = max(0, total_students - total_allocated)
+
+    # 4. Completed vs Pending metrics (Completed = total_solved >= 10)
+    target_student_ids = allocated_student_ids if allocated_student_ids else student_ids
+    completed = 0
+    if target_student_ids:
+        stats_rows = db.query(LeetCodeProfileStats.total_solved).filter(
+            LeetCodeProfileStats.student_id.in_(target_student_ids)
+        ).all()
+        completed = sum(1 for s in stats_rows if (s[0] or 0) >= 10)
+
+    denominator = total_allocated if total_allocated > 0 else total_students
+    pending = max(0, denominator - completed)
+
+    overall_progress = round((completed / float(denominator)) * 100.0, 1) if denominator > 0 else 0.0
+    progress_status = get_progress_status(overall_progress)
+
+    return {
+        "total_staff": total_staff,
+        "total_students": total_students,
+        "total_allocated": total_allocated,
+        "completed": completed,
+        "pending": pending,
+        "unassigned": unassigned,
+        "overall_progress": overall_progress,
+        "progress_status": progress_status,
+        "has_data": True
+    }
+
+
+def get_todays_action_items(
+    db: Session,
+    current_user: Optional[User] = None,
+    dept_id: Optional[int] = None
+) -> List[Dict[str, Any]]:
+    """Data-driven action items (URGENT red & ATTENTION amber)."""
+    if current_user:
+        role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
+        if role_clean in ["hod", "head of department"] and current_user.department_id:
+            dept_id = current_user.department_id
+
+    actions = []
+
+    # 1. Unassigned students alert
+    unassigned_q = db.query(Student).outerjoin(
+        FacultyStudentAssignment,
+        and_(FacultyStudentAssignment.student_id == Student.id, FacultyStudentAssignment.is_active == True)
+    ).filter(
+        Student.is_active == True,
+        FacultyStudentAssignment.id.is_(None)
+    )
+    if dept_id:
+        unassigned_q = unassigned_q.filter(Student.department_id == dept_id)
+    
+    unassigned_count = unassigned_q.count()
+    if unassigned_count > 0:
+        actions.append({
+            "id": "action_unassigned",
+            "severity": "URGENT",
+            "type": "UNASSIGNED_STUDENTS",
+            "title": f"{unassigned_count} students are unassigned",
+            "reason": "Department students require assigned faculty mentors for progress tracking.",
+            "count": unassigned_count,
+            "action_label": "Assign Now",
+            "target_tab": "unassigned"
+        })
+
+    # 2. Staff with progress < 60% (Red threshold)
+    staff_users = db.query(User).filter(
+        User.is_active == True,
+        or_(User.role.ilike("%Staff%"), User.role.ilike("%Faculty%"))
+    )
+    if dept_id:
+        staff_users = staff_users.filter(User.department_id == dept_id)
+    
+    low_progress_staff = []
+    for s in staff_users.all():
+        assigned = db.query(FacultyStudentAssignment.student_id).filter(
+            FacultyStudentAssignment.faculty_id == s.id,
+            FacultyStudentAssignment.is_active == True
+        ).all()
+        a_ids = [r[0] for r in assigned]
+        if len(a_ids) > 0:
+            comp = db.query(LeetCodeProfileStats).filter(
+                LeetCodeProfileStats.student_id.in_(a_ids),
+                LeetCodeProfileStats.total_solved >= 10
+            ).count()
+            prog = round((comp / float(len(a_ids))) * 100.0, 1)
+            if prog < 60.0:
+                low_progress_staff.append((s.username, prog, len(a_ids)))
+
+    if low_progress_staff:
+        staff_names = ", ".join(s[0] for s in low_progress_staff[:2])
+        actions.append({
+            "id": "action_low_staff",
+            "severity": "URGENT",
+            "type": "LOW_PROGRESS_STAFF",
+            "title": f"{len(low_progress_staff)} faculty member(s) have critical low progress (<60%)",
+            "reason": f"Faculty ({staff_names}) require HOD review to accelerate student completions.",
+            "count": len(low_progress_staff),
+            "action_label": "Review Staff",
+            "target_tab": "staff-performance"
+        })
+
+    # 3. Overdue Pending Students (0 solved after allocation)
+    pending_zero = db.query(Student).join(
+        FacultyStudentAssignment,
+        and_(FacultyStudentAssignment.student_id == Student.id, FacultyStudentAssignment.is_active == True)
+    ).outerjoin(
+        LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
+    ).filter(
+        Student.is_active == True,
+        or_(LeetCodeProfileStats.id.is_(None), LeetCodeProfileStats.total_solved == 0)
+    )
+    if dept_id:
+        pending_zero = pending_zero.filter(Student.department_id == dept_id)
+    
+    zero_count = pending_zero.count()
+    if zero_count > 0:
+        actions.append({
+            "id": "action_zero_solved",
+            "severity": "ATTENTION",
+            "type": "ZERO_SOLVED_PENDING",
+            "title": f"{zero_count} allocated students have 0 completed problems",
+            "reason": "Students have been assigned to mentors but have not recorded initial problem completions.",
+            "count": zero_count,
+            "action_label": "View Students",
+            "target_tab": "pending"
+        })
+
+    return actions
+
+
+def get_year_section_heatmap(
+    db: Session,
+    current_user: Optional[User] = None,
+    dept_id: Optional[int] = None
+) -> List[Dict[str, Any]]:
+    """Generates Year (I, II, III, IV) x Section performance matrix."""
+    if current_user:
+        role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
+        if role_clean in ["hod", "head of department"] and current_user.department_id:
+            dept_id = current_user.department_id
+
+    years = ["I", "II", "III", "IV"]
+    sections = ["A", "B", "C"]
+    
+    matrix = []
+    for y in years:
+        sec_list = []
+        for sec_name in sections:
+            q = db.query(Student).filter(Student.is_active == True, Student.year_level == y)
+            if dept_id:
+                q = q.filter(Student.department_id == dept_id)
+            
+            # Filter section by name match
+            from backend.models import Section
+            q = q.filter(Student.section.has(Section.name.ilike(sec_name)))
+            st_list = q.all()
+            st_count = len(st_list)
+
+            if st_count == 0:
+                sec_list.append({
+                    "section": sec_name,
+                    "student_count": 0,
+                    "progress_pct": None,
+                    "status": "NO_DATA"
+                })
+            else:
+                s_ids = [s.id for s in st_list]
+                comp = db.query(LeetCodeProfileStats).filter(
+                    LeetCodeProfileStats.student_id.in_(s_ids),
+                    LeetCodeProfileStats.total_solved >= 10
+                ).count()
+                prog = round((comp / float(st_count)) * 100.0, 1)
+                sec_list.append({
+                    "section": sec_name,
+                    "student_count": st_count,
+                    "progress_pct": prog,
+                    "status": get_progress_status(prog)
+                })
+        
+        matrix.append({
+            "year": f"{y} Year",
+            "year_level": y,
+            "sections": sec_list
+        })
+
+    return matrix
+

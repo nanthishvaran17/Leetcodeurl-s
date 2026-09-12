@@ -639,7 +639,7 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                   value={deptId?.toString() || ""}
                   onChange={(val) => setDeptId(Number(val))}
                   dropdownWidth="w-full"
-                  options={departments.map((d: any) => ({ value: String(d.id), label: `${d.name} (${d.code})`, pillText: d.code }))}
+                  options={departments.map((d: any) => ({ value: String(d.id), label: d.name, pillText: d.code }))}
                   icon={<Building2 className="w-5 h-5" />}
                 />
               </div>

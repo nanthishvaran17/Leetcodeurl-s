@@ -18,7 +18,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({ staff, stu
     : 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-none animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="fixed inset-0 z-[100050] flex justify-end bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="w-full max-w-lg h-full bg-white dark:bg-navy-950 border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-y-auto flex flex-col">
         {/* Header Profile Section */}
         <div className="bg-brand-50 dark:bg-navy-800 p-6 border-b border-slate-200 dark:border-navy-700">

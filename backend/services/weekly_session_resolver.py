@@ -128,25 +128,66 @@ def resolve_weekly_sessions(
             "current_week_date": str(curr_date) if curr_date else None,
         }
 
-    # Filter out test sessions and future sessions (e.g. 13.09.2026 when today is 06.09.2026)
-    valid_past_or_today = []
-    for s in all_db_sessions:
-        if not s or re.search(r'\b(test|mock)\b', str(s.contest_name or ""), re.IGNORECASE):
-            continue
-        p_date = parse_session_date(s.session_date)
-        c_num = extract_contest_number(s)
-        if p_date and p_date <= today_ist and c_num is not None:
-            valid_past_or_today.append((p_date, c_num, s))
+    from backend.models import WeeklyPublicResult
 
-    # Sort descending by date and contest number
-    valid_past_or_today.sort(key=lambda item: (item[0], item[1]), reverse=True)
+    # Pre-fetch attendance status across all candidate sessions to eliminate N+1 queries
+    session_ids = [sess.id for sess in all_db_sessions if sess and getattr(sess, "id", None)]
+    attended_session_ids = set()
+    if session_ids:
+        rows = (
+            db.query(WeeklyPublicResult.session_id)
+            .filter(
+                WeeklyPublicResult.session_id.in_(session_ids),
+                WeeklyPublicResult.participation_status.in_(["PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"])
+            )
+            .group_by(WeeklyPublicResult.session_id)
+            .all()
+        )
+        attended_session_ids = {r[0] for r in rows}
+
+    valid_past_or_today = []
+    for session in all_db_sessions:
+        if not session:
+            continue
+
+        contest_name = str(session.contest_name or "")
+        if re.search(r'\b(test|mock)\b', contest_name, re.IGNORECASE):
+            continue
+
+        parsed_date = parse_session_date(session.session_date)
+        contest_number = extract_contest_number(session)
+
+        if parsed_date and parsed_date <= today_ist and contest_number is not None:
+            has_attendance = 1 if session.id in attended_session_ids else 0
+            valid_past_or_today.append({
+                "has_attendance": has_attendance,
+                "parsed_date": parsed_date,
+                "contest_number": contest_number,
+                "session": session,
+            })
+
+    # Sort descending by attendance flag (1 first), then parsed date, then contest number
+    valid_past_or_today.sort(
+        key=lambda item: (item["has_attendance"], item["parsed_date"], item["contest_number"]),
+        reverse=True
+    )
 
     if len(valid_past_or_today) >= 2:
-        curr_pdate, curr_num, curr_sess = valid_past_or_today[0]
-        last_pdate, last_num, last_sess = valid_past_or_today[1]
+        current_record = valid_past_or_today[0]
+        last_record = valid_past_or_today[1]
+
+        curr_sess = current_record["session"]
+        curr_num = current_record["contest_number"]
+
+        last_sess = last_record["session"]
+        last_num = last_record["contest_number"]
         mode = "db_auto"
     elif len(valid_past_or_today) == 1:
-        curr_pdate, curr_num, curr_sess = valid_past_or_today[0]
+        current_record = valid_past_or_today[0]
+
+        curr_sess = current_record["session"]
+        curr_num = current_record["contest_number"]
+
         last_sess = _find_session_by_contest_num(curr_num - 1)
         last_num = extract_contest_number(last_sess) if last_sess else None
         mode = "db_auto"

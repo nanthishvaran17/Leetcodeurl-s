@@ -64,11 +64,15 @@ def build_canonical_contest_dataset(
     attendance: str = "ALL",
     current_user: Optional[User] = None
 ) -> Dict[str, Any]:
-    """
-    Builds the SINGLE SOURCE OF TRUTH (SSOT) Canonical Contest Dataset.
-    Driven directly by the authoritative Student Master and verified contest results.
-    Runs comprehensive reconciliation before returning.
-    """
+    if not isinstance(dept, str):
+        dept = "ALL"
+    if not isinstance(year, str):
+        year = "ALL"
+    if not isinstance(attendance, str):
+        attendance = "ALL"
+    if not hasattr(current_user, "id"):
+        current_user = None
+
     session_obj = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
     if not session_obj:
         session_obj = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()

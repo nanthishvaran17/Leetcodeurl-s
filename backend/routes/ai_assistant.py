@@ -9,7 +9,78 @@ from backend.schemas import AIAssistantRequest, AIAssistantResponse
 from backend.services.ai_knowledge_service import AIKnowledgeEngine
 from backend.security import get_current_user_optional
 
+from pydantic import BaseModel
+from typing import Dict, Any, List
+
+class AIChatRequest(BaseModel):
+    message: str
+    conversation_id: Optional[str] = None
+    context: Optional[Dict[str, Any]] = None
+    history: Optional[List[Dict[str, Any]]] = None
+    mode: Optional[str] = "institutional"
+
 router = APIRouter(prefix="/ai", tags=["AI Assistant"])
+
+@router.post("/chat")
+def handle_ai_chat(
+    req: AIChatRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    """
+    POST /api/ai/chat
+    Standardized AI Chat Endpoint for Institutional Intelligence & NLU Tool Execution.
+    """
+    clean_msg = req.message.strip()
+    if not clean_msg:
+        raise HTTPException(status_code=400, detail="Message prompt cannot be empty.")
+
+    page_context = (req.context.get("page") if isinstance(req.context, dict) else None)
+    context_filters = req.context if isinstance(req.context, dict) else {}
+    conv_id = req.conversation_id or context_filters.get("conversation_id") or f"conv_{uuid.uuid4().hex[:12]}"
+    context_filters["conversation_id"] = conv_id
+
+    response_data = AIKnowledgeEngine.answer_query(
+        db=db,
+        query_text=clean_msg,
+        user=current_user,
+        context_page=page_context,
+        context_filters=context_filters,
+        history=req.history,
+        mode=req.mode or "institutional"
+    )
+
+    try:
+        from backend.models import AIChatHistory
+        chat_log = AIChatHistory(
+            session_id=conv_id,
+            user_query=clean_msg,
+            ai_response=response_data.get("answer", ""),
+            mode=req.mode or "institutional",
+            data_status=response_data.get("dataStatus", "VERIFIED")
+        )
+        db.add(chat_log)
+        db.commit()
+    except Exception:
+        pass
+
+    return {
+        "conversation_id": conv_id,
+        "type": "answer",
+        "message": response_data.get("answer", ""),
+        "data": response_data,
+        "provenance": {
+            "status": response_data.get("dataStatus", "VERIFIED"),
+            "source": response_data.get("source", "NEC Institutional Intelligence Engine")
+        },
+        "actions": [],
+        "context": req.context or {},
+        "pdfAvailable": response_data.get("pdfAvailable", False),
+        "downloadUrl": response_data.get("downloadUrl"),
+        "tableData": response_data.get("tableData")
+    }
+
 
 @router.post("/assistant", response_model=AIAssistantResponse)
 def handle_ai_assistant_query(
@@ -83,7 +154,11 @@ def handle_ai_assistant_query(
         actionTab=response_data.get("actionTab"),
         source=response_data.get("source", "NEC Institutional Intelligence Engine"),
         dataStatus=response_data.get("dataStatus", "VERIFIED"),
-        requestId=response_data.get("requestId", f"ai_{uuid.uuid4().hex[:12]}")
+        requestId=response_data.get("requestId", f"ai_{uuid.uuid4().hex[:12]}"),
+        clarifyingOptions=response_data.get("clarifyingOptions"),
+        pdfAvailable=response_data.get("pdfAvailable"),
+        downloadUrl=response_data.get("downloadUrl"),
+        tableData=response_data.get("tableData")
     )
 
 
@@ -111,6 +186,8 @@ async def handle_ai_assistant_stream(
 
     page_context = req.context.page if req.context else None
     context_filters = req.context.model_dump() if req.context else {}
+    conv_id = req.conversation_id or context_filters.get("conversation_id") or f"conv_{uuid.uuid4().hex[:12]}"
+    context_filters["conversation_id"] = conv_id
     req_id = f"ai_{uuid.uuid4().hex[:12]}"
 
     async def generate():
@@ -146,6 +223,10 @@ async def handle_ai_assistant_stream(
             "actionTab": response_data.get("actionTab"),
             "source": response_data.get("source", "NEC Institutional Intelligence Engine"),
             "dataStatus": response_data.get("dataStatus", "VERIFIED"),
+            "clarifyingOptions": response_data.get("clarifyingOptions"),
+            "pdfAvailable": response_data.get("pdfAvailable"),
+            "downloadUrl": response_data.get("downloadUrl"),
+            "tableData": response_data.get("tableData")
         }
         yield f"data: {json.dumps(result_payload)}\n\n"
 

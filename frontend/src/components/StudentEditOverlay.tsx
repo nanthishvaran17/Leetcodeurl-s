@@ -121,6 +121,26 @@ const generateEmailFromRegNo = (regNo: string) => {
   return `${normalized}@nandhaengg.org`.toLowerCase();
 };
 
+export const resolveYearLevelFromRegNo = (regNoStr: string, currentYearVal?: any): string => {
+  const norm = (regNoStr || '').trim().toUpperCase();
+  const match = norm.match(/(?:7322)?(\d{2})[A-Z]{2,4}\d+/);
+  if (match && match[1]) {
+    const batch = parseInt(match[1], 10);
+    if (batch === 26) return "1";
+    if (batch === 25) return "2";
+    if (batch === 24) return "3";
+    if (batch === 23) return "4";
+  }
+  if (currentYearVal != null && currentYearVal !== '') {
+    const valStr = String(currentYearVal).trim().toUpperCase();
+    if (valStr === '1' || valStr === 'I' || valStr === '1ST YEAR' || valStr === '1ST') return "1";
+    if (valStr === '2' || valStr === 'II' || valStr === '2ND YEAR' || valStr === '2ND') return "2";
+    if (valStr === '3' || valStr === 'III' || valStr === '3RD YEAR' || valStr === '3RD') return "3";
+    if (valStr === '4' || valStr === 'IV' || valStr === '4TH YEAR' || valStr === 'FINAL YEAR' || valStr === 'FINAL' || valStr === '4TH') return "4";
+  }
+  return "3";
+};
+
 export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   isOpen,
   student,
@@ -132,7 +152,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   const [name, setName] = useState('');
   const [regNo, setRegNo] = useState('');
   const [deptId, setDeptId] = useState<number | string>(1);
-  const [yearLevel, setYearLevel] = useState('III');
+  const [yearLevel, setYearLevel] = useState('3');
   const [section, setSection] = useState('A');
   const [username, setUsername] = useState('');
   const [leetcodeUrl, setLeetcodeUrl] = useState('');
@@ -140,6 +160,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   const [institutionalEmail, setInstitutionalEmail] = useState('');
   const [emailStatus, setEmailStatus] = useState('');
   const [allocation, setAllocation] = useState('none');
+  const [accommodation, setAccommodation] = useState('Day Scholar');
+  const [twelfthCutoff, setTwelfthCutoff] = useState('');
 
   const [secondaryAccounts, setSecondaryAccounts] = useState<SecondaryAccountItem[]>([]);
 
@@ -174,7 +196,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       const initName = student.name || student.student_name || '';
       const initRegNo = student.reg_no || student.register_number || '';
       const initDeptId = student.department_id || student.department?.id || 1;
-      const initYear = student.year_level || student.year || 'III';
+      const initYear = resolveYearLevelFromRegNo(initRegNo, student.year_level || student.year);
       const initSec = student.section?.name || student.section || 'A';
       const initUser = student.username || student.canonical_username || '';
       const initUrl = student.leetcode_url || student.profile_url || '';
@@ -182,6 +204,9 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       const initInstEmail = student.institutional_email || (initRegNo ? generateEmailFromRegNo(initRegNo) : '');
       const initEmailStatus = student.email_status || 'pending';
       const initAlloc = student.allocation || 'none';
+      const initAccomm = student.accommodation || student.accommodation_type || 'Day Scholar';
+      const initCutoff = student.twelfth_cutoff ?? student.twelfthCutoff ?? student.cutoff ?? '';
+      const formattedCutoff = (initCutoff !== '' && initCutoff !== null && initCutoff !== undefined) ? String(initCutoff) : '';
 
       const initSecAccounts: SecondaryAccountItem[] = (student.leetcode_accounts || []).map((acc: any) => ({
         id: acc.id,
@@ -200,6 +225,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       setInstitutionalEmail(initInstEmail);
       setEmailStatus(initEmailStatus);
       setAllocation(initAlloc);
+      setAccommodation(initAccomm);
+      setTwelfthCutoff(formattedCutoff);
       setSecondaryAccounts(initSecAccounts);
 
       initialRef.current = {
@@ -213,6 +240,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         email: initEmail,
         institutionalEmail: initInstEmail,
         allocation: initAlloc,
+        accommodation: initAccomm,
+        twelfthCutoff: formattedCutoff,
         secondaryAccounts: JSON.stringify(initSecAccounts)
       };
       setErrorMessage(null);
@@ -235,9 +264,12 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       email !== init.email ||
       institutionalEmail !== init.institutionalEmail ||
       allocation !== init.allocation ||
+      accommodation !== init.accommodation ||
+      twelfthCutoff !== init.twelfthCutoff ||
       JSON.stringify(secondaryAccounts) !== init.secondaryAccounts
     );
-  }, [name, regNo, deptId, yearLevel, section, username, leetcodeUrl, email, institutionalEmail, allocation, secondaryAccounts]);
+  }, [name, regNo, deptId, yearLevel, section, username, leetcodeUrl, email, institutionalEmail, allocation, accommodation, twelfthCutoff, secondaryAccounts]);
+
 
   const handleAddSecondaryAccount = () => {
     setSecondaryAccounts(prev => [...prev, { username: '', url: '' }]);
@@ -408,6 +440,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         email: email.trim() || undefined,
         institutional_email: institutionalEmail.trim() || undefined,
         allocation: allocation !== 'none' ? allocation : null,
+        accommodation: accommodation,
+        twelfth_cutoff: twelfthCutoff ? parseFloat(twelfthCutoff) : null,
         secondary_accounts: formattedSecondary,
         version: student.version
       };
@@ -525,6 +559,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                     onChange={(e) => {
                       const val = e.target.value;
                       setRegNo(val);
+                      const autoYear = resolveYearLevelFromRegNo(val, yearLevel);
+                      setYearLevel(autoYear);
                       if (val.trim()) {
                         setInstitutionalEmail(generateEmailFromRegNo(val));
                       } else {
@@ -607,6 +643,37 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                   value={yearLevel}
                   onChange={(val) => setYearLevel(val)}
                   icon={Calendar}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                    12th Cut-off Score
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="200"
+                    value={twelfthCutoff}
+                    onChange={(e) => setTwelfthCutoff(e.target.value)}
+                    placeholder="e.g. 185.50"
+                    className="w-full max-w-full box-border h-11 sm:h-10 px-3.5 text-sm sm:text-xs font-mono bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl sm:rounded-2xl text-slate-900 dark:text-white font-bold outline-none focus:ring-2 focus:ring-amber-500 shadow-xs"
+                  />
+                </div>
+                <CustomDropdown
+                  id="edit-student-accommodation-select"
+                  label="Accommodation Type"
+                  labelClassName="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1"
+                  menuWidthClass="w-full min-w-full"
+                  triggerClassName="w-full h-11 sm:h-10 flex items-center justify-between px-3.5 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-900 dark:text-white text-sm sm:text-xs font-bold shadow-xs cursor-pointer"
+                  options={[
+                    { value: "Day Scholar", label: "Day Scholar", badge: "DAY SCHOLAR" },
+                    { value: "Hostel", label: "Hostel", badge: "HOSTEL" }
+                  ]}
+                  value={accommodation}
+                  onChange={(val) => setAccommodation(val)}
                 />
               </div>
             </div>

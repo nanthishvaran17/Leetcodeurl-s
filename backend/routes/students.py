@@ -156,22 +156,19 @@ async def get_leaderboard_fast(
             results = []
             for st in students:
                 s = st.stats
-                is_verified = bool(
-                    s and 
-                    (s.sync_status or "").lower() in ("success", "verified", "ok", "stale") and 
-                    (s.status or "").lower() in ("verified", "ok", "success", "stale") and 
-                    s.total_solved is not None
-                )
+                has_stats = bool(s and s.total_solved is not None)
                 is_invalid = bool(s and (s.sync_status in ("invalid_username", "invalid_profile") or s.status in ("INVALID_USERNAME", "INVALID_PROFILE")))
                 is_pending = bool(not st.username or not str(st.username).strip() or
                                   (s and (s.sync_status == "pending_username" or s.status == "PENDING_USERNAME")))
 
+                is_verified = has_stats and not is_invalid and not is_pending
+
                 sync_state = "SYNCED" if is_verified else ("INVALID_USERNAME" if is_invalid else "PENDING_USERNAME")
-                total_solved = s.total_solved if (is_verified and s) else None
-                easy_solved = s.easy_solved if (is_verified and s) else None
-                medium_solved = s.medium_solved if (is_verified and s) else None
-                hard_solved = s.hard_solved if (is_verified and s) else None
-                contest_rating = round(s.contest_rating, 1) if (is_verified and s and s.contest_rating) else None
+                total_solved = s.total_solved if has_stats else 0
+                easy_solved = s.easy_solved if has_stats else 0
+                medium_solved = s.medium_solved if has_stats else 0
+                hard_solved = s.hard_solved if has_stats else 0
+                contest_rating = round(s.contest_rating, 1) if (s and s.contest_rating is not None) else None
 
                 streak = 0
                 if st.lc_activity and st.lc_activity.current_streak is not None:
@@ -180,9 +177,10 @@ async def get_leaderboard_fast(
                     streak = s.max_streak
 
                 prog = prog_map.get(st.id)
-                college_rank = prog.college_rank if (prog and is_verified) else None
-                dept_rank = prog.dept_rank if (prog and is_verified) else None
-                weekly_progress = prog.weekly_progress if (prog and is_verified) else 0
+                college_rank = prog.college_rank if prog else None
+                dept_rank = prog.dept_rank if prog else None
+                weekly_progress = prog.weekly_progress if prog else 0
+
                 if streak == 0 and prog and is_verified:
                     streak = prog.streak_count or 0
 
@@ -221,6 +219,8 @@ async def get_leaderboard_fast(
                     "year_level": st.year_level,
                     "department_id": st.department_id,
                     "department": {"id": st.department.id, "name": st.department.name, "code": st.department.code} if st.department else None,
+                    "accommodation": st.accommodation,
+                    "twelfth_cutoff": st.twelfth_cutoff,
                     "sync_state": sync_state,
                     "version": st.version,
                     "profile_url": f"https://leetcode.com/u/{st.username}/" if (is_verified and st.username) else None,
@@ -668,8 +668,8 @@ def download_sample_student_excel():
     ws.title = "Students"
     ws.sheet_view.showGridLines = True
 
-    headers = ["REG NO", "NAME", "DEPT", "YEAR", "EMAIL", "PRIMARY LEETCODE LINK", "SECONDARY LEETCODE LINK"]
-    col_widths = [18, 28, 14, 10, 25, 45, 45]
+    headers = ["REG NO", "NAME", "DEPT", "YEAR", "BATCH", "ACCOMMODATION", "12TH CUT-OFF", "EMAIL", "PRIMARY LEETCODE LINK", "SECONDARY LEETCODE LINK"]
+    col_widths = [18, 28, 14, 10, 14, 16, 14, 25, 45, 45]
 
     navy_fill = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
     font_header = Font(name="Times New Roman", size=11, bold=True, color="FFFFFF")
@@ -694,9 +694,9 @@ def download_sample_student_excel():
     ws.row_dimensions[1].height = 26
 
     sample_rows = [
-        ["732224CC001", "AJAY A", "CSE(CS)", "III", "https://leetcode.com/u/ajay_primary/", "https://leetcode.com/u/ajay_sec/"],
-        ["732224CC002", "AMRUTHA M", "CSE(CS)", "III", "https://leetcode.com/u/amrutha_primary/", "https://leetcode.com/u/amrutha_sec/"],
-        ["732224CI001", "BHARATH K", "CSE(IOT)", "III", "https://leetcode.com/u/bharath_primary/", ""],
+        ["732224CC001", "AJAY A", "CSE(CS)", "III", "2024-2028", "Hostel", 182.5, "ajay@college.edu", "https://leetcode.com/u/ajay_primary/", "https://leetcode.com/u/ajay_sec/"],
+        ["732224CC002", "AMRUTHA M", "CSE(CS)", "III", "2024-2028", "Day Scholar", 175.0, "amrutha@college.edu", "https://leetcode.com/u/amrutha_primary/", "https://leetcode.com/u/amrutha_sec/"],
+        ["732224CI001", "BHARATH K", "CSE(IOT)", "III", "2024-2028", "Hostel", 188.0, "bharath@college.edu", "https://leetcode.com/u/bharath_primary/", ""],
     ]
 
     for row_idx, r_data in enumerate(sample_rows, start=2):
@@ -704,11 +704,11 @@ def download_sample_student_excel():
         for col_idx, val in enumerate(r_data, start=1):
             c = ws.cell(row=row_idx, column=col_idx, value=val)
             c.font = Font(name="Times New Roman", size=10)
-            c.alignment = center if col_idx in (1, 3, 4) else left
+            c.alignment = center if col_idx in (1, 3, 4, 5, 6, 7) else left
             c.border = thin_border
 
     ws.freeze_panes = "A2"
-    ws.auto_filter.ref = f"A1:F{len(sample_rows)+1}"
+    ws.auto_filter.ref = f"A1:J{len(sample_rows)+1}"
 
     output = io.BytesIO()
     wb.save(output)
@@ -969,6 +969,8 @@ class StudentUpdateSchema(BaseModel):
     secondary_accounts: Optional[List[SecondaryAccountSchema]] = None
     institutional_email: Optional[str] = None
     allocation: Optional[str] = None
+    accommodation: Optional[str] = None
+    twelfth_cutoff: Optional[float] = None
 
 
 @router.patch("/{student_id}")
@@ -1070,6 +1072,17 @@ def update_student(
         if student.allocation != new_allocation:
             changes_made['allocation'] = new_allocation or "None"
             student.allocation = new_allocation
+
+    if payload.accommodation is not None:
+        new_acc = payload.accommodation.strip() if payload.accommodation.strip() else None
+        if student.accommodation != new_acc:
+            changes_made['accommodation'] = new_acc or "None"
+            student.accommodation = new_acc
+
+    if payload.twelfth_cutoff is not None:
+        if student.twelfth_cutoff != payload.twelfth_cutoff:
+            changes_made['twelfth_cutoff'] = payload.twelfth_cutoff
+            student.twelfth_cutoff = payload.twelfth_cutoff
 
     # LeetCode URL / username normalisation 
     url_changed = False
@@ -1352,6 +1365,70 @@ async def validate_students_import(
     content = await file.read()
     from backend.services.excel_import_service import validate_excel_import_file
     result = validate_excel_import_file(content)
+    return result
+
+
+from fastapi import Form
+import json
+
+@router.post("/analyze-import")
+async def analyze_students_import(
+    file: UploadFile = File(...),
+    custom_mapping: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Import Pre-Validation", required_roles=["admin", "super admin", "hod"]))
+):
+    """
+    Intelligently analyzes uploaded Excel bytes without writing to production DB.
+    Returns detected column mapping, confidence scores, row counts, preview classifications, and new departments.
+    """
+    content = await file.read()
+    mapping_dict = None
+    if custom_mapping:
+        try:
+            mapping_dict = json.loads(custom_mapping)
+        except Exception:
+            pass
+    from backend.services.excel_import_service import analyze_excel_import
+    result = analyze_excel_import(content, custom_mapping=mapping_dict)
+    return result
+
+
+@router.post("/commit-import")
+async def commit_students_import(
+    file: UploadFile = File(...),
+    custom_mapping: Optional[str] = Form(None),
+    confirmed_new_departments: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Import Commit", required_roles=["admin", "super admin", "hod"]))
+):
+    """
+    Executes intelligent batch import commit into database.
+    Registers new departments, updates existing records without duplicating reg_no,
+    creates new students, invalidates cache, logs audit events, and triggers background LeetCode sync.
+    """
+    content = await file.read()
+    mapping_dict = None
+    if custom_mapping:
+        try:
+            mapping_dict = json.loads(custom_mapping)
+        except Exception:
+            pass
+            
+    confirmed_depts_list = None
+    if confirmed_new_departments:
+        try:
+            confirmed_depts_list = json.loads(confirmed_new_departments)
+        except Exception:
+            pass
+
+    from backend.services.excel_import_service import commit_smart_excel_import
+    result = commit_smart_excel_import(
+        file_bytes=content,
+        custom_mapping=mapping_dict,
+        confirmed_new_departments=confirmed_depts_list,
+        triggered_by_user=current_user
+    )
     return result
 
 

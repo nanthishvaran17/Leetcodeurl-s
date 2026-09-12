@@ -9,6 +9,7 @@ interface PremiumDepartmentSelectProps {
   className?: string;
   label?: string;
   useIdAsValue?: boolean;
+  dropdownWidth?: string;
 }
 
 const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({ 
@@ -16,7 +17,8 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
   onChange, 
   className = '', 
   label = 'DEPARTMENT FILTER',
-  useIdAsValue = true
+  useIdAsValue = true,
+  dropdownWidth = 'min-w-[580px]'
 }) => {
   const { departments, isLoading } = useDepartments();
 
@@ -35,11 +37,14 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
       value={selectedDept}
       onChange={onChange}
       options={options}
-      icon={<Building2 className="w-5 h-5" />}
+      icon={<Building2 className="w-4 h-4" />}
       className={className}
-      dropdownWidth="w-full min-w-[280px]"
+      dropdownWidth={dropdownWidth}
+      showSearch={true}
+      searchPlaceholder="Search department..."
     />
   );
 };
 
 export default PremiumDepartmentSelect;
+

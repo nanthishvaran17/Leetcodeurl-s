@@ -766,6 +766,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       setMatrixRows(cachedMatrix.items || []);
       setTotalRows(cachedMatrix.total || 0);
       setSessionMetrics(cachedMatrix.metrics || null);
+      setDepartmentStats(cachedMatrix.departmentStats || null);
+      setYearStats(cachedMatrix.yearStats || null);
     }
 
     selectedSessionIdRef.current = sessionId;
@@ -1252,34 +1254,36 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
   // Memoized Dynamic Statistics Calculation with Fast Tiered Fallback
   const stats = useMemo(() => {
-    const totalRows = sessionMetrics?.totalStudents ?? fastSummary?.totalStudents ?? 574;
-    const attendedRows = sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? fastSummary?.participantCount ?? 0;
-    const notAttendedRows = sessionMetrics?.notAttended ?? sessionMetrics?.notParticipated ?? Math.max(0, totalRows - attendedRows);
+    const totalRows = matrixRows.length;
+    const isScopeActive = selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL';
+    const totalRowsVal = sessionMetrics?.totalStudents ?? sessionMetrics?.totalCount ?? (isScopeActive ? totalRows : (fastSummary?.totalStudents ?? totalRows ?? 0));
+    const attendedRows = sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? (isScopeActive ? 0 : (fastSummary?.participantCount ?? 0));
+    const notAttendedRows = sessionMetrics?.notAttended ?? sessionMetrics?.notParticipated ?? Math.max(0, totalRowsVal - attendedRows);
     const virtualRows = sessionMetrics?.virtualAttended ?? sessionMetrics?.virtualParticipants ?? 0;
     const isVirtualAvailable = sessionMetrics?.virtualDataStatus === 'AVAILABLE' || virtualRows > 0;
-    const errorRows = sessionMetrics?.dataErrors ?? sessionMetrics?.failedVerification ?? 0;
+    const errorRows = sessionMetrics?.dataErrors ?? sessionMetrics?.totalErrors ?? sessionMetrics?.failedVerification ?? (errorLogs ? errorLogs.length : 0);
 
     // Active cohort total solve breakdown (4/4, 3/4, 2/4, 1/4 Solved)
-    const q4Solved = sessionMetrics?.q4Count ?? fastSummary?.solvedDistribution?.q4 ?? 0;
-    const q3Solved = sessionMetrics?.q3Count ?? fastSummary?.solvedDistribution?.q3 ?? 0;
-    const q2Solved = sessionMetrics?.q2Count ?? fastSummary?.solvedDistribution?.q2 ?? 0;
-    const q1Solved = sessionMetrics?.q1Count ?? fastSummary?.solvedDistribution?.q1 ?? 0;
+    const q4Solved = sessionMetrics?.q4Count ?? (isScopeActive ? 0 : (fastSummary?.solvedDistribution?.q4 ?? 0));
+    const q3Solved = sessionMetrics?.q3Count ?? (isScopeActive ? 0 : (fastSummary?.solvedDistribution?.q3 ?? 0));
+    const q2Solved = sessionMetrics?.q2Count ?? (isScopeActive ? 0 : (fastSummary?.solvedDistribution?.q2 ?? 0));
+    const q1Solved = sessionMetrics?.q1Count ?? (isScopeActive ? 0 : (fastSummary?.solvedDistribution?.q1 ?? 0));
 
     const virtual4Solved = sessionMetrics?.virtual4Solved ?? 0;
     const virtual3Solved = sessionMetrics?.virtual3Solved ?? 0;
     const virtual2Solved = sessionMetrics?.virtual2Solved ?? 0;
     const virtual1Solved = sessionMetrics?.virtual1Solved ?? 0;
 
-    const publicPct = totalRows > 0 ? ((attendedRows / totalRows) * 100).toFixed(1) : (fastSummary?.attendanceRate?.toFixed(1) ?? '0.0');
-    const virtualPct = totalRows > 0 ? ((virtualRows / totalRows) * 100).toFixed(1) : '0.0';
-    const notAttendedPct = totalRows > 0 ? ((notAttendedRows / totalRows) * 100).toFixed(1) : '0.0';
+    const publicPct = totalRowsVal > 0 ? Math.min(100, Math.max(0, (attendedRows / totalRowsVal) * 100)).toFixed(1) : '0.0';
+    const virtualPct = totalRowsVal > 0 ? Math.min(100, Math.max(0, (virtualRows / totalRowsVal) * 100)).toFixed(1) : '0.0';
+    const notAttendedPct = totalRowsVal > 0 ? Math.min(100, Math.max(0, (notAttendedRows / totalRowsVal) * 100)).toFixed(1) : '0.0';
     // EXACT MANDATORY FORMULA: ((PUBLIC + VIRTUAL) / TOTAL) * 100
-    const totalParticipationPct = totalRows > 0 ? (((attendedRows + virtualRows) / totalRows) * 100).toFixed(1) : (fastSummary?.attendanceRate?.toFixed(1) ?? '0.0');
+    const totalParticipationPct = totalRowsVal > 0 ? Math.min(100, Math.max(0, ((attendedRows + virtualRows) / totalRowsVal) * 100)).toFixed(1) : '0.0';
 
     const topPerformers = sessionMetrics?.topPerformers ?? [];
 
     return {
-      totalRows,
+      totalRows: totalRowsVal,
       attendedRows,
       notAttendedRows,
       virtualRows,
@@ -3152,7 +3156,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </button>
 
               <button
-                onClick={() => setSubTab('error_board')}
+                onClick={() => {
+                  setSubTab('error_board');
+                  setSelectedAttendanceFilter('DATA_ERROR');
+                }}
                 className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 cursor-pointer ${subTab === 'error_board'
                   ? 'bg-amber-500 text-white shadow-md'
                   : 'bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
@@ -3587,18 +3594,50 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                    {matrixRows
-                      .filter(r => !r.username || r.participation_status === 'DATA_ERROR' || r.status === 'USERNAME_NOT_FOUND')
-                      .map((errStudent, idx) => (
-                        <tr key={idx} className="hover:bg-amber-50/50 dark:hover:bg-amber-950/20">
-                          <td className="px-4 py-2.5 text-center text-slate-400 font-mono">{idx + 1}</td>
-                          <td className="px-4 py-2.5 font-bold font-mono text-amber-600 dark:text-amber-400">{errStudent.reg_no}</td>
-                          <td className="px-4 py-2.5 font-semibold text-slate-900 dark:text-white">{errStudent.name}</td>
-                          <td className="px-4 py-2.5 text-center font-bold">{errStudent.dept}</td>
-                          <td className="px-4 py-2.5 text-center text-slate-500">{errStudent.year}</td>
+                    {(() => {
+                      const errorRows = matrixRows.filter(r => 
+                        !r.username || 
+                        selectedAttendanceFilter === 'DATA_ERROR' ||
+                        ['USERNAME_NOT_FOUND', 'DATA_ERROR', 'FETCH_ERROR', 'ERROR', 'INVALID', 'DATA_MISMATCH', 'AUTH_REQUIRED', 'BLOCKED'].includes(r.status) || 
+                        r.participation_status === 'DATA_ERROR'
+                      );
+
+                      if (errorRows.length === 0) {
+                        return (
+                          <tr>
+                            <td colSpan={7} className="p-8 text-center text-slate-500 font-bold">
+                              No data quality errors found for current filter scope.
+                            </td>
+                          </tr>
+                        );
+                      }
+
+                      return errorRows.map((errStudent, idx) => (
+                        <tr key={errStudent.reg_no || errStudent.id || idx} className="hover:bg-amber-50/50 dark:hover:bg-amber-950/20">
+                          <td className="px-4 py-2.5 text-center text-slate-400 font-mono font-bold">
+                            {(currentPage - 1) * pageSize + idx + 1}
+                          </td>
+                          <td className="px-4 py-2.5 font-bold font-mono text-amber-600 dark:text-amber-400">
+                            {errStudent.reg_no}
+                          </td>
+                          <td className="px-4 py-2.5 font-semibold text-slate-900 dark:text-white">
+                            {errStudent.name}
+                          </td>
+                          <td className="px-4 py-2.5 text-center font-bold">
+                            {errStudent.dept}
+                          </td>
+                          <td className="px-4 py-2.5 text-center text-slate-500">
+                            {errStudent.year}
+                          </td>
                           <td className="px-4 py-2.5 text-slate-500">
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
-                              {errStudent.username ? 'Invalid LeetCode Handle / API Error' : 'Missing LeetCode Username Handle'}
+                              {!errStudent.username 
+                                ? 'Missing LeetCode Username Handle' 
+                                : errStudent.status === 'USERNAME_NOT_FOUND' 
+                                ? 'Username Not Found on LeetCode' 
+                                : errStudent.status === 'FETCH_ERROR' 
+                                ? 'LeetCode API Fetch Error' 
+                                : 'Invalid LeetCode Handle / API Error'}
                             </span>
                           </td>
                           <td className="px-4 py-2.5 text-center">
@@ -3610,7 +3649,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                             </button>
                           </td>
                         </tr>
-                      ))}
+                      ));
+                    })()}
                   </tbody>
                 </table>
               </div>

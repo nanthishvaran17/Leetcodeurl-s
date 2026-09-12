@@ -566,7 +566,14 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                             <td className="px-4 py-2.5 text-right font-medium">{s.medium ?? "—"}</td>
                             <td className="px-4 py-2.5 text-right font-medium">{s.hard ?? "—"}</td>
                             <td className="px-4 py-2.5 text-right font-black text-emerald-600 dark:text-emerald-400 text-sm">{s.total_solved ?? "—"}</td>
-                            <td className="px-4 py-2.5 text-right font-mono text-slate-600 dark:text-slate-400">{s.rating ? Math.round(s.rating) : "—"}</td>
+                            <td className="px-4 py-2.5 text-right font-mono text-slate-600 dark:text-slate-400">
+                              {(() => {
+                                const r = s.rating ?? s.contest_rating ?? s.contestRating ?? s.stats?.contest_rating;
+                                return (r !== null && r !== undefined && r !== '' && r !== '—' && !isNaN(Number(r)) && Number(r) > 0)
+                                  ? Math.round(Number(r)).toLocaleString()
+                                  : "—";
+                              })()}
+                            </td>
                           </tr>
                         ))}
                       </tbody>

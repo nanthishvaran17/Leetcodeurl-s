@@ -12,6 +12,7 @@ import { downloadFromUrl } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
 import { ExportStatus } from '../components/ExportStatus';
 import { DownloadState } from '../services/download/downloadTypes';
+import { useKeyboardContext } from '../context/KeyboardContext';
 
 export const ReportsPage: React.FC = () => {
   const { notify } = useNotification();
@@ -42,6 +43,23 @@ export const ReportsPage: React.FC = () => {
   const [isDeletingSnapshot, setIsDeletingSnapshot] = useState<boolean>(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const { pushContext, popContext, registerEscHandler } = useKeyboardContext();
+
+  useEffect(() => {
+    if (deleteModalItem || showCertModal || activeUniversalPreviewId) {
+      pushContext('MODAL');
+      const unregister = registerEscHandler(() => {
+        if (deleteModalItem) setDeleteModalItem(null);
+        if (showCertModal) setShowCertModal(false);
+        if (activeUniversalPreviewId) setActiveUniversalPreviewId(null);
+      });
+      return () => {
+        unregister();
+        popContext('MODAL');
+      };
+    }
+  }, [deleteModalItem, showCertModal, activeUniversalPreviewId, pushContext, popContext, registerEscHandler]);
 
   useEffect(() => {
     fetchEmailLogs();
@@ -315,18 +333,6 @@ export const ReportsPage: React.FC = () => {
       }
     },
     {
-      id: 'csv-export',
-      title: 'Student Performance CSV Export',
-      badge: 'RAW SPREADSHEET (CSV)',
-      badgeColor: 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20',
-      description: 'Direct CSV file format containing all student performance metrics: S.No, Register No, Name, Department, Year, LeetCode URL, Username, Easy, Medium, Hard, Total Solved, Rating, Global Rank. Openable in any spreadsheet software.',
-      filename: 'LeetCode_Student_Performance_Report.csv',
-      icon: FileText,
-      iconBg: 'bg-teal-500/10 text-teal-600 dark:text-teal-400',
-      btnGradient: 'from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 shadow-teal-600/30',
-      onClick: handleDownloadCSV
-    },
-    {
       id: 'official-summary',
       title: 'Official College Weekly Excel',
       badge: 'OFFICIAL TEMPLATE',
@@ -484,7 +490,7 @@ export const ReportsPage: React.FC = () => {
                 <div>
                   <h2 className="text-xl font-black text-slate-900 dark:text-white">Universal Reports & Analytics</h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">
-                    Central Report Engine: Generate standardized datasets viewable via <b>Preview</b>, <b>Excel (.xlsx)</b>, <b>PDF (.pdf)</b>, <b>Word (.docx)</b>, and <b>CSV (.csv)</b>.
+                    Central Report Engine: Generate standardized datasets viewable via <b>Preview</b>, <b>Excel (.xlsx)</b>, <b>PDF (.pdf)</b>, and <b>Word (.docx)</b>.
                   </p>
                 </div>
               </div>
@@ -709,19 +715,6 @@ export const ReportsPage: React.FC = () => {
 
                 <button
                   type="button"
-                  onClick={() => {
-                    const filename = `${selectedReportType}_${selectedDept}_${selectedYear}.csv`;
-                    downloadReportFile(`/reports/export-csv?report_type=${selectedReportType}&department=${selectedDept}&year=${selectedYear}&output_scope=${selectedOutputScope}`, filename);
-                  }}
-                  className="flex items-center space-x-1.5 px-3.5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
-                  title="Direct Download CSV (.csv)"
-                >
-                  <FileText className="w-4 h-4" />
-                  <span>CSV (.csv)</span>
-                </button>
-
-                <button
-                  type="button"
                   onClick={() => handleGenerateUniversalReport()}
                   disabled={isGeneratingUniversal}
                   className="flex items-center space-x-2.5 px-6 py-2.5 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-700 hover:to-purple-700 disabled:opacity-50 text-white font-black text-xs sm:text-sm rounded-xl shadow-xl shadow-brand-500/25 transition-all transform hover:scale-105 cursor-pointer"
@@ -742,7 +735,7 @@ export const ReportsPage: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-black text-slate-900 dark:text-white">Pre-Formatted Exports & Download Hub</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">1-Click download official institutional Excel workbooks, weekly contest matrices, PDF summaries, Word documents, and raw CSV exports.</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">1-Click download official institutional Excel workbooks, weekly contest matrices, PDF summaries, and Word documents.</p>
                 </div>
               </div>
             </div>

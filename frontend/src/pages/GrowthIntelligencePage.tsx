@@ -124,12 +124,26 @@ export const GrowthIntelligencePage: React.FC = () => {
     api.get('/growth/options')
       .then((response) => {
         setDepartments(response.data?.departments || []);
-        setAvailableYears(response.data?.years || []);
+        const rawYears: string[] = response.data?.years || [];
+        const orderMap: Record<string, number> = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4 };
+        const cleanYears = Array.from(new Set(rawYears.map(y => {
+          const u = String(y || '').trim().toUpperCase().replace(/ YEAR$/i, '');
+          if (u === '1' || u === '1ST' || u === 'I') return 'I';
+          if (u === '2' || u === '2ND' || u === 'II') return 'II';
+          if (u === '3' || u === '3RD' || u === 'III') return 'III';
+          if (u === '4' || u === '4TH' || u === 'IV') return 'IV';
+          return u;
+        }))).filter(y => ['I', 'II', 'III', 'IV'].includes(y)).sort((a, b) => (orderMap[a] || 99) - (orderMap[b] || 99));
+
+        setAvailableYears(cleanYears.length > 0 ? cleanYears : ['I', 'II', 'III', 'IV']);
         if (user?.role?.toLowerCase() === 'hod' && response.data?.departments?.length === 1) {
           setDeptFilter(response.data.departments[0].code);
         }
       })
-      .catch((err) => console.error('Growth filter options fetch error:', err));
+      .catch((err) => {
+        console.error('Growth filter options fetch error:', err);
+        setAvailableYears(['I', 'II', 'III', 'IV']);
+      });
   }, [user]);
 
   const sortImprovers = (data: Improver[], mode = sortMode): Improver[] => [...data].sort((left, right) => {

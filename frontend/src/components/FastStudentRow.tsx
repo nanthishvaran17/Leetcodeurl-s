@@ -112,7 +112,13 @@ export const FastStudentRow = memo(({
              </div>
              <div className="flex flex-col">
                  <span className="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Rating</span>
-                 <span className="text-sm font-black text-amber-500">{student.stats?.contest_rating ? student.stats.contest_rating.toLocaleString() : '—'}</span>
+                  <span className="text-sm font-black text-amber-500">
+                    {(() => {
+                      const rawRating = student.stats?.contest_rating ?? (student as any).contest_rating;
+                      if (rawRating == null || rawRating <= 0) return '—';
+                      return Math.round(Number(rawRating)).toLocaleString();
+                    })()}
+                  </span>
              </div>
          </div>
           <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
@@ -192,23 +198,38 @@ export const FastStudentRow = memo(({
           if (status === 'VIRTUAL_ATTENDED' || status === 'VIRTUAL') {
             return <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 font-extrabold text-[10px] tracking-wider uppercase">Virtual</span>;
           }
-          if (status === 'NOT_ATTENDED' || status === 'PUBLIC_NOT_ATTENDED' || status === 'ABSENT') {
-            return <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-extrabold text-[10px] tracking-wider uppercase">Not Attended</span>;
+          if (status === 'PENDING_USERNAME' || status === 'NO_HANDLE') {
+            return <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 font-extrabold text-[10px] tracking-wider uppercase">Pending</span>;
           }
-          return <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-extrabold text-[10px] tracking-wider uppercase">Data Error</span>;
+          if (status === 'DATA_ERROR' || status === 'SOURCE_ERROR' || status === 'CONFLICT' || status === 'INVALID_USERNAME') {
+            return <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-extrabold text-[10px] tracking-wider uppercase">Data Error</span>;
+          }
+          return <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-extrabold text-[10px] tracking-wider uppercase">Not Attended</span>;
         })()}
       </div>
 
       <div className="hidden md:block flex-none w-24 px-3 text-center text-amber-500 font-bold">
-        {student.stats?.contest_rating ? student.stats.contest_rating.toLocaleString() : '—'}
+        {(() => {
+          const rawRating = student.stats?.contest_rating ?? (student as any).contest_rating;
+          if (rawRating == null || rawRating <= 0) return '—';
+          return Math.round(Number(rawRating)).toLocaleString();
+        })()}
       </div>
 
       <div className="hidden md:block flex-none w-28 px-3 text-center text-indigo-500 font-bold">
-        {student.stats?.contest_global_ranking ? `#${student.stats.contest_global_ranking.toLocaleString()}` : '—'}
+        {(() => {
+          const rawRank = student.stats?.contest_global_ranking ?? (student as any).contest_global_ranking;
+          if (rawRank == null || rawRank <= 0 || rawRank === 50000) return '—';
+          return `#${Number(rawRank).toLocaleString()}`;
+        })()}
       </div>
 
       <div className="hidden md:block flex-none w-28 px-3 text-center text-slate-600 font-bold">
-        {student.stats?.public_profile_ranking ? `#${student.stats.public_profile_ranking.toLocaleString()}` : '—'}
+        {(() => {
+          const rawProfileRank = student.stats?.public_profile_ranking ?? (student as any).public_profile_ranking;
+          if (!rawProfileRank || rawProfileRank >= 5000000 || rawProfileRank <= 0) return '—';
+          return `#${Number(rawProfileRank).toLocaleString()}`;
+        })()}
       </div>
 
       <div className="hidden md:block flex-none w-32 px-3 text-center" onClick={(e) => e.stopPropagation()}>

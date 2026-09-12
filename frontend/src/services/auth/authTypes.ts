@@ -28,6 +28,11 @@ export interface AuthUser {
   isProfileLinked: boolean;
   id?: number;
   username?: string;
+  full_name?: string | null;
+  displayName?: string | null;
+  institutional_id?: string | null;
+  designation?: string | null;
+  staff_verification_status?: string;
   /** HOD multi-department scope: list of department IDs this HOD is authorized to access.
    *  Empty array means global access (for Admin/Principal/Management roles). */
   authorized_department_ids?: number[];

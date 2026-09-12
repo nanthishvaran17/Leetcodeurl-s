@@ -24,35 +24,36 @@ def resolve_date_range(period: str, custom_start: Optional[str] = None, custom_e
     start_dt = None
     end_dt = now_ist
     
-    if period == "today":
+    p = (period or "30d").lower().strip()
+    if p in ("today", "daily"):
         start_dt = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
-    elif period == "yesterday":
+    elif p in ("yesterday",):
         start_dt = (now_ist - datetime.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
         end_dt = start_dt + datetime.timedelta(days=1) - datetime.timedelta(microseconds=1)
-    elif period == "this_week":
+    elif p in ("this_week", "weekly"):
         start_dt = (now_ist - datetime.timedelta(days=now_ist.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
-    elif period == "last_week":
+    elif p in ("last_week",):
         start_of_this_week = (now_ist - datetime.timedelta(days=now_ist.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
         start_dt = start_of_this_week - datetime.timedelta(days=7)
         end_dt = start_of_this_week - datetime.timedelta(microseconds=1)
-    elif period == "this_month":
+    elif p in ("this_month", "monthly"):
         start_dt = now_ist.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    elif period == "last_month":
+    elif p in ("last_month",):
         first_day_this_month = now_ist.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         end_dt = first_day_this_month - datetime.timedelta(microseconds=1)
         start_dt = end_dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    elif period == "30d":
+    elif p in ("30d", "last_30_days", "30_days"):
         start_dt = now_ist - datetime.timedelta(days=30)
-    elif period == "90d":
+    elif p in ("90d", "last_90_days", "90_days"):
         start_dt = now_ist - datetime.timedelta(days=90)
-    elif period == "academic_year":
+    elif p in ("academic_year", "yearly", "year"):
         start_year = now_ist.year if now_ist.month >= 6 else now_ist.year - 1
         start_dt = datetime.datetime(start_year, 6, 1, tzinfo=IST_TZ)
-    elif period == "custom" and custom_start and custom_end:
+    elif p == "custom" and custom_start and custom_end:
         try:
             start_dt = datetime.datetime.fromisoformat(custom_start.replace('Z', '+00:00')).astimezone(IST_TZ)
             end_dt = datetime.datetime.fromisoformat(custom_end.replace('Z', '+00:00')).astimezone(IST_TZ)
-        except:
+        except Exception:
             start_dt = now_ist - datetime.timedelta(days=30)
     else: 
         start_dt = now_ist - datetime.timedelta(days=30)
@@ -124,13 +125,70 @@ def get_analytics_dashboard(
         StudentStatSnapshot.captured_at <= end_dt
     ).group_by(date_col).order_by(date_col.asc()).all()
 
-    trend_data = []
+    # Map database aggregated rows into a lookup dictionary
+    db_map = {}
     for row in trend_aggregates:
-        trend_data.append({
-            "date": str(row.date),
-            "avg_rating": round(row.avg_rating, 1) if row.avg_rating is not None else None,
-            "avg_solved": round(row.avg_solved, 1) if row.avg_solved is not None else None
+        r_val = round(float(row.avg_rating), 1) if row.avg_rating is not None and float(row.avg_rating) > 0 else None
+        s_val = round(float(row.avg_solved), 1) if row.avg_solved is not None and float(row.avg_solved) > 0 else None
+        db_map[str(row.date)] = {"avg_rating": r_val, "avg_solved": s_val}
+
+    # Fetch live roster averages as initial fallback
+    current_roster_stats = db.query(
+        func.avg(LeetCodeProfileStats.contest_rating).label("avg_rating"),
+        func.avg(LeetCodeProfileStats.total_solved).label("avg_solved")
+    ).join(
+        student_subquery, LeetCodeProfileStats.student_id == student_subquery.c.id
+    ).first()
+
+    fallback_rating = round(float(current_roster_stats.avg_rating or 1500.0), 1) if current_roster_stats and current_roster_stats.avg_rating else 1500.0
+    fallback_solved = round(float(current_roster_stats.avg_solved or 150.0), 1) if current_roster_stats and current_roster_stats.avg_solved else 150.0
+
+    # Generate continuous date list from start_dt to end_dt
+    start_date = start_dt.date()
+    end_date = end_dt.date()
+    total_days = max(1, (end_date - start_date).days + 1)
+    daily_dates = [start_date + datetime.timedelta(days=i) for i in range(total_days)]
+
+    raw_trend = []
+    last_rating = None
+    last_solved = None
+
+    # First pass: forward fill
+    for d in daily_dates:
+        d_str = d.strftime("%Y-%m-%d")
+        item = db_map.get(d_str)
+
+        r_val = item["avg_rating"] if item and item["avg_rating"] is not None else None
+        s_val = item["avg_solved"] if item and item["avg_solved"] is not None else None
+
+        if r_val is not None:
+            last_rating = r_val
+        else:
+            r_val = last_rating
+
+        if s_val is not None:
+            last_solved = s_val
+        else:
+            s_val = last_solved
+
+        raw_trend.append({
+            "date": d_str,
+            "avg_rating": r_val,
+            "avg_solved": s_val
         })
+
+    # Second pass: back fill for any initial missing dates
+    first_valid_rating = next((t["avg_rating"] for t in raw_trend if t["avg_rating"] is not None), fallback_rating)
+    first_valid_solved = next((t["avg_solved"] for t in raw_trend if t["avg_solved"] is not None), fallback_solved)
+
+    trend_data = []
+    for t in raw_trend:
+        trend_data.append({
+            "date": t["date"],
+            "avg_rating": t["avg_rating"] if t["avg_rating"] is not None else first_valid_rating,
+            "avg_solved": t["avg_solved"] if t["avg_solved"] is not None else first_valid_solved
+        })
+
 
     # 3. Overall Difficulty & Submission Stats Aggregation
     stats_aggregate = db.query(
@@ -428,14 +486,56 @@ def get_department_comparison(
 from sqlalchemy.orm import Session, joinedload
 
 @router.get("/data-quality")
-def get_data_quality(force_refresh: bool = False, db: Session = Depends(get_db)):
-    students = (
+def get_data_quality(
+    dept: Optional[str] = Query(None),
+    year: Optional[str] = Query(None),
+    attendance: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    force_refresh: bool = False,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    if not isinstance(dept, str):
+        dept = "ALL"
+    if not isinstance(year, str):
+        year = "ALL"
+    if not isinstance(attendance, str):
+        attendance = "ALL"
+    if not isinstance(search, str):
+        search = None
+    if not hasattr(current_user, "id"):
+        current_user = None
+
+    query = (
         db.query(Student)
         .options(joinedload(Student.department), joinedload(Student.stats))
-        .filter(Student.is_active == True)
-        .order_by(Student.name.asc())
-        .all()
+        .filter((Student.is_active == True) | (Student.is_active.is_(None)))
     )
+
+    if current_user:
+        from backend.services.authorization_service import apply_role_based_student_filter
+        query = apply_role_based_student_filter(query, current_user, db)
+
+    students = query.order_by(Student.name.asc()).all()
+
+    # Filter students in memory by dept, year, search
+    if dept and dept != "ALL":
+        d_upper = dept.upper()
+        if d_upper in ("CSE(CS)", "CS", "CYBER"):
+            students = [s for s in students if (s.department and ("CS" in s.department.code.upper() or "CYBER" in s.department.code.upper())) or ("CC" in (s.reg_no or "").upper())]
+        elif d_upper in ("CSE(IOT)", "IOT"):
+            students = [s for s in students if (s.department and "IOT" in s.department.code.upper()) or ("CI" in (s.reg_no or "").upper())]
+        else:
+            students = [s for s in students if s.department and s.department.code.upper() == d_upper]
+
+    if year and year != "ALL":
+        y_upper = year.upper()
+        students = [s for s in students if str(s.year_level or "").upper() == y_upper or y_upper in str(s.year_level or "").upper()]
+
+    if search:
+        s_lower = search.strip().lower()
+        students = [s for s in students if s_lower in (s.name or "").lower() or s_lower in (s.reg_no or "").lower() or s_lower in (s.username or "").lower()]
+
     total = len(students)
     if total == 0:
         return {
@@ -501,6 +601,7 @@ def get_data_quality(force_refresh: bool = False, db: Session = Depends(get_db))
             "reg_no": s.reg_no or f"ID-{s.id}",
             "name": s.name,
             "dept": dept_code,
+            "year": s.year_level or "III",
             "status": status,
             "issue": issue_desc,
             "action_required": action_req
@@ -519,14 +620,69 @@ def get_data_quality(force_refresh: bool = False, db: Session = Depends(get_db))
         "profile_not_found": profile_not_found_count,
         "network_errors": network_errors_count,
         "invalid_urls": invalid_urls_count,
-        "issues_count": len(issues_list),
+        "issues_count": len([i for i in issues_list if i["status"] != "VALID_PROFILE"]),
         "issues_list": issues_list,
         "source_status": "AVAILABLE"
     }
 
+from backend.services.high_concurrency_cache import global_response_cache
+
 @router.get("/performance-chart")
-def get_performance_chart(timeframe: str = Query("monthly"), db: Session = Depends(get_db)):
-    start_dt, end_dt = resolve_date_range(timeframe)
+def get_performance_chart(
+    timeframe: str = Query("monthly"),
+    department: Optional[str] = None,
+    dept_id: Optional[int] = None,
+    year_level: Optional[str] = None,
+    batch: Optional[str] = None,
+    section_id: Optional[int] = None,
+    custom_start: Optional[str] = None,
+    custom_end: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    user_id = current_user.id if current_user else 0
+    cache_key = f"perf_chart:{timeframe}:{department}:{dept_id}:{year_level}:{batch}:{section_id}:{custom_start}:{custom_end}:{user_id}"
+    cached_res = global_response_cache.get(cache_key)
+    if cached_res:
+        return cached_res
+
+    start_dt, end_dt = resolve_date_range(timeframe, custom_start, custom_end)
+    
+    # Base query for authorized students
+    base_student_query = db.query(Student.id).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    
+    # Resolve Department by ID or Code/Name
+    target_dept_id = dept_id
+    if not target_dept_id and department and department.upper() not in ("", "ALL"):
+        if str(department).isdigit():
+            target_dept_id = int(department)
+        else:
+            dept_obj = db.query(Department).filter(
+                or_(
+                    func.upper(Department.code) == department.upper(),
+                    func.upper(Department.name) == department.upper()
+                )
+            ).first()
+            if dept_obj:
+                target_dept_id = dept_obj.id
+
+    if target_dept_id:
+        base_student_query = base_student_query.filter(Student.department_id == target_dept_id)
+        
+    if year_level and year_level.upper() not in ("", "ALL"):
+        cleaned_year = year_level.upper().replace(" YEAR", "").replace("YR", "").strip()
+        base_student_query = base_student_query.filter(func.upper(Student.year_level) == cleaned_year)
+        
+    if batch and batch.upper() not in ("", "ALL"):
+        base_student_query = base_student_query.filter(Student.batch == batch)
+
+    if section_id:
+        base_student_query = base_student_query.filter(Student.section_id == section_id)
+        
+    if current_user:
+        base_student_query = apply_role_based_student_filter(base_student_query, current_user, db)
+        
+    student_subquery = base_student_query.subquery()
     
     date_col = func.date(StudentStatSnapshot.captured_at).label("date")
     trend_aggregates = db.query(
@@ -534,24 +690,119 @@ def get_performance_chart(timeframe: str = Query("monthly"), db: Session = Depen
         func.sum(StudentStatSnapshot.total_solved).label("problemsSolved"),
         func.count(func.distinct(StudentStatSnapshot.student_id)).label("activeStudents")
     ).filter(
+        StudentStatSnapshot.student_id.in_(db.query(student_subquery.c.id)),
         StudentStatSnapshot.captured_at >= start_dt,
         StudentStatSnapshot.captured_at <= end_dt
     ).group_by(date_col).order_by(date_col.asc()).all()
     
-    data = []
+    db_perf_map = {}
     for row in trend_aggregates:
-        data.append({
-            "label": str(row.date),
-            "problemsSolved": int(row.problemsSolved or 0),
-            "activeStudents": int(row.activeStudents or 0)
+        db_perf_map[str(row.date)] = {
+            "problemsSolved": int(row.problemsSolved) if row.problemsSolved and int(row.problemsSolved) > 0 else None,
+            "activeStudents": int(row.activeStudents) if row.activeStudents and int(row.activeStudents) > 0 else None
+        }
+
+    # Generate full daily sequence
+    start_date = start_dt.date()
+    end_date = end_dt.date()
+    total_days = max(1, (end_date - start_date).days + 1)
+    daily_dates = [start_date + datetime.timedelta(days=i) for i in range(total_days)]
+
+    raw_perf = []
+    last_p_solved = None
+    last_p_active = None
+
+    # First pass: forward fill
+    for d in daily_dates:
+        d_str = d.strftime("%Y-%m-%d")
+        item = db_perf_map.get(d_str)
+
+        p_solv = item["problemsSolved"] if item and item["problemsSolved"] is not None else None
+        p_act = item["activeStudents"] if item and item["activeStudents"] is not None else None
+
+        if p_solv is not None:
+            last_p_solved = p_solv
+        else:
+            p_solv = last_p_solved
+
+        if p_act is not None:
+            last_p_active = p_act
+        else:
+            p_act = last_p_active
+
+        raw_perf.append({
+            "date": d_str,
+            "problemsSolved": p_solv,
+            "activeStudents": p_act
         })
+
+    # Second pass: back fill
+    first_v_solved = next((t["problemsSolved"] for t in raw_perf if t["problemsSolved"] is not None), 0)
+    first_v_active = next((t["activeStudents"] for t in raw_perf if t["activeStudents"] is not None), 0)
+
+    data = []
+    for t in raw_perf:
+        solv_final = t["problemsSolved"] if t["problemsSolved"] is not None else first_v_solved
+        act_final = t["activeStudents"] if t["activeStudents"] is not None else first_v_active
+        data.append({
+            "label": t["date"],
+            "date": t["date"],
+            "problemsSolved": solv_final,
+            "activeStudents": act_final
+        })
+
+
+    # Calculate Previous Period Comparison for Growth Rate
+    duration = end_dt - start_dt
+    prev_start_dt = start_dt - duration
+    prev_end_dt = start_dt - datetime.timedelta(microseconds=1)
+    
+    prev_solved_sum = db.query(
+        func.sum(StudentStatSnapshot.total_solved)
+    ).filter(
+        StudentStatSnapshot.student_id.in_(db.query(student_subquery.c.id)),
+        StudentStatSnapshot.captured_at >= prev_start_dt,
+        StudentStatSnapshot.captured_at <= prev_end_dt
+    ).scalar() or 0
+
+    curr_total_solved = sum(item["problemsSolved"] for item in data)
+    period_growth: Optional[float] = None
+    if prev_solved_sum > 0:
+        period_growth = round(((curr_total_solved - prev_solved_sum) / float(prev_solved_sum)) * 100.0, 1)
+
+    peak_solved = max((item["problemsSolved"] for item in data), default=0)
+    peak_active = max((item["activeStudents"] for item in data), default=0)
+    
+    most_active_date = None
+    if data:
+        most_active_item = max(data, key=lambda item: item["problemsSolved"])
+        most_active_date = most_active_item["date"]
         
-    if not data:
-        data = [
-            {"label": "No Data", "problemsSolved": 0, "activeStudents": 0}
-        ]
-        
-    return {"data": data}
+    # Get last updated timestamp
+    last_snapshot = db.query(func.max(StudentStatSnapshot.captured_at)).filter(
+        StudentStatSnapshot.student_id.in_(db.query(student_subquery.c.id))
+    ).scalar()
+    
+    data_as_of = last_snapshot.isoformat() if last_snapshot else None
+
+    res_dict = {
+        "data": data,
+        "metrics": {
+            "peak_solved": peak_solved,
+            "peak_active": peak_active,
+            "most_active_date": most_active_date,
+            "period_growth": period_growth,
+            "previous_period_solved": int(prev_solved_sum)
+        },
+        "data_as_of": data_as_of,
+        "scope": {
+            "timeframe": timeframe,
+            "department": department or target_dept_id,
+            "year_level": year_level
+        }
+    }
+    global_response_cache.set(cache_key, res_dict, ttl_seconds=5.0)
+    return res_dict
 
 
 @router.get("/contest/aggregate")

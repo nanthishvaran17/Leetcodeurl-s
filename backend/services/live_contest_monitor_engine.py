@@ -5,7 +5,7 @@ from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 
 from backend.logger import logger
-from backend.models import Student, LeetCodeAccount, StudentContestParticipation, LiveContestEvent
+from backend.models import Student, LeetCodeAccount, StudentContestParticipation, LiveContestEvent, LiveQuestionStatus, LiveQuestionAuditLog
 from backend.database import SessionLocal
 
 IST = ZoneInfo("Asia/Kolkata")
@@ -154,6 +154,191 @@ class LiveContestMonitorEngine:
         finally:
             db.close()
 
+    async def stop_monitoring(self):
+
+        """Stops the live contest monitoring engine gracefully (Kill-Switch)."""
+        self.is_monitoring = False
+        self.sync_state = "STOPPED"
+        if self._monitor_task and not self._monitor_task.done():
+            self._monitor_task.cancel()
+        logger.info("[LIVE_MONITOR] Live Monitoring Engine stopped via kill-switch.")
+        return {"status": "STOPPED", "contest_id": self.active_contest_id}
+
+    def _calculate_time_taken(
+        self,
+        contest_start_dt: datetime.datetime,
+        solved_at_dt: datetime.datetime,
+        prior_solved_at_dt: Optional[datetime.datetime],
+        current_source: str,
+        prior_source: Optional[str]
+    ) -> tuple[Optional[int], bool, bool]:
+        """
+        Computes time_taken_seconds according to chronological order.
+        Returns: (time_taken_seconds, time_taken_is_estimated, is_anomaly)
+        """
+        is_estimated = False
+        if current_source != "AUTHORITATIVE_LEETCODE" or (prior_source and prior_source != "AUTHORITATIVE_LEETCODE"):
+            is_estimated = True
+
+        # Ensure tz alignment for delta calculation
+        t_solved = solved_at_dt.replace(tzinfo=None) if solved_at_dt.tzinfo else solved_at_dt
+        if prior_solved_at_dt:
+            t_prior = prior_solved_at_dt.replace(tzinfo=None) if prior_solved_at_dt.tzinfo else prior_solved_at_dt
+            delta_sec = int((t_solved - t_prior).total_seconds())
+        else:
+            t_start = contest_start_dt.replace(tzinfo=None) if contest_start_dt.tzinfo else contest_start_dt
+            delta_sec = int((t_solved - t_start).total_seconds())
+
+        if delta_sec <= 0:
+            logger.warning(f"[TIME_TAKEN_ANOMALY] Non-positive duration calculated ({delta_sec}s). Clamping to None.")
+            return None, is_estimated, True
+
+        return delta_sec, is_estimated, False
+
+    def process_question_transitions(
+        self,
+        db: Session,
+        contest_id: str,
+        student_id: int,
+        incoming_q_status: Dict[str, int],
+        timestamps_dict: Optional[Dict[str, datetime.datetime]] = None,
+        sources_dict: Optional[Dict[str, str]] = None,
+        contest_start_dt: Optional[datetime.datetime] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Processes question status transitions (0 -> 1) for a student in a contest.
+        Guarantees:
+          - Multi-delta same-cycle sorting by chronological solved_at timestamp.
+          - Chronological time_taken calculation relative to prior solved question.
+          - Mixed-source estimation flagging.
+          - Non-positive time_taken anomaly clamping.
+          - LiveQuestionStatus state persistence.
+          - LiveQuestionAuditLog append-only logging with sync_version sequence.
+        """
+        if not contest_start_dt:
+            now_dt = datetime.datetime.now(tz=IST)
+            contest_start_dt = now_dt.replace(hour=8, minute=0, second=0, microsecond=0)
+
+        timestamps_dict = timestamps_dict or {}
+        sources_dict = sources_dict or {}
+
+        # 1. Fetch current question statuses from DB
+        existing_rows = db.query(LiveQuestionStatus).filter(
+            LiveQuestionStatus.contest_id == contest_id,
+            LiveQuestionStatus.student_id == student_id
+        ).all()
+        existing_map = {row.question_id: row for row in existing_rows}
+
+        # 2. Identify 0 -> 1 transitions
+        detected_transitions = []
+        now_utc = datetime.datetime.now(tz=UTC)
+
+        for q_id in ["Q1", "Q2", "Q3", "Q4"]:
+            val = incoming_q_status.get(q_id, 0)
+            existing_row = existing_map.get(q_id)
+            is_already_solved = existing_row.solved if existing_row else 0
+
+            if val == 1 and is_already_solved == 0:
+                solved_at = timestamps_dict.get(q_id, now_utc)
+                source = sources_dict.get(q_id, "DETECTION_DERIVED" if q_id not in timestamps_dict else "AUTHORITATIVE_LEETCODE")
+                detected_transitions.append({
+                    "question_id": q_id,
+                    "solved_at": solved_at,
+                    "source": source
+                })
+
+        if not detected_transitions:
+            return []
+
+        def _norm_dt(dt_val: Optional[datetime.datetime]) -> datetime.datetime:
+            if dt_val is None:
+                return datetime.datetime.min
+            return dt_val.replace(tzinfo=None) if dt_val.tzinfo else dt_val
+
+        # 3. Sort transitions by solved_at timestamp ascending (Rule §4 & §7)
+        detected_transitions.sort(key=lambda t: _norm_dt(t["solved_at"]))
+
+        processed_event_details = []
+
+        # 4. Fetch all already solved questions for this student
+        solved_history = [
+            {"question_id": r.question_id, "solved_at": r.solved_at, "source": r.source}
+            for r in existing_rows if r.solved == 1 and r.solved_at
+        ]
+        solved_history.sort(key=lambda item: _norm_dt(item["solved_at"]))
+
+        for t in detected_transitions:
+            q_id = t["question_id"]
+            solved_at_dt = t["solved_at"]
+            source = t["source"]
+
+            # Determine most recent prior solved question by timestamp
+            prior_solve = solved_history[-1] if solved_history else None
+            prior_solved_at_dt = prior_solve["solved_at"] if prior_solve else None
+            prior_source = prior_solve["source"] if prior_solve else None
+
+            time_taken_sec, is_estimated, is_anomaly = self._calculate_time_taken(
+                contest_start_dt, solved_at_dt, prior_solved_at_dt, source, prior_source
+            )
+
+            # Upsert LiveQuestionStatus
+            lqs = existing_map.get(q_id)
+            if not lqs:
+                lqs = LiveQuestionStatus(
+                    contest_id=contest_id,
+                    student_id=student_id,
+                    question_id=q_id
+                )
+                db.add(lqs)
+
+            lqs.solved = 1
+            lqs.solved_at = solved_at_dt
+            lqs.detected_at = now_utc
+            lqs.time_taken_seconds = time_taken_sec
+            lqs.time_taken_is_estimated = is_estimated
+            lqs.is_anomaly = is_anomaly
+            lqs.source = source
+            lqs.event_version = self.sync_version
+
+            # Write Append-Only LiveQuestionAuditLog
+            audit = LiveQuestionAuditLog(
+                contest_id=contest_id,
+                student_id=student_id,
+                question_id=q_id,
+                old_value=0,
+                new_value=1,
+                detected_at=now_utc,
+                solved_at=solved_at_dt,
+                time_taken_seconds=time_taken_sec,
+                time_taken_is_estimated=is_estimated,
+                source=source,
+                sequence=self.sync_version
+            )
+            db.add(audit)
+            db.commit()
+
+            # Append to in-memory solved_history for subsequent transitions in this batch
+            solved_history.append({
+                "question_id": q_id,
+                "solved_at": solved_at_dt,
+                "source": source
+            })
+            solved_history.sort(key=lambda item: _norm_dt(item["solved_at"]))
+
+
+            processed_event_details.append({
+                "question_id": q_id,
+                "solved": 1,
+                "solved_at": solved_at_dt.isoformat() if isinstance(solved_at_dt, datetime.datetime) else str(solved_at_dt),
+                "time_taken_seconds": time_taken_sec,
+                "time_taken_is_estimated": is_estimated,
+                "is_anomaly": is_anomaly,
+                "source": source,
+                "sequence": self.sync_version
+            })
+
+        return processed_event_details
+
     async def _evaluate_and_detect_change(self, db: Session, contest_id: str, item: Dict[str, Any], is_initial: bool = False):
         """
         Evaluates current score for a student account and detects changes against cached state.
@@ -185,8 +370,20 @@ class LiveContestMonitorEngine:
         # Change Detection logic
         has_changed = False
         if not is_initial:
-            if curr_solved > prev_state["solved_count"] or curr_score != prev_state["score_display"] or curr_q1 != prev_state["q1"] or curr_q2 != prev_state["q2"]:
+            if curr_solved > prev_state["solved_count"] or curr_score != prev_state["score_display"] or curr_q1 != prev_state["q1"] or curr_q2 != prev_state["q2"] or curr_q3 != prev_state["q3"] or curr_q4 != prev_state["q4"]:
                 has_changed = True
+
+        # Process question-level transitions and audit logs
+        incoming_q_status = {"Q1": curr_q1, "Q2": curr_q2, "Q3": curr_q3, "Q4": curr_q4}
+        question_details = []
+        if has_changed:
+            self.sync_version += 1
+            question_details = self.process_question_transitions(
+                db=db,
+                contest_id=contest_id,
+                student_id=student.id,
+                incoming_q_status=incoming_q_status
+            )
 
         # Update cache
         self.cached_states[cache_key] = {
@@ -197,7 +394,6 @@ class LiveContestMonitorEngine:
 
         # If activity changed or explicitly requested, generate versioned event
         if has_changed:
-            self.sync_version += 1
             event_id = f"EVT-{people_id}-{contest_id}-{self.sync_version}"
             timestamp_str = datetime.datetime.now(tz=IST).strftime("%I:%M:%S %p")
 
@@ -219,6 +415,7 @@ class LiveContestMonitorEngine:
                     "previousCount": prev_state["solved_count"],
                     "q1": curr_q1, "q2": curr_q2, "q3": curr_q3, "q4": curr_q4,
                     "score_display": f"{curr_solved} / 4" if curr_solved > 0 else "Not Attended",
+                    "question_transitions": question_details,
                     "activity_timeline_entry": {
                         "time": timestamp_str,
                         "text": f" Solved {curr_solved - prev_state['solved_count']} Problem(s) (Total: {curr_solved}/4)"
@@ -257,6 +454,7 @@ class LiveContestMonitorEngine:
             # Broadcast over WebSocket
             await self.broadcast_ws_event(activity_payload)
             logger.info(f"[LIVE_MONITOR_EVENT] {student.name} ({people_id}): Solved {prev_state['solved_count']} -> {curr_solved}. Event {event_id} broadcasted.")
+
 
     def get_live_snapshot(self, db: Session, contest_id: str) -> Dict[str, Any]:
         """Returns the full current snapshot of all 297 students for initial WebSocket connection."""

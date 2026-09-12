@@ -26,6 +26,7 @@ class StudentRow(BaseModel):
     hard: Optional[int] = 0
     total_solved: Optional[int] = 0
     contest_rating: Optional[float] = None
+    rating: Optional[float] = None
     global_rank: Optional[int] = None
     category: str = "0 Solved"
     status: str = "UNVERIFIED"

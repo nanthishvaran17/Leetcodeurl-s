@@ -99,21 +99,53 @@ class FacultyActionEngine:
         kpis = {
             "Critical": 0, "High": 0, "Medium": 0, "Low": 0,
             "Pending": 0, "In Progress": 0, "Monitoring": 0, "Completed": 0, "Resolved": 0,
-            "Overdue": 0, "Escalated": 0, "total": 0
+            "Overdue": 0, "Escalated": 0, "total": 0,
+            "critical_count": 0, "high_count": 0, "medium_count": 0, "low_count": 0,
+            "pending_count": 0, "in_progress_count": 0, "monitoring_count": 0, "completed_count": 0, "resolved_count": 0,
+            "overdue_count": 0, "escalated_count": 0, "total_actions": 0, "immediate_attention_count": 0
         }
         
         for item in items:
             kpis["total"] += 1
+            kpis["total_actions"] += 1
+
             if item.priority in kpis:
                 kpis[item.priority] += 1
+            if item.priority == "Critical":
+                kpis["critical_count"] += 1
+                kpis["immediate_attention_count"] += 1
+            elif item.priority == "High":
+                kpis["high_count"] += 1
+            elif item.priority == "Medium":
+                kpis["medium_count"] += 1
+            elif item.priority == "Low":
+                kpis["low_count"] += 1
+
             if item.status in kpis:
                 kpis[item.status] += 1
+            if item.status == "Pending":
+                kpis["pending_count"] += 1
+            elif item.status == "In Progress":
+                kpis["in_progress_count"] += 1
+            elif item.status == "Monitoring":
+                kpis["monitoring_count"] += 1
+            elif item.status == "Completed":
+                kpis["completed_count"] += 1
+            elif item.status == "Resolved":
+                kpis["resolved_count"] += 1
+
             if getattr(item, "is_overdue_followup", False):
                 kpis["Overdue"] += 1
+                kpis["overdue_count"] += 1
             if getattr(item, "is_escalated", False):
                 kpis["Escalated"] += 1
+                kpis["escalated_count"] += 1
                 
         return kpis
+
+# Module level alias export
+get_faculty_kpis = FacultyActionEngine.get_faculty_kpis
+
 
 class FacultyActionIngestion:
     """Ingests items from multiple sources into the Faculty Action Queue."""
@@ -205,6 +237,7 @@ def get_faculty_actions_list(
     is_escalated: Optional[bool] = None,
 ) -> dict:
     from backend.models import FacultyActionQueueItem, Student, FacultyStudentAssignment
+    from datetime import datetime
     from sqlalchemy import or_
 
     query = db.query(FacultyActionQueueItem).join(Student, FacultyActionQueueItem.student_id == Student.id)
@@ -241,12 +274,62 @@ def get_faculty_actions_list(
         ))
 
     filtered_count = query.count()
-    items = query.order_by(FacultyActionQueueItem.priority_score.desc(), FacultyActionQueueItem.created_at.desc()).offset(offset).limit(limit).all()
+    raw_items = query.order_by(FacultyActionQueueItem.priority_score.desc(), FacultyActionQueueItem.created_at.desc()).offset(offset).limit(limit).all()
     
+    formatted_items = []
+    for item in raw_items:
+        s = item.student
+        stats = getattr(s, "leetcode_stats", None) if s else None
+        dept = getattr(s, "department", None) if s else None
+        
+        # Calculate days overdue for follow-up
+        is_overdue_val = False
+        days_overdue_val = 0
+        if item.follow_up_date and item.status not in ["Completed", "Resolved"]:
+            today = datetime.utcnow().date()
+            f_date = item.follow_up_date.date() if isinstance(item.follow_up_date, datetime) else item.follow_up_date
+            if f_date < today:
+                is_overdue_val = True
+                days_overdue_val = (today - f_date).days
+
+        formatted_items.append({
+            "id": item.id,
+            "student_id": item.student_id,
+            "student_name": s.name if s else "Unknown Student",
+            "reg_no": s.reg_no if s else "",
+            "leetcode_username": getattr(s, "username", "") or getattr(s, "primary_leetcode_id", "") if s else "",
+            "department_name": dept.name if dept else (getattr(s, 'department_name', '') if s else ""),
+            "department_code": dept.code if dept else (getattr(s, 'department_code', '') if s else ""),
+            "year_level": s.year_level if s else "",
+            "signal_type": item.signal_type,
+            "priority": item.priority or "Medium",
+            "priority_score": item.priority_score or 50,
+            "priority_score_reason": item.reason or "",
+            "status": item.status or "Pending",
+            "recommended_action": item.recommended_action or "",
+            "assigned_faculty_name": item.assigned_faculty_name,
+            "due_date": item.due_date.isoformat() if item.due_date else None,
+            "follow_up_date": item.follow_up_date.isoformat() if item.follow_up_date else None,
+            "next_review_date": item.next_review_date.isoformat() if item.next_review_date else None,
+            "is_escalated": item.is_escalated or False,
+            "escalated_to": item.escalated_to,
+            "action_taken": item.action_taken,
+            "faculty_notes": item.faculty_notes,
+            "evidence_remarks": item.evidence_remarks,
+            "is_overdue_followup": is_overdue_val,
+            "days_overdue": days_overdue_val,
+            "created_at": item.created_at.isoformat() if item.created_at else "",
+            "updated_at": item.updated_at.isoformat() if item.updated_at else "",
+            "total_solved": stats.total_solved if stats and stats.total_solved is not None else 0,
+            "current_rating": stats.current_rating if stats and stats.current_rating is not None else 0,
+            "contests_attended": stats.attended_contests_count if stats and hasattr(stats, 'attended_contests_count') else 0,
+            "last_active_days_ago": 0
+        })
+
     total_pages = max(1, (filtered_count + limit - 1) // limit) if limit > 0 else 1
 
     return {
-        "items": items,
+        "items": formatted_items,
         "total": filtered_count,
         "total_count": total_count,
         "filtered_count": filtered_count,

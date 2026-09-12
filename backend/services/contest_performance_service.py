@@ -302,7 +302,8 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             "contest_solved": solved_val,
             "total_solved": solved_val,
             "rank": rank_val if rank_val is not None else "—",
-            "rating": rating_val
+            "rating": rating_val,
+            "contest_rating": rating_val
         })
 
     # 6. Reconcile Summary & Solve Distribution

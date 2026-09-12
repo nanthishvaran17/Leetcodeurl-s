@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   Building2, RefreshCw, Sparkles, Search, Plus,
   Trash2, UserCheck, X, CheckCircle2, AlertTriangle, Users,
@@ -23,6 +23,7 @@ import {
 import { simulateWhatIfScenario, askAIDepartmentQuery } from '../services/intelligenceService';
 import { CustomDropdown } from '../components/CustomDropdown';
 import { AnalyticsDashboard } from '../components/analytics/AnalyticsDashboard';
+import { useKeyboardContext } from '../context/KeyboardContext';
 import { useDebounce } from '../hooks/useDebounce';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
@@ -47,10 +48,19 @@ const StudentDetailDrawer: React.FC<{
   onClose: () => void;
   onReassign: (studentId: number, targetFacultyId: number) => void;
 }> = ({ student, staffList, onClose, onReassign }) => {
+  useEffect(() => {
+    if (student) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [student]);
+
   if (!student) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-none animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div className="fixed inset-0 z-[100050] flex justify-end bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="w-full max-w-md h-full bg-white dark:bg-navy-950 border-l border-slate-200 dark:border-navy-700 shadow-2xl p-4 sm:p-6 pt-6 sm:pt-7 overflow-y-auto space-y-6 flex flex-col justify-between">
         <div className="space-y-6">
           {/* Header */}
@@ -198,6 +208,12 @@ const StaffAllocationModal: React.FC<{
   const [actionLoading, setActionLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  useEffect(() => {
+    if (deptId && deptId !== selectedDeptId) {
+      setSelectedDeptId(deptId);
+    }
+  }, [deptId]);
+
   const loadData = useCallback(async () => {
     setLoading(true);
     setMessage(null);
@@ -220,7 +236,13 @@ const StaffAllocationModal: React.FC<{
   }, [selectedDeptId]);
 
   useEffect(() => {
-    if (isOpen) loadData();
+    if (isOpen) {
+      loadData();
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [isOpen, selectedDeptId, loadData]);
 
   const handleAutoDistribute = async () => {
@@ -286,17 +308,18 @@ const StaffAllocationModal: React.FC<{
               <p className="text-xs text-slate-500 truncate">Enforces institutional 1:20 faculty-to-student mentor ratio</p>
             </div>
           </div>
-          <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
-            <div className="flex-1 sm:flex-initial min-w-0">
+          <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pr-1">
+            <div className="flex-1 sm:flex-initial min-w-0 relative max-w-[260px] sm:max-w-[300px]">
               <GlobalFilter
                 value={selectedDeptId.toString()}
                 onChange={val => setSelectedDeptId(Number(val))}
-                dropdownWidth="w-full sm:w-max min-w-full"
-                options={departments.map((d: any) => ({ value: String(d.id), label: `${d.name} (${d.code})`, pillText: d.code }))}
+                dropdownWidth="w-64 sm:w-72"
+                align="right"
+                options={departments.map((d: any) => ({ value: String(d.id), label: d.name, pillText: d.code }))}
                 icon={<Building2 className="w-4 h-4" />}
               />
             </div>
-            <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 shrink-0 touch-target-min flex items-center justify-center"><X size={18} /></button>
+            <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-800 shrink-0 touch-target-min flex items-center justify-center"><X size={18} /></button>
           </div>
         </div>
 
@@ -371,11 +394,12 @@ const StaffAllocationModal: React.FC<{
                   Manual Student Allocation ({unassignedStudents.length} unassigned)
                 </h4>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-                  <div className="flex-1 sm:flex-initial min-w-0">
+                  <div className="flex-1 sm:flex-initial min-w-0 relative">
                     <GlobalFilter
                       value={targetFacultyId?.toString() || ""}
                       onChange={val => setTargetFacultyId(Number(val))}
                       dropdownWidth="w-full sm:w-64"
+                      align="right"
                       options={[
                         { value: "", label: "Select target faculty..." },
                         ...workload.map((f: any) => ({ value: String(f.faculty_id), label: `${f.faculty_name} (${f.assigned_students}/20)` }))
@@ -439,29 +463,70 @@ const ReportHubModal: React.FC<{
 }> = ({ isOpen, onClose, deptId, departments }) => {
   const [selectedReportType, setSelectedReportType] = useState<string>('EXECUTIVE');
   const [selectedDeptId, setSelectedDeptId] = useState<number | undefined>(deptId);
+  const [selectedYear, setSelectedYear] = useState<string>('ALL');
+  const [selectedSection, setSelectedSection] = useState<string>('ALL');
+  const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
+  
   const [reportData, setReportData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [downloadingExcel, setDownloadingExcel] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  // Canonical Single Source of Truth Report Scope Object
+  const reportScope = useMemo(() => {
+    const dept = departments.find(d => String(d.id) === String(selectedDeptId));
+    return {
+      reportType: selectedReportType,
+      departmentId: selectedDeptId,
+      departmentCode: dept?.code || 'ALL',
+      departmentName: dept?.name || 'All Institutional Departments',
+      academicYear: selectedYear,
+      section: selectedSection,
+      status: selectedStatus,
+    };
+  }, [selectedReportType, selectedDeptId, selectedYear, selectedSection, selectedStatus, departments]);
 
   const loadReport = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getReportData(selectedReportType, selectedDeptId);
+      const data = await getReportData({
+        report_type: selectedReportType,
+        dept_id: selectedDeptId,
+        year_level: selectedYear !== 'ALL' ? selectedYear : undefined,
+        section: selectedSection !== 'ALL' ? selectedSection : undefined,
+        status_filter: selectedStatus !== 'ALL' ? selectedStatus : undefined,
+      });
       setReportData(data);
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
-  }, [selectedReportType, selectedDeptId]);
+  }, [selectedReportType, selectedDeptId, selectedYear, selectedSection, selectedStatus]);
 
-  const [downloadingExcel, setDownloadingExcel] = useState(false);
+  const getFilterQueryParams = () => {
+    const params = new URLSearchParams();
+    if (selectedDeptId) params.append('dept_id', String(selectedDeptId));
+    if (reportScope.departmentCode !== 'ALL') params.append('department', reportScope.departmentCode);
+    if (selectedYear !== 'ALL') params.append('year', selectedYear);
+    if (selectedSection !== 'ALL') params.append('section', selectedSection);
+    if (selectedStatus !== 'ALL') params.append('status', selectedStatus);
+    const qs = params.toString();
+    return qs ? `?${qs}` : '';
+  };
 
   const handleDownloadExcel = async () => {
     setDownloadingExcel(true);
     try {
+      const qParam = getFilterQueryParams();
+      const deptSlug = reportScope.departmentCode !== 'ALL' ? `_${reportScope.departmentCode}` : '_ALL';
+      const yearSlug = selectedYear !== 'ALL' ? `_Yr${selectedYear}` : '';
+      const secSlug = selectedSection !== 'ALL' ? `_Sec${selectedSection}` : '';
+      const filename = `NEC_${selectedReportType}_Report${deptSlug}${yearSlug}${secSlug}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
       const res = await downloadManager.download({
-        endpoint: '/reports/export-official-college-summary',
-        filename: 'Nandha_College_Official_Weekly_Report.xlsx',
+        endpoint: `/reports/export-official-college-summary${qParam}`,
+        filename,
         mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       });
       if (!res.success) {
@@ -475,15 +540,46 @@ const ReportHubModal: React.FC<{
     }
   };
 
+  const handleDownloadPdf = async () => {
+    setDownloadingPdf(true);
+    try {
+      const qParam = getFilterQueryParams();
+      const deptSlug = reportScope.departmentCode !== 'ALL' ? `_${reportScope.departmentCode}` : '_ALL';
+      const yearSlug = selectedYear !== 'ALL' ? `_Yr${selectedYear}` : '';
+      const secSlug = selectedSection !== 'ALL' ? `_Sec${selectedSection}` : '';
+      const filename = `NEC_${selectedReportType}_Report${deptSlug}${yearSlug}${secSlug}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+      const res = await downloadManager.download({
+        endpoint: `/reports/export-pdf${qParam}`,
+        filename,
+        mimeType: 'application/pdf',
+      });
+      if (!res.success) {
+        alert(res.error || "Failed to download PDF report.");
+      }
+    } catch (err) {
+      console.error("Report download error:", err);
+      alert("Failed to download PDF report.");
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
+
   useEffect(() => {
-    if (isOpen) loadReport();
-  }, [isOpen, selectedReportType, selectedDeptId, loadReport]);
+    if (isOpen) {
+      loadReport();
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen, loadReport]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-6 sm:pt-7 overflow-y-auto bg-slate-950/80 backdrop-blur-sm animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-4xl max-h-[88vh] bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-2xl flex flex-col justify-between overflow-hidden text-slate-900 dark:text-white antialiased">
+    <div className="fixed inset-0 z-[100050] flex items-center justify-center p-3 sm:p-4 lg:p-6 overflow-hidden bg-slate-950/90 dark:bg-black/90 backdrop-blur-xl animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="w-full max-w-4xl max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-2rem)] lg:max-h-[calc(100dvh-3rem)] my-auto bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-navy-700 shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-white antialiased">
         {/* Header */}
         <div className="px-6 py-4 bg-slate-50 dark:bg-navy-900 border-b border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
@@ -494,7 +590,7 @@ const ReportHubModal: React.FC<{
               <h3 className="font-display text-base sm:text-lg font-black text-slate-950 dark:text-white">
                 Institutional Executive Report Generator
               </h3>
-              <p className="text-xs text-slate-600 dark:text-slate-300 font-bold">Live generated audit and accreditation reports</p>
+              <p className="text-xs text-slate-600 dark:text-slate-300 font-bold">Dynamic filter-aware audit and accreditation reports</p>
             </div>
           </div>
           <button
@@ -506,49 +602,95 @@ const ReportHubModal: React.FC<{
         </div>
 
         {/* Body */}
-        <div className="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1 text-xs custom-scrollbar">
-          {/* Controls */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-sm">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1 min-h-0 text-xs custom-scrollbar">
+          {/* Controls Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-sm">
             <div>
-              <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Select Report Type</label>
+              <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Report Type</label>
               <GlobalFilter
                 value={selectedReportType}
                 onChange={val => setSelectedReportType(val)}
-                dropdownWidth="w-full"
+                dropdownWidth="min-w-[320px]"
                 options={[
-                  { value: "EXECUTIVE", label: "Executive Department Coding Health Report" },
-                  { value: "FACULTY_ALLOCATION", label: "Faculty Mentorship & Allocation Audit Report" },
+                  { value: "EXECUTIVE", label: "Executive Coding Health Report" },
+                  { value: "FACULTY_ALLOCATION", label: "Faculty Mentorship Audit Report" },
                   { value: "INACTIVE_AT_RISK", label: "Inactive & At-Risk Intervention Report" }
                 ]}
                 icon={<FileText className="w-4 h-4 text-brand-500" />}
               />
             </div>
+
             <div>
               <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Department Scope</label>
               <GlobalFilter
                 value={selectedDeptId?.toString() || ""}
                 onChange={val => setSelectedDeptId(val ? Number(val) : undefined)}
-                dropdownWidth="w-full"
+                dropdownWidth="min-w-[320px]"
                 options={[
                   { value: "", label: "All Institutional Departments", pillText: "ALL" },
-                  ...departments.map((d: any) => ({ value: String(d.id), label: `${d.name} (${d.code})`, pillText: d.code }))
+                  ...departments.map((d: any) => ({ value: String(d.id), label: d.name, pillText: d.code }))
                 ]}
                 icon={<Building2 className="w-4 h-4 text-indigo-500" />}
               />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Academic Year</label>
+              <GlobalFilter
+                value={selectedYear}
+                onChange={val => setSelectedYear(val)}
+                dropdownWidth="min-w-[240px]"
+                options={[
+                  { value: "ALL", label: "All Academic Years", pillText: "ALL" },
+                  { value: "1", label: "I Year", pillText: "1st" },
+                  { value: "2", label: "II Year", pillText: "2nd" },
+                  { value: "3", label: "III Year", pillText: "3rd" },
+                  { value: "4", label: "IV Year", pillText: "4th" }
+                ]}
+                icon={<Calendar className="w-4 h-4 text-amber-500" />}
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Section / Cohort</label>
+              <GlobalFilter
+                value={selectedSection}
+                onChange={val => setSelectedSection(val)}
+                dropdownWidth="min-w-[220px]"
+                options={[
+                  { value: "ALL", label: "All Sections", pillText: "ALL" },
+                  { value: "A", label: "Section A", pillText: "A" },
+                  { value: "B", label: "Section B", pillText: "B" },
+                  { value: "C", label: "Section C", pillText: "C" }
+                ]}
+                icon={<Layers className="w-4 h-4 text-purple-500" />}
+              />
+            </div>
+          </div>
+
+          {/* Scope Indicator Bar */}
+          <div className="px-3.5 py-2 rounded-xl bg-brand-50/80 dark:bg-brand-950/40 border border-brand-200/60 dark:border-brand-800/40 flex items-center justify-between flex-wrap gap-2 text-[11px]">
+            <div className="font-bold text-brand-900 dark:text-brand-200 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
+              <span>Authoritative Scope:</span>
+              <span className="font-extrabold text-brand-700 dark:text-brand-300">{reportData?.department_scope || reportScope.departmentName}</span>
+            </div>
+            <div className="text-slate-500 dark:text-slate-400 font-bold text-[10px] tracking-wide">
+              Single Source of Truth • UI + Excel + PDF Synced
             </div>
           </div>
 
           {/* Live Preview Paper */}
           {loading ? (
-            <div className="p-16 text-center text-slate-500 font-black text-sm">Loading live report data...</div>
+            <div className="p-16 text-center text-slate-500 font-black text-sm">Loading live report data for selected scope...</div>
           ) : (
             <div className="p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 shadow-md space-y-4 text-slate-900 dark:text-white">
               <div className="border-b border-slate-200 dark:border-navy-800 pb-3 flex justify-between items-end flex-wrap gap-2">
                 <div>
-                  <div className="text-[10px] font-mono uppercase font-black text-slate-500 dark:text-slate-400 tracking-wider">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</div>
+                  <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider font-display">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</div>
                   <h2 className="text-base sm:text-lg font-black font-display text-slate-950 dark:text-white mt-0.5">{reportData?.report_title}</h2>
                 </div>
-                <div className="text-right text-xs font-mono text-slate-600 dark:text-slate-300 font-bold">
+                <div className="text-right text-xs text-slate-600 dark:text-slate-300 font-bold font-sans">
                   {reportData?.generated_at}
                 </div>
               </div>
@@ -558,26 +700,26 @@ const ReportHubModal: React.FC<{
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {Object.entries(reportData?.summary_metrics || {}).map(([k, v]: any) => (
-                      <div key={k} className="p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-xs">
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono font-bold uppercase tracking-wider">{k}</div>
-                        <div className="text-lg font-black font-mono text-brand-600 dark:text-brand-400 mt-0.5">{String(v)}</div>
+                      <div key={k} className="p-3.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800 shadow-xs">
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider font-display">{k}</div>
+                        <div className="text-xl font-black font-display text-brand-600 dark:text-brand-400 mt-1">{String(v)}</div>
                       </div>
                     ))}
                   </div>
 
                   <div className="overflow-x-auto table-responsive-container">
-                    <table className="w-full text-left text-xs border-collapse mobile-card-table">
+                    <table className="w-full text-left text-xs border-collapse mobile-card-table font-sans">
                       <thead className="hidden md:table-header-group">
-                        <tr className="border-b border-slate-200 dark:border-navy-800 font-mono font-black text-slate-500 dark:text-slate-400 uppercase text-[10px]">
+                        <tr className="border-b border-slate-200 dark:border-navy-800 font-bold text-slate-500 dark:text-slate-400 uppercase text-[10px] tracking-wider font-display">
                         <th className="py-2.5 px-3">Dimension</th>
                         <th className="py-2.5 px-3 text-right">Score</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-navy-800/80 font-mono text-slate-800 dark:text-slate-200">
+                    <tbody className="divide-y divide-slate-100 dark:divide-navy-800/80 text-slate-800 dark:text-slate-200 font-sans">
                       {(reportData?.dimension_breakdown || []).map((row: any, i: number) => (
                         <tr key={i} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors">
-                          <td className="py-2.5 px-3 font-sans font-bold">{row.dimension}</td>
-                          <td className="py-2.5 px-3 text-right font-black text-brand-600 dark:text-brand-400">{row.score}</td>
+                          <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-slate-100">{row.dimension}</td>
+                          <td className="py-2.5 px-3 text-right font-extrabold text-brand-600 dark:text-brand-400">{row.score}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -588,9 +730,9 @@ const ReportHubModal: React.FC<{
 
               {selectedReportType === 'FACULTY_ALLOCATION' && (
                 <div className="overflow-x-auto table-responsive-container">
-                  <table className="w-full text-left text-xs border-collapse mobile-card-table">
+                  <table className="w-full text-left text-xs border-collapse mobile-card-table font-sans">
                     <thead className="hidden md:table-header-group">
-                      <tr className="border-b border-slate-200 dark:border-navy-800 font-mono font-black text-slate-600 dark:text-slate-300 uppercase text-[10px]">
+                      <tr className="border-b border-slate-200 dark:border-navy-800 font-bold text-slate-600 dark:text-slate-300 uppercase text-[10px] tracking-wider font-display">
                         <th className="py-2.5 px-3">Faculty Mentor</th>
                         <th className="py-2.5 px-3">Dept</th>
                         <th className="py-2.5 px-3 text-right">Assigned</th>
@@ -598,13 +740,13 @@ const ReportHubModal: React.FC<{
                         <th className="py-2.5 px-3 text-center">Ratio Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-navy-800/80 font-mono text-slate-900 dark:text-slate-100">
+                    <tbody className="divide-y divide-slate-100 dark:divide-navy-800/80 text-slate-900 dark:text-slate-100 font-sans">
                       {(reportData?.faculty_records || []).map((fac: any) => (
                         <tr key={fac.faculty_id} className="hover:bg-slate-50 dark:hover:bg-navy-800/60 transition-colors">
-                          <td className="py-2.5 px-3 font-bold font-sans text-slate-950 dark:text-white text-xs sm:text-sm">{fac.faculty_name}</td>
+                          <td className="py-2.5 px-3 font-bold text-slate-950 dark:text-white text-xs sm:text-sm">{fac.faculty_name}</td>
                           <td className="py-2.5 px-3 font-bold text-slate-700 dark:text-slate-300">{fac.department_code}</td>
-                          <td className="py-2.5 px-3 text-right font-black">{fac.assigned_students}/20</td>
-                          <td className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400 font-black">{fac.active_students}</td>
+                          <td className="py-2.5 px-3 text-right font-extrabold">{fac.assigned_students}/20</td>
+                          <td className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400 font-extrabold">{fac.active_students}</td>
                           <td className="py-2.5 px-3 text-center">
                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-black shadow-xs ${
                               fac.workload_status === 'NORMAL'
@@ -622,27 +764,27 @@ const ReportHubModal: React.FC<{
               )}
 
               {selectedReportType === 'INACTIVE_AT_RISK' && (
-                <div className="space-y-3">
+                <div className="space-y-3 font-sans">
                   <div className="text-xs font-black text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 p-3 rounded-xl border border-rose-200 dark:border-rose-800/50">
-                    Total Inactive Solvers: {reportData?.total_inactive}
+                    Total Inactive Solvers in Scope: {reportData?.total_inactive}
                   </div>
                   <div className="overflow-x-auto table-responsive-container">
-                    <table className="w-full text-left text-xs border-collapse mobile-card-table">
+                    <table className="w-full text-left text-xs border-collapse mobile-card-table font-sans">
                       <thead className="hidden md:table-header-group">
-                        <tr className="border-b border-slate-200 dark:border-navy-800 font-mono font-black text-slate-600 dark:text-slate-300 uppercase text-[10px]">
+                        <tr className="border-b border-slate-200 dark:border-navy-800 font-bold text-slate-600 dark:text-slate-300 uppercase text-[10px] tracking-wider font-display">
                           <th className="py-2.5 px-3">Reg No</th>
                           <th className="py-2.5 px-3">Student Name</th>
                           <th className="py-2.5 px-3">Dept</th>
                           <th className="py-2.5 px-3">Assigned Faculty Mentor</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-navy-800/80 font-mono text-slate-900 dark:text-slate-100">
+                      <tbody className="divide-y divide-slate-100 dark:divide-navy-800/80 text-slate-900 dark:text-slate-100 font-sans">
                         {(reportData?.students || []).map((st: any) => (
                           <tr key={st.reg_no} className="hover:bg-slate-50 dark:hover:bg-navy-800/60 transition-colors">
-                            <td className="py-2.5 px-3 font-black text-amber-700 dark:text-amber-300">{st.reg_no}</td>
-                            <td className="py-2.5 px-3 font-sans font-bold text-slate-950 dark:text-white">{st.name}</td>
-                            <td className="py-2.5 px-3 font-bold">{st.department}</td>
-                            <td className="py-2.5 px-3 text-brand-600 dark:text-brand-400 font-black">{st.assigned_mentor}</td>
+                            <td className="py-2.5 px-3 font-black text-amber-700 dark:text-amber-300 font-sans">{st.reg_no}</td>
+                            <td className="py-2.5 px-3 font-bold text-slate-950 dark:text-white">{st.name}</td>
+                            <td className="py-2.5 px-3 font-semibold">{st.department}</td>
+                            <td className="py-2.5 px-3 text-brand-600 dark:text-brand-400 font-extrabold">{st.assigned_mentor}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -657,11 +799,12 @@ const ReportHubModal: React.FC<{
         {/* Footer */}
         <div className="px-6 py-4 bg-slate-50 dark:bg-navy-900 border-t border-slate-200 dark:border-navy-800 flex justify-between items-center shrink-0 flex-wrap gap-2">
           <button
-            onClick={() => window.print()}
-            className="px-4 py-2 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-900 dark:text-slate-200 text-xs font-black inline-flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs"
+            onClick={handleDownloadPdf}
+            disabled={downloadingPdf}
+            className="px-4 py-2 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-900 dark:text-slate-200 text-xs font-black inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-colors shadow-xs"
           >
-            <Printer size={14} className="text-amber-500" />
-            <span>Print Document</span>
+            <Printer size={14} className={downloadingPdf ? 'animate-spin text-amber-500' : 'text-amber-500'} />
+            <span>{downloadingPdf ? 'Generating PDF...' : 'Print / Export PDF'}</span>
           </button>
           <div className="flex gap-2">
             <button
@@ -733,6 +876,40 @@ export const HODCommandCenter: React.FC = () => {
   const [aiLoading, setAiLoading] = useState<boolean>(false);
   const [whatIfTarget, setWhatIfTarget] = useState<number>(95);
   const [whatIfResult, setWhatIfResult] = useState<any>(null);
+
+  const { pushContext, popContext, registerEscHandler } = useKeyboardContext();
+
+  const isAnyModalOrDrawerOpen = Boolean(
+    selectedStudentDetail || selectedStaffDetail || selectedDeptIntelligence ||
+    showStaffAllocationModal || showReportHubModal || showMethodologyModal ||
+    showAIModal || showWhatIfModal || confirmUnassignTarget
+  );
+
+  useEffect(() => {
+    if (isAnyModalOrDrawerOpen) {
+      pushContext('MODAL');
+      const unregister = registerEscHandler(() => {
+        if (selectedStudentDetail) setSelectedStudentDetail(null);
+        if (selectedStaffDetail) setSelectedStaffDetail(null);
+        if (selectedDeptIntelligence) setSelectedDeptIntelligence(null);
+        if (showStaffAllocationModal) setShowStaffAllocationModal(false);
+        if (showReportHubModal) setShowReportHubModal(false);
+        if (showMethodologyModal) setShowMethodologyModal(false);
+        if (showAIModal) setShowAIModal(false);
+        if (showWhatIfModal) setShowWhatIfModal(false);
+        if (confirmUnassignTarget) setConfirmUnassignTarget(null);
+      });
+      return () => {
+        unregister();
+        popContext('MODAL');
+      };
+    }
+  }, [
+    isAnyModalOrDrawerOpen, selectedStudentDetail, selectedStaffDetail, selectedDeptIntelligence,
+    showStaffAllocationModal, showReportHubModal, showMethodologyModal, showAIModal,
+    showWhatIfModal, confirmUnassignTarget, pushContext, popContext, registerEscHandler
+  ]);
+
 
   // Load Scope Data
   const loadScopedData = useCallback(async (isInitial = false, isRefresh = false) => {
@@ -1079,8 +1256,26 @@ export const HODCommandCenter: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. FOUR PRIMARY KPI CARDS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+      {/* 4. SIX AUTHORITATIVE HOD KPI CARDS */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+        <Card 
+          className="p-4 flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer"
+          onClick={() => {
+            setShowStaffAllocationModal(true);
+          }}
+        >
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-[10px] font-bold uppercase tracking-wider font-mono">TOTAL STAFF</span>
+            <Users size={15} className="text-indigo-500" />
+          </div>
+          <div className="mt-2">
+            <div className="font-display text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
+              {summary?.kpi_summary?.total_staff ?? staffList.length}
+            </div>
+            <div className="text-[11px] text-slate-500 mt-0.5">Faculty Mentors</div>
+          </div>
+        </Card>
+
         <Card 
           className={`p-4 flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-1 hover:shadow-md ${selectedStatus === 'ALL' ? 'ring-2 ring-slate-400 bg-slate-50 dark:bg-navy-800' : ''}`}
           onClick={() => {
@@ -1090,67 +1285,222 @@ export const HODCommandCenter: React.FC = () => {
         >
           <div className="flex items-center justify-between text-slate-400">
             <span className="text-[10px] font-bold uppercase tracking-wider font-mono">TOTAL STUDENTS</span>
-            <Users size={15} className="text-slate-600" />
+            <BookOpen size={15} className="text-slate-600" />
           </div>
           <div className="mt-2">
-            <div className="font-display text-3xl font-extrabold text-slate-900 dark:text-white font-mono">{totalInScope}</div>
-            <div className="text-[11px] text-slate-500 mt-0.5">Assigned in scope</div>
+            <div className="font-display text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white font-mono">
+              {summary?.kpi_summary?.total_students ?? totalInScope}
+            </div>
+            <div className="text-[11px] text-slate-500 mt-0.5">Enrolled Scope</div>
           </div>
         </Card>
 
         <Card 
-          className={`p-4 flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-1 hover:shadow-md ${selectedStatus === 'ACTIVE' ? 'ring-2 ring-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20' : ''}`}
+          className="p-4 flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer"
+          onClick={() => {
+            document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+        >
+          <div className="flex items-center justify-between text-brand-600">
+            <span className="text-[10px] font-bold uppercase tracking-wider font-mono">ALLOCATED</span>
+            <UserCheck size={15} />
+          </div>
+          <div className="mt-2">
+            <div className="font-display text-2xl lg:text-3xl font-extrabold text-brand-600 font-mono">
+              {summary?.kpi_summary?.total_allocated ?? activeInScope}
+            </div>
+            <div className="text-[11px] text-slate-500 mt-0.5">{summary?.kpi_summary?.unassigned ?? 0} Unassigned</div>
+          </div>
+        </Card>
+
+        <Card 
+          className="p-4 flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer"
           onClick={() => {
             setSelectedStatus('ACTIVE');
             document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
           }}
         >
           <div className="flex items-center justify-between text-emerald-600">
-            <span className="text-[10px] font-bold uppercase tracking-wider font-mono">ACTIVE SOLVERS</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider font-mono">COMPLETED</span>
             <CheckCircle2 size={15} />
           </div>
           <div className="mt-2">
-            <div className="font-display text-3xl font-extrabold text-emerald-600 font-mono">{activeInScope}</div>
-            <div className="text-[11px] text-slate-500 mt-0.5">{partRateInScope}% Participation</div>
+            <div className="font-display text-2xl lg:text-3xl font-extrabold text-emerald-600 font-mono">
+              {summary?.kpi_summary?.completed ?? 0}
+            </div>
+            <div className="text-[11px] text-emerald-600 font-semibold mt-0.5">Target Achieved</div>
           </div>
         </Card>
 
         <Card 
-          className={`p-4 flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-1 hover:shadow-md ${selectedStatus === 'INACTIVE' ? 'ring-2 ring-rose-500 bg-rose-50/50 dark:bg-rose-900/20' : ''}`}
+          className="p-4 flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer"
           onClick={() => {
             setSelectedStatus('INACTIVE');
             document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
           }}
         >
-          <div className="flex items-center justify-between text-rose-600">
-            <span className="text-[10px] font-bold uppercase tracking-wider font-mono">INACTIVE SOLVERS</span>
+          <div className="flex items-center justify-between text-amber-600">
+            <span className="text-[10px] font-bold uppercase tracking-wider font-mono">PENDING</span>
             <Clock size={15} />
           </div>
           <div className="mt-2">
-            <div className="font-display text-3xl font-extrabold text-rose-600 font-mono">{inactiveInScope}</div>
-            <div className="text-[11px] text-rose-500 mt-0.5 font-semibold">Needs Review</div>
+            <div className="font-display text-2xl lg:text-3xl font-extrabold text-amber-600 font-mono">
+              {summary?.kpi_summary?.pending ?? 0}
+            </div>
+            <div className="text-[11px] text-amber-600 font-semibold mt-0.5">In Progress</div>
           </div>
         </Card>
 
         <Card 
-          className={`p-4 flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-1 hover:shadow-md ${selectedStatus === 'IMPROVING' ? 'ring-2 ring-brand-500 bg-brand-50/50 dark:bg-brand-900/20' : ''}`}
-          onClick={() => {
-            setSelectedStatus('IMPROVING');
-            document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
-          }}
+          className="p-4 flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-md cursor-pointer !bg-slate-900 text-white border-slate-800"
         >
-          <div className="flex items-center justify-between text-brand-600">
-            <span className="text-[10px] font-bold uppercase tracking-wider font-mono">IMPROVING TREND</span>
-            <TrendingUp size={15} />
+          <div className="flex items-center justify-between text-brand-300">
+            <span className="text-[10px] font-bold uppercase tracking-wider font-mono text-slate-300">OVERALL PROGRESS</span>
+            <Zap size={15} className="text-amber-400" />
           </div>
           <div className="mt-2">
-            <div className="font-display text-3xl font-extrabold text-brand-600 font-mono">{improvingInScope}</div>
-            <div className="text-[11px] text-brand-500 mt-0.5 font-semibold">Positive Velocity</div>
+            <div className="font-display text-2xl lg:text-3xl font-extrabold text-amber-400 font-mono drop-shadow-sm">
+              {summary?.kpi_summary?.overall_progress ?? 0}%
+            </div>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                (summary?.kpi_summary?.overall_progress ?? 0) >= 80 ? 'bg-emerald-500 text-white' :
+                (summary?.kpi_summary?.overall_progress ?? 0) >= 60 ? 'bg-amber-500 text-white' : 'bg-rose-500 text-white'
+              }`}>
+                {(summary?.kpi_summary?.overall_progress ?? 0) >= 80 ? 'GREEN (GOOD)' :
+                 (summary?.kpi_summary?.overall_progress ?? 0) >= 60 ? 'AMBER (WATCH)' : 'RED (ACTION)'}
+              </span>
+            </div>
           </div>
         </Card>
       </div>
 
-      {/* 5. DEPARTMENT PERFORMANCE & NEEDS ATTENTION */}
+      {/* 5. TODAY'S ACTION REQUIRED */}
+      <Card className="p-5 space-y-4">
+        <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-navy-800">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-amber-500" />
+            <h3 className="font-display text-sm font-bold text-slate-900 dark:text-white">
+              TODAY'S ACTION REQUIRED
+            </h3>
+          </div>
+          <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200">
+            REAL-TIME INTELLIGENCE
+          </span>
+        </div>
+
+        {summary?.action_items && summary.action_items.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {summary.action_items.map((action) => (
+              <div
+                key={action.id}
+                className={`p-4 rounded-xl border flex flex-col justify-between space-y-3 ${
+                  action.severity === 'URGENT'
+                    ? 'bg-rose-50/60 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/50'
+                    : 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50'
+                }`}
+              >
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded ${
+                      action.severity === 'URGENT' ? 'bg-rose-600 text-white' : 'bg-amber-600 text-white'
+                    }`}>
+                      {action.severity}
+                    </span>
+                    <span className="text-xs font-mono font-bold text-slate-500">Count: {action.count}</span>
+                  </div>
+                  <h4 className="font-bold text-xs text-slate-900 dark:text-white pt-1">{action.title}</h4>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug">{action.reason}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    if (action.target_tab === 'unassigned') {
+                      setShowStaffAllocationModal(true);
+                    } else if (action.target_tab === 'staff-performance') {
+                      document.getElementById('staff-performance-section')?.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                      document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className={`w-full py-1.5 rounded-lg text-xs font-bold transition shadow-xs ${
+                    action.severity === 'URGENT'
+                      ? 'bg-rose-600 hover:bg-rose-700 text-white'
+                      : 'bg-amber-600 hover:bg-amber-700 text-white'
+                  }`}
+                >
+                  {action.action_label} →
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-6 text-center text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl border border-emerald-200">
+            ✓ Everything is on track. No critical departmental actions pending today.
+          </div>
+        )}
+      </Card>
+
+      {/* 6. YEAR / SECTION PERFORMANCE HEATMAP */}
+      {summary?.heatmap_matrix && summary.heatmap_matrix.length > 0 && (
+        <Card className="p-5 space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-navy-800">
+            <div>
+              <h3 className="font-display text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Layers size={16} className="text-brand-500" />
+                <span>Year / Section Performance Matrix (Heatmap)</span>
+              </h3>
+              <p className="text-xs text-slate-500">Progress distribution across academic years and sections</p>
+            </div>
+            <div className="flex items-center gap-2 text-[10px] font-mono">
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-emerald-500" /> GOOD (≥80%)</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-amber-500" /> WATCH (60-79%)</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-rose-500" /> ACTION (&lt;60%)</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 font-mono text-xs">
+            {summary.heatmap_matrix.map((row) => (
+              <div key={row.year_level} className="p-3.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-2.5">
+                <div className="font-bold text-slate-900 dark:text-white text-xs font-display flex justify-between items-center">
+                  <span>{row.year}</span>
+                  <span className="text-[10px] text-slate-400 font-normal">Level {row.year_level}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {row.sections.map((sec) => {
+                    const isSelectedSec = selectedYear === row.year_level && selectedSection === sec.section;
+                    return (
+                      <div
+                        key={sec.section}
+                        onClick={() => {
+                          setSelectedYear(row.year_level);
+                          setSelectedSection(sec.section);
+                          document.getElementById('student-directory-section')?.scrollIntoView({ behavior: 'smooth' });
+                        }}
+                        className={`p-2 rounded-lg border text-center cursor-pointer transition ${
+                          isSelectedSec ? 'ring-2 ring-brand-500 font-extrabold' : ''
+                        } ${
+                          sec.status === 'GREEN' ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300' :
+                          sec.status === 'AMBER' ? 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300' :
+                          sec.status === 'RED' ? 'bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300' :
+                          'bg-slate-100 text-slate-400 border-slate-200'
+                        }`}
+                      >
+                        <div className="text-[10px] font-bold">Sec {sec.section}</div>
+                        <div className="font-mono font-extrabold text-sm mt-0.5">
+                          {sec.progress_pct !== null ? `${sec.progress_pct}%` : '—'}
+                        </div>
+                        <div className="text-[9px] opacity-75">{sec.student_count} std</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {/* 7. DEPARTMENT PERFORMANCE & NEEDS ATTENTION */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Left: Department Performance (Compact) */}
         <Card className="lg:col-span-6 p-5 space-y-4">
@@ -1633,7 +1983,7 @@ export const HODCommandCenter: React.FC = () => {
       </div>
 
       {/* 8. FACULTY MENTORS PERFORMANCE & COMPLETION MATRIX */}
-      <Card className="p-5 space-y-3.5">
+      <Card id="staff-performance-section" className="p-5 space-y-3.5 scroll-mt-20">
         <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-navy-800">
           <div>
             <h3 className="font-display text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -1787,14 +2137,14 @@ export const HODCommandCenter: React.FC = () => {
       {/* Unassign All Mentees Confirmation Modal */}
       {confirmUnassignTarget && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+          className="fixed inset-0 z-[100100] flex items-center justify-center p-4 bg-slate-950/90 dark:bg-black/90 backdrop-blur-xl animate-fade-in"
           onClick={e => { if (e.target === e.currentTarget) setConfirmUnassignTarget(null); }}
         >
           <div className="w-full max-w-md bg-white dark:bg-navy-950 rounded-2xl shadow-2xl border border-rose-200 dark:border-rose-800/60 overflow-hidden">
             {/* Red warning header */}
             <div className="bg-rose-50 dark:bg-rose-900/30 px-6 py-4 border-b border-rose-100 dark:border-rose-800/50 flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-rose-100 dark:bg-rose-800/60 flex items-center justify-center flex-shrink-0">
-                <span className="text-rose-600 dark:text-rose-400 text-lg"></span>
+                <span className="text-rose-600 dark:text-rose-400 text-lg">⚠️</span>
               </div>
               <div>
                 <div className="font-display text-sm font-bold text-rose-800 dark:text-rose-200">Unassign All Mentees</div>
@@ -1848,7 +2198,7 @@ export const HODCommandCenter: React.FC = () => {
 
       {/* View Methodology Modal */}
       {showMethodologyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 animate-fade-in" onClick={e => e.target === e.currentTarget && setShowMethodologyModal(false)}>
+        <div className="fixed inset-0 z-[100050] flex items-center justify-center p-4 bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && setShowMethodologyModal(false)}>
           <div className="w-full max-w-lg bg-white dark:bg-navy-950 rounded-2xl p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
               <h3 className="font-display text-base font-bold text-slate-900 dark:text-white">
@@ -1877,7 +2227,7 @@ export const HODCommandCenter: React.FC = () => {
 
       {/* Ask AI Modal */}
       {showAIModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 animate-fade-in" onClick={e => e.target === e.currentTarget && setShowAIModal(false)}>
+        <div className="fixed inset-0 z-[100050] flex items-center justify-center p-4 bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && setShowAIModal(false)}>
           <div className="w-full max-w-lg bg-white dark:bg-navy-950 rounded-2xl p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
               <h3 className="font-display text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -1912,7 +2262,7 @@ export const HODCommandCenter: React.FC = () => {
 
       {/* What-If Simulator Modal */}
       {showWhatIfModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 animate-fade-in" onClick={e => e.target === e.currentTarget && setShowWhatIfModal(false)}>
+        <div className="fixed inset-0 z-[100050] flex items-center justify-center p-4 bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && setShowWhatIfModal(false)}>
           <div className="w-full max-w-md bg-white dark:bg-navy-950 rounded-2xl p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
               <h3 className="font-display text-base font-bold text-slate-900 dark:text-white">

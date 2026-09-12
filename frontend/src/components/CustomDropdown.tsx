@@ -211,8 +211,8 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   ) : null;
 
   return (
-    <div className={`space-y-1 w-full max-w-full min-w-0 box-border relative ${className}`} ref={dropdownRef} id={id}>
-      <label className={labelClassName || "block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate flex items-center justify-between"}>
+    <div className={`flex flex-col space-y-1.5 w-full max-w-full min-w-0 box-border relative ${className}`} ref={dropdownRef} id={id}>
+      <label className={labelClassName || "block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate flex items-center justify-between h-4 leading-4 m-0 p-0"}>
         <span>{label}</span>
         {selectedOption?.count !== undefined && selectedOption.count > 0 && (
           <span className="text-[9px] font-mono font-bold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-1.5 py-0.5 rounded-full border border-brand-500/20">
@@ -239,7 +239,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
           }
           setIsOpen(!isOpen);
         }}
-        className={triggerClassName || `w-full min-h-[44px] h-auto py-2 flex items-center justify-between px-3.5 rounded-2xl border transition-all duration-200 text-left cursor-pointer group shadow-sm ${
+        className={triggerClassName || `w-full h-11 min-h-[44px] py-2 flex items-center justify-between px-3.5 rounded-2xl border transition-all duration-200 text-left cursor-pointer group shadow-sm box-border ${
           isOpen
             ? 'bg-white dark:bg-slate-800 border-brand-500 ring-2 ring-brand-500/20 shadow-md shadow-brand-500/10'
             : 'bg-white dark:bg-slate-800/90 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700/80 hover:border-brand-500/40'

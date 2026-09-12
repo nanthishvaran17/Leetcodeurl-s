@@ -80,11 +80,22 @@ export function formatDepartmentName(dept: any): string {
   if (norm === 'cse_cs') return 'Computer Science and Engineering (Cyber Security)';
   if (norm === 'cse_iot') return 'Computer Science and Engineering (IoT)';
   if (norm === 'it') return 'Information Technology';
+  if (norm === 'eee') return 'Electrical and Electronics Engineering';
+  if (norm === 'ece') return 'Electronics and Communication Engineering';
+  if (norm === 'mech') return 'Mechanical Engineering';
+  if (norm === 'civil') return 'Civil Engineering';
+  if (norm === 'aids') return 'Artificial Intelligence and Data Science';
   if (typeof dept === 'object' && dept) {
     return dept.name || dept.code || String(dept);
   }
   if (typeof dept === 'string' && dept.trim()) {
-    if (dept.toUpperCase() === 'IT') return 'Information Technology';
+    const clean = dept.trim().toUpperCase();
+    if (clean === 'IT') return 'Information Technology';
+    if (clean === 'EEE') return 'Electrical and Electronics Engineering';
+    if (clean === 'ECE') return 'Electronics and Communication Engineering';
+    if (clean === 'MECH') return 'Mechanical Engineering';
+    if (clean === 'CIVIL') return 'Civil Engineering';
+    if (clean === 'AIDS') return 'Artificial Intelligence and Data Science';
     return dept;
   }
   return String(dept || '');
@@ -279,8 +290,8 @@ export function sortStudents(students: StudentData[], sortBy: SortByKey): Studen
 
     case 'rating':
       return sorted.sort((a, b) => {
-        const ratingA = Number((a.stats as any)?.contest_rating ?? (a as any).contest_rating ?? 0);
-        const ratingB = Number((b.stats as any)?.contest_rating ?? (b as any).contest_rating ?? 0);
+        const ratingA = Number((a.stats as any)?.contest_rating ?? (a as any).contest_rating ?? (a as any).rating ?? (a as any).contestRating ?? 0);
+        const ratingB = Number((b.stats as any)?.contest_rating ?? (b as any).contest_rating ?? (b as any).rating ?? (b as any).contestRating ?? 0);
         return ratingB - ratingA;
       });
 

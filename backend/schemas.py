@@ -40,7 +40,10 @@ class StudentBase(BaseModel):
     codeforces_username: Optional[str] = None
     hackerrank_username: Optional[str] = None
     allocation: Optional[str] = None
+    accommodation: Optional[str] = None
+    twelfth_cutoff: Optional[float] = None
     is_active: bool = True
+
 
 class StudentCreate(StudentBase):
     pass
@@ -430,3 +433,7 @@ class AIAssistantResponse(BaseModel):
     source: str
     dataStatus: str
     requestId: str
+    clarifyingOptions: Optional[List[str]] = None
+    pdfAvailable: Optional[bool] = None
+    downloadUrl: Optional[str] = None
+    tableData: Optional[List[Dict[str, Any]]] = None

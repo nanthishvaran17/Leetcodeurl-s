@@ -112,9 +112,9 @@ class TestLiveWeeklyIntelligenceReport(unittest.TestCase):
         self.assertEqual(cse_res.status_code, 200)
         cse_data = cse_res.json()
         
-        # All returned students should belong to CSE
+        # All returned students should belong to CSE or CSE variant departments
         for s in cse_data["student_3_week_comparison"]:
-            self.assertEqual(s["department"], "CSE")
+            self.assertTrue(s["department"].startswith("CSE"))
 
     def test_hod_department_scoped_authorization(self):
         """Test HOD user role can only access allocated departments."""

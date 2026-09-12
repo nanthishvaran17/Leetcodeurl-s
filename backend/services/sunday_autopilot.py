@@ -542,51 +542,80 @@ class UniversalWeeklyContestAutopilot:
                     "immutable": True
                 }
 
-            # Final Lock Readiness Gate Guard
-            gate = self.evaluate_final_lock_readiness_gate(session.id, db)
-            if not gate.get("allow_lock", False):
-                session.pipeline_state = AutopilotState.LOCK_BLOCKED
+            # Set state to FINALIZING at 09:30 boundary (§29)
+            if session.pipeline_state != "FINALIZED":
+                session.status = "FINALIZING"
+                session.pipeline_state = AutopilotState.FINALIZING
+                session.pipeline_last_updated = datetime.datetime.utcnow()
+                session.last_reconciliation_attempt = datetime.datetime.now(datetime.timezone.utc)
                 db.commit()
-                logger.warning(f"[FINALIZATION_GUARD_BLOCKED] Finalization blocked for session {session.id} because Lock Gate failed: {gate}")
-                return {
-                    "phase": "FINALIZATION",
-                    "success": False,
-                    "status": "LOCK_BLOCKED",
-                    "reason": "Final lock gate failed. Verification incomplete.",
-                    "gate": gate
-                }
 
-            session.status = "FINALIZED"
-            db.commit()
-
-            # Execute full authoritative reconciliation
+            # Final Lock Readiness Gate Guard & Authoritative Reconciliation
+            gate = self.evaluate_final_lock_readiness_gate(session.id, db)
             reconciliation = UniversalContestReconciliationEngine.reconcile_contest(
                 session.id, db, sync_mode="POST_CONTEST_SYNC"
             )
-            dataset_hash = reconciliation.get("checksum") or reconciliation.get("dataset_hash") or hashlib.sha256(str(session.id).encode()).hexdigest()
 
-            session.final_snapshot_id = f"SNAPSHOT-{meta_num(session.contest_name)}-FINAL-{session.id}"
+            is_successful = gate.get("allow_lock", False) or reconciliation.get("success", False)
+
+            if not is_successful:
+                session.status = "MANUAL_REVIEW_REQUIRED"
+                session.pipeline_state = "MANUAL_REVIEW_REQUIRED"
+                session.manual_review_required_at = datetime.datetime.now(datetime.timezone.utc)
+                session.manual_review_reason = "Authoritative final reconciliation incomplete at 09:40:00 Asia/Kolkata deadline"
+                session.reconciliation_failure_count = (session.reconciliation_failure_count or 0) + 1
+                session.last_error_code = "RECONCILIATION_UNRESOLVED"
+                session.last_error_message_safe = str(gate.get("reason") or "Lock gate verification failed")
+                db.commit()
+
+                # Log administrative alert
+                err_log = WeeklyContestErrorLog(
+                    session_id=session.id,
+                    student_id=0,
+                    reg_no="SYSTEM",
+                    student_name="SYSTEM_RECONCILIATION",
+                    field_name="finalization_status",
+                    error_type="MANUAL_REVIEW_REQUIRED",
+                    error_message=f"Contest {session.contest_name} finalization reached 09:40 deadline without full verification. Transitioned to MANUAL_REVIEW_REQUIRED."
+                )
+                db.add(err_log)
+                db.commit()
+
+                logger.warning(f"[FINALIZATION_MANUAL_REVIEW_REQUIRED] Session {session.id} set to MANUAL_REVIEW_REQUIRED: {gate}")
+                return {
+                    "phase": "FINALIZATION",
+                    "success": False,
+                    "status": "MANUAL_REVIEW_REQUIRED",
+                    "reason": session.manual_review_reason,
+                    "gate": gate
+                }
+
+            # SUCCESS: Finalized
+            dataset_hash = reconciliation.get("checksum") or reconciliation.get("dataset_hash") or hashlib.sha256(str(session.id).encode()).hexdigest()
+            session.status = "FINALIZED"
+            session.pipeline_state = AutopilotState.FINALIZED
+            session.final_snapshot_id = f"SNAPSHOT-{session.contest_id or 'CONTEST'}-FINAL-{session.id}"
             session.dataset_hash = dataset_hash
             session.finalized_at = datetime.datetime.now(datetime.timezone.utc)
+            session.finalization_method = getattr(session, 'finalization_method', None) or "AUTOMATIC"
+            session.last_successful_source_fetch = datetime.datetime.now(datetime.timezone.utc)
+            session.pipeline_last_updated = datetime.datetime.utcnow()
             db.commit()
 
             live_cnt = reconciliation.get("live_attended", 0)
             virt_cnt = reconciliation.get("verified_virtual", reconciliation.get("virtual_attended", 0))
             not_cnt = reconciliation.get("not_attended", 0)
 
-            session.pipeline_state = "FINALIZED"
-            session.pipeline_last_updated = datetime.datetime.utcnow()
-            db.commit()
-
             self.current_phase = session.pipeline_state
             self.last_sync_timestamp = datetime.datetime.now(datetime.timezone.utc)
-            self.last_action_summary = f"Contest {session.contest_name} Finalized: {live_cnt} Live | {virt_cnt} Virtual | {not_cnt} Absent"
+            self.last_action_summary = f"Contest {session.contest_name} Finalized ({session.finalization_method}): {live_cnt} Live | {virt_cnt} Virtual | {not_cnt} Absent"
 
             return {
                 "phase": "FINALIZATION",
                 "success": True,
                 "session_id": session.id,
                 "status": "FINALIZED",
+                "finalization_method": session.finalization_method,
                 "audit": reconciliation
             }
         except Exception as e:
