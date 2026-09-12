@@ -254,6 +254,17 @@ def run_migrations():
                         ADD COLUMN IF NOT EXISTS metadata_json JSONB,
                         ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                         ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+
+                    ALTER TABLE weekly_sessions
+                        ADD COLUMN IF NOT EXISTS manual_review_required_at TIMESTAMP WITH TIME ZONE,
+                        ADD COLUMN IF NOT EXISTS manual_review_reason TEXT,
+                        ADD COLUMN IF NOT EXISTS last_successful_source_fetch TIMESTAMP WITH TIME ZONE,
+                        ADD COLUMN IF NOT EXISTS last_reconciliation_attempt TIMESTAMP WITH TIME ZONE,
+                        ADD COLUMN IF NOT EXISTS reconciliation_failure_count INTEGER DEFAULT 0,
+                        ADD COLUMN IF NOT EXISTS last_error_code VARCHAR(100),
+                        ADD COLUMN IF NOT EXISTS last_error_message_safe TEXT,
+                        ADD COLUMN IF NOT EXISTS finalization_method VARCHAR(50),
+                        ADD COLUMN IF NOT EXISTS finalized_by VARCHAR(150);
                 """))
                 conn.execute(__import__('sqlalchemy').text("""
                     UPDATE students
