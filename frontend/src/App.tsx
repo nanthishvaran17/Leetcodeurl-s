@@ -1,7 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { App as CapacitorApp } from '@capacitor/app';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, LogOut } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
@@ -675,17 +674,12 @@ export const App: React.FC = () => {
           />
         )}
 
-        {/* Main Content View Container with Framer Motion Transition */}
-        <AnimatePresence mode="wait">
-          <motion.main
-            id="main-content"
-            key={activeTab}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.24, ease: "easeOut" }}
-            className="min-w-0 w-full"
-          >
+        {/* Main Content View Container with Fast CSS Transition */}
+        <main
+          id="main-content"
+          key={activeTab}
+          className="min-w-0 w-full animate-fade-in"
+        >
 
             <ErrorBoundary>
               <Suspense fallback={<PageSkeleton />}>
@@ -820,8 +814,7 @@ export const App: React.FC = () => {
               )}
             </Suspense>
           </ErrorBoundary>
-        </motion.main>
-      </AnimatePresence>
+        </main>
 
 
       </div>
@@ -906,7 +899,6 @@ export const App: React.FC = () => {
       )}
 
       {/* EXIT CONFIRMATION DIALOG */}
-      <AnimatePresence>
         {showExitConfirmModal && (
           <div
             className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-fade-in"
@@ -914,12 +906,8 @@ export const App: React.FC = () => {
               if (e.target === e.currentTarget) setShowExitConfirmModal(false);
             }}
           >
-            <motion.div
-              initial={{ scale: 0.92, opacity: 0, y: 8 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.92, opacity: 0, y: 8 }}
-              transition={{ duration: 0.18, ease: 'easeOut' }}
-              className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-3xl shadow-2xl p-6 sm:p-7 w-full max-w-sm font-sans relative text-slate-900 dark:text-white overflow-hidden space-y-5"
+            <div
+              className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-3xl shadow-2xl p-6 sm:p-7 w-full max-w-sm font-sans relative text-slate-900 dark:text-white overflow-hidden space-y-5 animate-modal-content"
             >
               <div className="flex items-center gap-3.5">
                 <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40 shrink-0">
@@ -962,10 +950,9 @@ export const App: React.FC = () => {
                   EXIT
                 </button>
               </div>
-            </motion.div>
+            </div>
           </div>
         )}
-      </AnimatePresence>
 
       {/* PWA App Install Banner */}
       <InstallAppPrompt />

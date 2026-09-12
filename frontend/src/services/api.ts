@@ -1,19 +1,21 @@
 import axios from 'axios';
 import { API_BASE_URL, getApiBaseUrl, isCapacitorNative, getApiUrl as configGetApiUrl } from '../config/apiConfig';
-import { getAuthInstance, getOrInitAuth } from './firebase';
-
 export const getApiUrl = configGetApiUrl;
 
 export const getAuthHeaders = async () => {
+  const jwtToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  if (jwtToken) {
+    return { Authorization: `Bearer ${jwtToken}` };
+  }
   try {
+    const { getAuthInstance, getOrInitAuth } = await import('./firebase');
     const auth = getAuthInstance() || getOrInitAuth();
-    if (auth.currentUser) {
+    if (auth?.currentUser) {
       const token = await auth.currentUser.getIdToken();
       if (token) return { Authorization: `Bearer ${token}` };
     }
   } catch (_e) {}
-  const jwtToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  return { Authorization: jwtToken ? `Bearer ${jwtToken}` : '' };
+  return { Authorization: '' };
 };
 
 const api = axios.create({
@@ -111,16 +113,15 @@ api.interceptors.request.use(async (config) => {
     config.url = config.url.substring(4);
   }
   try {
-    const auth = getAuthInstance() || getOrInitAuth();
-    if (auth.currentUser) {
-      const token = await auth.currentUser.getIdToken();
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    } else {
-      const jwtToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      if (jwtToken && !config.headers.Authorization) {
-        config.headers.Authorization = `Bearer ${jwtToken}`;
+    const jwtToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (jwtToken && !config.headers.Authorization) {
+      config.headers.Authorization = `Bearer ${jwtToken}`;
+    } else if (!jwtToken && !config.headers.Authorization) {
+      const { getAuthInstance, getOrInitAuth } = await import('./firebase');
+      const auth = getAuthInstance() || getOrInitAuth();
+      if (auth?.currentUser) {
+        const token = await auth.currentUser.getIdToken();
+        if (token) config.headers.Authorization = `Bearer ${token}`;
       }
     }
   } catch (e) {
@@ -200,29 +201,35 @@ api.interceptors.response.use(
       config._retry = true;
       isRefreshing = true;
 
-      return new Promise((resolve, reject) => {
+      return new Promise(async (resolve, reject) => {
         // Attempt silent refresh using Firebase SDK
-        const auth = getAuthInstance() || getOrInitAuth();
-        if (!auth.currentUser) {
+        try {
+          const { getAuthInstance, getOrInitAuth } = await import('./firebase');
+          const auth = getAuthInstance() || getOrInitAuth();
+          if (!auth?.currentUser) {
             processQueue(new Error('No current user'), null);
             globalLogout();
             return reject(new Error('No current user'));
+          }
+          auth.currentUser.getIdToken(true)
+            .then((newToken) => {
+              config.headers['Authorization'] = 'Bearer ' + newToken;
+              processQueue(null, newToken);
+              resolve(api(config));
+            })
+            .catch(err => {
+              processQueue(err, null);
+              globalLogout();
+              reject(err);
+            })
+            .finally(() => {
+              isRefreshing = false;
+            });
+        } catch (err) {
+          processQueue(err, null);
+          globalLogout();
+          reject(err);
         }
-        auth.currentUser.getIdToken(true)
-          .then((newToken) => {
-            config.headers['Authorization'] = 'Bearer ' + newToken;
-            processQueue(null, newToken);
-            resolve(api(config));
-          })
-          .catch(err => {
-            processQueue(err, null);
-            console.warn("[AUTH] Refresh token expired or invalid. Triggering explicit logout.");
-            globalLogout();
-            reject(err);
-          })
-          .finally(() => {
-            isRefreshing = false;
-          });
       });
     }
 
