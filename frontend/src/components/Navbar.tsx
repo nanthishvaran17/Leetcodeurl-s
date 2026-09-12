@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { Sun, Moon, User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, Zap, AlertOctagon, Bell, Palette, Check, RefreshCw, Sparkles } from 'lucide-react';
+import { Sun, Moon, User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, Zap, AlertOctagon, Bell, Palette, Check, RefreshCw } from 'lucide-react';
 import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
 import { SyncStatusModal } from './SyncStatusModal';
@@ -141,16 +141,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span>Sync Engine Status</span>
               </button>
 
-              {/* AI Copilot Button */}
-              <button
-                type="button"
-                onClick={() => window.dispatchEvent(new CustomEvent('open_ai_widget'))}
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold text-xs shadow-sm transition-all cursor-pointer active:scale-95 border border-white/10"
-                title="Open AI Copilot"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                <span className="hidden sm:inline">AI Copilot</span>
-              </button>
 
               {/* Notifications */}
               {isAuthenticated && (
