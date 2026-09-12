@@ -154,7 +154,6 @@ async def _deferred_startup_tasks():
                         except Exception as _st_err:
                             logger.warning(f"[STARTUP] Atomic migration stmt note: {_st_err}")
                 else:
-                else:
                     # SQLite dialect fallback column additions
                     try:
                         res = conn.execute(text("PRAGMA table_info(student_contest_participations)")).fetchall()
