@@ -416,7 +416,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-start justify-between gap-6 lg:gap-8">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-8">
           {/* Left: Title & Description */}
           <div className="space-y-3.5 min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
