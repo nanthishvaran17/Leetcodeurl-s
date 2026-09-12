@@ -2043,7 +2043,7 @@ export const HRCandidateFinderPage: React.FC = () => {
       {/* 3. CANDIDATE RESULTS SECTION */}
       <div className="space-y-4">
         {/* Results Header & Summary Cards */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
           <div>
             <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
               Candidate Results
@@ -2053,55 +2053,57 @@ export const HRCandidateFinderPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Export Actions */}
-          <div className="flex items-center gap-2">
-            <button onClick={exportToExcel} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 transition-all cursor-pointer">
-              <FileSpreadsheet className="w-4 h-4" /> Export Excel
-            </button>
-            <button onClick={exportToPDF} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-xs border border-slate-600 dark:border-navy-600 transition-all cursor-pointer">
-              <FileText className="w-4 h-4" /> Export PDF
-            </button>
-          </div>
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full xl:w-auto justify-between xl:justify-end">
+            {/* Export Actions */}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button onClick={exportToExcel} className="flex-1 sm:flex-initial flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 transition-all cursor-pointer">
+                <FileSpreadsheet className="w-4 h-4" /> Export Excel
+              </button>
+              <button onClick={exportToPDF} className="flex-1 sm:flex-initial flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-xs border border-slate-600 dark:border-navy-600 transition-all cursor-pointer">
+                <FileText className="w-4 h-4" /> Export PDF
+              </button>
+            </div>
 
-          {/* Compact Metric Cards */}
-          <div className="grid grid-cols-4 gap-2 w-full sm:w-auto">
-            <div className="bg-white dark:bg-navy-900 px-3 py-2 rounded-xl border border-slate-200 dark:border-navy-700 shadow-sm text-center">
-              <span className="text-[10px] font-bold text-slate-400 block uppercase">Found</span>
-              <span className="text-base font-black text-slate-900 dark:text-white">{summaryCounts.total}</span>
-            </div>
-            <div className="bg-emerald-50 dark:bg-emerald-950/30 px-3 py-2 rounded-xl border border-emerald-200 dark:border-emerald-900/40 text-center">
-              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 block uppercase">Ready</span>
-              <span className="text-base font-black text-emerald-700 dark:text-emerald-300">{summaryCounts.ready}</span>
-            </div>
-            <div className="bg-amber-50 dark:bg-amber-950/30 px-3 py-2 rounded-xl border border-amber-200 dark:border-amber-900/40 text-center">
-              <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 block uppercase">Near Ready</span>
-              <span className="text-base font-black text-amber-700 dark:text-amber-300">{summaryCounts.nearReady}</span>
-            </div>
-            <div className="bg-rose-50 dark:bg-rose-950/30 px-3 py-2 rounded-xl border border-rose-200 dark:border-rose-900/40 text-center">
-              <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 block uppercase">Attention</span>
-              <span className="text-base font-black text-rose-700 dark:text-rose-300">{summaryCounts.attention}</span>
+            {/* Compact Metric Cards */}
+            <div className="grid grid-cols-4 gap-2 w-full sm:w-auto">
+              <div className="bg-white dark:bg-navy-900 px-3 py-2 rounded-xl border border-slate-200 dark:border-navy-700 shadow-sm text-center">
+                <span className="text-[10px] font-bold text-slate-400 block uppercase">Found</span>
+                <span className="text-base font-black text-slate-900 dark:text-white">{summaryCounts.total}</span>
+              </div>
+              <div className="bg-emerald-50 dark:bg-emerald-950/30 px-3 py-2 rounded-xl border border-emerald-200 dark:border-emerald-900/40 text-center">
+                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 block uppercase">Ready</span>
+                <span className="text-base font-black text-emerald-700 dark:text-emerald-300">{summaryCounts.ready}</span>
+              </div>
+              <div className="bg-amber-50 dark:bg-amber-950/30 px-3 py-2 rounded-xl border border-amber-200 dark:border-amber-900/40 text-center">
+                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 block uppercase">Near Ready</span>
+                <span className="text-base font-black text-amber-700 dark:text-amber-300">{summaryCounts.nearReady}</span>
+              </div>
+              <div className="bg-rose-50 dark:bg-rose-950/30 px-3 py-2 rounded-xl border border-rose-200 dark:border-rose-900/40 text-center">
+                <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 block uppercase">Attention</span>
+                <span className="text-base font-black text-rose-700 dark:text-rose-300">{summaryCounts.attention}</span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Candidate Table Container */}
         <div ref={tableRef} className="bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-slate-100 dark:border-navy-800 flex items-center justify-between flex-wrap gap-3">
+          <div className="px-4 sm:px-5 py-3.5 border-b border-slate-100 dark:border-navy-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <Award className="w-4 h-4 text-blue-600" />
+              <Award className="w-4 h-4 text-blue-600 shrink-0" />
               <h4 className="font-bold text-xs text-slate-800 dark:text-white uppercase tracking-wider">
                 Master Candidate Table
               </h4>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="relative">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="relative w-full sm:w-auto">
                 <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   value={tableSearch}
                   onChange={e => setTableSearch(e.target.value)}
                   placeholder="Filter table..."
-                  className="pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 dark:border-navy-700 text-xs bg-white dark:bg-navy-800 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 w-44"
+                  className="pl-8 pr-3 py-2 rounded-lg border border-slate-200 dark:border-navy-700 text-xs bg-white dark:bg-navy-800 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-44 min-h-[40px] sm:min-h-0"
                 />
               </div>
             </div>
@@ -2119,46 +2121,163 @@ export const HRCandidateFinderPage: React.FC = () => {
               <p className="text-xs text-slate-400">Try relaxing search parameters above</p>
             </div>
           ) : (
-            <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-              <table className="w-full text-left text-xs whitespace-nowrap table-fixed">
-                <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-800 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  <tr>
-                    <th className="py-3 px-4 text-left w-[22%]">Student</th>
-                    <th className="py-3 px-2 text-center w-[11%]">Register No</th>
-                    <th className="py-3 px-2 text-center w-[8%]">Dept</th>
-                    <th className="py-3 px-2 text-center w-[9%]">Batch</th>
-                    <th className="py-3 px-2 text-center w-[10%] cursor-pointer hover:text-blue-600 transition-colors" onClick={() => { setSortField("global_rank"); setSortAsc(!sortAsc); }}>Global Rank</th>
-                    <th className="py-3 px-2 text-center w-[8%] cursor-pointer hover:text-blue-600 transition-colors" onClick={() => { setSortField("total_solved"); setSortAsc(!sortAsc); }}>Total Solved</th>
-                    <th className="py-3 px-2 text-center w-[6%] cursor-pointer hover:text-emerald-600 transition-colors" onClick={() => { setSortField("easy_solved"); setSortAsc(!sortAsc); }}>Easy</th>
-                    <th className="py-3 px-2 text-center w-[6%] cursor-pointer hover:text-amber-600 transition-colors" onClick={() => { setSortField("medium_solved"); setSortAsc(!sortAsc); }}>Medium</th>
-                    <th className="py-3 px-2 text-center w-[6%] cursor-pointer hover:text-rose-600 transition-colors" onClick={() => { setSortField("hard_solved"); setSortAsc(!sortAsc); }}>Hard</th>
-                    <th className="py-3 px-2 text-center w-[9%] cursor-pointer hover:text-purple-600 transition-colors" onClick={() => { setSortField("contest_rating"); setSortAsc(!sortAsc); }}>Contest Rating</th>
-                    <th className="py-3 px-2 text-center w-[7%]">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
-                  {displayCandidates.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-50/80 dark:hover:bg-navy-800/50 transition-colors">
-                      <td className="py-3 px-4 text-left font-bold text-slate-900 dark:text-white w-[22%]">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center font-black text-xs shadow-xs flex-shrink-0">
-                            {c.name.charAt(0)}
+            <>
+              {/* DESKTOP & TABLET FULL TABLE VIEW (>= 768px) */}
+              <div className="hidden md:block overflow-x-auto max-h-[600px] overflow-y-auto">
+                <table className="w-full text-left text-xs whitespace-nowrap table-fixed">
+                  <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-800 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    <tr>
+                      <th className="py-3 px-4 text-left w-[22%]">Student</th>
+                      <th className="py-3 px-2 text-center w-[11%]">Register No</th>
+                      <th className="py-3 px-2 text-center w-[8%]">Dept</th>
+                      <th className="py-3 px-2 text-center w-[9%]">Batch</th>
+                      <th className="py-3 px-2 text-center w-[10%] cursor-pointer hover:text-blue-600 transition-colors" onClick={() => { setSortField("global_rank"); setSortAsc(!sortAsc); }}>Global Rank</th>
+                      <th className="py-3 px-2 text-center w-[8%] cursor-pointer hover:text-blue-600 transition-colors" onClick={() => { setSortField("total_solved"); setSortAsc(!sortAsc); }}>Total Solved</th>
+                      <th className="py-3 px-2 text-center w-[6%] cursor-pointer hover:text-emerald-600 transition-colors" onClick={() => { setSortField("easy_solved"); setSortAsc(!sortAsc); }}>Easy</th>
+                      <th className="py-3 px-2 text-center w-[6%] cursor-pointer hover:text-amber-600 transition-colors" onClick={() => { setSortField("medium_solved"); setSortAsc(!sortAsc); }}>Medium</th>
+                      <th className="py-3 px-2 text-center w-[6%] cursor-pointer hover:text-rose-600 transition-colors" onClick={() => { setSortField("hard_solved"); setSortAsc(!sortAsc); }}>Hard</th>
+                      <th className="py-3 px-2 text-center w-[9%] cursor-pointer hover:text-purple-600 transition-colors" onClick={() => { setSortField("contest_rating"); setSortAsc(!sortAsc); }}>Contest Rating</th>
+                      <th className="py-3 px-2 text-center w-[7%]">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
+                    {displayCandidates.map((c) => (
+                      <tr key={c.id} className="hover:bg-slate-50/80 dark:hover:bg-navy-800/50 transition-colors">
+                        <td className="py-3 px-4 text-left font-bold text-slate-900 dark:text-white w-[22%]">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center font-black text-xs shadow-xs flex-shrink-0">
+                              {c.name.charAt(0)}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="font-bold text-slate-900 dark:text-white text-xs leading-tight truncate">{c.name}</div>
+                              <div className="text-[10px] text-slate-400 font-mono leading-none truncate">{c.username}</div>
+                            </div>
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="font-bold text-slate-900 dark:text-white text-xs leading-tight truncate">{c.name}</div>
-                            <div className="text-[10px] text-slate-400 font-mono leading-none truncate">{c.username}</div>
+                        </td>
+                        <td className="py-3 px-2 text-center font-mono text-slate-600 dark:text-slate-300 font-medium text-xs w-[11%]">{c.reg_no}</td>
+                        <td className="py-3 px-2 text-center w-[8%]">
+                          <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold text-[10px]">
+                            {c.dept_code}
+                          </span>
+                        </td>
+                        <td className="py-3 px-2 text-center font-semibold text-slate-600 dark:text-slate-400 text-xs w-[9%]">{c.batch}</td>
+                        <td className="py-3 px-2 text-center w-[10%]">
+                          <span className="px-2.5 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-mono font-black text-xs border border-blue-200/60 dark:border-blue-900/50">
+                            {(() => {
+                              const gr: any = c.global_rank;
+                              if (gr === null || gr === undefined || gr === "" || gr === "N/A" || gr === "—") return "—";
+                              if (typeof gr === "string") {
+                                const s = gr.trim();
+                                if (s.startsWith("#")) return s;
+                                const num = parseInt(s.replace(/\D/g, ""), 10);
+                                return !isNaN(num) && num > 0 ? `#${num.toLocaleString()}` : s;
+                              }
+                              if (typeof gr === "number" && gr > 0) return `#${gr.toLocaleString()}`;
+                              return "—";
+                            })()}
+                          </span>
+                        </td>
+                        <td className="py-3 px-2 text-center font-black text-slate-900 dark:text-white text-xs font-mono w-[8%]">{c.total_solved}</td>
+                        <td className="py-3 px-2 text-center font-bold text-emerald-600 dark:text-emerald-400 text-xs font-mono w-[6%]">{c.easy_solved}</td>
+                        <td className="py-3 px-2 text-center font-bold text-amber-600 dark:text-amber-400 text-xs font-mono w-[6%]">{c.medium_solved}</td>
+                        <td className="py-3 px-2 text-center font-bold text-rose-600 dark:text-rose-400 text-xs font-mono w-[6%]">{c.hard_solved}</td>
+                        <td className="py-3 px-2 text-center font-extrabold text-purple-600 dark:text-purple-400 text-xs font-mono w-[9%]">
+                          {c.contest_rating > 0 ? c.contest_rating.toLocaleString() : "—"}
+                        </td>
+                        <td className="py-3 px-2 text-center w-[7%]">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              onClick={() => setSelectedCandidate(c)}
+                              className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white font-bold text-xs border border-blue-200 dark:border-blue-800 transition-all cursor-pointer shadow-2xs"
+                            >
+                              View
+                            </button>
+                            <a
+                              href={c.leetcode_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1 rounded-lg text-slate-400 hover:text-orange-500 transition-colors"
+                              title="Open LeetCode Profile"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
                           </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* MOBILE RESPONSIVE CANDIDATE CARDS (< 768px) */}
+              <div className="block md:hidden space-y-3 p-3 sm:p-4 max-h-[650px] overflow-y-auto">
+                {displayCandidates.map((c) => (
+                  <div
+                    key={c.id}
+                    className="bg-white dark:bg-navy-950 rounded-2xl border border-slate-200/90 dark:border-navy-800 p-4 shadow-sm space-y-3 relative transition-all"
+                  >
+                    {/* Header: Avatar + Student Name + Username & Action Buttons */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center font-black text-sm shadow-xs shrink-0">
+                          {c.name.charAt(0)}
                         </div>
-                      </td>
-                      <td className="py-3 px-2 text-center font-mono text-slate-600 dark:text-slate-300 font-medium text-xs w-[11%]">{c.reg_no}</td>
-                      <td className="py-3 px-2 text-center w-[8%]">
-                        <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold text-[10px]">
-                          {c.dept_code}
+                        <div className="min-w-0 flex-1">
+                          <h5 className="font-extrabold text-slate-900 dark:text-white text-sm leading-snug break-words">
+                            {c.name}
+                          </h5>
+                          {c.username && (
+                            <div className="text-xs text-slate-400 font-mono leading-none truncate mt-0.5">
+                              @{c.username}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Action Buttons: View + External Link */}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          onClick={() => setSelectedCandidate(c)}
+                          className="min-h-[44px] px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-blue-600/20 transition-all cursor-pointer flex items-center gap-1"
+                        >
+                          View
+                        </button>
+                        <a
+                          href={c.leetcode_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 hover:text-orange-500 border border-slate-200 dark:border-navy-700 transition-colors"
+                          title="Open LeetCode Profile"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* Meta Bar: Register No, Batch, Dept */}
+                    <div className="grid grid-cols-2 gap-2 text-xs p-2.5 bg-slate-50 dark:bg-navy-900 rounded-xl border border-slate-100 dark:border-navy-800">
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Register No</span>
+                        <span className="font-mono font-bold text-slate-700 dark:text-slate-200 truncate block mt-0.5">
+                          {c.reg_no || '—'}
                         </span>
-                      </td>
-                      <td className="py-3 px-2 text-center font-semibold text-slate-600 dark:text-slate-400 text-xs w-[9%]">{c.batch}</td>
-                      <td className="py-3 px-2 text-center w-[10%]">
-                        <span className="px-2.5 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-mono font-black text-xs border border-blue-200/60 dark:border-blue-900/50">
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Batch & Dept</span>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <span className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-navy-800 text-slate-800 dark:text-slate-200 font-extrabold text-[10px]">
+                            {c.dept_code}
+                          </span>
+                          <span className="font-semibold text-slate-600 dark:text-slate-400 text-xs">{c.batch}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Performance Grid: Global Rank, Total Solved, Contest Rating */}
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="bg-blue-50/70 dark:bg-blue-950/40 p-2 rounded-xl border border-blue-100 dark:border-blue-900/50">
+                        <span className="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 block uppercase">LeetCode Rank</span>
+                        <span className="font-mono font-black text-xs text-blue-700 dark:text-blue-300 mt-0.5 block">
                           {(() => {
                             const gr: any = c.global_rank;
                             if (gr === null || gr === undefined || gr === "" || gr === "N/A" || gr === "—") return "—";
@@ -2172,38 +2291,33 @@ export const HRCandidateFinderPage: React.FC = () => {
                             return "—";
                           })()}
                         </span>
-                      </td>
-                      <td className="py-3 px-2 text-center font-black text-slate-900 dark:text-white text-xs font-mono w-[8%]">{c.total_solved}</td>
-                      <td className="py-3 px-2 text-center font-bold text-emerald-600 dark:text-emerald-400 text-xs font-mono w-[6%]">{c.easy_solved}</td>
-                      <td className="py-3 px-2 text-center font-bold text-amber-600 dark:text-amber-400 text-xs font-mono w-[6%]">{c.medium_solved}</td>
-                      <td className="py-3 px-2 text-center font-bold text-rose-600 dark:text-rose-400 text-xs font-mono w-[6%]">{c.hard_solved}</td>
-                      <td className="py-3 px-2 text-center font-extrabold text-purple-600 dark:text-purple-400 text-xs font-mono w-[9%]">
-                        {c.contest_rating > 0 ? c.contest_rating.toLocaleString() : "—"}
-                      </td>
-                      <td className="py-3 px-2 text-center w-[7%]">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            onClick={() => setSelectedCandidate(c)}
-                            className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white font-bold text-xs border border-blue-200 dark:border-blue-800 transition-all cursor-pointer shadow-2xs"
-                          >
-                            View
-                          </button>
-                          <a
-                            href={c.leetcode_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-1 rounded-lg text-slate-400 hover:text-orange-500 transition-colors"
-                            title="Open LeetCode Profile"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </a>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      </div>
+
+                      <div className="bg-slate-100/70 dark:bg-navy-900 p-2 rounded-xl border border-slate-200/60 dark:border-navy-800">
+                        <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 block uppercase">Total Solved</span>
+                        <span className="font-mono font-black text-xs text-slate-900 dark:text-white mt-0.5 block">
+                          {c.total_solved}
+                        </span>
+                      </div>
+
+                      <div className="bg-purple-50/70 dark:bg-purple-950/40 p-2 rounded-xl border border-purple-100 dark:border-purple-900/50">
+                        <span className="text-[10px] font-extrabold text-purple-600 dark:text-purple-400 block uppercase">Contest Rating</span>
+                        <span className="font-mono font-black text-xs text-purple-700 dark:text-purple-300 mt-0.5 block">
+                          {c.contest_rating > 0 ? c.contest_rating.toLocaleString() : "—"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Easy / Medium / Hard Breakdown */}
+                    <div className="flex items-center justify-between text-[11px] font-mono font-bold px-2 pt-1 border-t border-slate-100 dark:border-navy-800">
+                      <span className="text-emerald-600 dark:text-emerald-400">Easy: {c.easy_solved}</span>
+                      <span className="text-amber-600 dark:text-amber-400">Medium: {c.medium_solved}</span>
+                      <span className="text-rose-600 dark:text-rose-400">Hard: {c.hard_solved}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>
