@@ -59,13 +59,15 @@ async def _deferred_startup_tasks():
                 is_pg = "postgresql" in db_url_str or "postgres" in db_url_str
 
                 if is_pg:
-                    # PostgreSQL IF NOT EXISTS column additions
-                    conn.execute(text("""
+                    # Execute each ALTER TABLE in an isolated atomic transaction to prevent multi-table deadlocks
+                    pg_statements = [
+                        """
                         ALTER TABLE students
                             ADD COLUMN IF NOT EXISTS primary_leetcode_id VARCHAR(100),
                             ADD COLUMN IF NOT EXISTS secondary_leetcode_id VARCHAR(100),
                             ADD COLUMN IF NOT EXISTS secondary_status VARCHAR(50) DEFAULT 'none';
-
+                        """,
+                        """
                         ALTER TABLE student_contest_participations
                             ADD COLUMN IF NOT EXISTS official_attendance_state VARCHAR(30),
                             ADD COLUMN IF NOT EXISTS is_frozen BOOLEAN DEFAULT FALSE,
@@ -75,10 +77,12 @@ async def _deferred_startup_tasks():
                             ADD COLUMN IF NOT EXISTS confidence VARCHAR(50) DEFAULT 'HIGH',
                             ADD COLUMN IF NOT EXISTS verification_level VARCHAR(50),
                             ADD COLUMN IF NOT EXISTS verification_evidence TEXT;
-
+                        """,
+                        """
                         ALTER TABLE weekly_session_snapshots
                             ADD COLUMN IF NOT EXISTS is_sequence_broken BOOLEAN DEFAULT FALSE;
-
+                        """,
+                        """
                         ALTER TABLE admin_audit_logs
                             ADD COLUMN IF NOT EXISTS audit_id VARCHAR(100),
                             ADD COLUMN IF NOT EXISTS event_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -129,7 +133,8 @@ async def _deferred_startup_tasks():
                             ADD COLUMN IF NOT EXISTS metadata_json JSONB,
                             ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                             ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
-
+                        """,
+                        """
                         ALTER TABLE weekly_sessions
                             ADD COLUMN IF NOT EXISTS manual_review_required_at TIMESTAMP WITH TIME ZONE,
                             ADD COLUMN IF NOT EXISTS manual_review_reason TEXT,
@@ -140,7 +145,15 @@ async def _deferred_startup_tasks():
                             ADD COLUMN IF NOT EXISTS last_error_message_safe TEXT,
                             ADD COLUMN IF NOT EXISTS finalization_method VARCHAR(50),
                             ADD COLUMN IF NOT EXISTS finalized_by VARCHAR(150);
-                    """))
+                        """
+                    ]
+                    for stmt in pg_statements:
+                        try:
+                            with engine.begin() as atomic_conn:
+                                atomic_conn.execute(text(stmt))
+                        except Exception as _st_err:
+                            logger.warning(f"[STARTUP] Atomic migration stmt note: {_st_err}")
+                else:
                 else:
                     # SQLite dialect fallback column additions
                     try:
