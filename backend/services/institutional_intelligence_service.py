@@ -457,9 +457,16 @@ I can also generate an Executive PDF report or show detailed submission history 
             }
 
         # ---------------------------------------------------------------------
-        # 3. ACTION REQUESTS (PDF, REPORT, EXPORT)
         # ---------------------------------------------------------------------
-        if any(w in q_clean for w in ["pdf", "make pdf", "create pdf", "pdf venum", "export pdf", "create report", "make report", "download report"]):
+        # 3. ACTION REQUESTS (ONLY FOR STANDALONE PDF/EXPORT REQUESTS WITHOUT SPECIFIC QUERY DATA)
+        # ---------------------------------------------------------------------
+        has_specific_data_query = any(w in q_clean for w in [
+            "top", "toper", "topper", "best", "performer", "list", "solver", "solved", 
+            "contest", "conetst", "absent", "missed", "inactive", "staff", "faculty", 
+            "7322", "who", "ethana", "how many", "count", "five", "10", "ten", "cse-cs", "cse-iot"
+        ]) or bool(re.search(r'\b(cse|cs|iot|it|ece|eee|aids|agri)\b', q_clean))
+
+        if any(w in q_clean for w in ["make pdf", "create pdf", "pdf venum", "export pdf", "create report", "make report", "download report"]) or (any(w in q_clean for w in ["pdf", "report", "excel"]) and not has_specific_data_query):
             ctx_summary = "Institutional Intelligence Report"
             if history:
                 for h in reversed(history):
@@ -504,16 +511,16 @@ Click the button below to view or export the verified PDF document."""
         # ---------------------------------------------------------------------
         dept_match = None
         dept_patterns = [
-            ("CSE", r'\b(cse|computer science)\b'),
-            ("CS", r'\b(cs|cyber security|cyber)\b'),
-            ("IOT", r'\b(iot|internet of things)\b'),
+            ("CS", r'\b(cs|cse-cs|cse_cs|cse\s*\(cs\)|cyber security|cyber)\b'),
+            ("IOT", r'\b(iot|cse-iot|cse_iot|cse\s*\(iot\)|internet of things)\b'),
             ("IT", r'\b(it|information tech|information technology)\b'),
             ("ECE", r'\b(ece|electronics)\b'),
             ("EEE", r'\b(eee|electrical)\b'),
             ("MECH", r'\b(mech|mechanical)\b'),
             ("CIVIL", r'\b(civil)\b'),
             ("AIDS", r'\b(aids|ai\s*&\s*ds|ai\s*and\s*ds)\b'),
-            ("AIML", r'\b(aiml|ai\s*&\s*ml|ai\s*and\s*ml)\b')
+            ("AIML", r'\b(aiml|ai\s*&\s*ml|ai\s*and\s*ml)\b'),
+            ("CSE", r'\b(cse|computer science)\b')
         ]
         for code_label, pat in dept_patterns:
             if re.search(pat, q_clean):
@@ -580,8 +587,12 @@ Click the button below to view or export the verified PDF document."""
         students_q = apply_role_based_student_filter(students_q, current_user, db)
 
         if dept_match:
-            if dept_match in ("CSE", "CS"):
-                depts = db.query(Department).filter(or_(Department.code.ilike("%CSE%"), Department.code.ilike("%CS%"), Department.name.ilike("%Computer Science%"))).all()
+            if dept_match == "CS":
+                depts = db.query(Department).filter(or_(Department.code == "CS", Department.code.ilike("%(CS)%"), Department.name.ilike("%Cyber%"))).all()
+            elif dept_match == "IOT":
+                depts = db.query(Department).filter(or_(Department.code == "IOT", Department.code.ilike("%(IOT)%"), Department.name.ilike("%IoT%"), Department.name.ilike("%Internet%"))).all()
+            elif dept_match == "CSE":
+                depts = db.query(Department).filter(or_(Department.code == "CSE", Department.name == "Computer Science & Engineering")).all()
             else:
                 depts = db.query(Department).filter(or_(Department.code.ilike(f"%{dept_match}%"), Department.name.ilike(f"%{dept_match}%"))).all()
             if depts:
@@ -758,7 +769,7 @@ I can show specific student progress assigned to any faculty member."""
             }
 
         # E. TOP PERFORMERS / LEADERBOARD / YEAR FOLLOW-UP / LANGUAGE LEADERBOARD
-        if any(w in q_clean for w in ["top", "best", "performer", "highest", "leader", "solver", "solved", "rank", "yaaru", "only", "find out", "user", "users"]) or year_match or lang_match:
+        if any(w in q_clean for w in ["top", "toper", "topper", "best", "performer", "highest", "leader", "solver", "solvers", "solved", "rank", "list", "yaaru", "only", "find out", "user", "users"]) or year_match or lang_match or dept_match:
             student_ids = [s.id for s in all_students]
             top_list = []
 
