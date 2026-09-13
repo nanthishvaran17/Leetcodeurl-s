@@ -313,8 +313,8 @@ async def _deferred_startup_tasks():
                 def _run_bg_pregen():
                     with SessionLocal() as _report_db:
                         pregenerate_all_weekly_reports(_report_db)
-                await asyncio.to_thread(_run_bg_pregen)
-                logger.info("[STARTUP] Weekly report pre-generation worker completed.")
+                asyncio.create_task(asyncio.to_thread(_run_bg_pregen))
+                logger.info("[STARTUP] Weekly report pre-generation worker dispatched in background.")
             except Exception as _p_err:
                 logger.warning(f"[STARTUP] Weekly report pre-generation note: {_p_err}")
 
