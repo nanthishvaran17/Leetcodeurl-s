@@ -92,13 +92,13 @@ const StudentDetailDrawer: React.FC<{
           {/* Header */}
           <div className="flex items-start justify-between pb-4 border-b border-slate-100 dark:border-navy-800">
             <div>
-              <span className="px-2 py-0.5 rounded bg-brand-50 dark:bg-brand-950 text-brand-600 font-mono text-[10px] font-bold">
+              <span className="px-2 py-0.5 rounded bg-brand-50 dark:bg-brand-950 text-brand-600 text-[10px] font-bold">
                 {student.reg_no}
               </span>
               <h3 className="font-display text-lg font-bold text-slate-900 dark:text-white mt-1">
                 {student.name}
               </h3>
-              <p className="text-xs text-slate-500 font-mono">
+              <p className="text-xs text-slate-500 font-medium">
                 {student.department_code} • {student.year_level} Year
               </p>
             </div>
@@ -110,15 +110,15 @@ const StudentDetailDrawer: React.FC<{
           {/* Key Metrics Grid */}
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-100 dark:border-navy-700">
-              <div className="text-[10px] font-bold uppercase text-slate-400 font-mono">Total Solved</div>
-              <div className="font-display text-2xl font-bold text-slate-900 dark:text-white font-mono mt-0.5">
+              <div className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Total Solved</div>
+              <div className="font-display text-2xl font-black text-slate-900 dark:text-white mt-0.5">
                 {student.total_solved}
               </div>
               <div className="text-[11px] text-emerald-600 font-medium">{student.weekly_change || '+0'} this week</div>
             </div>
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-100 dark:border-navy-700">
-              <div className="text-[10px] font-bold uppercase text-slate-400 font-mono">Contest Rating</div>
-              <div className="font-display text-2xl font-bold text-brand-600 font-mono mt-0.5">
+              <div className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Contest Rating</div>
+              <div className="font-display text-2xl font-black text-brand-600 mt-0.5">
                 {student.contest_rating || '—'}
               </div>
               <div className="text-[11px] text-slate-500">Contest: {student.contest_standing || '—'}</div>
@@ -127,19 +127,19 @@ const StudentDetailDrawer: React.FC<{
 
           {/* Difficulty Breakdown */}
           <div className="space-y-2">
-            <h4 className="font-display text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">
+            <h4 className="font-display text-xs font-bold uppercase tracking-wider text-slate-500">
               Problem Difficulty Ratio
             </h4>
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
-              <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-mono font-bold">
+              <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold">
                 <div className="text-[10px] text-emerald-600">Easy</div>
                 <div>{student.easy_solved}</div>
               </div>
-              <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-mono font-bold">
+              <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-bold">
                 <div className="text-[10px] text-amber-600">Medium</div>
                 <div>{student.medium_solved}</div>
               </div>
-              <div className="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 font-mono font-bold">
+              <div className="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 font-bold">
                 <div className="text-[10px] text-rose-600">Hard</div>
                 <div>{student.hard_solved}</div>
               </div>
@@ -148,18 +148,18 @@ const StudentDetailDrawer: React.FC<{
 
           {/* Mentorship Allocation Control */}
           <div className="space-y-2.5">
-            <h4 className="font-display text-xs font-bold uppercase tracking-wider text-slate-500 font-mono">
+            <h4 className="font-display text-xs font-bold uppercase tracking-wider text-slate-500">
               Faculty Mentorship Allocation
             </h4>
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-100 dark:border-navy-700 space-y-3">
               <div className="flex justify-between items-center text-xs">
                 <span className="text-slate-500">Current Mentor:</span>
-                <span className="font-bold text-slate-900 dark:text-white font-mono">
+                <span className="font-bold text-slate-900 dark:text-white">
                   {student.assigned_staff || 'Unassigned'}
                 </span>
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-400 font-mono mb-1">
+                <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
                   Reassign Faculty Mentor:
                 </label>
                 <GlobalFilter
@@ -358,49 +358,51 @@ const StaffAllocationModal: React.FC<{
           )}
 
           {/* Quick Actions Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-100 dark:border-navy-700">
-            <div>
-              <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">Unassigned Students Queue: </span>
-              <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold font-mono">{unassignedStudents.length}</span>
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-xs">
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold text-slate-900 dark:text-white text-xs uppercase tracking-wide">Unassigned Students Queue:</span>
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800 font-black text-xs uppercase tracking-wider">
+                {unassignedStudents.length} Students Pending
+              </span>
             </div>
-            {/* Auto-distribute button removed as per user request to handle allocations manually */}
           </div>
 
           {/* Faculty Workload Grid */}
-          <div className="space-y-2.5">
-            <h4 className="font-bold font-mono text-slate-500 uppercase tracking-wider">
-              Department Faculty Workload Matrix
+          <div className="space-y-3">
+            <h4 className="font-black text-slate-900 dark:text-white text-xs uppercase tracking-wider flex items-center justify-between font-display">
+              <span>Department Faculty Workload Matrix</span>
+              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">1:20 Ideal Ratio</span>
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {workload.map(fac => {
                 const count = fac.assigned_students || 0;
                 const pct = Math.min(100, Math.round((count / 20) * 100));
                 return (
-                  <div key={fac.faculty_id} className="p-3.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 space-y-2.5">
+                  <div key={fac.faculty_id} className="p-4 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 space-y-3 shadow-xs">
                     <div className="flex justify-between items-start">
                       <div>
-                        <div className="font-bold text-slate-900 dark:text-white font-display text-sm">{fac.faculty_name}</div>
-                        <div className="text-[11px] text-slate-400 font-mono">{fac.email}</div>
+                        <div className="font-black text-slate-900 dark:text-white font-display text-sm">{fac.faculty_name}</div>
+                        <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">{fac.email}</div>
                       </div>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${fac.workload_status === 'NORMAL' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : fac.workload_status === 'AT_RATIO' ? 'bg-brand-50 text-brand-700 border border-brand-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
+                      <span className={`px-2.5 py-1 rounded text-[11px] font-black border ${fac.workload_status === 'NORMAL' ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300' : fac.workload_status === 'AT_RATIO' ? 'bg-brand-100 text-brand-800 border-brand-300 dark:bg-brand-950 dark:text-brand-300' : 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-300'}`}>
                         {count}/20 ({pct}%)
                       </span>
                     </div>
 
                     {/* Progress bar */}
-                    <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-navy-800 overflow-hidden">
-                      <div className={`h-full rounded-full ${count <= 20 ? 'bg-emerald-500' : 'bg-rose-500'}`} style={{ width: `${pct}%` }} />
+                    <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-navy-800 overflow-hidden border border-slate-200 dark:border-navy-700 shadow-inner">
+                      <div className={`h-full rounded-full transition-all duration-300 ${count <= 20 ? 'bg-emerald-500' : 'bg-rose-500'}`} style={{ width: `${pct}%` }} />
                     </div>
 
                     {/* Assigned Student Mini Tags */}
                     {fac.students && fac.students.length > 0 && (
-                      <div className="space-y-1">
-                        <div className="text-[10px] text-slate-400 font-mono">Assigned Students ({fac.students.length}):</div>
-                        <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+                      <div className="space-y-1.5 pt-1">
+                        <div className="text-xs font-bold text-slate-700 dark:text-slate-300">Assigned Mentees ({fac.students.length}):</div>
+                        <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
                           {fac.students.map(s => (
-                            <span key={s.id} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-navy-800 text-[10px] font-mono">
+                            <span key={s.id} className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 text-xs font-extrabold text-slate-800 dark:text-slate-200">
                               <span>{s.name.split(' ')[0]}</span>
-                              <button onClick={() => handleUnassignStudent(fac.faculty_id, s.id)} className="text-slate-400 hover:text-rose-600">×</button>
+                              <button onClick={() => handleUnassignStudent(fac.faculty_id, s.id)} className="text-slate-400 hover:text-rose-600 font-bold">×</button>
                             </span>
                           ))}
                         </div>
@@ -414,9 +416,9 @@ const StaffAllocationModal: React.FC<{
 
           {/* Unassigned Students Selection Box */}
           {unassignedStudents.length > 0 && (
-            <div className="p-4 rounded-xl border border-slate-200 dark:border-navy-700 space-y-3">
-              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-                <h4 className="font-bold font-mono text-slate-700 dark:text-slate-200">
+            <div className="p-4 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 space-y-3 shadow-xs">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-100 dark:border-navy-800 pb-2.5">
+                <h4 className="font-black text-slate-900 dark:text-white text-sm font-display">
                   Manual Student Allocation ({unassignedStudents.length} unassigned)
                 </h4>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
@@ -436,18 +438,18 @@ const StaffAllocationModal: React.FC<{
                   <button
                     disabled={!targetFacultyId || selectedUnassigned.length === 0 || actionLoading}
                     onClick={handleBatchAssign}
-                    className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold disabled:opacity-50 touch-target-min sm:min-h-[auto]"
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs disabled:opacity-40 transition shadow-sm cursor-pointer"
                   >
                     Assign ({selectedUnassigned.length})
                   </button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-52 overflow-y-auto pt-1">
                 {unassignedStudents.map(s => {
                   const isChecked = selectedUnassigned.includes(s.id);
                   return (
-                    <label key={s.id} className={`p-2 rounded-lg border flex items-center gap-2 transition ${isChecked ? 'bg-brand-50 border-brand-300 font-bold' : 'border-slate-100 bg-slate-50'}`}>
+                    <label key={s.id} className={`p-2.5 rounded-xl border flex items-center gap-2.5 transition cursor-pointer ${isChecked ? 'bg-brand-50 dark:bg-brand-950/80 border-brand-400 dark:border-brand-700 shadow-xs' : 'border-slate-200 dark:border-navy-700 bg-slate-50/70 dark:bg-navy-950/50 hover:bg-slate-100 dark:hover:bg-navy-800'}`}>
                       <input
                         type="checkbox"
                         checked={isChecked}
@@ -455,10 +457,11 @@ const StaffAllocationModal: React.FC<{
                           if (e.target.checked) setSelectedUnassigned(prev => [...prev, s.id]);
                           else setSelectedUnassigned(prev => prev.filter(id => id !== s.id));
                         }}
+                        className="w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 shrink-0"
                       />
-                      <div className="truncate">
-                        <div className="truncate text-slate-800 dark:text-slate-200">{s.name}</div>
-                        <div className="text-[10px] text-slate-400 font-mono">{s.reg_no}</div>
+                      <div className="truncate min-w-0">
+                        <div className="truncate text-slate-900 dark:text-white font-extrabold text-xs">{s.name}</div>
+                        <div className="text-[11px] font-bold text-amber-700 dark:text-amber-400 mt-0.5">{s.reg_no}</div>
                       </div>
                     </label>
                   );
@@ -630,28 +633,28 @@ const ReportHubModal: React.FC<{
         {/* Body */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1 min-h-0 text-xs custom-scrollbar">
           {/* Controls Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-sm">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-sm">
+            <div className="md:col-span-4">
               <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Report Type</label>
               <GlobalFilter
                 value={selectedReportType}
                 onChange={val => setSelectedReportType(val)}
-                dropdownWidth="min-w-[320px]"
+                dropdownWidth="min-w-[460px]"
                 options={[
-                  { value: "EXECUTIVE", label: "Executive Coding Health Report" },
-                  { value: "FACULTY_ALLOCATION", label: "Faculty Mentorship Audit Report" },
-                  { value: "INACTIVE_AT_RISK", label: "Inactive & At-Risk Intervention Report" }
+                  { value: "EXECUTIVE", label: "Executive Coding Health Report", pillText: "EXE" },
+                  { value: "FACULTY_ALLOCATION", label: "Faculty Mentorship Audit Report", pillText: "FAC" },
+                  { value: "INACTIVE_AT_RISK", label: "Inactive & At-Risk Intervention Report", pillText: "INA" }
                 ]}
                 icon={<FileText className="w-4 h-4 text-brand-500" />}
               />
             </div>
 
-            <div>
+            <div className="md:col-span-4">
               <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Department Scope</label>
               <GlobalFilter
                 value={selectedDeptId?.toString() || ""}
                 onChange={val => setSelectedDeptId(val ? Number(val) : undefined)}
-                dropdownWidth="min-w-[320px]"
+                dropdownWidth="min-w-[460px]"
                 options={[
                   { value: "", label: "All Institutional Departments", pillText: "ALL" },
                   ...departments.map((d: any) => ({ value: String(d.id), label: d.name, pillText: d.code }))
@@ -660,12 +663,12 @@ const ReportHubModal: React.FC<{
               />
             </div>
 
-            <div>
+            <div className="md:col-span-2">
               <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Academic Year</label>
               <GlobalFilter
                 value={selectedYear}
                 onChange={val => setSelectedYear(val)}
-                dropdownWidth="min-w-[240px]"
+                dropdownWidth="min-w-[260px]"
                 options={[
                   { value: "ALL", label: "All Academic Years", pillText: "ALL" },
                   { value: "1", label: "I Year", pillText: "1st" },
@@ -677,12 +680,12 @@ const ReportHubModal: React.FC<{
               />
             </div>
 
-            <div>
+            <div className="md:col-span-2">
               <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1.5">Section / Cohort</label>
               <GlobalFilter
                 value={selectedSection}
                 onChange={val => setSelectedSection(val)}
-                dropdownWidth="min-w-[220px]"
+                dropdownWidth="min-w-[240px]"
                 options={[
                   { value: "ALL", label: "All Sections", pillText: "ALL" },
                   { value: "A", label: "Section A", pillText: "A" },
@@ -713,10 +716,10 @@ const ReportHubModal: React.FC<{
             <div className="p-5 sm:p-6 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 shadow-md space-y-4 text-slate-900 dark:text-white">
               <div className="border-b border-slate-200 dark:border-navy-800 pb-3 flex justify-between items-end flex-wrap gap-2">
                 <div>
-                  <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider font-display">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</div>
-                  <h2 className="text-base sm:text-lg font-black font-display text-slate-950 dark:text-white mt-0.5">{reportData?.report_title}</h2>
+                  <div className="text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</div>
+                  <h2 className="text-base sm:text-lg font-black text-slate-950 dark:text-white mt-0.5 tracking-tight">{reportData?.report_title}</h2>
                 </div>
-                <div className="text-right text-xs text-slate-600 dark:text-slate-300 font-bold font-sans">
+                <div className="text-right text-xs text-slate-600 dark:text-slate-300 font-bold">
                   {reportData?.generated_at}
                 </div>
               </div>
@@ -727,16 +730,16 @@ const ReportHubModal: React.FC<{
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {Object.entries(reportData?.summary_metrics || {}).map(([k, v]: any) => (
                       <div key={k} className="p-3.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200/80 dark:border-navy-800 shadow-xs">
-                        <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider font-display">{k}</div>
-                        <div className="text-xl font-black font-display text-brand-600 dark:text-brand-400 mt-1">{String(v)}</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider">{k}</div>
+                        <div className="text-xl sm:text-2xl font-black text-brand-600 dark:text-brand-400 mt-1 tracking-tight">{String(v)}</div>
                       </div>
                     ))}
                   </div>
 
                   <div className="overflow-x-auto table-responsive-container">
-                    <table className="w-full text-left text-xs border-collapse mobile-card-table font-sans">
+                    <table className="w-full text-left text-xs border-collapse mobile-card-table">
                       <thead className="hidden md:table-header-group">
-                        <tr className="border-b border-slate-200 dark:border-navy-800 font-bold text-slate-500 dark:text-slate-400 uppercase text-[10px] tracking-wider font-display">
+                        <tr className="border-b border-slate-200 dark:border-navy-800 font-bold text-slate-500 dark:text-slate-400 uppercase text-[10px] tracking-wider">
                         <th className="py-2.5 px-3">Dimension</th>
                         <th className="py-2.5 px-3 text-right">Score</th>
                       </tr>
@@ -1124,6 +1127,35 @@ export const HODCommandCenter: React.FC = () => {
     }
   };
 
+  const rawYearMatrix = summary?.benchmarks?.year_matrix || [];
+  const yearMatrix = useMemo(() => {
+    const map = new Map<string, YearBenchmark>();
+    const canonicalOrder: Record<string, number> = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4 };
+    for (const item of rawYearMatrix) {
+      const raw = String(item.year_level || item.year || '').toUpperCase().trim();
+      let code = 'I';
+      if (raw.includes('IV') || raw.includes('4')) code = 'IV';
+      else if (raw.includes('III') || raw.includes('3')) code = 'III';
+      else if (raw.includes('II') || raw.includes('2')) code = 'II';
+      else if (raw.includes('I') || raw.includes('1')) code = 'I';
+
+      if (!map.has(code)) {
+        map.set(code, {
+          ...item,
+          year: `${code} Year`,
+          year_level: code
+        });
+      } else {
+        const existing = map.get(code)!;
+        existing.student_count = (existing.student_count || 0) + (item.student_count || 0);
+        existing.active_count = (existing.active_count || 0) + (item.active_count || 0);
+        existing.health_score = Math.max(existing.health_score || 0, item.health_score || 0);
+        existing.participation_pct = Math.round(((existing.active_count || 0) / Math.max(1, existing.student_count || 1)) * 100);
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => (canonicalOrder[a.year_level] || 99) - (canonicalOrder[b.year_level] || 99));
+  }, [rawYearMatrix]);
+
   if (loading && !summary) {
     return (
       <div className="flex flex-col items-center justify-center py-32 text-slate-400">
@@ -1138,7 +1170,6 @@ export const HODCommandCenter: React.FC = () => {
   const brief = summary?.executive_brief;
   const needsAtt = summary?.needs_attention;
   const deptMatrix = summary?.benchmarks?.department_matrix || [];
-  const yearMatrix = summary?.benchmarks?.year_matrix || [];
 
   const totalInScope = health?.total_students || 0;
   const activeInScope = health?.active_this_week || 0;
@@ -1984,37 +2015,81 @@ export const HODCommandCenter: React.FC = () => {
           </div>
         </Card>
 
-        {/* Year Benchmarks & Skill Gaps */}
-        <div className="lg:col-span-4 space-y-4">
-          <Card className="p-4 space-y-3">
-            <h4 className="font-display text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
-              Year Benchmarks
-            </h4>
-            <div className="space-y-2 text-xs">
-              {yearMatrix.map(y => (
-                <div key={y.year_level} className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-navy-800 font-mono">
-                  <span className="font-bold text-slate-700 dark:text-slate-200">{y.year}</span>
-                  <div className="text-right">
-                    <span className="text-emerald-600 font-bold">{y.participation_pct}% Part</span> • <span className="text-brand-600 font-bold">{y.health_score} Health</span>
+        {/* Year Benchmarks & Skill Gaps Full-Width Row */}
+        <div className="lg:col-span-12 grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {/* Year-Wise Academic Benchmarks Card */}
+          <Card className="p-5 space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-navy-800">
+              <div>
+                <h4 className="font-display text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono flex items-center gap-2">
+                  <BarChart3 size={16} className="text-brand-500" />
+                  <span>Year-Wise Academic Benchmarks</span>
+                </h4>
+                <p className="text-xs text-slate-500 font-sans mt-0.5">Participation and health score breakdown by academic cohort.</p>
+              </div>
+              <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 font-bold">
+                Target: 80%+ Active
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {yearMatrix.length === 0 ? (
+                <div className="col-span-2 p-6 text-center text-slate-400 font-mono text-xs">No year benchmark metrics recorded.</div>
+              ) : (
+                yearMatrix.map(y => (
+                  <div key={y.year_level} className="p-3.5 rounded-xl bg-slate-50 dark:bg-navy-900/80 border border-slate-200 dark:border-navy-800 font-mono flex items-center justify-between shadow-xs">
+                    <div>
+                      <div className="font-extrabold text-slate-900 dark:text-white text-xs">{y.year}</div>
+                      <div className="text-[10px] text-slate-500 font-sans mt-0.5">{y.student_count || 0} Students Tracked</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-emerald-600 dark:text-emerald-400 font-extrabold text-xs">{y.participation_pct}% <span className="text-[10px] font-normal text-slate-400">Part</span></div>
+                      <div className="text-brand-600 dark:text-brand-400 font-extrabold text-xs">{y.health_score} <span className="text-[10px] font-normal text-slate-400">Health</span></div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </Card>
 
-          <Card className="p-4 space-y-3">
-            <h4 className="font-display text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono">
-              Top Coding Skill Gaps
-            </h4>
-            <div className="space-y-2 text-xs font-mono">
+          {/* Top Coding Skill Gaps Card */}
+          <Card className="p-5 space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-navy-800">
+              <div>
+                <h4 className="font-display text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider font-mono flex items-center gap-2">
+                  <Target size={16} className="text-rose-500" />
+                  <span>Top Institutional Skill Gaps & Focus Areas</span>
+                </h4>
+                <p className="text-xs text-slate-500 font-sans mt-0.5">Key problem topics requiring targeted mentor-led lab sprints.</p>
+              </div>
+              <span className="text-[10px] font-mono text-rose-700 bg-rose-50 dark:bg-rose-950 dark:text-rose-300 px-2 py-0.5 rounded border border-rose-200 dark:border-rose-800 font-bold">
+                Priority Action
+              </span>
+            </div>
+
+            <div className="space-y-3 font-mono">
               {[
-                { name: 'Dynamic Programming', pct: '27.3%' },
-                { name: 'Graph BFS/DFS', pct: '42.0%' },
-                { name: 'Binary Search', pct: '58.4%' }
+                { name: 'Dynamic Programming (DP)', solve: '27.3%', target: '60.0%', status: 'Critical Gap', color: 'rose' },
+                { name: 'Graph BFS/DFS & Shortest Path', solve: '42.0%', target: '65.0%', status: 'Attention Needed', color: 'amber' },
+                { name: 'Binary Search & Two Pointers', solve: '58.4%', target: '75.0%', status: 'Improving', color: 'blue' }
               ].map((s, i) => (
-                <div key={i} className="flex justify-between items-center py-1 border-b border-slate-50 dark:border-navy-800 last:border-0">
-                  <span className="text-slate-600 dark:text-slate-300 font-sans">{s.name}</span>
-                  <span className="font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">{s.pct} solve rate</span>
+                <div key={i} className="p-3 rounded-xl bg-slate-50 dark:bg-navy-900/80 border border-slate-200 dark:border-navy-800 flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="font-extrabold text-slate-900 dark:text-white text-xs font-sans">{s.name}</div>
+                    <div className="text-[10px] text-slate-500">
+                      Benchmark Target: <strong className="text-slate-700 dark:text-slate-300 font-bold">{s.target}</strong>
+                    </div>
+                  </div>
+                  <div className="text-right flex flex-col items-end gap-1">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                      s.color === 'rose' ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800' :
+                      s.color === 'amber' ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800' :
+                      'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800'
+                    }`}>
+                      {s.solve} solve rate
+                    </span>
+                    <span className="text-[9px] text-slate-500 font-bold uppercase tracking-tight">{s.status}</span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -2054,10 +2129,10 @@ export const HODCommandCenter: React.FC = () => {
                 <th className="py-2.5 px-3 text-center">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50 dark:divide-navy-800 font-mono">
+            <tbody className="divide-y divide-slate-100 dark:divide-navy-800 font-mono">
               {staffList.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-6 text-center text-slate-400">No staff members found for the selected scope.</td>
+                  <td colSpan={7} className="py-8 text-center text-slate-500 font-bold dark:text-slate-400">No staff members found for the selected scope.</td>
                 </tr>
               ) : (
                 staffList.map(s => {
@@ -2066,56 +2141,100 @@ export const HODCommandCenter: React.FC = () => {
                   const active = (s as any).active_count || 0;
                   const completionRate = assigned > 0 ? Math.round((active / assigned) * 100) : 0;
                   const isSelected = selectedStaff === String(s.id);
+                  const deptCode = (s as any).department_code || 'DEPT';
+                  const deptBadge = getDeptBadgeStyle(deptCode);
+
                   return (
                     <tr
                       key={s.id}
                       onClick={() => setSelectedStaffDetail(s)}
-                      className={`hover:bg-brand-50/50 dark:hover:bg-navy-800 cursor-pointer transition ${isSelected ? 'bg-brand-50/80 font-bold' : ''}`}
+                      className={`hover:bg-brand-50/70 dark:hover:bg-navy-800 cursor-pointer transition-colors ${isSelected ? 'bg-brand-50/90 dark:bg-navy-800 font-bold' : ''}`}
                     >
-                      <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-white font-sans flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-600 dark:text-brand-300 font-extrabold flex items-center justify-center text-xs border border-brand-200 shadow-sm shrink-0">
-                          {s.username ? s.username.charAt(0).toUpperCase() : 'S'}
-                        </div>
-                        <div>
-                          <div className="font-bold text-slate-900 dark:text-white">{s.username}</div>
-                          <div className="text-[10px] text-slate-400 font-mono font-normal">{s.email}</div>
-                        </div>
-                      </td>
-                      <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300 font-mono font-semibold">
-                        <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 text-[10px]">
-                          {(s as any).department_code || 'DEPT'}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
-                        {assigned} / {maxAllowed}
-                      </td>
-                      <td className="py-2.5 px-3 text-right font-mono text-emerald-600 font-bold">
-                        {active} <span className="text-[10px] text-slate-400 font-normal">active</span>
-                      </td>
-                      <td className="py-2.5 px-3 text-right font-mono">
-                        <div className="flex items-center justify-end gap-2">
-                          <div className="w-16 h-1.5 rounded-full bg-slate-100 dark:bg-navy-800 overflow-hidden">
-                            <div className={`h-full rounded-full ${completionRate >= 80 ? 'bg-emerald-500' : completionRate >= 50 ? 'bg-amber-500' : 'bg-rose-500'}`} style={{ width: `${completionRate}%` }} />
+                      {/* Faculty Mentor Info */}
+                      <td className="py-3 px-3 font-bold text-slate-900 dark:text-white font-sans">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 font-black flex items-center justify-center text-xs border border-brand-300 dark:border-brand-800 shadow-sm shrink-0">
+                            {s.username ? s.username.charAt(0).toUpperCase() : 'S'}
                           </div>
-                          <span className="font-bold text-slate-900 dark:text-white">{completionRate}%</span>
+                          <div>
+                            <div className="font-extrabold text-slate-900 dark:text-white text-xs">{s.username}</div>
+                            <div className="text-[10px] text-slate-600 dark:text-slate-400 font-mono font-medium">{s.email}</div>
+                          </div>
                         </div>
                       </td>
-                      <td className="py-2.5 px-3 text-center">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${assigned >= 30 ? 'bg-purple-50 text-purple-700 border border-purple-200' : assigned >= 20 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-brand-50 text-brand-700 border border-brand-200'}`}>
-                          {assigned >= 30 ? 'MAX CAPACITY (30)' : assigned >= 20 ? 'TARGET REACHED (20+)' : 'WITHIN CAPACITY'}
+
+                      {/* Department Badge */}
+                      <td className="py-3 px-3">
+                        <span className={`px-2.5 py-0.5 rounded font-mono text-[10px] font-extrabold inline-block border shadow-xs ${deptBadge}`}>
+                          {deptCode}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3 text-center" onClick={e => e.stopPropagation()}>
+
+                      {/* Assigned Mentees */}
+                      <td className="py-3 px-3 text-right font-mono">
+                        <span className="font-black text-slate-900 dark:text-white text-xs">{assigned}</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold"> / {maxAllowed}</span>
+                      </td>
+
+                      {/* Active Solvers */}
+                      <td className="py-3 px-3 text-right font-mono">
+                        {active > 0 ? (
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-extrabold text-[11px] inline-flex items-center gap-1 border border-emerald-300 dark:border-emerald-800">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            {active} active
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-400 font-bold text-[10px] inline-flex items-center gap-1 border border-slate-200 dark:border-navy-700">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                            0 active
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Completion Rate */}
+                      <td className="py-3 px-3 text-right font-mono">
+                        <div className="flex items-center justify-end gap-2">
+                          <div className="w-20 h-2 rounded-full bg-slate-100 dark:bg-navy-800 overflow-hidden border border-slate-200 dark:border-navy-700 shadow-inner">
+                            <div 
+                              className={`h-full rounded-full transition-all duration-300 ${completionRate >= 80 ? 'bg-emerald-500' : completionRate >= 50 ? 'bg-amber-500' : completionRate > 0 ? 'bg-amber-400' : 'bg-slate-300'}`} 
+                              style={{ width: `${completionRate}%` }} 
+                            />
+                          </div>
+                          <span className="font-extrabold text-slate-900 dark:text-white text-xs">{completionRate}%</span>
+                        </div>
+                      </td>
+
+                      {/* Workload Status */}
+                      <td className="py-3 px-3 text-center">
+                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-black border uppercase tracking-tight ${
+                          assigned >= 30 
+                            ? 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950 dark:text-purple-300' 
+                            : assigned >= 20 
+                            ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300' 
+                            : assigned > 0
+                            ? 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-950 dark:text-blue-300'
+                            : 'bg-slate-100 text-slate-600 border-slate-300 dark:bg-navy-800 dark:text-slate-400'
+                        }`}>
+                          {assigned >= 30 ? 'MAX CAPACITY (30)' : assigned >= 20 ? 'TARGET REACHED (20+)' : assigned > 0 ? 'WITHIN CAPACITY' : 'UNALLOCATED (0)'}
+                        </span>
+                      </td>
+
+                      {/* Action Buttons */}
+                      <td className="py-3 px-3 text-center" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             onClick={(e) => { e.stopPropagation(); setSelectedStaffDetail(s); }}
-                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer ${isSelected ? 'bg-brand-600 text-white' : 'bg-slate-100 hover:bg-brand-50 hover:text-brand-600 text-slate-600 dark:bg-navy-800 dark:text-slate-300'}`}
+                            className={`px-3 py-1 rounded-lg text-[10px] font-extrabold transition cursor-pointer shadow-xs ${
+                              isSelected 
+                                ? 'bg-brand-600 text-white shadow-brand-600/30' 
+                                : 'bg-brand-50 hover:bg-brand-600 hover:text-white text-brand-700 dark:bg-brand-950 dark:text-brand-300 dark:hover:bg-brand-600 border border-brand-200 dark:border-brand-800'
+                            }`}
                           >
                             Inspect Details →
                           </button>
                           <button
                             onClick={() => setShowStaffAllocationModal(true)}
-                            className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-navy-800 dark:text-slate-300 text-[10px] font-bold transition cursor-pointer"
+                            className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-navy-800 dark:hover:bg-navy-700 dark:text-slate-200 text-[10px] font-extrabold transition cursor-pointer border border-slate-200 dark:border-navy-700"
                             title="Manage Faculty Allocation"
                           >
                             Reassign ⇄
@@ -2123,7 +2242,7 @@ export const HODCommandCenter: React.FC = () => {
                           {assigned > 0 && (
                             <button
                               onClick={() => handleUnassignAllForStaff(s.id, s.username)}
-                              className="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 text-[10px] font-bold transition cursor-pointer border border-rose-200 dark:border-rose-900/50"
+                              className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 text-[10px] font-extrabold transition cursor-pointer border border-rose-200 dark:border-rose-800/80"
                               title="Unassign All Mentees from this Staff Mentor"
                             >
                               Unassign 

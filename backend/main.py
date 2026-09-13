@@ -649,6 +649,28 @@ async def ultra_fast_memory_cache_middleware(request, call_next):
     _add_cors_headers_to_response(request, response.headers)
     return response
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled Exception on {request.url.path}: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An internal server error occurred. Please try again later."}
+    )
+
+from backend.csrf_middleware import global_csrf_middleware
+
+@app.middleware("http")
+async def add_global_csrf_middleware(request, call_next):
+    return await global_csrf_middleware(request, call_next)
+
+@app.middleware("http")
+async def request_size_limiter(request: Request, call_next):
+    # Enforce 10MB maximum request size for all endpoints to prevent DoS via payload size
+    content_length = request.headers.get("content-length")
+    if content_length and int(content_length) > 10 * 1024 * 1024:
+        return JSONResponse(status_code=413, content={"detail": "Payload too large. Maximum allowed size is 10MB."})
+    return await call_next(request)
+
 @app.middleware("http")
 async def add_security_headers_and_performance_middleware(request, call_next):
     response = await call_next(request)

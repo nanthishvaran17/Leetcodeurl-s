@@ -152,6 +152,13 @@ async def get_leaderboard_fast(
                 ).all():
                     hist_map[hr.student_id] = hr
 
+            from backend.models import LeetCodeAccount
+            sec_accounts_map: dict = {}
+            for acc in db.query(LeetCodeAccount).filter(LeetCodeAccount.student_id.in_(student_ids)).all():
+                if acc.student_id not in sec_accounts_map:
+                    sec_accounts_map[acc.student_id] = []
+                sec_accounts_map[acc.student_id].append(acc)
+
             # --- Step 4: Build slim response dicts (no Pydantic overhead) ---
             results = []
             for st in students:
@@ -248,6 +255,14 @@ async def get_leaderboard_fast(
                     "contest_name": target_contest_name,
                     "contest_number": c_num,
                     "has_virtual": vir is not None and vir.participation_status in ("VIRTUAL_ATTENDED", "VIRTUAL"),
+                    "leetcode_accounts": [
+                        {
+                            "id": a.id,
+                            "leetcode_username": a.leetcode_username,
+                            "username": a.leetcode_username,
+                            "profile_url": a.profile_url
+                        } for a in sec_accounts_map.get(st.id, [])
+                    ],
                 })
 
             import orjson
@@ -774,7 +789,7 @@ def create_student(
     
     reg_no_upper = student_in.reg_no.upper()
     email_result = check_and_generate_email(db, reg_no_upper)
-    institutional_email = email_result.get("email")
+    institutional_email = student_in.institutional_email if student_in.institutional_email else email_result.get("email")
     email_status = email_result.get("status", "error")
 
     student = Student(
@@ -789,7 +804,9 @@ def create_student(
         leetcode_url=std_url if std_url else student_in.leetcode_url,
         username=username,
         codeforces_username=student_in.codeforces_username,
-        hackerrank_username=student_in.hackerrank_username
+        hackerrank_username=student_in.hackerrank_username,
+        accommodation=student_in.accommodation,
+        twelfth_cutoff=student_in.twelfth_cutoff
     )
     db.add(student)
     db.commit()
@@ -1098,14 +1115,23 @@ def update_student(
                     student.leetcode_url = _parsed_url  # canonical URL
                 else:
                     student.username = None
+                    student.leetcode_url = None
+            else:
+                student.username = None
+                student.leetcode_url = None
 
     # Direct username override (e.g. from the username field in the edit form)
-    if payload.username and payload.username.strip():
+    if payload.username is not None:
         _direct_u = payload.username.strip()
-        if _direct_u.lower() != (old_username or "").strip().lower():
+        if _direct_u:
+            if _direct_u.lower() != (old_username or "").strip().lower():
+                url_changed = True
+                student.username = _direct_u
+                student.leetcode_url = f"https://leetcode.com/u/{_direct_u}/"
+        elif old_username:
             url_changed = True
-            student.username = _direct_u
-            student.leetcode_url = f"https://leetcode.com/u/{_direct_u}/"
+            student.username = None
+            student.leetcode_url = None
 
     if payload.is_active is not None:
         student.is_active = payload.is_active

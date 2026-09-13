@@ -903,13 +903,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <table className="w-full text-left text-xs whitespace-nowrap border-collapse table-fixed">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-navy-700 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[11px]">
-                    <th className="py-2.5 px-3.5 font-extrabold text-left w-[22%]">Department</th>
-                    <th className="py-2.5 px-3.5 font-extrabold text-center w-[10%]" title="Total enrolled students in this department">Students</th>
-                    <th className="py-2.5 px-3.5 font-extrabold text-center w-[10%]" title="Students with active verified LeetCode profiles">Active</th>
-                    <th className="py-2.5 px-3.5 font-extrabold text-center w-[16%]" title="Percentage of active students out of total enrolled">Participation</th>
-                    <th className="py-2.5 px-3.5 font-extrabold text-center w-[12%] cursor-help" title="Average LeetCode problems solved per enrolled student in this department">Avg Solved</th>
-                    <th className="py-2.5 px-3.5 font-extrabold text-left w-[20%]" title="Top student by LeetCode contest rating & problems solved">Top Performer</th>
-                    <th className="py-2.5 px-3.5 font-extrabold text-right w-[10%]">Action</th>
+                    <th className="py-1.5 px-3 font-extrabold text-left w-[28%]">Department</th>
+                    <th className="py-1.5 px-2 font-extrabold text-center w-[9%]">Students</th>
+                    <th className="py-1.5 px-2 font-extrabold text-center w-[9%]">Active</th>
+                    <th className="py-1.5 px-2 font-extrabold text-center w-[14%]">Participation</th>
+                    <th className="py-1.5 px-2 font-extrabold text-center w-[10%]">Avg Solved</th>
+                    <th className="py-1.5 px-3 font-extrabold text-left w-[22%]">Top Performer</th>
+                    <th className="py-1.5 px-3 font-extrabold text-right w-[8%]">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-navy-800">
@@ -928,13 +928,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     })
                     .map((dept) => (
                       <tr key={dept.department_code || dept.department_id} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors">
-                        <td className="py-2.5 px-3.5 w-[22%]">
-                          <div className="font-black text-slate-900 dark:text-white">{dept.department_code}</div>
-                          <div className="text-[10px] text-slate-500 truncate max-w-[180px]">{dept.department_name}</div>
+                        <td className="py-1.5 px-3 w-[28%]">
+                          <div className="font-black text-sm text-slate-900 dark:text-white">{dept.department_code}</div>
+                          <div className="text-xs text-slate-500 mt-0.5 whitespace-normal leading-tight pr-2">{dept.department_name}</div>
                         </td>
-                        <td className="py-2.5 px-3.5 font-medium text-slate-600 dark:text-slate-300 text-center w-[10%]">{dept.total_students}</td>
-                        <td className="py-2.5 px-3.5 font-medium text-emerald-600 dark:text-emerald-400 text-center w-[10%]">{dept.active_students ?? dept.active_count ?? Math.round(((dept.participation_rate || 0) / 100) * dept.total_students)}</td>
-                        <td className="py-2.5 px-3.5 text-center w-[16%]">
+                        <td className="py-1.5 px-2 font-medium text-slate-600 dark:text-slate-300 text-center w-[9%]">{dept.total_students}</td>
+                        <td className="py-1.5 px-2 font-medium text-emerald-600 dark:text-emerald-400 text-center w-[9%]">{dept.active_students ?? dept.active_count ?? Math.round(((dept.participation_rate || 0) / 100) * dept.total_students)}</td>
+                        <td className="py-1.5 px-2 text-center w-[14%]">
                           <div className="flex items-center justify-center space-x-2">
                             <div className="w-14 h-1.5 bg-slate-200 dark:bg-navy-700 rounded-full overflow-hidden">
                               <div style={{ width: `${dept.participation_rate}%` }} className="h-full bg-indigo-500 rounded-full"></div>
@@ -942,8 +942,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                             <span className="font-bold text-slate-700 dark:text-slate-300 text-[11px]">{dept.participation_rate}%</span>
                           </div>
                         </td>
-                        <td className="py-2.5 px-3.5 font-bold text-slate-900 dark:text-white text-center w-[12%]">{dept.avg_solved}</td>
-                        <td className="py-2.5 px-3.5 text-left w-[20%]">
+                        <td className="py-1.5 px-2 font-bold text-slate-900 dark:text-white text-center w-[10%]">{dept.avg_solved}</td>
+                        <td className="py-1.5 px-3 text-left w-[22%]">
                           {dept.top_student_name ? (
                             <div className="flex items-center justify-start space-x-1.5">
                               <button
@@ -978,7 +978,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                             <span className="text-slate-400">-</span>
                           )}
                         </td>
-                        <td className="py-2.5 px-3.5 text-right w-[10%]">
+                        <td className="py-1.5 px-3 text-right w-[8%]">
                           <button
                             onClick={() => onNavigateTab('departments')}
                             className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white font-bold text-xs border border-blue-200/60 dark:border-blue-900/50 transition-all cursor-pointer shadow-2xs"

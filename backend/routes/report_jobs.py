@@ -59,11 +59,15 @@ def generate_report_background_task(job_id: str, payload: dict, institution_id: 
                     student = db.query(Student).filter(Student.id == cert.student_id).first()
 
                 if not student:
-                    student = db.query(Student).filter(
-                        (Student.reg_no.ilike(f"%{clean_search}%")) |
-                        (Student.username.ilike(f"%{clean_search}%")) |
-                        (Student.name.ilike(f"%{clean_search}%"))
-                    ).first()
+                    q = db.query(Student)
+                    if clean_search.isdigit():
+                        student = q.filter((Student.id == int(clean_search)) | (Student.reg_no == clean_search)).first()
+                    if not student:
+                        student = q.filter(
+                            (Student.reg_no.ilike(f"%{clean_search}%")) |
+                            (Student.username.ilike(f"%{clean_search}%")) |
+                            (Student.name.ilike(f"%{clean_search}%"))
+                        ).first()
 
             if not student and trace_id:
                 cert = db.query(CertificateRecord).filter(CertificateRecord.verification_id == trace_id).first()

@@ -28,7 +28,11 @@ class DownloadManager {
    */
   async download(options: DownloadOptions): Promise<{ success: boolean; downloadId: string; error?: string }> {
     const startTime = performance.now();
-    const endpoint = options.endpoint.startsWith('/') ? options.endpoint : `/${options.endpoint}`;
+    let rawEndpoint = options.endpoint.startsWith('/') ? options.endpoint : `/${options.endpoint}`;
+    if (rawEndpoint.startsWith('/api/')) {
+      rawEndpoint = rawEndpoint.replace('/api/', '/');
+    }
+    const endpoint = rawEndpoint;
     const filename = sanitizeFilename(options.filename || this.inferFilenameFromEndpoint(endpoint));
     const mimeType = options.mimeType || getMimeTypeFromFilename(filename);
 
@@ -225,7 +229,7 @@ class DownloadManager {
       while (!isComplete) {
         await new Promise(r => setTimeout(r, 2000)); // Poll every 2 seconds
         
-        const statusRes = await api.get(`${endpoint}/${jobId}`, {
+        const statusRes = await api.get(`${endpoint}/${jobId}?_t=${Date.now()}`, {
           headers: { ...authHeaders }
         });
         

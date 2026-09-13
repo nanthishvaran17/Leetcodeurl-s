@@ -6,6 +6,7 @@ import {
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
+import { GlobalFilter } from './GlobalFilter';
 
 const ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
 const ALLOWED_EXTS = ['.pdf', '.jpg', '.jpeg', '.png'];
@@ -259,6 +260,33 @@ export const StaffVerificationSection: React.FC = () => {
 
   const currentStatus = verificationState?.verification_status || 'NOT_SUBMITTED';
 
+  const departmentOptions = departments.map((d: any) => ({
+    value: String(d.id),
+    label: `${d.code} - ${d.name}`,
+    hidePill: true
+  }));
+
+  const designationOptions = [
+    'Assistant Professor',
+    'Associate Professor',
+    'Professor',
+    'Head of Department (HOD)',
+    'Faculty Mentor',
+    'Class Advisor',
+    'Lab Instructor / Programmer',
+    'Placement Officer',
+    'Institutional Administrator'
+  ].map(label => ({ value: label, label, hidePill: true }));
+
+  const reportsToOptions = [
+    { value: '', label: 'Select Reporting Manager / HOD...', hidePill: true },
+    ...reporters.map((rep: any) => ({
+      value: String(rep.id),
+      label: `${rep.name} (${rep.designation})`,
+      hidePill: true
+    }))
+  ];
+
   return (
     <div className="space-y-8 animate-fade-in font-sans">
       
@@ -368,18 +396,12 @@ export const StaffVerificationSection: React.FC = () => {
               <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                 Department <span className="text-rose-500">*</span>
               </label>
-              <select
-                required
-                value={departmentId}
-                onChange={(e) => setDepartmentId(Number(e.target.value))}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
-              >
-                {departments.map((d: any) => (
-                  <option key={d.id} value={d.id}>
-                    {d.code} - {d.name}
-                  </option>
-                ))}
-              </select>
+              <GlobalFilter
+                value={String(departmentId)}
+                onChange={(val) => setDepartmentId(Number(val))}
+                options={departmentOptions}
+                placeholder="Select Department..."
+              />
             </div>
 
             {/* Field 4: Designation */}
@@ -387,22 +409,12 @@ export const StaffVerificationSection: React.FC = () => {
               <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                 Designation <span className="text-rose-500">*</span>
               </label>
-              <select
-                required
+              <GlobalFilter
                 value={designation}
-                onChange={(e) => setDesignation(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
-              >
-                <option value="Assistant Professor">Assistant Professor</option>
-                <option value="Associate Professor">Associate Professor</option>
-                <option value="Professor">Professor</option>
-                <option value="Head of Department (HOD)">Head of Department (HOD)</option>
-                <option value="Faculty Mentor">Faculty Mentor</option>
-                <option value="Class Advisor">Class Advisor</option>
-                <option value="Lab Instructor / Programmer">Lab Instructor / Programmer</option>
-                <option value="Placement Officer">Placement Officer</option>
-                <option value="Institutional Administrator">Institutional Administrator</option>
-              </select>
+                onChange={(val) => setDesignation(val)}
+                options={designationOptions}
+                placeholder="Select Designation..."
+              />
             </div>
 
             {/* Field 5: Reports To */}
@@ -410,18 +422,12 @@ export const StaffVerificationSection: React.FC = () => {
               <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                 Reports To <span className="text-slate-400 font-normal lowercase">(optional)</span>
               </label>
-              <select
+              <GlobalFilter
                 value={reportingToUserId}
-                onChange={(e) => setReportingToUserId(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
-              >
-                <option value="">Select Reporting Manager / HOD...</option>
-                {reporters.map((rep: any) => (
-                  <option key={rep.id} value={rep.id}>
-                    {rep.name} ({rep.designation})
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setReportingToUserId(val)}
+                options={reportsToOptions}
+                placeholder="Select Reporting Manager / HOD..."
+              />
             </div>
           </div>
 

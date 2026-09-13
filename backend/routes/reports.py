@@ -43,6 +43,7 @@ def get_report_download_info(
     attendance: Optional[str] = Query("ALL"),
     status: Optional[str] = Query("ALL"),
     search: Optional[str] = Query(""),
+    student_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
@@ -71,7 +72,8 @@ def get_report_download_info(
         "batch": eff_batch,
         "status": eff_status,
         "search": eff_search,
-        "session_id": session_id
+        "session_id": session_id,
+        "student_id": student_id
     }
 
     from backend.services.pregenerated_report_service import get_or_create_report

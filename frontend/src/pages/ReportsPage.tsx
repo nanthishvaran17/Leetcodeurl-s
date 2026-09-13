@@ -161,6 +161,10 @@ export const ReportsPage: React.FC = () => {
     else if (endpoint.includes('export-student-performance-detail')) { report_type = 'STUDENT_PERFORMANCE'; format = 'excel'; }
     else if (endpoint.includes('export-weekly-contest-matrix')) { report_type = 'BATCH_PERFORMANCE'; format = 'excel'; } 
     else if (endpoint.includes('export-master-tracker')) { report_type = 'STUDENT_MASTER'; format = 'excel'; }
+    else if (endpoint.includes('/reports/download')) { report_type = 'MASTER_10_SHEET'; format = 'excel'; }
+    else if (endpoint.includes('/reports/hod')) { report_type = 'HOD_DEPARTMENT_INTELLIGENCE'; format = 'excel'; }
+    else if (endpoint.includes('/reports/staff')) { report_type = 'FACULTY_CONSOLIDATED'; format = 'excel'; }
+    else if (endpoint.includes('/reports/principal')) { report_type = 'PRINCIPAL_EXECUTIVE'; format = 'excel'; }
     else if (endpoint.includes('export-pdf')) { format = 'pdf'; }
     else if (endpoint.includes('export-word')) { format = 'word'; }
     else if (endpoint.includes('export-csv')) { format = 'csv'; }

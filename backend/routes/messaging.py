@@ -415,13 +415,39 @@ async def upload_attachment(
         upload_dir = os.path.join(BASE_DIR, "data", "attachments")
         os.makedirs(upload_dir, exist_ok=True)
 
-        file_ext = os.path.splitext(file.filename)[1] if file.filename else ""
+        # 1. Size Validation (Max 10MB)
+        content = await file.read()
+        if len(content) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="Attachment exceeds 10MB limit.")
+
+        # 2. Extension Validation
+        file_ext = os.path.splitext(file.filename)[1].lower() if file.filename else ""
+        allowed_exts = {".png", ".jpg", ".jpeg", ".pdf"}
+        if file_ext not in allowed_exts:
+            raise HTTPException(status_code=400, detail="Unsupported attachment type. Only PNG, JPG, and PDF are allowed.")
+
+        # 3. Magic Number Validation
+        magic_numbers = {
+            b'\x89PNG\r\n\x1a\n': ".png",
+            b'\xff\xd8\xff': ".jpg",
+            b'%PDF-': ".pdf"
+        }
+        
+        is_valid_magic = False
+        for magic in magic_numbers:
+            if content.startswith(magic):
+                is_valid_magic = True
+                break
+                
+        if not is_valid_magic:
+            raise HTTPException(status_code=400, detail="Invalid file content (magic number mismatch).")
+
         unique_id = uuid.uuid4().hex
         secure_filename = f"{unique_id}{file_ext}"
         storage_path = os.path.join(upload_dir, secure_filename)
 
         with open(storage_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+            buffer.write(content)
             
         file_size = os.path.getsize(storage_path)
 

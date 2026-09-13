@@ -56,10 +56,10 @@ DEFAULT_SYSTEM_SETTINGS = {
     "REPORT_RECIPIENT_EMAILS": "hod.cyber@college.edu, hod.iot@college.edu",
     "SMTP_HOST": "smtp.gmail.com",
     "SMTP_PORT": "587",
-    "SMTP_USERNAME": "notifications@nandha.edu.in",
+    "SMTP_USERNAME": "nanthishvaran17@gmail.com",
     "SMTP_PASSWORD_MASKED": "••••••••",
     "SMTP_ENCRYPTION": "TLS",
-    "SENDER_EMAIL": "notifications@nandha.edu.in",
+    "SENDER_EMAIL": "nanthishvaran17@gmail.com",
     "SENDER_NAME": "Nandha Engineering College Contest Engine",
     "AUTO_EMAIL_AFTER_FINALIZE": "true",
     "ATTACH_EXCEL": "true",
@@ -401,7 +401,7 @@ def run_live_data_integrity_audit(
     audit = AdminAuditLog(
         audit_id=f"AUDIT-INTEGRITY-{datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
         admin_name=getattr(current_user, 'username', 'Admin'),
-        admin_email=getattr(current_user, 'email', 'admin@nandhaengg.org'),
+        admin_email=getattr(current_user, 'email', 'nanthishvaran17@gmail.com'),
         admin_role=getattr(current_user, 'role', 'admin'),
         action="RUN_INTEGRITY_AUDIT",
         action_type="INTEGRITY",
@@ -622,7 +622,7 @@ def trigger_advanced_operation(
     audit = AdminAuditLog(
         audit_id=f"AUDIT-ADV-{datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
         admin_name=getattr(current_user, 'username', 'Admin'),
-        admin_email=getattr(current_user, 'email', 'admin@nandhaengg.org'),
+        admin_email=getattr(current_user, 'email', 'nanthishvaran17@gmail.com'),
         admin_role=getattr(current_user, 'role', 'admin'),
         action=f"ADVANCED_{operation.upper().replace('-', '_')}",
         action_type="MAINTENANCE",
@@ -1006,7 +1006,7 @@ async def probe_all_services_live(
     audit = AdminAuditLog(
         audit_id=f"AUDIT-PROBE-{datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
         admin_name=getattr(current_user, 'username', 'Admin'),
-        admin_email=getattr(current_user, 'email', 'admin@nandhaengg.org'),
+        admin_email=getattr(current_user, 'email', 'nanthishvaran17@gmail.com'),
         admin_role=getattr(current_user, 'role', 'admin'),
         action="PROBE_ALL_SERVICES",
         action_type="HEALTH_CHECK",
@@ -1072,7 +1072,7 @@ def execute_recommended_action(
     audit = AdminAuditLog(
         audit_id=f"AUDIT-ACTION-{datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
         admin_name=getattr(current_user, 'username', 'Admin'),
-        admin_email=getattr(current_user, 'email', 'admin@nandhaengg.org'),
+        admin_email=getattr(current_user, 'email', 'nanthishvaran17@gmail.com'),
         admin_role=getattr(current_user, 'role', 'admin'),
         action=f"EXECUTE_ACTION_{action_id}",
         action_type="OPERATIONS",

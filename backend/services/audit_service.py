@@ -41,7 +41,7 @@ def log_admin_action(
     
     admin_id = current_user.id if current_user else None
     admin_name = current_user.username if current_user else "SYSTEM"
-    admin_email = current_user.email if current_user else "system@nandhaengg.org"
+    admin_email = current_user.email if current_user else "nanthishvaran17@gmail.com"
     admin_role = current_user.role if current_user else "SYSTEM"
 
     # Deeply enrich metadata payload dictionary with complete audit telemetry

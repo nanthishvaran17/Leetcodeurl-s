@@ -166,6 +166,9 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
   const [deptId, setDeptId] = useState<number>(1);
   const [yearLevel, setYearLevel] = useState('III');
   const [email, setEmail] = useState('');
+  const [institutionalEmail, setInstitutionalEmail] = useState('');
+  const [cutOffScore, setCutOffScore] = useState('');
+  const [accommodationType, setAccommodationType] = useState('Day Scholar');
   const [leetcodeUrl, setLeetcodeUrl] = useState('');
 
   // LeetCode validation state (per-modal; cleared on open/close)
@@ -321,6 +324,9 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
         department_id: deptId,
         year_level: yearLevel,
         email: email || undefined,
+        institutional_email: institutionalEmail || undefined,
+        accommodation: accommodationType,
+        twelfth_cutoff: cutOffScore ? parseFloat(cutOffScore) : null,
         leetcode_url: finalUrl
       });
 
@@ -331,6 +337,8 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
       setShowAddModal(false);
       setRegNo(''); setName(''); setLeetcodeUrl('');
+      setEmail(''); setInstitutionalEmail(''); setCutOffScore('');
+      setAccommodationType('DAY SCHOLAR');
       setLcValidation({ status: 'idle' });
       queryClient.invalidateQueries({ queryKey: ['students'] });
     } catch (err: any) {
@@ -657,6 +665,55 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                   ]}
                   icon={<Calendar className="w-5 h-5" />}
                 />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Personal Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="e.g. ajay@gmail.com"
+                  className="w-full p-2.5 rounded-xl border bg-white dark:bg-navy-950"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Institutional Email</label>
+                <input
+                  type="email"
+                  value={institutionalEmail}
+                  onChange={(e) => setInstitutionalEmail(e.target.value)}
+                  placeholder="e.g. 732224CC001@nandhaengg.org (optional)"
+                  className="w-full p-2.5 rounded-xl border bg-white dark:bg-navy-950"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">12th Cut-off</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={cutOffScore}
+                    onChange={(e) => setCutOffScore(e.target.value)}
+                    placeholder="e.g. 185.50"
+                    className="w-full p-2.5 rounded-xl border bg-white dark:bg-navy-950"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Accommodation</label>
+                  <GlobalFilter
+                    value={accommodationType}
+                    onChange={(val) => setAccommodationType(val)}
+                    dropdownWidth="w-full"
+                    options={[
+                      { value: "DAY SCHOLAR", label: "Day Scholar" },
+                      { value: "HOSTEL", label: "Hostel" }
+                    ]}
+                    icon={<Building2 className="w-5 h-5" />}
+                  />
+                </div>
               </div>
 
               {/* LeetCode URL with live validation */}

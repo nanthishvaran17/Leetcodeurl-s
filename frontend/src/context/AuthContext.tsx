@@ -24,9 +24,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   });
 
-  const [token, setToken] = useState<string | null>(() => {
-    return localStorage.getItem('token');
-  });
+  const [token, setToken] = useState<string | null>(null);
 
   const [authState, setAuthState] = useState<AuthState>(() => {
     const savedUser = localStorage.getItem('user');
@@ -47,7 +45,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = useCallback((newToken: string | null, newUser: any) => {
     if (newToken) {
       setToken(newToken);
-      localStorage.setItem('token', newToken);
     }
     const formattedUser: AuthUser = {
       uid: newUser.uid || `user_${newUser.id || '1'}`,
@@ -83,7 +80,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthState('AUTHENTICATING');
     setToken(null);
     setUser(null);
-    localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('admin_user');
     sessionStorage.clear();

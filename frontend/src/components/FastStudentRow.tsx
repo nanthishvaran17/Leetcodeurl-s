@@ -234,9 +234,9 @@ export const FastStudentRow = memo(({
 
       <div className="hidden md:flex flex-none w-32 px-3 items-center justify-center text-center" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-center gap-1 transition-opacity">
-          <button onClick={() => onView(student)} className="p-1.5 rounded-xl text-brand-600 hover:bg-brand-50" title="View"><Eye className="w-4 h-4" /></button>
-          <button onClick={() => onEdit(student)} className="p-1.5 rounded-xl text-amber-600 hover:bg-amber-50" title="Edit"><Edit3 className="w-4 h-4" /></button>
-          <button onClick={() => onRefresh(student.id)} disabled={isSyncing} className={`p-1.5 rounded-xl ${isSyncing ? 'text-brand-500 animate-spin' : 'text-emerald-600 hover:bg-emerald-50'}`}><RefreshCw className="w-4 h-4" /></button>
+          <button onClick={(e) => { e.stopPropagation(); onView(student); }} className="p-1.5 rounded-xl text-brand-600 hover:bg-brand-50" title="View"><Eye className="w-4 h-4" /></button>
+          <button onClick={(e) => { e.stopPropagation(); onEdit(student); }} className="p-1.5 rounded-xl text-amber-600 hover:bg-amber-50" title="Edit"><Edit3 className="w-4 h-4" /></button>
+          <button onClick={(e) => { e.stopPropagation(); onRefresh(student.id); }} disabled={isSyncing} className={`p-1.5 rounded-xl ${isSyncing ? 'text-brand-500 animate-spin' : 'text-emerald-600 hover:bg-emerald-50'}`}><RefreshCw className="w-4 h-4" /></button>
           <button onClick={(e) => { e.stopPropagation(); onDelete(student, e); }} className="p-1.5 rounded-xl text-rose-600 hover:bg-rose-50" title="Delete"><Trash2 className="w-4 h-4" /></button>
         </div>
       </div>

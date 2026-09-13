@@ -1144,7 +1144,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                   </div>
                   <div className="help-list-item highlight">
                     <div className="help-list-title">Institution Support Desk</div>
-                    <div className="help-list-desc">Email: admin@nandhaengg.org · Nandha Engineering College (Autonomous)</div>
+                    <div className="help-list-desc">Email: nanthishvaran17@gmail.com · Nandha Engineering College (Autonomous)</div>
                   </div>
                 </div>
                 <button

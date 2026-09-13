@@ -26,7 +26,7 @@ SYSTEM_ARCHITECTURE_DOCS = {
     ),
     "firebase_auth": (
         "Dual-Token Security Layer: Supports both local HMAC JWTs and Firebase Admin SDK / Google Auth ID tokens. "
-        "Authorized institutional emails (e.g. admin@nandhaengg.org, hod.cyber@college.edu) are auto-provisioned to guarantee fail-closed security."
+        "Authorized institutional emails (e.g. nanthishvaran17@gmail.com, hod.cyber@college.edu) are auto-provisioned to guarantee fail-closed security."
     ),
     "weekly_contests": (
         "Weekly Contest Tracker tracks official LeetCode contests (Weekly Contest 510 through 515+). "

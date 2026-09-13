@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, ExternalLink, Trophy, Flame, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X, BarChart2, Activity, BookOpen, Clock } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Trophy, Flame, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X, BarChart2, Activity, BookOpen, Clock, Medal, TrendingUp, Monitor, Target } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import api from '../services/api';
 import { SkillRadarChart } from '../components/SkillRadarChart';
@@ -35,23 +35,29 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   const [liveFetchError, setLiveFetchError] = useState<string | null>(null);
   const [showEditOverlay, setShowEditOverlay] = useState(false);
 
+  const resolveTargetId = () => {
+    return detail?.id || detail?.student_id || detail?.reg_no || student?.id || student?.student_id || student?.reg_no;
+  };
+
   useEffect(() => {
-    const targetId = student?.id || student?.student_id;
+    const targetId = resolveTargetId();
     if (targetId) {
       fetchStudentDetail();
     }
   }, [student]);
 
   const fetchStudentDetail = async () => {
-    const targetId = student?.id || student?.student_id;
+    const targetId = resolveTargetId();
     if (!targetId) return;
     try {
       // 1. Fetch fast student details immediately to unblock UI
-      const stRes = await api.get(`/students/${targetId}`);
-      setDetail(stRes.data);
+      const stRes = await api.get(`/students/${encodeURIComponent(targetId)}`);
+      if (stRes.data) {
+        setDetail(stRes.data);
+      }
       
       // 2. Fetch heavy AI insights in the background without blocking the modal
-      api.get(`/analytics/compare-students?ids=${targetId}`)
+      api.get(`/analytics/compare-students?ids=${encodeURIComponent(targetId)}`)
         .then(insRes => {
           if (insRes.data && insRes.data.length > 0) {
             setInsights(insRes.data[0].insights);
@@ -70,16 +76,20 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   const [downloadState, setDownloadState] = useState<DownloadState | null>(null);
 
   const handleGenerateCert = async () => {
-    const targetId = student?.id || student?.student_id;
-    if (!targetId) return;
+    const targetId = resolveTargetId();
+    if (!targetId) {
+      notify.error('Certificate Error', 'No valid student identifier found.', { category: 'CERTIFICATE ENGINE' });
+      return;
+    }
     setDownloadingCert(true);
     notify.info('Generating Certificate', 'Creating official performance certificate PDF...', { category: 'CERTIFICATE ENGINE' });
     try {
+      const cleanReg = (detail?.reg_no || student?.reg_no || '').replace(/[^A-Za-z0-9]+/g, '').toUpperCase();
       const res = await api.post('/certificates/generate', {
         student_id: targetId,
+        register_no: cleanReg || targetId,
         cert_type: "Top Performer"
       });
-      const cleanReg = (student.reg_no || '').replace(/[^A-Za-z0-9]+/g, '').toUpperCase();
       const certId = res.data?.verification_id || `CERT-${cleanReg}-EXCELLENCE`;
       const filename = `Certificate_${cleanReg || certId}.pdf`;
 
@@ -95,19 +105,22 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       }
     } catch (err: any) {
       console.error("Certificate error:", err);
-      notify.error('Certificate Error', err.message || "Failed to generate certificate.", { category: 'CERTIFICATE ENGINE' });
+      notify.error('Certificate Error', err.response?.data?.detail || err.message || "Failed to generate certificate.", { category: 'CERTIFICATE ENGINE' });
     } finally {
       setDownloadingCert(false);
     }
   };
 
   const handleDownloadForensicCert = async () => {
-    const targetId = student?.id || student?.student_id;
-    if (!targetId) return;
+    const targetId = resolveTargetId();
+    if (!targetId) {
+      notify.error('Forensic Error', 'No valid student identifier found.', { category: 'FORENSIC AUDIT' });
+      return;
+    }
     setDownloadingForensic(true);
     notify.dismissCategory('FORENSIC AUDIT');
     try {
-      const cleanReg = (student.reg_no || '').replace(/[^A-Za-z0-9]+/g, '').toUpperCase();
+      const cleanReg = (detail?.reg_no || student?.reg_no || '').replace(/[^A-Za-z0-9]+/g, '').toUpperCase();
       const reportTargetId = cleanReg ? `CERT-${cleanReg}-FORENSIC` : `CERT-${targetId}-FORENSIC`;
       const filename = `Forensic_Audit_Report_${reportTargetId}.pdf`;
 
@@ -132,7 +145,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   };
 
   const handleLiveFetch = async () => {
-    const targetId = student?.id || student?.student_id;
+    const targetId = resolveTargetId();
     if (!targetId) {
       notify.error('Sync Error', 'No valid student record ID found.', { category: 'LIVE SYNC' });
       return;
@@ -142,8 +155,8 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
     setLiveFetchError(null);
     notify.info('Live Sync Started', 'Fetching latest data from LeetCode...', { category: 'LIVE SYNC' });
     try {
-      await api.post(`/api/sync/student/${targetId}`);
-      const refreshed = await api.get(`/students/${targetId}`);
+      await api.post(`/sync/student/${targetId}`);
+      const refreshed = await api.get(`/students/${encodeURIComponent(targetId)}`);
       setDetail(refreshed.data);
       notify.success('Sync Complete', 'Student profile has been updated.', { category: 'LIVE SYNC' });
     } catch (err: any) {
@@ -157,7 +170,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   };
 
   const handleDelete = async () => {
-    const targetId = detail?.id || detail?.student_id || student?.id || student?.student_id;
+    const targetId = resolveTargetId();
     if (!targetId || isDeleting) return;
     const targetName = detail?.name || student?.name || 'Student';
     const targetReg = detail?.reg_no || student?.reg_no || '';
@@ -173,7 +186,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
 
     setIsDeleting(true);
     try {
-      await api.delete(`/students/${targetId}?soft_delete=true`);
+      await api.delete(`/students/${encodeURIComponent(targetId)}?soft_delete=true`);
       notify.success('Student Deactivated', `Student "${targetName}" deactivated successfully.`, { category: 'STUDENT PROFILE' });
       window.dispatchEvent(new Event('refresh_dashboard_summary'));
       onBack();
@@ -198,32 +211,32 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
     <div className="h-full flex flex-col overflow-hidden animate-fade-in bg-white dark:bg-navy-950 rounded-3xl">
       
       {/* Header Bar with Close Button & Actions */}
-      <div className="p-4 sm:p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex flex-col md:flex-row items-center justify-between gap-4 border-b border-slate-800 shrink-0 relative z-50 shadow-xl pointer-events-auto">
-        <div className="flex items-center space-x-4 w-full md:w-auto">
+      <div className="p-4 sm:p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex flex-col md:flex-row items-center justify-between gap-3 border-b border-slate-800 shrink-0 relative z-50 shadow-xl pointer-events-auto">
+        <div className="flex items-center space-x-3 w-full md:w-auto min-w-0">
           <button
             type="button"
             onClick={() => onBack()}
-            className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer flex items-center space-x-2 text-xs font-bold shadow-sm"
+            className="p-2 sm:p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer flex items-center space-x-1.5 sm:space-x-2 text-xs font-bold shadow-sm shrink-0"
             title="Back"
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Back</span>
           </button>
-          <div className="flex-1">
-            <h2 className="text-lg sm:text-xl font-black text-white">{detail?.name || student?.name}</h2>
-            <p className="text-[10px] sm:text-xs text-brand-300 font-mono font-bold mt-0.5 truncate max-w-sm">
-              {detail?.reg_no || student?.reg_no} • {detail?.department?.name || detail?.department?.code || student?.department?.code} {detail?.year_level ? `• ${detail.year_level} Year` : ''}
+          <div className="flex-1 min-w-0">
+            <h2 className="text-base sm:text-xl font-black text-white truncate">{detail?.name || student?.name}</h2>
+            <p className="text-[10px] sm:text-xs text-brand-300 font-mono font-bold mt-0.5 truncate">
+              {detail?.reg_no || student?.reg_no} • {detail?.department?.name || detail?.department?.code || student?.department?.code} {detail?.year_level ? `• ${detail.year_level.includes('Year') ? detail.year_level : `${detail.year_level} Year`}` : ''}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 -mb-1 flex-nowrap md:flex-wrap justify-start md:justify-end custom-scrollbar shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 w-full md:w-auto flex-wrap justify-start md:justify-end shrink-0 pr-1">
             {detail?.leetcode_url && (
               <a
                 href={detail.leetcode_url}
                 target="_blank"
                 rel="noreferrer"
-                className="px-3 py-2 min-h-[40px] rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-[11px] flex items-center space-x-1.5 shadow-md shadow-brand-600/30 transition-all hover:scale-105 shrink-0 whitespace-nowrap cursor-pointer"
+                className="px-2.5 sm:px-3 py-1.5 sm:py-2 min-h-[36px] sm:min-h-[40px] rounded-xl bg-white/5 hover:bg-brand-500/20 text-brand-300 hover:text-brand-200 border border-white/10 hover:border-brand-500/30 font-bold text-[11px] flex items-center space-x-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">LeetCode</span>
@@ -233,7 +246,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             <button
               type="button"
               onClick={() => setShowEditOverlay(true)}
-              className="px-3 py-2 min-h-[40px] rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-[11px] flex items-center space-x-1.5 shadow-md transition-all hover:scale-105 cursor-pointer shrink-0 whitespace-nowrap"
+              className="px-2.5 sm:px-3 py-1.5 sm:py-2 min-h-[36px] sm:min-h-[40px] rounded-xl bg-white/5 hover:bg-amber-500/20 text-amber-300 hover:text-amber-200 border border-white/10 hover:border-amber-500/30 font-bold text-[11px] flex items-center space-x-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm"
             >
               <Edit3 className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Edit</span>
@@ -243,7 +256,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               type="button"
               onClick={handleLiveFetch}
               disabled={isLiveFetching}
-              className="px-3 py-2 min-h-[40px] rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] flex items-center space-x-1.5 shadow-md shadow-indigo-600/30 transition-all hover:scale-105 disabled:opacity-50 cursor-pointer shrink-0 whitespace-nowrap"
+              className="px-2.5 sm:px-3 py-1.5 sm:py-2 min-h-[36px] sm:min-h-[40px] rounded-xl bg-white/5 hover:bg-indigo-500/20 text-indigo-300 hover:text-indigo-200 border border-white/10 hover:border-indigo-500/30 font-bold text-[11px] flex items-center space-x-1.5 transition-all disabled:opacity-50 shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLiveFetching ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">{isLiveFetching ? 'Syncing...' : 'Sync'}</span>
@@ -253,7 +266,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               type="button"
               onClick={handleGenerateCert}
               disabled={downloadingCert}
-              className="px-3 py-2 min-h-[40px] rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] flex items-center space-x-1.5 shadow-md shadow-amber-600/30 transition-all hover:scale-105 disabled:opacity-50 cursor-pointer shrink-0 whitespace-nowrap"
+              className="px-2.5 sm:px-3 py-1.5 sm:py-2 min-h-[36px] sm:min-h-[40px] rounded-xl bg-white/5 hover:bg-orange-500/20 text-orange-300 hover:text-orange-200 border border-white/10 hover:border-orange-500/30 font-bold text-[11px] flex items-center space-x-1.5 transition-all disabled:opacity-50 shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm"
             >
               <Award className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Certificate</span>
@@ -263,7 +276,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               type="button"
               onClick={handleDownloadForensicCert}
               disabled={downloadingForensic}
-              className="px-3 py-2 min-h-[40px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] flex items-center space-x-1.5 shadow-md shadow-emerald-600/30 transition-all hover:scale-105 disabled:opacity-50 cursor-pointer shrink-0 whitespace-nowrap"
+              className="px-2.5 sm:px-3 py-1.5 sm:py-2 min-h-[36px] sm:min-h-[40px] rounded-xl bg-white/5 hover:bg-emerald-500/20 text-emerald-300 hover:text-emerald-200 border border-white/10 hover:border-emerald-500/30 font-bold text-[11px] flex items-center space-x-1.5 transition-all disabled:opacity-50 shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm"
             >
               <FileText className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Audit</span>
@@ -273,22 +286,12 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               type="button"
               onClick={handleDelete}
               disabled={isDeleting}
-              className="px-3 py-2 min-h-[40px] rounded-xl bg-rose-600/90 hover:bg-rose-600 text-white font-bold text-[11px] flex items-center space-x-1.5 shadow-md shadow-rose-600/30 transition-all hover:scale-105 disabled:opacity-50 cursor-pointer shrink-0 whitespace-nowrap"
-              title="Deactivate Student"
+              className="px-2.5 sm:px-3 py-1.5 sm:py-2 min-h-[36px] sm:min-h-[40px] rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 hover:text-rose-200 border border-rose-500/30 hover:border-rose-500/50 font-bold text-[11px] flex items-center space-x-1.5 transition-all disabled:opacity-50 shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm shadow-sm"
+              title="Delete / Deactivate Student"
             >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{isDeleting ? '...' : 'Deactivate'}</span>
+              <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+              <span>{isDeleting ? '...' : 'Delete'}</span>
             </button>
-
-          <button
-            type="button"
-            onClick={() => onBack()}
-            className="px-3 py-2 min-h-[40px] rounded-xl bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white transition-all font-black text-[11px] flex items-center space-x-1 cursor-pointer shrink-0 whitespace-nowrap"
-            title="Close Modal"
-          >
-            <X className="w-4 h-4" />
-            <span className="hidden sm:inline">Close</span>
-          </button>
         </div>
       </div>
       
@@ -334,61 +337,94 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
 
       {activeTab === 'overview' && (
         <>
-          {/* Ranks & Streaks Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* PREMIUM BENTO GRID FOR STATS */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
-        <div className="glass-card p-3 sm:p-5 rounded-2xl border text-center shadow-md">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">College Rank</p>
-          <h3 className="text-2xl font-extrabold text-brand-600 dark:text-brand-400 mt-1">#{detail?.college_rank || '—'}</h3>
-        </div>
+        {/* Left Section: Rankings & Activity (7 columns) */}
+        <div className="lg:col-span-7 bg-white dark:bg-navy-900/40 rounded-3xl border border-slate-200/60 dark:border-navy-700/60 p-5 sm:p-6 shadow-sm relative overflow-hidden backdrop-blur-xl">
+          <div className="absolute top-0 right-0 p-32 bg-brand-500/5 dark:bg-brand-500/10 blur-3xl rounded-full -translate-y-1/2 translate-x-1/3"></div>
+          
+          <div className="flex items-center space-x-2 mb-5 relative z-10">
+            <Trophy className="w-4 h-4 text-brand-500" />
+            <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Rankings & Activity</h4>
+          </div>
 
-        <div className="glass-card p-3 sm:p-5 rounded-2xl border text-center shadow-md">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Department Rank</p>
-          <h3 className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">#{detail?.dept_rank || '—'}</h3>
-        </div>
+          <div className="grid grid-cols-2 gap-4 relative z-10">
+            <div className="bg-slate-50/80 dark:bg-navy-900/50 rounded-2xl p-4 border border-slate-100 dark:border-navy-800 transition-transform hover:scale-[1.02]">
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="p-1.5 rounded-lg bg-brand-100 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400">
+                  <Trophy className="w-3.5 h-3.5" />
+                </div>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">College Rank</p>
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white">#{detail?.college_rank || '—'}</h3>
+            </div>
 
-        <div className="glass-card p-3 sm:p-5 rounded-2xl border text-center shadow-md">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Weekly Progress</p>
-          <h3 className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">+{detail?.weekly_progress || 0}</h3>
-        </div>
+            <div className="bg-slate-50/80 dark:bg-navy-900/50 rounded-2xl p-4 border border-slate-100 dark:border-navy-800 transition-transform hover:scale-[1.02]">
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="p-1.5 rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
+                  <Medal className="w-3.5 h-3.5" />
+                </div>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Dept Rank</p>
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white">#{detail?.dept_rank || '—'}</h3>
+            </div>
 
-        <div className="glass-card p-3 sm:p-5 rounded-2xl border text-center shadow-md">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active Streak</p>
-          <h3 className="text-2xl font-extrabold text-amber-500 mt-1">{detail?.lc_activity?.current_streak || detail?.streak_count || 0} Days</h3>
-        </div>
+            <div className="bg-slate-50/80 dark:bg-navy-900/50 rounded-2xl p-4 border border-slate-100 dark:border-navy-800 transition-transform hover:scale-[1.02]">
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="p-1.5 rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
+                  <TrendingUp className="w-3.5 h-3.5" />
+                </div>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Weekly Progress</p>
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">+{detail?.weekly_progress || 0}</h3>
+            </div>
 
-      </div>
-
-      {/* Contest Performance Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <div className="glass-card p-3 sm:p-5 rounded-2xl border text-center shadow-md">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Official Contests</p>
-          <h3 className="text-2xl font-extrabold text-brand-600 dark:text-brand-400 mt-1">{detail?.lc_contest_standing?.attended_count || detail?.stats?.official_contests || 0}</h3>
-        </div>
-        <div className="glass-card p-3 sm:p-5 rounded-2xl border text-center shadow-md">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Virtual Contests</p>
-          <div className="mt-1">
-            <h3 className="text-2xl font-extrabold text-brand-600 dark:text-brand-400">
-              {detail?.stats?.virtual_contests || (detail?.has_virtual ? 1 : 0)}
-            </h3>
-            <div className="mt-1">
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                (detail?.stats?.virtual_contest_status === 'ATTENDED' || detail?.has_virtual || (detail?.stats?.virtual_contests && detail.stats.virtual_contests > 0))
-                  ? 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300 border border-brand-400/30'
-                  : 'bg-slate-100 text-slate-600 dark:bg-navy-950 dark:text-slate-400 border border-slate-300/30'
-              }`}>
-                {(detail?.stats?.virtual_contest_status === 'ATTENDED' || detail?.has_virtual || (detail?.stats?.virtual_contests && detail.stats.virtual_contests > 0))
-                  ? 'Attended'
-                  : 'Not Attended'}
-              </span>
+            <div className="bg-slate-50/80 dark:bg-navy-900/50 rounded-2xl p-4 border border-slate-100 dark:border-navy-800 transition-transform hover:scale-[1.02]">
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="p-1.5 rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
+                  <Flame className="w-3.5 h-3.5" />
+                </div>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Active Streak</p>
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-black text-amber-500">{detail?.lc_activity?.current_streak || detail?.streak_count || 0} <span className="text-sm font-bold text-amber-500/70">Days</span></h3>
             </div>
           </div>
         </div>
-        <div className="glass-card p-3 sm:p-5 rounded-2xl border text-center shadow-md col-span-2 md:col-span-1">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Contest Rating</p>
-          <h3 className="text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">
-            {(detail?.lc_contest_standing?.contest_rating || detail?.stats?.contest_rating) ? (detail.lc_contest_standing?.contest_rating || detail.stats?.contest_rating).toLocaleString('en-US', { minimumFractionDigits: 1 }) : 'Unrated'}
-          </h3>
+
+        {/* Right Section: Contest Metrics (5 columns) */}
+        <div className="lg:col-span-5 bg-white dark:bg-navy-900/40 rounded-3xl border border-slate-200/60 dark:border-navy-700/60 p-5 sm:p-6 shadow-sm relative overflow-hidden backdrop-blur-xl flex flex-col">
+          <div className="absolute bottom-0 right-0 p-32 bg-indigo-500/5 dark:bg-indigo-500/10 blur-3xl rounded-full translate-y-1/3 translate-x-1/3"></div>
+          
+          <div className="flex items-center space-x-2 mb-5 relative z-10">
+            <Target className="w-4 h-4 text-indigo-500" />
+            <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Contest Performance</h4>
+          </div>
+
+          <div className="flex-1 flex flex-col justify-center space-y-4 relative z-10">
+            {/* Rating Highlight */}
+            <div className="bg-gradient-to-br from-indigo-500 to-brand-600 rounded-2xl p-5 text-white shadow-lg shadow-brand-500/20 transform transition-transform hover:scale-[1.02]">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[10px] font-bold text-indigo-100 uppercase tracking-wider">Global Rating</p>
+                <Award className="w-4 h-4 text-brand-200" />
+              </div>
+              <h3 className="text-3xl sm:text-4xl font-black text-white">
+                {(detail?.lc_contest_standing?.contest_rating || detail?.stats?.contest_rating) ? (detail.lc_contest_standing?.contest_rating || detail.stats?.contest_rating).toLocaleString('en-US', { minimumFractionDigits: 1 }) : 'Unrated'}
+              </h3>
+            </div>
+
+            {/* Official / Virtual Split */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-slate-50/80 dark:bg-navy-900/50 rounded-2xl p-4 border border-slate-100 dark:border-navy-800 transition-transform hover:scale-[1.02]">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Official</p>
+                <h3 className="text-2xl font-black text-slate-800 dark:text-white">{detail?.lc_contest_standing?.attended_count || detail?.stats?.official_contests || 0}</h3>
+              </div>
+              <div className="bg-slate-50/80 dark:bg-navy-900/50 rounded-2xl p-4 border border-slate-100 dark:border-navy-800 transition-transform hover:scale-[1.02]">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Virtual</p>
+                <h3 className="text-2xl font-black text-slate-800 dark:text-white">{detail?.stats?.virtual_contests || (detail?.has_virtual ? 1 : 0)}</h3>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

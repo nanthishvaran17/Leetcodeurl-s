@@ -49,7 +49,7 @@ def get_or_create_default_schedule(db: Session) -> ScheduledReportConfig:
         # Default recipients
         default_recipients = [e.strip() for e in settings.REPORT_RECIPIENT_EMAILS.split(",") if e.strip()]
         if not default_recipients:
-            default_recipients = ["nanthishvaran17@gmail.com", "hod_cse@nandhaengg.org", "principal@nandhaengg.org"]
+            default_recipients = ["nanthishvaran17@gmail.com", "nanthishvaran17@gmail.com", "principal@nandhaengg.org"]
 
         config = ScheduledReportConfig(
             report_type="weekly_public_leetcode",

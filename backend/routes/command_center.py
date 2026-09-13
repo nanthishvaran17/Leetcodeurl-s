@@ -73,7 +73,7 @@ def _log_admin_action(db: Session, action: str, target_id: str, description: str
         audit = AdminAuditLog(
             audit_id=f"CC-{datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')}-{target_id[:6]}",
             admin_name="Operations Staff",
-            admin_email="system@nandhaengg.org",
+            admin_email="nanthishvaran17@gmail.com",
             admin_role="admin",
             action=action,
             action_type="CRUD",

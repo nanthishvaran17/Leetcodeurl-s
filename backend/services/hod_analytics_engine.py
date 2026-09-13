@@ -301,6 +301,18 @@ def get_institutional_benchmarks(db: Session, current_user: Optional[User] = Non
         "year_matrix":       year_matrix,
     }
 
+def _canonical_year_code(val: Any) -> str:
+    s = str(val or "").strip().upper()
+    if s in ("I", "1", "1ST", "FIRST", "I YEAR", "1 YEAR", "YEAR 1", "YR 1"):
+        return "I"
+    if s in ("II", "2", "2ND", "SECOND", "II YEAR", "2 YEAR", "YEAR 2", "YR 2"):
+        return "II"
+    if s in ("III", "3", "3RD", "THIRD", "III YEAR", "3 YEAR", "YEAR 3", "YR 3"):
+        return "III"
+    if s in ("IV", "4", "4TH", "FOURTH", "IV YEAR", "4 YEAR", "YEAR 4", "YR 4"):
+        return "IV"
+    return s
+
 def calculate_year_matrix(db: Session, current_user: Optional[User] = None) -> List[Dict[str, Any]]:
     departments = db.query(Department).all()
     dept_map = {d.id: d for d in departments if _is_real_dept(d.code)}
@@ -322,19 +334,19 @@ def calculate_year_matrix(db: Session, current_user: Optional[User] = None) -> L
     
     stats_by_year = {}
     for year_level, total_solved, contest_rating in student_stats:
-        if year_level not in stats_by_year:
-            stats_by_year[year_level] = []
-        stats_by_year[year_level].append({
+        c_year = _canonical_year_code(year_level)
+        if not c_year:
+            continue
+        if c_year not in stats_by_year:
+            stats_by_year[c_year] = []
+        stats_by_year[c_year].append({
             "total_solved": total_solved,
             "contest_rating": contest_rating
         })
             
     year_matrix = []
-    for year_level, stats_rows in stats_by_year.items():
-        if not year_level:
-            continue
-            
-        count = sum(1 for s in student_stats if s[0] == year_level)
+    for c_year, stats_rows in stats_by_year.items():
+        count = len(stats_rows)
         if count == 0:
             continue
 
@@ -353,10 +365,10 @@ def calculate_year_matrix(db: Session, current_user: Optional[User] = None) -> L
             min(100, max(0, (avg_rating - 1200) / 6)) * 0.35
         )), 1)
 
-        year_label = f"{year_level} Year" if "Year" not in str(year_level) else str(year_level)
+        year_label = f"{c_year} Year"
         year_matrix.append({
             "year":          year_label,
-            "year_level":    year_level,
+            "year_level":    c_year,
             "student_count": count,
             "active_count":  active,
             "inactive_count": inactive,

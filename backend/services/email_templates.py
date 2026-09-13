@@ -224,18 +224,28 @@ def generate_professional_template(title: str, content: str, action_button: Opti
             .footer {{ padding: 24px 18px !important; font-size: 13px !important; }}
             .btn {{ display: block !important; width: 100% !important; padding: 14px 12px !important; box-sizing: border-box !important; }}
             
-            /* Enforcing 2-column layout on mobile */
-            .data-table td {{
+            /* Enforcing responsive stacking layout on mobile */
+            .data-table th, .data-table td, .stack-column {{
+                display: block !important;
+                width: 100% !important;
                 box-sizing: border-box !important;
-                padding: 10px 12px !important;
-                font-size: 13px !important;
+                padding: 10px 16px !important;
             }}
-            .data-table td:first-child {{
-                width: 35% !important;
-                background-color: #f8fafc !important;
+            .data-table td:first-child, .stack-label {{
+                border-right: none !important;
+                border-bottom: none !important;
+                padding-bottom: 4px !important;
+                width: 100% !important;
             }}
-            .data-table td:nth-child(2) {{
-                width: 65% !important;
+            .data-table td:nth-child(2), .stack-value {{
+                padding-top: 0 !important;
+                width: 100% !important;
+            }}
+            .safe-wrap {{
+                word-break: break-word !important;
+                overflow-wrap: anywhere !important;
+                max-width: 100% !important;
+                display: inline-block;
             }}
         }}
 

@@ -75,11 +75,14 @@ def get_reporting_managers(
     current_user: User = Depends(get_current_user)
 ):
     """Returns candidate staff/admin users for 'Reports To' dropdown."""
+    ELIGIBLE_ROLES = {"admin", "administrator", "staff", "faculty", "hod", "super admin"}
     users = db.query(User).filter(
         User.is_active == True,
-        User.id != current_user.id
+        User.id != current_user.id,
+        User.role.isnot(None),
+        User.role != "",
     ).order_by(User.full_name.asc(), User.username.asc()).all()
-    
+
     return [
         {
             "id": u.id,
@@ -88,6 +91,7 @@ def get_reporting_managers(
             "department_id": u.department_id
         }
         for u in users
+        if (u.role or "").strip().lower() in ELIGIBLE_ROLES
     ]
 
 
@@ -171,6 +175,22 @@ async def submit_staff_verification(
                 status_code=400,
                 detail="Unsupported document type. Only PDF, JPG, and PNG documents are allowed."
             )
+
+        # Magic number validation for images & PDF
+        magic_numbers = {
+            b'\x89PNG\r\n\x1a\n': ".png",
+            b'\xff\xd8\xff': ".jpg",
+            b'%PDF-': ".pdf"
+        }
+        
+        is_valid_magic = False
+        for magic in magic_numbers:
+            if file_bytes.startswith(magic):
+                is_valid_magic = True
+                break
+                
+        if not is_valid_magic:
+            raise HTTPException(status_code=400, detail="Invalid file content (magic number mismatch).")
 
         doc_orig_name = os.path.basename(document.filename)
         doc_hash = hashlib.sha256(file_bytes).hexdigest()

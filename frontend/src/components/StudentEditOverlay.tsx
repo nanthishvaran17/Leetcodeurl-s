@@ -208,10 +208,15 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       const initCutoff = student.twelfth_cutoff ?? student.twelfthCutoff ?? student.cutoff ?? '';
       const formattedCutoff = (initCutoff !== '' && initCutoff !== null && initCutoff !== undefined) ? String(initCutoff) : '';
 
-      const initSecAccounts: SecondaryAccountItem[] = (student.leetcode_accounts || []).map((acc: any) => ({
-        id: acc.id,
-        username: acc.leetcode_username || acc.username || '',
-        url: acc.profile_url || (acc.leetcode_username || acc.username ? `https://leetcode.com/u/${acc.leetcode_username || acc.username}/` : '')
+      const rawAccounts = Array.isArray(student.leetcode_accounts)
+        ? student.leetcode_accounts
+        : Array.isArray(student.secondary_accounts)
+        ? student.secondary_accounts
+        : [];
+      const initSecAccounts: SecondaryAccountItem[] = rawAccounts.map((acc: any) => ({
+        id: acc?.id,
+        username: acc?.leetcode_username || acc?.username || '',
+        url: acc?.profile_url || (acc?.leetcode_username || acc?.username ? `https://leetcode.com/u/${acc?.leetcode_username || acc?.username}/` : '')
       }));
 
       setName(initName);
@@ -435,8 +440,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         department_id: deptId,
         year_level: yearLevel,
         section: section.trim(),
-        username: username.trim() || undefined,
-        leetcode_url: leetcodeUrl.trim() || undefined,
+        username: username.trim(),
+        leetcode_url: leetcodeUrl.trim(),
         email: email.trim() || undefined,
         institutional_email: institutionalEmail.trim() || undefined,
         allocation: allocation !== 'none' ? allocation : null,

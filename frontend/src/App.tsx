@@ -16,6 +16,10 @@ import { InstallAppPrompt } from './components/InstallAppPrompt';
 import { AppUpdateNotifier } from './components/AppUpdateNotifier';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 import { useScrollLock } from './hooks/useScrollLock';
+import { LandingPage } from './pages/LandingPage';
+import { LoginPage } from './pages/LoginPage';
+import { DashboardPage } from './pages/DashboardPage';
+
 // Safe lazy import wrapper with automatic chunk reload on Vercel deployment update
 function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ default: T }>) {
   return lazy(() =>
@@ -38,10 +42,6 @@ function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ d
   );
 }
 
-// Critical-path pages (always needed within 1 navigation) — keep synchronous
-const LandingPage = safeLazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
-const LoginPage = safeLazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
-const DashboardPage = safeLazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
 const StudentMasterPage = safeLazy(() => import('./pages/StudentMasterPage').then(m => ({ default: m.StudentMasterPage })));
 const StudentProfilePage = safeLazy(() => import('./pages/StudentProfilePage').then(m => ({ default: m.StudentProfilePage })));
 // Heavy modals — lazy, only mounted on demand

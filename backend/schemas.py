@@ -42,6 +42,7 @@ class StudentBase(BaseModel):
     allocation: Optional[str] = None
     accommodation: Optional[str] = None
     twelfth_cutoff: Optional[float] = None
+    institutional_email: Optional[str] = None
     is_active: bool = True
 
 

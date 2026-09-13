@@ -21,6 +21,14 @@ from backend.models import (
 from backend.services.authorization_service import apply_role_based_student_filter
 from backend.leetcode_client import extract_leetcode_username
 
+def sanitize_csv_excel_value(val: Any) -> Any:
+    """Neutralizes formula injection in Excel/CSV exports."""
+    if isinstance(val, str):
+        val = val.strip()
+        if val.startswith(('=', '+', '-', '@')):
+            return "'" + val
+    return val
+
 STUDENT_IMPORT_COLUMNS = [
     "REG NO",
     "NAME",

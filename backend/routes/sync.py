@@ -288,13 +288,28 @@ def get_sync_job_items(
     } for it in items]
 
 
-@router.post("/api/sync/student/{student_id}")
-def trigger_single_student_sync(student_id: int, db: Session = Depends(get_db)):
+@router.post("/student/{student_identifier}")
+@router.post("/api/sync/student/{student_identifier}")
+def trigger_single_student_sync(student_identifier: str, db: Session = Depends(get_db)):
     """
     Performs single-student instant live refresh.
     Refreshes student stats, logs audit item, recalculates ranks, and returns updated student data.
+    Accepts numeric student ID (e.g. 142) or register number (e.g. 732223CC021).
     """
-    res = sync_single_student(student_id, db)
+    from backend.models import Student
+    from backend.services.live_sync_service import sync_single_student
+
+    clean_id = str(student_identifier).strip()
+    student = None
+    if clean_id.isdigit():
+        student = db.query(Student).filter(Student.id == int(clean_id)).first()
+    if not student:
+        student = db.query(Student).filter(Student.reg_no == clean_id.upper()).first()
+
+    if not student:
+        raise HTTPException(status_code=404, detail=f"Student record '{student_identifier}' not found.")
+
+    res = sync_single_student(student.id, db, force_refresh=True)
     if res.get("status") == "error":
         raise HTTPException(status_code=400, detail=res.get("message", "Sync failed"))
     return res

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Query
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -10,7 +10,7 @@ router = APIRouter(prefix="/api/public", tags=["Public Endpoints"])
 @router.get("/leaderboard")
 def get_public_leaderboard(
     request: Request,
-    limit: int = 3000,
+    limit: int = Query(100, ge=1, le=500),
     page: int = 1,
     paginated: bool = False,
     search: Optional[str] = None,

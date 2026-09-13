@@ -27,6 +27,196 @@ export interface GlobalFilterProps {
   searchPlaceholder?: string;
 }
 
+export interface DepartmentTheme {
+  iconBg: string;
+  iconColor: string;
+  badgeBg: string;
+  badgeText: string;
+  badgeBorder: string;
+  hoverBg: string;
+  selectedBg: string;
+  selectedText: string;
+  selectedCheck: string;
+}
+
+export const getDepartmentTheme = (opt: GlobalFilterOption | undefined, isSelected: boolean): DepartmentTheme => {
+  if (!opt) {
+    return {
+      iconBg: 'bg-slate-100 dark:bg-navy-800',
+      iconColor: 'text-slate-500 dark:text-slate-400',
+      badgeBg: 'bg-slate-100 dark:bg-navy-800',
+      badgeText: 'text-slate-700 dark:text-slate-300',
+      badgeBorder: 'border-slate-200 dark:border-navy-700',
+      hoverBg: 'hover:bg-slate-50 dark:hover:bg-navy-800',
+      selectedBg: 'bg-brand-600 text-white font-extrabold shadow-md',
+      selectedText: 'text-white font-black',
+      selectedCheck: 'text-white'
+    };
+  }
+
+  const pill = (opt.pillText || '').toUpperCase().trim();
+  const val = (opt.value || '').toUpperCase().trim();
+  const label = (opt.label || '').toUpperCase().trim();
+  const fullText = `${pill} ${val} ${label}`;
+
+  const isAll = val === 'ALL' || val === '' || pill === 'ALL' || label.includes('ALL INSTITUTIONAL') || label.includes('ALL DEPARTMENTS') || label.includes('ALL SECTIONS') || label.includes('ALL ACADEMIC');
+
+  if (isAll) {
+    return {
+      iconBg: isSelected ? 'bg-white/20' : 'bg-brand-50 dark:bg-brand-950/80',
+      iconColor: isSelected ? 'text-white' : 'text-brand-600 dark:text-brand-400',
+      badgeBg: isSelected ? 'bg-white/20' : 'bg-brand-100 dark:bg-brand-900/80',
+      badgeText: isSelected ? 'text-white font-black' : 'text-brand-800 dark:text-brand-300',
+      badgeBorder: isSelected ? 'border-white/30' : 'border-brand-200 dark:border-brand-800',
+      hoverBg: 'hover:bg-brand-50/70 dark:hover:bg-brand-950/40',
+      selectedBg: 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-500/20 font-black',
+      selectedText: 'text-white font-black',
+      selectedCheck: 'text-white'
+    };
+  }
+
+  // 1. CSE(IOT) → Orange (Check IOT first before general CSE or CS)
+  if (pill.includes('IOT') || fullText.includes('IOT') || label.includes('INTERNET OF THINGS')) {
+    return {
+      iconBg: isSelected ? 'bg-white/20' : 'bg-orange-100 dark:bg-orange-950/80',
+      iconColor: isSelected ? 'text-white' : 'text-orange-600 dark:text-orange-400',
+      badgeBg: isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-orange-100 dark:bg-orange-950/90',
+      badgeText: isSelected ? 'text-white font-black' : 'text-orange-800 dark:text-orange-300',
+      badgeBorder: isSelected ? 'border-white/30' : 'border-orange-300 dark:border-orange-800',
+      hoverBg: 'hover:bg-orange-50/80 dark:hover:bg-orange-950/30',
+      selectedBg: 'bg-orange-600 text-white shadow-md shadow-orange-600/20 font-black',
+      selectedText: 'text-white font-black',
+      selectedCheck: 'text-white'
+    };
+  }
+
+  // 2. CSE(CS) / Cyber Security → Purple / Violet
+  if (pill === 'CSE(CS)' || pill === 'CS' || label.includes('CYBER') || label.includes('SECURITY') || pill.includes('(CS)')) {
+    return {
+      iconBg: isSelected ? 'bg-white/20' : 'bg-purple-100 dark:bg-purple-950/80',
+      iconColor: isSelected ? 'text-white' : 'text-purple-600 dark:text-purple-400',
+      badgeBg: isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-purple-100 dark:bg-purple-950/90',
+      badgeText: isSelected ? 'text-white font-black' : 'text-purple-800 dark:text-purple-300',
+      badgeBorder: isSelected ? 'border-white/30' : 'border-purple-300 dark:border-purple-800',
+      hoverBg: 'hover:bg-purple-50/80 dark:hover:bg-purple-950/30',
+      selectedBg: 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black',
+      selectedText: 'text-white font-black',
+      selectedCheck: 'text-white'
+    };
+  }
+
+  // 3. ECE → Magenta / Pink
+  if (pill.includes('ECE') || val.includes('ECE') || label.includes('ELECTRONICS AND COMMUNICATION') || label.includes('ECE')) {
+    return {
+      iconBg: isSelected ? 'bg-white/20' : 'bg-fuchsia-100 dark:bg-fuchsia-950/80',
+      iconColor: isSelected ? 'text-white' : 'text-fuchsia-600 dark:text-fuchsia-400',
+      badgeBg: isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-fuchsia-100 dark:bg-fuchsia-950/90',
+      badgeText: isSelected ? 'text-white font-black' : 'text-fuchsia-800 dark:text-fuchsia-300',
+      badgeBorder: isSelected ? 'border-white/30' : 'border-fuchsia-300 dark:border-fuchsia-800',
+      hoverBg: 'hover:bg-fuchsia-50/80 dark:hover:bg-fuchsia-950/30',
+      selectedBg: 'bg-fuchsia-600 text-white shadow-md shadow-fuchsia-600/20 font-black',
+      selectedText: 'text-white font-black',
+      selectedCheck: 'text-white'
+    };
+  }
+
+  // 4. EEE → Amber / Yellow
+  if (pill.includes('EEE') || val.includes('EEE') || label.includes('ELECTRICAL') || label.includes('EEE')) {
+    return {
+      iconBg: isSelected ? 'bg-white/20' : 'bg-amber-100 dark:bg-amber-950/80',
+      iconColor: isSelected ? 'text-slate-950' : 'text-amber-600 dark:text-amber-400',
+      badgeBg: isSelected ? 'bg-white/20 text-slate-950 border-slate-950/30' : 'bg-amber-100 dark:bg-amber-950/90',
+      badgeText: isSelected ? 'text-slate-950 font-black' : 'text-amber-900 dark:text-amber-300',
+      badgeBorder: isSelected ? 'border-slate-950/30' : 'border-amber-300 dark:border-amber-800',
+      hoverBg: 'hover:bg-amber-50/80 dark:hover:bg-amber-950/30',
+      selectedBg: 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black',
+      selectedText: 'text-slate-950 font-black',
+      selectedCheck: 'text-slate-950'
+    };
+  }
+
+  // 5. AIDS / AI → Teal / Cyan
+  if (pill.includes('AIDS') || pill === 'AI' || label.includes('ARTIFICIAL') || label.includes('DATA SCIENCE') || label.includes('AIDS')) {
+    return {
+      iconBg: isSelected ? 'bg-white/20' : 'bg-teal-100 dark:bg-teal-950/80',
+      iconColor: isSelected ? 'text-white' : 'text-teal-600 dark:text-teal-400',
+      badgeBg: isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-teal-100 dark:bg-teal-950/90',
+      badgeText: isSelected ? 'text-white font-black' : 'text-teal-800 dark:text-teal-300',
+      badgeBorder: isSelected ? 'border-white/30' : 'border-teal-300 dark:border-teal-800',
+      hoverBg: 'hover:bg-teal-50/80 dark:hover:bg-teal-950/30',
+      selectedBg: 'bg-teal-600 text-white shadow-md shadow-teal-600/20 font-black',
+      selectedText: 'text-white font-black',
+      selectedCheck: 'text-white'
+    };
+  }
+
+  // 6. IT / Information Technology → Green / Emerald
+  if (pill === 'IT' || label.includes('INFORMATION TECHNOLOGY') || (label.includes('IT') && !label.includes('SECURITY') && !label.includes('SUITE'))) {
+    return {
+      iconBg: isSelected ? 'bg-white/20' : 'bg-emerald-100 dark:bg-emerald-950/80',
+      iconColor: isSelected ? 'text-white' : 'text-emerald-600 dark:text-emerald-400',
+      badgeBg: isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-emerald-100 dark:bg-emerald-950/90',
+      badgeText: isSelected ? 'text-white font-black' : 'text-emerald-800 dark:text-emerald-300',
+      badgeBorder: isSelected ? 'border-white/30' : 'border-emerald-300 dark:border-emerald-800',
+      hoverBg: 'hover:bg-emerald-50/80 dark:hover:bg-emerald-950/30',
+      selectedBg: 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20 font-black',
+      selectedText: 'text-white font-black',
+      selectedCheck: 'text-white'
+    };
+  }
+
+  // 7. AGRI → Red / Coral
+  if (pill.includes('AGRI') || pill.includes('AG') || label.includes('AGRICULTUR')) {
+    return {
+      iconBg: isSelected ? 'bg-white/20' : 'bg-rose-100 dark:bg-rose-950/80',
+      iconColor: isSelected ? 'text-white' : 'text-rose-600 dark:text-rose-400',
+      badgeBg: isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-rose-100 dark:bg-rose-950/90',
+      badgeText: isSelected ? 'text-white font-black' : 'text-rose-800 dark:text-rose-300',
+      badgeBorder: isSelected ? 'border-white/30' : 'border-rose-300 dark:border-rose-800',
+      hoverBg: 'hover:bg-rose-50/80 dark:hover:bg-rose-950/30',
+      selectedBg: 'bg-rose-600 text-white shadow-md shadow-rose-600/20 font-black',
+      selectedText: 'text-white font-black',
+      selectedCheck: 'text-white'
+    };
+  }
+
+  // 8. CSE (General) → Blue
+  if (pill === 'CSE' || label.includes('COMPUTER SCIENCE AND ENGINEERING') || (label.includes('COMPUTER') && !label.includes('CYBER') && !label.includes('IOT'))) {
+    return {
+      iconBg: isSelected ? 'bg-white/20' : 'bg-blue-100 dark:bg-blue-950/80',
+      iconColor: isSelected ? 'text-white' : 'text-blue-600 dark:text-blue-400',
+      badgeBg: isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-blue-100 dark:bg-blue-950/90',
+      badgeText: isSelected ? 'text-white font-black' : 'text-blue-800 dark:text-blue-300',
+      badgeBorder: isSelected ? 'border-white/30' : 'border-blue-300 dark:border-blue-800',
+      hoverBg: 'hover:bg-blue-50/80 dark:hover:bg-blue-950/30',
+      selectedBg: 'bg-blue-600 text-white shadow-md shadow-blue-600/20 font-black',
+      selectedText: 'text-white font-black',
+      selectedCheck: 'text-white'
+    };
+  }
+
+  // Fallback (Indigo)
+  return {
+    iconBg: isSelected ? 'bg-white/20' : 'bg-indigo-100 dark:bg-indigo-950/80',
+    iconColor: isSelected ? 'text-white' : 'text-indigo-600 dark:text-indigo-400',
+    badgeBg: isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-indigo-100 dark:bg-indigo-950/90',
+    badgeText: isSelected ? 'text-white font-black' : 'text-indigo-800 dark:text-indigo-300',
+    badgeBorder: isSelected ? 'border-white/30' : 'border-indigo-300 dark:border-indigo-800',
+    hoverBg: 'hover:bg-indigo-50/80 dark:hover:bg-indigo-950/30',
+    selectedBg: 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20 font-black',
+    selectedText: 'text-white font-black',
+    selectedCheck: 'text-white'
+  };
+};
+
+export const getPillText = (opt: GlobalFilterOption | undefined) => {
+  if (!opt) return 'ALL';
+  if (opt.pillText) return opt.pillText;
+  if (opt.value === 'ALL' || opt.value === '' || opt.value === 'all') return 'ALL';
+  if (opt.value.length <= 6) return opt.value.toUpperCase();
+  return opt.value.substring(0, 3).toUpperCase();
+};
+
 export const GlobalFilter: React.FC<GlobalFilterProps> = ({
   label,
   options,
@@ -117,7 +307,6 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
     const maxHeight = Math.max(160, Math.min(380, availableHeight));
 
     // Dynamic width calculation:
-    // Determine target width from dropdownWidth prop or default min-w-[580px]
     let baseWidth = 580;
     if (dropdownWidth) {
       const match = dropdownWidth.match(/(?:min-w-\[|w-\[)(\d+)px\]/);
@@ -126,9 +315,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
       }
     }
 
-
     let computedWidth = Math.max(rect.width, baseWidth);
-    // Clamp to screen width minus safe margins
     computedWidth = Math.min(computedWidth, Math.max(280, window.innerWidth - 24));
 
     let top = 0;
@@ -194,54 +381,8 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
     };
   }, [isOpen]);
 
-  const getPillText = (opt: GlobalFilterOption | undefined) => {
-    if (!opt) return 'ALL';
-    if (opt.pillText) return opt.pillText;
-    if (opt.value === 'ALL' || opt.value === '' || opt.value === 'all') return 'ALL';
-    if (opt.value.length <= 6) return opt.value.toUpperCase();
-    return opt.value.substring(0, 3).toUpperCase();
-  };
-
-  const getPillColor = (opt: GlobalFilterOption | undefined, isSelected: boolean) => {
-    if (!opt) return 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700';
-    if (opt.pillColorClass) return opt.pillColorClass;
-    if (opt.value === 'ALL' || opt.value === '' || opt.value === 'all') {
-      return isSelected 
-        ? 'bg-white/25 text-white border-white/40 font-black' 
-        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700';
-    }
-    
-    const textKey = `${opt.pillText || ''} ${opt.value || ''} ${opt.label || ''}`.toUpperCase();
-    
-    if (textKey.includes('IOT')) {
-      return isSelected ? 'bg-amber-400 text-slate-950 font-black border-amber-300 shadow-sm' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30';
-    }
-    if (textKey.includes('CS') || textKey.includes('CYBER')) {
-      return isSelected ? 'bg-blue-400 text-slate-950 font-black border-blue-300 shadow-sm' : 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30';
-    }
-    if (textKey.includes('IT') || textKey.includes('INFORMATION')) {
-      return isSelected ? 'bg-emerald-400 text-slate-950 font-black border-emerald-300 shadow-sm' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30';
-    }
-    if (textKey.includes('AIDS') || textKey.includes('ARTIFICIAL') || textKey.includes('AI')) {
-      return isSelected ? 'bg-teal-400 text-slate-950 font-black border-teal-300 shadow-sm' : 'bg-teal-500/15 text-teal-600 dark:text-teal-400 border-teal-500/30';
-    }
-    if (textKey.includes('AGRI')) {
-      return isSelected ? 'bg-rose-400 text-slate-950 font-black border-rose-300 shadow-sm' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30';
-    }
-    if (textKey.includes('EEE') || textKey.includes('ELECTRICAL')) {
-      return isSelected ? 'bg-orange-400 text-slate-950 font-black border-orange-300 shadow-sm' : 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30';
-    }
-    if (textKey.includes('ECE') || textKey.includes('ELECTRONICS')) {
-      return isSelected ? 'bg-fuchsia-400 text-slate-950 font-black border-fuchsia-300 shadow-sm' : 'bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-400 border-fuchsia-500/30';
-    }
-    if (textKey.includes('CSE') || textKey.includes('COMPUTER')) {
-      return isSelected ? 'bg-purple-400 text-slate-950 font-black border-purple-300 shadow-sm' : 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30';
-    }
-
-    return isSelected ? 'bg-indigo-400 text-slate-950 font-black border-indigo-300 shadow-sm' : 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30';
-  };
-
   const activeSearchPlaceholder = searchPlaceholder || (label ? `Search ${label.toLowerCase()}...` : 'Search department...');
+  const triggerTheme = getDepartmentTheme(selectedOption, false);
 
   return (
     <div className={twMerge('flex flex-col space-y-1.5 min-w-0 w-full', className)}>
@@ -266,24 +407,27 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
               : "border-slate-200 dark:border-slate-700 hover:border-brand-300"
           )}
         >
-          <div className="flex items-center space-x-2 overflow-hidden min-w-0 flex-1 pr-2">
+          <div className="flex items-center space-x-2.5 overflow-hidden min-w-0 flex-1 pr-2">
             <div className={clsx(
-              "shrink-0 transition-colors duration-200",
-              isOpen ? "text-brand-500" : "text-slate-400 dark:text-slate-500"
+              "w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors border",
+              triggerTheme.iconBg,
+              isOpen ? "border-brand-300" : "border-slate-200/60 dark:border-navy-700/60"
             )}>
-              {selectedOption?.icon || icon || <Filter className="w-4 h-4" />}
+              <span className={isOpen ? "text-brand-600 dark:text-brand-400" : triggerTheme.iconColor}>
+                {selectedOption?.icon || icon || <Filter className="w-3.5 h-3.5" />}
+              </span>
             </div>
             
             {selectedOption?.hidePill !== true && (
               <div className={clsx(
-                "shrink-0 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md",
-                isOpen ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300" : getPillColor(selectedOption, false)
+                "shrink-0 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border",
+                triggerTheme.badgeBg, triggerTheme.badgeText, triggerTheme.badgeBorder
               )}>
                 {getPillText(selectedOption)}
               </div>
             )}
             
-            <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate flex-1 text-left">
+            <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 truncate flex-1 text-left">
               {selectedOption ? selectedOption.label : placeholder}
             </span>
           </div>
@@ -332,7 +476,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder={activeSearchPlaceholder}
-                    className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-xs font-semibold text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
+                    className="w-full pl-9 pr-8 py-2 rounded-xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-xs font-bold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all shadow-xs"
                   />
                   {searchQuery && (
                     <button
@@ -354,6 +498,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
                 ) : (
                   filteredOptions.map((opt) => {
                     const isSelected = opt.value === value;
+                    const theme = getDepartmentTheme(opt, isSelected);
                     return (
                       <button
                         key={opt.value}
@@ -363,32 +508,36 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
                           setIsOpen(false);
                         }}
                         className={clsx(
-                          "w-full flex items-center justify-between p-3 min-h-[44px] rounded-xl transition-all text-left cursor-pointer",
+                          "w-full flex items-center justify-between p-3 min-h-[44px] rounded-xl transition-all duration-150 text-left cursor-pointer border-b border-slate-100 dark:border-navy-900/60 last:border-0",
                           isSelected
-                            ? "bg-brand-600 text-white shadow-md shadow-brand-500/20"
-                            : "bg-slate-50 dark:bg-navy-900 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800"
+                            ? theme.selectedBg
+                            : `${theme.hoverBg} bg-white dark:bg-navy-950`
                         )}
                       >
                         <div className="flex items-center space-x-3 flex-1 min-w-0 pr-2">
-                          <div className={clsx("shrink-0", isSelected ? "text-white" : "text-slate-400 dark:text-slate-500")}>
-                            {opt.icon || icon || <Filter className="w-4 h-4" />}
+                          <div className={clsx(
+                            "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-colors shadow-2xs",
+                            theme.iconBg,
+                            isSelected ? "border-transparent" : "border-slate-200/60 dark:border-navy-700/60"
+                          )}>
+                            <span className={theme.iconColor}>{opt.icon || icon || <Filter className="w-4 h-4" />}</span>
                           </div>
                           {opt.hidePill !== true && (
                             <span className={clsx(
-                              "w-16 min-w-[4rem] text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border",
-                              getPillColor(opt, isSelected)
+                              "w-16 min-w-[4rem] text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border shadow-2xs",
+                              theme.badgeBg, theme.badgeText, theme.badgeBorder
                             )}>
                               {getPillText(opt)}
                             </span>
                           )}
                           <span className={clsx(
-                            "text-xs font-bold flex-1 min-w-0 tracking-tight leading-snug break-words hyphens-none",
-                            isSelected ? "text-white font-extrabold" : "text-slate-800 dark:text-slate-200 font-semibold"
+                            "text-xs font-extrabold flex-1 min-w-0 tracking-tight leading-snug break-words hyphens-none",
+                            isSelected ? theme.selectedText : "text-slate-900 dark:text-white"
                           )}>
                             {opt.label}
                           </span>
                         </div>
-                        {isSelected && <Check className="w-4 h-4 text-white shrink-0 ml-2" strokeWidth={3} />}
+                        {isSelected && <Check className={clsx("w-4 h-4 shrink-0 ml-2", theme.selectedCheck)} strokeWidth={3} />}
                       </button>
                     );
                   })
@@ -413,11 +562,11 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
             }}
             className="animate-in fade-in zoom-in-95 duration-150"
           >
-            <div className="bg-white dark:bg-navy-950 rounded-[1.25rem] shadow-[0_16px_48px_rgba(0,0,0,0.25)] border border-slate-200 dark:border-navy-700/90 overflow-hidden flex flex-col">
+            <div className="bg-white dark:bg-navy-950 rounded-[1.25rem] shadow-[0_20px_50px_rgba(0,0,0,0.22)] border border-slate-200 dark:border-navy-700/90 overflow-hidden flex flex-col">
               
               {/* Desktop Search Header Bar */}
               {showSearch && options.length > 3 && (
-                <div className="p-2.5 border-b border-slate-100 dark:border-navy-800 bg-slate-50/70 dark:bg-navy-900/70 sticky top-0 z-10 backdrop-blur-md">
+                <div className="p-2.5 border-b border-slate-100 dark:border-navy-800 bg-slate-50/80 dark:bg-navy-900/80 sticky top-0 z-10 backdrop-blur-md">
                   <div className="relative flex items-center">
                     <Search className="w-4 h-4 absolute left-3 text-slate-400 dark:text-slate-500 pointer-events-none" />
                     <input
@@ -426,7 +575,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder={activeSearchPlaceholder}
-                      className="w-full pl-9 pr-8 py-2 rounded-xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-xs font-semibold text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
+                      className="w-full pl-9 pr-8 py-2 rounded-xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-xs font-bold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all shadow-xs"
                       onClick={(e) => e.stopPropagation()}
                     />
                     {searchQuery && (
@@ -454,6 +603,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
                 ) : (
                   filteredOptions.map((opt) => {
                     const isSelected = opt.value === value;
+                    const theme = getDepartmentTheme(opt, isSelected);
                     
                     return (
                       <button
@@ -464,39 +614,39 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
                           setIsOpen(false);
                         }}
                         className={clsx(
-                          "w-full flex items-center justify-between px-3.5 py-2.5 min-h-[42px] transition-all duration-150 outline-none text-left cursor-pointer border-b border-slate-50 dark:border-navy-900/50 last:border-0",
+                          "w-full flex items-center justify-between px-3.5 py-2.5 min-h-[44px] transition-all duration-150 outline-none text-left cursor-pointer border-b border-slate-100 dark:border-navy-900/60 last:border-0",
                           isSelected 
-                            ? "bg-brand-600 text-white font-black shadow-md shadow-brand-500/20" 
-                            : "hover:bg-slate-100 dark:hover:bg-navy-800/90 text-slate-700 dark:text-slate-200 font-semibold"
+                            ? theme.selectedBg 
+                            : `${theme.hoverBg} bg-white dark:bg-navy-950`
                         )}
                       >
                         <div className="flex items-center space-x-3 flex-1 min-w-0 pr-3">
                           <div className={clsx(
-                            "shrink-0 transition-colors",
-                            isSelected ? "text-white/90" : "text-slate-400 dark:text-slate-500"
+                            "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-colors shadow-2xs",
+                            theme.iconBg,
+                            isSelected ? "border-transparent" : "border-slate-200/60 dark:border-navy-700/60"
                           )}>
-                            {opt.icon || icon || <Filter className="w-4 h-4" />}
+                            <span className={theme.iconColor}>{opt.icon || icon || <Filter className="w-4 h-4" />}</span>
                           </div>
                           
                           {opt.hidePill !== true && (
                             <div className={clsx(
-                              "w-16 min-w-[4rem] text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border",
-                              getPillColor(opt, isSelected)
+                              "w-16 min-w-[4rem] text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border shadow-2xs",
+                              theme.badgeBg, theme.badgeText, theme.badgeBorder
                             )}>
                               {getPillText(opt)}
                             </div>
                           )}
                           <span className={clsx(
-                            "text-xs sm:text-sm font-bold flex-1 min-w-0 tracking-tight leading-snug",
-                            "sm:whitespace-nowrap whitespace-normal break-words hyphens-none",
-                            isSelected ? "text-white font-extrabold" : "text-slate-800 dark:text-slate-200 font-semibold"
+                            "text-xs sm:text-sm font-extrabold flex-1 min-w-0 tracking-tight leading-snug",
+                            isSelected ? theme.selectedText : "text-slate-900 dark:text-white"
                           )}>
                             {opt.label}
                           </span>
                         </div>
 
                         {isSelected && (
-                          <Check className="w-4 h-4 text-white shrink-0 ml-2" strokeWidth={3} />
+                          <Check className={clsx("w-4 h-4 shrink-0 ml-2", theme.selectedCheck)} strokeWidth={3} />
                         )}
                       </button>
                     );

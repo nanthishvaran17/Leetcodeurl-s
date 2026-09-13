@@ -250,9 +250,11 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
     elif request.query_params.get("token"):
         raw_token = request.query_params.get("token", "").strip()
     else:
-        # DO NOT fallback to cookie for standard API requests.
-        # This enforces the JWT + Refresh Token architecture.
-        # The cookie will ONLY be read by the /refresh endpoint.
+        # Fallback to HttpOnly cookie for all requests to prevent XSS/localStorage exposure
+        cookie_name = getattr(settings, "SESSION_COOKIE_NAME", "admin_session_token")
+        raw_token = request.cookies.get(cookie_name)
+        
+    if not raw_token:
         return None
 
     # EXTREME SPEED OPTIMIZATION: Auth Resolution Cache
@@ -1025,8 +1027,24 @@ def exchange_google_auth_code(payload: ExchangeGoogleAuthCodeRequest, request: R
 
 
 
+import time
+
+# In-memory rate limiter: dict mapping IP -> list of timestamps
+_login_attempts = {}
+
 @router.post("/login")
 async def login(login_data: UserLogin, request: Request, response: Response, db: Session = Depends(get_db)):
+    client_ip = request.client.host if request and request.client else "127.0.0.1"
+    now = time.time()
+    
+    # Clean old attempts (older than 5 minutes)
+    if client_ip in _login_attempts:
+        _login_attempts[client_ip] = [t for t in _login_attempts[client_ip] if now - t < 300]
+        if len(_login_attempts[client_ip]) >= 10:
+            raise HTTPException(status_code=429, detail="Too many login attempts. Please try again later.")
+    
+    _login_attempts.setdefault(client_ip, []).append(now)
+
     validate_csrf_origin(request)
     clean_username = login_data.username.strip()
     clean_password = login_data.password.strip()

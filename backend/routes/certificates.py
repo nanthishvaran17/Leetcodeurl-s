@@ -27,7 +27,7 @@ os.makedirs(SIGNATURES_DIR, exist_ok=True)
 
 
 class CertificateGenerateRequest(BaseModel):
-    student_id: Optional[int] = None
+    student_id: Optional[Any] = None
     register_no: Optional[str] = None
     cert_type: str = "Top Performer"
     issue_date: Optional[str] = None
@@ -483,6 +483,7 @@ def list_certificates(
     ]
 
 
+
 @router.post("/certificates/generate")
 def generate_certificate_endpoint(
     req: CertificateGenerateRequest,
@@ -494,9 +495,13 @@ def generate_certificate_endpoint(
     Enforces Staff assigned student authorization, Top Performer validation, unique verification ID, and PDF generation.
     """
     student = None
-    if req.student_id:
-        student = db.query(Student).filter(Student.id == req.student_id).first()
-    elif req.register_no:
+    if req.student_id is not None:
+        st_str = str(req.student_id).strip()
+        if st_str.isdigit():
+            student = db.query(Student).filter(Student.id == int(st_str)).first()
+        if not student:
+            student = db.query(Student).filter(Student.reg_no == st_str.upper()).first()
+    if not student and req.register_no:
         student = db.query(Student).filter(Student.reg_no == req.register_no.strip().upper()).first()
 
     if not student:
@@ -790,9 +795,27 @@ async def upload_signature(
     if file.content_type not in allowed_types:
         raise HTTPException(status_code=400, detail="Invalid image type. Supported: PNG, JPG, JPEG, WEBP.")
 
+    ext = file.filename.split(".")[-1].lower() if file.filename and "." in file.filename else ""
+    if ext not in ["png", "jpg", "jpeg", "webp"]:
+        raise HTTPException(status_code=400, detail="Invalid file extension.")
+
     content = await file.read()
     if len(content) > 5 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="Image file exceeds 5MB size limit.")
+        
+    # Magic number validation for images
+    magic_numbers = {
+        b'\x89PNG\r\n\x1a\n': "png",
+        b'\xff\xd8\xff': "jpg",
+        b'RIFF': "webp"
+    }
+    is_valid_magic = False
+    for magic in magic_numbers:
+        if content.startswith(magic):
+            is_valid_magic = True
+            break
+    if not is_valid_magic:
+        raise HTTPException(status_code=400, detail="Invalid image content (magic number mismatch).")
 
     # 2. Derive titles
     sig_type_clean = signature_type.strip().upper()

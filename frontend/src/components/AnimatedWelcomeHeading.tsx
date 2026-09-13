@@ -29,55 +29,72 @@ export const AnimatedWelcomeHeading: React.FC<AnimatedWelcomeHeadingProps> = ({
   // Unique session key for current user (resets on user switch or logout)
   const userIdKey = user?.uid || (user?.id ? `id_${user.id}` : null) || (user?.email ? `email_${user.email}` : null) || (canonicalName ? `name_${canonicalName}` : null);
 
-  const [displayedName, setDisplayedName] = useState<string>('');
+  const fullText = canonicalName ? `${prefix}, ${canonicalName}` : prefix;
+  const prefixLength = prefix.length;
+  const prefixAndCommaLength = prefixLength + 2; // length of `${prefix}, `
+
+  const [displayedCount, setDisplayedCount] = useState<number>(0);
+  const [isTyping, setIsTyping] = useState<boolean>(true);
   const lastAnimatedUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    // If no authenticated user or empty name, clear state
-    if (!canonicalName || !userIdKey) {
-      setDisplayedName('');
+    // If no authenticated user or empty session yet, wait
+    if (!userIdKey && !canonicalName) {
+      setDisplayedCount(0);
+      setIsTyping(true);
       lastAnimatedUserIdRef.current = null;
       return;
     }
 
-    // If already animated for this specific user session, preserve full name without re-triggering animation
-    // (Prevents animation from restarting on unrelated re-renders: notifications, AI assistant, live sync, filters, KPI updates)
+    // If already animated for this specific user session, preserve full text
     if (lastAnimatedUserIdRef.current === userIdKey) {
-      setDisplayedName(canonicalName);
+      setDisplayedCount(fullText.length);
+      setIsTyping(false);
       return;
     }
 
-    // New user session or user switch detected: reset & trigger letter-by-letter animation
+    // New user session detected: trigger letter-by-letter typewriter animation
     lastAnimatedUserIdRef.current = userIdKey;
-    setDisplayedName('');
+    setDisplayedCount(0);
+    setIsTyping(true);
 
-    let charIndex = 0;
+    let count = 0;
     const typingInterval = setInterval(() => {
-      charIndex++;
-      if (charIndex <= canonicalName.length) {
-        setDisplayedName(canonicalName.slice(0, charIndex));
+      count++;
+      if (count <= fullText.length) {
+        setDisplayedCount(count);
       } else {
         clearInterval(typingInterval);
+        setTimeout(() => setIsTyping(false), 700); // Hide caret after typing finishes
       }
-    }, 45); // Smooth 45ms per character typing animation
+    }, 35); // 35ms per character typing animation
 
     return () => {
       clearInterval(typingInterval);
     };
-  }, [userIdKey, canonicalName]);
+  }, [userIdKey, fullText, canonicalName]);
+
+  // Revealed slices
+  const revealedPrefix = fullText.slice(0, Math.min(displayedCount, prefixLength));
+  const hasCommaOnly = displayedCount === prefixLength + 1;
+  const hasCommaAndSpace = displayedCount >= prefixAndCommaLength;
+
+  const revealedName = displayedCount > prefixAndCommaLength
+    ? canonicalName.slice(0, displayedCount - prefixAndCommaLength)
+    : '';
 
   return (
     <h1 className={className}>
-      {prefix}
-      {displayedName ? (
-        <>
-          , <span className={nameClassName}>{displayedName}</span>
-        </>
-      ) : canonicalName ? (
-        <>
-          , <span className={nameClassName}>&nbsp;</span>
-        </>
-      ) : null}
+      <span>{revealedPrefix}</span>
+      {hasCommaOnly && <span>,</span>}
+      {hasCommaAndSpace && <span>, </span>}
+      {canonicalName && (
+        <span className={nameClassName}>{revealedName}</span>
+      )}
+      {isTyping && (
+        <span className="inline-block w-2 sm:w-2.5 h-6 sm:h-8 ml-1 bg-brand-400 animate-pulse rounded-xs align-middle shadow-[0_0_10px_rgba(129,140,248,0.9)]" />
+      )}
     </h1>
   );
 };
+

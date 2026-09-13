@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   ShieldCheck, Lock, Activity, Clock, RefreshCw, Mail, Database, 
   AlertTriangle, Save, CheckCircle2, XCircle, ArrowRight, Layers,
@@ -35,10 +35,10 @@ export const SettingsPage: React.FC = () => {
     REPORT_RECIPIENT_EMAILS: 'nanthishvaran17@gmail.com',
     SMTP_HOST: 'smtp.gmail.com',
     SMTP_PORT: '587',
-    SMTP_USERNAME: 'notifications@nandha.edu.in',
+    SMTP_USERNAME: 'nanthishvaran17@gmail.com',
     SMTP_PASSWORD_MASKED: '••••••••',
     SMTP_ENCRYPTION: 'TLS',
-    SENDER_EMAIL: 'notifications@nandha.edu.in',
+    SENDER_EMAIL: 'nanthishvaran17@gmail.com',
     SENDER_NAME: 'Nandha Engineering College Contest Engine',
     AUTO_EMAIL_AFTER_FINALIZE: 'true',
     SEND_ONLY_VALIDATED: 'true',
@@ -64,6 +64,9 @@ export const SettingsPage: React.FC = () => {
   const [backups, setBackups] = useState<any[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [systemHealth, setSystemHealth] = useState<any>(null);
+  const [isProbing, setIsProbing] = useState(false);
+  const [lastProbed, setLastProbed] = useState<Date | null>(null);
+  const [probeKey, setProbeKey] = useState(0); // increments each probe to re-trigger card animations
   const [saving, setSaving] = useState(false);
   const [saveDiffMsg, setSaveDiffMsg] = useState<string | null>(null);
   const [testingEmail, setTestingEmail] = useState(false);
@@ -152,28 +155,37 @@ export const SettingsPage: React.FC = () => {
   };
 
   const fetchSystemHealth = async () => {
+    setIsProbing(true);
+    setSystemHealth(null);
     try {
       const res = await api.get('/settings/system-health');
       if (res.data && res.data.components) {
         setSystemHealth(res.data);
+        setLastProbed(new Date());
+        setProbeKey(k => k + 1);
       } else {
         throw new Error('Invalid response structure');
       }
     } catch (err) {
       console.error('Failed to load system health:', err);
+      // Show real error state instead of fake HEALTHY
       setSystemHealth({
-        status: 'HEALTHY',
+        status: 'FAILED',
         components: {
-          backendApi: 'HEALTHY',
-          database: 'HEALTHY',
-          contestSync: 'HEALTHY',
-          reportEngine: 'HEALTHY',
-          emailEngine: 'HEALTHY',
-          backupSystem: 'HEALTHY',
-          scheduler: 'HEALTHY',
-          dataIntegrity: 'HEALTHY'
+          backendApi: 'FAILED',
+          database: 'UNKNOWN',
+          contestSync: 'UNKNOWN',
+          reportEngine: 'UNKNOWN',
+          emailEngine: 'UNKNOWN',
+          backupSystem: 'UNKNOWN',
+          scheduler: 'UNKNOWN',
+          dataIntegrity: 'UNKNOWN'
         }
       });
+      setLastProbed(new Date());
+      setProbeKey(k => k + 1);
+    } finally {
+      setIsProbing(false);
     }
   };
 
@@ -509,104 +521,183 @@ export const SettingsPage: React.FC = () => {
     <div className="space-y-6 pb-16 text-xs text-slate-800 dark:text-slate-200">
       
       {/* 1. RICH INSTITUTIONAL PAGE HEADER BANNER */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-lg border border-brand-500/30">
+      <div className="relative overflow-hidden rounded-3xl text-white shadow-2xl border border-white/10"
+        style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #0f172a 70%, #0c1a3a 100%)' }}>
 
-        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-amber-300 text-xs font-black">
-              <Shield className="w-3.5 h-3.5 text-amber-400" />
-              <span>INSTITUTIONAL CONFIGURATION • SYSTEM CONTROL CENTER</span>
+        {/* Decorative animated blobs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-20 -left-20 w-80 h-80 rounded-full opacity-20 blur-3xl animate-pulse"
+            style={{ background: 'radial-gradient(circle, #6366f1, transparent)' }} />
+          <div className="absolute -bottom-20 -right-20 w-96 h-96 rounded-full opacity-15 blur-3xl"
+            style={{ background: 'radial-gradient(circle, #8b5cf6, transparent)', animationDelay: '1.5s' }} />
+          <div className="absolute top-0 right-1/3 w-64 h-64 rounded-full opacity-10 blur-2xl"
+            style={{ background: 'radial-gradient(circle, #3b82f6, transparent)' }} />
+          {/* Grid overlay */}
+          <div className="absolute inset-0 opacity-[0.04]"
+            style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+        </div>
+
+        <div className="relative z-10 p-6 md:p-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+
+            {/* Left: Title Block */}
+            <div className="space-y-2">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full border text-xs font-black tracking-wide uppercase"
+                style={{ background: 'rgba(245,158,11,0.12)', borderColor: 'rgba(245,158,11,0.3)', color: '#fbbf24' }}>
+                <Shield className="w-3.5 h-3.5" />
+                <span>Institutional Configuration • System Control Center</span>
+              </div>
+
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                Admin System Control Center
+              </h1>
+
+              <p className="text-slate-400 text-xs font-medium max-w-md leading-relaxed">
+                Manage institutional parameters, role-based access, system synchronization health, and background data integrity checks.
+              </p>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">
-              Admin System Control Center
-            </h1>
 
-          </div>
+            {/* Right: Badges + Actions */}
+            <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+              <span className="px-3 py-1.5 rounded-full font-black text-xs border flex items-center space-x-1.5"
+                style={{ background: 'rgba(16,185,129,0.15)', borderColor: 'rgba(16,185,129,0.3)', color: '#34d399' }}>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>PRODUCTION</span>
+              </span>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 font-black text-xs border border-emerald-400/30 flex items-center space-x-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>PRODUCTION</span>
-            </span>
+              <span className="px-3 py-1.5 rounded-full font-bold text-xs border flex items-center space-x-1.5"
+                style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)', color: '#cbd5e1' }}>
+                <Clock className="w-3.5 h-3.5" />
+                <span>Asia/Kolkata (IST)</span>
+              </span>
 
-            <span className="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-200 font-bold text-xs border border-slate-200 dark:border-navy-700 flex items-center space-x-1">
-              <Clock className="w-3.5 h-3.5" />
-              <span>Asia/Kolkata (IST)</span>
-            </span>
+              <button
+                type="button"
+                onClick={handleExportConfigJson}
+                className="px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center space-x-1.5 transition-all cursor-pointer"
+                style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.35)', color: '#a5b4fc' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.35)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.2)')}
+                title="Export complete configuration JSON"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Export JSON</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={handleExportConfigJson}
-              className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 flex items-center space-x-1 transition-all cursor-pointer"
-              title="Export complete configuration JSON"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export JSON</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => configFileInputRef.current?.click()}
-              className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 flex items-center space-x-1 transition-all cursor-pointer"
-              title="Import configuration JSON"
-            >
-              <Upload className="w-3.5 h-3.5" />
-              <span>Import JSON</span>
-            </button>
-            <input
-              type="file"
-              ref={configFileInputRef}
-              onChange={handleImportConfigJson}
-              accept=".json"
-              className="hidden"
-            />
+              <button
+                type="button"
+                onClick={() => configFileInputRef.current?.click()}
+                className="px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center space-x-1.5 transition-all cursor-pointer"
+                style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.35)', color: '#a5b4fc' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.35)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.2)')}
+                title="Import configuration JSON"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span>Import JSON</span>
+              </button>
+              <input
+                type="file"
+                ref={configFileInputRef}
+                onChange={handleImportConfigJson}
+                accept=".json"
+                className="hidden"
+              />
+            </div>
           </div>
         </div>
       </div>
+
 
       {/* 2. COMPACT SYSTEM STATUS STRIP WITH LIVE PROBING */}
       <div className="glass-card p-4 rounded-2xl border border-slate-200 dark:border-navy-700 space-y-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-emerald-500" />
+            <Activity className={`w-4 h-4 ${isProbing ? 'text-amber-500 animate-pulse' : 'text-emerald-500'}`} />
             <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
               Live Subsystem Health Probes
             </span>
+            {lastProbed && !isProbing && (
+              <span className="text-[10px] text-slate-400 font-medium">
+                — Last probed {lastProbed.toLocaleTimeString()}
+              </span>
+            )}
           </div>
+
+          {/* Probe Now button with ripple */}
           <button
             type="button"
-            onClick={() => { setSystemHealth(null); fetchSystemHealth(); }}
-            className="inline-flex items-center gap-1.5 text-[10px] font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 bg-brand-500/10 hover:bg-brand-500/20 px-2.5 py-1 rounded-lg transition-all cursor-pointer"
+            onClick={fetchSystemHealth}
+            disabled={isProbing}
+            className={`relative overflow-hidden inline-flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all select-none ${
+              isProbing
+                ? 'text-amber-600 bg-amber-500/15 border border-amber-500/30 cursor-not-allowed'
+                : 'text-brand-600 dark:text-brand-400 bg-brand-500/10 hover:bg-brand-500/20 border border-brand-500/20 hover:border-brand-500/40 cursor-pointer active:scale-95'
+            }`}
+            style={{ transition: 'all 0.15s cubic-bezier(0.4,0,0.2,1)' }}
+            onMouseDown={e => {
+              if (isProbing) return;
+              const btn = e.currentTarget;
+              const circle = document.createElement('span');
+              const diameter = Math.max(btn.clientWidth, btn.clientHeight);
+              const radius = diameter / 2;
+              const rect = btn.getBoundingClientRect();
+              circle.style.cssText = `
+                position:absolute; border-radius:50%;
+                width:${diameter}px; height:${diameter}px;
+                left:${e.clientX - rect.left - radius}px;
+                top:${e.clientY - rect.top - radius}px;
+                background:rgba(99,102,241,0.3);
+                transform:scale(0); animation:probe-ripple 0.5s linear;
+                pointer-events:none;
+              `;
+              btn.appendChild(circle);
+              setTimeout(() => circle.remove(), 550);
+            }}
           >
-            <RefreshCw className={`w-3 h-3 ${systemHealth === null ? 'animate-spin' : ''}`} />
-            <span>Probe Now</span>
+            <RefreshCw className={`w-3 h-3 ${isProbing ? 'animate-spin' : ''}`} />
+            <span>{isProbing ? 'Probing...' : 'Probe Now'}</span>
           </button>
         </div>
 
+        {/* Inject ripple keyframe once */}
+        <style>{`
+          @keyframes probe-ripple { to { transform: scale(2.5); opacity: 0; } }
+          @keyframes card-pop { 0% { transform: scale(0.94); opacity: 0.5; } 60% { transform: scale(1.03); } 100% { transform: scale(1); opacity: 1; } }
+        `}</style>
+
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2 font-mono text-[11px]">
-          {HEALTH_ITEMS.map((item) => {
+          {HEALTH_ITEMS.map((item, idx) => {
             const rawVal = systemHealth?.components?.[item.key];
-            const isChecking = systemHealth === null;
+            const isChecking = isProbing || systemHealth === null;
             const isHealthy = rawVal === 'HEALTHY';
             const isDegraded = rawVal === 'DEGRADED';
             const isOffline = rawVal === 'OFFLINE';
+            const isUnknown = rawVal === 'UNKNOWN';
+            const isFailed = rawVal === 'FAILED';
 
             return (
-              <div key={item.key} className="p-2.5 rounded-xl border bg-slate-50/50 dark:bg-navy-950/50 border-slate-200 dark:border-navy-800 flex flex-col items-center justify-center text-center">
+              <div
+                key={`${item.key}-${probeKey}`}
+                className="p-2.5 rounded-xl border bg-slate-50/50 dark:bg-navy-950/50 border-slate-200 dark:border-navy-800 flex flex-col items-center justify-center text-center"
+                style={{
+                  animation: probeKey > 0 ? `card-pop 0.35s cubic-bezier(0.4,0,0.2,1) ${idx * 40}ms both` : 'none'
+                }}
+              >
                 <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider truncate w-full">{item.label}</span>
                 <span className={`font-black text-[10px] mt-1 px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${
                   isChecking
                     ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20 animate-pulse'
-                    : isHealthy 
-                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' 
+                    : isHealthy
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                       : isDegraded
                         ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                        : isOffline
+                        : isOffline || isUnknown
                           ? 'bg-slate-500/10 text-slate-400 border border-slate-500/20'
                           : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
                 }`}>
                   {isChecking && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />}
-                  {isChecking ? 'Checking' : (isHealthy ? 'Healthy' : (isDegraded ? 'Degraded' : (isOffline ? 'Offline' : 'Error')))}
+                  {isChecking ? 'Checking' : isHealthy ? 'Healthy' : isDegraded ? 'Degraded' : isOffline ? 'Offline' : isUnknown ? 'Unknown' : isFailed ? 'Failed' : 'Error'}
                 </span>
               </div>
             );
@@ -626,7 +717,6 @@ export const SettingsPage: React.FC = () => {
             { id: 'integrity', label: 'Data Integrity Guard', icon: ShieldCheck },
             { id: 'smtp', label: 'Email & SMTP', icon: Mail },
             { id: 'snapshots', label: 'Database Snapshots', icon: Database },
-            { id: 'audit', label: 'Audit Stream', icon: Activity },
             { id: 'maintenance', label: 'Maintenance', icon: Server },
             { id: 'security', label: 'Security Activity', icon: Lock }
           ].map(tab => (
@@ -1317,105 +1407,6 @@ export const SettingsPage: React.FC = () => {
           </div>
         )}
 
-        {/* 11. SECTION VIII — ADMIN IDENTITY & AUDIT LOG STREAM */}
-        {activeSectionFilter === 'audit' && (
-          <div className="p-6 rounded-3xl bg-gradient-to-br from-navy-950 via-slate-900 to-indigo-950 text-white border border-brand-500/30 shadow-lg space-y-4 animate-fade-in">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
-              <div className="space-y-0.5">
-                <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-brand-500/20 border border-brand-400/30 text-amber-300 text-[10px] font-black uppercase">
-                  <Fingerprint className="w-3 h-3 text-amber-400" />
-                  <span>REAL-TIME AUDIT STREAM</span>
-                </div>
-                <h2 className="text-base font-black text-white uppercase tracking-wide">
-                  Admin Identity & Audit Log
-                </h2>
-                <p className="text-xs text-slate-300">
-                  Real-time database audit log recording administrator identity, logins, report generation, email dispatches & setting modifications.
-                </p>
-              </div>
-
-              <div className="flex items-center space-x-2 self-start sm:self-center">
-                <button
-                  type="button"
-                  onClick={handleExportAuditLogsCsv}
-                  className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 flex items-center space-x-1.5 transition-all cursor-pointer"
-                  title="Export audit logs to CSV"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Export CSV</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowFullAuditLog(!showFullAuditLog)}
-                  className="px-3 py-1.5 rounded-xl bg-amber-400/10 hover:bg-amber-400/20 text-amber-300 font-bold text-xs border border-amber-400/30 cursor-pointer"
-                >
-                  {showFullAuditLog ? 'Show Recent' : '[ VIEW FULL AUDIT LOG ]'}
-                </button>
-              </div>
-            </div>
-
-            {/* Audit Log Filter Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1">
-              <div className="flex flex-wrap items-center gap-1.5">
-                {['ALL', 'USER_LOGIN', 'CREATE_SNAPSHOT', 'TEST_EMAIL', 'ADVANCED', 'ACCESS'].map(act => (
-                  <button
-                    key={act}
-                    type="button"
-                    onClick={() => setAuditActionFilter(act)}
-                    className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
-                      auditActionFilter === act
-                        ? 'bg-amber-400 text-navy-950 font-black'
-                        : 'bg-white/10 text-slate-300 hover:bg-white/20'
-                    }`}
-                  >
-                    {act === 'ALL' ? 'All Actions' : act.replace('_', ' ')}
-                  </button>
-                ))}
-              </div>
-
-              <div className="relative min-w-[200px] flex-1 max-w-xs">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-2 text-slate-400" />
-                <input
-                  type="text"
-                  value={auditSearch}
-                  onChange={(e) => setAuditSearch(e.target.value)}
-                  placeholder="Search logs by action, admin..."
-                  className="w-full pl-8 pr-3 py-1 text-xs rounded-xl bg-white/10 border border-white/20 text-white placeholder-gray-400"
-                />
-              </div>
-            </div>
-
-            <div className="overflow-x-auto max-h-72">
-              {filteredAuditLogs.length === 0 ? (
-                <div className="p-6 text-center text-xs text-slate-400">No matching audit log entries found.</div>
-              ) : (
-                <table className="w-full text-xs text-left">
-                  <thead>
-                    <tr className="border-b border-white/10 text-slate-400 font-extrabold uppercase text-[9px]">
-                      <th className="py-2.5 px-3">Time (IST)</th>
-                      <th className="py-2.5 px-3">Admin</th>
-                      <th className="py-2.5 px-3">Action</th>
-                      <th className="py-2.5 px-3">Result</th>
-                      <th className="py-2.5 px-3">Details</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5 font-mono text-[11px]">
-                    {(showFullAuditLog ? filteredAuditLogs : filteredAuditLogs.slice(0, 10)).map((log) => (
-                      <tr key={log.id} className="hover:bg-white/5">
-                        <td className="py-2.5 px-3 text-slate-400">{log.timestamp ? log.timestamp.substring(0, 19).replace('T', ' ') : '—'}</td>
-                        <td className="py-2.5 px-3 font-bold text-white">{log.user_name}</td>
-                        <td className="py-2.5 px-3 text-indigo-300 font-bold">{log.action}</td>
-                        <td className="py-2.5 px-3 text-emerald-400 font-black"> SUCCESS</td>
-                        <td className="py-2.5 px-3 text-slate-300">{log.details}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* SINGLE SAVE CONFIGURATION BUTTON WITH CHANGE DETECTION */}
         {['automation', 'contest', 'integrity', 'smtp', 'security'].includes(activeSectionFilter) && (
