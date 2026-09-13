@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import axios from 'axios';
 import { 
   ShieldCheck, Lock, Activity, Clock, RefreshCw, Mail, Database, 
   AlertTriangle, Save, CheckCircle2, XCircle, ArrowRight, Layers,
@@ -166,7 +167,10 @@ export const SettingsPage: React.FC = () => {
       } else {
         throw new Error('Invalid response structure');
       }
-    } catch (err) {
+    } catch (err: any) {
+      if (axios.isCancel(err) || err?.name === 'CanceledError' || err?.code === 'ERR_CANCELED') {
+        return;
+      }
       console.error('Failed to load system health:', err);
       // Show real error state instead of fake HEALTHY
       setSystemHealth({

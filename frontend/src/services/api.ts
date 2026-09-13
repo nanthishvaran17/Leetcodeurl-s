@@ -265,12 +265,9 @@ api.get = async function (url: string, config?: any) {
   const key = getRequestKey(url, config);
   const cached = responseCache.get(key);
   
-  // URL-based cancellation (base URL without query params)
-  // Ensures that rapid filter changes cancel obsolete requests.
+  // URL-based cancellation (only if explicitly requested via config.cancelPrior or if caller passed a signal)
   const baseUrl = url.split('?')[0];
-  
-  // Only cancel previous request if parameters changed (different key), NOT when concurrent components call the same endpoint
-  if (!inFlightRequests.has(key)) {
+  if (config?.cancelPrior && !inFlightRequests.has(key)) {
     const existing = activeControllers.get(baseUrl);
     if (existing && existing.key !== key) {
       existing.controller.abort();
