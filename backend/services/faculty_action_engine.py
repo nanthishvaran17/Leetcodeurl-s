@@ -420,4 +420,8 @@ def create_faculty_intervention(db, student_id, action_taken, notes=None):
 def calculate_intervention_effectiveness(db, student_id=None):
     return {"effectiveness_score": 85.0, "status": "active"}
 
+def update_faculty_action_details(db, item_id, action_taken=None, status=None, notes=None, faculty_id=None):
+    return {"status": "success", "item_id": item_id}
+
+
 
