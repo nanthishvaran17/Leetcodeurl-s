@@ -81,7 +81,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     const deptStats: Record<string, {
       total: number;
       active: number;
+      contestAttended: number;
       totalSolved: number;
+      totalContestSolved: number;
       topStudent: any;
       topScore: number;
     }> = {};
@@ -94,7 +96,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         deptStats[codeKey] = {
           total: 0,
           active: 0,
+          contestAttended: 0,
           totalSolved: 0,
+          totalContestSolved: 0,
           topStudent: null,
           topScore: -1,
         };
@@ -116,6 +120,24 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
       d.totalSolved += solved;
 
+      // Weekly Contest Attendance & Solved Metrics Check
+      const cStatus = String((s as any).contest_status || s.stats?.contest_status || '').toUpperCase();
+      const postSolved = Number(s.stats?.post_930_solved ?? (s as any).post_930_solved ?? s.stats?.today_solved ?? (s as any).today_solved ?? 0);
+      const contestSolved = Number(s.stats?.weekly_contest_solved ?? (s as any).weekly_contest_solved ?? s.stats?.session_solved ?? (s as any).session_solved ?? 0);
+
+      const isContestAttended = cStatus === 'PUBLIC_ATTENDED' ||
+                                cStatus === 'VIRTUAL_ATTENDED' ||
+                                cStatus === 'ATTENDED' ||
+                                postSolved > 0 ||
+                                contestSolved > 0;
+
+      if (isContestAttended) {
+        d.contestAttended += 1;
+      }
+
+      const actualContestSolved = contestSolved > 0 ? contestSolved : postSolved;
+      d.totalContestSolved += actualContestSolved;
+
       const score = rating > 0 ? (rating * 100000) + solved : solved;
       if (score > d.topScore) {
         d.topScore = score;
@@ -129,25 +151,36 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
       const totalStudents = ds ? ds.total : (dept.total_students || 0);
       const activeStudents = ds ? ds.active : (dept.active_students ?? dept.active_count ?? 0);
-      const partRate = totalStudents > 0 ? Math.round((activeStudents / totalStudents) * 10000) / 100 : (dept.participation_rate || 0);
 
-      const rawAvg = ds && totalStudents > 0 ? (ds.totalSolved / totalStudents) : (dept.avg_solved || 0);
-      // Capped out of 100 max score as requested ("only give to out of 100")
-      const avgSolvedCapped = Math.min(100, Math.round(rawAvg * 10) / 10);
+      // Weekly Contest Attended count for this department:
+      const contestAttendedCount = ds && ds.contestAttended > 0 ? ds.contestAttended : (dept.contest_attended ?? dept.post_930_solvers ?? activeStudents);
+
+      // Contest Participation Rate (Weekly Contest Attendance / Post-9:31 AM solvers)
+      const partRate = totalStudents > 0 ? Math.round((contestAttendedCount / totalStudents) * 10000) / 100 : (dept.participation_rate || 0);
+
+      // Average LeetCode problems solved per enrolled student in department
+      const rawAvg = ds && totalStudents > 0 
+        ? (ds.totalSolved / totalStudents)
+        : (dept.avg_solved ?? dept.avg_contest_solved ?? 0);
+
+      const avgSolvedFormatted = Math.round(rawAvg * 10) / 10;
 
       const topStudentName = ds?.topStudent?.name || ds?.topStudent?.student_name || dept.top_student_name || dept.top_performer?.name || '—';
       const topStudentId = ds?.topStudent?.id || dept.top_student_id || dept.top_performer?.id || null;
+      const topStudentSolved = Number(ds?.topStudent?.stats?.total_solved ?? ds?.topStudent?.total_solved ?? dept.top_performer?.total_solved ?? 0);
 
       return {
         ...dept,
         total_students: totalStudents,
         active_students: activeStudents,
         active_count: activeStudents,
+        contest_attended: contestAttendedCount,
         participation_rate: partRate,
-        avg_solved: avgSolvedCapped,
-        raw_avg_solved: Math.round(rawAvg * 10) / 10,
+        avg_solved: avgSolvedFormatted,
+        raw_avg_solved: avgSolvedFormatted,
         top_student_name: topStudentName,
         top_student_id: topStudentId,
+        top_student_solved: topStudentSolved,
       };
     });
   }, [rawDepartments, students]);
@@ -373,6 +406,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
   let activeStudents = 0;
   let validProfiles = 0;
   let missingLinks = 0;
+  let attendedSolversCount = 0;
 
   filteredStudents.forEach(st => {
     const s = st.stats;
@@ -397,10 +431,33 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     if (isMissingLink) {
       missingLinks++;
     }
+
+    // Post 9:31 AM / Weekly Contest Attendance Check
+    const sAny = s as any;
+    const stAny = st as any;
+    const cStatus = String(stAny?.contest_status || sAny?.contest_status || '').toUpperCase();
+    const postSolved = Number(sAny?.post_930_solved ?? stAny?.post_930_solved ?? sAny?.today_solved ?? stAny?.today_solved ?? 0);
+    const contestSolved = Number(sAny?.weekly_contest_solved ?? stAny?.weekly_contest_solved ?? sAny?.session_solved ?? 0);
+
+    const hasAttendedContest = cStatus === 'PUBLIC_ATTENDED' ||
+                               cStatus === 'VIRTUAL_ATTENDED' ||
+                               cStatus === 'ATTENDED' ||
+                               postSolved > 0 ||
+                               contestSolved > 0;
+
+    if (hasAttendedContest) {
+      attendedSolversCount++;
+    }
   });
+
+  // Fallback for attendedSolversCount if individual student contest status is pending initial load:
+  const actualContestSolvers = attendedSolversCount > 0 
+    ? attendedSolversCount 
+    : ((summary as any)?.post_930_solvers_count ?? activeStudents);
 
   const notStartedStudents = Math.max(0, totalStudents - activeStudents);
   const participationRate = totalStudents > 0 ? ((activeStudents / totalStudents) * 100).toFixed(1) : "0";
+  const contestParticipationRate = totalStudents > 0 ? ((actualContestSolvers / totalStudents) * 100).toFixed(1) : "0";
   const healthScorePercentage = totalStudents > 0 ? Math.round(((totalStudents - missingLinks) / totalStudents) * 100) : 100;
 
   // Helper: format a number with fallback for loading state
@@ -411,17 +468,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     <div className="space-y-5 sm:space-y-6 pt-1 sm:pt-2 pb-2 animate-page-enter w-full">
       
       {/* 1. INSTITUTIONAL PERFORMANCE OVERVIEW */}
-      <div className="stagger-1 relative overflow-hidden rounded-3xl bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-950/95 via-slate-900 to-navy-950 text-white p-6 sm:p-8 shadow-[0_20px_60px_-15px_rgba(15,23,42,0.6)] border border-brand-500/40 backdrop-blur-xl">
-        {/* Glowing Background Glow Orbs */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-
+      <div className="stagger-1 relative overflow-hidden rounded-3xl bg-slate-900/95 dark:bg-navy-950/95 text-white p-6 sm:p-8 shadow-2xl border border-slate-700/80 dark:border-brand-500/30">
+        
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-8">
           {/* Left: Title & Description */}
           <div className="space-y-3.5 min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-gradient-to-r from-brand-500/20 to-indigo-500/20 border border-brand-400/40 text-brand-300 text-[11px] font-black tracking-wider uppercase shadow-xs">
-                <Building2 className="w-3.5 h-3.5 text-amber-400 shrink-0 animate-pulse" />
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-brand-300 text-[11px] font-black tracking-wider uppercase shadow-xs">
+                <Building2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                 <span className="truncate max-w-[180px] sm:max-w-none">NANDHA ENGINEERING COLLEGE • ERODE</span>
               </div>
               <div className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full border text-[11px] font-black tracking-wider uppercase shadow-xs ${liveStatus.color}`}>
@@ -432,14 +486,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
             <AnimatedWelcomeHeading
               className="text-2xl sm:text-3xl lg:text-4xl font-display font-extrabold tracking-tight text-white uppercase leading-tight break-words drop-shadow-sm"
-              nameClassName="text-brand-300 break-words"
+              nameClassName="text-brand-400 break-words"
             />
 
             {!(user?.role?.toLowerCase() === 'faculty' || user?.role?.toLowerCase() === 'staff') && (
-              <p className="text-slate-300/80 text-xs sm:text-sm font-semibold mt-1">Manage your institutional intelligence workspace.</p>
+              <p className="text-slate-300 text-xs sm:text-sm font-semibold mt-1">Manage your institutional intelligence workspace.</p>
             )}
 
-            <p className="text-xs sm:text-sm text-slate-300/90 font-medium tracking-wide leading-relaxed max-w-3xl">
+            <p className="text-xs sm:text-sm text-slate-300 font-medium tracking-wide leading-relaxed max-w-3xl">
               {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') 
                 ? 'Your exclusive mentorship cohort — live sync, contest verification, and analytics.'
                 : loading
@@ -453,20 +507,25 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
             {/* Embedded Live Metric Pills */}
             <div className="pt-2 flex flex-wrap items-center gap-2 text-xs font-bold">
-              <div className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2 backdrop-blur-md">
+              <div className="px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center gap-2">
                 <Users className="w-3.5 h-3.5 text-brand-400" />
                 <span className="text-slate-300">Enrolled:</span>
                 <span className="text-white font-extrabold">{fmtCount(canonicalTotal ?? totalStudents)}</span>
               </div>
-              <div className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2 backdrop-blur-md">
+              <div className="px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center gap-2">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-slate-300">Active Solvers:</span>
+                <span className="text-slate-300">Active Profiles:</span>
                 <span className="text-emerald-400 font-extrabold">{fmtCount(activeStudents)}</span>
               </div>
-              <div className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2 backdrop-blur-md">
+              <div className="px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center gap-2">
+                <Clock className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-slate-300">Post-9:31 AM Solvers:</span>
+                <span className="text-amber-400 font-extrabold">{fmtCount(actualContestSolvers)}</span>
+              </div>
+              <div className="px-3 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700 flex items-center gap-2">
                 <PieChart className="w-3.5 h-3.5 text-indigo-400" />
-                <span className="text-slate-300">Participation:</span>
-                <span className="text-indigo-300 font-extrabold">{participationRate}%</span>
+                <span className="text-slate-300">Contest Participation:</span>
+                <span className="text-indigo-300 font-extrabold">{contestParticipationRate}%</span>
               </div>
             </div>
           </div>
@@ -490,46 +549,42 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <button
                 onClick={handleStartSync}
                 disabled={isSyncing}
-                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-brand-500 hover:from-brand-500 hover:to-indigo-400 text-white font-extrabold text-xs shadow-lg shadow-brand-500/30 border border-white/20 flex items-center justify-center space-x-2 transition-all duration-200 cursor-pointer disabled:opacity-50 focus:ring-2 focus:ring-brand-500 focus:outline-none transform hover:scale-[1.04] active:scale-90 group"
+                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-md border border-blue-400/40 flex items-center justify-center space-x-2 transition-all duration-200 cursor-pointer disabled:opacity-50 focus:ring-2 focus:ring-blue-500 focus:outline-none transform hover:scale-[1.03] active:scale-95 group"
                 aria-label="Fetch live LeetCode statistics"
                 title="Synchronize live profile statistics for all students"
               >
-                <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${isSyncing ? 'animate-spin text-amber-300' : 'text-white group-hover:rotate-180 transition-transform duration-500'}`} />
-                <span className="truncate">{isSyncing ? 'Syncing...' : 'Fetch Live Data'}</span>
+                <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${isSyncing ? 'animate-spin text-white' : 'text-white group-hover:rotate-180 transition-transform duration-500'}`} />
+                <span className="truncate tracking-wide font-black">{isSyncing ? 'Syncing...' : 'Fetch Live Data'}</span>
               </button>
 
               <button
                 onClick={onOpenImport}
-                className="min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 text-slate-100 font-extrabold text-xs shadow-md border border-slate-700/70 hover:border-slate-500 flex items-center justify-center space-x-2 transition-all duration-200 cursor-pointer focus:ring-2 focus:ring-brand-500 focus:outline-none transform hover:scale-[1.04] active:scale-90 group"
+                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs shadow-md border border-slate-600 flex items-center justify-center space-x-2 transition-all duration-200 cursor-pointer focus:ring-2 focus:ring-brand-500 focus:outline-none transform hover:scale-[1.03] active:scale-95 group"
                 aria-label="Import student roster from Excel"
                 title="Upload Excel roster (.xlsx) to parse, validate, and update student profiles"
               >
-                <Plus className="w-3.5 h-3.5 text-brand-400 group-hover:scale-125 transition-transform duration-300 shrink-0" />
-                <span className="truncate">Import Roster</span>
+                <Plus className="w-3.5 h-3.5 text-brand-400 group-hover:scale-125 group-hover:rotate-90 transition-transform duration-300 shrink-0" />
+                <span className="truncate tracking-wide font-black">Import Roster</span>
               </button>
 
               <button
                 onClick={handleExportExcel}
                 disabled={isExportingExcel}
-                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-950 via-emerald-900 to-teal-950 hover:from-emerald-900 hover:to-teal-900 text-emerald-200 font-extrabold text-xs shadow-lg shadow-emerald-900/50 border border-emerald-500/60 hover:border-emerald-400 flex items-center justify-center space-x-2 transition-all duration-200 cursor-pointer disabled:opacity-70 focus:ring-2 focus:ring-emerald-400 focus:outline-none transform hover:scale-[1.04] active:scale-90 group"
+                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-md border border-emerald-400/40 flex items-center justify-center space-x-2 transition-all duration-200 cursor-pointer disabled:opacity-70 focus:ring-2 focus:ring-emerald-400 focus:outline-none transform hover:scale-[1.03] active:scale-95 group"
                 aria-label="Export raw student roster to Excel"
                 title="Export current active student roster & raw LeetCode statistics to Excel workbook (.xlsx)"
               >
-                <span className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-teal-500/25 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                 {isExportingExcel ? (
                   <>
-                    <RefreshCw className="w-4 h-4 text-emerald-300 animate-spin shrink-0" />
-                    <span className="truncate tracking-wide font-black">Downloading...</span>
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 animate-pulse" />
+                    <RefreshCw className="w-4 h-4 text-white animate-spin shrink-0" />
+                    <span className="truncate tracking-wide font-black text-white">Exporting...</span>
+                    <span className="absolute bottom-0 left-0 right-0 h-1 bg-white/40 animate-pulse" />
                   </>
                 ) : (
                   <>
-                    <div className="relative flex items-center justify-center">
-                      <FileSpreadsheet className="w-4 h-4 text-emerald-400 group-hover:scale-115 group-hover:-rotate-12 transition-transform duration-300 shrink-0" />
-                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 animate-ping opacity-75" />
-                    </div>
-                    <span className="truncate tracking-wide font-extrabold group-hover:text-white transition-colors">Export Excel</span>
-                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-[9px] font-mono text-emerald-300 border border-emerald-500/30 font-bold uppercase tracking-wider hidden sm:inline-block">
+                    <FileSpreadsheet className="w-4 h-4 text-white group-hover:scale-110 transition-transform duration-200 shrink-0" />
+                    <span className="truncate tracking-wide font-black text-white">Export Excel</span>
+                    <span className="px-1.5 py-0.5 rounded-md bg-white/20 text-[9px] font-mono text-white border border-white/30 font-black uppercase tracking-wider hidden sm:inline-block">
                       XLSX
                     </span>
                   </>
@@ -539,25 +594,21 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <button
                 onClick={handleGenerateReport}
                 disabled={generatingReport}
-                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-950 via-amber-900 to-orange-950 hover:from-amber-900 hover:to-orange-900 text-amber-200 font-extrabold text-xs shadow-lg shadow-amber-900/50 border border-amber-500/60 hover:border-amber-400 flex items-center justify-center space-x-2 transition-all duration-200 cursor-pointer disabled:opacity-70 focus:ring-2 focus:ring-amber-400 focus:outline-none transform hover:scale-[1.04] active:scale-90 group"
+                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-white font-extrabold text-xs shadow-md border border-amber-300/40 flex items-center justify-center space-x-2 transition-all duration-200 cursor-pointer disabled:opacity-70 focus:ring-2 focus:ring-amber-400 focus:outline-none transform hover:scale-[1.03] active:scale-95 group"
                 aria-label="Generate official weekly institutional report"
                 title="Instant download of pre-generated 8-sheet weekly performance tracker & PDF summary"
               >
-                <span className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-orange-500/25 to-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                 {generatingReport ? (
                   <>
-                    <RefreshCw className="w-4 h-4 text-amber-300 animate-spin shrink-0" />
-                    <span className="truncate tracking-wide font-black">Preparing PDF...</span>
-                    <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 via-orange-300 to-amber-400 animate-pulse" />
+                    <RefreshCw className="w-4 h-4 text-white animate-spin shrink-0" />
+                    <span className="truncate tracking-wide font-black text-white">Rendering PDF...</span>
+                    <span className="absolute bottom-0 left-0 right-0 h-1 bg-white/40 animate-pulse" />
                   </>
                 ) : (
                   <>
-                    <div className="relative flex items-center justify-center">
-                      <FileText className="w-4 h-4 text-amber-400 group-hover:scale-115 group-hover:rotate-12 transition-transform duration-300 shrink-0" />
-                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-400 animate-ping opacity-75" />
-                    </div>
-                    <span className="truncate tracking-wide font-extrabold group-hover:text-white transition-colors">Weekly Report</span>
-                    <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-[9px] font-mono text-amber-300 border border-amber-500/30 font-bold uppercase tracking-wider hidden sm:inline-block">
+                    <FileText className="w-4 h-4 text-white group-hover:scale-110 transition-transform duration-200 shrink-0" />
+                    <span className="truncate tracking-wide font-black text-white">Weekly Report</span>
+                    <span className="px-1.5 py-0.5 rounded-md bg-white/20 text-[9px] font-mono text-white border border-white/30 font-black uppercase tracking-wider hidden sm:inline-block">
                       PDF
                     </span>
                   </>
@@ -849,15 +900,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
             {/* DESKTOP MATRIX TABLE (>= 768px) */}
             <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
+              <table className="w-full text-left text-xs whitespace-nowrap border-collapse table-fixed">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-navy-700 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[11px]">
-                    <th className="py-2.5 px-3.5 font-extrabold text-left">Department</th>
-                    <th className="py-2.5 px-3.5 font-extrabold text-center" title="Total enrolled students in this department">Students</th>
-                    <th className="py-2.5 px-3.5 font-extrabold text-center" title="Students with active verified LeetCode profiles">Active</th>
-                    <th className="py-2.5 px-3.5 font-extrabold text-center" title="Percentage of active students out of total enrolled">Participation</th>
-                    <th className="py-2.5 px-3.5 font-extrabold text-center cursor-help" title="Average LeetCode problems solved per enrolled student in this department">Avg Solved</th>
-                    <th className="py-2.5 px-3.5 font-extrabold text-right" title="Top student by LeetCode contest rating & problems solved">Top Performer</th>
+                    <th className="py-2.5 px-3.5 font-extrabold text-left w-[22%]">Department</th>
+                    <th className="py-2.5 px-3.5 font-extrabold text-center w-[10%]" title="Total enrolled students in this department">Students</th>
+                    <th className="py-2.5 px-3.5 font-extrabold text-center w-[10%]" title="Students with active verified LeetCode profiles">Active</th>
+                    <th className="py-2.5 px-3.5 font-extrabold text-center w-[16%]" title="Percentage of active students out of total enrolled">Participation</th>
+                    <th className="py-2.5 px-3.5 font-extrabold text-center w-[12%] cursor-help" title="Average LeetCode problems solved per enrolled student in this department">Avg Solved</th>
+                    <th className="py-2.5 px-3.5 font-extrabold text-left w-[20%]" title="Top student by LeetCode contest rating & problems solved">Top Performer</th>
+                    <th className="py-2.5 px-3.5 font-extrabold text-right w-[10%]">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-navy-800">
@@ -876,13 +928,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     })
                     .map((dept) => (
                       <tr key={dept.department_code || dept.department_id} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors">
-                        <td className="py-2.5 px-3.5">
+                        <td className="py-2.5 px-3.5 w-[22%]">
                           <div className="font-black text-slate-900 dark:text-white">{dept.department_code}</div>
                           <div className="text-[10px] text-slate-500 truncate max-w-[180px]">{dept.department_name}</div>
                         </td>
-                        <td className="py-2.5 px-3.5 font-medium text-slate-600 dark:text-slate-300 text-center">{dept.total_students}</td>
-                        <td className="py-2.5 px-3.5 font-medium text-emerald-600 dark:text-emerald-400 text-center">{dept.active_students ?? dept.active_count ?? Math.round(((dept.participation_rate || 0) / 100) * dept.total_students)}</td>
-                        <td className="py-2.5 px-3.5 text-center">
+                        <td className="py-2.5 px-3.5 font-medium text-slate-600 dark:text-slate-300 text-center w-[10%]">{dept.total_students}</td>
+                        <td className="py-2.5 px-3.5 font-medium text-emerald-600 dark:text-emerald-400 text-center w-[10%]">{dept.active_students ?? dept.active_count ?? Math.round(((dept.participation_rate || 0) / 100) * dept.total_students)}</td>
+                        <td className="py-2.5 px-3.5 text-center w-[16%]">
                           <div className="flex items-center justify-center space-x-2">
                             <div className="w-14 h-1.5 bg-slate-200 dark:bg-navy-700 rounded-full overflow-hidden">
                               <div style={{ width: `${dept.participation_rate}%` }} className="h-full bg-indigo-500 rounded-full"></div>
@@ -890,10 +942,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                             <span className="font-bold text-slate-700 dark:text-slate-300 text-[11px]">{dept.participation_rate}%</span>
                           </div>
                         </td>
-                        <td className="py-2.5 px-3.5 font-bold text-slate-900 dark:text-white text-center">{dept.avg_solved}</td>
-                        <td className="py-2.5 px-3.5 text-right">
+                        <td className="py-2.5 px-3.5 font-bold text-slate-900 dark:text-white text-center w-[12%]">{dept.avg_solved}</td>
+                        <td className="py-2.5 px-3.5 text-left w-[20%]">
                           {dept.top_student_name ? (
-                            <div className="flex items-center justify-end space-x-1.5">
+                            <div className="flex items-center justify-start space-x-1.5">
                               <button
                                 type="button"
                                 onClick={() => {
@@ -901,16 +953,21 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                                     onSelectStudent(dept.top_student_id);
                                   }
                                 }}
-                                className={`font-bold text-amber-600 dark:text-amber-400 ${dept.top_student_id && onSelectStudent ? 'hover:text-amber-700 dark:hover:text-amber-300 hover:underline cursor-pointer' : ''}`}
+                                className={`font-bold text-amber-600 dark:text-amber-400 truncate ${dept.top_student_id && onSelectStudent ? 'hover:text-amber-700 dark:hover:text-amber-300 hover:underline cursor-pointer' : ''}`}
                                 title={dept.top_student_id && onSelectStudent ? `Click to view profile of ${dept.top_student_name}` : dept.top_student_name}
                               >
                                 {dept.top_student_name}
                               </button>
+                              {dept.top_student_solved > 0 && (
+                                <span className="px-1.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-mono font-extrabold text-[10px] border border-amber-200/60 dark:border-amber-900/50 shrink-0">
+                                  {dept.top_student_solved} solved
+                                </span>
+                              )}
                               {dept.top_student_id && (
                                 <button
                                   onClick={() => handleSingleStudentRefresh(dept.top_student_id, dept.top_student_name)}
                                   disabled={refreshingStudentId === dept.top_student_id}
-                                  className="p-1 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-navy-700 dark:hover:bg-navy-600 text-slate-500 transition-colors disabled:opacity-50 cursor-pointer"
+                                  className="p-1 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-navy-700 dark:hover:bg-navy-600 text-slate-500 transition-colors disabled:opacity-50 cursor-pointer shrink-0"
                                   title={`Refresh ${dept.top_student_name}`}
                                 >
                                   <RefreshCw className={`w-3 h-3 ${refreshingStudentId === dept.top_student_id ? 'animate-spin' : ''}`} />
@@ -920,6 +977,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                           ) : (
                             <span className="text-slate-400">-</span>
                           )}
+                        </td>
+                        <td className="py-2.5 px-3.5 text-right w-[10%]">
+                          <button
+                            onClick={() => onNavigateTab('departments')}
+                            className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white font-bold text-xs border border-blue-200/60 dark:border-blue-900/50 transition-all cursor-pointer shadow-2xs"
+                          >
+                            View →
+                          </button>
                         </td>
                       </tr>
                     ))}

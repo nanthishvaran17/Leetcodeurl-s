@@ -533,7 +533,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
           </div>
           <div className="flex-none w-24 py-3 px-3 text-left">Rank</div>
           <div className="flex-none w-32 py-3 px-3 text-left">Register No</div>
-          <div className="flex-none w-52 py-3 px-3 text-left">Student</div>
+          <div className="flex-none w-52 py-3 px-3 pl-5 text-left">Student</div>
           <div className="flex-none w-28 py-3 px-3 text-left">Dept / Year</div>
           <div className="flex-none w-36 py-3 px-3 text-left">LeetCode Handle</div>
           <div className="flex-none w-24 py-3 px-3 text-center">Solved</div>

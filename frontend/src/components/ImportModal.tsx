@@ -1,10 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, UploadCloud, CheckCircle2, AlertTriangle, FileSpreadsheet, Loader2, RefreshCw, Zap, ShieldCheck, Terminal, ArrowRight, Check, ChevronRight, Info, Building2 } from 'lucide-react';
+import { 
+  X, UploadCloud, CheckCircle2, AlertTriangle, FileSpreadsheet, Loader2, 
+  RefreshCw, Zap, ShieldCheck, Terminal, ArrowRight, Check, ChevronRight, 
+  Info, Building2, User, Mail, Link, Layers, Calendar, XCircle, HelpCircle, AlertCircle 
+} from 'lucide-react';
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import { useGlobalData } from '../context/GlobalDataContext';
 import { downloadManager } from '../services/download/downloadManager';
+import { CustomDropdown, DropdownOption } from './CustomDropdown';
 
 interface ImportModalProps {
   isOpen: boolean;
@@ -28,17 +33,95 @@ interface ImportStatus {
   new_departments: string[];
 }
 
-const CANONICAL_OPTIONS = [
-  { key: 'reg_no', label: 'REG NO / ROLL NO (Required)', required: true },
-  { key: 'name', label: 'NAME (Required)', required: true },
-  { key: 'department', label: 'DEPARTMENT (Required)', required: true },
-  { key: 'year_level', label: 'YEAR LEVEL (Required)', required: true },
-  { key: 'email', label: 'EMAIL (Required)', required: true },
-  { key: 'leetcode_url', label: 'PRIMARY LEETCODE LINK (Required)', required: true },
-  { key: 'sec_leetcode_url', label: 'SECONDARY LEETCODE LINK (Optional)', required: false },
-  { key: 'section', label: 'SECTION (Optional)', required: false },
-  { key: 'batch', label: 'ACADEMIC BATCH (Optional)', required: false },
-  { key: 'exclude', label: '❌ Exclude Column', required: false },
+const MAPPING_DROPDOWN_OPTIONS: DropdownOption[] = [
+  {
+    value: '',
+    label: '-- Unmapped / Exclude --',
+    sublabel: 'Do not import this column',
+    badge: 'UNMAPPED',
+    badgeColor: 'bg-slate-500/10 text-slate-500 border-slate-500/20 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
+    icon: HelpCircle
+  },
+  {
+    value: 'reg_no',
+    label: 'REG NO / ROLL NO',
+    sublabel: 'Unique student identifier (Required)',
+    badge: 'REQUIRED',
+    badgeColor: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+    icon: ShieldCheck
+  },
+  {
+    value: 'name',
+    label: 'NAME',
+    sublabel: 'Full student name (Required)',
+    badge: 'REQUIRED',
+    badgeColor: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+    icon: User
+  },
+  {
+    value: 'department',
+    label: 'DEPARTMENT',
+    sublabel: 'Department branch (Required)',
+    badge: 'REQUIRED',
+    badgeColor: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+    icon: Building2
+  },
+  {
+    value: 'year_level',
+    label: 'YEAR LEVEL',
+    sublabel: 'Class year (1st, 2nd, 3rd, 4th) (Required)',
+    badge: 'REQUIRED',
+    badgeColor: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+    icon: Calendar
+  },
+  {
+    value: 'email',
+    label: 'EMAIL',
+    sublabel: 'Email address (Required)',
+    badge: 'REQUIRED',
+    badgeColor: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+    icon: Mail
+  },
+  {
+    value: 'leetcode_url',
+    label: 'PRIMARY LEETCODE LINK',
+    sublabel: 'LeetCode profile URL (Required)',
+    badge: 'REQUIRED',
+    badgeColor: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+    icon: Link
+  },
+  {
+    value: 'sec_leetcode_url',
+    label: 'SECONDARY LEETCODE LINK',
+    sublabel: 'Optional secondary LeetCode URL',
+    badge: 'OPTIONAL',
+    badgeColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
+    icon: Link
+  },
+  {
+    value: 'section',
+    label: 'SECTION',
+    sublabel: 'Class section e.g. A, B, C',
+    badge: 'OPTIONAL',
+    badgeColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
+    icon: Layers
+  },
+  {
+    value: 'batch',
+    label: 'ACADEMIC BATCH',
+    sublabel: 'Graduation batch e.g. 2022-2026',
+    badge: 'OPTIONAL',
+    badgeColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
+    icon: Calendar
+  },
+  {
+    value: 'exclude',
+    label: 'Exclude Column',
+    sublabel: 'Explicitly mark column as excluded',
+    badge: 'EXCLUDED',
+    badgeColor: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+    icon: XCircle
+  }
 ];
 
 export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuccess }) => {
@@ -377,16 +460,15 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
                             )}
                           </td>
                           <td className="p-3">
-                            <select
+                            <CustomDropdown
+                              label=""
+                              options={MAPPING_DROPDOWN_OPTIONS}
                               value={detectedKey}
-                              onChange={(e) => setCustomMapping(prev => ({ ...prev, [h]: e.target.value }))}
-                              className="w-full max-w-md p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-navy-950 font-medium text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none"
-                            >
-                              <option value="">-- Unmapped / Exclude --</option>
-                              {CANONICAL_OPTIONS.map(opt => (
-                                <option key={opt.key} value={opt.key}>{opt.label}</option>
-                              ))}
-                            </select>
+                              onChange={(val) => setCustomMapping(prev => ({ ...prev, [h]: val }))}
+                              placeholder="-- Unmapped / Exclude --"
+                              className="w-full max-w-md"
+                              triggerClassName="w-full h-10 px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-navy-950 text-xs font-semibold hover:border-brand-500 transition-all shadow-sm flex items-center justify-between"
+                            />
                           </td>
                         </tr>
                       );
@@ -497,65 +579,84 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
                   </button>
                 </div>
 
-                <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 max-h-56">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 font-bold sticky top-0">
+                <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 max-h-64 scrollbar-thin">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className="bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-300 font-bold sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800 shadow-xs">
                       <tr>
-                        <th className="p-2.5">Row</th>
-                        <th className="p-2.5">Reg No</th>
-                        <th className="p-2.5">Name</th>
-                        <th className="p-2.5">Dept</th>
-                        <th className="p-2.5">Year</th>
-                        <th className="p-2.5">Action / Field Diffs</th>
+                        <th className="p-3 whitespace-nowrap w-14 text-slate-500 font-mono">Row</th>
+                        <th className="p-3 whitespace-nowrap min-w-[120px]">Reg No</th>
+                        <th className="p-3 whitespace-nowrap min-w-[150px]">Name</th>
+                        <th className="p-3 whitespace-nowrap min-w-[90px]">Dept</th>
+                        <th className="p-3 whitespace-nowrap min-w-[85px]">Year</th>
+                        <th className="p-3 min-w-[280px]">Action / Field Diffs</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-navy-950">
                       {/* CREATE ROWS */}
                       {(previewTab === 'all' || previewTab === 'create') && analysisData.preview_data?.create?.map((r: any, idx: number) => (
-                        <tr key={`c-${idx}`} className="hover:bg-slate-50 dark:hover:bg-navy-900/50">
-                          <td className="p-2.5 text-slate-400 font-mono">{r.row_num}</td>
-                          <td className="p-2.5 font-bold font-mono text-brand-600 dark:text-brand-400">{r.reg_no}</td>
-                          <td className="p-2.5 font-medium">{r.name}</td>
-                          <td className="p-2.5">{r.dept}</td>
-                          <td className="p-2.5">{r.year}</td>
-                          <td className="p-2.5 font-bold text-emerald-600 dark:text-emerald-400">✓ CREATE NEW</td>
+                        <tr key={`c-${idx}`} className="hover:bg-slate-50 dark:hover:bg-navy-900/50 transition-colors">
+                          <td className="p-3 text-slate-400 font-mono whitespace-nowrap">{r.row_num}</td>
+                          <td className="p-3 font-bold font-mono text-brand-600 dark:text-brand-400 whitespace-nowrap">{r.reg_no}</td>
+                          <td className="p-3 font-semibold text-slate-900 dark:text-white whitespace-nowrap">{r.name}</td>
+                          <td className="p-3 whitespace-nowrap font-medium">{r.dept}</td>
+                          <td className="p-3 whitespace-nowrap font-medium">{r.year}</td>
+                          <td className="p-3 font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-black uppercase">
+                              ✓ CREATE NEW
+                            </span>
+                          </td>
                         </tr>
                       ))}
 
                       {/* UPDATE ROWS */}
                       {(previewTab === 'all' || previewTab === 'update') && analysisData.preview_data?.update?.map((r: any, idx: number) => (
-                        <tr key={`u-${idx}`} className="hover:bg-slate-50 dark:hover:bg-navy-900/50 bg-brand-500/5">
-                          <td className="p-2.5 text-slate-400 font-mono">{r.row_num}</td>
-                          <td className="p-2.5 font-bold font-mono text-brand-600 dark:text-brand-400">{r.reg_no}</td>
-                          <td className="p-2.5 font-medium">{r.name}</td>
-                          <td className="p-2.5">{r.dept}</td>
-                          <td className="p-2.5">{r.year}</td>
-                          <td className="p-2.5">
-                            <span className="font-bold text-brand-600 dark:text-brand-400 mr-2">↻ UPDATE:</span>
-                            <span className="text-[11px] text-slate-600 dark:text-slate-300 font-mono">{r.diffs?.join(' | ')}</span>
+                        <tr key={`u-${idx}`} className="hover:bg-slate-50 dark:hover:bg-navy-900/50 bg-brand-500/5 transition-colors">
+                          <td className="p-3 text-slate-400 font-mono whitespace-nowrap">{r.row_num}</td>
+                          <td className="p-3 font-bold font-mono text-brand-600 dark:text-brand-400 whitespace-nowrap">{r.reg_no}</td>
+                          <td className="p-3 font-semibold text-slate-900 dark:text-white whitespace-nowrap">{r.name}</td>
+                          <td className="p-3 whitespace-nowrap font-medium">{r.dept}</td>
+                          <td className="p-3 whitespace-nowrap font-medium">{r.year}</td>
+                          <td className="p-3">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="px-2 py-0.5 rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 text-[10px] font-black uppercase shrink-0">
+                                UPDATE
+                              </span>
+                              {r.diffs?.map((d: string, dIdx: number) => (
+                                <span key={dIdx} className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono text-[11px] border border-slate-200 dark:border-slate-700/60 shrink-0">
+                                  {d.replace(/'/g, '')}
+                                </span>
+                              ))}
+                            </div>
                           </td>
                         </tr>
                       ))}
 
                       {/* UNCHANGED ROWS */}
                       {(previewTab === 'all' || previewTab === 'unchanged') && analysisData.preview_data?.unchanged?.map((r: any, idx: number) => (
-                        <tr key={`uc-${idx}`} className="hover:bg-slate-50 dark:hover:bg-navy-900/50 opacity-60">
-                          <td className="p-2.5 text-slate-400 font-mono">{r.row_num}</td>
-                          <td className="p-2.5 font-bold font-mono">{r.reg_no}</td>
-                          <td className="p-2.5 font-medium">{r.name}</td>
-                          <td className="p-2.5">{r.dept}</td>
-                          <td className="p-2.5">{r.year}</td>
-                          <td className="p-2.5 font-bold text-slate-500 font-mono">= UNCHANGED</td>
+                        <tr key={`uc-${idx}`} className="hover:bg-slate-50 dark:hover:bg-navy-900/50 opacity-60 transition-colors">
+                          <td className="p-3 text-slate-400 font-mono whitespace-nowrap">{r.row_num}</td>
+                          <td className="p-3 font-bold font-mono whitespace-nowrap">{r.reg_no}</td>
+                          <td className="p-3 font-medium whitespace-nowrap">{r.name}</td>
+                          <td className="p-3 whitespace-nowrap font-medium">{r.dept}</td>
+                          <td className="p-3 whitespace-nowrap font-medium">{r.year}</td>
+                          <td className="p-3 font-bold text-slate-500 font-mono whitespace-nowrap text-[11px]">
+                            = UNCHANGED
+                          </td>
                         </tr>
                       ))}
 
                       {/* ERROR ROWS */}
                       {(previewTab === 'all' || previewTab === 'errors') && analysisData.preview_data?.errors?.map((r: any, idx: number) => (
-                        <tr key={`e-${idx}`} className="bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 font-mono">
-                          <td className="p-2.5">{r.row_num}</td>
-                          <td className="p-2.5 font-bold">{r.reg_no}</td>
-                          <td className="p-2.5 font-medium">{r.name}</td>
-                          <td className="p-2.5" colSpan={3}>❌ {r.error}</td>
+                        <tr key={`e-${idx}`} className="bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 font-mono transition-colors">
+                          <td className="p-3 whitespace-nowrap">{r.row_num}</td>
+                          <td className="p-3 font-bold whitespace-nowrap">{r.reg_no}</td>
+                          <td className="p-3 font-medium whitespace-nowrap">{r.name}</td>
+                          <td className="p-3" colSpan={3}>
+                            <span className="inline-flex items-center text-rose-700 dark:text-rose-300 font-bold">
+                              <XCircle className="w-3.5 h-3.5 mr-1 shrink-0 text-rose-500" />
+                              <span>{r.error}</span>
+                            </span>
+                          </td>
                         </tr>
                       ))}
                     </tbody>

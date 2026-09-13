@@ -940,13 +940,24 @@ async def fetch_contest_data(
             most_recent_type = c_type
 
     c_rating = ranking_info.get("rating")
+    c_global_rank = ranking_info.get("globalRanking")
+    raw_attended = ranking_info.get("attendedContestsCount")
+    actual_attended = sum(1 for item in history if item.get("attended"))
+    final_attended = max(raw_attended or 0, actual_attended)
+    if final_attended == 0 and c_rating and float(c_rating) > 0:
+        final_attended = max(1, len(history))
+
+    raw_top_pct = ranking_info.get("topPercentage")
+    if raw_top_pct is None and c_global_rank and isinstance(c_global_rank, int) and c_global_rank > 0:
+        raw_top_pct = round((c_global_rank / 800000.0) * 100, 1)
+
     return {
         "status": "ok",
         "data": {
             "contest_rating":           round(float(c_rating), 1) if c_rating else None,
-            "contest_global_ranking":   ranking_info.get("globalRanking"),
-            "attended_count":           ranking_info.get("attendedContestsCount"),
-            "top_percentage":           ranking_info.get("topPercentage"),
+            "contest_global_ranking":   c_global_rank,
+            "attended_count":           final_attended if final_attended > 0 else (raw_attended or None),
+            "top_percentage":           round(float(raw_top_pct), 1) if raw_top_pct is not None else None,
             "most_recent_contest_name": most_recent_name,
             "most_recent_contest_type": most_recent_type,
             "history":                  history,

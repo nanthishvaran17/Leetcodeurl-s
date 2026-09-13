@@ -2127,23 +2127,23 @@ export const HRCandidateFinderPage: React.FC = () => {
                 <table className="w-full text-left text-xs whitespace-nowrap table-fixed">
                   <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-800 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     <tr>
-                      <th className="py-3 px-4 text-left w-[22%]">Student</th>
-                      <th className="py-3 px-2 text-center w-[11%]">Register No</th>
-                      <th className="py-3 px-2 text-center w-[8%]">Dept</th>
-                      <th className="py-3 px-2 text-center w-[9%]">Batch</th>
+                      <th className="py-3 px-4 text-left w-[20%]">Student</th>
+                      <th className="py-3 px-3 text-left w-[13%]">Register No</th>
+                      <th className="py-3 px-2 text-center w-[7%]">Dept</th>
+                      <th className="py-3 px-2 text-center w-[8%]">Batch</th>
                       <th className="py-3 px-2 text-center w-[10%] cursor-pointer hover:text-blue-600 transition-colors" onClick={() => { setSortField("global_rank"); setSortAsc(!sortAsc); }}>Global Rank</th>
-                      <th className="py-3 px-2 text-center w-[8%] cursor-pointer hover:text-blue-600 transition-colors" onClick={() => { setSortField("total_solved"); setSortAsc(!sortAsc); }}>Total Solved</th>
+                      <th className="py-3 px-2 text-center w-[9%] cursor-pointer hover:text-blue-600 transition-colors" onClick={() => { setSortField("total_solved"); setSortAsc(!sortAsc); }}>Total Solved</th>
                       <th className="py-3 px-2 text-center w-[6%] cursor-pointer hover:text-emerald-600 transition-colors" onClick={() => { setSortField("easy_solved"); setSortAsc(!sortAsc); }}>Easy</th>
                       <th className="py-3 px-2 text-center w-[6%] cursor-pointer hover:text-amber-600 transition-colors" onClick={() => { setSortField("medium_solved"); setSortAsc(!sortAsc); }}>Medium</th>
                       <th className="py-3 px-2 text-center w-[6%] cursor-pointer hover:text-rose-600 transition-colors" onClick={() => { setSortField("hard_solved"); setSortAsc(!sortAsc); }}>Hard</th>
-                      <th className="py-3 px-2 text-center w-[9%] cursor-pointer hover:text-purple-600 transition-colors" onClick={() => { setSortField("contest_rating"); setSortAsc(!sortAsc); }}>Contest Rating</th>
+                      <th className="py-3 px-2 text-center w-[8%] cursor-pointer hover:text-purple-600 transition-colors" onClick={() => { setSortField("contest_rating"); setSortAsc(!sortAsc); }}>Contest Rating</th>
                       <th className="py-3 px-2 text-center w-[7%]">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
                     {displayCandidates.map((c) => (
                       <tr key={c.id} className="hover:bg-slate-50/80 dark:hover:bg-navy-800/50 transition-colors">
-                        <td className="py-3 px-4 text-left font-bold text-slate-900 dark:text-white w-[22%]">
+                        <td className="py-3 px-4 text-left font-bold text-slate-900 dark:text-white w-[20%]">
                           <div className="flex items-center gap-2.5">
                             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center font-black text-xs shadow-xs flex-shrink-0">
                               {c.name.charAt(0)}
@@ -2154,13 +2154,13 @@ export const HRCandidateFinderPage: React.FC = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 px-2 text-center font-mono text-slate-600 dark:text-slate-300 font-medium text-xs w-[11%]">{c.reg_no}</td>
-                        <td className="py-3 px-2 text-center w-[8%]">
+                        <td className="py-3 px-3 text-left font-mono text-slate-600 dark:text-slate-300 font-medium text-xs w-[13%]">{c.reg_no}</td>
+                        <td className="py-3 px-2 text-center w-[7%]">
                           <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold text-[10px]">
                             {c.dept_code}
                           </span>
                         </td>
-                        <td className="py-3 px-2 text-center font-semibold text-slate-600 dark:text-slate-400 text-xs w-[9%]">{c.batch}</td>
+                        <td className="py-3 px-2 text-center font-semibold text-slate-600 dark:text-slate-400 text-xs w-[8%]">{c.batch}</td>
                         <td className="py-3 px-2 text-center w-[10%]">
                           <span className="px-2.5 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-mono font-black text-xs border border-blue-200/60 dark:border-blue-900/50">
                             {(() => {
@@ -2177,11 +2177,11 @@ export const HRCandidateFinderPage: React.FC = () => {
                             })()}
                           </span>
                         </td>
-                        <td className="py-3 px-2 text-center font-black text-slate-900 dark:text-white text-xs font-mono w-[8%]">{c.total_solved}</td>
+                        <td className="py-3 px-2 text-center font-black text-slate-900 dark:text-white text-xs font-mono w-[9%]">{c.total_solved}</td>
                         <td className="py-3 px-2 text-center font-bold text-emerald-600 dark:text-emerald-400 text-xs font-mono w-[6%]">{c.easy_solved}</td>
                         <td className="py-3 px-2 text-center font-bold text-amber-600 dark:text-amber-400 text-xs font-mono w-[6%]">{c.medium_solved}</td>
                         <td className="py-3 px-2 text-center font-bold text-rose-600 dark:text-rose-400 text-xs font-mono w-[6%]">{c.hard_solved}</td>
-                        <td className="py-3 px-2 text-center font-extrabold text-purple-600 dark:text-purple-400 text-xs font-mono w-[9%]">
+                        <td className="py-3 px-2 text-center font-extrabold text-purple-600 dark:text-purple-400 text-xs font-mono w-[8%]">
                           {c.contest_rating > 0 ? c.contest_rating.toLocaleString() : "—"}
                         </td>
                         <td className="py-3 px-2 text-center w-[7%]">
@@ -2397,7 +2397,6 @@ export const HRCandidateFinderPage: React.FC = () => {
                   { id: "contests", label: "Contests", icon: Trophy },
                   { id: "problems", label: "Problems", icon: FileText },
                   { id: "badges", label: "Badges & Skills", icon: Award },
-                  { id: "intelligence", label: "Intelligence", icon: Target },
                   { id: "quality", label: "Data Quality", icon: Shield },
                 ].map((tab) => {
                   const IconComp = tab.icon;
@@ -2429,33 +2428,6 @@ export const HRCandidateFinderPage: React.FC = () => {
                   {/* OVERVIEW TAB */}
                   {activeTab === "overview" && (
                     <div className="space-y-4">
-                      {/* Metric Cards Grid */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div className="bg-purple-50 dark:bg-purple-950/30 p-3.5 rounded-2xl border border-purple-200 dark:border-purple-900/40">
-                          <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider block">Performance</span>
-                          <p className="text-2xl font-black text-purple-700 dark:text-purple-300 mt-1">
-                            {intelData?.performance?.score ?? selectedCandidate.performance_score} <span className="text-xs font-semibold text-purple-400">/ 100</span>
-                          </p>
-                        </div>
-                        <div className="bg-emerald-50 dark:bg-emerald-950/30 p-3.5 rounded-2xl border border-emerald-200 dark:border-emerald-900/40">
-                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">Placement</span>
-                          <p className="text-xl font-black text-emerald-700 dark:text-emerald-300 mt-1 uppercase tracking-tight">
-                            {intelData?.placement?.readiness ?? selectedCandidate.placement_readiness}
-                          </p>
-                        </div>
-                        <div className="bg-blue-50 dark:bg-blue-950/30 p-3.5 rounded-2xl border border-blue-200 dark:border-blue-900/40">
-                          <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">Interview</span>
-                          <p className="text-2xl font-black text-blue-700 dark:text-blue-300 mt-1">
-                            {intelData?.performance?.interview_readiness ?? selectedCandidate.interview_readiness} <span className="text-xs font-semibold text-blue-400">/ 100</span>
-                          </p>
-                        </div>
-                        <div className="bg-amber-50 dark:bg-amber-950/30 p-3.5 rounded-2xl border border-amber-200 dark:border-amber-900/40">
-                          <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">Risk Level</span>
-                          <p className="text-xl font-black text-amber-700 dark:text-amber-300 mt-1 uppercase">
-                            {intelData?.risk?.level ?? selectedCandidate.risk_level}
-                          </p>
-                        </div>
-                      </div>
 
                       {/* Summary Panels */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2469,7 +2441,15 @@ export const HRCandidateFinderPage: React.FC = () => {
                             <div className="flex justify-between"><span className="text-slate-500">Easy Solved:</span><span className="font-bold text-emerald-600">{intelData?.coding?.easy_solved ?? selectedCandidate.easy_solved}</span></div>
                             <div className="flex justify-between"><span className="text-slate-500">Medium Solved:</span><span className="font-bold text-amber-600">{intelData?.coding?.medium_solved ?? selectedCandidate.medium_solved}</span></div>
                             <div className="flex justify-between"><span className="text-slate-500">Hard Solved:</span><span className="font-bold text-rose-600">{intelData?.coding?.hard_solved ?? selectedCandidate.hard_solved}</span></div>
-                            <div className="flex justify-between"><span className="text-slate-500">Acceptance Rate:</span><span className="font-bold text-slate-700 dark:text-slate-300">{intelData?.coding?.acceptance_rate ?? selectedCandidate.acceptance_rate}%</span></div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-500">Acceptance Rate:</span>
+                              <span className="font-bold text-slate-700 dark:text-slate-300">
+                                {(() => {
+                                  const raw = String(intelData?.coding?.acceptance_rate ?? selectedCandidate.acceptance_rate ?? "N/A").replace(/%/g, "").trim();
+                                  return raw === "N/A" || !raw ? "N/A" : `${raw}%`;
+                                })()}
+                              </span>
+                            </div>
                           </div>
                         </div>
 
@@ -2518,34 +2498,6 @@ export const HRCandidateFinderPage: React.FC = () => {
                         ) : (
                           <p className="text-xs text-slate-400 italic">No language data recorded.</p>
                         )}
-                      </div>
-
-                      {/* Why Selected & HR Decision Summary */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 p-4 rounded-2xl space-y-2">
-                          <p className="text-xs font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
-                            <UserCheck className="w-4 h-4 text-emerald-600" /> Why Selected?
-                          </p>
-                          <div className="space-y-1 text-xs text-emerald-900 dark:text-emerald-200">
-                            {intelData?.selection_reasons?.map((reason: string, rIdx: number) => (
-                              <div key={rIdx} className="flex items-start gap-1.5">
-                                <Check className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                                <span>{reason}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 p-4 rounded-2xl space-y-2">
-                          <p className="text-xs font-black text-blue-800 dark:text-blue-300 uppercase tracking-wider flex items-center gap-1.5">
-                            <Star className="w-4 h-4 text-blue-600" /> Placement Recommendation
-                          </p>
-                          <div className="text-xs space-y-1.5 text-blue-900 dark:text-blue-200">
-                            <div className="flex justify-between"><span className="text-slate-500">Candidate Strength:</span><span className="font-black text-amber-500">{intelData?.hr_decision?.candidate_strength || "★★★★☆"}</span></div>
-                            <div className="flex justify-between"><span className="text-slate-500">Coding Rating:</span><span className="font-bold">{intelData?.hr_decision?.coding_eval || "Strong"}</span></div>
-                            <div className="flex justify-between"><span className="text-slate-500">Recommended For:</span><span className="font-bold text-blue-600 dark:text-blue-400">{intelData?.hr_decision?.recommended_for?.join(", ") || "Tier-1 Campus Drives"}</span></div>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   )}
@@ -2602,7 +2554,15 @@ export const HRCandidateFinderPage: React.FC = () => {
 
                       {/* Submissions & Streaks Stats */}
                       <div className="bg-slate-50 dark:bg-navy-800 p-4 rounded-2xl space-y-2 border border-slate-200/80 dark:border-navy-700 text-xs">
-                        <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-navy-700"><span className="text-slate-500">Acceptance Rate:</span><span className="font-bold">{intelData?.coding?.acceptance_rate ?? "N/A"}</span></div>
+                        <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-navy-700">
+                          <span className="text-slate-500">Acceptance Rate:</span>
+                          <span className="font-bold">
+                            {(() => {
+                              const raw = String(intelData?.coding?.acceptance_rate ?? selectedCandidate?.acceptance_rate ?? "N/A").replace(/%/g, "").trim();
+                              return raw === "N/A" || !raw ? "N/A" : `${raw}%`;
+                            })()}
+                          </span>
+                        </div>
                         <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-navy-700"><span className="text-slate-500">Total Submissions:</span><span className="font-bold">{intelData?.coding?.total_submissions ?? "N/A"}</span></div>
                         <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-navy-700"><span className="text-slate-500">Accepted Submissions:</span><span className="font-bold">{intelData?.coding?.accepted_submissions ?? "N/A"}</span></div>
                         <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-navy-700"><span className="text-slate-500">Active Days:</span><span className="font-bold">{intelData?.coding?.active_days ?? "N/A"}</span></div>
@@ -2828,19 +2788,19 @@ export const HRCandidateFinderPage: React.FC = () => {
                           <div className="overflow-x-auto">
                             <table className="w-full text-left text-xs">
                               <thead>
-                                <tr className="border-b border-slate-200 dark:border-navy-700 text-slate-500 font-bold">
-                                  <th className="py-2 px-2">Problem</th>
-                                  <th className="py-2 px-2">Language</th>
-                                  <th className="py-2 px-2 text-center">Status</th>
-                                  <th className="py-2 px-2 text-center">Runtime / Memory</th>
-                                  <th className="py-2 px-2 text-right">Timestamp</th>
+                                <tr className="border-b border-slate-200 dark:border-navy-700 text-slate-700 dark:text-slate-300 font-black uppercase text-[10px] tracking-wider">
+                                  <th className="py-2.5 px-2">Problem</th>
+                                  <th className="py-2.5 px-2">Language</th>
+                                  <th className="py-2.5 px-2 text-center">Status</th>
+                                  <th className="py-2.5 px-2 text-center">Runtime / Memory</th>
+                                  <th className="py-2.5 px-2 text-right">Timestamp</th>
                                 </tr>
                               </thead>
-                              <tbody className="divide-y divide-slate-100 dark:divide-navy-700">
+                              <tbody className="divide-y divide-slate-200/70 dark:divide-navy-700">
                                 {intelData.submissions
                                   .filter((s: any) => !probSearch || s.title.toLowerCase().includes(probSearch.toLowerCase()))
                                   .map((s: any, idx: number) => (
-                                    <tr key={idx} className="hover:bg-slate-100/60 dark:hover:bg-navy-900/60 transition-colors">
+                                    <tr key={idx} className="hover:bg-slate-100/80 dark:hover:bg-navy-900/60 transition-colors">
                                       <td className="py-2.5 px-2 font-bold text-slate-900 dark:text-white">
                                         <a
                                           href={"https://leetcode.com/problems/" + (s.title_slug || "two-sum") + "/"}
@@ -2862,12 +2822,12 @@ export const HRCandidateFinderPage: React.FC = () => {
                                           {s.status}
                                         </span>
                                       </td>
-                                      <td className="py-2.5 px-2 text-center text-slate-500 dark:text-slate-400 font-mono text-[11px]">
+                                      <td className="py-2.5 px-2 text-center text-slate-700 dark:text-slate-200 font-mono font-semibold text-xs">
                                         {s.runtime && s.runtime !== "N/A" ? `${s.runtime}` : "38 ms"} {s.memory && s.memory !== "N/A" ? `• ${s.memory}` : ""}
                                       </td>
-                                      <td className="py-2.5 px-2 text-right text-slate-400 font-mono text-[11px]">{s.timestamp}</td>
+                                      <td className="py-2.5 px-2 text-right text-slate-700 dark:text-slate-300 font-mono font-semibold text-xs">{s.timestamp}</td>
                                     </tr>
-                                 ))}
+                                  ))}
                               </tbody>
                             </table>
                           </div>
@@ -2950,57 +2910,6 @@ export const HRCandidateFinderPage: React.FC = () => {
                             </div>
                           );
                         })()}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* INTELLIGENCE TAB */}
-                  {activeTab === "intelligence" && (
-                    <div className="space-y-5">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-purple-50 dark:bg-purple-950/30 p-4 rounded-2xl border border-purple-200 dark:border-purple-900/50">
-                          <p className="text-[10px] font-bold text-purple-600 uppercase">Performance Score</p>
-                          <p className="text-3xl font-black text-purple-700 dark:text-purple-300 mt-1">{intelData?.performance?.score ?? selectedCandidate.performance_score} / 100</p>
-                        </div>
-                        <div className="bg-emerald-50 dark:bg-emerald-950/30 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-900/50">
-                          <p className="text-[10px] font-bold text-emerald-600 uppercase">Placement Readiness</p>
-                          <p className="text-2xl font-black text-emerald-700 dark:text-emerald-300 mt-1">{intelData?.placement?.readiness ?? selectedCandidate.placement_readiness}</p>
-                        </div>
-                      </div>
-
-                      {/* Strengths & Weaknesses */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 p-4 rounded-2xl space-y-2">
-                          <p className="text-xs font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">Candidate Strengths</p>
-                          <div className="space-y-1.5 text-xs text-emerald-900 dark:text-emerald-200">
-                            {intelData?.strengths && intelData.strengths.length > 0 ? (
-                              intelData.strengths.map((st: string, idx: number) => (
-                                <div key={idx} className="flex items-start gap-1.5">
-                                  <Check className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                                  <span>{st}</span>
-                                </div>
-                              ))
-                            ) : (
-                              <p className="text-slate-400 italic">No specific strengths flagged.</p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 p-4 rounded-2xl space-y-2">
-                          <p className="text-xs font-black text-amber-800 dark:text-amber-300 uppercase tracking-wider">Areas to Watch</p>
-                          <div className="space-y-1.5 text-xs text-amber-900 dark:text-amber-200">
-                            {intelData?.areas_to_watch && intelData.areas_to_watch.length > 0 ? (
-                              intelData.areas_to_watch.map((w: string, idx: number) => (
-                                <div key={idx} className="flex items-start gap-1.5">
-                                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
-                                  <span>{w}</span>
-                                </div>
-                              ))
-                            ) : (
-                              <p className="text-slate-400 italic">No areas to watch flagged.</p>
-                            )}
-                          </div>
-                        </div>
                       </div>
                     </div>
                   )}

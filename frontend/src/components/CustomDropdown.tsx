@@ -47,8 +47,8 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState<{ top: number; left: number; width: number; maxHeight?: number; transformOrigin?: string } | null>(null);
 
-  // Find selected option (ignore empty placeholder options)
-  const selectedOption = options.find((opt) => opt.value === value && opt.value !== '' && !opt.label.toLowerCase().startsWith('select'));
+  // Find selected option
+  const selectedOption = options.find((opt) => opt.value === value && !opt.label.toLowerCase().startsWith('select'));
   
   // Filter out redundant placeholder options (e.g. value: '' with label 'Select ...') from selectable popover list
   const selectableOptions = options.filter((opt) => {
@@ -212,14 +212,16 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
 
   return (
     <div className={`flex flex-col space-y-1.5 w-full max-w-full min-w-0 box-border relative ${className}`} ref={dropdownRef} id={id}>
-      <label className={labelClassName || "block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate flex items-center justify-between h-4 leading-4 m-0 p-0"}>
-        <span>{label}</span>
-        {selectedOption?.count !== undefined && selectedOption.count > 0 && (
-          <span className="text-[9px] font-mono font-bold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-1.5 py-0.5 rounded-full border border-brand-500/20">
-            {selectedOption.count}
-          </span>
-        )}
-      </label>
+      {label ? (
+        <label className={labelClassName || "block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate flex items-center justify-between h-4 leading-4 m-0 p-0"}>
+          <span>{label}</span>
+          {selectedOption?.count !== undefined && selectedOption.count > 0 && (
+            <span className="text-[9px] font-mono font-bold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-1.5 py-0.5 rounded-full border border-brand-500/20">
+              {selectedOption.count}
+            </span>
+          )}
+        </label>
+      ) : null}
 
       {/* Trigger Button */}
       <button

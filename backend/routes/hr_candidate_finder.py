@@ -435,6 +435,17 @@ def get_student_intelligence(
 
         c_attended = max(c_attended or 0, len(authentic_records))
 
+    if (c_attended is None or c_attended == 0) and c_rating and float(c_rating) > 0:
+        c_attended = max(1, len(c_history_records))
+
+    if c_top_pct is None and c_rank:
+        try:
+            rank_num = int(str(c_rank).replace("#", "").replace(",", "").strip())
+            if rank_num > 0:
+                c_top_pct = round((rank_num / 800000.0) * 100, 1)
+        except Exception:
+            pass
+
     # 5. Badges
     badge_records = db.query(LeetCodeBadge).filter(LeetCodeBadge.student_id == student.id).all()
     badges = [
