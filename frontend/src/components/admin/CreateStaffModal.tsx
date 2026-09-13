@@ -86,16 +86,25 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
     
     const sortedYears = Array.from(years).sort((a, b) => (a > b ? 1 : -1));
 
-    const options: DropdownOption[] = sortedYears.map(y => {
-      const meta = getAcademicYearMeta(y);
-      return {
-        value: y,
-        label: meta.label,
-        badge: meta.badge,
-        badgeColor: meta.badgeColor,
-        sublabel: meta.sublabel,
-      };
-    });
+    const options: DropdownOption[] = [
+      {
+        value: 'ALL',
+        label: 'All Academic Years / Batches',
+        badge: 'ALL',
+        badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30',
+        sublabel: 'Full Department Cohort Scope'
+      },
+      ...sortedYears.map(y => {
+        const meta = getAcademicYearMeta(y);
+        return {
+          value: y,
+          label: meta.label,
+          badge: meta.badge,
+          badgeColor: meta.badgeColor,
+          sublabel: meta.sublabel,
+        };
+      })
+    ];
 
     return options;
   }, [storeVersion]);

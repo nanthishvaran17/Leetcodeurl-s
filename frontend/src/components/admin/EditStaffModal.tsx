@@ -128,7 +128,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         phone_number: staffObj.phone_number || '',
         role: staffObj.role || 'Faculty Mentor',
         department_id: staffObj.department_id ? String(staffObj.department_id) : '0',
-        academic_year: staffObj.academic_year || '',
+        academic_year: (staffObj.academic_year && staffObj.academic_year.trim() && staffObj.academic_year !== 'None' && staffObj.academic_year !== 'null') ? staffObj.academic_year : 'ALL',
         designation: staffObj.designation || '',
         date_of_birth: dobVal,
         mentoring_role: staffObj.mentoring_role || '',
@@ -175,11 +175,21 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
     });
     
     const sortedYears = Array.from(years).sort((a, b) => (a > b ? 1 : -1));
-    return sortedYears.map(y => ({
-      value: y,
-      label: y.length <= 4 ? `${y} Year` : y,
-      badge: y.substring(0, 5)
-    }));
+    const options: DropdownOption[] = [
+      {
+        value: 'ALL',
+        label: 'All Academic Years / Batches',
+        badge: 'ALL',
+        badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30',
+        sublabel: 'Full Department Cohort Scope'
+      },
+      ...sortedYears.map(y => ({
+        value: y,
+        label: y.length <= 4 ? `${y} Year` : y,
+        badge: y.substring(0, 5)
+      }))
+    ];
+    return options;
   }, [storeVersion]);
 
   // Department Options
