@@ -4,6 +4,10 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/api/(.*)",
+      "destination": "https://leetcodeurl-s-3mig.onrender.com/api/$1"
+    },
+    {
       "source": "/__/auth/(.*)",
       "destination": "https://leetcode-student-data.firebaseapp.com/__/auth/$1"
     },

@@ -60,6 +60,11 @@ export const getApiBaseUrl = (): string => {
     return `${envBase}/api`;
   }
 
+  // On Web Browser production (Vercel), return '/api' to use Vercel's proxy rewrite
+  if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app')) {
+    return '/api';
+  }
+
   return 'https://leetcodeurl-s-3mig.onrender.com/api';
 };
 
