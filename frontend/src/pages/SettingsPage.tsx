@@ -10,6 +10,7 @@ import {
 import api from '../services/api';
 import { SecurityActivitySection } from '../components/SecurityActivitySection';
 import { useNotification } from '../context/NotificationContext';
+import { useAuth } from '../context/AuthContext';
 import { StaffManagement } from '../components/admin/StaffManagement';
 import { AdminStaffAllocationPanel } from '../components/AdminStaffAllocationPanel';
 import { StaffVerificationSection } from '../components/StaffVerificationSection';
@@ -18,6 +19,7 @@ import { downloadManager } from '../services/download/downloadManager';
 
 export const SettingsPage: React.FC = () => {
   const { notify, confirmAction } = useNotification();
+  const { user: currentUser, isAuthenticated } = useAuth();
   const [initialSettings, setInitialSettings] = useState<any>({});
   const [settings, setSettings] = useState<any>({
     SESSION_START: '08:00',
@@ -104,10 +106,15 @@ export const SettingsPage: React.FC = () => {
     if (initialFetchRef.current) return;
     initialFetchRef.current = true;
     fetchSettings();
-    fetchBackups();
     fetchSystemHealth();
-    fetchAuditLogs();
   }, []);
+
+  useEffect(() => {
+    if (currentUser || isAuthenticated) {
+      fetchBackups();
+      fetchAuditLogs();
+    }
+  }, [currentUser, isAuthenticated]);
 
   // Compute unsaved changes count
   useEffect(() => {
