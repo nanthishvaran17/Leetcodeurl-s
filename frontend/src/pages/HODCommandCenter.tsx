@@ -40,6 +40,32 @@ const Card: React.FC<{ children: React.ReactNode; className?: string; id?: strin
   </div>
 );
 
+const getDeptBadgeStyle = (code: string) => {
+  const c = (code || '').toUpperCase();
+  if (c.includes('CS') && !c.includes('IOT')) {
+    return 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30';
+  }
+  if (c.includes('IOT') || c.includes('CI')) {
+    return 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30';
+  }
+  if (c.includes('IT')) {
+    return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30';
+  }
+  if (c.includes('AIDS') || c.includes('AI')) {
+    return 'bg-teal-500/15 text-teal-700 dark:text-teal-300 border-teal-500/30';
+  }
+  if (c.includes('AGRI') || c.includes('AG')) {
+    return 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30';
+  }
+  if (c.includes('EEE')) {
+    return 'bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30';
+  }
+  if (c.includes('ECE')) {
+    return 'bg-fuchsia-500/15 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-500/30';
+  }
+  return 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30';
+};
+
 // Student Detail Drawer 
 
 const StudentDetailDrawer: React.FC<{
@@ -1808,40 +1834,41 @@ export const HODCommandCenter: React.FC = () => {
       {/* 7. DEPARTMENT MATRIX & YEAR BENCHMARKS */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Department Matrix */}
-        <Card className="lg:col-span-12 p-5 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-navy-800">
+        <Card className="lg:col-span-12 p-5 space-y-3.5">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-navy-800">
             <div>
-              <h3 className="font-display text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                <Building2 size={20} className="text-brand-600 dark:text-brand-400" />
+              <h3 className="font-display text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Building2 size={16} className="text-brand-500" />
                 <span>Department Performance & Intelligence Matrix</span>
               </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">Comprehensive real-time view of departmental health, engagement, and mentorship.</p>
+              <p className="text-xs text-slate-500">Comprehensive real-time view of departmental health, engagement, and mentorship.</p>
             </div>
-            <span className="text-xs text-slate-700 dark:text-slate-300 font-mono bg-slate-100 dark:bg-navy-900 px-3.5 py-1.5 rounded-lg border border-slate-300 dark:border-navy-700 font-bold shadow-xs">
+            <span className="text-[10px] text-slate-400 font-mono bg-slate-50 dark:bg-navy-950 px-2 py-1 rounded-md border border-slate-100 dark:border-navy-700">
               Click row to inspect details
             </span>
           </div>
 
           <div className="overflow-x-auto table-responsive-container stylish-scrollbar">
-            <table className="w-full text-left text-sm border-collapse whitespace-nowrap mobile-card-table">
+            <table className="w-full text-left text-xs border-collapse whitespace-nowrap mobile-card-table">
               <thead className="hidden md:table-header-group">
-                <tr className="text-xs sm:text-sm font-black uppercase text-slate-800 dark:text-slate-100 font-mono border-b-2 border-slate-300 dark:border-navy-700 bg-slate-200/90 dark:bg-navy-900">
-                  <th className="py-3.5 px-4 rounded-tl-xl">Rank</th>
-                  <th className="py-3.5 px-4">Dept</th>
-                  <th className="py-3.5 px-4 text-right">Roster</th>
-                  <th className="py-3.5 px-4 text-right">Active Score</th>
-                  <th className="py-3.5 px-4 text-center">Engagement</th>
-                  <th className="py-3.5 px-4 text-right">Avg Solved</th>
-                  <th className="py-3.5 px-4 text-right">Completion</th>
-                  <th className="py-3.5 px-4 text-right">At-Risk</th>
-                  <th className="py-3.5 px-4 text-right">Mentors</th>
-                  <th className="py-3.5 px-4 text-center">Health</th>
-                  <th className="py-3.5 px-4 text-center rounded-tr-xl">Action</th>
+                <tr className="text-[10px] font-bold uppercase text-slate-500 font-mono border-b border-slate-100 dark:border-navy-800 bg-slate-50 dark:bg-navy-950/50">
+                  <th className="py-2.5 px-3 rounded-tl-lg">Rank</th>
+                  <th className="py-2.5 px-3">Dept</th>
+                  <th className="py-2.5 px-3 text-right">Roster</th>
+                  <th className="py-2.5 px-3 text-right">Active Score</th>
+                  <th className="py-2.5 px-3 text-center">Engagement</th>
+                  <th className="py-2.5 px-3 text-right">Avg Solved</th>
+                  <th className="py-2.5 px-3 text-right">Completion</th>
+                  <th className="py-2.5 px-3 text-right">At-Risk</th>
+                  <th className="py-2.5 px-3 text-right">Mentors</th>
+                  <th className="py-2.5 px-3 text-center">Health</th>
+                  <th className="py-2.5 px-3 text-center rounded-tr-lg">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-navy-800 font-mono">
+              <tbody className="divide-y divide-slate-100 dark:divide-navy-800/60 font-mono">
                 {deptMatrix.map(d => {
                   const isSelected = selectedDept === String(d.department_id);
+                  const badgeStyle = getDeptBadgeStyle(d.department_code);
                   return (
                     <tr
                       key={d.department_id}
@@ -1849,85 +1876,98 @@ export const HODCommandCenter: React.FC = () => {
                         setSelectedDept(String(d.department_id));
                         setSelectedDeptIntelligence(d);
                       }}
-                      className={`hover:bg-brand-50/60 dark:hover:bg-navy-800/80 cursor-pointer transition ${isSelected ? 'bg-brand-100/70 dark:bg-brand-900/30 font-bold' : ''}`}
+                      className={`hover:bg-slate-50/80 dark:hover:bg-navy-800/80 cursor-pointer transition ${isSelected ? 'bg-brand-50/60 dark:bg-brand-900/20' : ''}`}
                     >
-                      <td className="py-4 px-4 font-black text-sm text-slate-900 dark:text-white">
-                        {d.rank ? `#${d.rank}` : '-'}
+                      <td className="py-3 px-3">
+                        {d.rank === 1 ? (
+                          <span className="px-2 py-0.5 rounded text-[11px] font-black bg-amber-400/20 text-amber-700 dark:text-amber-300 border border-amber-400/40">#1</span>
+                        ) : d.rank === 2 ? (
+                          <span className="px-2 py-0.5 rounded text-[11px] font-black bg-slate-200 dark:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-navy-600">#2</span>
+                        ) : d.rank === 3 ? (
+                          <span className="px-2 py-0.5 rounded text-[11px] font-black bg-amber-600/20 text-amber-800 dark:text-amber-400 border border-amber-600/40">#3</span>
+                        ) : (
+                          <span className="font-extrabold text-slate-600 dark:text-slate-400 text-xs">{d.rank ? `#${d.rank}` : '-'}</span>
+                        )}
                       </td>
-                      <td className="py-4 px-4">
-                        <div className="font-black text-sm sm:text-base text-slate-900 dark:text-white font-mono">{d.department_code}</div>
+                      <td className="py-3 px-3">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-black border uppercase tracking-wider ${badgeStyle}`}>
+                          {d.department_code}
+                        </span>
                       </td>
-                      <td className="py-4 px-4 text-right">
-                        <div className="text-slate-900 dark:text-white font-black text-sm sm:text-base">{d.student_count}</div>
-                        <div className="text-xs text-slate-600 dark:text-slate-400 font-semibold">{d.active_count} active</div>
+                      <td className="py-3 px-3 text-right">
+                        <div className="text-sm font-extrabold text-slate-900 dark:text-white font-mono">{d.student_count}</div>
+                        <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center justify-end gap-1 mt-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
+                          <span>{d.active_count} active</span>
+                        </div>
                       </td>
-                      <td className="py-4 px-4 text-right">
+                      <td className="py-3 px-3 text-right">
                         <div className="flex flex-col items-end gap-1">
-                          <span className="font-black text-sm sm:text-base text-slate-900 dark:text-white">{d.active_score || 0}/100</span>
-                          <div className="w-20 bg-slate-300 dark:bg-navy-950 rounded-full h-2">
-                            <div className="bg-brand-600 h-2 rounded-full" style={{ width: `${d.active_score || 0}%` }} />
+                          <span className="font-extrabold text-slate-900 dark:text-white text-xs">{d.active_score || 0}/100</span>
+                          <div className="w-16 bg-slate-200 dark:bg-navy-900 rounded-full h-1.5 overflow-hidden">
+                            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 h-1.5 rounded-full" style={{ width: `${d.active_score || 0}%` }} />
                           </div>
                         </div>
                       </td>
-                      <td className="py-4 px-4 text-center">
-                        <span className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-black shadow-xs ${
-                          d.coding_engagement === 'HIGH' ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200 border border-emerald-300' :
-                          d.coding_engagement === 'MEDIUM' ? 'bg-brand-100 text-brand-900 dark:bg-brand-950 dark:text-brand-200 border border-brand-300' :
-                          'bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200 border border-rose-300'
+                      <td className="py-3 px-3 text-center">
+                        <span className={`px-2.5 py-1 rounded text-[10px] font-black tracking-wide uppercase border ${
+                          d.coding_engagement === 'HIGH' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30' :
+                          d.coding_engagement === 'MEDIUM' ? 'bg-brand-500/15 text-brand-700 dark:text-brand-300 border-brand-500/30' :
+                          'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30'
                         }`}>
                           {d.coding_engagement || 'N/A'}
                         </span>
                       </td>
-                      <td className="py-4 px-4 text-right">
+                      <td className="py-3 px-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          <span className="font-black text-sm sm:text-base text-slate-900 dark:text-white">{d.avg_solved}</span>
-                          <span className={`text-sm flex items-center ${d.performance_trend === '↑' ? 'text-emerald-600 font-black' : d.performance_trend === '↓' ? 'text-rose-600 font-black' : 'text-slate-400'}`}>
-                            {d.performance_trend === '↑' ? <TrendingUp size={15} /> : d.performance_trend === '↓' ? <TrendingDown size={15} /> : <Minus size={15} />}
+                          <span className="font-extrabold text-slate-900 dark:text-white text-xs">{d.avg_solved}</span>
+                          <span className={`text-[11px] font-bold flex items-center ${d.performance_trend === '↑' ? 'text-emerald-600 dark:text-emerald-400' : d.performance_trend === '↓' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400'}`}>
+                            {d.performance_trend === '↑' ? <TrendingUp size={13} className="stroke-[2.5]" /> : d.performance_trend === '↓' ? <TrendingDown size={13} className="stroke-[2.5]" /> : <Minus size={13} />}
                           </span>
                         </div>
                       </td>
-                      <td className="py-4 px-4 text-right">
+                      <td className="py-3 px-3 text-right">
                         <div className="flex flex-col items-end gap-1">
-                          <span className="font-black text-sm sm:text-base text-slate-900 dark:text-white">{d.completion_rate || 0}%</span>
-                          <div className="w-20 bg-slate-300 dark:bg-navy-950 rounded-full h-2">
-                            <div className="bg-brand-600 h-2 rounded-full" style={{ width: `${d.completion_rate || 0}%` }} />
+                          <span className="font-extrabold text-slate-900 dark:text-white text-xs">{d.completion_rate || 0}%</span>
+                          <div className="w-16 bg-slate-200 dark:bg-navy-900 rounded-full h-1.5 overflow-hidden">
+                            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 h-1.5 rounded-full" style={{ width: `${d.completion_rate || 0}%` }} />
                           </div>
                         </div>
                       </td>
-                      <td className="py-4 px-4 text-right">
+                      <td className="py-3 px-3 text-right">
                         {d.at_risk_students ? (
-                          <span className="px-3 py-1 rounded-full bg-rose-100 text-rose-900 font-black text-xs sm:text-sm border border-rose-300 dark:bg-rose-950 dark:text-rose-200 shadow-xs">
+                          <span className="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 font-extrabold text-[11px] border border-rose-500/30">
                             {d.at_risk_students}
                           </span>
                         ) : (
-                          <span className="text-slate-500 font-bold text-sm">-</span>
+                          <span className="text-slate-400 text-[11px] font-bold">-</span>
                         )}
                       </td>
-                      <td className="py-4 px-4 text-right">
-                        <div className="font-black text-sm sm:text-base text-slate-900 dark:text-white">{d.faculty_mentors || 0}</div>
+                      <td className="py-3 px-3 text-right">
+                        <div className="font-extrabold text-slate-900 dark:text-white text-xs">{d.faculty_mentors || 0}</div>
                         {d.faculty_mentors && d.faculty_mentors > 0 && d.student_count > 0 ? (
-                          <div className="text-xs text-slate-600 dark:text-slate-400 font-semibold">
+                          <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300 font-mono mt-0.5">
                             1:{Math.round(d.student_count / d.faculty_mentors)} ratio
                           </div>
                         ) : null}
                       </td>
-                      <td className="py-4 px-4 text-center">
-                        <span className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black whitespace-nowrap shadow-xs ${
-                          d.health_status === 'Excellent' ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200 border border-emerald-400' :
-                          d.health_status === 'Healthy' ? 'bg-brand-100 text-brand-900 dark:bg-brand-950 dark:text-brand-200 border border-brand-400' :
-                          d.health_status === 'Needs Attention' ? 'bg-amber-100 text-amber-950 dark:bg-amber-950 dark:text-amber-200 border border-amber-400' :
-                          'bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200 border border-rose-400'
+                      <td className="py-3 px-3 text-center">
+                        <span className={`px-2.5 py-1 rounded text-[11px] font-black whitespace-nowrap border ${
+                          d.health_status === 'Excellent' || d.health_status === 'Healthy' ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30' :
+                          d.health_status === 'Needs Attention' ? 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/40' :
+                          'bg-rose-500/15 text-rose-800 dark:text-rose-300 border-rose-500/40'
                         }`}>
                           {d.health_status || 'Unknown'}
                         </span>
                       </td>
-                      <td className="py-4 px-4 text-center">
+                      <td className="py-3 px-3 text-center">
                         <button
                           onClick={(e) => { e.stopPropagation(); setSelectedDeptIntelligence(d); }}
-                          className="p-2.5 rounded-xl bg-slate-200 dark:bg-navy-800 text-slate-800 dark:text-slate-200 hover:bg-brand-600 hover:text-white transition shadow-xs border border-slate-300 dark:border-navy-700 cursor-pointer"
+                          className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200/60 dark:bg-navy-800 dark:hover:bg-navy-700 dark:text-brand-300 dark:border-navy-700 inline-flex items-center gap-1 transition shadow-xs cursor-pointer"
                           title="Inspect Details"
                         >
-                          <Activity size={16} />
+                          <Activity size={13} />
+                          <span>Inspect</span>
                         </button>
                       </td>
                     </tr>
@@ -1937,7 +1977,7 @@ export const HODCommandCenter: React.FC = () => {
             </table>
             
             {deptMatrix.length === 0 && !loading && (
-              <div className="p-8 text-center text-slate-500 font-mono text-sm border-t border-slate-200 dark:border-navy-800">
+              <div className="p-8 text-center text-slate-500 font-mono text-sm border-t border-slate-100 dark:border-navy-800">
                 No department data available.
               </div>
             )}
@@ -1983,41 +2023,41 @@ export const HODCommandCenter: React.FC = () => {
       </div>
 
       {/* 8. FACULTY MENTORS PERFORMANCE & COMPLETION MATRIX */}
-      <Card id="staff-performance-section" className="p-5 space-y-4 scroll-mt-20">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-navy-800">
+      <Card id="staff-performance-section" className="p-5 space-y-3.5 scroll-mt-20">
+        <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-navy-800">
           <div>
-            <h3 className="font-display text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-              <Users size={20} className="text-brand-600 dark:text-brand-400" />
+            <h3 className="font-display text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Users size={16} className="text-brand-500" />
               <span>Faculty Mentors Performance & Progress Matrix</span>
             </h3>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">Track mentorship workload, active solver rates, and student completion across staff members</p>
+            <p className="text-xs text-slate-500">Track mentorship workload, active solver rates, and student completion across staff members</p>
           </div>
           <button
             onClick={() => setShowStaffAllocationModal(true)}
-            className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-black text-xs sm:text-sm flex items-center gap-2 transition cursor-pointer shadow-md"
+            className="px-3 py-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-600 font-bold text-xs flex items-center gap-1 transition cursor-pointer"
           >
-            <Users size={16} />
+            <Users size={13} />
             <span>Manage Allocation</span>
           </button>
         </div>
 
-        <div className="overflow-x-auto table-responsive-container stylish-scrollbar">
-          <table className="w-full text-left text-sm border-collapse mobile-card-table">
+        <div className="overflow-x-auto table-responsive-container">
+          <table className="w-full text-left text-xs border-collapse mobile-card-table">
             <thead className="hidden md:table-header-group">
-              <tr className="text-xs sm:text-sm font-black uppercase text-slate-800 dark:text-slate-100 font-mono border-b-2 border-slate-300 dark:border-navy-700 bg-slate-200/90 dark:bg-navy-900">
-                <th className="py-3.5 px-4 rounded-tl-xl">Faculty Mentor</th>
-                <th className="py-3.5 px-4">Dept</th>
-                <th className="py-3.5 px-4 text-right">Assigned Mentees</th>
-                <th className="py-3.5 px-4 text-right">Active Solvers</th>
-                <th className="py-3.5 px-4 text-right">Completion Rate</th>
-                <th className="py-3.5 px-4 text-center">Workload Status</th>
-                <th className="py-3.5 px-4 text-center rounded-tr-xl">Action</th>
+              <tr className="text-[10px] font-bold uppercase text-slate-400 font-mono border-b border-slate-100 dark:border-navy-800">
+                <th className="py-2.5 px-3">Faculty Mentor</th>
+                <th className="py-2.5 px-3">Dept</th>
+                <th className="py-2.5 px-3 text-right">Assigned Mentees</th>
+                <th className="py-2.5 px-3 text-right">Active Solvers</th>
+                <th className="py-2.5 px-3 text-right">Completion Rate</th>
+                <th className="py-2.5 px-3 text-center">Workload Status</th>
+                <th className="py-2.5 px-3 text-center">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-navy-800 font-mono">
+            <tbody className="divide-y divide-slate-50 dark:divide-navy-800 font-mono">
               {staffList.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-500 text-sm font-bold">No staff members found for the selected scope.</td>
+                  <td colSpan={7} className="py-6 text-center text-slate-400">No staff members found for the selected scope.</td>
                 </tr>
               ) : (
                 staffList.map(s => {
@@ -2030,52 +2070,52 @@ export const HODCommandCenter: React.FC = () => {
                     <tr
                       key={s.id}
                       onClick={() => setSelectedStaffDetail(s)}
-                      className={`hover:bg-brand-50/60 dark:hover:bg-navy-800 cursor-pointer transition ${isSelected ? 'bg-brand-100/70 dark:bg-brand-900/30 font-bold' : ''}`}
+                      className={`hover:bg-brand-50/50 dark:hover:bg-navy-800 cursor-pointer transition ${isSelected ? 'bg-brand-50/80 font-bold' : ''}`}
                     >
-                      <td className="py-4 px-4 font-bold text-slate-900 dark:text-white font-sans flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-800 dark:text-brand-200 font-black flex items-center justify-center text-base border-2 border-brand-300 dark:border-brand-700 shadow-xs shrink-0">
+                      <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-white font-sans flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-600 dark:text-brand-300 font-extrabold flex items-center justify-center text-xs border border-brand-200 shadow-sm shrink-0">
                           {s.username ? s.username.charAt(0).toUpperCase() : 'S'}
                         </div>
                         <div>
-                          <div className="font-black text-sm sm:text-base text-slate-900 dark:text-white">{s.username}</div>
-                          <div className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-mono font-bold">{s.email}</div>
+                          <div className="font-bold text-slate-900 dark:text-white">{s.username}</div>
+                          <div className="text-[10px] text-slate-400 font-mono font-normal">{s.email}</div>
                         </div>
                       </td>
-                      <td className="py-4 px-4 text-slate-800 dark:text-slate-200 font-mono font-bold">
-                        <span className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 border border-slate-300 dark:border-navy-600 text-xs sm:text-sm font-black text-slate-900 dark:text-white shadow-2xs">
+                      <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300 font-mono font-semibold">
+                        <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 text-[10px]">
                           {(s as any).department_code || 'DEPT'}
                         </span>
                       </td>
-                      <td className="py-4 px-4 text-right font-mono font-black text-sm sm:text-base text-slate-900 dark:text-white">
+                      <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
                         {assigned} / {maxAllowed}
                       </td>
-                      <td className="py-4 px-4 text-right font-mono text-emerald-700 dark:text-emerald-400 font-black text-sm sm:text-base">
-                        {active} <span className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-bold">active</span>
+                      <td className="py-2.5 px-3 text-right font-mono text-emerald-600 font-bold">
+                        {active} <span className="text-[10px] text-slate-400 font-normal">active</span>
                       </td>
-                      <td className="py-4 px-4 text-right font-mono">
-                        <div className="flex items-center justify-end gap-2.5">
-                          <div className="w-20 h-2.5 rounded-full bg-slate-300 dark:bg-navy-800 overflow-hidden">
+                      <td className="py-2.5 px-3 text-right font-mono">
+                        <div className="flex items-center justify-end gap-2">
+                          <div className="w-16 h-1.5 rounded-full bg-slate-100 dark:bg-navy-800 overflow-hidden">
                             <div className={`h-full rounded-full ${completionRate >= 80 ? 'bg-emerald-500' : completionRate >= 50 ? 'bg-amber-500' : 'bg-rose-500'}`} style={{ width: `${completionRate}%` }} />
                           </div>
-                          <span className="font-black text-sm sm:text-base text-slate-900 dark:text-white">{completionRate}%</span>
+                          <span className="font-bold text-slate-900 dark:text-white">{completionRate}%</span>
                         </div>
                       </td>
-                      <td className="py-4 px-4 text-center">
-                        <span className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wide border shadow-xs ${assigned >= 30 ? 'bg-purple-100 text-purple-950 border-purple-300 dark:bg-purple-950 dark:text-purple-200' : assigned >= 20 ? 'bg-emerald-100 text-emerald-950 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-200' : 'bg-brand-100 text-brand-950 border-brand-300 dark:bg-brand-950 dark:text-brand-200'}`}>
+                      <td className="py-2.5 px-3 text-center">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${assigned >= 30 ? 'bg-purple-50 text-purple-700 border border-purple-200' : assigned >= 20 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-brand-50 text-brand-700 border border-brand-200'}`}>
                           {assigned >= 30 ? 'MAX CAPACITY (30)' : assigned >= 20 ? 'TARGET REACHED (20+)' : 'WITHIN CAPACITY'}
                         </span>
                       </td>
-                      <td className="py-4 px-4 text-center" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center justify-center gap-2">
+                      <td className="py-2.5 px-3 text-center" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-center gap-1.5">
                           <button
                             onClick={(e) => { e.stopPropagation(); setSelectedStaffDetail(s); }}
-                            className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-black transition cursor-pointer shadow-md ${isSelected ? 'bg-brand-700 text-white' : 'bg-brand-600 hover:bg-brand-700 text-white'}`}
+                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer ${isSelected ? 'bg-brand-600 text-white' : 'bg-slate-100 hover:bg-brand-50 hover:text-brand-600 text-slate-600 dark:bg-navy-800 dark:text-slate-300'}`}
                           >
                             Inspect Details →
                           </button>
                           <button
                             onClick={() => setShowStaffAllocationModal(true)}
-                            className="px-3.5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-navy-700 dark:hover:bg-navy-600 text-slate-900 dark:text-slate-100 text-xs sm:text-sm font-black transition cursor-pointer border border-slate-300 dark:border-navy-600 shadow-md"
+                            className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-navy-800 dark:text-slate-300 text-[10px] font-bold transition cursor-pointer"
                             title="Manage Faculty Allocation"
                           >
                             Reassign ⇄
@@ -2083,10 +2123,10 @@ export const HODCommandCenter: React.FC = () => {
                           {assigned > 0 && (
                             <button
                               onClick={() => handleUnassignAllForStaff(s.id, s.username)}
-                              className="px-3.5 py-2 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-900 dark:bg-rose-950 dark:hover:bg-rose-900 dark:text-rose-200 text-xs sm:text-sm font-black transition cursor-pointer border border-rose-300 dark:border-rose-800 shadow-md"
+                              className="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 text-[10px] font-bold transition cursor-pointer border border-rose-200 dark:border-rose-900/50"
                               title="Unassign All Mentees from this Staff Mentor"
                             >
-                              Unassign
+                              Unassign 
                             </button>
                           )}
                         </div>
