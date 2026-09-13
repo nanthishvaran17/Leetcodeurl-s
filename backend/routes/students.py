@@ -1255,6 +1255,75 @@ def update_student(
     return StudentOut.model_validate(student)
 
 
+@router.get("/{student_id}/audit-history")
+def get_student_audit_history(
+    student_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_security_access(resource_name="Student Audit History", required_roles=["admin", "super admin", "hod", "faculty", "staff"]))
+):
+    """
+    Retrieves secure audit log history & pipeline verification state for a student.
+    Enforces authentication, RBAC, and department scoping.
+    """
+    require_staff_student_access(db, current_user, student_id)
+
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student record not found.")
+
+    from backend.models import AuditLog
+    from sqlalchemy import or_
+
+    search_terms = [t for t in [student.reg_no, student.name] if t]
+    filter_conditions = []
+    for term in search_terms:
+        filter_conditions.append(AuditLog.details.ilike(f"%{term}%"))
+
+    logs = []
+    if filter_conditions:
+        logs = db.query(AuditLog).filter(or_(*filter_conditions)).order_by(AuditLog.timestamp.desc()).limit(30).all()
+
+    st = student.stats
+
+    history_entries = [
+        {
+            "id": l.id,
+            "action": l.action,
+            "details": l.details,
+            "user_name": l.user_name or "System",
+            "timestamp": l.timestamp.isoformat() if l.timestamp else None
+        }
+        for l in logs
+    ]
+
+    return {
+        "success": True,
+        "student": {
+            "id": student.id,
+            "name": student.name,
+            "reg_no": student.reg_no,
+            "username": student.username,
+            "leetcode_url": student.leetcode_url,
+            "department": student.department.name if student.department else None,
+            "year_level": student.year_level,
+        },
+        "stats_pipeline": {
+            "sync_status": st.sync_status if st else "NOT_STARTED",
+            "validation_status": getattr(st, "validation_status", "PENDING") if st else "PENDING",
+            "last_verified_at": st.last_verified_at.isoformat() if (st and st.last_verified_at) else None,
+            "last_attempt_at": getattr(st, "last_attempt_at", None).isoformat() if (st and getattr(st, "last_attempt_at", None)) else None,
+            "error_message": st.error_message if st else None,
+            "total_solved": st.total_solved if st else 0,
+            "easy_solved": st.easy_solved if st else 0,
+            "medium_solved": st.medium_solved if st else 0,
+            "hard_solved": st.hard_solved if st else 0,
+            "contest_rating": st.contest_rating if st else 0,
+        },
+        "logs": history_entries
+    }
+
+
+
 @router.delete("/{student_id}")
 def delete_student(
     student_id: int,

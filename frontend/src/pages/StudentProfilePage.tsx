@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, ExternalLink, Trophy, Flame, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X, BarChart2, Activity, BookOpen, Clock, Medal, TrendingUp, Monitor, Target } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Trophy, Flame, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X, BarChart2, Activity, BookOpen, Clock, Medal, TrendingUp, Monitor, Target, CheckCircle2 } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import api from '../services/api';
 import { SkillRadarChart } from '../components/SkillRadarChart';
@@ -9,6 +9,7 @@ import { ExportStatus } from '../components/ExportStatus';
 
 import { IDCardGenerator } from '../components/IDCardGenerator';
 import { StudentEditOverlay } from '../components/StudentEditOverlay';
+import { StudentAuditModal } from '../components/StudentAuditModal';
 import { IndividualAnalyticsDashboard } from '../components/analytics/IndividualAnalyticsDashboard';
 import { ContestAnalyticsView } from '../components/analytics/ContestAnalyticsView';
 import { ActivityAnalyticsView } from '../components/analytics/ActivityAnalyticsView';
@@ -31,9 +32,11 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   const [detail, setDetail] = useState<any>(student);
   const [insights, setInsights] = useState<any>(null);
   const [isLiveFetching, setIsLiveFetching] = useState(false);
+  const [syncSuccess, setSyncSuccess] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [liveFetchError, setLiveFetchError] = useState<string | null>(null);
   const [showEditOverlay, setShowEditOverlay] = useState(false);
+  const [showAuditModal, setShowAuditModal] = useState(false);
 
   const resolveTargetId = () => {
     return detail?.id || detail?.student_id || detail?.reg_no || student?.id || student?.student_id || student?.reg_no;
@@ -75,10 +78,30 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   const [downloadingForensic, setDownloadingForensic] = useState(false);
   const [downloadState, setDownloadState] = useState<DownloadState | null>(null);
 
+  // 1. LEETCODE BUTTON HANDLER
+  const handleOpenLeetCode = () => {
+    const rawUrl = detail?.leetcode_url || student?.leetcode_url;
+    const rawUser = detail?.username || student?.username || detail?.leetcode_username || student?.leetcode_username;
+    
+    let targetUrl: string | null = null;
+    if (rawUrl && /^https?:\/\/(www\.)?leetcode\.com\//i.test(rawUrl.trim())) {
+      targetUrl = rawUrl.trim();
+    } else if (rawUser && /^[a-zA-Z0-9_-]+$/.test(rawUser.trim())) {
+      targetUrl = `https://leetcode.com/u/${encodeURIComponent(rawUser.trim())}/`;
+    }
+
+    if (targetUrl) {
+      window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      notify.warning('No LeetCode Handle', 'This student record does not have a linked LeetCode username or profile URL.', { category: 'STUDENT PROFILE' });
+    }
+  };
+
+  // 4. CERTIFICATE BUTTON HANDLER
   const handleGenerateCert = async () => {
     const targetId = resolveTargetId();
-    if (!targetId) {
-      notify.error('Certificate Error', 'No valid student identifier found.', { category: 'CERTIFICATE ENGINE' });
+    if (!targetId || downloadingCert) {
+      if (!targetId) notify.error('Certificate Error', 'No valid student identifier found.', { category: 'CERTIFICATE ENGINE' });
       return;
     }
     setDownloadingCert(true);
@@ -99,7 +122,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         mimeType: 'application/pdf',
       });
       if (dlResult.success) {
-        notify.success('Certificate Downloaded', `Certificate ${filename} generated.`, { category: 'CERTIFICATE ENGINE' });
+        notify.success('Certificate Downloaded', `Certificate ${filename} generated successfully.`, { category: 'CERTIFICATE ENGINE' });
       } else {
         notify.error('Certificate Error', dlResult.error || 'Failed to generate certificate.', { category: 'CERTIFICATE ENGINE' });
       }
@@ -111,10 +134,11 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
     }
   };
 
+  // FORENSIC PDF EXPORT
   const handleDownloadForensicCert = async () => {
     const targetId = resolveTargetId();
-    if (!targetId) {
-      notify.error('Forensic Error', 'No valid student identifier found.', { category: 'FORENSIC AUDIT' });
+    if (!targetId || downloadingForensic) {
+      if (!targetId) notify.error('Forensic Error', 'No valid student identifier found.', { category: 'FORENSIC AUDIT' });
       return;
     }
     setDownloadingForensic(true);
@@ -131,9 +155,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         filename,
         onStateChange: (state) => setDownloadState(state)
       });
-      if (dlResult.success) {
-        // notification is handled by downloadManager
-      } else {
+      if (!dlResult.success) {
         notify.error('Forensic Error', dlResult.error || 'Failed to download report.', { category: 'FORENSIC AUDIT' });
       }
     } catch (err: any) {
@@ -144,24 +166,36 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
     }
   };
 
+  // 3. SYNC BUTTON HANDLER
   const handleLiveFetch = async () => {
     const targetId = resolveTargetId();
-    if (!targetId) {
-      notify.error('Sync Error', 'No valid student record ID found.', { category: 'LIVE SYNC' });
+    if (!targetId || isLiveFetching) {
+      if (!targetId) notify.error('Sync Error', 'No valid student record ID found.', { category: 'LIVE SYNC' });
       return;
     }
     
     setIsLiveFetching(true);
+    setSyncSuccess(false);
     setLiveFetchError(null);
     notify.info('Live Sync Started', 'Fetching latest data from LeetCode...', { category: 'LIVE SYNC' });
     try {
       await api.post(`/sync/student/${targetId}`);
       const refreshed = await api.get(`/students/${encodeURIComponent(targetId)}`);
       setDetail(refreshed.data);
-      notify.success('Sync Complete', 'Student profile has been updated.', { category: 'LIVE SYNC' });
+      setSyncSuccess(true);
+      notify.success('Sync Complete', 'LeetCode data synced successfully.', { category: 'LIVE SYNC' });
+      setTimeout(() => setSyncSuccess(false), 3000);
     } catch (err: any) {
       console.error("Live fetch error:", err);
-      const errMsg = err.response?.data?.detail || err.response?.data?.message || "Failed to fetch live stats";
+      const status = err.response?.status;
+      let errMsg = "Failed to fetch live statistics from LeetCode.";
+      if (status === 401) errMsg = "Session expired. Please log in again to sync.";
+      else if (status === 403) errMsg = "Access denied. Insufficient permissions to trigger student sync.";
+      else if (status === 404) errMsg = "Student record or LeetCode profile not found.";
+      else if (status === 429) errMsg = "LeetCode rate-limit reached. Please try again in a few moments.";
+      else if (err.response?.data?.detail) errMsg = err.response.data.detail;
+      else if (err.message) errMsg = err.message;
+      
       setLiveFetchError(errMsg);
       notify.error('Sync Failed', errMsg, { category: 'LIVE SYNC' });
     } finally {
@@ -169,6 +203,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
     }
   };
 
+  // 6. DELETE BUTTON HANDLER
   const handleDelete = async () => {
     const targetId = resolveTargetId();
     if (!targetId || isDeleting) return;
@@ -187,11 +222,18 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
     setIsDeleting(true);
     try {
       await api.delete(`/students/${encodeURIComponent(targetId)}?soft_delete=true`);
-      notify.success('Student Deactivated', `Student "${targetName}" deactivated successfully.`, { category: 'STUDENT PROFILE' });
+      notify.success('Student Deactivated', `Student "${targetName}" (${targetReg}) deactivated successfully.`, { category: 'STUDENT PROFILE' });
       window.dispatchEvent(new Event('refresh_dashboard_summary'));
       onBack();
     } catch (err: any) {
-      notify.error('Delete Failed', err.response?.data?.detail || 'Failed to deactivate student record.', { category: 'STUDENT PROFILE' });
+      const status = err.response?.status;
+      let errMsg = 'Failed to deactivate student record.';
+      if (status === 401) errMsg = 'Authentication required. Session may have expired.';
+      else if (status === 403) errMsg = 'Permission denied. Only authorized staff or administrators can delete records.';
+      else if (status === 404) errMsg = 'Student record not found or already deactivated.';
+      else if (err.response?.data?.detail) errMsg = err.response.data.detail;
+
+      notify.error('Delete Failed', errMsg, { category: 'STUDENT PROFILE' });
     } finally {
       setIsDeleting(false);
     }
@@ -216,8 +258,8 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           <button
             type="button"
             onClick={() => onBack()}
-            className="p-2 sm:p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer flex items-center space-x-1.5 sm:space-x-2 text-xs font-bold shadow-sm shrink-0"
-            title="Back"
+            className="p-2.5 sm:p-2.5 min-h-[44px] min-w-[44px] rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer flex items-center justify-center space-x-1.5 sm:space-x-2 text-xs font-bold shadow-sm shrink-0"
+            title="Back to Roster List"
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Back</span>
@@ -230,67 +272,89 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           </div>
         </div>
 
+        {/* ALL 6 ACTION BUTTONS WITH MIN 44PX TOUCH TARGETS */}
         <div className="flex items-center gap-1.5 sm:gap-2 w-full md:w-auto flex-wrap justify-start md:justify-end shrink-0 pr-1">
-            {detail?.leetcode_url && (
-              <a
-                href={detail.leetcode_url}
-                target="_blank"
-                rel="noreferrer"
-                className="px-2.5 sm:px-3 py-1.5 sm:py-2 min-h-[36px] sm:min-h-[40px] rounded-xl bg-white/5 hover:bg-brand-500/20 text-brand-300 hover:text-brand-200 border border-white/10 hover:border-brand-500/30 font-bold text-[11px] flex items-center space-x-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">LeetCode</span>
-              </a>
-            )}
+            
+            {/* 1. LEETCODE BUTTON (Blue) */}
+            <button
+              type="button"
+              onClick={handleOpenLeetCode}
+              className="px-3 py-2 min-h-[44px] min-w-[44px] sm:min-h-[40px] rounded-xl bg-white/5 hover:bg-brand-500/20 text-brand-300 hover:text-brand-200 border border-white/10 hover:border-brand-500/30 font-bold text-xs flex items-center justify-center space-x-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm shadow-xs"
+              title="Open Official LeetCode Profile in New Tab"
+            >
+              <ExternalLink className="w-4 h-4 text-brand-400" />
+              <span className="hidden sm:inline">LeetCode</span>
+            </button>
 
+            {/* 2. EDIT BUTTON (Amber) */}
             <button
               type="button"
               onClick={() => setShowEditOverlay(true)}
-              className="px-2.5 sm:px-3 py-1.5 sm:py-2 min-h-[36px] sm:min-h-[40px] rounded-xl bg-white/5 hover:bg-amber-500/20 text-amber-300 hover:text-amber-200 border border-white/10 hover:border-amber-500/30 font-bold text-[11px] flex items-center space-x-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm"
+              className="px-3 py-2 min-h-[44px] min-w-[44px] sm:min-h-[40px] rounded-xl bg-white/5 hover:bg-amber-500/20 text-amber-300 hover:text-amber-200 border border-white/10 hover:border-amber-500/30 font-bold text-xs flex items-center justify-center space-x-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm shadow-xs"
+              title="Edit Student Roster Profile & Credentials"
             >
-              <Edit3 className="w-3.5 h-3.5" />
+              <Edit3 className="w-4 h-4 text-amber-400" />
               <span className="hidden sm:inline">Edit</span>
             </button>
 
+            {/* 3. SYNC BUTTON (Purple) */}
             <button
               type="button"
               onClick={handleLiveFetch}
               disabled={isLiveFetching}
-              className="px-2.5 sm:px-3 py-1.5 sm:py-2 min-h-[36px] sm:min-h-[40px] rounded-xl bg-white/5 hover:bg-indigo-500/20 text-indigo-300 hover:text-indigo-200 border border-white/10 hover:border-indigo-500/30 font-bold text-[11px] flex items-center space-x-1.5 transition-all disabled:opacity-50 shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm"
+              className={`px-3 py-2 min-h-[44px] min-w-[44px] sm:min-h-[40px] rounded-xl border font-bold text-xs flex items-center justify-center space-x-1.5 transition-all disabled:opacity-50 shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm shadow-xs ${
+                syncSuccess
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                  : 'bg-white/5 hover:bg-indigo-500/20 text-indigo-300 hover:text-indigo-200 border-white/10 hover:border-indigo-500/30'
+              }`}
+              title="Synchronize Student Stats from LeetCode"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isLiveFetching ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">{isLiveFetching ? 'Syncing...' : 'Sync'}</span>
+              {syncSuccess ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span className="hidden sm:inline">Synced!</span>
+                </>
+              ) : (
+                <>
+                  <RefreshCw className={`w-4 h-4 text-indigo-400 ${isLiveFetching ? 'animate-spin' : ''}`} />
+                  <span className="hidden sm:inline">{isLiveFetching ? 'Syncing...' : 'Sync'}</span>
+                </>
+              )}
             </button>
 
+            {/* 4. CERTIFICATE BUTTON (Orange) */}
             <button
               type="button"
               onClick={handleGenerateCert}
               disabled={downloadingCert}
-              className="px-2.5 sm:px-3 py-1.5 sm:py-2 min-h-[36px] sm:min-h-[40px] rounded-xl bg-white/5 hover:bg-orange-500/20 text-orange-300 hover:text-orange-200 border border-white/10 hover:border-orange-500/30 font-bold text-[11px] flex items-center space-x-1.5 transition-all disabled:opacity-50 shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm"
+              className="px-3 py-2 min-h-[44px] min-w-[44px] sm:min-h-[40px] rounded-xl bg-white/5 hover:bg-orange-500/20 text-orange-300 hover:text-orange-200 border border-white/10 hover:border-orange-500/30 font-bold text-xs flex items-center justify-center space-x-1.5 transition-all disabled:opacity-50 shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm shadow-xs"
+              title="Generate & Download Official Performance Certificate PDF"
             >
-              <Award className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Certificate</span>
+              <Award className={`w-4 h-4 text-orange-400 ${downloadingCert ? 'animate-pulse' : ''}`} />
+              <span className="hidden sm:inline">{downloadingCert ? 'Generating...' : 'Certificate'}</span>
             </button>
 
+            {/* 5. AUDIT BUTTON (Green) */}
             <button
               type="button"
-              onClick={handleDownloadForensicCert}
-              disabled={downloadingForensic}
-              className="px-2.5 sm:px-3 py-1.5 sm:py-2 min-h-[36px] sm:min-h-[40px] rounded-xl bg-white/5 hover:bg-emerald-500/20 text-emerald-300 hover:text-emerald-200 border border-white/10 hover:border-emerald-500/30 font-bold text-[11px] flex items-center space-x-1.5 transition-all disabled:opacity-50 shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm"
+              onClick={() => setShowAuditModal(true)}
+              className="px-3 py-2 min-h-[44px] min-w-[44px] sm:min-h-[40px] rounded-xl bg-white/5 hover:bg-emerald-500/20 text-emerald-300 hover:text-emerald-200 border border-white/10 hover:border-emerald-500/30 font-bold text-xs flex items-center justify-center space-x-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm shadow-xs"
+              title="Open Student Telemetry & Forensic Audit Ledger"
             >
-              <FileText className="w-3.5 h-3.5" />
+              <FileText className="w-4 h-4 text-emerald-400" />
               <span className="hidden sm:inline">Audit</span>
             </button>
 
+            {/* 6. DELETE BUTTON (Red) */}
             <button
               type="button"
               onClick={handleDelete}
               disabled={isDeleting}
-              className="px-2.5 sm:px-3 py-1.5 sm:py-2 min-h-[36px] sm:min-h-[40px] rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 hover:text-rose-200 border border-rose-500/30 hover:border-rose-500/50 font-bold text-[11px] flex items-center space-x-1.5 transition-all disabled:opacity-50 shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm shadow-sm"
-              title="Delete / Deactivate Student"
+              className="px-3 py-2 min-h-[44px] min-w-[44px] sm:min-h-[40px] rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 hover:text-rose-200 border border-rose-500/30 hover:border-rose-500/50 font-bold text-xs flex items-center justify-center space-x-1.5 transition-all disabled:opacity-50 shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm shadow-sm"
+              title="Deactivate / Soft-Delete Student Record"
             >
-              <Trash2 className="w-3.5 h-3.5 text-rose-400" />
-              <span>{isDeleting ? '...' : 'Delete'}</span>
+              <Trash2 className="w-4 h-4 text-rose-400" />
+              <span>{isDeleting ? 'Deactivating...' : 'Delete'}</span>
             </button>
         </div>
       </div>
@@ -300,6 +364,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           {liveFetchError}
         </div>
       )}
+
 
       {/* Custom Tab Navigation */}
       <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-navy-900/50 overflow-x-auto custom-scrollbar shrink-0">
@@ -556,6 +621,16 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           window.dispatchEvent(new Event('refresh_dashboard_summary'));
         }}
       />
+
+      <StudentAuditModal
+        isOpen={showAuditModal}
+        studentId={resolveTargetId()}
+        studentName={detail?.name || student?.name}
+        regNo={detail?.reg_no || student?.reg_no}
+        onClose={() => setShowAuditModal(false)}
+        onDownloadForensic={handleDownloadForensicCert}
+      />
     </div>
   );
 };
+
