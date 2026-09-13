@@ -66,9 +66,13 @@ async def fetch_submissions_for_user(
                         if not title_slug or not submitted_at:
                             continue
                             
-                        # ONLY match submissions for the current contest's problem slugs
-                        if title_slug not in problem_slugs:
-                            continue
+                        # Register title_slug dynamically and match contest submissions
+                        if problem_slugs and title_slug not in problem_slugs:
+                            try:
+                                from backend.services.live_contest_poller import live_contest_poller
+                                live_contest_poller.register_discovered_question(title_slug)
+                            except Exception:
+                                pass
                             
                         # Idempotent insert based on new UNIQUE constraint
                         # (student_id, contest_id, title_slug, submitted_at)

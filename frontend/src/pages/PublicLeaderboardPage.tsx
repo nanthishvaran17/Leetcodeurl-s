@@ -18,6 +18,29 @@ interface PublicLeaderboardPageProps {
   onSelectStudent?: (student: StudentData) => void;
 }
 
+const getDeptBadgeStyle = (deptCode: string) => {
+  const code = (deptCode || '').toUpperCase().trim();
+  if (code.includes('IOT')) {
+    return 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30';
+  } else if (code.includes('CS') || code.includes('CYBER')) {
+    return 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30';
+  } else if (code === 'IT' || code.includes('INFORMATION')) {
+    return 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30';
+  } else if (code.includes('AIDS') || code.includes('AI')) {
+    return 'bg-teal-500/15 text-teal-600 dark:text-teal-400 border-teal-500/30';
+  } else if (code.includes('AGRI')) {
+    return 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30';
+  } else if (code.includes('EEE')) {
+    return 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30';
+  } else if (code.includes('ECE')) {
+    return 'bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-400 border-fuchsia-500/30';
+  } else if (code.includes('CSE')) {
+    return 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30';
+  } else {
+    return 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30';
+  }
+};
+
 export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ onSelectStudent }) => {
   const { data: initialStudents = [], isLoading: loading } = useStudentsQuery();
   // NOTE: useLiveLeaderboard() is NOT called here — the global singleton in GlobalWebSocketProvider
@@ -169,7 +192,11 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
                     <div className={`text-[10px] sm:text-xs font-black ${cfg.textColor}`}>{cfg.label}</div>
                     <div className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white truncate max-w-[85px] sm:max-w-[130px] mx-auto" title={s.name}>{s.name}</div>
                     <div className="text-[9px] sm:text-[10px] text-slate-500 font-mono truncate">{s.reg_no}</div>
-                    <div className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate">{s.department?.code} • {s.year_level} Yr</div>
+                    <div className="pt-0.5">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-black border ${getDeptBadgeStyle(s.department?.code || s.department?.name || '')}`}>
+                        {s.department?.code || 'DEPT'} • {s.year_level} Yr
+                      </span>
+                    </div>
                     <div className="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black text-[10px] sm:text-xs border border-emerald-500/20 mt-1 inline-block whitespace-nowrap">
                       {s.stats?.total_solved || 0} Solved
                     </div>

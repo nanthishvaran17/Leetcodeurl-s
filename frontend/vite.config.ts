@@ -19,10 +19,12 @@ export default defineConfig({
         secure: false,
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, res) => {
-            // Send graceful 503 response if backend is offline/reloading instead of hanging request
+            if (['ECONNRESET', 'ECONNABORTED', 'EPIPE'].includes((err as any)?.code)) return;
             if (res && 'writeHead' in res && !res.headersSent) {
-              res.writeHead(503, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ error: 'Backend service unavailable or starting up', detail: err.message }));
+              try {
+                res.writeHead(503, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Backend service unavailable or starting up', detail: err.message }));
+              } catch {}
             }
           });
         },
@@ -33,14 +35,16 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         configure: (proxy, _options) => {
-          proxy.on('error', (err) => {
-            // Gracefully handle client socket resets & disconnects during HMR / navigation
-            if (err?.code === 'ECONNRESET' || err?.code === 'ECONNABORTED') return;
+          proxy.on('error', (err, _req, _res) => {
+            // Silently absorb transient disconnects / socket resets
           });
-          proxy.on('proxyReqWs', (_proxyReq, _req, socket) => {
-            socket.on('error', (_err) => {
-              // Suppress socket error noise on dev server terminal
-            });
+          proxy.on('proxyReqWs', (proxyReq, _req, socket) => {
+            if (proxyReq) {
+              proxyReq.on('error', () => {});
+            }
+            if (socket) {
+              socket.on('error', () => {});
+            }
           });
         },
       },

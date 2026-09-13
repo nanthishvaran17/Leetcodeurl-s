@@ -30,6 +30,8 @@ export interface DownloadOptions {
   /** Additional query parameters or data */
   params?: Record<string, any>;
   data?: any;
+  /** Optional custom headers */
+  headers?: Record<string, string>;
   /** HTTP Method ('GET' | 'POST') */
   method?: 'GET' | 'POST';
   /** Optional state change listener */

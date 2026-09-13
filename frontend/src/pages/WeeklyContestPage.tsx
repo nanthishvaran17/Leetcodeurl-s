@@ -1,3 +1,4 @@
+// WeeklyContestPage.tsx - LeetCode Intelligence Dashboard
 import React, { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
@@ -189,18 +190,18 @@ const ContestMatrixRow = memo(({ r, actualIdx, isSelected, onEdit, onDelete, onS
   const isError = r.participation_status === 'DATA_ERROR' || r.participation_status === 'SOURCE_ERROR' || r.participation_status === 'CONFLICT' || r.status === 'USERNAME_NOT_FOUND' || r.status === 'FETCH_ERROR';
 
   const statusBadge = isPublicAttended
-    ? { cls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 ring-1 ring-emerald-400/30', label: 'PUBLIC ' }
+    ? { cls: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30', dot: 'bg-emerald-500', label: 'PUBLIC' }
     : isVirtualAttended
-      ? { cls: 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 ring-1 ring-purple-400/40', label: 'VIRTUAL ' }
+      ? { cls: 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/30', dot: 'bg-purple-500', label: 'VIRTUAL' }
       : isNotAttended
-        ? { cls: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300', label: 'NOT ATTENDED' }
+        ? { cls: 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30', dot: 'bg-rose-500', label: 'NOT ATTENDED' }
         : isNotVerifiedFinal
-          ? { cls: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-400/30', label: 'NOT VERIFIED (FINAL)' }
+          ? { cls: 'bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/30', dot: 'bg-slate-400', label: 'UNVERIFIED' }
           : isNotVerified
-            ? { cls: 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300 border border-brand-400/30', label: 'NOT VERIFIED ' }
+            ? { cls: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30', dot: 'bg-indigo-500', label: 'PENDING' }
             : isError
-              ? { cls: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300', label: 'DATA ERROR' }
-              : { cls: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300', label: 'PENDING' };
+              ? { cls: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30', dot: 'bg-amber-500', label: 'DATA ERROR' }
+              : { cls: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20', dot: 'bg-slate-400', label: 'PENDING' };
 
   const confBadgeCls = r.confidence === 'HIGH'
     ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
@@ -209,22 +210,24 @@ const ContestMatrixRow = memo(({ r, actualIdx, isSelected, onEdit, onDelete, onS
       : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30';
 
   const renderQ = (val: any) => {
-    if (!isAttended || val === '—' || val === null || val === undefined) return <span className="text-slate-300 dark:text-slate-600 font-normal">—</span>;
+    if (!isAttended || val === '—' || val === null || val === undefined) {
+      return <span className="inline-flex items-center justify-center w-6 h-6 rounded text-slate-300 dark:text-slate-600 font-bold text-xs">—</span>;
+    }
     return (val === 1 || val === '1')
-      ? <span className="inline-block w-5 h-5 leading-5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-black text-center">1</span>
-      : <span className="inline-block w-5 h-5 leading-5 rounded bg-rose-500/10 text-rose-400 dark:text-rose-500 font-bold text-center">0</span>;
+      ? <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-black text-xs border border-emerald-500/30 shadow-2xs">1</span>
+      : <span className="inline-block w-6 h-6 leading-6 rounded-md bg-rose-500/10 text-rose-500 dark:text-rose-400 font-bold text-xs border border-rose-500/20 text-center">0</span>;
   };
 
   return (
     <tr
-      className={`hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors ${!isAttended ? 'opacity-60' : ''} ${isSelected ? 'bg-brand-50/50 dark:bg-brand-900/20' : ''}`}
+      className={`hover:bg-slate-50/80 dark:hover:bg-navy-800/60 transition-colors border-b border-slate-100 dark:border-slate-800/60 ${!isAttended ? 'bg-slate-50/40 dark:bg-navy-950/40' : ''} ${isSelected ? 'bg-brand-50/60 dark:bg-brand-900/30' : ''}`}
       onClick={(e) => {
         if ((e.target as HTMLElement).closest('button') || (e.target as HTMLElement).tagName.toLowerCase() === 'input') return;
         onSelect(r);
       }}
       role="button"
     >
-      <td className="px-4 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
+      <td className="px-3 py-3 text-center" onClick={(e) => e.stopPropagation()}>
         <input
           type="checkbox"
           className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-navy-950 focus:ring-brand-500 checked:bg-brand-500"
@@ -232,58 +235,57 @@ const ContestMatrixRow = memo(({ r, actualIdx, isSelected, onEdit, onDelete, onS
           onChange={(e) => onCheckbox(r.reg_no, e.target.checked)}
         />
       </td>
-      <td className="px-4 py-2.5 text-center text-slate-400 font-mono">{actualIdx + 1}</td>
-      <td className="px-4 py-2.5 font-bold text-slate-900 dark:text-white font-mono text-[11px]">{r.reg_no}</td>
-      <td className="px-4 py-2.5 font-semibold text-slate-800 dark:text-slate-200">{r.name}</td>
-      <td className="px-4 py-2.5 text-center font-bold">
-        <span className="px-2 py-0.5 rounded-md text-[10px] bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300">
+      <td className="px-3 py-3 text-center text-xs font-mono font-semibold text-slate-500 dark:text-slate-400">{actualIdx + 1}</td>
+      <td className="px-3 py-3 font-semibold font-mono text-xs text-slate-800 dark:text-slate-200 tracking-tight whitespace-nowrap">{r.reg_no}</td>
+      <td className="px-3 py-3 font-bold text-slate-900 dark:text-white text-xs whitespace-nowrap max-w-[200px] truncate" title={r.name}>{r.name}</td>
+      <td className="px-3 py-3 text-center">
+        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-extrabold uppercase bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
           {r.dept}
         </span>
       </td>
-      <td className="px-4 py-2.5 text-center text-slate-600 dark:text-slate-400 font-bold">{r.year}</td>
-      <td className="px-4 py-2.5 text-center">
-        <div className="flex flex-col items-center gap-0.5">
-          <span className={`px-2 py-0.5 text-[9px] font-extrabold rounded-full whitespace-nowrap ${statusBadge.cls}`}>
+      <td className="px-3 py-3 text-center text-xs font-mono font-bold text-slate-600 dark:text-slate-400">{r.year}</td>
+      <td className="px-3 py-3 text-center">
+        <div className="flex flex-col items-center justify-center gap-0.5">
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-extrabold rounded-full border whitespace-nowrap ${statusBadge.cls}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${statusBadge.dot}`} />
             {statusBadge.label}
           </span>
           {r.confidence && (
-            <span className={`px-1.5 py-0.5 text-[8px] font-mono font-black rounded border ${confBadgeCls}`}>
+            <span className={`px-1.5 py-0.2 text-[8px] font-mono font-black rounded border ${confBadgeCls}`}>
               {r.confidence}
             </span>
           )}
         </div>
       </td>
-      <td className="px-4 py-2.5 text-center">{renderQ(r.q1)}</td>
-      <td className="px-4 py-2.5 text-center">{renderQ(r.q2)}</td>
-      <td className="px-4 py-2.5 text-center">{renderQ(r.q3)}</td>
-      <td className="px-4 py-2.5 text-center">{renderQ(r.q4)}</td>
-      <td className="px-4 py-2.5 text-right font-black">
+      <td className="px-2 py-3 text-center">{renderQ(r.q1)}</td>
+      <td className="px-2 py-3 text-center">{renderQ(r.q2)}</td>
+      <td className="px-2 py-3 text-center">{renderQ(r.q3)}</td>
+      <td className="px-2 py-3 text-center">{renderQ(r.q4)}</td>
+      <td className="px-3 py-3 text-center">
         {isVirtualAttended ? (
-          <span className="text-purple-600 dark:text-purple-400 font-mono font-black">{r.total_solved ?? 0}/4 (Virtual)</span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-700 dark:text-purple-300 font-mono font-bold text-xs border border-purple-500/20">
+            {r.total_solved ?? 0}/4 <span className="text-[9px] opacity-70">(V)</span>
+          </span>
         ) : isPublicAttended ? (
-          <span className="text-brand-600 dark:text-brand-400 font-mono">{r.total_solved ?? '—'}/4</span>
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-400 font-mono font-black text-xs border border-brand-500/20">
+            {r.total_solved ?? '—'}/4
+          </span>
         ) : (
-          <span className="text-slate-300 dark:text-slate-600">—</span>
+          <span className="text-slate-300 dark:text-slate-600 font-bold text-xs">—</span>
         )}
       </td>
-      <td className="px-4 py-2.5 text-right font-mono text-slate-600 dark:text-slate-400">
-        {isVirtualAttended ? <span className="text-slate-400 italic text-[10px]">Virtual</span> : (isPublicAttended ? (r.rank || '—') : '—')}
-      </td>
-      <td className="px-4 py-2.5 text-right font-mono font-bold text-amber-600 dark:text-amber-400">
-        {isVirtualAttended ? <span className="text-slate-400 italic text-[10px]">—</span> : (isPublicAttended ? (r.rating && !isNaN(Number(r.rating)) && Number(r.rating) > 0 ? Number(r.rating).toFixed(1) : '—') : '—')}
-      </td>
-      <td className="px-4 py-2.5 text-center whitespace-nowrap">
+      <td className="px-3 py-3 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-center space-x-1.5">
           <button
             onClick={() => onEdit(r)}
-            className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900 text-indigo-600 dark:text-indigo-400 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900 text-indigo-600 dark:text-indigo-400 transition-all hover:scale-105 cursor-pointer"
             title={`Edit ${r.name}`}
           >
             <Edit3 className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => onDelete(r)}
-            className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-400 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-400 transition-all hover:scale-105 cursor-pointer"
             title={`Deactivate ${r.name}`}
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -695,6 +697,14 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, debouncedSearchTerm, currentPage, pageSize]);
 
+  // Auto-switch tab to live matrix view when contest is LIVE
+  const isSessionLiveNow = currentSession?.status === 'LIVE';
+  useEffect(() => {
+    if (isSessionLiveNow) {
+      setActiveTab('matrix');
+    }
+  }, [isSessionLiveNow]);
+
 
   async function fetchInitialContestData() {
     try {
@@ -711,8 +721,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       }
 
       const [currRes, allSessionsRes] = await Promise.all([
-        fetchWithCacheDedupe('current_contest_session', () => api.get('/contests/current-session').then(r => r.data), { ttlMs: 15 * 60 * 1000 }),
-        fetchWithCacheDedupe('all_contest_sessions', () => api.get('/contests/sessions').then(r => r.data), { ttlMs: 15 * 60 * 1000 })
+        fetchWithCacheDedupe('current_contest_session', () => api.get('/contests/current-session').then(r => r.data), { ttlMs: 5000 }),
+        fetchWithCacheDedupe('all_contest_sessions', () => api.get('/contests/sessions').then(r => r.data), { ttlMs: 5000 })
       ]);
       
       setCurrentSession(currRes);
@@ -800,7 +810,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       const summaryPromise = fetchWithCacheDedupe(
         `contest_summary_${requestedSessionId}`,
         () => api.get(`/contests/sessions/${requestedSessionId}/summary`, { signal: controller.signal }).then(r => r.data),
-        { signal: controller.signal, ttlMs: 15 * 60 * 1000 }
+        { signal: controller.signal, ttlMs: 5000 }
       ).then((sData) => {
         summaryApiTime = performance.now() - t0;
         if (reqId === latestReqIdRef.current && selectedSessionIdRef.current === requestedSessionId) {
@@ -816,7 +826,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       const questionsPromise = fetchWithCacheDedupe(
         `contest_questions_${requestedSessionId}`,
         () => api.get(`/contests/sessions/${requestedSessionId}/questions`, { signal: controller.signal }).then(r => r.data),
-        { signal: controller.signal, ttlMs: 15 * 60 * 1000 }
+        { signal: controller.signal, ttlMs: 5000 }
       ).then((qData) => {
         questionsApiTime = performance.now() - t0;
         if (reqId === latestReqIdRef.current && selectedSessionIdRef.current === requestedSessionId) {
@@ -1054,8 +1064,23 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     const contestNum = match ? match[0] : selectedSessionId;
     const ext = format === 'excel' ? 'xlsx' : format === 'word' ? 'docx' : format === 'zip' ? 'zip' : format;
 
-    let filename = `NEC_Weekly_Contest_${contestNum}_PUBLIC`;
-    filename += `.${ext}`;
+    // Build clean institutional filename reflecting active filters
+    const d = (selectedDeptFilter || 'ALL').toUpperCase().trim();
+    const deptSlug = (d === 'ALL' || d === '' || d === 'ALL DEPARTMENTS') 
+      ? 'All-Depts' 
+      : d.replace(/[\(\)\s]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+
+    const y = (selectedYearFilter || 'ALL').toUpperCase().trim();
+    let yearSlug = 'All-Yrs';
+    if (y !== 'ALL' && y !== '') {
+      const yClean = y.replace('YEAR', '').replace('YR', '').trim();
+      yearSlug = `${yClean}-Yr`;
+    }
+
+    const a = (selectedAttendanceFilter || 'ALL').toUpperCase().trim();
+    const attSlug = (a !== 'ALL' && a !== '' && a !== 'PUBLIC') ? `_${a.replace(/\s+/g, '_')}` : '';
+
+    const filename = `NEC_WC${contestNum}_${deptSlug}_${yearSlug}${attSlug}.${ext}`;
 
     try {
       const res = await downloadManager.download({
@@ -1405,8 +1430,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
       {/* 1. SLEEK INSTITUTIONAL HERO HEADER */}
       <div className={`relative overflow-hidden rounded-3xl text-white p-6 sm:p-8 shadow-2xl border transition-all duration-500 ${isLive
-        ? 'bg-gradient-to-br from-rose-900 via-slate-900 to-indigo-900 border-rose-500/60 shadow-rose-900/40 before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/5 before:to-transparent before:-translate-x-full before:animate-[shimmer_2s_infinite]'
-        : 'bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 border-brand-500/30 shadow-indigo-900/10'
+        ? 'bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 border-emerald-500/50 shadow-emerald-500/10 before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/5 before:to-transparent before:-translate-x-full before:animate-[shimmer_2s_infinite]'
+        : 'bg-gradient-to-r from-slate-950 via-navy-950 to-slate-950 border-indigo-500/30 shadow-indigo-950/20'
         }`}>
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-6">
@@ -1660,13 +1685,13 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       {isLive && (
         <div className="space-y-4 animate-fade-in">
           {/* Live Timer Bar */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-rose-900/60 via-slate-900 to-indigo-950 border border-rose-500/30 text-white flex flex-wrap items-center justify-between gap-4 shadow-lg">
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 border border-emerald-500/40 text-white flex flex-wrap items-center justify-between gap-4 shadow-xl">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400">
-                <Clock className="w-5 h-5 animate-spin" />
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                <Clock className="w-5 h-5 animate-spin text-emerald-400" />
               </div>
               <div>
-                <p className="text-xs font-black uppercase text-rose-300 tracking-wider">CONTEST TIME REMAINING</p>
+                <p className="text-xs font-black uppercase text-emerald-400 tracking-wider">CONTEST TIME REMAINING</p>
                 <p className="text-2xl font-mono font-black text-white">
                   <LiveCountdownClock endSec={timeRemainingSec} label="Time remaining" />
                 </p>
@@ -1676,7 +1701,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             <div className="flex items-center gap-6">
               <div className="text-right">
                 <p className="text-[10px] font-bold text-slate-400 uppercase">Contest Ends At</p>
-                <p className="text-sm font-mono font-black text-rose-200">09:30:00 AM IST</p>
+                <p className="text-sm font-mono font-black text-indigo-300">09:30:00 AM IST</p>
               </div>
               <div className="text-right">
                 <p className="text-[10px] font-bold text-slate-400 uppercase">Next Sync In</p>
@@ -2364,24 +2389,6 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
                         <button
                           type="button"
-                          onClick={() => { downloadReportFile('csv'); setShowExportMenu(false); }}
-                          className="w-full flex items-center justify-between h-11 sm:h-12 px-3 rounded-xl text-left transition-all duration-150 group hover:bg-teal-500/10 dark:hover:bg-teal-500/15 cursor-pointer"
-                        >
-                          <div className="flex items-center space-x-3 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-teal-500/10 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
-                              <FileText className="w-5 h-5 stroke-[2]" />
-                            </div>
-                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-teal-600 dark:group-hover:text-teal-300 transition-colors">
-                              Export as CSV
-                            </span>
-                          </div>
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-500/15 text-teal-600 dark:text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition-colors">
-                            .CSV
-                          </span>
-                        </button>
-
-                        <button
-                          type="button"
                           onClick={() => { downloadReportFile('pdf'); setShowExportMenu(false); }}
                           className="w-full flex items-center justify-between h-11 sm:h-12 px-3 rounded-xl text-left transition-all duration-150 group hover:bg-rose-500/10 dark:hover:bg-rose-500/15 cursor-pointer"
                         >
@@ -2490,23 +2497,27 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
           {/* Department Select — Premium Custom Dropdown */}
           {(() => {
+            const getDeptColor = (deptCode: string) => {
+              const code = (deptCode || '').toUpperCase().trim();
+              if (code.includes('IOT')) return 'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800';
+              if (code.includes('CS') || code.includes('CYBER')) return 'text-blue-600 bg-blue-50 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800';
+              if (code === 'IT' || code.includes('INFORMATION')) return 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
+              if (code.includes('AIDS') || code.includes('AI')) return 'text-teal-600 bg-teal-50 dark:bg-teal-950 dark:text-teal-300 border border-teal-200 dark:border-teal-800';
+              if (code.includes('AGRI')) return 'text-rose-600 bg-rose-50 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800';
+              if (code.includes('EEE')) return 'text-orange-600 bg-orange-50 dark:bg-orange-950 dark:text-orange-300 border border-orange-200 dark:border-orange-800';
+              if (code.includes('ECE')) return 'text-fuchsia-600 bg-fuchsia-50 dark:bg-fuchsia-950 dark:text-fuchsia-300 border border-fuchsia-200 dark:border-fuchsia-800';
+              if (code.includes('CSE')) return 'text-purple-600 bg-purple-50 dark:bg-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-800';
+              return 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800';
+            };
+
             const DEPT_OPTIONS = [
-              { value: 'ALL', label: 'All Departments', code: 'ALL', color: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300' },
-              ...departments.map((d, index) => {
-                const colors = [
-                  'text-purple-600 bg-purple-50 dark:bg-purple-950 dark:text-purple-300',
-                  'text-cyan-600 bg-cyan-50 dark:bg-cyan-950 dark:text-cyan-300',
-                  'text-blue-600 bg-blue-50 dark:bg-blue-950 dark:text-blue-300',
-                  'text-emerald-600 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300',
-                  'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300',
-                ];
-                return {
-                  value: d.code,
-                  label: d.name,
-                  code: d.code,
-                  color: colors[index % colors.length]
-                };
-              })
+              { value: 'ALL', label: 'All Departments', code: 'ALL', color: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800' },
+              ...departments.map((d) => ({
+                value: d.code,
+                label: d.name,
+                code: d.code,
+                color: getDeptColor(d.code)
+              }))
             ];
             const selectedDeptObj = DEPT_OPTIONS.find(o => o.value === selectedDeptFilter) || DEPT_OPTIONS[0];
             return (
@@ -2568,15 +2579,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   <div className="flex items-center gap-1.5 mt-0.5">
                     {selectedYearFilter === 'ALL' ? (
                       <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300">ALL</span>
-                    ) : selectedYearFilter === '2' ? (
+                    ) : selectedYearFilter === '2' || selectedYearFilter === 'II' ? (
                       <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300">II</span>
-                    ) : selectedYearFilter === '3' ? (
+                    ) : selectedYearFilter === '3' || selectedYearFilter === 'III' ? (
                       <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300">III</span>
                     ) : (
                       <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300">IV</span>
                     )}
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
-                      {selectedYearFilter === 'ALL' ? 'All Academic Years' : selectedYearFilter === '2' ? 'Year (2025–2029)' : selectedYearFilter === '3' ? 'Year (2024–2028)' : 'Year (2023–2027)'}
+                      {selectedYearFilter === 'ALL' ? 'All Academic Years' : (selectedYearFilter === '2' || selectedYearFilter === 'II') ? 'Year (2025–2029)' : (selectedYearFilter === '3' || selectedYearFilter === 'III') ? 'Year (2024–2028)' : 'Year (2023–2027)'}
                     </span>
                   </div>
                 )}
@@ -2588,9 +2599,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               <div className="absolute z-[100] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-lg overflow-hidden">
                 {[
                   { value: 'ALL', label: 'All Academic Years', code: 'ALL', color: 'text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300' },
-                  { value: '2',  label: 'Year (2025–2029)',    code: 'II',  color: 'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
-                  { value: '3', label: 'Year (2024–2028)',   code: 'III', color: 'text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300' },
-                  { value: '4',  label: 'Year (2023–2027)',    code: 'IV',  color: 'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
+                  { value: 'II',  label: 'Year (2025–2029)',    code: 'II',  color: 'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
+                  { value: 'III', label: 'Year (2024–2028)',   code: 'III', color: 'text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300' },
+                  { value: 'IV',  label: 'Year (2023–2027)',    code: 'IV',  color: 'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
                 ].map(opt => (
                   <button
                     key={opt.value}
@@ -2598,7 +2609,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => { setSelectedYearFilter(opt.value); setYearOpen(false); }}
                     className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${
-                      selectedYearFilter === opt.value
+                      selectedYearFilter === opt.value || (selectedYearFilter === '3' && opt.value === 'III') || (selectedYearFilter === '2' && opt.value === 'II') || (selectedYearFilter === '4' && opt.value === 'IV')
                         ? 'bg-brand-50 dark:bg-brand-950/60'
                         : 'hover:bg-slate-50 dark:hover:bg-navy-800'
                     }`}
@@ -2606,9 +2617,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${opt.color}`}>{opt.code}</span>
                     <span className={`text-xs truncate flex-1 ${
-                      selectedYearFilter === opt.value ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-slate-700 dark:text-slate-300'
+                      selectedYearFilter === opt.value || (selectedYearFilter === '3' && opt.value === 'III') || (selectedYearFilter === '2' && opt.value === 'II') || (selectedYearFilter === '4' && opt.value === 'IV') ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-slate-700 dark:text-slate-300'
                     }`}>{opt.label}</span>
-                    {selectedYearFilter === opt.value && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
+                    {(selectedYearFilter === opt.value || (selectedYearFilter === '3' && opt.value === 'III') || (selectedYearFilter === '2' && opt.value === 'II') || (selectedYearFilter === '4' && opt.value === 'IV')) && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
                   </button>
                 ))}
               </div>
@@ -3249,15 +3260,34 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               )}
 
               {/* Table Legend */}
-              <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 bg-slate-50 dark:bg-navy-950 text-[10px] font-bold">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span className="font-extrabold uppercase text-slate-400">Legend:</span>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-extrabold">PUBLIC </span>
-                  <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 font-extrabold">VIRTUAL </span>
-                  <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-extrabold">NOT ATTENDED </span>
-                  <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-extrabold">DATA ERROR</span>
+              <div className="px-5 py-3 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 bg-slate-50/80 dark:bg-navy-900/60 text-xs font-medium backdrop-blur-xs">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-extrabold text-[11px] uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-1">Legend:</span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold border border-emerald-500/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    PUBLIC
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-300 text-[10px] font-extrabold border border-purple-500/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                    VIRTUAL
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300 text-[10px] font-extrabold border border-rose-500/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                    NOT ATTENDED
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 text-[10px] font-extrabold border border-amber-500/20">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                    DATA ERROR
+                  </span>
                 </div>
-                <span className="text-slate-400 font-medium">Q cells: <b className="text-emerald-600">1</b> = solved | <b className="text-rose-500">0</b> = not solved | <b>—</b> = not attended</span>
+                <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 bg-white dark:bg-navy-950 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
+                  <span className="font-semibold">Q cells:</span>
+                  <span className="inline-flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400"><b className="w-4 h-4 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-center leading-4 text-[10px]">1</b> solved</span>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <span className="inline-flex items-center gap-1 font-bold text-rose-500 dark:text-rose-400"><b className="w-4 h-4 rounded bg-rose-500/20 text-rose-500 dark:text-rose-400 text-center leading-4 text-[10px]">0</b> unsolved</span>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <span className="text-slate-400 font-bold"><b>—</b> not attended</span>
+                </div>
               </div>
 
               {/* Bulk Action Bar */}
@@ -3297,11 +3327,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               )}
 
               <div className="table-responsive-container w-full min-w-0 max-w-full max-h-[75vh] overflow-y-auto overflow-x-auto">
-                <table className="w-full min-w-[900px] text-left text-xs ">
-                  <thead className="bg-navy-950 text-white font-black uppercase sticky top-0 z-10 hidden md:table-header-group">
-                    <tr>
+                <table className="w-full min-w-[900px] text-left text-xs">
+                  <thead className="bg-slate-900 dark:bg-navy-900 text-slate-200 text-[11px] font-black uppercase tracking-wider sticky top-0 z-10 shadow-sm hidden md:table-header-group">
+                    <tr className="border-b border-slate-800 dark:border-slate-700/80">
                       {/* Checkbox Column */}
-                      <th className="px-4 py-3 text-center w-12">
+                      <th className="px-3 py-3.5 text-center w-10">
                         <input 
                           type="checkbox" 
                           className="w-4 h-4 rounded border-slate-600 bg-navy-900 focus:ring-brand-500 checked:bg-brand-500"
@@ -3316,51 +3346,41 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                           }}
                         />
                       </th>
-                      <th className="px-4 py-3 text-center">S.No</th>
-                      <th className="px-4 py-3">Reg No</th>
-                      <th className="px-4 py-3">Student Name</th>
-                      <th className="px-4 py-3 text-center">Dept</th>
-                      <th className="px-4 py-3 text-center">Year</th>
-                      <th className="px-4 py-3 text-center">Status</th>
+                      <th className="px-3 py-3.5 text-center text-slate-300">S.No</th>
+                      <th className="px-3 py-3.5 text-left text-slate-300 whitespace-nowrap">Reg No</th>
+                      <th className="px-3 py-3.5 text-left text-slate-300 whitespace-nowrap">Student Name</th>
+                      <th className="px-3 py-3.5 text-center text-slate-300">Dept</th>
+                      <th className="px-3 py-3.5 text-center text-slate-300">Year</th>
+                      <th className="px-3 py-3.5 text-center text-slate-300">Status</th>
                       
                       {/* Sortable Columns */}
                       {['q1', 'q2', 'q3', 'q4'].map((qKey) => (
-                        <th key={qKey} className="px-4 py-3 text-center cursor-pointer hover:bg-navy-800 transition-colors group select-none" onClick={() => handleSort(qKey)}>
+                        <th key={qKey} className="px-2 py-3.5 text-center cursor-pointer hover:bg-slate-800 transition-colors group select-none text-slate-300" onClick={() => handleSort(qKey)}>
                           <div className="flex items-center justify-center space-x-1">
                             <span>{qKey.toUpperCase()}</span>
-                            <span className="text-[10px] opacity-50 group-hover:opacity-100">
-                              {sortConfig?.key === qKey ? (sortConfig.direction === 'asc' ? '' : '') : '↕'}
+                            <span className="text-[10px] opacity-40 group-hover:opacity-100">
+                              {sortConfig?.key === qKey ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
                             </span>
                           </div>
                         </th>
                       ))}
                       
-                      <th className="px-4 py-3 text-right cursor-pointer hover:bg-navy-800 transition-colors group select-none" onClick={() => handleSort('solved')}>
-                        <div className="flex items-center justify-end space-x-1">
+                      <th className="px-3 py-3.5 text-center cursor-pointer hover:bg-slate-800 transition-colors group select-none text-slate-300" onClick={() => handleSort('solved')}>
+                        <div className="flex items-center justify-center space-x-1">
                           <span>Contest Solved</span>
-                          <span className="text-[10px] opacity-50 group-hover:opacity-100">
-                            {sortConfig?.key === 'solved' ? (sortConfig.direction === 'asc' ? '' : '') : '↕'}
+                          <span className="text-[10px] opacity-40 group-hover:opacity-100">
+                            {sortConfig?.key === 'solved' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
                           </span>
                         </div>
                       </th>
                       
-                      <th className="px-4 py-3 text-right cursor-pointer hover:bg-navy-800 transition-colors group select-none" onClick={() => handleSort('rank')}>
-                        <div className="flex items-center justify-end space-x-1">
-                          <span>Rank</span>
-                          <span className="text-[10px] opacity-50 group-hover:opacity-100">
-                            {sortConfig?.key === 'rank' ? (sortConfig.direction === 'asc' ? '' : '') : '↕'}
-                          </span>
-                        </div>
-                      </th>
-                      
-                      <th className="px-4 py-3 text-right">Rating</th>
-                      <th className="px-4 py-3 text-center">Actions</th>
+                      <th className="px-3 py-3.5 text-center text-slate-300">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                     {paginatedMatrixRows.length === 0 ? (
                       <tr>
-                        <td colSpan={14} className="p-12 text-center text-slate-500 font-bold">
+                        <td colSpan={12} className="p-12 text-center text-slate-500 font-bold">
                           No students found
                         </td>
                       </tr>

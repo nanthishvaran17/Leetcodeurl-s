@@ -36,15 +36,49 @@ def get_or_create_current_weekly_session(db: Session) -> WeeklySession:
             db.commit()
 
         dynamic_status = meta.get("status", "SCHEDULED")
-        if dynamic_status == "FINALIZED" and latest_session.status in ("LIVE", "ACTIVE"):
+        if dynamic_status == "FINALIZED" and latest_session.status in ("LIVE", "ACTIVE", "SCHEDULED"):
             latest_session.status = "FINALIZED"
             db.commit()
         elif dynamic_status == "SCHEDULED" and latest_session.status in ("LIVE", "ACTIVE"):
             latest_session.status = "SCHEDULED"
             db.commit()
-        elif dynamic_status == "LIVE" and latest_session.status != "LIVE":
-            latest_session.status = "LIVE"
-            db.commit()
+        elif dynamic_status == "LIVE":
+            if latest_session.status != "LIVE":
+                latest_session.status = "LIVE"
+                latest_session.baseline_snapshot_id = f"start_{latest_session.id}"
+                db.commit()
+
+            # Ensure baseline student tracking records exist for this session
+            existing_count = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == latest_session.id).count()
+            if existing_count == 0:
+                students = db.query(Student).options(joinedload(Student.department)).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+                latest_session.total_students = len(students)
+                now_dt = datetime.datetime.utcnow()
+                new_results = [
+                    WeeklyPublicResult(
+                        session_id=latest_session.id,
+                        student_id=student.id,
+                        reg_no=student.reg_no,
+                        name=student.name,
+                        dept=student.department.code if student.department else "CSE",
+                        year=student.year_level or "III",
+                        participation_status="PENDING",
+                        state="PENDING",
+                        previous_state=None,
+                        state_changed_at=now_dt,
+                        q1=0, q2=0, q3=0, q4=0,
+                        total_contest_solved=0,
+                        fetch_status="PENDING",
+                        data_fetch_status="DATA_UNAVAILABLE",
+                        confidence="UNVERIFIED"
+                    )
+                    for student in students
+                ]
+                if new_results:
+                    db.add_all(new_results)
+                db.commit()
+                logger.info(f"Initialized baseline student records for LIVE contest session {latest_session.id} ({len(students)} students)")
+
         return latest_session
 
     try:

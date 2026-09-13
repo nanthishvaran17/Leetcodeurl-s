@@ -203,55 +203,42 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
   };
 
   const getPillColor = (opt: GlobalFilterOption | undefined, isSelected: boolean) => {
-    if (isSelected) return 'bg-white/20 text-white border border-white/30';
     if (!opt) return 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700';
     if (opt.pillColorClass) return opt.pillColorClass;
-    if (opt.value === 'ALL' || opt.value === '' || opt.value === 'all') return 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700';
+    if (opt.value === 'ALL' || opt.value === '' || opt.value === 'all') {
+      return isSelected 
+        ? 'bg-white/25 text-white border-white/40 font-black' 
+        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700';
+    }
     
     const textKey = `${opt.pillText || ''} ${opt.value || ''} ${opt.label || ''}`.toUpperCase();
     
-    if (textKey.includes('CSE(CS)') || textKey.includes('CYBER') || textKey.includes('CSE-CS') || opt.value === '1') {
-      return 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 border-blue-300 dark:border-blue-700';
+    if (textKey.includes('IOT')) {
+      return isSelected ? 'bg-amber-400 text-slate-950 font-black border-amber-300 shadow-sm' : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30';
     }
-    if (textKey.includes('CSE(IOT)') || textKey.includes('IOT') || textKey.includes('CSE-IOT') || opt.value === '2') {
-      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border-amber-300 dark:border-amber-700';
+    if (textKey.includes('CS') || textKey.includes('CYBER')) {
+      return isSelected ? 'bg-blue-400 text-slate-950 font-black border-blue-300 shadow-sm' : 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30';
     }
-    if (textKey.includes('IT') || textKey.includes('INFORMATION') || opt.value === '7') {
-      return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700';
+    if (textKey.includes('IT') || textKey.includes('INFORMATION')) {
+      return isSelected ? 'bg-emerald-400 text-slate-950 font-black border-emerald-300 shadow-sm' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30';
     }
-    if (textKey.includes('CSE') || textKey.includes('COMPUTER SCIENCE')) {
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700';
+    if (textKey.includes('AIDS') || textKey.includes('ARTIFICIAL') || textKey.includes('AI')) {
+      return isSelected ? 'bg-teal-400 text-slate-950 font-black border-teal-300 shadow-sm' : 'bg-teal-500/15 text-teal-600 dark:text-teal-400 border-teal-500/30';
     }
     if (textKey.includes('AGRI')) {
-      return 'bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300 border-rose-300 dark:border-rose-700';
-    }
-    if (textKey.includes('AIDS') || textKey.includes('ARTIFICIAL')) {
-      return 'bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300 border-teal-300 dark:border-teal-700';
+      return isSelected ? 'bg-rose-400 text-slate-950 font-black border-rose-300 shadow-sm' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30';
     }
     if (textKey.includes('EEE') || textKey.includes('ELECTRICAL')) {
-      return 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300 border-orange-300 dark:border-orange-700';
+      return isSelected ? 'bg-orange-400 text-slate-950 font-black border-orange-300 shadow-sm' : 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30';
     }
     if (textKey.includes('ECE') || textKey.includes('ELECTRONICS')) {
-      return 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 border-red-300 dark:border-red-700';
+      return isSelected ? 'bg-fuchsia-400 text-slate-950 font-black border-fuchsia-300 shadow-sm' : 'bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-400 border-fuchsia-500/30';
     }
-    if (textKey.includes('MECH')) {
-      return 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 border-purple-300 dark:border-purple-700';
-    }
-    if (textKey.includes('CIVIL')) {
-      return 'bg-lime-100 text-lime-800 dark:bg-lime-900/50 dark:text-lime-300 border-lime-300 dark:border-lime-700';
+    if (textKey.includes('CSE') || textKey.includes('COMPUTER')) {
+      return isSelected ? 'bg-purple-400 text-slate-950 font-black border-purple-300 shadow-sm' : 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30';
     }
 
-    const colors = [
-      'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
-      'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
-      'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800',
-      'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200 dark:border-rose-800',
-      'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800',
-      'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border-purple-200 dark:border-purple-800'
-    ];
-    let hash = 0;
-    for (let i = 0; i < opt.value.length; i++) hash = opt.value.charCodeAt(i) + ((hash << 5) - hash);
-    return colors[Math.abs(hash) % colors.length];
+    return isSelected ? 'bg-indigo-400 text-slate-950 font-black border-indigo-300 shadow-sm' : 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30';
   };
 
   const activeSearchPlaceholder = searchPlaceholder || (label ? `Search ${label.toLowerCase()}...` : 'Search department...');

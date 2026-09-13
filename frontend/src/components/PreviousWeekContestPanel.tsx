@@ -178,43 +178,40 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
       const latestSessionId = sessionId;
 
-      // Check instant cached summary
-      const cached = getCachedContestData<any>(`contest_summary_${latestSessionId}`);
-      if (cached && !summary) {
-        setSummary({
-          session_id: cached.sessionId,
-          contest_slug: cached.contestId || `weekly-contest-${cached.contestNumber}`,
-          contest_title: cached.contestName,
-          target_date_ist: cached.sessionDate,
-          validation_status: cached.status,
-          publish_status: cached.status,
-          cache_state: 'HIT',
-          dataset_version: 1,
-          sync_id: 'live',
-          sync_started_at: '',
-          metrics: {
-            PUBLIC: cached.participantCount || 0,
-            VIRTUAL: 0,
-            NOT_PARTICIPATED: Math.max(0, (cached.totalStudents || 0) - (cached.participantCount || 0)),
-            NOT_VERIFIED: 0,
-            MISSING_LEETCODE_USERNAME: 0,
-            TOTAL_STUDENTS: cached.totalStudents || 0,
+      // 1. Instant Cache Hydration from memory/local storage (0ms load time!)
+      try {
+        const localKey = `cache_prev_panel_${latestSessionId}`;
+        const stored = localStorage.getItem(localKey);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.summary && !summary) {
+            setSummary(parsed.summary);
+            setLoading(false);
           }
-        });
-        setLoading(false);
+          if (parsed.records && Array.isArray(parsed.records) && records.length === 0) {
+            setRecords(parsed.records);
+          }
+        }
+      } catch (e) {
+        // Ignore storage read errors
       }
 
       if (forceSync && latestSessionId) {
         await api.post(`/contests/sessions/${latestSessionId}/sync`);
       }
 
-      const [summaryData, matrixData] = await Promise.all([
-        fetchWithCacheDedupe(`contest_summary_${latestSessionId}`, () => api.get(`/contests/sessions/${latestSessionId}/summary`).then(r => r.data), { force: forceSync, ttlMs: 15 * 60 * 1000 }),
-        fetchWithCacheDedupe(`contest_matrix_preview_${latestSessionId}`, () => api.get(`/contests/sessions/${latestSessionId}/matrix?paginated=true&page=1&limit=100`).then(r => r.data), { force: forceSync, ttlMs: 15 * 60 * 1000 })
-      ]);
+      // 2. Stream Summary First (Ultra-fast ~20ms response) to clear loading state immediately
+      const summaryPromise = api.get(`/contests/sessions/${latestSessionId}/summary`)
+        .then(r => r.data)
+        .catch(() => null);
 
+      const matrixPromise = api.get(`/contests/sessions/${latestSessionId}/matrix?paginated=true&page=1&limit=100`)
+        .then(r => r.data)
+        .catch(() => null);
+
+      const summaryData = await summaryPromise;
       if (summaryData) {
-        setSummary({
+        const newSummary: PreviousWeekSummary = {
           session_id: summaryData.sessionId,
           contest_slug: summaryData.contestId || `weekly-contest-${summaryData.contestNumber}`,
           contest_title: summaryData.contestName,
@@ -233,9 +230,13 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
             MISSING_LEETCODE_USERNAME: 0,
             TOTAL_STUDENTS: summaryData.totalStudents || 0,
           }
-        });
+        };
+        setSummary(newSummary);
+        setLoading(false); // Unblock UI immediately!
       }
-      
+
+      // 3. Matrix Stream Update
+      const matrixData = await matrixPromise;
       const rows = matrixData?.items || matrixData?.rows || [];
       if (rows.length > 0) {
         const mappedRecords: ParticipationRecord[] = rows.map((row: any) => ({
@@ -267,6 +268,38 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           verification_status: row.source_status || 'UNKNOWN'
         }));
         setRecords(mappedRecords);
+
+        // Store in localStorage for 0ms instant reload on next visit!
+        try {
+          if (summaryData) {
+            localStorage.setItem(`cache_prev_panel_${latestSessionId}`, JSON.stringify({
+              summary: {
+                session_id: summaryData.sessionId,
+                contest_slug: summaryData.contestId || `weekly-contest-${summaryData.contestNumber}`,
+                contest_title: summaryData.contestName,
+                target_date_ist: summaryData.sessionDate,
+                validation_status: summaryData.status,
+                publish_status: summaryData.status,
+                cache_state: 'HIT',
+                dataset_version: 1,
+                sync_id: 'live',
+                sync_started_at: '',
+                metrics: {
+                  PUBLIC: summaryData.participantCount || 0,
+                  VIRTUAL: 0,
+                  NOT_PARTICIPATED: Math.max(0, (summaryData.totalStudents || 0) - (summaryData.participantCount || 0)),
+                  NOT_VERIFIED: 0,
+                  MISSING_LEETCODE_USERNAME: 0,
+                  TOTAL_STUDENTS: summaryData.totalStudents || 0,
+                }
+              },
+              records: mappedRecords,
+              ts: Date.now()
+            }));
+          }
+        } catch (e) {
+          // Ignore quota errors
+        }
       }
     } catch (err: any) {
       if (!silent) {
@@ -283,6 +316,21 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   // Initial load when sessionId prop changes
   useEffect(() => {
     if (sessionId) {
+      // Hydrate from instant local storage first for 0ms render
+      try {
+        const stored = localStorage.getItem(`cache_prev_panel_${sessionId}`);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.summary) {
+            setSummary(parsed.summary);
+            setLoading(false);
+          }
+          if (parsed.records && Array.isArray(parsed.records)) {
+            setRecords(parsed.records);
+          }
+        }
+      } catch (e) {}
+
       fetchPreviousWeekData();
     } else {
       setRecords([]);

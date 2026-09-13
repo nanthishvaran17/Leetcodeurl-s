@@ -24,9 +24,32 @@ export const Post930SolversView: React.FC = () => {
   // Selected student evidence modal state
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
 
+  const getDeptBadgeStyle = (deptCode: string) => {
+    const code = (deptCode || '').toUpperCase().trim();
+    if (code.includes('IOT')) {
+      return 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30';
+    } else if (code.includes('CS') || code.includes('CYBER')) {
+      return 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30';
+    } else if (code === 'IT' || code.includes('INFORMATION')) {
+      return 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30';
+    } else if (code.includes('AIDS') || code.includes('AI')) {
+      return 'bg-teal-500/15 text-teal-600 dark:text-teal-400 border-teal-500/30';
+    } else if (code.includes('AGRI')) {
+      return 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30';
+    } else if (code.includes('EEE')) {
+      return 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30';
+    } else if (code.includes('ECE')) {
+      return 'bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-400 border-fuchsia-500/30';
+    } else if (code.includes('CSE')) {
+      return 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30';
+    } else {
+      return 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30';
+    }
+  };
+
   useEffect(() => {
     fetchPost930Solvers();
-  }, [minSolves, sortBy, dept, yearLevel, section]);
+  }, [minSolves, sortBy, dept, yearLevel, section, search]);
 
   const fetchPost930Solvers = async () => {
     setLoading(true);
@@ -57,6 +80,7 @@ export const Post930SolversView: React.FC = () => {
     if (dept) params.append('dept', dept);
     if (yearLevel) params.append('year_level', yearLevel);
     if (section) params.append('section', section);
+    if (search) params.append('search', search);
 
     downloadManager.download({
       endpoint: `/contests/post-930-solvers/export?${params.toString()}`,
@@ -67,7 +91,7 @@ export const Post930SolversView: React.FC = () => {
 
   const studentsList = data?.students || [];
   const filteredStudents = studentsList.filter((s: any) =>
-    (s.student_name || '').toLowerCase().includes(search.toLowerCase()) ||
+    (s.student_name || s.name || '').toLowerCase().includes(search.toLowerCase()) ||
     (s.register_number || s.reg_no || '').toLowerCase().includes(search.toLowerCase()) ||
     (s.username || '').toLowerCase().includes(search.toLowerCase())
   );
@@ -283,14 +307,17 @@ export const Post930SolversView: React.FC = () => {
                     <td className="px-4 py-3.5 font-mono text-slate-500">
                       {st.register_number || st.reg_no}
                     </td>
-                    <td className="px-4 py-3.5 text-slate-600 dark:text-slate-300">
-                      {st.department} ({(st.year || st.year_level || '').replace(/year/gi, '').trim()} Year)
+                    <td className="px-4 py-3.5">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-black border ${getDeptBadgeStyle(st.department)}`}>
+                        <span>{st.department}</span>
+                        <span className="opacity-75 font-semibold text-[10px]">({(st.year || st.year_level || '').replace(/year/gi, '').trim()} Year)</span>
+                      </span>
                     </td>
                     <td className="px-4 py-3.5 text-right font-bold text-slate-700 dark:text-slate-300">
                       {st.official_locked_solved}
                     </td>
                     <td className="px-4 py-3.5 text-right font-black text-amber-500">
-                      +{st.post_window_solve_count}
+                      {st.post_window_solve_count?.toString().startsWith('+') ? st.post_window_solve_count : `+${st.post_window_solve_count}`}
                     </td>
                     <td className="px-4 py-3.5 text-right font-bold text-purple-500">
                       {st.post_window_submission_count || st.post_window_solve_count}
@@ -337,9 +364,14 @@ export const Post930SolversView: React.FC = () => {
                   <Clock className="w-5 h-5 text-amber-500" />
                   <span>{selectedStudent.student_name}</span>
                 </h3>
-                <p className="text-xs text-slate-400 font-mono">
-                  Reg: {selectedStudent.register_number || selectedStudent.reg_no} • {selectedStudent.department} ({selectedStudent.year || selectedStudent.year_level} Year)
-                </p>
+                <div className="flex items-center space-x-2 mt-1">
+                  <span className="text-xs text-slate-400 font-mono">
+                    Reg: {selectedStudent.register_number || selectedStudent.reg_no}
+                  </span>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-black border ${getDeptBadgeStyle(selectedStudent.department)}`}>
+                    {selectedStudent.department} ({(selectedStudent.year || selectedStudent.year_level || '').replace(/year/gi, '').trim()} Year)
+                  </span>
+                </div>
               </div>
               <button
                 onClick={() => setSelectedStudent(null)}
@@ -356,7 +388,7 @@ export const Post930SolversView: React.FC = () => {
               </div>
               <div>
                 <span className="text-[10px] text-amber-500 font-bold uppercase">Post-9:30 Problems:</span>
-                <p className="font-black text-amber-500">+{selectedStudent.post_window_solve_count}</p>
+                <p className="font-black text-amber-500">{selectedStudent.post_window_solve_count?.toString().startsWith('+') ? selectedStudent.post_window_solve_count : `+${selectedStudent.post_window_solve_count}`}</p>
               </div>
             </div>
 

@@ -100,34 +100,34 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
     ws.page_setup.fitToWidth = 1
     ws.page_setup.fitToHeight = 0
 
-    # Row 1-3: Fill header background (A1:last_col 3) with solid Navy
-    for r in range(1, 4):
-        for c in range(1, cols + 1):
-            cell = ws.cell(row=r, column=c)
-            cell.fill = NAVY_PRIMARY
-
-    # Row 1: Main Title (B1:last_col 1) so logo in A1 does not overlap text
-    ws.merge_cells(f"B1:{last_col}1")
-    ws["B1"] = "NANDHA ENGINEERING COLLEGE, ERODE – 638 052"
-    ws["B1"].font = FONT_MAIN_TITLE
-    ws["B1"].alignment = ALIGN_CENTER
-    ws["B1"].fill = NAVY_PRIMARY
+    # Row 1: Main Title (A1:last_col 1)
+    ws.merge_cells(f"A1:{last_col}1")
+    for c in range(1, cols + 1):
+        cell = ws.cell(row=1, column=c)
+        cell.fill = NAVY_PRIMARY
+    ws["A1"] = "NANDHA ENGINEERING COLLEGE, ERODE – 638 052"
+    ws["A1"].font = FONT_MAIN_TITLE
+    ws["A1"].alignment = ALIGN_CENTER
     ws.row_dimensions[1].height = 32
 
-    # Row 2: Subtitle (B2:last_col 2)
-    ws.merge_cells(f"B2:{last_col}2")
-    ws["B2"] = "(AUTONOMOUS) • ESTD 2001 | Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai"
-    ws["B2"].font = FONT_SUBTITLE
-    ws["B2"].alignment = ALIGN_CENTER
-    ws["B2"].fill = NAVY_SECONDARY
+    # Row 2: Subtitle (A2:last_col 2)
+    ws.merge_cells(f"A2:{last_col}2")
+    for c in range(1, cols + 1):
+        cell = ws.cell(row=2, column=c)
+        cell.fill = NAVY_SECONDARY
+    ws["A2"] = "(AUTONOMOUS) • ESTD 2001 | Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai"
+    ws["A2"].font = FONT_SUBTITLE
+    ws["A2"].alignment = ALIGN_CENTER
     ws.row_dimensions[2].height = 20
 
-    # Row 3: Department Context (B3:last_col 3)
-    ws.merge_cells(f"B3:{last_col}3")
-    ws["B3"] = dept_text.upper()
-    ws["B3"].font = Font(name=FONT_TNR, size=11, bold=True, color="1B365D")
-    ws["B3"].alignment = ALIGN_CENTER
-    ws["B3"].fill = SUB_FILL
+    # Row 3: Department Context (A3:last_col 3)
+    ws.merge_cells(f"A3:{last_col}3")
+    for c in range(1, cols + 1):
+        cell = ws.cell(row=3, column=c)
+        cell.fill = SUB_FILL
+    ws["A3"] = dept_text.upper()
+    ws["A3"].font = Font(name=FONT_TNR, size=11, bold=True, color="1B365D")
+    ws["A3"].alignment = ALIGN_CENTER
     ws.row_dimensions[3].height = 22
 
     # Row 4: Report Title
@@ -161,10 +161,16 @@ def _write_college_header(ws, report_title: str, dept_text: str, cols: int, meta
         meta_parts = [f"{k}: {v}" for k, v in metadata_block.items() if v]
         meta_str = "   |   ".join(meta_parts)
         ws.merge_cells(f"A5:{last_col}5")
+        META_FILL = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid")
+        FONT_META = Font(name=FONT_TNR, size=9.5, bold=True, color="1E293B")
+        for col_idx in range(1, cols + 1):
+            cell = ws.cell(row=5, column=col_idx)
+            cell.fill = META_FILL
+            _apply_thin_border(cell, force=True)
         ws["A5"] = meta_str
-        ws["A5"].font = FONT_NOTE
+        ws["A5"].font = FONT_META
         ws["A5"].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-        ws.row_dimensions[5].height = 30
+        ws.row_dimensions[5].height = 26
 
 def normalize_row_data(r: dict) -> dict:
     """Ensures deterministic binary Q1-Q4 (0 or 1) and exact solved calculation."""
@@ -361,7 +367,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     for c_i, v in enumerate(perf_vals, 1):
         cell = ws1.cell(row=r_perf_hdr+1, column=c_i, value=v)
         cell.font = FONT_NUMERIC_BOLD if c_i > 1 else FONT_BODY_BOLD
-        cell.alignment = ALIGN_RIGHT if c_i > 1 else ALIGN_LEFT
+        cell.alignment = ALIGN_CENTER if c_i > 1 else ALIGN_LEFT
         _apply_thin_border(cell)
     ws1.row_dimensions[r_perf_hdr+1].height = 22
 
@@ -387,8 +393,8 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         for c_i, v in enumerate(vals, 1):
             cell = ws2.cell(row=row_num, column=c_i, value=v)
             cell.font = FONT_BODY
-            # Center Align: S.No, Register No, Department, Year, Status, Q1-Q4, Solved. Left Align: Student Name, Username
-            cell.alignment = ALIGN_LEFT if c_i in (3, 6) else ALIGN_CENTER
+            # Center Align: S.No, Register No, Department, Year, Username, Status, Q1-Q4, Solved. Left Align: Student Name
+            cell.alignment = ALIGN_LEFT if c_i == 3 else ALIGN_CENTER
             if r["is_att"] and c_i in (7, 12):
                 cell.font = FONT_SUCCESS
                 cell.fill = FILL_SUCCESS
@@ -424,8 +430,8 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         for c_i, v in enumerate([idx, r["reg_no"], r["name"], r["dept"], r["year"], r["username"], r["status"], live_str, virt_str, ev_label], 1):
             cell = ws3.cell(row=row_num, column=c_i, value=v)
             cell.font = FONT_BODY
-            # Center Align all except Student Name (3), Username (6), and Evidence Summary (10)
-            cell.alignment = ALIGN_LEFT if c_i in (3, 6, 10) else ALIGN_CENTER
+            # Center Align all except Student Name (3) and Evidence Summary (10)
+            cell.alignment = ALIGN_LEFT if c_i in (3, 10) else ALIGN_CENTER
             if c_i == 7:
                 cell.fill = FILL_SUCCESS if is_live else (FILL_WARNING if is_virt else FILL_RISK)
                 cell.font = FONT_SUCCESS if is_live else (FONT_WARNING if is_virt else FONT_RISK)
@@ -488,8 +494,8 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
             for c_i, v in enumerate([idx, r["reg_no"], r["name"], r["dept"], r["year"], r["username"], r["q1"], r["q2"], r["q3"], r["q4"], r["solved_str"], r["score"]], 1):
                 cell = ws_t.cell(row=row_num, column=c_i, value=v)
                 cell.font = FONT_BODY
-                # Center Align all except Student Name (3) and Username (6)
-                cell.alignment = ALIGN_LEFT if c_i in (3, 6) else ALIGN_CENTER
+                # Center Align all except Student Name (3)
+                cell.alignment = ALIGN_LEFT if c_i == 3 else ALIGN_CENTER
                 if c_i in (1, 11, 12):
                     cell.font = FONT_BODY_BOLD
                 _apply_thin_border(cell)
@@ -623,37 +629,61 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
     # GLOBAL COLUMN WIDTH & SCROLLING FINALIZE
     # 
     for ws_item in wb.worksheets:
+        s_title = ws_item.title
         for col in ws_item.columns:
             col_letter = get_column_letter(col[0].column)
-            max_len = 0
-            for cell in col:
-                val_s = str(cell.value or "")
-                # Avoid title block lines in length calculation
-                if cell.row > 6 and len(val_s) > max_len and len(val_s) < 60:
-                    max_len = len(val_s)
+            col_idx = col[0].column
             
-            # Explicit column widths matching optimal layout
-            if col_letter == "A":
-                ws_item.column_dimensions[col_letter].width = 8
-            elif col_letter == "B":
-                ws_item.column_dimensions[col_letter].width = 16  # Exact fit for Register No (e.g. 732224CC007)
-            elif col_letter == "C":
-                ws_item.column_dimensions[col_letter].width = 26  # Student Name
-            elif col_letter == "D":
-                ws_item.column_dimensions[col_letter].width = 14  # Dept
-            elif col_letter == "E":
-                ws_item.column_dimensions[col_letter].width = 10  # Year
-            elif col_letter == "F":
-                ws_item.column_dimensions[col_letter].width = 22  # Username / Status
-            elif col_letter in ("G", "H", "I"):
-                ws_item.column_dimensions[col_letter].width = 10
-            elif col_letter == "J":
-                # Evidence Summary on Attendance sheet needs wider column (42)
-                ws_item.column_dimensions[col_letter].width = 42 if "Attendance" in ws_item.title else 10
+            # Lookup column header title from row 7 or row 11
+            hdr_val = ""
+            for r_chk in range(12, 0, -1):
+                cell_v = str(ws_item.cell(row=r_chk, column=col_idx).value or "").strip().upper()
+                if cell_v and not cell_v.startswith("NANDHA") and not cell_v.startswith("(AUTONOMOUS)") and not cell_v.startswith("CONTEST") and not cell_v.startswith("DEPARTMENT OF"):
+                    hdr_val = cell_v
+                    break
+
+            max_len = len(hdr_val)
+            for cell in col:
+                if cell.row >= 7:
+                    val_s = str(cell.value or "")
+                    if len(val_s) > max_len and len(val_s) < 80:
+                        max_len = len(val_s)
+            
+            if s_title == "Executive Summary":
+                if col_idx == 1:
+                    w = 18.0  # Metric / Student Counts
+                elif col_idx in (2, 3, 4, 5):
+                    w = 15.0  # 4/4, 3/4, 2/4, 1/4 Solvers
+                elif col_idx == 6:
+                    w = 16.0  # 0/4 / Absent
+                else:
+                    w = 14.0  # Q1, Q2, Q3, Q4 Solves
             else:
-                ws_item.column_dimensions[col_letter].width = max(10, min(max_len + 4, 36))
+                if "REGISTER NO" in hdr_val:
+                    w = max(18.0, max_len + 3)
+                elif "STUDENT NAME" in hdr_val:
+                    w = max(28.0, max_len + 3)
+                elif "DEPARTMENT" in hdr_val or hdr_val == "DEPT":
+                    w = max(16.0, max_len + 3)
+                elif "YEAR" in hdr_val:
+                    w = max(12.0, max_len + 3)
+                elif "USERNAME" in hdr_val or "LEETCODE" in hdr_val or "HANDLE" in hdr_val:
+                    w = max(24.0, max_len + 3)
+                elif "STATUS" in hdr_val or "ATTENDANCE" in hdr_val:
+                    w = max(22.0, max_len + 3)
+                elif "EVIDENCE" in hdr_val:
+                    w = max(42.0, max_len + 3)
+                elif hdr_val in ("Q1", "Q2", "Q3", "Q4"):
+                    w = 9.0
+                elif hdr_val in ("SOLVED", "SCORE", "LIVE", "VIRTUAL"):
+                    w = 12.0
+                elif hdr_val in ("S.NO", "NO", "RANK", "S. NO"):
+                    w = 12.0
+                else:
+                    w = max(12.0, min(max_len + 4, 40.0))
+
+            ws_item.column_dimensions[col_letter].width = ws_item.column_dimensions[col_letter].width = w
 
     output = io.BytesIO()
     wb.save(output)
     return output.getvalue()
-

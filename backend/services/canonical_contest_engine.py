@@ -56,6 +56,73 @@ def invalidate_canonical_cache(session_id: Optional[int] = None):
     cache.invalidate_tag("contests")
 
 
+def normalize_year_param(year: Optional[str]) -> str:
+    """
+    Normalizes any year filter parameter string (e.g., '3', 'Year III', '3rd', '2024–2028', 'III')
+    to standard canonical roman numerals ('I', 'II', 'III', 'IV', or 'ALL').
+    """
+    if not year or not isinstance(year, str):
+        return "ALL"
+    y = year.strip().upper()
+    if y in ("ALL", "ALL ACADEMIC YEARS", "ALL YEARS", "", "NONE", "NULL", "*"):
+        return "ALL"
+    if y in ("3", "III", "3RD", "3RD YEAR", "YEAR 3", "YEAR III", "2024–2028", "2024-2028", "2024", "3 YEAR"):
+        return "III"
+    if y in ("2", "II", "2ND", "2ND YEAR", "YEAR 2", "YEAR II", "2025–2029", "2025-2029", "2025", "2 YEAR"):
+        return "II"
+    if y in ("4", "IV", "4TH", "4TH YEAR", "YEAR 4", "YEAR IV", "2023–2027", "2023-2027", "2023", "4 YEAR"):
+        return "IV"
+    if y in ("1", "I", "1ST", "1ST YEAR", "YEAR 1", "YEAR I", "2026–2030", "2026-2030", "2026", "1 YEAR"):
+        return "I"
+    if y.startswith("YEAR ") or y.endswith(" YEAR"):
+        clean_y = y.replace("YEAR", "").strip()
+        return normalize_year_param(clean_y)
+    if "3" in y or "III" in y:
+        return "III"
+    if "2" in y or "II" in y:
+        return "II"
+    if "4" in y or "IV" in y:
+        return "IV"
+    if "1" in y or "I" in y:
+        return "I"
+    return y
+
+
+def normalize_dept_param(dept: Optional[str]) -> str:
+    """
+    Normalizes any department filter parameter string (e.g., 'CS', 'Cyber Security', 'CSE(CS)')
+    to standard canonical department code ('CSE(CS)', 'CSE(IOT)', 'IT', 'AIDS', 'ECE', 'EEE', 'CSE', etc.).
+    """
+    if not dept or not isinstance(dept, str):
+        return "ALL"
+    d = dept.strip().upper()
+    if d in ("ALL", "ALL DEPARTMENTS", "COLLEGE-WIDE", "", "NONE", "NULL", "*"):
+        return "ALL"
+    if d in ("CSE(CS)", "CS", "CYBER", "CYBER SECURITY", "CSE_CS", "CSE (CS)", "COMPUTER SCIENCE AND ENGINEERING (CYBER SECURITY)", "COMPUTER SCIENCE & ENGINEERING (CYBER SECURITY)"):
+        return "CSE(CS)"
+    if d in ("CSE(IOT)", "IOT", "INTERNET OF THINGS", "CSE_IOT", "CSE (IOT)", "COMPUTER SCIENCE AND ENGINEERING (IOT)", "COMPUTER SCIENCE & ENGINEERING (IOT)"):
+        return "CSE(IOT)"
+    if d in ("IT", "INFORMATION TECHNOLOGY"):
+        return "IT"
+    if d in ("AIDS", "AI&DS", "AI-DS", "AI DS", "ARTIFICIAL INTELLIGENCE", "AIDS DEPARTMENT"):
+        return "AIDS"
+    if d in ("ECE", "ELECTRONICS", "ELECTRONICS AND COMMUNICATION ENGINEERING", "ELECTRONICS & COMMUNICATION ENGINEERING", "ECE DEPARTMENT"):
+        return "ECE"
+    if d in ("EEE", "ELECTRICAL", "ELECTRICAL AND ELECTRONICS ENGINEERING", "ELECTRICAL & ELECTRONICS ENGINEERING", "EEE DEPARTMENT"):
+        return "EEE"
+    if d in ("MECH", "MECHANICAL", "MECHANICAL ENGINEERING"):
+        return "MECH"
+    if d in ("CIVIL", "CIVIL ENGINEERING"):
+        return "CIVIL"
+    if d in ("AGRI", "AGRICULTURE", "AGRICULTURAL ENGINEERING", "AGRI DEPARTMENT"):
+        return "AGRI"
+    if d in ("BME", "BIOMEDICAL", "BIOMEDICAL ENGINEERING"):
+        return "BME"
+    if d in ("CSE", "COMPUTER SCIENCE", "COMPUTER SCIENCE & ENGINEERING", "COMPUTER SCIENCE AND ENGINEERING"):
+        return "CSE"
+    return d
+
+
 def build_canonical_contest_dataset(
     session_id: int,
     db: Session,
@@ -64,10 +131,8 @@ def build_canonical_contest_dataset(
     attendance: str = "ALL",
     current_user: Optional[User] = None
 ) -> Dict[str, Any]:
-    if not isinstance(dept, str):
-        dept = "ALL"
-    if not isinstance(year, str):
-        year = "ALL"
+    dept = normalize_dept_param(dept)
+    year = normalize_year_param(year)
     if not isinstance(attendance, str):
         attendance = "ALL"
     if not hasattr(current_user, "id"):
@@ -161,6 +226,7 @@ def _build_canonical_contest_dataset_internal(
     }
 
     year_stats_map: Dict[str, Dict[str, Any]] = {
+        "I": {"label": "1st Year (I)", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
         "II": {"label": "2nd Year (II)", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
         "III": {"label": "3rd Year (III)", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
         "IV": {"label": "4th Year (IV)", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0}
@@ -368,14 +434,7 @@ def _build_canonical_contest_dataset_internal(
 
         # Year aggregator
         y_str = str(year_level).strip().upper()
-        if y_str in ("IV", "4", "4TH", "IV YEAR", "FINAL"):
-            yr_norm = "IV"
-        elif y_str in ("III", "3", "3RD", "III YEAR", "THIRD"):
-            yr_norm = "III"
-        elif y_str in ("II", "2", "2ND", "II YEAR", "SECOND"):
-            yr_norm = "II"
-        else:
-            yr_norm = "III"
+        yr_norm = normalize_year_param(y_str)
 
         if yr_norm in year_stats_map:
             year_stats_map[yr_norm]["total"] += 1

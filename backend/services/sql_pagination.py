@@ -3,7 +3,7 @@ from sqlalchemy import func, case, and_, desc, asc, nullslast
 from typing import Optional, Dict, Any
 
 from backend.models import Student, WeeklyPublicResult, WeeklyVirtualResult, Department, User
-from backend.services.canonical_contest_engine import normalize_participation_status
+from backend.services.canonical_contest_engine import normalize_participation_status, normalize_dept_param, normalize_year_param
 
 def get_paginated_matrix_rows(
     session_id: int,
@@ -17,10 +17,8 @@ def get_paginated_matrix_rows(
     sort_by: Optional[str] = None,
     current_user: Optional[User] = None
 ) -> Dict[str, Any]:
-    if not isinstance(dept, str):
-        dept = None
-    if not isinstance(year, str):
-        year = None
+    dept = normalize_dept_param(dept)
+    year = normalize_year_param(year)
     if not isinstance(attendance, str):
         attendance = None
     if not isinstance(search, str):
@@ -76,13 +74,18 @@ def get_paginated_matrix_rows(
         (func.upper(Student.reg_no).like('732225%'), 'II'),
         (func.upper(Student.reg_no).like('%25CC%'), 'II'),
         (func.upper(Student.reg_no).like('%25CI%'), 'II'),
+        (func.upper(Student.reg_no).like('%25CIR%'), 'II'),
         (func.upper(Student.reg_no).like('732224%'), 'III'),
         (func.upper(Student.reg_no).like('%24CC%'), 'III'),
         (func.upper(Student.reg_no).like('%24CI%'), 'III'),
+        (func.upper(Student.reg_no).like('%24CIR%'), 'III'),
         (func.upper(Student.reg_no).like('732223%'), 'IV'),
         (func.upper(Student.reg_no).like('%23CC%'), 'IV'),
         (func.upper(Student.reg_no).like('%23CI%'), 'IV'),
-        else_=func.coalesce(Student.year_level, WeeklyPublicResult.year, 'III')
+        (func.upper(Student.reg_no).like('%23CIR%'), 'IV'),
+        (func.upper(Student.reg_no).like('23%'), 'IV'),
+        (func.upper(Student.reg_no).like('732223%'), 'IV'),
+        else_=func.coalesce(func.nullif(Student.year_level, ''), func.nullif(WeeklyPublicResult.year, ''), 'III')
     )
 
     # 3. Apply Filters
@@ -147,6 +150,14 @@ def get_paginated_matrix_rows(
 
     total_count = query.count()
     
+    attended_priority_expr = case(
+        (func.upper(WeeklyPublicResult.participation_status).in_(['PUBLIC', 'PUBLIC_ATTENDED', 'ATTENDED', 'OFFICIAL']), 1),
+        (func.upper(WeeklyVirtualResult.participation_status).in_(['VIRTUAL', 'VIRTUAL_ATTENDED']), 2),
+        (func.coalesce(WeeklyPublicResult.total_contest_solved, 0) > 0, 3),
+        (func.coalesce(WeeklyVirtualResult.total_contest_solved, 0) > 0, 3),
+        else_=4
+    )
+
     rank_order_expr = case(
         (func.coalesce(WeeklyPublicResult.contest_rank, 0) > 0, WeeklyPublicResult.contest_rank),
         else_=99999999
@@ -154,11 +165,12 @@ def get_paginated_matrix_rows(
     score_order_expr = func.coalesce(WeeklyPublicResult.contest_score, WeeklyVirtualResult.contest_score, 0)
 
     if sort_by == "score" or sort_by == "solved":
-        query = query.order_by(nullslast(desc(score_order_expr)), rank_order_expr.asc(), Student.name.asc())
+        query = query.order_by(attended_priority_expr.asc(), nullslast(desc(score_order_expr)), rank_order_expr.asc(), Student.name.asc())
     elif sort_by == "rank":
-        query = query.order_by(rank_order_expr.asc(), nullslast(desc(score_order_expr)), Student.name.asc())
+        query = query.order_by(attended_priority_expr.asc(), rank_order_expr.asc(), nullslast(desc(score_order_expr)), Student.name.asc())
     else:
         query = query.order_by(
+            attended_priority_expr.asc(),
             nullslast(desc(score_order_expr)), 
             rank_order_expr.asc(), 
             Student.name.asc()

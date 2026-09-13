@@ -535,7 +535,7 @@ def generate_report_bytes(
     from backend.exporters.csv_exporter import export_csv_from_dataset
     from backend.exporters.zip_exporter import export_zip_bundle_from_dataset
 
-    config_type = "STUDENT_PERFORMANCE" if rpt in ("STUDENT_PERFORMANCE", "OFFICIAL_SUMMARY", "EXCEL", "PDF", "WORD", "CSV") else rpt
+    config_type = "WEEKLY_STUDENT_PERFORMANCE" if rpt in ("STUDENT_PERFORMANCE", "STUDENT_DETAIL", "OFFICIAL_SUMMARY", "EXCEL", "PDF", "WORD", "CSV") else rpt
     config = ReportConfig(
         report_type=config_type,
         department=dept,

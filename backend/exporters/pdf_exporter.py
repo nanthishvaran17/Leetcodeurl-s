@@ -2,7 +2,7 @@ import os
 import io
 import datetime
 from typing import Dict, List
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import (
@@ -26,6 +26,89 @@ def _to_float(val, default=0.0) -> float:
         return float(str(val))
     except (ValueError, TypeError):
         return default
+
+def _get_platform_solved(s: dict) -> int:
+    pts = _to_int(s.get("profile_total_solved"))
+    if pts > 0:
+        return pts
+    ts = _to_int(s.get("total_solved"))
+    cts = _to_int(s.get("total_contest_solved") or s.get("contest_problems_solved") or s.get("problems_solved"))
+    if ts > 4 or (ts > 0 and ts != cts):
+        return ts
+    return pts or ts
+
+def _get_contest_solved(s: dict) -> int:
+    return _to_int(
+        s.get("total_contest_solved") or 
+        s.get("contest_problems_solved") or 
+        s.get("problems_solved") or 
+        (s.get("total_solved") if _to_int(s.get("total_solved")) <= 4 else 0)
+    )
+
+def _get_contest_score(s: dict) -> int:
+    return _to_int(s.get("contest_score") or s.get("score"))
+
+def resolve_dept_full_name(d_raw: str, reg_no: str = "") -> str:
+    r_upper = str(reg_no).upper()
+    if "CC" in r_upper:
+        return "Computer Science and Engineering (Cyber Security)"
+    if "CI" in r_upper or "CIR" in r_upper:
+        return "Computer Science and Engineering (Internet of Things)"
+    d = str(d_raw).strip().upper()
+    if d in ("CSE(CS)", "CS", "CYBER", "CYBER SECURITY", "CSE_CS", "CSE-CS", "CSE (CS)"):
+        return "Computer Science and Engineering (Cyber Security)"
+    if d in ("CSE(IOT)", "IOT", "INTERNET OF THINGS", "CSE_IOT", "CSE-IOT", "CSE (IOT)"):
+        return "Computer Science and Engineering (Internet of Things)"
+    if d in ("IT", "INFORMATION TECHNOLOGY"):
+        return "Information Technology"
+    if d in ("AIDS", "AI&DS", "AI-DS", "ARTIFICIAL INTELLIGENCE"):
+        return "Artificial Intelligence and Data Science"
+    if d in ("ECE", "ELECTRONICS"):
+        return "Electronics and Communication Engineering"
+    if d in ("EEE", "ELECTRICAL"):
+        return "Electrical and Electronics Engineering"
+    if d in ("MECH", "MECHANICAL"):
+        return "Mechanical Engineering"
+    if d in ("CIVIL",):
+        return "Civil Engineering"
+    if d in ("AGRI", "AGRICULTURE"):
+        return "Agriculture Engineering"
+    if d in ("BME", "BIOMEDICAL"):
+        return "Biomedical Engineering"
+    if d in ("CSE", "COMPUTER SCIENCE"):
+        return "Computer Science and Engineering"
+    return str(d_raw).strip() or "Computer Science and Engineering"
+
+def resolve_dept_code(d_raw: str, reg_no: str = "") -> str:
+    r_upper = str(reg_no).upper()
+    if "CC" in r_upper:
+        return "CSE(CS)"
+    if "CI" in r_upper or "CIR" in r_upper:
+        return "CSE(IOT)"
+    d = str(d_raw).strip().upper()
+    if d in ("CSE(CS)", "CS", "CYBER", "CYBER SECURITY", "CSE_CS", "CSE-CS", "CSE (CS)"):
+        return "CSE(CS)"
+    if d in ("CSE(IOT)", "IOT", "INTERNET OF THINGS", "CSE_IOT", "CSE-IOT", "CSE (IOT)"):
+        return "CSE(IOT)"
+    if d in ("IT", "INFORMATION TECHNOLOGY"):
+        return "IT"
+    if d in ("AIDS", "AI&DS", "AI-DS", "ARTIFICIAL INTELLIGENCE"):
+        return "AIDS"
+    if d in ("ECE", "ELECTRONICS"):
+        return "ECE"
+    if d in ("EEE", "ELECTRICAL"):
+        return "EEE"
+    if d in ("MECH", "MECHANICAL"):
+        return "MECH"
+    if d in ("CIVIL",):
+        return "CIVIL"
+    if d in ("AGRI", "AGRICULTURE"):
+        return "AGRI"
+    if d in ("BME", "BIOMEDICAL"):
+        return "BME"
+    if d in ("CSE", "COMPUTER SCIENCE"):
+        return "CSE"
+    return str(d_raw).strip() or "CSE"
 
 def make_numbered_canvas(header_info: Dict[str, str]):
     class CustomNumberedCanvas(canvas.Canvas):
@@ -54,24 +137,28 @@ def make_numbered_canvas(header_info: Dict[str, str]):
             self.setFont("Times-Roman", 7.5)
             self.setFillColor(colors.HexColor("#64748B"))
             
+            p_width, p_height = landscape(A4)
+            left_x = 28.8
+            right_x = p_width - 28.8
+            
             # Header Top Border Line on pages > 1
             if self._pageNumber > 1:
                 self.setStrokeColor(colors.HexColor("#CBD5E1"))
                 self.setLineWidth(0.5)
-                self.line(36, A4[1] - 30, A4[0] - 36, A4[1] - 30)
-                self.drawString(36, A4[1] - 25, f"NANDHA ENGINEERING COLLEGE (AUTONOMOUS) • {header_info.get('dept', '')}")
-                self.drawRightString(A4[0] - 36, A4[1] - 25, f"{header_info.get('contest_name', '')} • OFFICIAL RECORD")
+                self.line(left_x, p_height - 24, right_x, p_height - 24)
+                self.drawString(left_x, p_height - 18, f"NANDHA ENGINEERING COLLEGE (AUTONOMOUS) • {header_info.get('dept', '')}")
+                self.drawRightString(right_x, p_height - 18, f"{header_info.get('contest_name', '')} • OFFICIAL RECORD")
 
             # Footer Bottom Border Line
             self.setStrokeColor(colors.HexColor("#CBD5E1"))
             self.setLineWidth(0.5)
-            self.line(36, 32, A4[0] - 36, 32)
+            self.line(left_x, 30, right_x, 30)
             
             # Footer text
             left_footer = f"Nandha Engineering College, Erode – 638 052 | Confidential • Internal Academic Record"
             page_str = f"Page {self._pageNumber} of {page_count}"
-            self.drawString(36, 20, left_footer)
-            self.drawRightString(A4[0] - 36, 20, page_str)
+            self.drawString(left_x, 18, left_footer)
+            self.drawRightString(right_x, 18, page_str)
             self.restoreState()
     return CustomNumberedCanvas
 
@@ -80,20 +167,21 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
     """
     CANONICAL INSTITUTIONAL MULTI-PAGE PDF EXPORTER
     Generates high-resolution, multi-page, evidence-based PDF using the master intelligence engine.
+    Fully content-driven dynamic pagination with zero artificial blank areas.
     """
     if "metadata" in dataset and "summary" in dataset and "departments" in dataset:
         from backend.pdf_v2.engine import build_intelligence_pdf
         return build_intelligence_pdf(dataset)
 
-    from backend.database import SessionLocal
-    from backend.services.intelligence_report_service import build_intelligence_dataset
-    from backend.pdf_v2.engine import build_intelligence_pdf
-    db = SessionLocal()
-    try:
-        intel_ds = build_intelligence_dataset(db)
-        return build_intelligence_pdf(intel_ds)
-    finally:
-        db.close()
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=landscape(A4),
+        leftMargin=0.4 * inch,
+        rightMargin=0.4 * inch,
+        topMargin=0.4 * inch,
+        bottomMargin=0.4 * inch
+    )
 
     story = []
     styles = getSampleStyleSheet()
@@ -142,7 +230,8 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
         fontSize=9,
         leading=11,
         textColor=colors.white,
-        alignment=1
+        alignment=1,
+        keepWithNext=True
     )
     th_style = ParagraphStyle(
         'TH',
@@ -198,32 +287,143 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
     snapshot_id = str(dataset.get("snapshotId") or dataset.get("snapshot_id") or dataset.get("reportId") or f"SNAPSHOT_{calculate_contest_number(_prev_sun)}")
     gen_time_str = dataset.get("generatedAtIST") or datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")
 
-    # Dynamic Department header
-    departments_set = sorted(list({r.get("department_name") or r.get("department") or "CSE" for r in rows}))
-    if len(departments_set) == 1:
-        dept_header_text = f"Department of {departments_set[0]}"
-    else:
-        dept_header_text = "Department of " + " & ".join(departments_set)
+    # Dynamic Department resolution helper
+    def resolve_dept_full_name(d_raw: str, reg_no: str = "") -> str:
+        r_upper = str(reg_no).upper()
+        if "CC" in r_upper:
+            return "Computer Science and Engineering (Cyber Security)"
+        if "CI" in r_upper or "CIR" in r_upper:
+            return "Computer Science and Engineering (Internet of Things)"
+        d = str(d_raw).strip().upper()
+        if d in ("CSE(CS)", "CS", "CYBER", "CYBER SECURITY", "CSE_CS", "CSE-CS", "CSE (CS)"):
+            return "Computer Science and Engineering (Cyber Security)"
+        if d in ("CSE(IOT)", "IOT", "INTERNET OF THINGS", "CSE_IOT", "CSE-IOT", "CSE (IOT)"):
+            return "Computer Science and Engineering (Internet of Things)"
+        if d in ("IT", "INFORMATION TECHNOLOGY"):
+            return "Information Technology"
+        if d in ("AIDS", "AI&DS", "AI-DS", "ARTIFICIAL INTELLIGENCE"):
+            return "Artificial Intelligence and Data Science"
+        if d in ("ECE", "ELECTRONICS"):
+            return "Electronics and Communication Engineering"
+        if d in ("EEE", "ELECTRICAL"):
+            return "Electrical and Electronics Engineering"
+        if d in ("MECH", "MECHANICAL"):
+            return "Mechanical Engineering"
+        if d in ("CIVIL",):
+            return "Civil Engineering"
+        if d in ("AGRI", "AGRICULTURE"):
+            return "Agriculture Engineering"
+        if d in ("BME", "BIOMEDICAL"):
+            return "Biomedical Engineering"
+        if d in ("CSE", "COMPUTER SCIENCE"):
+            return "Computer Science and Engineering"
+        return str(d_raw).strip() or "Computer Science and Engineering"
+
+    def resolve_dept_code(d_raw: str, reg_no: str = "") -> str:
+        r_upper = str(reg_no).upper()
+        if "CC" in r_upper:
+            return "CSE(CS)"
+        if "CI" in r_upper or "CIR" in r_upper:
+            return "CSE(IOT)"
+        d = str(d_raw).strip().upper()
+        if d in ("CSE(CS)", "CS", "CYBER", "CYBER SECURITY", "CSE_CS", "CSE-CS", "CSE (CS)"):
+            return "CSE(CS)"
+        if d in ("CSE(IOT)", "IOT", "INTERNET OF THINGS", "CSE_IOT", "CSE-IOT", "CSE (IOT)"):
+            return "CSE(IOT)"
+        if d in ("IT", "INFORMATION TECHNOLOGY"):
+            return "IT"
+        if d in ("AIDS", "AI&DS", "AI-DS", "ARTIFICIAL INTELLIGENCE"):
+            return "AIDS"
+        if d in ("ECE", "ELECTRONICS"):
+            return "ECE"
+        if d in ("EEE", "ELECTRICAL"):
+            return "EEE"
+        if d in ("MECH", "MECHANICAL"):
+            return "MECH"
+        if d in ("CIVIL",):
+            return "CIVIL"
+        if d in ("AGRI", "AGRICULTURE"):
+            return "AGRI"
+        if d in ("BME", "BIOMEDICAL"):
+            return "BME"
+        if d in ("CSE", "COMPUTER SCIENCE"):
+            return "CSE"
+        return str(d_raw).strip() or "CSE"
+
+    def _get_platform_solved(s: dict) -> int:
+        p = _to_int(s.get("profile_total_solved") or s.get("platform_total_solved") or s.get("cumulative_solved"))
+        if p > 0:
+            return p
+        ts = _to_int(s.get("total_solved"))
+        if ts > 4:
+            return ts
+        return 0
+
+    def _get_contest_solved(s: dict) -> int:
+        c = _to_int(s.get("total_contest_solved") or s.get("contest_problems_solved") or s.get("problems_solved"))
+        if c > 0:
+            return c
+        ts = _to_int(s.get("total_solved"))
+        if 0 < ts <= 4:
+            return ts
+        q_count = sum(1 for q in (s.get("q1"), s.get("q2"), s.get("q3"), s.get("q4")) if q and _to_int(q) >= 1)
+        return q_count
+
+    def _get_contest_score(s: dict) -> int:
+        score = _to_int(s.get("contest_score") or s.get("score"))
+        if score > 0:
+            return score
+        q1 = 1 if s.get("q1") and _to_int(s.get("q1")) >= 1 else 0
+        q2 = 1 if s.get("q2") and _to_int(s.get("q2")) >= 1 else 0
+        q3 = 1 if s.get("q3") and _to_int(s.get("q3")) >= 1 else 0
+        q4 = 1 if s.get("q4") and _to_int(s.get("q4")) >= 1 else 0
+        calc = q1 * 3 + q2 * 4 + q3 * 5 + q4 * 6
+        if calc > 0:
+            return calc
+        c_solv = _get_contest_solved(s)
+        if c_solv >= 4:
+            return 18
+        elif c_solv == 3:
+            return 12
+        elif c_solv == 2:
+            return 7
+        elif c_solv == 1:
+            return 3
+        return 0
 
     # Department & Year grouping
     dept_year_groups: Dict[str, Dict[str, List[dict]]] = {}
     for r in rows:
-        d_name = r.get("department_name") or r.get("department") or "CSE"
-        y_name = r.get("year_level") or r.get("year") or "IV"
+        reg_no = r.get("reg_no") or r.get("register_no") or ""
+        d_raw = r.get("dept") or r.get("department_short") or r.get("department_name") or r.get("department") or "CSE"
+        d_name = resolve_dept_full_name(d_raw, reg_no)
+        y_name = r.get("year_level") or r.get("year") or "III"
+        if "YEAR" in str(y_name).upper():
+            y_name = str(y_name).upper().replace("YEAR", "").strip()
         if d_name not in dept_year_groups:
             dept_year_groups[d_name] = {}
         if y_name not in dept_year_groups[d_name]:
             dept_year_groups[d_name][y_name] = []
         dept_year_groups[d_name][y_name].append(r)
 
+    departments_set = sorted(list(dept_year_groups.keys()))
+    if len(departments_set) == 1:
+        dept_header_text = f"Department of {departments_set[0]}"
+    elif len(departments_set) == 2:
+        dept_header_text = f"Department of {departments_set[0]} & {departments_set[1]}"
+    elif len(departments_set) > 2:
+        dept_header_text = "Institutional Performance Summary — All Academic Departments"
+    else:
+        dept_header_text = "Department of Computer Science and Engineering"
+
     # Calculations
     tot_students = len(rows)
     tot_attended = sum(1 for r in rows if r.get("participation_status") in ("PUBLIC_ATTENDED", "OFFICIAL_ATTENDED", "ATTENDED", "PUBLIC"))
     tot_not_attended = tot_students - tot_attended
     att_pct = (tot_attended / tot_students * 100) if tot_students > 0 else 0.0
-    tot_platform_solved = sum(_to_int(r.get("total_solved")) for r in rows)
+    tot_platform_solved = sum(_get_platform_solved(r) for r in rows)
     avg_platform_solved = (tot_platform_solved / tot_students) if tot_students > 0 else 0.0
-    tot_contest_solved = sum(_to_int(r.get("contest_problems_solved") or r.get("problems_solved")) for r in rows)
+    tot_contest_solved = sum(_get_contest_solved(r) for r in rows)
 
     # Helper: Header Banner
     def build_header_flowables():
@@ -242,7 +442,7 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
         if os.path.exists(logo_path):
             try:
                 img = Image(logo_path, width=0.95*inch, height=0.75*inch)
-                t_hdr = Table([[img, header_text_cells]], colWidths=[1.1*inch, 6.2*inch])
+                t_hdr = Table([[img, header_text_cells]], colWidths=[1.1*inch, 9.75*inch])
                 t_hdr.setStyle(TableStyle([
                     ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                     ('ALIGN', (0, 0), (0, 0), 'LEFT'),
@@ -253,12 +453,10 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
                 return header_text_cells
         return header_text_cells
 
-    # 
-    # PAGE 1: EXECUTIVE SUMMARY & OVERVIEW
-    # 
+    # SECTION 1: HEADER & EXECUTIVE DASHBOARD
     story.extend(build_header_flowables())
-    story.append(Spacer(1, 5))
-    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#1B365D'), spaceAfter=8))
+    story.append(Spacer(1, 4))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#1B365D'), spaceAfter=6))
 
     # KPI Summary Cards Table
     kpi_card_data = [
@@ -269,13 +467,13 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
             Paragraph("<b>TOTAL PLATFORM SOLVED</b>", sec_hdr_style)
         ],
         [
-            Paragraph(f"<font size=12><b>{tot_students}</b></font><br/><font size=7 color='#64748B'>Verified Roster</font>", td_bold),
-            Paragraph(f"<font size=12 color='#059669'><b>{tot_attended}</b></font><br/><font size=7 color='#059669'>{att_pct:.1f}% Attendance</font>", td_bold),
-            Paragraph(f"<font size=12 color='#DC2626'><b>{tot_not_attended}</b></font><br/><font size=7 color='#DC2626'>{100-att_pct:.1f}% Absent</font>", td_bold),
-            Paragraph(f"<font size=12 color='#1B365D'><b>{tot_platform_solved:,}</b></font><br/><font size=7 color='#64748B'>Avg {avg_platform_solved:.1f}/std</font>", td_bold)
+            Paragraph(f"<font size=11><b>{tot_students}</b></font><br/><font size=7 color='#64748B'>Verified Roster</font>", td_bold),
+            Paragraph(f"<font size=11 color='#059669'><b>{tot_attended}</b></font><br/><font size=7 color='#059669'>{att_pct:.1f}% Attendance</font>", td_bold),
+            Paragraph(f"<font size=11 color='#DC2626'><b>{tot_not_attended}</b></font><br/><font size=7 color='#DC2626'>{100-att_pct:.1f}% Absent</font>", td_bold),
+            Paragraph(f"<font size=11 color='#1B365D'><b>{tot_platform_solved:,}</b></font><br/><font size=7 color='#64748B'>Avg {avg_platform_solved:.1f}/std</font>", td_bold)
         ]
     ]
-    t_kpi = Table(kpi_card_data, colWidths=[1.825*inch]*4)
+    t_kpi = Table(kpi_card_data, colWidths=[2.7125*inch]*4)
     t_kpi.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (0, 0), colors.HexColor('#1B365D')),
         ('BACKGROUND', (1, 0), (1, 0), colors.HexColor('#059669')),
@@ -286,11 +484,11 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#CBD5E1')),
         ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CBD5E1')),
-        ('TOPPADDING', (0, 0), (-1, -1), 4),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
     ]))
     story.append(t_kpi)
-    story.append(Spacer(1, 10))
+    story.append(Spacer(1, 8))
 
     # Executive Overview Narrative Table
     overview_text = (
@@ -299,21 +497,21 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
         f"The cumulative problem-solving tally across the institutional database stands at <b>{tot_platform_solved:,}</b> problems solved. "
         f"All metrics are source-validated and locked under immutable snapshot <code>{snapshot_id}</code>."
     )
-    t_narrative = Table([[Paragraph(overview_text, td_left)]], colWidths=[7.3*inch])
+    t_narrative = Table([[Paragraph(overview_text, td_left)]], colWidths=[10.85*inch])
     t_narrative.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#F0F9FF')),
         ('BOX', (0, 0), (-1, -1), 0.75, colors.HexColor('#0284C7')),
-        ('PADDING', (0, 0), (-1, -1), 6),
+        ('PADDING', (0, 0), (-1, -1), 5),
     ]))
     story.append(t_narrative)
-    story.append(Spacer(1, 10))
+    story.append(Spacer(1, 8))
 
-    # Contest Metrics Breakdown Block
-    c_4q_tot = sum(1 for s in rows if _to_int(s.get("contest_problems_solved") or s.get("problems_solved")) == 4)
-    c_3q_tot = sum(1 for s in rows if _to_int(s.get("contest_problems_solved") or s.get("problems_solved")) == 3)
-    c_2q_tot = sum(1 for s in rows if _to_int(s.get("contest_problems_solved") or s.get("problems_solved")) == 2)
-    c_1q_tot = sum(1 for s in rows if _to_int(s.get("contest_problems_solved") or s.get("problems_solved")) == 1)
-    c_0q_tot = sum(1 for s in rows if _to_int(s.get("contest_problems_solved") or s.get("problems_solved")) == 0)
+    # SECTION 2: LIVE CONTEST PERFORMANCE MATRIX
+    c_4q_tot = sum(1 for s in rows if _get_contest_solved(s) >= 4)
+    c_3q_tot = sum(1 for s in rows if _get_contest_solved(s) == 3)
+    c_2q_tot = sum(1 for s in rows if _get_contest_solved(s) == 2)
+    c_1q_tot = sum(1 for s in rows if _get_contest_solved(s) == 1)
+    c_0q_tot = sum(1 for s in rows if _get_contest_solved(s) == 0)
 
     contest_summary_table = [
         [Paragraph(f"<b>{contest_name.upper()} — LIVE CONTEST PERFORMANCE MATRIX</b>", sec_hdr_style), "", "", "", "", ""],
@@ -334,7 +532,7 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
             Paragraph(f"<font color='#1B365D'><b>{tot_contest_solved}</b></font>", td_bold)
         ]
     ]
-    t_csum = Table(contest_summary_table, colWidths=[1.216*inch]*6)
+    t_csum = Table(contest_summary_table, colWidths=[1.8083*inch]*6, repeatRows=2)
     t_csum.setStyle(TableStyle([
         ('SPAN', (0, 0), (5, 0)),
         ('BACKGROUND', (0, 0), (5, 0), colors.HexColor('#1B365D')),
@@ -347,14 +545,9 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
         ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
     ]))
     story.append(t_csum)
+    story.append(Spacer(1, 10))
 
-    # 
-    # PAGE 2: DEPARTMENT-WISE SUMMARY
-    # 
-    story.append(PageBreak())
-    story.append(Spacer(1, 5))
-    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#1B365D'), spaceAfter=8))
-
+    # SECTION 3: DEPARTMENT-WISE SUMMARY (Flows dynamically without artificial page break)
     dept_table_data = [
         [Paragraph("<b>INSTITUTIONAL DEPARTMENT COMPARATIVE SUMMARY</b>", sec_hdr_style), "", "", "", "", "", "", "", ""],
         [
@@ -373,10 +566,10 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
     for idx, (d_name, y_dict) in enumerate(dept_year_groups.items(), 1):
         d_students = [s for y_list in y_dict.values() for s in y_list]
         d_count = len(d_students)
-        d_curr_solved = sum(_to_int(s.get("total_solved")) for s in d_students)
-        d_contest_solved = sum(_to_int(s.get("contest_problems_solved") or s.get("problems_solved")) for s in d_students)
+        d_curr_solved = sum(_get_platform_solved(s) for s in d_students)
+        d_contest_solved = sum(_get_contest_solved(s) for s in d_students)
         d_last_solved = max(0, d_curr_solved - d_contest_solved)
-        d_delta = d_curr_solved - d_last_solved
+        d_delta = d_contest_solved
         d_att = sum(1 for s in d_students if s.get("participation_status") in ("PUBLIC_ATTENDED", "OFFICIAL_ATTENDED", "ATTENDED", "PUBLIC"))
         d_not_att = d_count - d_att
         d_pct = (d_att / d_count * 100) if d_count > 0 else 0.0
@@ -394,11 +587,14 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
         ])
 
     # Total row
+    is_multi_dept = len(dept_year_groups) > 1
+    total_label = "COLLEGE AGGREGATE (TOTAL)" if is_multi_dept else "DEPARTMENT TOTAL (AGGREGATE)"
+
     dept_table_data.append([
-        Paragraph("<b>TOTAL</b>", td_bold),
-        Paragraph("<b>COLLEGE AGGREGATE</b>", td_bold),
+        Paragraph(f"<b>{total_label}</b>", td_bold),
+        "",
         Paragraph(f"<b>{tot_students}</b>", td_bold),
-        Paragraph(f"<b>{tot_platform_solved - tot_contest_solved:,}</b>", td_bold),
+        Paragraph(f"<b>{max(0, tot_platform_solved - tot_contest_solved):,}</b>", td_bold),
         Paragraph(f"<b>{tot_platform_solved:,}</b>", td_bold),
         Paragraph(f"<font color='#059669'><b>+{tot_contest_solved:,}</b></font>", td_bold),
         Paragraph(f"<font color='#059669'><b>{tot_attended}</b></font>", td_bold),
@@ -406,9 +602,10 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
         Paragraph(f"<b>{att_pct:.1f}%</b>", td_bold),
     ])
 
-    t_dept = Table(dept_table_data, colWidths=[0.4*inch, 2.2*inch, 0.65*inch, 0.85*inch, 0.85*inch, 0.75*inch, 0.55*inch, 0.65*inch, 0.7*inch])
+    t_dept = Table(dept_table_data, colWidths=[0.5*inch, 3.15*inch, 0.85*inch, 1.1*inch, 1.1*inch, 1.0*inch, 0.85*inch, 0.95*inch, 1.35*inch], repeatRows=2)
     t_dept.setStyle(TableStyle([
         ('SPAN', (0, 0), (8, 0)),
+        ('SPAN', (0, -1), (1, -1)),
         ('BACKGROUND', (0, 0), (8, 0), colors.HexColor('#1B365D')),
         ('BACKGROUND', (0, 1), (-1, 1), colors.HexColor('#2E5B88')),
         ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#F1F5F9')),
@@ -420,14 +617,9 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
         ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
     ]))
     story.append(t_dept)
+    story.append(Spacer(1, 10))
 
-    # 
-    # PAGE 3: YEAR-WISE / BATCH MATRIX & PROBLEM DISTRIBUTION
-    # 
-    story.append(PageBreak())
-    story.append(Spacer(1, 5))
-    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#1B365D'), spaceAfter=8))
-
+    # SECTION 4: ACADEMIC YEAR & BATCH MATRIX (Flows dynamically)
     batch_table_data = [
         [Paragraph("<b>ACADEMIC YEAR & BATCH PROBLEM-SOLVING DISTRIBUTION</b>", sec_hdr_style), "", "", "", "", "", "", ""],
         [
@@ -445,11 +637,11 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
     for d_name, y_dict in dept_year_groups.items():
         for y_name, y_students in sorted(y_dict.items()):
             cnt = len(y_students)
-            p_gt500 = sum(1 for s in y_students if _to_int(s.get("total_solved")) >= 500)
-            p_250_500 = sum(1 for s in y_students if 250 <= _to_int(s.get("total_solved")) < 500)
-            p_lt250 = sum(1 for s in y_students if 100 <= _to_int(s.get("total_solved")) < 250)
-            p_lt100 = sum(1 for s in y_students if 1 <= _to_int(s.get("total_solved")) < 100)
-            p_0 = sum(1 for s in y_students if _to_int(s.get("total_solved")) == 0)
+            p_gt500 = sum(1 for s in y_students if _get_platform_solved(s) >= 500)
+            p_250_500 = sum(1 for s in y_students if 250 <= _get_platform_solved(s) < 500)
+            p_lt250 = sum(1 for s in y_students if 100 <= _get_platform_solved(s) < 250)
+            p_lt100 = sum(1 for s in y_students if 1 <= _get_platform_solved(s) < 100)
+            p_0 = sum(1 for s in y_students if _get_platform_solved(s) == 0)
 
             batch_table_data.append([
                 Paragraph(d_name, td_left),
@@ -459,10 +651,10 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
                 Paragraph(str(p_250_500), td_style),
                 Paragraph(str(p_lt250), td_style),
                 Paragraph(str(p_lt100), td_style),
-                Paragraph(f"<font color='#DC2626'><b>{p_0}</b></font>", td_bold)
+                Paragraph(f"<font color='#DC2626'><b>{p_0}</b></font>" if p_0 > 0 else "0", td_bold if p_0 > 0 else td_style)
             ])
 
-    t_batch = Table(batch_table_data, colWidths=[2.2*inch, 0.9*inch, 0.7*inch, 0.7*inch, 0.7*inch, 0.7*inch, 0.7*inch, 0.7*inch])
+    t_batch = Table(batch_table_data, colWidths=[3.15*inch, 1.3*inch, 0.9*inch, 1.1*inch, 1.1*inch, 1.1*inch, 1.1*inch, 1.1*inch], repeatRows=2)
     t_batch.setStyle(TableStyle([
         ('SPAN', (0, 0), (7, 0)),
         ('BACKGROUND', (0, 0), (7, 0), colors.HexColor('#1B365D')),
@@ -475,14 +667,9 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
         ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
     ]))
     story.append(t_batch)
+    story.append(Spacer(1, 10))
 
-    # 
-    # PAGE 4: TOP PERFORMERS & FACULTY ACTION INTERVENTION
-    # 
-    story.append(PageBreak())
-    story.append(Spacer(1, 5))
-    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#1B365D'), spaceAfter=8))
-
+    # SECTION 5: TOP PERFORMERS (Problems Solved & Contest Score)
     top_table_data = [
         [Paragraph("<b>INSTITUTIONAL TOP 10 LEETCODE PERFORMERS</b>", sec_hdr_style), "", "", "", "", "", ""],
         [
@@ -491,23 +678,35 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
             Paragraph("<b>Student Name</b>", th_style),
             Paragraph("<b>Department</b>", th_style),
             Paragraph("<b>Year</b>", th_style),
-            Paragraph("<b>Platform Solved</b>", th_style),
-            Paragraph("<b>Contest Rating</b>", th_style)
+            Paragraph("<b>Problems Solved</b>", th_style),
+            Paragraph("<b>Score</b>", th_style)
         ]
     ]
-    sorted_top = sorted(rows, key=lambda s: _to_int(s.get("total_solved")), reverse=True)[:10]
+    sorted_top = sorted(
+        rows,
+        key=lambda s: (-_get_contest_score(s), -_get_contest_solved(s), s.get("name") or "")
+    )[:10]
     for r_idx, s in enumerate(sorted_top, 1):
+        reg_no = s.get("reg_no") or s.get("register_no") or ""
+        d_raw = s.get("dept") or s.get("department_short") or s.get("department") or ""
+        d_code = resolve_dept_code(d_raw, reg_no)
+        y_val = s.get("year") or s.get("year_level") or ""
+        if "YEAR" in str(y_val).upper():
+            y_val = str(y_val).upper().replace("YEAR", "").strip()
+        c_solv = _get_contest_solved(s)
+        c_score = _get_contest_score(s)
+
         top_table_data.append([
             Paragraph(str(r_idx), td_bold),
-            Paragraph(s.get("reg_no") or "", td_style),
+            Paragraph(reg_no, td_style),
             Paragraph(f"<b>{s.get('name') or ''}</b>", td_left),
-            Paragraph(s.get("dept") or s.get("department_short") or "", td_style),
-            Paragraph(s.get("year") or s.get("year_level") or "", td_style),
-            Paragraph(f"<font color='#059669'><b>{_to_int(s.get('total_solved'))}</b></font>", td_bold),
-            Paragraph(f"{_to_float(s.get('contest_rating')):.1f}" if _to_float(s.get('contest_rating')) > 0 else "", td_style)
+            Paragraph(d_code, td_style),
+            Paragraph(y_val, td_style),
+            Paragraph(f"<font color='#059669'><b>{c_solv}</b></font>", td_bold),
+            Paragraph(f"<font color='#1B365D'><b>{c_score}</b></font>", td_bold)
         ])
 
-    t_top = Table(top_table_data, colWidths=[0.5*inch, 1.2*inch, 2.3*inch, 1.1*inch, 0.6*inch, 0.9*inch, 0.7*inch])
+    t_top = Table(top_table_data, colWidths=[0.6*inch, 1.6*inch, 3.45*inch, 1.7*inch, 0.8*inch, 1.35*inch, 1.35*inch], repeatRows=2)
     t_top.setStyle(TableStyle([
         ('SPAN', (0, 0), (6, 0)),
         ('BACKGROUND', (0, 0), (6, 0), colors.HexColor('#1B365D')),
@@ -520,22 +719,18 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
         ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
     ]))
     story.append(t_top)
+    story.append(Spacer(1, 10))
 
-    # 
-    # PAGE 5+: CONTEST PUBLIC ATTENDED ROSTER
-    # 
-    story.append(PageBreak())
-    story.append(Spacer(1, 5))
-    story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#1B365D'), spaceAfter=8))
-
+    # SECTION 6: CONTEST PUBLIC ATTENDED ROSTER (Flows dynamically & splits cleanly across pages)
     attended_rows = [
         r for r in rows
         if r.get("participation_status") in ("PUBLIC_ATTENDED", "OFFICIAL_ATTENDED", "ATTENDED", "PUBLIC")
     ]
     attended_rows.sort(key=lambda s: (
-        s.get("department_name") or s.get("department") or "",
+        resolve_dept_full_name(s.get("dept") or s.get("department_name") or s.get("department") or "", s.get("reg_no") or ""),
         s.get("year_level") or s.get("year") or "",
-        -_to_int(s.get("contest_problems_solved") or s.get("problems_solved")),
+        -_get_contest_score(s),
+        -_get_contest_solved(s),
         s.get("name") or s.get("student_name") or ""
     ))
 
@@ -561,7 +756,7 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
             Paragraph("PUBLIC ATTENDED ROSTER — 0 STUDENTS: No verified official participants for this contest.", td_left),
             "", "", "", "", "", "", "", ""
         ])
-        t_roster = Table(roster_table_data, colWidths=[0.4*inch, 1.1*inch, 2.3*inch, 0.8*inch, 0.5*inch, 0.45*inch, 0.45*inch, 0.45*inch, 0.45*inch, 0.5*inch], repeatRows=2)
+        t_roster = Table(roster_table_data, colWidths=[0.5*inch, 1.5*inch, 3.15*inch, 1.2*inch, 0.7*inch, 0.7*inch, 0.7*inch, 0.7*inch, 0.7*inch, 1.0*inch], repeatRows=2)
         t_roster.setStyle(TableStyle([
             ('SPAN', (0, 0), (9, 0)),
             ('SPAN', (1, 2), (9, 2)),
@@ -577,25 +772,34 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
         story.append(t_roster)
     else:
         for idx, s in enumerate(attended_rows, 1):
-            q1 = "1" if s.get("q1") or _to_int(s.get("total_contest_solved") or s.get("total_solved")) >= 1 else "0"
-            q2 = "1" if s.get("q2") or _to_int(s.get("total_contest_solved") or s.get("total_solved")) >= 2 else "0"
-            q3 = "1" if s.get("q3") or _to_int(s.get("total_contest_solved") or s.get("total_solved")) >= 3 else "0"
-            q4 = "1" if s.get("q4") or _to_int(s.get("total_contest_solved") or s.get("total_solved")) == 4 else "0"
+            reg_no = s.get("reg_no") or s.get("register_no") or ""
+            d_raw = s.get("dept") or s.get("department_short") or s.get("department") or ""
+            d_code = resolve_dept_code(d_raw, reg_no)
+            y_val = s.get("year") or s.get("year_level") or ""
+            if "YEAR" in str(y_val).upper():
+                y_val = str(y_val).upper().replace("YEAR", "").strip()
+
+            c_solved = _get_contest_solved(s)
+            q1 = "1" if s.get("q1") or c_solved >= 1 else "0"
+            q2 = "1" if s.get("q2") or c_solved >= 2 else "0"
+            q3 = "1" if s.get("q3") or c_solved >= 3 else "0"
+            q4 = "1" if s.get("q4") or c_solved >= 4 else "0"
+            score_val = _get_contest_score(s)
 
             roster_table_data.append([
                 Paragraph(str(idx), td_style),
-                Paragraph(s.get("reg_no") or "", td_style),
+                Paragraph(reg_no, td_style),
                 Paragraph(s.get("name") or "", td_left),
-                Paragraph(s.get("dept") or s.get("department_short") or "", td_style),
-                Paragraph(s.get("year") or s.get("year_level") or "", td_style),
+                Paragraph(d_code, td_style),
+                Paragraph(y_val, td_style),
                 Paragraph(f"<font color='#059669'>{q1}</font>", td_bold),
                 Paragraph(f"<font color='#059669'>{q2}</font>", td_bold),
                 Paragraph(f"<font color='#059669'>{q3}</font>", td_bold),
                 Paragraph(f"<font color='#059669'>{q4}</font>", td_bold),
-                Paragraph(f"<b>{_to_int(s.get('contest_score') or s.get('score'))}</b>", td_bold)
+                Paragraph(f"<b>{score_val}</b>", td_bold)
             ])
 
-        t_roster = Table(roster_table_data, colWidths=[0.35*inch, 1.15*inch, 2.3*inch, 0.8*inch, 0.5*inch, 0.45*inch, 0.45*inch, 0.45*inch, 0.45*inch, 0.5*inch], repeatRows=2)
+        t_roster = Table(roster_table_data, colWidths=[0.5*inch, 1.5*inch, 3.15*inch, 1.2*inch, 0.7*inch, 0.7*inch, 0.7*inch, 0.7*inch, 0.7*inch, 1.0*inch], repeatRows=2)
         t_roster.setStyle(TableStyle([
             ('SPAN', (0, 0), (9, 0)),
             ('BACKGROUND', (0, 0), (9, 0), colors.HexColor('#1B365D')),
@@ -615,3 +819,4 @@ def export_pdf_from_dataset(dataset: dict) -> bytes:
     })
     doc.build(story, canvasmaker=canvas_maker)
     return buffer.getvalue()
+

@@ -791,11 +791,11 @@ def download_session_report_by_format(
     """
     fmt = format.lower().strip()
     try:
-        eff_dept = department if department != "ALL" else (dept if dept != "ALL" else "ALL")
-        eff_year = year_level if year_level != "ALL" else (year if year != "ALL" else "ALL")
-        eff_att = status if status != "ALL" else (attendance if attendance != "ALL" else "ALL")
-        eff_search = (search or "").strip()
-        eff_batch = batch or "ALL"
+        eff_dept = department if isinstance(department, str) and department != "ALL" else (dept if isinstance(dept, str) and dept != "ALL" else "ALL")
+        eff_year = year_level if isinstance(year_level, str) and year_level != "ALL" else (year if isinstance(year, str) and year != "ALL" else "ALL")
+        eff_att = status if isinstance(status, str) and status != "ALL" else (attendance if isinstance(attendance, str) and attendance != "ALL" else "ALL")
+        eff_search = search.strip() if isinstance(search, str) else ""
+        eff_batch = batch if isinstance(batch, str) else "ALL"
 
         dataset, r_filename = _get_dataset_for_id(
             report_id=session_id,

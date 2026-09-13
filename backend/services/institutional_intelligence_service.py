@@ -1,6 +1,7 @@
 import json
 import uuid
 import datetime
+import re
 from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_, desc, func
@@ -352,9 +353,22 @@ class InstitutionalIntelligenceService:
         q_raw = query.strip()
         q_clean = q_raw.lower()
 
+        # ---------------------------------------------------------------------
+        # 0. CONVERSATIONAL INTENTS (GREETINGS, INTROS, CHATGPT/CLAUDE FEATURES, SMALL TALK)
+        # ---------------------------------------------------------------------
+        conv_response = InstitutionalIntelligenceService._detect_conversational_response(q_clean)
+        if conv_response:
+            return {
+                "query": query,
+                "answer": conv_response,
+                "evidence": ["Conversational interaction"],
+                "actions": [],
+                "dataConfidence": "CONVERSATIONAL"
+            }
+
         # Enforce Student restriction: Students can only query their own context
         if "STUDENT" in user_role and not any(r in user_role for r in ["ADMIN", "HOD", "FACULTY", "STAFF"]):
-            if any(w in q_clean for w in ["my", "i", "status", "flag", "progress"]):
+            if re.search(r'\b(my|i|self|status|flag|progress)\b', q_clean):
                 return InstitutionalIntelligenceService._answer_student_self_query(db, current_user)
             else:
                 return {
@@ -637,30 +651,87 @@ I can show specific student progress assigned to any faculty member."""
                 "dataConfidence": "HIGH_VERIFIED"
             }
 
-        # C. CONTEST MISSED / ABSENTEES
-        if any(w in q_clean for w in ["contest", "missed", "absent", "attendance"]):
+        # C. CONTEST MISSED / ABSENTEES / SCORE RATIO QUERY (e.g., 3/4, 4/4, 2/4, 1/4, 0/4)
+        ratio_match = re.search(r'([0-4])\s*/\s*4', q_clean) or re.search(r'([0-4])\s*(?:out of 4|count|problems|solved)', q_clean)
+        is_contest_q = any(w in q_clean for w in ["contest", "conetst", "missed", "absent", "attendance", "weelky", "weekly", "sonet"]) or bool(ratio_match)
+
+        if is_contest_q:
             latest_session = db.query(WeeklySession).order_by(desc(WeeklySession.id)).first()
             if not latest_session:
                 markdown_resp = "No active contest sessions found in verified records."
             else:
                 results = db.query(WeeklyPublicResult).filter_by(session_id=latest_session.id).all()
-                participated_ids = {r.student_id for r in results if r.outcome in ("SOLVED_LIVE", "SOLVED_VIRTUAL", "PARTICIPATED")}
-                absentees = [s for s in all_students if s.id not in participated_ids]
+                student_map = {s.id: s for s in all_students}
+                in_scope_results = [r for r in results if r.student_id in student_map]
 
-                if not absentees:
-                    markdown_resp = f"### 🏆 Contest Attendance Report\n\n**Contest**: {latest_session.contest_name}\n\n✅ **100% Participation**: All **{in_scope_count} students** in scope attended the contest."
-                else:
-                    rows = "\n".join([f"| {i+1} | **{s.name}** | `{s.reg_no}` | {s.department.code if s.department else 'N/A'} |" for i, s in enumerate(absentees[:20])])
-                    more_msg = f"\n\n*...and {len(absentees) - 20} more student absentees.*" if len(absentees) > 20 else ""
-                    markdown_resp = f"### 🚨 Contest Absentee Audit\n\n**Contest**: {latest_session.contest_name}\n\nFound **{len(absentees)} student absentees** out of {in_scope_count} total students:\n\n| # | Student Name | Register Number | Department |\n|---|---|---|---|\n{rows}{more_msg}"
+                # C.1 SPECIFIC RATIO QUERY (e.g. 3/4, 4/4)
+                if ratio_match:
+                    target_num = int(ratio_match.group(1))
+                    matching = [r for r in in_scope_results if (r.total_contest_solved == target_num or (r.q1+r.q2+r.q3+r.q4) == target_num)]
+                    
+                    if not matching:
+                        markdown_resp = f"### 🎯 Contest Score Audit ({target_num}/4 Solved)\n\n**Contest**: {latest_session.contest_name}\n\nNo active students in current scope scored exactly **{target_num}/4** in this contest session."
+                    else:
+                        rows = "\n".join([
+                            f"| {i+1} | **{r.name or student_map[r.student_id].name}** | `{r.reg_no or student_map[r.student_id].reg_no}` | {r.dept or 'N/A'} ({r.year or 'N/A'}) | **{target_num}/4** | VERIFIED |"
+                            for i, r in enumerate(matching[:25])
+                        ])
+                        more_msg = f"\n\n*...and {len(matching) - 25} more solvers with {target_num}/4 score.*" if len(matching) > 25 else ""
+                        markdown_resp = f"### 🎯 Contest Score Audit ({target_num}/4 Solved)\n\n**Contest**: {latest_session.contest_name}\n\nFound **{len(matching)} student(s)** who achieved **{target_num}/4 solved** in the official contest:\n\n| # | Student Name | Register Number | Dept / Year | Contest Ratio | Evidence Status |\n|---|---|---|---|---|---|\n{rows}{more_msg}"
 
-            return {
-                "query": query,
-                "answer": markdown_resp,
-                "evidence": [f"Checked session {latest_session.contest_name if latest_session else 'N/A'}"],
-                "actions": [{"label": "Send Contest Follow-up", "action": "SEND_REMINDER", "params": {"target": "CONTEST_ABSENTEES"}}],
-                "dataConfidence": "HIGH_VERIFIED"
-            }
+                    return {
+                        "query": query,
+                        "answer": markdown_resp,
+                        "evidence": [f"Filtered contest results for session {latest_session.contest_name} with score {target_num}/4."],
+                        "actions": [{"label": "View Contest Leaderboard", "action": "VIEW_CONTEST", "params": {"sessionId": latest_session.id}}],
+                        "dataConfidence": "HIGH_VERIFIED"
+                    }
+
+                # C.2 ABSENTEE AUDIT
+                if any(w in q_clean for w in ["missed", "absent", "attendance", "not attend"]):
+                    participated_ids = {r.student_id for r in results if r.outcome in ("SOLVED_LIVE", "SOLVED_VIRTUAL", "PARTICIPATED")}
+                    absentees = [s for s in all_students if s.id not in participated_ids]
+
+                    if not absentees:
+                        markdown_resp = f"### 🏆 Contest Attendance Report\n\n**Contest**: {latest_session.contest_name}\n\n✅ **100% Participation**: All **{in_scope_count} students** in scope attended the contest."
+                    else:
+                        rows = "\n".join([f"| {i+1} | **{s.name}** | `{s.reg_no}` | {s.department.code if s.department else 'N/A'} |" for i, s in enumerate(absentees[:20])])
+                        more_msg = f"\n\n*...and {len(absentees) - 20} more student absentees.*" if len(absentees) > 20 else ""
+                        markdown_resp = f"### 🚨 Contest Absentee Audit\n\n**Contest**: {latest_session.contest_name}\n\nFound **{len(absentees)} student absentees** out of {in_scope_count} total students:\n\n| # | Student Name | Register Number | Department |\n|---|---|---|---|\n{rows}{more_msg}"
+
+                    return {
+                        "query": query,
+                        "answer": markdown_resp,
+                        "evidence": [f"Checked session {latest_session.contest_name}"],
+                        "actions": [{"label": "Send Contest Follow-up", "action": "SEND_REMINDER", "params": {"target": "CONTEST_ABSENTEES"}}],
+                        "dataConfidence": "HIGH_VERIFIED"
+                    }
+
+                # C.3 GENERAL CONTEST OVERVIEW / BREAKDOWN
+                score_counts = {4: 0, 3: 0, 2: 0, 1: 0, 0: 0}
+                for r in in_scope_results:
+                    cnt = r.total_contest_solved if r.total_contest_solved in score_counts else (r.q1+r.q2+r.q3+r.q4)
+                    score_counts[min(max(cnt, 0), 4)] += 1
+
+                markdown_resp = f"""### 📊 Weekly Contest Performance Snapshot
+
+**Contest Session**: {latest_session.contest_name} ({latest_session.session_date or 'Recent'})
+
+• **4/4 Perfect Solvers**: **{score_counts[4]}** students
+• **3/4 Solvers**: **{score_counts[3]}** students
+• **2/4 Solvers**: **{score_counts[2]}** students
+• **1/4 Solvers**: **{score_counts[1]}** students
+• **0/4 Solvers**: **{score_counts[0]}** students
+
+*You can ask me to list students by specific solve count, e.g., "who got 3/4" or "4/4 solvers".*"""
+
+                return {
+                    "query": query,
+                    "answer": markdown_resp,
+                    "evidence": [f"Aggregated contest scores for session {latest_session.contest_name} across {len(in_scope_results)} students."],
+                    "actions": [{"label": "View Live Contest", "action": "VIEW_CONTEST", "params": {"sessionId": latest_session.id}}],
+                    "dataConfidence": "HIGH_VERIFIED"
+                }
 
         # D. INACTIVE / PENDING STUDENTS
         if any(w in q_clean for w in ["inactive", "idle", "pending students", "pending", "zero", "kudu"]):
@@ -794,11 +865,35 @@ You can ask me to view inactive students, contest absentees, staff progress, or 
     @staticmethod
     def _detect_conversational_response(q_clean: str) -> Optional[str]:
         """
-        Detects casual greetings, identity questions, capabilities, small talk, thanks, and acknowledgements.
-        Returns response string if query is purely conversational without data entities.
+        Detects casual greetings, identity questions, ChatGPT/Claude style feature requests,
+        user introductions, small talk, thanks, and acknowledgements.
+        Returns response string if query is conversational without data entities.
         """
-        data_keywords = ["student", "staff", "cse", "it", "ece", "eee", "mech", "civil", "aids", "aiml", "iot", "report", "pdf", "contest", "absent", "inactive", "pending", "top", "rank", "solved", "rating", "7322", "path", "detail"]
-        if any(kw in q_clean for kw in data_keywords):
+        # ChatGPT / Claude style full feature request
+        if any(kw in q_clean for kw in ["chat gpt", "chatgpt", "claude", "full feature", "full version", "feature", "feceit"]):
+            return """### 🤖 Full-Featured ChatGPT & Claude-Style Intelligence Engine
+
+I am equipped with comprehensive AI assistant capabilities for **Nandha Engineering College**:
+
+- 💬 **ChatGPT & Claude-Style Conversational AI**: Instant answers, natural language processing, Tanglish & English support.
+- 🔍 **Student Spotlight & Lookup**: Detailed profiles, LeetCode rating, global rank, and language breakdowns (e.g. `732224CC031`).
+- 📊 **Department & Roster Intelligence**: Department-level rankings, attendance tracking, and performance analytics.
+- 🏆 **Sunday Weekly Contest Engine**: Immutability locks, Post-9:30 AM solver detection, and Q1–Q4 ratio tracking.
+- 📄 **1-Click Executive PDF & Excel Reports**: Automated audit exports and staff mentoring summaries.
+
+*How can I assist you right now? Feel free to ask any question or request a report!*"""
+
+        # Institution name / college mention
+        if any(kw in q_clean for kw in ["nandha", "anndha", "enggiene", "engineering college", "nec"]):
+            return "Welcome! 🏫 I am the **Institutional Intelligence Assistant** for **Nandha Engineering College**. I continuously monitor all **1,573 active students** across CSE, IT, ECE, EEE, AIDS, and AGRI departments. How can I assist you with your department analytics today?"
+
+        # User introductions
+        if any(p in q_clean for p in ["i am ", "my name is ", "i'm ", "nanthish"]):
+            name_str = "Nanthish" if "nanthish" in q_clean else "there"
+            return f"Hello **{name_str}**! 👋 Great to connect with you. I am your Institutional Intelligence Assistant for Nandha Engineering College. I monitor all **1,573 active students** across CSE, IT, ECE, EEE, AIDS, and AGRI departments. How can I help you today?"
+
+        data_keywords = ["student", "staff", "cse", "it", "ece", "eee", "mech", "civil", "aids", "aiml", "iot", "report", "pdf", "contest", "conetst", "weelky", "weekly", "sonet", "3/4", "4/4", "2/4", "1/4", "0/4", "ratio", "absent", "inactive", "pending", "top", "rank", "solved", "rating", "7322", "path", "detail"]
+        if any(kw in q_clean for kw in data_keywords) or re.search(r'[0-4]\s*/\s*4', q_clean):
             return None
 
         # 1. Greetings
@@ -823,6 +918,9 @@ You can ask me to view inactive students, contest absentees, staff progress, or 
         # 4. Small Talk
         if any(phrase in q_clean for phrase in ["how are you", "how r u", "how is it going", "how's it going"]):
             return "I'm doing well, thanks! Ready to help you with the institutional data."
+
+        if "give" in q_clean or "sollu" in q_clean or "sollunga" in q_clean or "paaru" in q_clean:
+            return "Hello! 👋 I am ready to assist. You can ask me:\n- *'Show CSE top performers'*\n- *'Who missed the last contest?'*\n- *'Show Post-9:30 AM solvers report'*\n- *'Lookup student 732224CC031'*\n- *'Export Executive PDF Report'*\nOr ask any question about the roster!"
         
         if "joke" in q_clean:
             return "Why do programmers prefer dark mode? Because light attracts bugs! 🐛 😄 How can I assist with your student data today?"

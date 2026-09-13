@@ -175,19 +175,19 @@ def write_sheet_header(
     ws.merge_cells(f"C1:{last_col_letter}1")
     ws["C1"] = "NANDHA ENGINEERING COLLEGE"
     ws["C1"].font = Font(name=PRIMARY_FONT, size=15, bold=True, color="FFFFFF")
-    ws["C1"].alignment = Alignment(horizontal="left", vertical="center")
+    ws["C1"].alignment = Alignment(horizontal="center", vertical="center")
     ws.row_dimensions[1].height = 28
 
     ws.merge_cells(f"C2:{last_col_letter}2")
     ws["C2"] = "WEEKLY LEETCODE INTELLIGENCE REPORT"
     ws["C2"].font = Font(name=PRIMARY_FONT, size=11, bold=True, color="FFFFFF")
-    ws["C2"].alignment = Alignment(horizontal="left", vertical="center")
+    ws["C2"].alignment = Alignment(horizontal="center", vertical="center")
     ws.row_dimensions[2].height = 20
 
     ws.merge_cells(f"C3:{last_col_letter}3")
     ws["C3"] = f"{sheet_title.upper()} — {contest_name}"
     ws["C3"].font = Font(name=PRIMARY_FONT, size=10, italic=True, color="FFFFFF")
-    ws["C3"].alignment = Alignment(horizontal="left", vertical="center")
+    ws["C3"].alignment = Alignment(horizontal="center", vertical="center")
     ws.row_dimensions[3].height = 20
 
     # Add Official Logo (Height EXACTLY 42px, anchor A1, exact aspect ratio preserved)
@@ -235,7 +235,7 @@ def write_sheet_header(
             cell = ws.cell(row=r, column=c)
             cell.fill = meta_fill
             cell.font = meta_font_val
-            cell.alignment = ALIGN_LEFT
+            cell.alignment = ALIGN_CENTER
             cell.border = GRID_BORDER
 
 
@@ -305,19 +305,19 @@ def write_kpi_grid(ws, kpi_list: List[Dict[str, Any]], primary_hex: str, light_h
 COLUMN_WIDTH_MAP = {
     "S.No": 8,
     "Rank": 8,
-    "Register No": 16,
-    "Student Name": 26,
+    "Register No": 18,
+    "Student Name": 28,
     "Department": 20,
-    "Year": 10,
-    "LeetCode Handle": 24,
-    "Username": 24,
-    "Status": 18,
-    "Attendance": 16,
+    "Year": 12,
+    "LeetCode Handle": 26,
+    "Username": 26,
+    "Status": 24,
+    "Attendance": 24,
     "Q1": 8,
     "Q2": 8,
     "Q3": 8,
     "Q4": 8,
-    "Solved": 10,
+    "Solved": 12,
     "Score": 12,
     "Mentor Signal": 24,
     "Staff / Mentor": 24

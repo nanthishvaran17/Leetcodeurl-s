@@ -107,7 +107,7 @@ def build_intelligence_pdf(dataset: Dict[str, Any]) -> bytes:
         build_header_and_executive, dataset, styles, table_style,
         section_name="Executive Dashboard"
     ))
-    story.append(PageBreak())
+    story.append(Spacer(1, 0.4 * cm))
 
     # 2+3. Department & Academic Year Intelligence
     story.extend(_section_elements_safe(
@@ -119,7 +119,7 @@ def build_intelligence_pdf(dataset: Dict[str, Any]) -> bytes:
         build_year_intelligence, dataset, styles, table_style,
         section_name="Academic Year Intelligence"
     ))
-    story.append(PageBreak())
+    story.append(Spacer(1, 0.4 * cm))
 
     # 4+5. DSA Topic & Language Intelligence
     story.extend(_section_elements_safe(
@@ -131,21 +131,21 @@ def build_intelligence_pdf(dataset: Dict[str, Any]) -> bytes:
         build_language_intelligence, dataset, styles, table_style,
         section_name="Language Intelligence"
     ))
-    story.append(PageBreak())
+    story.append(Spacer(1, 0.4 * cm))
 
     # 6. Department Cross-Matrices
     story.extend(_section_elements_safe(
         build_department_matrices, dataset, styles, table_style,
         section_name="Department Cross-Matrices"
     ))
-    story.append(PageBreak())
+    story.append(Spacer(1, 0.4 * cm))
 
     # 7. Top Performers & Weekly Improvers
     story.extend(_section_elements_safe(
         build_top_performers_and_cohorts, dataset, styles, table_style,
         section_name="Top Performers"
     ))
-    story.append(PageBreak())
+    story.append(Spacer(1, 0.4 * cm))
 
     # 8. Weekly Contest Intelligence
     story.extend(_section_elements_safe(
@@ -159,14 +159,14 @@ def build_intelligence_pdf(dataset: Dict[str, Any]) -> bytes:
         build_contest_q1q4, dataset, _USABLE_W,
         section_name="Contest Q1-Q4"
     ))
-    story.append(PageBreak())
+    story.append(Spacer(1, 0.4 * cm))
 
     # 10. Weekly Historical Trend (NEW)
     story.extend(_section_elements_safe(
         build_historical_trend, dataset, _USABLE_W,
         section_name="Historical Trend"
     ))
-    story.append(PageBreak())
+    story.append(Spacer(1, 0.4 * cm))
 
     # 11. Risk & Intervention Intelligence
     risk_data = dataset.get("risk_distribution", {})

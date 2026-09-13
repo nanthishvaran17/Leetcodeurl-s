@@ -1,4 +1,4 @@
-import api from '../api';
+import api, { getAuthHeaders } from '../api';
 import {
   DownloadOptions,
   DownloadState,
@@ -53,8 +53,8 @@ class DownloadManager {
     this.updateState(state, options.onStateChange);
 
     try {
-      // 2. FAST AUTHENTICATION (Synchronous read from local session)
-      const token = localStorage.getItem('token') || '';
+      // 2. AUTHENTICATION HEADERS (Supports JWT in localStorage and Firebase Auth Tokens)
+      const authHeaders = await getAuthHeaders();
 
       // 3. GENERATE REPORT VIA API (Axios Blob Request)
       // Note: We DO NOT emit notifyStart before the server responds successfully!
@@ -64,7 +64,10 @@ class DownloadManager {
         params: options.params || {},
         data: options.data,
         responseType: 'blob',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: {
+          ...authHeaders,
+          ...(options.headers || {})
+        },
         onDownloadProgress: (progressEvent) => {
           if (progressEvent.total) {
             const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -81,8 +84,19 @@ class DownloadManager {
         throw new Error(validation.error || 'Generated report payload is invalid or empty.');
       }
 
+      // Check if server returned a custom filename in Content-Disposition header
+      let effectiveFilename = filename;
+      const contentDisposition = response.headers?.['content-disposition'] || response.headers?.['Content-Disposition'];
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename=["']?([^"';]+)["']?/i);
+        if (match && match[1]) {
+          effectiveFilename = sanitizeFilename(match[1]);
+        }
+      }
+
       // 5. STATE MACHINE: GENERATION SUCCEEDED -> NOW FINALIZE DOWNLOAD
       state.status = 'DOWNLOADING';
+      state.filename = effectiveFilename;
       this.updateState(state, options.onStateChange);
 
       // 6. STORAGE & PLATFORM-SPECIFIC DISPATCH
@@ -90,10 +104,8 @@ class DownloadManager {
         const { Filesystem, Directory } = await import('@capacitor/filesystem');
         const base64Data = await blobToBase64(blob);
 
-        // Modern Scoped Storage compliant: Write into Directory.Cache (app-sandboxed internal storage).
-        // Zero permission requirements on Android 10, 11, 12, 13, 14, 15, 16+.
         const writeResult = await Filesystem.writeFile({
-          path: filename,
+          path: effectiveFilename,
           data: base64Data,
           directory: Directory.Cache,
           recursive: true,
@@ -108,7 +120,7 @@ class DownloadManager {
 
         // Notify with full persistent file reference
         await downloadNotification.notifySuccess({
-          filename,
+          filename: effectiveFilename,
           localFileUri: writeResult.uri,
           mimeType,
           fileSizeBytes: blob.size,
@@ -117,7 +129,7 @@ class DownloadManager {
 
         setTimeout(() => {
           if (writeResult.uri) {
-            shareOrOpenFile(writeResult.uri, filename, mimeType);
+            shareOrOpenFile(writeResult.uri, effectiveFilename, mimeType);
           }
         }, 250);
 
@@ -130,7 +142,7 @@ class DownloadManager {
 
       const typedBlob = blob instanceof Blob && blob.type ? blob : new Blob([blob], { type: mimeType });
       const blobUrl = URL.createObjectURL(typedBlob);
-      await triggerBrowserAnchorDownload(blobUrl, filename, mimeType);
+      await triggerBrowserAnchorDownload(blobUrl, effectiveFilename, mimeType);
 
       setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
 
@@ -141,7 +153,7 @@ class DownloadManager {
       this.updateState(state, options.onStateChange);
 
       await downloadNotification.notifySuccess({
-        filename,
+        filename: effectiveFilename,
         localFileUri: blobUrl,
         mimeType,
         fileSizeBytes: blob.size,
@@ -189,7 +201,7 @@ class DownloadManager {
     this.updateState(state, options.onStateChange);
 
     try {
-      const token = localStorage.getItem('token') || '';
+      const authHeaders = await getAuthHeaders();
       
       // 1. Create Job
       const createRes = await api.post(endpoint, {
@@ -197,7 +209,7 @@ class DownloadManager {
         format: options.format,
         filters: options.filters || {}
       }, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
+        headers: { ...authHeaders }
       });
 
       const jobId = createRes.data?.job_id;
@@ -214,7 +226,7 @@ class DownloadManager {
         await new Promise(r => setTimeout(r, 2000)); // Poll every 2 seconds
         
         const statusRes = await api.get(`${endpoint}/${jobId}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {}
+          headers: { ...authHeaders }
         });
         
         const jobStatus = statusRes.data?.status;
@@ -239,7 +251,7 @@ class DownloadManager {
         url: downloadUrl,
         method: 'GET',
         responseType: 'blob',
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
+        headers: { ...authHeaders }
       });
 
       const blob = response.data;

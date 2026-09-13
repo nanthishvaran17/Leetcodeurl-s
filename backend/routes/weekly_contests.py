@@ -594,6 +594,15 @@ def get_current_session_info(db: Session = Depends(get_db)):
     end_dt = now_ist.replace(hour=9, minute=30, second=0, microsecond=0)
     time_remaining_sec = max(0, int((end_dt - now_ist).total_seconds())) if (now_ist < end_dt and session.status == "LIVE") else 0
 
+    if session.status == "LIVE":
+        try:
+            from backend.services.weekly_session_manager import sunday_live_engine
+            from backend.database import SessionLocal
+            if not sunday_live_engine.is_running:
+                asyncio.create_task(sunday_live_engine.run_live_sync_cycle(session.id, SessionLocal))
+        except Exception as _live_err:
+            pass
+
     return {
         "sessionId": session.id,
         "sessionCode": session.session_code,
@@ -2236,6 +2245,12 @@ def get_post_930_solvers(
     user = get_current_user_from_request(request, db)
     user_role_clean = (user.role or "").strip().lower() if user else "admin"
 
+    # Sanitize string parameters safely
+    dept_str = dept.strip().upper() if (dept and isinstance(dept, str)) else None
+    year_str = year_level.strip().upper() if (year_level and isinstance(year_level, str)) else None
+    section_str = section.strip().upper() if (section and isinstance(section, str)) else None
+    search_str = search.strip().lower() if (search and isinstance(search, str)) else None
+
     # Enforce Staff-level RBAC isolation
     assigned_student_ids = None
     if user and user_role_clean in ["staff", "faculty"]:
@@ -2249,7 +2264,7 @@ def get_post_930_solvers(
 
     # Determine target session date
     target_date = get_most_recent_sunday_date(get_current_ist_datetime())
-    if session_date:
+    if session_date and isinstance(session_date, str):
         parsed = parse_session_date(session_date)
         if parsed:
             target_date = parsed
@@ -2267,6 +2282,7 @@ def get_post_930_solvers(
         lock_datetime = ist_tz.localize(lock_datetime)
 
     official_lock_iso = lock_datetime.isoformat()
+    lock_utc = lock_datetime.astimezone(pytz.utc).replace(tzinfo=None)
 
     # Retrieve official locked snapshot baseline if available
     locked_snapshot_map = {}
@@ -2296,11 +2312,11 @@ def get_post_930_solvers(
                             reg = item.get("reg_no") or item.get("register_number") or item.get("regNo")
                             if reg:
                                 reg_key = reg.strip().upper()
-                                sol = item.get("cumulative_solved") if item.get("cumulative_solved") is not None else item.get("total_solved")
+                                sol = item.get("cumulative_solved") or item.get("total_solved_profile") or item.get("profile_solved")
                                 if sol is not None and sol != '' and reg_key not in locked_snapshot_map:
                                     try:
                                         val = int(sol)
-                                        if val >= 0:
+                                        if val > 4:
                                             locked_snapshot_map[reg_key] = val
                                     except:
                                         pass
@@ -2322,17 +2338,17 @@ def get_post_930_solvers(
     if student_id:
         query = query.filter(Student.id == student_id)
 
-    if dept and dept.strip().upper() not in ['ALL', 'ALL DEPTS', '']:
-        query = query.filter(Student.department.has(code=dept.strip().upper()))
+    if dept_str and dept_str not in ['ALL', 'ALL DEPTS', '']:
+        query = query.filter(Student.department.has(code=dept_str))
 
-    if year_level and year_level.strip().upper() not in ['ALL', 'ALL YEARS', '']:
-        query = query.filter(Student.year_level == year_level.strip().upper())
+    if year_str and year_str not in ['ALL', 'ALL YEARS', '']:
+        query = query.filter(Student.year_level == year_str)
 
-    if section and section.strip().upper() not in ['ALL', 'ALL SECTIONS', '']:
-        query = query.filter(Student.section.has(name=section.strip().upper()))
+    if section_str and section_str not in ['ALL', 'ALL SECTIONS', '']:
+        query = query.filter(Student.section.has(name=section_str))
 
-    if search:
-        s_term = f"%{search.strip().lower()}%"
+    if search_str:
+        s_term = f"%{search_str}%"
         query = query.filter(
             (Student.name.ilike(s_term)) |
             (Student.reg_no.ilike(s_term)) |
@@ -2345,56 +2361,75 @@ def get_post_930_solvers(
     total_post_submissions = 0
     all_post_timestamps = []
 
-    # Optimize: pre-fetch virtual results
     student_ids = [s.id for s in students]
+
+    # Pre-fetch snapshots before & after lock_datetime
+    all_snaps_before = db.query(StudentStatSnapshot).filter(
+        StudentStatSnapshot.student_id.in_(student_ids),
+        StudentStatSnapshot.captured_at <= lock_utc
+    ).order_by(StudentStatSnapshot.captured_at.desc()).all()
+
+    all_snaps_after = db.query(StudentStatSnapshot).filter(
+        StudentStatSnapshot.student_id.in_(student_ids),
+        StudentStatSnapshot.captured_at > lock_utc
+    ).order_by(StudentStatSnapshot.captured_at.asc()).all()
+
+    from collections import defaultdict
+    snaps_before_by_student = defaultdict(list)
+    for sn in all_snaps_before:
+        snaps_before_by_student[sn.student_id].append(sn)
+
+    snaps_after_by_student = defaultdict(list)
+    for sn in all_snaps_after:
+        snaps_after_by_student[sn.student_id].append(sn)
+
+    # Optimize: pre-fetch virtual results
     virtual_res_query = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.student_id.in_(student_ids)).all()
     
-    from collections import defaultdict
     v_results_by_student = defaultdict(list)
     for v in virtual_res_query:
         if v.student_id:
             v_results_by_student[v.student_id].append(v)
 
+    # Load Official Weekly Public Results / Snapshot for session to get exact contest solved score at 09:30 AM lock (0 to 4)
+    official_contest_solved_map = {}
+    if session:
+        public_records = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session.id).all()
+        for p in public_records:
+            reg_k = p.reg_no.strip().upper() if p.reg_no else ""
+            if reg_k:
+                official_contest_solved_map[reg_k] = p.total_contest_solved if p.total_contest_solved is not None else 0
+
     # Process post-9:30 solves per student with problem-level deduplication
     for s in students:
         reg_key = s.reg_no.strip().upper() if s.reg_no else ""
-        current_total = (s.stats.total_solved if (s.stats and s.stats.total_solved is not None) else 0)
-        
-        official_locked = locked_snapshot_map.get(reg_key, None)
-        if official_locked is None or official_locked == 0:
-            # Check StudentStatSnapshot closest to lock_datetime
-            st_snap = db.query(StudentStatSnapshot).filter(
-                StudentStatSnapshot.student_id == s.id,
-                StudentStatSnapshot.captured_at <= lock_datetime.astimezone(pytz.utc).replace(tzinfo=None)
-            ).order_by(StudentStatSnapshot.captured_at.desc()).first()
+        current_total_profile = (s.stats.total_solved if (s.stats and s.stats.total_solved is not None) else 0)
 
-            if st_snap and st_snap.total_solved is not None and st_snap.total_solved > 0:
-                official_locked = st_snap.total_solved
-            else:
-                # If no baseline snapshot exists for this student on session date, baseline is current_total
-                official_locked = current_total
+        # Retrieve official locked contest score (0/4, 1/4, 2/4, 3/4, 4/4)
+        official_contest_solved = official_contest_solved_map.get(reg_key, 0)
+
+        # If student already solved 4/4 during official contest, they cannot have post-window contest solves
+        if official_contest_solved >= 4:
+            continue
 
         qualifying_problems = []
         seen_problem_keys = set()
         student_submissions = 0
-        
-        # Examine virtual results
+
+        # Examine virtual contest results completed after 09:30 AM IST
         virtual_res = v_results_by_student.get(s.id, [])
+        v_res_after = []
 
         for v in virtual_res:
             v_time = v.completed_at
             if v_time:
-                if v_time.tzinfo is None:
-                    v_time_ist = pytz.utc.localize(v_time).astimezone(ist_tz)
-                else:
-                    v_time_ist = v_time.astimezone(ist_tz)
-                
-                # Check strictly > lock_datetime
+                v_time_ist = pytz.utc.localize(v_time).astimezone(ist_tz) if v_time.tzinfo is None else v_time.astimezone(ist_tz)
                 if v_time_ist > lock_datetime or v_time_ist.time() > datetime.time(9, 30, 0):
+                    v_res_after.append((v, v_time_ist))
                     p_key = f"{s.id}_virt_{v.id}"
                     if p_key not in seen_problem_keys:
                         seen_problem_keys.add(p_key)
-                        p_name = f"Virtual Contest Solved ({v.total_contest_solved} problems)"
+                        p_name = f"Virtual Contest Solved ({v.total_contest_solved}/4 problems)"
                         qualifying_problems.append({
                             "problem_name": p_name,
                             "name": p_name,
@@ -2409,21 +2444,23 @@ def get_post_930_solvers(
                         student_submissions += v.total_contest_solved + 1
                         all_post_timestamps.append(v_time_ist)
 
-        # Fallback calculation comparing snapshot baseline vs current total
-        post_solve_count = len(qualifying_problems)
-        if post_solve_count == 0 and current_total > official_locked:
-            diff = current_total - official_locked
-            post_solve_count = diff
-            student_submissions = diff + 1
-            
-            # Resolve actual activity timestamp from post-9:30 stat snapshots or last_verified_at
-            post_snap = db.query(StudentStatSnapshot).filter(
-                StudentStatSnapshot.student_id == s.id,
-                StudentStatSnapshot.captured_at > lock_datetime.astimezone(pytz.utc).replace(tzinfo=None)
-            ).order_by(StudentStatSnapshot.captured_at.asc()).first()
+        max_remaining_contest_problems = 4 - official_contest_solved
+        post_contest_solves = 0
 
-            if post_snap and post_snap.captured_at:
-                c_at = post_snap.captured_at
+        if v_res_after:
+            highest_v_score = max(v[0].total_contest_solved for v in v_res_after)
+            post_contest_solves = max(0, min(max_remaining_contest_problems, highest_v_score - official_contest_solved))
+            if post_contest_solves == 0 and highest_v_score > 0:
+                post_contest_solves = min(max_remaining_contest_problems, highest_v_score)
+
+        if post_contest_solves <= 0 or not qualifying_problems:
+            continue
+
+        if not qualifying_problems and post_contest_solves > 0:
+            student_submissions = post_contest_solves + 1
+            post_snap = sn_after
+            if post_snap and post_snap[0].captured_at:
+                c_at = post_snap[0].captured_at
                 base_time_ist = pytz.utc.localize(c_at).astimezone(ist_tz) if c_at.tzinfo is None else c_at.astimezone(ist_tz)
             elif s.stats and s.stats.last_verified_at:
                 lv_dt = s.stats.last_verified_at
@@ -2436,8 +2473,8 @@ def get_post_930_solvers(
                 base_time_ist = lock_datetime + datetime.timedelta(minutes=5)
 
             qualifying_problems.append({
-                "problem_name": f"Post-Session Problem Solved (+{diff})",
-                "name": f"Post-Session Problem Solved (+{diff})",
+                "problem_name": f"Post-Session Contest Problem Solved (+{post_contest_solves})",
+                "name": f"Post-Session Contest Problem Solved (+{post_contest_solves})",
                 "problem_id": f"POST_{s.id}",
                 "solved_at": base_time_ist.strftime("%I:%M:%S %p IST"),
                 "timestamp_ist": base_time_ist.strftime("%I:%M:%S %p IST"),
@@ -2447,13 +2484,14 @@ def get_post_930_solvers(
                 "url": f"https://leetcode.com/u/{s.username}/" if s.username else None
             })
 
-        # Filter out zero post-9:30 activity
+        current_contest_solved = min(4, official_contest_solved + post_contest_solves)
+        post_solve_count = post_contest_solves
         if post_solve_count < (min_post_window_solves or 1):
             continue
 
         total_post_solves += post_solve_count
         total_post_submissions += student_submissions
-        
+
         timestamps = [p["timestamp_iso"] for p in qualifying_problems if p.get("timestamp_iso")]
         first_time = min(timestamps) if timestamps else None
         latest_time = max(timestamps) if timestamps else None
@@ -2496,10 +2534,13 @@ def get_post_930_solvers(
             "year_level": s.year_level,
             "section": s.section.name if s.section else "A",
             "username": s.username,
-            "official_locked_solved": official_locked,
-            "post_window_solve_count": post_solve_count,
+            "official_locked_solved": f"{official_contest_solved}/4",
+            "post_window_solve_count": f"+{post_contest_solves}",
             "post_window_submission_count": student_submissions,
-            "current_total_solved": current_total,
+            "current_total_solved": f"{current_contest_solved}/4",
+            "official_locked_raw": official_contest_solved,
+            "post_window_solves_raw": post_contest_solves,
+            "current_total_raw": current_contest_solved,
             "first_post_window_solve": first_time,
             "latest_post_window_solve": latest_time,
             "first_post_window_solve_formatted": _fmt_iso_to_ist(first_time, "09:35 AM IST"),
