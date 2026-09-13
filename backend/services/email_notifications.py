@@ -47,7 +47,7 @@ def notify_staff_created(staff_email: str, staff_name: str, role: str, username:
     <p style="margin-top: 15px; color: #334155; font-size: 14px;">If you did not expect this account, please contact the system administrator.</p>
     """
 
-    action_button = f'<a href="{setup_url}" class="btn" target="_blank">Set Up My Account</a>'
+    action_button = f'<a href="{setup_url}" class="btn" target="_blank" style="display: inline-block; background-color: #2563eb; color: #ffffff !important; text-decoration: none; padding: 14px 28px; border-radius: 6px; font-weight: bold; font-size: 16px; text-align: center; min-width: 220px;">Set Up My Account</a>'
     html_body = generate_professional_template(title, content, action_button, fallback_url=setup_url)
 
     logger.info(f"[NOTIFY] Sending staff creation email to {staff_email} with setup_url: {setup_url}")

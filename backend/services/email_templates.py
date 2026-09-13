@@ -29,9 +29,11 @@ def generate_professional_template(title: str, content: str, action_button: Opti
             """
         if fallback_url:
             button_html += f"""
-            <div style="text-align: center; margin-top: 12px; font-size: 13px; color: #475569; word-break: break-word; overflow-wrap: anywhere; line-height: 1.5;">
-                Or copy and paste this link into your browser:<br>
-                <a href="{fallback_url}" style="color: #3b82f6; text-decoration: underline; word-break: break-all;">{fallback_url}</a>
+            <div style="margin-top: 20px; text-align: center; font-size: 13px; color: #475569;">
+                <p style="margin: 0 0 6px 0; font-weight: 600; color: #334155;">Or copy and paste this link into your browser:</p>
+                <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 14px; word-break: break-all; font-family: monospace; font-size: 12px; color: #2563eb; text-align: left; margin: 0 auto; max-width: 520px; line-height: 1.5;">
+                    <a href="{fallback_url}" style="color: #2563eb; text-decoration: underline; word-break: break-all; font-family: monospace; font-size: 12px;">{fallback_url}</a>
+                </div>
             </div>
             """
 
@@ -294,6 +296,7 @@ def generate_professional_template(title: str, content: str, action_button: Opti
                         <td class="email-content" style="padding: 32px 24px; line-height: 1.6; font-size: 15px; color: #1e293b; word-break: break-word; overflow-wrap: anywhere;">
                             <h2 style="color: #0f172a; margin-top: 0; margin-bottom: 20px; font-size: 22px; line-height: 1.3; word-break: break-word; overflow-wrap: anywhere;">{title}</h2>
                             {content}
+                            {button_html}
                         </td>
                     </tr>
                     <tr>
@@ -301,8 +304,7 @@ def generate_professional_template(title: str, content: str, action_button: Opti
                             <p style="margin: 0 0 4px 0; font-size: 14px; font-weight: 700; color: #1e293b; line-height: 1.5;">{settings.COLLEGE_NAME} &bull; LeetCode Intelligence System</p>
                             <p style="margin: 0 0 16px 0; font-size: 13px; font-weight: 600; color: #475569; line-height: 1.5;">Student Performance &bull; Contest Intelligence &bull; Analytics &bull; Reports</p>
                             <p style="margin: 0 0 4px 0; font-size: 13px; font-weight: 500; color: #334155; line-height: 1.5;">This is an automated system-generated email.<br/>Please do not reply to this message.</p>
-                            <p style="margin: 12px 0 16px 0; font-size: 13px; font-weight: 500; color: #334155; line-height: 1.5;">&copy; 2026 {settings.COLLEGE_NAME}. All rights reserved.</p>
-                            {button_html}
+                            <p style="margin: 12px 0 0 0; font-size: 13px; font-weight: 500; color: #334155; line-height: 1.5;">&copy; 2026 {settings.COLLEGE_NAME}. All rights reserved.</p>
                         </td>
                     </tr>
                 </table>
