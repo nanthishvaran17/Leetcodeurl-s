@@ -1027,23 +1027,31 @@ def exchange_google_auth_code(payload: ExchangeGoogleAuthCodeRequest, request: R
 
 
 
-import time
+def get_real_client_ip(request: Request) -> str:
+    if not request:
+        return "127.0.0.1"
+    forwarded = request.headers.get("x-forwarded-for") or request.headers.get("cf-connecting-ip") or request.headers.get("x-real-ip")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "127.0.0.1"
 
-# In-memory rate limiter: dict mapping IP -> list of timestamps
+# In-memory rate limiter: dict mapping (IP:username) -> list of timestamps
 _login_attempts = {}
 
 @router.post("/login")
 async def login(login_data: UserLogin, request: Request, response: Response, db: Session = Depends(get_db)):
-    client_ip = request.client.host if request and request.client else "127.0.0.1"
+    client_ip = get_real_client_ip(request)
+    clean_user_key = (login_data.username or "").strip().lower()
+    rate_key = f"{client_ip}:{clean_user_key}"
     now = time.time()
     
     # Clean old attempts (older than 5 minutes)
-    if client_ip in _login_attempts:
-        _login_attempts[client_ip] = [t for t in _login_attempts[client_ip] if now - t < 300]
-        if len(_login_attempts[client_ip]) >= 10:
-            raise HTTPException(status_code=429, detail="Too many login attempts. Please try again later.")
+    if rate_key in _login_attempts:
+        _login_attempts[rate_key] = [t for t in _login_attempts[rate_key] if now - t < 300]
+        if len(_login_attempts[rate_key]) >= 60:
+            raise HTTPException(status_code=429, detail="Too many login attempts. Please wait a few minutes before trying again.")
     
-    _login_attempts.setdefault(client_ip, []).append(now)
+    _login_attempts.setdefault(rate_key, []).append(now)
 
     validate_csrf_origin(request)
     clean_username = login_data.username.strip()
