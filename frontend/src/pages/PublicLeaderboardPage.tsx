@@ -8,7 +8,7 @@ import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import { studentLiveStore, useStudentListIds } from '../stores/studentLiveStore';
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
-import { sortStudents } from '../utils/filterUtils';
+import { sortStudents, normalizeAcademicYear } from '../utils/filterUtils';
 import { useFilters, useFilteredStudents } from '../context/FilterContext';
 import { useGlobalData } from '../context/GlobalDataContext';
 import { useDepartments } from '../contexts/DepartmentContext';
@@ -72,7 +72,8 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
       result = result.filter((s: any) => s.department?.code === filters.department);
     }
     if (filters.academicYear !== 'ALL') {
-      result = result.filter((s: any) => s.year_level === filters.academicYear);
+      const targetYearNorm = normalizeAcademicYear(filters.academicYear);
+      result = result.filter((s: any) => normalizeAcademicYear(s.year_level) === targetYearNorm);
     }
 
     if (sortBy === 'easy') result.sort((a, b) => (b.stats?.easy_solved || 0) - (a.stats?.easy_solved || 0));
@@ -259,8 +260,11 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
               icon={<Calendar className="w-5 h-5" />}
               dropdownWidth="w-56"
               options={[
-                { value: 'ALL', label: 'All Years' },
-                ...uniqueYears.map((y: any) => ({ value: y, label: `${y} Year` }))
+                { value: 'ALL', label: 'All Years', pillText: 'ALL' },
+                { value: '1', label: 'I Year', pillText: '1ST' },
+                { value: '2', label: 'II Year', pillText: '2ND' },
+                { value: '3', label: 'III Year', pillText: '3RD' },
+                { value: '4', label: 'IV Year', pillText: '4TH' }
               ]}
             />
 

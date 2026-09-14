@@ -582,7 +582,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
                           </div>
                           {opt.hidePill !== true && (
                             <span className={clsx(
-                              "w-16 min-w-[4rem] text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border shadow-2xs",
+                              "text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border shadow-2xs whitespace-nowrap",
                               theme.badgeBg, theme.badgeText, theme.badgeBorder
                             )}>
                               {getPillText(opt)}
@@ -689,7 +689,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
                           
                           {opt.hidePill !== true && (
                             <div className={clsx(
-                              "w-16 min-w-[4rem] text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border shadow-2xs",
+                              "text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border shadow-2xs whitespace-nowrap",
                               theme.badgeBg, theme.badgeText, theme.badgeBorder
                             )}>
                               {getPillText(opt)}

@@ -23,6 +23,8 @@ import { useContestWebSocket, ContestWSEvent } from '../hooks/useContestWebSocke
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
 import { useDepartments } from '../contexts/DepartmentContext';
+import { GlobalFilter, GlobalFilterOption } from '../components/GlobalFilter';
+import { normalizeDepartment } from '../utils/filterUtils';
 import { 
   getCachedContestData, 
   setCachedContestData, 
@@ -1580,21 +1582,31 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
             {/* Session Dropdown Selector with Delete Option */}
             <div className="flex items-center space-x-2">
-              <select
-                value={selectedSessionId || ''}
-                onChange={(e) => handleSelectSession(Number(e.target.value))}
-                className="px-4 py-2.5 rounded-xl bg-navy-950/90 border border-slate-700/80 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer min-w-[220px] shadow-inner"
-              >
-                {displaySessions.length === 0 ? (
-                  <option value="">No completed contest session</option>
-                ) : (
-                  displaySessions.map((s) => (
-                    <option key={s.sessionId} value={s.sessionId} className="bg-navy-950 text-white py-1">
-                      {s.sessionDate} — {s.contestName} ({s.status})
-                    </option>
-                  ))
-                )}
-              </select>
+              <GlobalFilter
+                options={displaySessions.map((s) => {
+                  const statusUp = (s.status || '').toUpperCase();
+                  const isCompleted = statusUp.includes('FINAL') || statusUp.includes('COMPLET');
+                  const isScheduled = statusUp.includes('SCHEDULE');
+                  return {
+                    value: String(s.sessionId),
+                    label: `${s.sessionDate || ''} — ${s.contestName}`,
+                    pillText: isScheduled ? 'SCHEDULED' : (isCompleted ? 'FINALIZED' : (statusUp || 'ACTIVE')),
+                    pillColorClass: isScheduled
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                      : (isCompleted
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                        : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30')
+                  };
+                })}
+                value={selectedSessionId ? String(selectedSessionId) : ''}
+                onChange={(val) => handleSelectSession(Number(val))}
+                icon={<Trophy className="w-4 h-4 text-amber-400" />}
+                placeholder="[ Select Contest Session ]"
+                searchPlaceholder="Search contest session..."
+                showSearch={true}
+                className="w-full sm:w-auto"
+                dropdownWidth="w-[340px]"
+              />
               
               {(user?.role?.toLowerCase().includes('admin') || user?.role?.toLowerCase() === 'system admin') && activeSessionObj && (
                 <button
@@ -2741,9 +2753,33 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   { bg: 'bg-purple-50/50 dark:bg-purple-950/20', border: 'border-purple-100 dark:border-purple-900/50', text: 'text-purple-700 dark:text-purple-400', stat: 'text-purple-700 dark:text-purple-300', label: 'text-purple-500' }
                 ];
                 const color = colors[index % colors.length];
-                const deptStats = departmentStats?.[dept.code];
-                const total = deptStats?.total || 0;
-                const attended = (deptStats?.public || 0) + (deptStats?.virtual || 0);
+                const deptNorm = normalizeDepartment(dept.code || dept.name);
+
+                let total = 0;
+                let attended = 0;
+
+                // 1. Check API departmentStats dictionary
+                if (departmentStats && typeof departmentStats === 'object') {
+                  for (const [key, val] of Object.entries(departmentStats)) {
+                    if (normalizeDepartment(key) === deptNorm || key === dept.code || key === dept.name) {
+                      const dVal: any = val;
+                      total = dVal?.total || 0;
+                      attended = (dVal?.public || 0) + (dVal?.virtual || 0);
+                      break;
+                    }
+                  }
+                }
+
+                // 2. Fallback if departmentStats is unpopulated: calculate dynamically from matrix/cached data
+                if (total === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0)) {
+                  const studentPool = matrixRows.length > 0 ? matrixRows : (cachedStudents || []);
+                  const deptStudents = studentPool.filter((s: any) => normalizeDepartment(s.dept || s.department || s.department_code) === deptNorm);
+                  total = deptStudents.length;
+                  attended = deptStudents.filter((s: any) => {
+                    const st = (s.participation_status || s.status || '').toUpperCase();
+                    return st === 'PUBLIC_ATTENDED' || st === 'PUBLIC' || st === 'ATTENDED' || st === 'VIRTUAL_ATTENDED' || st === 'VIRTUAL';
+                  }).length;
+                }
 
                 return (
                   <div key={dept.code} className={`p-4 rounded-2xl ${color.bg} border ${color.border} flex items-center justify-between shadow-sm hover:shadow-md transition-shadow`}>
@@ -3524,7 +3560,49 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     {/* Department breakdown rows */}
                     {departments.map((dept, index) => {
                       const deptCode = dept.code;
-                      const dStats = departmentStats?.[deptCode] || { total: 0, public: 0, virtual: 0, not_attended: 0, errors: 0 };
+                      const deptNorm = normalizeDepartment(dept.code || dept.name);
+
+                      let dStats = { total: 0, public: 0, virtual: 0, not_attended: 0, errors: 0 };
+
+                      if (departmentStats && typeof departmentStats === 'object') {
+                        for (const [key, val] of Object.entries(departmentStats)) {
+                          if (normalizeDepartment(key) === deptNorm || key === dept.code || key === dept.name) {
+                            const dVal: any = val;
+                            dStats = {
+                              total: dVal?.total || 0,
+                              public: dVal?.public || 0,
+                              virtual: dVal?.virtual || 0,
+                              not_attended: dVal?.not_attended || 0,
+                              errors: dVal?.errors || 0
+                            };
+                            break;
+                          }
+                        }
+                      }
+
+                      if (dStats.total === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0)) {
+                        const studentPool = matrixRows.length > 0 ? matrixRows : (cachedStudents || []);
+                        const deptStudents = studentPool.filter((s: any) => normalizeDepartment(s.dept || s.department || s.department_code) === deptNorm);
+                        const tot = deptStudents.length;
+                        const pub = deptStudents.filter((s: any) => {
+                          const st = (s.participation_status || s.status || '').toUpperCase();
+                          return st === 'PUBLIC_ATTENDED' || st === 'PUBLIC' || st === 'ATTENDED';
+                        }).length;
+                        const virt = deptStudents.filter((s: any) => {
+                          const st = (s.participation_status || s.status || '').toUpperCase();
+                          return st === 'VIRTUAL_ATTENDED' || st === 'VIRTUAL';
+                        }).length;
+                        const notAtt = deptStudents.filter((s: any) => {
+                          const st = (s.participation_status || s.status || '').toUpperCase();
+                          return st === 'PUBLIC_NOT_ATTENDED' || st === 'NOT_ATTENDED';
+                        }).length;
+                        const errs = deptStudents.filter((s: any) => {
+                          const st = (s.participation_status || s.status || '').toUpperCase();
+                          return st === 'DATA_ERROR' || st === 'SOURCE_ERROR' || st === 'CONFLICT';
+                        }).length;
+                        dStats = { total: tot, public: pub, virtual: virt, not_attended: notAtt, errors: errs };
+                      }
+
                       const tot = dStats.total || 0;
                       const pub = dStats.public || 0;
                       const virt = dStats.virtual || 0;

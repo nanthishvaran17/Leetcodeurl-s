@@ -1224,7 +1224,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 options={availableContests.map((c: any) => ({
                   value: String(c.id),
                   label: `${c.contest_name} (Session #${c.id})`,
-                  pillText: `SESSION #${c.id}`,
+                  pillText: `#${c.id}`,
                   pillColorClass: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20"
                 }))}
                 value={selectedContestId}
