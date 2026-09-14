@@ -980,9 +980,9 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
           <div className="p-6 rounded-3xl bg-gradient-to-br from-navy-950 via-slate-900 to-indigo-950 text-white border border-brand-500/30 shadow-xl space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
               <div className="space-y-1">
-                <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-brand-500/20 border border-brand-400/30 text-amber-300 text-[10px] font-black uppercase">
-                  <ShieldCheck className="w-3 h-3 text-amber-400" />
-                  <span>DATA INTEGRITY & PROFILE HEALTH • REALTIME AUDIT BOARD</span>
+                <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-brand-500/20 border border-brand-400/30 text-amber-300 text-[10px] font-black uppercase max-w-full">
+                  <ShieldCheck className="w-3 h-3 text-amber-400 flex-shrink-0" />
+                  <span className="truncate">DATA INTEGRITY & PROFILE HEALTH • REALTIME AUDIT BOARD</span>
                 </div>
                 <h4 className="text-base font-black text-white">Data Quality & Profile Health Dashboard</h4>
                 <p className="text-xs text-slate-300">

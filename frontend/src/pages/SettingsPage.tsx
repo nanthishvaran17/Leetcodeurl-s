@@ -544,10 +544,10 @@ export const SettingsPage: React.FC = () => {
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
 
           {/* Left: Title Block */}
-          <div className="space-y-2.5 max-w-2xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black uppercase">
-              <Shield className="w-3.5 h-3.5 text-amber-400" />
-              <span>Institutional Configuration • System Control Center</span>
+          <div className="space-y-2.5 max-w-2xl min-w-0 flex-1">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black uppercase max-w-full">
+              <Shield className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+              <span className="truncate">Institutional Configuration • System Control Center</span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white">
@@ -715,8 +715,8 @@ export const SettingsPage: React.FC = () => {
       </div>
 
       {/* 3. QUICK JUMP / SECTION NAVIGATION BAR */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl glass-card border border-slate-200 dark:border-navy-700">
-        <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl glass-card border border-slate-200 dark:border-navy-700">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full no-scrollbar">
           {[
             { id: 'staff', label: 'Staff Management', icon: Shield },
             { id: 'staff_verification', label: 'Staff Verification', icon: UserCheck },
@@ -733,19 +733,19 @@ export const SettingsPage: React.FC = () => {
               key={tab.id}
               type="button"
               onClick={() => setActiveSectionFilter(tab.id)}
-              className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center space-x-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center space-x-1.5 cursor-pointer whitespace-nowrap flex-shrink-0 ${
                 activeSectionFilter === tab.id
                   ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
                   : 'bg-slate-100 dark:bg-navy-950 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-800'
               }`}
             >
-              <tab.icon className="w-3.5 h-3.5" />
+              <tab.icon className="w-3.5 h-3.5 flex-shrink-0" />
               <span>{tab.label}</span>
             </button>
           ))}
         </div>
 
-        <div className="relative min-w-[200px] flex-1 max-w-xs">
+        <div className="relative w-full sm:w-auto sm:min-w-[200px] flex-1 max-w-xs">
           <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
           <input
             type="text"
