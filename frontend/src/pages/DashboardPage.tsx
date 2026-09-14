@@ -887,7 +887,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                             if (dept.top_student_obj && onSelectStudent) {
                               onSelectStudent(dept.top_student_obj);
                             } else if (dept.top_student_id && onSelectStudent) {
-                              onSelectStudent({ id: dept.top_student_id, reg_no: String(dept.top_student_id), name: dept.top_student_name });
+                              onSelectStudent({ id: dept.top_student_id, reg_no: String(dept.top_student_id), name: dept.top_student_name } as any);
                             }
                           }}
                           className={`font-bold text-amber-600 dark:text-amber-400 truncate block text-left ${dept.top_student_id && onSelectStudent ? 'hover:underline cursor-pointer' : ''}`}
@@ -965,7 +965,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                                   if (dept.top_student_obj && onSelectStudent) {
                                     onSelectStudent(dept.top_student_obj);
                                   } else if (dept.top_student_id && onSelectStudent) {
-                                    onSelectStudent({ id: dept.top_student_id, reg_no: String(dept.top_student_id), name: dept.top_student_name });
+                                    onSelectStudent({ id: dept.top_student_id, reg_no: String(dept.top_student_id), name: dept.top_student_name } as any);
                                   }
                                 }}
                                 className={`font-bold text-amber-600 dark:text-amber-400 truncate ${dept.top_student_id && onSelectStudent ? 'hover:text-amber-700 dark:hover:text-amber-300 hover:underline cursor-pointer' : ''}`}
