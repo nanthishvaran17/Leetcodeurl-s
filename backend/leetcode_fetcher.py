@@ -81,6 +81,46 @@ circuit_breaker = CircuitBreaker(
     recovery_timeout=settings.LEETCODE_CIRCUIT_COOLDOWN
 )
 
+class AdaptiveBatchController:
+    """
+    Adaptive Batch Size & Rate Limiting Controller (Phase 8).
+    Dynamically adjusts request batch size and delay window based on LeetCode API health.
+    - Standard target: 15 students per batch.
+    - On 429/503 or latency spikes: reduces batch size down to min_batch (e.g. 3) and increases backoff.
+    - On consecutive successes: gradually restores normal batch size up to max_batch (15).
+    """
+    def __init__(self, initial_batch: int = 15, min_batch: int = 3, max_batch: int = 15):
+        self.current_batch_size = initial_batch
+        self.min_batch = min_batch
+        self.max_batch = max_batch
+        self.consecutive_successes = 0
+        self.consecutive_failures = 0
+        self._lock = threading.Lock()
+
+    def report_success(self):
+        with self._lock:
+            self.consecutive_failures = 0
+            self.consecutive_successes += 1
+            if self.consecutive_successes >= 5 and self.current_batch_size < self.max_batch:
+                self.current_batch_size = min(self.max_batch, self.current_batch_size + 2)
+                self.consecutive_successes = 0
+                logger.info(f"[ADAPTIVE_BATCH] API healthy. Scaled batch size up to {self.current_batch_size}")
+
+    def report_failure(self, status_code: Optional[int] = None):
+        with self._lock:
+            self.consecutive_successes = 0
+            self.consecutive_failures += 1
+            if self.current_batch_size > self.min_batch:
+                self.current_batch_size = max(self.min_batch, self.current_batch_size // 2)
+                logger.warning(f"[ADAPTIVE_BATCH] API pressure/error (status={status_code}). Scaled batch size down to {self.current_batch_size}")
+
+    def get_batch_size(self) -> int:
+        with self._lock:
+            return self.current_batch_size
+
+adaptive_batch_controller = AdaptiveBatchController()
+
+
 LEETCODE_GRAPHQL_URL = "https://leetcode.com/graphql"
 USER_CONTEST_QUERY = """
 query userContestRankingInfo($username: String!) {
@@ -376,22 +416,39 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: str, force_refres
                         matched_user = data.get("data", {}).get("matchedUser")
                         if matched_user is not None:
                             await circuit_breaker.record_success()
+                            adaptive_batch_controller.report_success()
                             break
                         else:
                             last_error_detail = f"User '{username}' does not exist on LeetCode (matchedUser is null)"
                             break
+                elif res.status_code == 429:
+                    await circuit_breaker.record_failure()
+                    adaptive_batch_controller.report_failure(429)
+                    retry_after = res.headers.get("Retry-After")
+                    import random
+                    if retry_after and retry_after.isdigit():
+                        backoff_sec = min(30.0, float(retry_after) + random.uniform(0.1, 0.5))
+                    else:
+                        backoff_sec = min(30.0, (2.0 ** attempt) + random.uniform(0.2, 0.8))
+                    last_error_detail = f"HTTP 429 Rate Limited (Backoff {round(backoff_sec, 2)}s)"
+                    logger.warning(f"LeetCode 429 Rate Limit for '{username}' (Attempt {attempt}/{retries}). Backoff {round(backoff_sec, 2)}s")
+                    if attempt < retries:
+                        await asyncio.sleep(backoff_sec)
+                        continue
                 else:
-                    if res.status_code == 429 or res.status_code >= 500:
-                        await circuit_breaker.record_failure()
+                    await circuit_breaker.record_failure()
+                    adaptive_batch_controller.report_failure(res.status_code)
                     last_error_detail = f"HTTP {res.status_code} response from LeetCode"
                     logger.warning(f"LeetCode returned HTTP {res.status_code} for user '{username}' (Attempt {attempt}/{retries})")
             
             except httpx.TimeoutException:
                 await circuit_breaker.record_failure()
+                adaptive_batch_controller.report_failure(504)
                 last_error_detail = "Network timeout"
                 logger.warning(f"Timeout fetching profile for '{username}' (Attempt {attempt}/{retries})")
             except (httpx.RemoteProtocolError, httpx.ConnectError, httpx.NetworkError) as net_err:
                 await circuit_breaker.record_failure()
+                adaptive_batch_controller.report_failure(503)
                 last_error_detail = f"Network connection drop ({type(net_err).__name__})"
                 logger.warning(f"Connection issue for '{username}' (Attempt {attempt}/{retries}): {last_error_detail}")
             except Exception as e:

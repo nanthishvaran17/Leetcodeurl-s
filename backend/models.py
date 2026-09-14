@@ -227,6 +227,23 @@ class WeeklySession(Base):
     finalization_method = Column(String(50), nullable=True)  # AUTOMATIC or MANUAL_ADMIN_REVIEW
     finalized_by = Column(String(100), nullable=True)
     
+    # Reliability Hardening: Durable State of Truth & Worker Heartbeat
+    scheduled_start = Column(DateTime(timezone=True), nullable=True)
+    actual_start = Column(DateTime(timezone=True), nullable=True)
+    scheduled_end = Column(DateTime(timezone=True), nullable=True)
+    actual_end = Column(DateTime(timezone=True), nullable=True)
+    baseline_status = Column(String(30), default="PENDING")
+    last_fetch_at = Column(DateTime(timezone=True), nullable=True)
+    last_event_id = Column(Integer, default=0)
+    worker_heartbeat = Column(DateTime(timezone=True), nullable=True)
+    worker_status = Column(String(30), default="IDLE")
+    worker_instance_id = Column(String(100), nullable=True)
+    retry_count = Column(Integer, default=0)
+    last_error = Column(Text, nullable=True)
+    finalized = Column(Boolean, default=False)
+    report_generation_status = Column(String(30), default="PENDING")
+    email_dispatch_status = Column(String(30), default="PENDING")
+    
     snapshots = relationship("WeeklySessionSnapshot", back_populates="session", cascade="all, delete-orphan")
     public_results = relationship("WeeklyPublicResult", back_populates="session", cascade="all, delete-orphan")
     virtual_results = relationship("WeeklyVirtualResult", back_populates="session", cascade="all, delete-orphan")
@@ -387,6 +404,10 @@ class VirtualContestAttempt(Base):
 
 class WeeklyContestLiveEvent(Base):
     __tablename__ = "weekly_contest_live_events"
+    __table_args__ = (
+        UniqueConstraint("session_id", "student_id", "question_id", "event_type", name="uq_live_event_identity"),
+        {"extend_existing": True}
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(Integer, ForeignKey("weekly_sessions.id"), nullable=False, index=True)

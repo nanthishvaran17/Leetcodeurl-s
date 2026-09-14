@@ -277,14 +277,14 @@ const ContestMatrixRow = memo(({ r, actualIdx, isSelected, onEdit, onDelete, onS
       <td className="px-3 py-3 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-center space-x-1.5">
           <button
-            onClick={() => onEdit(r)}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(r); }}
             className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900 text-indigo-600 dark:text-indigo-400 transition-all hover:scale-105 cursor-pointer"
             title={`Edit ${r.name}`}
           >
             <Edit3 className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => onDelete(r)}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(r); }}
             className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-400 transition-all hover:scale-105 cursor-pointer"
             title={`Deactivate ${r.name}`}
           >
@@ -1173,7 +1173,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     }
   };
 
-  const handleOpenEditStudent = useCallback((r: any) => {
+  const handleOpenEditStudent = useCallback((r: any, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setViewingProfileStudent(null);
     setEditingStudent(r);
     setEditName(r.name || '');
     setEditDeptCode(r.dept || '');

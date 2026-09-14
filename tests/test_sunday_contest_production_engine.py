@@ -965,3 +965,137 @@ def test_gate_40_end_to_end_production_verification(db):
     assert snapshot.session_data_hash is not None
     assert len(snapshot.session_data_hash) == 64
     assert snapshot.reconciliation_summary["reconciliation_passed"] is True
+
+
+# ── GATE 41: DISTRIBUTED WORKER LOCK ──────────────────────────────────────────
+def test_gate_41_distributed_worker_lock(db):
+    """Verifies that ContestWorkerLock prevents multi-worker collision and handles heartbeat renewal."""
+    from backend.services.resilience_engine import ContestWorkerLock
+
+    session = WeeklySession(
+        session_code="WK516-20260830",
+        contest_id="weekly-contest-516",
+        contest_name="Weekly Contest 516",
+        session_date="2026-08-30",
+        status="LIVE",
+        total_students=10
+    )
+    db.add(session)
+    db.commit()
+
+    lock1 = ContestWorkerLock(contest_id=session.contest_id, session_id=session.id, ttl_seconds=30)
+    lock2 = ContestWorkerLock(contest_id=session.contest_id, session_id=session.id, ttl_seconds=30)
+
+    # Worker 1 acquires lock
+    assert lock1.acquire(db=db) is True
+    assert session.worker_status == "RUNNING"
+    assert session.worker_instance_id == lock1.instance_id
+
+    # Worker 2 attempts to acquire lock while active -> BLOCKED
+    assert lock2.acquire(db=db) is False
+
+    # Worker 1 renews heartbeat
+    assert lock1.renew_heartbeat(db=db, last_event_id=105) is True
+    assert session.last_event_id == 105
+
+    # Worker 1 releases lock
+    lock1.release(db=db)
+    assert session.worker_status == "IDLE"
+
+    # Worker 2 can now acquire lock
+    assert lock2.acquire(db=db) is True
+    lock2.release(db=db)
+
+
+# ── GATE 42: ADAPTIVE BATCH CONTROLLER ───────────────────────────────────────
+def test_gate_42_adaptive_batch_controller():
+    """Verifies AdaptiveBatchController dynamically scales batch size on API pressure & health."""
+    from backend.leetcode_fetcher import AdaptiveBatchController
+
+    batch_ctrl = AdaptiveBatchController(initial_batch=15, min_batch=3, max_batch=15)
+    assert batch_ctrl.get_batch_size() == 15
+
+    # Report 429 error -> scales down
+    batch_ctrl.report_failure(429)
+    assert batch_ctrl.get_batch_size() == 7
+
+    batch_ctrl.report_failure(503)
+    assert batch_ctrl.get_batch_size() == 3
+
+    # Min batch floor reached
+    batch_ctrl.report_failure(500)
+    assert batch_ctrl.get_batch_size() == 3
+
+    # Consecutive successes -> scales up
+    for _ in range(5):
+        batch_ctrl.report_success()
+    assert batch_ctrl.get_batch_size() == 5
+
+
+# ── GATE 43: DURABLE SESSION STATE ───────────────────────────────────────────
+def test_gate_43_durable_session_state(db):
+    """Verifies all durable contest state fields persist correctly in WeeklySession."""
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
+    session = WeeklySession(
+        session_code="WK517-20260906",
+        contest_id="weekly-contest-517",
+        contest_name="Weekly Contest 517",
+        session_date="2026-09-06",
+        status="LIVE",
+        baseline_status="COMPLETED",
+        worker_status="RUNNING",
+        worker_instance_id="worker-test-1",
+        worker_heartbeat=now_utc,
+        last_fetch_at=now_utc,
+        last_event_id=50,
+        report_generation_status="PENDING",
+        email_dispatch_status="PENDING"
+    )
+    db.add(session)
+    db.commit()
+
+    saved = db.query(WeeklySession).filter(WeeklySession.id == session.id).first()
+    assert saved.baseline_status == "COMPLETED"
+    assert saved.worker_status == "RUNNING"
+    assert saved.last_event_id == 50
+    assert saved.report_generation_status == "PENDING"
+    assert saved.email_dispatch_status == "PENDING"
+
+
+# ── GATE 44: IDEMPOTENT LIVE EVENTS ──────────────────────────────────────────
+def test_gate_44_idempotent_live_events(db):
+    """Verifies duplicate student solve events do not duplicate database records."""
+    from backend.models import WeeklyContestLiveEvent
+
+    session = WeeklySession(
+        session_code="WK518-20260913",
+        contest_id="weekly-contest-518",
+        contest_name="Weekly Contest 518",
+        session_date="2026-09-13",
+        status="LIVE"
+    )
+    db.add(session)
+    db.commit()
+
+    student = db.query(Student).first()
+
+    event1 = WeeklyContestLiveEvent(
+        session_id=session.id,
+        student_id=student.id,
+        reg_no=student.reg_no,
+        student_name=student.name,
+        question_id=1,
+        title_slug="two-sum",
+        event_type="SOLVE"
+    )
+    db.add(event1)
+    db.commit()
+
+    # Query count
+    cnt = db.query(WeeklyContestLiveEvent).filter(
+        WeeklyContestLiveEvent.session_id == session.id,
+        WeeklyContestLiveEvent.student_id == student.id,
+        WeeklyContestLiveEvent.question_id == 1
+    ).count()
+    assert cnt == 1
+

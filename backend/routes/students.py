@@ -746,13 +746,19 @@ def get_student_by_email(email: str = Query(..., description="Student email addr
     return st_out
 
 @router.get("/{student_id}", response_model=StudentOut)
-def get_student_detail(student_id: int, request: Request, db: Session = Depends(get_db)):
+def get_student_detail(student_id: str, request: Request, db: Session = Depends(get_db)):
     current_user = get_current_user_optional(request, db)
-    require_staff_student_access(db, current_user, student_id)
 
-    student = db.query(Student).filter(Student.id == student_id).first()
+    student = None
+    if str(student_id).isdigit():
+        student = db.query(Student).filter(Student.id == int(student_id)).first()
+    if not student:
+        student = db.query(Student).filter(Student.reg_no == str(student_id).upper()).first()
+
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
+
+    require_staff_student_access(db, current_user, student.id)
     
     st_out = StudentOut.model_validate(student)
     latest_prog = db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == student.id).order_by(WeeklyStudentProgress.id.desc()).first()
@@ -993,18 +999,23 @@ class StudentUpdateSchema(BaseModel):
 @router.patch("/{student_id}")
 @router.put("/{student_id}")
 def update_student(
-    student_id: int,
+    student_id: str,
     payload: StudentUpdateSchema,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user=Depends(require_security_access(resource_name="Update Student", required_roles=["admin", "super admin", "hod", "faculty", "staff"]))
 ):
     import re
-    require_staff_student_access(db, current_user, student_id)
+    student = None
+    if str(student_id).isdigit():
+        student = db.query(Student).filter(Student.id == int(student_id)).first()
+    if not student:
+        student = db.query(Student).filter(Student.reg_no == str(student_id).upper()).first()
 
-    student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student record not found.")
+
+    require_staff_student_access(db, current_user, student.id)
 
     current_version = getattr(student, 'version', 1) or 1
     student.version = current_version + 1
@@ -1257,7 +1268,7 @@ def update_student(
 
 @router.get("/{student_id}/audit-history")
 def get_student_audit_history(
-    student_id: int,
+    student_id: str,
     db: Session = Depends(get_db),
     current_user=Depends(require_security_access(resource_name="Student Audit History", required_roles=["admin", "super admin", "hod", "faculty", "staff"]))
 ):
@@ -1265,11 +1276,16 @@ def get_student_audit_history(
     Retrieves secure audit log history & pipeline verification state for a student.
     Enforces authentication, RBAC, and department scoping.
     """
-    require_staff_student_access(db, current_user, student_id)
+    student = None
+    if str(student_id).isdigit():
+        student = db.query(Student).filter(Student.id == int(student_id)).first()
+    if not student:
+        student = db.query(Student).filter(Student.reg_no == str(student_id).upper()).first()
 
-    student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student record not found.")
+
+    require_staff_student_access(db, current_user, student.id)
 
     from backend.models import AuditLog
     from sqlalchemy import or_
@@ -1326,16 +1342,22 @@ def get_student_audit_history(
 
 @router.delete("/{student_id}")
 def delete_student(
-    student_id: int,
+    student_id: str,
     soft_delete: bool = Query(True),
     db: Session = Depends(get_db),
     current_user=Depends(require_security_access(resource_name="Delete Student", required_roles=["admin", "super admin", "hod", "faculty", "staff"]))
 ):
-    require_staff_student_access(db, current_user, student_id)
+    student = None
+    if str(student_id).isdigit():
+        student = db.query(Student).filter(Student.id == int(student_id)).first()
+    if not student:
+        student = db.query(Student).filter(Student.reg_no == str(student_id).upper()).first()
 
-    student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student record not found.")
+
+    require_staff_student_access(db, current_user, student.id)
+    student_id = student.id
 
     reg_no = student.reg_no
     name = student.name
@@ -1559,7 +1581,7 @@ def get_students_sync_status(run_id: Optional[str] = None):
 @router.post("/{student_id}/refresh")
 @router.post("/{student_id}/refresh-live")
 async def refresh_single_student(
-    student_id: int,
+    student_id: str,
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user)
 ):
@@ -1568,7 +1590,17 @@ async def refresh_single_student(
     Enforces strict role-based access control: Staff can only refresh assigned students.
     """
     from backend.services.authorization_service import require_staff_student_access
-    require_staff_student_access(db, current_user, student_id)
+    student = None
+    if str(student_id).isdigit():
+        student = db.query(Student).filter(Student.id == int(student_id)).first()
+    if not student:
+        student = db.query(Student).filter(Student.reg_no == str(student_id).upper()).first()
+
+    if not student:
+        raise HTTPException(status_code=404, detail="Student record not found.")
+
+    require_staff_student_access(db, current_user, student.id)
+    student_id = student.id
 
     try:
         result = await sync_single_student_by_id(student_id, timeout=30.0)
@@ -1670,7 +1702,7 @@ class LeetCodeValidateRequest(BaseModel):
 
 @router.post("/{student_id}/validate-leetcode")
 async def validate_leetcode_account(
-    student_id: int,
+    student_id: str,
     payload: LeetCodeValidateRequest,
     db: Session = Depends(get_db),
     current_user=Depends(require_security_access(

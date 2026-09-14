@@ -79,7 +79,16 @@ export const FastStudentRow = memo(({
   return (
     <div 
       style={style} 
-      onClick={() => onView(student)}
+      onClick={(e) => {
+        if (
+          (e.target as HTMLElement).closest('button') ||
+          (e.target as HTMLElement).closest('input') ||
+          (e.target as HTMLElement).closest('a')
+        ) {
+          return;
+        }
+        onView(student, e);
+      }}
       className="flex flex-col md:flex-row p-4 md:py-2.5 md:px-0 gap-3 md:gap-0 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10 transition-colors duration-150 group font-medium text-xs border border-slate-100 md:border-t-0 md:border-x-0 md:border-b dark:border-navy-800/60 cursor-pointer w-full md:w-[1400px] md:min-w-[1400px] items-start md:items-center bg-white md:bg-transparent dark:bg-navy-950 md:dark:bg-transparent rounded-2xl md:rounded-none shadow-sm md:shadow-none mb-3 md:mb-0 min-h-[52px]"
     >
       {/* MOBILE LAYOUT */}
@@ -122,10 +131,10 @@ export const FastStudentRow = memo(({
              </div>
          </div>
           <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => onView(student)} className="p-2.5 rounded-xl text-brand-600 bg-brand-50 dark:bg-brand-950/50 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer active:scale-95 transition-transform" title="View Student"><Eye className="w-4 h-4" /></button>
-            <button onClick={() => onEdit(student)} className="p-2.5 rounded-xl text-amber-600 bg-amber-50 dark:bg-amber-950/50 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer active:scale-95 transition-transform" title="Edit Student"><Edit3 className="w-4 h-4" /></button>
+            <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onView(student, e); }} className="p-2.5 rounded-xl text-brand-600 bg-brand-50 dark:bg-brand-950/50 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer active:scale-95 transition-transform" title="View Student"><Eye className="w-4 h-4" /></button>
+            <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(student, e); }} className="p-2.5 rounded-xl text-amber-600 bg-amber-50 dark:bg-amber-950/50 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer active:scale-95 transition-transform" title="Edit Student"><Edit3 className="w-4 h-4" /></button>
             {onDelete && (
-              <button onClick={(e) => onDelete(student, e)} className="p-2.5 rounded-xl text-rose-600 bg-rose-50 dark:bg-rose-950/50 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer active:scale-95 transition-transform" title="Delete Student Record"><Trash2 className="w-4 h-4" /></button>
+              <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(student, e); }} className="p-2.5 rounded-xl text-rose-600 bg-rose-50 dark:bg-rose-950/50 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer active:scale-95 transition-transform" title="Delete Student Record"><Trash2 className="w-4 h-4" /></button>
             )}
           </div>
        </div>
@@ -158,7 +167,7 @@ export const FastStudentRow = memo(({
       </div>
 
       <div className="hidden md:flex flex-none w-52 px-3 items-center justify-start text-left">
-        <button onClick={() => onView(student)} className="flex items-center space-x-3 w-full text-left">
+        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onView(student, e); }} className="flex items-center space-x-3 w-full text-left">
           <div className="shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-sm">
             {student.name.charAt(0).toUpperCase()}
           </div>
@@ -234,10 +243,10 @@ export const FastStudentRow = memo(({
 
       <div className="hidden md:flex flex-none w-32 px-3 items-center justify-center text-center" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-center gap-1 transition-opacity">
-          <button onClick={(e) => { e.stopPropagation(); onView(student); }} className="p-1.5 rounded-xl text-brand-600 hover:bg-brand-50" title="View"><Eye className="w-4 h-4" /></button>
-          <button onClick={(e) => { e.stopPropagation(); onEdit(student); }} className="p-1.5 rounded-xl text-amber-600 hover:bg-amber-50" title="Edit"><Edit3 className="w-4 h-4" /></button>
-          <button onClick={(e) => { e.stopPropagation(); onRefresh(student.id); }} disabled={isSyncing} className={`p-1.5 rounded-xl ${isSyncing ? 'text-brand-500 animate-spin' : 'text-emerald-600 hover:bg-emerald-50'}`}><RefreshCw className="w-4 h-4" /></button>
-          <button onClick={(e) => { e.stopPropagation(); onDelete(student, e); }} className="p-1.5 rounded-xl text-rose-600 hover:bg-rose-50" title="Delete"><Trash2 className="w-4 h-4" /></button>
+          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onView(student, e); }} className="p-1.5 rounded-xl text-brand-600 hover:bg-brand-50" title="View"><Eye className="w-4 h-4" /></button>
+          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(student, e); }} className="p-1.5 rounded-xl text-amber-600 hover:bg-amber-50" title="Edit"><Edit3 className="w-4 h-4" /></button>
+          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRefresh(student.id); }} disabled={isSyncing} className={`p-1.5 rounded-xl ${isSyncing ? 'text-brand-500 animate-spin' : 'text-emerald-600 hover:bg-emerald-50'}`}><RefreshCw className="w-4 h-4" /></button>
+          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(student, e); }} className="p-1.5 rounded-xl text-rose-600 hover:bg-rose-50" title="Delete"><Trash2 className="w-4 h-4" /></button>
         </div>
       </div>
     </div>

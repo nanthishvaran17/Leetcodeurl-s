@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Download, QrCode, ShieldCheck, Share2, Sparkles, CheckCircle2, Award } from 'lucide-react';
+import { triggerDownload } from '../utils/mobileDownload';
 
 interface IDCardGeneratorProps {
   studentName: string;
@@ -231,10 +232,20 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     if (!canvas) return;
     drawCardOnCanvas(canvas);
 
-    const link = document.createElement('a');
-    link.download = `LeetCode_Student_Pass_${regNo || 'download'}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const cleanReg = (regNo || 'download').replace(/[^A-Za-z0-9_-]+/g, '_');
+        const filename = `LeetCode_Student_Pass_${cleanReg}.png`;
+        triggerDownload(blob, filename, 'image/png');
+      } else {
+        const link = document.createElement('a');
+        link.download = `LeetCode_Student_Pass_${regNo || 'download'}.png`;
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }, 'image/png');
   };
 
   return (

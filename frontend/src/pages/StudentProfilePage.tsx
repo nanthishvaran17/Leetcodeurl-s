@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, ExternalLink, Trophy, Flame, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X, BarChart2, Activity, BookOpen, Clock, Medal, TrendingUp, Monitor, Target, CheckCircle2 } from 'lucide-react';
+// million-ignore
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { ArrowLeft, ExternalLink, Trophy, Flame, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X, BarChart2, Activity, BookOpen, Medal, TrendingUp, Target, CheckCircle2 } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import api from '../services/api';
 import { SkillRadarChart } from '../components/SkillRadarChart';
@@ -21,7 +23,7 @@ interface StudentProfilePageProps {
 }
 
 import { useNotification } from '../context/NotificationContext';
-import { triggerDownload } from '../utils/mobileDownload';
+// triggerDownload used by downloadManager internally
 import { downloadManager } from '../services/download/downloadManager';
 
 type TabId = 'overview' | 'analytics' | 'contests' | 'activity' | 'reports';
@@ -39,7 +41,77 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   const [showAuditModal, setShowAuditModal] = useState(false);
 
   const resolveTargetId = () => {
-    return detail?.id || detail?.student_id || detail?.reg_no || student?.id || student?.student_id || student?.reg_no;
+    return (
+      detail?.id ||
+      detail?.student_id ||
+      detail?.reg_no ||
+      detail?.register_no ||
+      detail?.register_number ||
+      student?.id ||
+      student?.student_id ||
+      student?.reg_no ||
+      student?.register_no ||
+      student?.register_number ||
+      null
+    );
+  };
+
+  const resolveLeetCodeUsername = () => {
+    return (
+      detail?.username ||
+      detail?.leetcode_username ||
+      detail?.leetcode_handle ||
+      detail?.handle ||
+      detail?.canonical_username ||
+      student?.username ||
+      student?.leetcode_username ||
+      student?.leetcode_handle ||
+      student?.handle ||
+      student?.canonical_username ||
+      ''
+    ).trim();
+  };
+
+  const resolveLeetCodeUrl = (): string | null => {
+    const rawUrl = (
+      detail?.leetcode_url ||
+      detail?.profile_url ||
+      detail?.url ||
+      student?.leetcode_url ||
+      student?.profile_url ||
+      student?.url ||
+      ''
+    ).trim();
+
+    if (rawUrl) {
+      if (/^https?:\/\/(www\.)?leetcode\.com\//i.test(rawUrl)) {
+        return rawUrl;
+      }
+      if (/^(www\.)?leetcode\.com\//i.test(rawUrl)) {
+        return `https://${rawUrl.replace(/^(www\.)?/, '')}`;
+      }
+      if (rawUrl.startsWith('@')) {
+        const cleanName = rawUrl.substring(1).trim();
+        if (cleanName) return `https://leetcode.com/u/${encodeURIComponent(cleanName)}/`;
+      }
+    }
+
+    const u = resolveLeetCodeUsername().replace(/^@/, '').trim();
+    if (u) {
+      if (/^https?:\/\/(www\.)?leetcode\.com\//i.test(u)) {
+        return u;
+      }
+      if (/^(www\.)?leetcode\.com\//i.test(u)) {
+        return `https://${u.replace(/^(www\.)?/, '')}`;
+      }
+      const extractedMatch = u.match(/(?:leetcode\.com\/(?:u\/)?)?([a-zA-Z0-9_-]+)/i);
+      const cleanHandle = extractedMatch ? extractedMatch[1] : u;
+      if (cleanHandle) {
+        return `https://leetcode.com/u/${encodeURIComponent(cleanHandle)}/`;
+      }
+    }
+
+    return null;
   };
 
   useEffect(() => {
@@ -78,24 +150,14 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   const [downloadingForensic, setDownloadingForensic] = useState(false);
   const [downloadState, setDownloadState] = useState<DownloadState | null>(null);
 
-  // 1. LEETCODE BUTTON HANDLER
-  const handleOpenLeetCode = () => {
-    const rawUrl = detail?.leetcode_url || student?.leetcode_url;
-    const rawUser = detail?.username || student?.username || detail?.leetcode_username || student?.leetcode_username;
-    
-    let targetUrl: string | null = null;
-    if (rawUrl && /^https?:\/\/(www\.)?leetcode\.com\//i.test(rawUrl.trim())) {
-      targetUrl = rawUrl.trim();
-    } else if (rawUser && /^[a-zA-Z0-9_-]+$/.test(rawUser.trim())) {
-      targetUrl = `https://leetcode.com/u/${encodeURIComponent(rawUser.trim())}/`;
-    }
+  // 1. LEETCODE — resolved URL for <a> tag (native navigation, no popup blocker)
+  const leetCodeUrl = resolveLeetCodeUrl();
 
-    if (targetUrl) {
-      window.open(targetUrl, '_blank', 'noopener,noreferrer');
-    } else {
-      notify.warning('No LeetCode Handle', 'This student record does not have a linked LeetCode username or profile URL.', { category: 'STUDENT PROFILE' });
-    }
+  // 2. EDIT BUTTON HANDLER
+  const handleOpenEditModal = () => {
+    setShowEditOverlay(true);
   };
+
 
   // 4. CERTIFICATE BUTTON HANDLER
   const handleGenerateCert = async () => {
@@ -250,112 +312,129 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   ];
 
   return (
-    <div className="h-full flex flex-col overflow-hidden animate-fade-in bg-white dark:bg-navy-950 rounded-3xl">
+    <div className="h-full flex flex-col overflow-hidden bg-white dark:bg-navy-950 rounded-3xl">
       
-      {/* Header Bar with Close Button & Actions */}
-      <div className="p-4 sm:p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex flex-col md:flex-row items-center justify-between gap-3 border-b border-slate-800 shrink-0 relative z-50 shadow-xl pointer-events-auto">
-        <div className="flex items-center space-x-3 w-full md:w-auto min-w-0">
+      {/* Header Bar with Close Button & Actions — restored from reference commit structure */}
+      <div className="p-4 sm:p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex flex-col md:flex-row items-center justify-between gap-4 border-b border-slate-800 shrink-0 relative z-50 shadow-xl">
+        <div className="flex items-center space-x-4 w-full md:w-auto">
           <button
             type="button"
             onClick={() => onBack()}
-            className="p-2.5 sm:p-2.5 min-h-[44px] min-w-[44px] rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer flex items-center justify-center space-x-1.5 sm:space-x-2 text-xs font-bold shadow-sm shrink-0"
-            title="Back to Roster List"
+            className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer flex items-center space-x-2 text-xs font-bold shadow-sm"
+            title="Back"
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Back</span>
           </button>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-base sm:text-xl font-black text-white truncate">{detail?.name || student?.name}</h2>
-            <p className="text-[10px] sm:text-xs text-brand-300 font-mono font-bold mt-0.5 truncate">
-              {detail?.reg_no || student?.reg_no} • {detail?.department?.name || detail?.department?.code || student?.department?.code} {detail?.year_level ? `• ${detail.year_level.includes('Year') ? detail.year_level : `${detail.year_level} Year`}` : ''}
+          <div className="flex-1">
+            <h2 className="text-lg sm:text-xl font-black text-white">{detail?.name || student?.name}</h2>
+            <p className="text-[10px] sm:text-xs text-brand-300 font-mono font-bold mt-0.5 truncate max-w-sm">
+              {detail?.reg_no || student?.reg_no} • {detail?.department?.name || detail?.department?.code || student?.department?.code} {detail?.year_level ? `• ${detail.year_level} Year` : ''}
             </p>
           </div>
         </div>
 
-        {/* ALL 6 ACTION BUTTONS WITH MIN 44PX TOUCH TARGETS */}
-        <div className="flex items-center gap-1.5 sm:gap-2 w-full md:w-auto flex-wrap justify-start md:justify-end shrink-0 pr-1">
-            
-            {/* 1. LEETCODE BUTTON (Blue) */}
-            <button
-              type="button"
-              onClick={handleOpenLeetCode}
-              className="px-3 py-2 min-h-[44px] min-w-[44px] sm:min-h-[40px] rounded-xl bg-white/5 hover:bg-brand-500/20 text-brand-300 hover:text-brand-200 border border-white/10 hover:border-brand-500/30 font-bold text-xs flex items-center justify-center space-x-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm shadow-xs"
-              title="Open Official LeetCode Profile in New Tab"
-            >
-              <ExternalLink className="w-4 h-4 text-brand-400" />
-              <span className="hidden sm:inline">LeetCode</span>
-            </button>
+        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 -mb-1 flex-nowrap md:flex-wrap justify-start md:justify-end custom-scrollbar shrink-0">
+            {/* 1. LEETCODE — native <a> tag for reliable navigation (matches reference commit) */}
+            {leetCodeUrl ? (
+              <a
+                href={leetCodeUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="px-3 py-2 min-h-[40px] rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-[11px] flex items-center space-x-1.5 shadow-md shadow-brand-600/30 transition-all hover:scale-105 shrink-0 whitespace-nowrap cursor-pointer"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">LeetCode</span>
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={() => notify.warning('No LeetCode Profile', 'LeetCode URL/username not found for this student.', { category: 'STUDENT PROFILE' })}
+                className="px-3 py-2 min-h-[40px] rounded-xl bg-slate-600/50 text-slate-400 font-bold text-[11px] flex items-center space-x-1.5 shrink-0 whitespace-nowrap cursor-pointer opacity-60"
+                title="No LeetCode profile configured"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">LeetCode</span>
+              </button>
+            )}
 
-            {/* 2. EDIT BUTTON (Amber) */}
+            {/* 2. EDIT */}
             <button
               type="button"
-              onClick={() => setShowEditOverlay(true)}
-              className="px-3 py-2 min-h-[44px] min-w-[44px] sm:min-h-[40px] rounded-xl bg-white/5 hover:bg-amber-500/20 text-amber-300 hover:text-amber-200 border border-white/10 hover:border-amber-500/30 font-bold text-xs flex items-center justify-center space-x-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm shadow-xs"
-              title="Edit Student Roster Profile & Credentials"
+              onClick={handleOpenEditModal}
+              className="px-3 py-2 min-h-[40px] rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-[11px] flex items-center space-x-1.5 shadow-md transition-all hover:scale-105 cursor-pointer shrink-0 whitespace-nowrap"
             >
-              <Edit3 className="w-4 h-4 text-amber-400" />
+              <Edit3 className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Edit</span>
             </button>
 
-            {/* 3. SYNC BUTTON (Purple) */}
+            {/* 3. SYNC */}
             <button
               type="button"
               onClick={handleLiveFetch}
               disabled={isLiveFetching}
-              className={`px-3 py-2 min-h-[44px] min-w-[44px] sm:min-h-[40px] rounded-xl border font-bold text-xs flex items-center justify-center space-x-1.5 transition-all disabled:opacity-50 shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm shadow-xs ${
+              className={`px-3 py-2 min-h-[40px] rounded-xl font-bold text-[11px] flex items-center space-x-1.5 shadow-md transition-all hover:scale-105 disabled:opacity-50 cursor-pointer shrink-0 whitespace-nowrap ${
                 syncSuccess
-                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                  : 'bg-white/5 hover:bg-indigo-500/20 text-indigo-300 hover:text-indigo-200 border-white/10 hover:border-indigo-500/30'
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/30'
+                  : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/30'
               }`}
-              title="Synchronize Student Stats from LeetCode"
             >
               {syncSuccess ? (
                 <>
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <CheckCircle2 className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Synced!</span>
                 </>
               ) : (
                 <>
-                  <RefreshCw className={`w-4 h-4 text-indigo-400 ${isLiveFetching ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-3.5 h-3.5 ${isLiveFetching ? 'animate-spin' : ''}`} />
                   <span className="hidden sm:inline">{isLiveFetching ? 'Syncing...' : 'Sync'}</span>
                 </>
               )}
             </button>
 
-            {/* 4. CERTIFICATE BUTTON (Orange) */}
+            {/* 4. CERTIFICATE */}
             <button
               type="button"
               onClick={handleGenerateCert}
               disabled={downloadingCert}
-              className="px-3 py-2 min-h-[44px] min-w-[44px] sm:min-h-[40px] rounded-xl bg-white/5 hover:bg-orange-500/20 text-orange-300 hover:text-orange-200 border border-white/10 hover:border-orange-500/30 font-bold text-xs flex items-center justify-center space-x-1.5 transition-all disabled:opacity-50 shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm shadow-xs"
-              title="Generate & Download Official Performance Certificate PDF"
+              className="px-3 py-2 min-h-[40px] rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] flex items-center space-x-1.5 shadow-md shadow-amber-600/30 transition-all hover:scale-105 disabled:opacity-50 cursor-pointer shrink-0 whitespace-nowrap"
             >
-              <Award className={`w-4 h-4 text-orange-400 ${downloadingCert ? 'animate-pulse' : ''}`} />
+              <Award className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">{downloadingCert ? 'Generating...' : 'Certificate'}</span>
             </button>
 
-            {/* 5. AUDIT BUTTON (Green) */}
+            {/* 5. AUDIT */}
             <button
               type="button"
               onClick={() => setShowAuditModal(true)}
-              className="px-3 py-2 min-h-[44px] min-w-[44px] sm:min-h-[40px] rounded-xl bg-white/5 hover:bg-emerald-500/20 text-emerald-300 hover:text-emerald-200 border border-white/10 hover:border-emerald-500/30 font-bold text-xs flex items-center justify-center space-x-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm shadow-xs"
-              title="Open Student Telemetry & Forensic Audit Ledger"
+              className="px-3 py-2 min-h-[40px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] flex items-center space-x-1.5 shadow-md shadow-emerald-600/30 transition-all hover:scale-105 cursor-pointer shrink-0 whitespace-nowrap"
             >
-              <FileText className="w-4 h-4 text-emerald-400" />
+              <FileText className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Audit</span>
             </button>
 
-            {/* 6. DELETE BUTTON (Red) */}
+            {/* 6. DELETE */}
             <button
               type="button"
               onClick={handleDelete}
               disabled={isDeleting}
-              className="px-3 py-2 min-h-[44px] min-w-[44px] sm:min-h-[40px] rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 hover:text-rose-200 border border-rose-500/30 hover:border-rose-500/50 font-bold text-xs flex items-center justify-center space-x-1.5 transition-all disabled:opacity-50 shrink-0 whitespace-nowrap cursor-pointer backdrop-blur-sm shadow-sm"
-              title="Deactivate / Soft-Delete Student Record"
+              className="px-3 py-2 min-h-[40px] rounded-xl bg-rose-600/90 hover:bg-rose-600 text-white font-bold text-[11px] flex items-center space-x-1.5 shadow-md shadow-rose-600/30 transition-all hover:scale-105 disabled:opacity-50 cursor-pointer shrink-0 whitespace-nowrap"
+              title="Deactivate Student"
             >
-              <Trash2 className="w-4 h-4 text-rose-400" />
-              <span>{isDeleting ? 'Deactivating...' : 'Delete'}</span>
+              <Trash2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{isDeleting ? '...' : 'Deactivate'}</span>
             </button>
+
+          {/* CLOSE BUTTON (restored from reference commit) */}
+          <button
+            type="button"
+            onClick={() => onBack()}
+            className="px-3 py-2 min-h-[40px] rounded-xl bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white transition-all font-black text-[11px] flex items-center space-x-1 cursor-pointer shrink-0 whitespace-nowrap"
+            title="Close Modal"
+          >
+            <X className="w-4 h-4" />
+            <span className="hidden sm:inline">Close</span>
+          </button>
         </div>
       </div>
       
@@ -595,25 +674,25 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       )}
 
       {activeTab === 'analytics' && (
-        <IndividualAnalyticsDashboard studentId={student?.id || student?.student_id} />
+        <IndividualAnalyticsDashboard studentId={resolveTargetId()} />
       )}
 
       {activeTab === 'contests' && (
-        <ContestAnalyticsView studentId={student?.id || student?.student_id} />
+        <ContestAnalyticsView studentId={resolveTargetId()} />
       )}
 
       {activeTab === 'activity' && (
-        <ActivityAnalyticsView studentId={student?.id || student?.student_id} />
+        <ActivityAnalyticsView studentId={resolveTargetId()} />
       )}
 
       {activeTab === 'reports' && (
-        <ReportsAnalyticsView studentId={student?.id || student?.student_id} />
+        <ReportsAnalyticsView studentId={resolveTargetId()} />
       )}
       </div>
 
       <StudentEditOverlay
         isOpen={showEditOverlay}
-        student={detail}
+        student={detail || student}
         onClose={() => setShowEditOverlay(false)}
         onSaveSuccess={(updated) => {
           setDetail(updated);

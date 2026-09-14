@@ -17,7 +17,7 @@ export const ReportsAnalyticsView: React.FC<ReportsAnalyticsProps> = ({
   yearLevel 
 }) => {
   const [loading, setLoading] = useState(false);
-  const [reportType, setReportType] = useState('official_summary');
+  const [reportType, setReportType] = useState(studentId ? 'student_detail' : 'official_summary');
   const [format, setFormat] = useState('pdf');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -29,7 +29,7 @@ export const ReportsAnalyticsView: React.FC<ReportsAnalyticsProps> = ({
 
     try {
       let baseUrl = `/reports/download-info?report_type=${reportType}&format=${format}&session_id=latest`;
-      if (studentId) baseUrl += `&student_id=${studentId}`;
+      if (studentId && reportType === 'student_detail') baseUrl += `&student_id=${studentId}`;
       if (deptId) baseUrl += `&dept_id=${deptId}`;
       if (yearLevel && yearLevel !== 'ALL') baseUrl += `&year_level=${yearLevel}`;
       

@@ -395,7 +395,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    const targetId = student?.id || student?.student_id;
+    const targetId = student?.id || student?.student_id || student?.reg_no || student?.register_number || student?.register_no;
     if (!student || !targetId || isSaving) return;
 
     const trimmedName = name.trim();
@@ -451,8 +451,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         version: student.version
       };
 
-      const studentId = student.id || student.student_id;
-      const res = await api.patch(`/students/${studentId}`, payload);
+      const res = await api.patch(`/students/${encodeURIComponent(targetId)}`, payload);
       const updated = res.data;
 
       notify.success('Student Record Updated', `Changes for ${trimmedName} saved successfully.`, { category: 'STUDENT EDIT' });
@@ -481,8 +480,31 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
     }
   }, [isOpen]);
 
-  if (!isOpen || !student) return null;
+  if (!isOpen) return null;
   if (typeof document === 'undefined') return null;
+
+  if (!student) {
+    return createPortal(
+      <div
+        className="fixed inset-0 z-[9999999] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md modal-overlay-responsive"
+        onClick={onClose}
+      >
+        <div className="bg-white dark:bg-navy-950 rounded-3xl p-6 shadow-2xl max-w-sm text-center border border-slate-200 dark:border-navy-700 animate-modal-content">
+          <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto mb-3" />
+          <h3 className="text-base font-bold text-slate-900 dark:text-white mb-2">Student Data Loading</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Student information is currently being fetched. Please try again in a moment.</p>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-slate-700 transition-all cursor-pointer"
+          >
+            Close
+          </button>
+        </div>
+      </div>,
+      document.body
+    );
+  }
 
   return createPortal(
     <div

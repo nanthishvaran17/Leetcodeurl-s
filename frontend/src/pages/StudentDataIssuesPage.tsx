@@ -1145,7 +1145,7 @@ export const StudentDataIssuesPage: React.FC = () => {
 
                           {/* Repair Username / Profile */}
                           <button
-                            onClick={() => handleOpenRepairModal(student)}
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleOpenRepairModal(student); }}
                             className="p-1.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30 cursor-pointer shadow-sm"
                             title="Repair / update student username"
                           >

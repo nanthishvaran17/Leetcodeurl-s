@@ -20,11 +20,14 @@ async def trigger_start_snapshot(db: Session, session_id: int):
     Executed at 8:00 AM IST: Takes baseline snapshot of all students' current solved counts.
     """
     session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
-    if not session:
-        logger.error(f"Session ID {session_id} not found.")
+    if session.baseline_status == "COMPLETED" and session.baseline_snapshot_id:
+        logger.info(f"[START_SNAPSHOT] Baseline Snapshot for Session ID {session_id} is already COMPLETED ({session.baseline_snapshot_id}). Reusing baseline.")
+        session.status = "LIVE" if session.status in ("SCHEDULED", "DISCOVERED") else session.status
+        db.commit()
         return
 
-    session.status = "ACTIVE"
+    session.status = "LIVE"
+    session.baseline_status = "IN_PROGRESS"
     session.baseline_snapshot_id = f"baseline_{session_id}"
     db.commit()
     logger.info(f"Starting 8:00 AM Baseline Snapshot for Session ID {session_id}...")
@@ -62,6 +65,8 @@ async def trigger_start_snapshot(db: Session, session_id: int):
             db.rollback()
             logger.error(f"[START_SNAPSHOT] Failed to snapshot student {student.id}: {e}")
 
+    session.baseline_status = "COMPLETED"
+    db.commit()
     logger.info("8:00 AM Baseline Snapshot completed successfully!")
 
 async def trigger_end_snapshot(db: Session, session_id: int):

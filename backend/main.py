@@ -144,7 +144,22 @@ async def _deferred_startup_tasks():
                             ADD COLUMN IF NOT EXISTS last_error_code VARCHAR(100),
                             ADD COLUMN IF NOT EXISTS last_error_message_safe TEXT,
                             ADD COLUMN IF NOT EXISTS finalization_method VARCHAR(50),
-                            ADD COLUMN IF NOT EXISTS finalized_by VARCHAR(150);
+                            ADD COLUMN IF NOT EXISTS finalized_by VARCHAR(150),
+                            ADD COLUMN IF NOT EXISTS scheduled_start TIMESTAMP WITH TIME ZONE,
+                            ADD COLUMN IF NOT EXISTS actual_start TIMESTAMP WITH TIME ZONE,
+                            ADD COLUMN IF NOT EXISTS scheduled_end TIMESTAMP WITH TIME ZONE,
+                            ADD COLUMN IF NOT EXISTS actual_end TIMESTAMP WITH TIME ZONE,
+                            ADD COLUMN IF NOT EXISTS baseline_status VARCHAR(30) DEFAULT 'PENDING',
+                            ADD COLUMN IF NOT EXISTS last_fetch_at TIMESTAMP WITH TIME ZONE,
+                            ADD COLUMN IF NOT EXISTS last_event_id INTEGER DEFAULT 0,
+                            ADD COLUMN IF NOT EXISTS worker_heartbeat TIMESTAMP WITH TIME ZONE,
+                            ADD COLUMN IF NOT EXISTS worker_status VARCHAR(30) DEFAULT 'IDLE',
+                            ADD COLUMN IF NOT EXISTS worker_instance_id VARCHAR(100),
+                            ADD COLUMN IF NOT EXISTS retry_count INTEGER DEFAULT 0,
+                            ADD COLUMN IF NOT EXISTS last_error TEXT,
+                            ADD COLUMN IF NOT EXISTS finalized BOOLEAN DEFAULT FALSE,
+                            ADD COLUMN IF NOT EXISTS report_generation_status VARCHAR(30) DEFAULT 'PENDING',
+                            ADD COLUMN IF NOT EXISTS email_dispatch_status VARCHAR(30) DEFAULT 'PENDING';
                         """
                     ]
                     for stmt in pg_statements:
@@ -170,6 +185,33 @@ async def _deferred_startup_tasks():
                             for col_name, sql_stmt in sqlite_additions:
                                 if col_name not in scp_cols:
                                     conn.execute(text(sql_stmt))
+
+                        res_ws = conn.execute(text("PRAGMA table_info(weekly_sessions)")).fetchall()
+                        ws_cols = {r[1] for r in res_ws}
+                        if ws_cols:
+                            ws_sqlite_additions = [
+                                ("scheduled_start", "ALTER TABLE weekly_sessions ADD COLUMN scheduled_start DATETIME"),
+                                ("actual_start", "ALTER TABLE weekly_sessions ADD COLUMN actual_start DATETIME"),
+                                ("scheduled_end", "ALTER TABLE weekly_sessions ADD COLUMN scheduled_end DATETIME"),
+                                ("actual_end", "ALTER TABLE weekly_sessions ADD COLUMN actual_end DATETIME"),
+                                ("baseline_status", "ALTER TABLE weekly_sessions ADD COLUMN baseline_status VARCHAR(30) DEFAULT 'PENDING'"),
+                                ("last_fetch_at", "ALTER TABLE weekly_sessions ADD COLUMN last_fetch_at DATETIME"),
+                                ("last_event_id", "ALTER TABLE weekly_sessions ADD COLUMN last_event_id INTEGER DEFAULT 0"),
+                                ("worker_heartbeat", "ALTER TABLE weekly_sessions ADD COLUMN worker_heartbeat DATETIME"),
+                                ("worker_status", "ALTER TABLE weekly_sessions ADD COLUMN worker_status VARCHAR(30) DEFAULT 'IDLE'"),
+                                ("worker_instance_id", "ALTER TABLE weekly_sessions ADD COLUMN worker_instance_id VARCHAR(100)"),
+                                ("retry_count", "ALTER TABLE weekly_sessions ADD COLUMN retry_count INTEGER DEFAULT 0"),
+                                ("last_error", "ALTER TABLE weekly_sessions ADD COLUMN last_error TEXT"),
+                                ("finalized", "ALTER TABLE weekly_sessions ADD COLUMN finalized BOOLEAN DEFAULT 0"),
+                                ("report_generation_status", "ALTER TABLE weekly_sessions ADD COLUMN report_generation_status VARCHAR(30) DEFAULT 'PENDING'"),
+                                ("email_dispatch_status", "ALTER TABLE weekly_sessions ADD COLUMN email_dispatch_status VARCHAR(30) DEFAULT 'PENDING'")
+                            ]
+                            for col_name, sql_stmt in ws_sqlite_additions:
+                                if col_name not in ws_cols:
+                                    try:
+                                        conn.execute(text(sql_stmt))
+                                    except Exception as _ws_col_err:
+                                        logger.warning(f"[STARTUP] SQLite column addition note for {col_name}: {_ws_col_err}")
                     except Exception as _sq_err:
                         logger.warning(f"[STARTUP] SQLite safety column addition note: {_sq_err}")
 

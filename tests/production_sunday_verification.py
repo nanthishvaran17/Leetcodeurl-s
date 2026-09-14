@@ -23,6 +23,41 @@ from backend.services.weekly_session_manager import (
 
 def run_production_verification() -> Dict[str, Any]:
     start_time = time.time()
+    try:
+        from backend.main import _deferred_startup_tasks
+        # Run safety schema migration
+        from backend.database import engine
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            res_ws = conn.execute(text("PRAGMA table_info(weekly_sessions)")).fetchall()
+            ws_cols = {r[1] for r in res_ws}
+            if ws_cols:
+                ws_sqlite_additions = [
+                    ("scheduled_start", "ALTER TABLE weekly_sessions ADD COLUMN scheduled_start DATETIME"),
+                    ("actual_start", "ALTER TABLE weekly_sessions ADD COLUMN actual_start DATETIME"),
+                    ("scheduled_end", "ALTER TABLE weekly_sessions ADD COLUMN scheduled_end DATETIME"),
+                    ("actual_end", "ALTER TABLE weekly_sessions ADD COLUMN actual_end DATETIME"),
+                    ("baseline_status", "ALTER TABLE weekly_sessions ADD COLUMN baseline_status VARCHAR(30) DEFAULT 'PENDING'"),
+                    ("last_fetch_at", "ALTER TABLE weekly_sessions ADD COLUMN last_fetch_at DATETIME"),
+                    ("last_event_id", "ALTER TABLE weekly_sessions ADD COLUMN last_event_id INTEGER DEFAULT 0"),
+                    ("worker_heartbeat", "ALTER TABLE weekly_sessions ADD COLUMN worker_heartbeat DATETIME"),
+                    ("worker_status", "ALTER TABLE weekly_sessions ADD COLUMN worker_status VARCHAR(30) DEFAULT 'IDLE'"),
+                    ("worker_instance_id", "ALTER TABLE weekly_sessions ADD COLUMN worker_instance_id VARCHAR(100)"),
+                    ("retry_count", "ALTER TABLE weekly_sessions ADD COLUMN retry_count INTEGER DEFAULT 0"),
+                    ("last_error", "ALTER TABLE weekly_sessions ADD COLUMN last_error TEXT"),
+                    ("finalized", "ALTER TABLE weekly_sessions ADD COLUMN finalized BOOLEAN DEFAULT 0"),
+                    ("report_generation_status", "ALTER TABLE weekly_sessions ADD COLUMN report_generation_status VARCHAR(30) DEFAULT 'PENDING'"),
+                    ("email_dispatch_status", "ALTER TABLE weekly_sessions ADD COLUMN email_dispatch_status VARCHAR(30) DEFAULT 'PENDING'")
+                ]
+                for col_name, sql_stmt in ws_sqlite_additions:
+                    if col_name not in ws_cols:
+                        try:
+                            conn.execute(text(sql_stmt))
+                        except Exception:
+                            pass
+    except Exception:
+        pass
+
     db = SessionLocal()
 
     try:

@@ -10,15 +10,16 @@ import { getCachedSummary, saveCachedSummary } from './utils/rosterCache';
 import { ErrorBoundary } from './ErrorBoundary';
 import { useAuth } from './context/AuthContext';
 import { useKeyboardContext } from './context/KeyboardContext';
-import { CommandPalette } from './components/CommandPalette';
 import { useGlobalKeyboardShortcuts } from './hooks/useGlobalKeyboardShortcuts';
 import { InstallAppPrompt } from './components/InstallAppPrompt';
 import { AppUpdateNotifier } from './components/AppUpdateNotifier';
-import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 import { useScrollLock } from './hooks/useScrollLock';
-import { LandingPage } from './pages/LandingPage';
-import { LoginPage } from './pages/LoginPage';
-import { DashboardPage } from './pages/DashboardPage';
+
+const CommandPalette = safeLazy(() => import('./components/CommandPalette').then(m => ({ default: m.CommandPalette })));
+const KeyboardShortcutsModal = safeLazy(() => import('./components/KeyboardShortcutsModal').then(m => ({ default: m.KeyboardShortcutsModal })));
+const LandingPage = safeLazy(() => import('./pages/LandingPage').then(m => ({ default: m.LandingPage })));
+const LoginPage = safeLazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const DashboardPage = safeLazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
 
 // Safe lazy import wrapper with automatic chunk reload on Vercel deployment update
 function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ default: T }>) {
@@ -876,7 +877,7 @@ export const App: React.FC = () => {
       )}
 
       {/* Viewport-Centered Student Profile Modal */}
-      {selectedStudent && typeof document !== 'undefined' && createPortal(
+      {selectedStudent && activeTab !== 'profile' && typeof document !== 'undefined' && createPortal(
         <div
           className="fixed inset-0 z-[100000] flex items-start justify-center p-3 sm:p-4 pt-6 sm:pt-7 overflow-y-auto bg-slate-950/80 backdrop-blur-md animate-fade-in"
           onClick={(e) => { if (e.target === e.currentTarget) setSelectedStudent(null); }}

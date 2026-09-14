@@ -4,7 +4,10 @@ import million from 'million/compiler'
 import path from 'path'
 
 export default defineConfig({
-  plugins: [million.vite({ auto: true }), react()],
+  plugins: [
+    million.vite({ auto: { rsc: true, skip: ['usePortal', 'createPortal', 'GlobalFilter'] } }),
+    react()
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

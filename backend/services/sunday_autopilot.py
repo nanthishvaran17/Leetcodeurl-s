@@ -494,7 +494,14 @@ class UniversalWeeklyContestAutopilot:
             data_errors = reconciliation.get("data_errors", 0)
             total_roster = reconciliation.get("total_roster", 1450)
 
-            self.last_sync_timestamp = datetime.datetime.now(datetime.timezone.utc)
+            now_utc = datetime.datetime.now(datetime.timezone.utc)
+            session.last_fetch_at = now_utc
+            session.last_successful_fetch_at = now_utc
+            session.worker_heartbeat = now_utc
+            session.worker_status = "RUNNING"
+            db.commit()
+
+            self.last_sync_timestamp = now_utc
             self.last_action_summary = f"Live telemetry synced: {live_attended} Live Solvers"
             self.telemetry["processed_count"] = total_roster
 
@@ -591,14 +598,18 @@ class UniversalWeeklyContestAutopilot:
                 }
 
             # SUCCESS: Finalized
+            now_utc = datetime.datetime.now(datetime.timezone.utc)
             dataset_hash = reconciliation.get("checksum") or reconciliation.get("dataset_hash") or hashlib.sha256(str(session.id).encode()).hexdigest()
             session.status = "FINALIZED"
             session.pipeline_state = AutopilotState.FINALIZED
             session.final_snapshot_id = f"SNAPSHOT-{session.contest_id or 'CONTEST'}-FINAL-{session.id}"
             session.dataset_hash = dataset_hash
-            session.finalized_at = datetime.datetime.now(datetime.timezone.utc)
+            session.finalized_at = now_utc
+            session.actual_end = now_utc
+            session.finalized = True
+            session.report_generation_status = "PENDING"
             session.finalization_method = getattr(session, 'finalization_method', None) or "AUTOMATIC"
-            session.last_successful_source_fetch = datetime.datetime.now(datetime.timezone.utc)
+            session.last_successful_source_fetch = now_utc
             session.pipeline_last_updated = datetime.datetime.utcnow()
             db.commit()
 
@@ -641,6 +652,9 @@ class UniversalWeeklyContestAutopilot:
             if not session:
                 return {"phase": "REPORTS", "success": False, "error": "Session not found"}
 
+            session.report_generation_status = "GENERATING"
+            db.commit()
+
             canonical_data = build_canonical_contest_dataset(session_id=session.id, db=db)
             date_clean = (session.session_date or datetime.date.today().strftime("%d-%m-%Y")).replace(".", "-").replace("/", "-")
 
@@ -672,6 +686,7 @@ class UniversalWeeklyContestAutopilot:
             with open(zip_path, "wb") as f: f.write(zip_bytes)
 
             session.pipeline_state = "REPORTS_GENERATED"
+            session.report_generation_status = "COMPLETED"
             session.pipeline_last_updated = datetime.datetime.utcnow()
             db.commit()
 
@@ -714,10 +729,14 @@ class UniversalWeeklyContestAutopilot:
             if not session:
                 return {"phase": "BROADCAST", "success": False, "error": "Session not found"}
 
+            session.email_dispatch_status = "DISPATCHING"
+            db.commit()
+
             # Email dispatch
             email_res = queue_weekly_report_dispatches(db=db, session_id=session.id, report_type="WEEKLY_CONTEST_AUTO")
 
             session.pipeline_state = "PUBLISHED"
+            session.email_dispatch_status = "COMPLETED"
             session.pipeline_last_updated = datetime.datetime.utcnow()
             db.commit()
 
@@ -1037,8 +1056,23 @@ class SundayAutopilotCoordinator:
         return weekly_contest_autopilot.phase_7_virtual_recheck(session_id, db)
 
     @classmethod
+    def phase_7b_auto_recovery(cls, session_id: Optional[int] = None, db: Optional[Session] = None) -> Dict[str, Any]:
+        return weekly_contest_autopilot.phase_7b_auto_recovery(session_id, db)
+
+    @classmethod
+    def phase_8_prepare_next_contest(cls, db: Optional[Session] = None) -> Dict[str, Any]:
+        return weekly_contest_autopilot.phase_8_prepare_next_contest(db)
+
+    @classmethod
+    def phase_8_prepare_next_contest_2205(cls, db_or_session_id: Any = None, db: Optional[Session] = None) -> Dict[str, Any]:
+        if isinstance(db_or_session_id, Session):
+            db = db_or_session_id
+        return weekly_contest_autopilot.phase_8_prepare_next_contest(db)
+
+    @classmethod
     async def resume_or_recover_on_startup(cls, db: Optional[Session] = None):
         return await weekly_contest_autopilot.resume_or_recover_on_startup(db)
+
 
 
 

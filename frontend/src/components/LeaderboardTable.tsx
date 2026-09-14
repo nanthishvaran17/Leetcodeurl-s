@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useDeferredValue } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { createPortal } from 'react-dom';
+import { FixedSizeList as List } from 'react-window';
 
 import { studentLiveStore } from '../stores/studentLiveStore';
 import { FastStudentRow } from './FastStudentRow';
@@ -189,6 +190,8 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
     return list;
   }, [effectiveStudents, sortConfig]);
 
+  const deferredSortedStudents = useDeferredValue(sortedStudents);
+
   const { notify, confirmAction } = useNotification();
   const queryClient = useQueryClient();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -225,9 +228,9 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
       if (pageSize === '200') return 1;
       return Math.ceil((serverTotalCount || 0) / Number(pageSize)) || 1;
     }
-    if (pageSize === '200') return Math.ceil(sortedStudents.length / 200) || 1;
-    return Math.ceil(sortedStudents.length / Number(pageSize)) || 1;
-  }, [sortedStudents.length, pageSize, isServerPaginated, serverTotalCount]);
+    if (pageSize === '200') return Math.ceil(deferredSortedStudents.length / 200) || 1;
+    return Math.ceil(deferredSortedStudents.length / Number(pageSize)) || 1;
+  }, [deferredSortedStudents.length, pageSize, isServerPaginated, serverTotalCount]);
 
   // Ensure current page is valid when total pages change
   useEffect(() => {
@@ -241,8 +244,8 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
     
     const size = Number(pageSize);
     const start = (currentPage - 1) * size;
-    return sortedStudents.slice(start, start + size);
-  }, [sortedStudents, effectiveStudents, currentPage, pageSize, isServerPaginated]);
+    return deferredSortedStudents.slice(start, start + size);
+  }, [deferredSortedStudents, effectiveStudents, currentPage, pageSize, isServerPaginated]);
 
   const handlePageChange = (newPage: number) => {
     if (isServerPaginated && onServerPageChange) {
@@ -279,6 +282,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
       e.preventDefault();
       e.stopPropagation();
     }
+    setEditingStudent(null);
     if (onSelectStudent) {
       onSelectStudent(student);
     } else {
@@ -288,6 +292,11 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   };
 
   const handleOpenEdit = (st: StudentData, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setViewingStudent(null);
     setModalTopY(calculateTargetTopY(e));
     setEditingStudent(st);
     setEditName(st.name);
@@ -329,10 +338,10 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   };
 
   const toggleAll = () => {
-    if (selectedIds.length === sortedStudents.length) {
+    if (selectedIds.length === deferredSortedStudents.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(sortedStudents.map(s => Number(s.id)));
+      setSelectedIds(deferredSortedStudents.map(s => Number(s.id)));
     }
   };
 
@@ -471,8 +480,24 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   
   // Wait, handleOpenEdit uses setModalTopY, setEditingStudent, etc. which are stable.
   // We can just redefine them or wrap them. Let's just use useCallback wrapping the state setters.
-  const memoizedHandleView = useCallback((s: any) => setViewingStudent(s), []);
-  const memoizedHandleEdit = useCallback((s: any) => {
+  const memoizedHandleView = useCallback((s: any, e?: any) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setEditingStudent(null);
+    if (onSelectStudent) {
+      onSelectStudent(s);
+    } else {
+      setViewingStudent(s);
+    }
+  }, [onSelectStudent]);
+  const memoizedHandleEdit = useCallback((s: any, e?: any) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setViewingStudent(null);
     setEditingStudent(s);
     setEditName(s.name);
     setEditDeptId(s.department_id || 1);
@@ -529,7 +554,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
         {/* Table Header Wrapper (Sticky) */}
         <div className="hidden md:flex bg-slate-50 dark:bg-navy-950 text-slate-500 dark:text-slate-400 font-extrabold border-b border-slate-200 dark:border-navy-800 uppercase tracking-wider text-[11px] w-[1400px] min-w-[1400px] items-center">
           <div className="flex-none w-10 py-3 px-3 text-center">
-             <input type="checkbox" checked={sortedStudents.length > 0 && selectedIds.length === sortedStudents.length} onChange={toggleAll} className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer" />
+             <input type="checkbox" checked={deferredSortedStudents.length > 0 && selectedIds.length === deferredSortedStudents.length} onChange={toggleAll} className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer" />
           </div>
           <div className="flex-none w-24 py-3 px-3 text-left">Rank</div>
           <div className="flex-none w-32 py-3 px-3 text-left">Register No</div>
@@ -551,28 +576,57 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
               <RefreshCw className="w-6 h-6 animate-spin text-brand-500" />
               <span className="text-xs font-bold text-brand-600 dark:text-brand-400">Loading real institutional student records...</span>
             </div>
-          ) : sortedStudents.length === 0 ? (
+          ) : deferredSortedStudents.length === 0 ? (
             <div className="flex flex-col items-center justify-center space-y-2 h-full py-12">
               <AlertCircle className="w-6 h-6 text-amber-500" />
               <span className="text-sm font-bold text-slate-800 dark:text-slate-200">No students match the selected filters.</span>
             </div>
           ) : (
-            <div className="flex flex-col space-y-1">
-              {paginatedStudents.map((student, idx) => (
-                <FastStudentRow
-                  key={student.id}
-                  studentId={student.id.toString()}
-                  index={idx + (currentPage - 1) * Number(pageSize)}
-                  style={{}}
-                  isSelected={selectedIds.includes(Number(student.id))}
-                  toggleStudent={handleToggleStudentAction}
-                  onView={memoizedHandleView}
-                  onEdit={memoizedHandleEdit}
-                  onRefresh={memoizedHandleRefresh}
-                  onDelete={memoizedHandleDelete}
-                />
-              ))}
-            </div>
+            paginatedStudents.length > 50 ? (
+              <List
+                height={800}
+                itemCount={paginatedStudents.length}
+                itemSize={52}
+                width="100%"
+                itemData={paginatedStudents}
+                style={{ overflowX: 'hidden' }}
+              >
+                {({ index, style, data }) => {
+                  const student = data[index];
+                  return (
+                    <FastStudentRow
+                      key={student.id}
+                      studentId={student.id.toString()}
+                      index={index + (currentPage - 1) * Number(pageSize)}
+                      style={style}
+                      isSelected={selectedIds.includes(Number(student.id))}
+                      toggleStudent={handleToggleStudentAction}
+                      onView={memoizedHandleView}
+                      onEdit={memoizedHandleEdit}
+                      onRefresh={memoizedHandleRefresh}
+                      onDelete={memoizedHandleDelete}
+                    />
+                  );
+                }}
+              </List>
+            ) : (
+              <div className="flex flex-col space-y-1">
+                {paginatedStudents.map((student, idx) => (
+                  <FastStudentRow
+                    key={student.id}
+                    studentId={student.id.toString()}
+                    index={idx + (currentPage - 1) * Number(pageSize)}
+                    style={{}}
+                    isSelected={selectedIds.includes(Number(student.id))}
+                    toggleStudent={handleToggleStudentAction}
+                    onView={memoizedHandleView}
+                    onEdit={memoizedHandleEdit}
+                    onRefresh={memoizedHandleRefresh}
+                    onDelete={memoizedHandleDelete}
+                  />
+                ))}
+              </div>
+            )
           )}
         </div>
       </div>

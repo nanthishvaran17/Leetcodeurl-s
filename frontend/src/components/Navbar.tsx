@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { Sun, Moon, User, LogOut, Activity, Menu, X, LayoutDashboard, Users, BarChart3, CheckCircle2, FileSpreadsheet, Settings, ShieldAlert, Globe, Layers, Calendar, TrendingUp, Cpu, Zap, AlertOctagon, Bell, Palette, Check, RefreshCw } from 'lucide-react';
@@ -6,7 +6,7 @@ import { CollegeLogo } from './CollegeLogo';
 import { getDataFreshness } from '../services/api';
 import { SyncStatusModal } from './SyncStatusModal';
 import { LiveIndicator } from './LiveIndicator';
-import { NotificationPanel } from './NotificationPanel';
+const NotificationPanel = lazy(() => import('./NotificationPanel').then(m => ({ default: m.NotificationPanel })));
 import { useGlobalNotifications } from '../context/GlobalNotificationContext';
 
 interface NavbarProps {
@@ -34,7 +34,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState<boolean>(false);
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
+  const [hasOpenedNotifications, setHasOpenedNotifications] = useState<boolean>(false);
   const { unreadCount } = useGlobalNotifications();
+
+  useEffect(() => {
+    if (showNotifications) setHasOpenedNotifications(true);
+  }, [showNotifications]);
 
   useEffect(() => {
     loadFreshness();
@@ -162,14 +167,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </span>
                     )}
                   </button>
-                  <NotificationPanel
-                    isOpen={showNotifications}
-                    onClose={() => setShowNotifications(false)}
-                    onNavigateTab={(tab) => {
-                      setActiveTab(tab);
-                      setShowNotifications(false);
-                    }}
-                  />
+                  {hasOpenedNotifications && (
+                    <Suspense fallback={null}>
+                      <NotificationPanel
+                        isOpen={showNotifications}
+                        onClose={() => setShowNotifications(false)}
+                        onNavigateTab={(tab) => {
+                          setActiveTab(tab);
+                          setShowNotifications(false);
+                        }}
+                      />
+                    </Suspense>
+                  )}
                 </div>
               )}
 
