@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Download, QrCode, ShieldCheck, Share2, Sparkles, CheckCircle2, Award } from 'lucide-react';
 import { triggerDownload } from '../utils/mobileDownload';
 
@@ -227,9 +227,16 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     };
   }, [studentName, regNo, deptName, yearLevel, totalSolved, collegeRank, streakCount]);
 
+  const [isGenerating, setIsGenerating] = useState(false);
+
   const generateAndDownloadPass = () => {
+    if (isGenerating) return;
+    setIsGenerating(true);
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      setIsGenerating(false);
+      return;
+    }
     drawCardOnCanvas(canvas);
 
     canvas.toBlob((blob) => {
@@ -245,6 +252,7 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
         link.click();
         document.body.removeChild(link);
       }
+      setTimeout(() => setIsGenerating(false), 2000);
     }, 'image/png');
   };
 
@@ -268,10 +276,11 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
 
         <button
           onClick={generateAndDownloadPass}
-          className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl text-xs font-black shadow-lg shadow-emerald-500/30 transition-transform transform hover:scale-105 cursor-pointer"
+          disabled={isGenerating}
+          className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl text-xs font-black shadow-lg shadow-emerald-500/30 transition-transform transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 cursor-pointer"
         >
           <Download className="w-4 h-4" />
-          <span>Download Ultra-HD Pass (.PNG)</span>
+          <span>{isGenerating ? 'Downloading...' : 'Download Ultra-HD Pass (.PNG)'}</span>
         </button>
       </div>
 

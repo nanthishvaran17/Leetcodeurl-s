@@ -75,10 +75,7 @@ def with_global_lock(job_name: str, timeout_minutes: int = 15):
         return wrapper
     return decorator
 
-jobstores = {
-    'default': SQLAlchemyJobStore(engine=engine, tablename='apscheduler_jobs')
-}
-scheduler = AsyncIOScheduler(jobstores=jobstores, timezone=IST)
+scheduler = AsyncIOScheduler(timezone=IST)
 
 def apscheduler_listener(event):
     db = SessionLocal()
@@ -679,10 +676,33 @@ async def friday_weekly_retry_job():
         db.close()
 
 
+_scheduler_lockfile = None
+
 def start_scheduler():
     """
     Starts the APScheduler cron jobs under Asia/Kolkata IST timezone.
+    Uses an OS-level file lock to ensure only ONE worker process starts the scheduler,
+    preventing duplicate cron jobs and memory exhaustion when running multiple Uvicorn/Gunicorn workers.
     """
+    import os
+    import sys
+    
+    global _scheduler_lockfile
+    try:
+        if sys.platform == 'win32':
+            import msvcrt
+            lockfile = open('scheduler.lock', 'w')
+            msvcrt.locking(lockfile.fileno(), msvcrt.LK_NBLCK, 1)
+            _scheduler_lockfile = lockfile
+        else:
+            import fcntl
+            lockfile = open('scheduler.lock', 'w')
+            fcntl.flock(lockfile.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            _scheduler_lockfile = lockfile
+    except (IOError, OSError):
+        logger.info("[SCHEDULER] Another worker is already running the scheduler. Skipping start to prevent duplicate jobs.")
+        return
+
     if scheduler.running:
         logger.info("APScheduler is already running. Skipping redundant start.")
         return

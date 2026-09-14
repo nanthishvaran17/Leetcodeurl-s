@@ -515,7 +515,7 @@ def generate_report_bytes(
         "COLLEGE_EXECUTIVE", "DEPARTMENT_PERFORMANCE"
     ):
         from backend.services.master_institutional_report_service import generate_master_10_sheet_workbook
-        return generate_master_10_sheet_workbook(db, current_user=current_user, department=dept, year=year)
+        return generate_master_10_sheet_workbook(db, current_user=current_user, department=dept, year=year, report_type=rpt)
 
     # 4. Master 8-Sheet Tracker Fallback
     if rpt in ("MASTER_TRACKER", "8_SHEET_MASTER_TRACKER"):
@@ -540,14 +540,20 @@ def generate_report_bytes(
         report_type=config_type,
         department=dept,
         year=year,
-        filters={"search": search, "batch": batch, "status": status, "session_id": session_id}
+        filters={"search": search, "batch": batch, "status": status, "session_id": session_id, "student_id": flt.get("student_id")}
     )
 
     dataset = build_universal_report(db, config, current_user=current_user)
 
     if fmt in ("excel", "xlsx"):
+        if flt.get("student_id"):
+            from backend.exporters.student_excel_exporter import export_student_excel_from_dataset
+            return export_student_excel_from_dataset(dataset, rpt)
         return export_excel_from_dataset(dataset)
     elif fmt == "pdf":
+        if flt.get("student_id"):
+            from backend.exporters.student_pdf_exporter import export_student_pdf_from_dataset
+            return export_student_pdf_from_dataset(dataset, rpt)
         from backend.pdf_generator import generate_pdf_report
         return generate_pdf_report(
             db=db,
@@ -555,6 +561,20 @@ def generate_report_bytes(
             year=year if year != "ALL" else None,
             current_user=current_user
         )
+    elif fmt == "both":
+        if flt.get("student_id"):
+            from backend.exporters.zip_exporter import export_student_zip_bundle_from_dataset
+            rows = dataset.get("rows", [])
+            s_name = rows[0].get("name") if rows else "Student"
+            s_reg = rows[0].get("reg_no") or rows[0].get("register_no") if rows else str(flt.get("student_id"))
+            
+            prefix = 'Student_Report'
+            if rpt == 'OFFICIAL_SUMMARY': prefix = 'Student_Summary'
+            if rpt == 'WEEKLY_CONTEST_MATRIX': prefix = 'Student_Contest_Matrix'
+            
+            return export_student_zip_bundle_from_dataset(dataset, s_name, s_reg, prefix)
+        from backend.exporters.zip_exporter import export_zip_bundle_from_dataset
+        return export_zip_bundle_from_dataset(dataset)
     elif fmt in ("word", "docx"):
         return export_word_from_dataset(dataset)
     elif fmt == "csv":

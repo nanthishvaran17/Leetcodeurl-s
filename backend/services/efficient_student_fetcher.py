@@ -98,12 +98,20 @@ class EfficientStudentFetcher:
                     logger.debug(f"Targeted lookup failed for {uname}: {e}")
                 return uname, None
 
-        tasks = [fetch_one(u) for u in usernames]
-        responses = await asyncio.gather(*tasks, return_exceptions=False)
-
-        for uname, data in responses:
-            if data:
-                results[uname] = data
+        usernames_list = list(usernames)
+        batch_size = 50
+        
+        for i in range(0, len(usernames_list), batch_size):
+            batch = usernames_list[i:i + batch_size]
+            tasks = [fetch_one(u) for u in batch]
+            responses = await asyncio.gather(*tasks, return_exceptions=False)
+            
+            for uname, data in responses:
+                if data:
+                    results[uname] = data
+                    
+            # Yield to event loop and GC
+            await asyncio.sleep(0.1)
 
         return results
 

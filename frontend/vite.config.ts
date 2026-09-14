@@ -5,7 +5,7 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [
-    million.vite({ auto: { rsc: true, skip: ['usePortal', 'createPortal', 'GlobalFilter'] } }),
+    million.vite({ auto: { rsc: true, skip: ['usePortal', 'createPortal', 'GlobalFilter', 'StudentProfilePage', 'StudentEditOverlay', 'StudentAuditModal', 'StatusNotificationModal', 'ConfirmDeleteModal'] } }),
     react()
   ],
   resolve: {

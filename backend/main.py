@@ -33,7 +33,7 @@ from backend.routes import (
     deep_tech_intelligence, url_import, contest_integrity, notifications, messaging, downloads, report_jobs
 )
 from backend.routes import admin, email_reports, ai_assistant, leetcode, ai_control_center, intelligence, nlci, hr_candidate_finder
-from backend.routes import command_center, scheduler
+from backend.routes import command_center, scheduler, student_reports
 from backend import leetcode_tracker
 from backend.services.heartbeat_service import get_deep_health_telemetry
 from backend.websocket_manager import manager
@@ -773,6 +773,7 @@ app.include_router(analytics.router)
 app.include_router(downloads.router)
 # reports: prefix="/api/reports" (self-prefixed)
 app.include_router(reports.router)
+app.include_router(student_reports.router)
 app.include_router(report_jobs.router)
 # settings: prefix="/api/settings" (self-prefixed)
 app.include_router(settings_route.router)
@@ -1006,3 +1007,5 @@ if os.path.exists(FRONTEND_DIST):
 logger.info("LeetCode Performance Tracker API is fully ready & live sync engine active.")
 
 # reload trigger
+
+# Trigger reload

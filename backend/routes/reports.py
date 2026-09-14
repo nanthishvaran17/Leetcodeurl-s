@@ -84,7 +84,7 @@ def get_report_download_info(
         filters=filters,
         current_user=current_user,
         institution_id=institution_id,
-        background=True
+        background=False
     )
 
 

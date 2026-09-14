@@ -165,8 +165,16 @@ export const SettingsPage: React.FC = () => {
   const fetchSystemHealth = async () => {
     setIsProbing(true);
     setSystemHealth(null);
+    
+    // Ensure the animation runs for at least 800ms so it doesn't flash instantly
+    const minDelay = new Promise(resolve => setTimeout(resolve, 800));
+    
     try {
-      const res = await api.get('/settings/system-health');
+      const [res] = await Promise.all([
+        api.get('/settings/system-health'),
+        minDelay
+      ]);
+      
       if (res.data && res.data.components) {
         setSystemHealth(res.data);
         setLastProbed(new Date());
@@ -532,41 +540,24 @@ export const SettingsPage: React.FC = () => {
     <div className="space-y-6 pb-16 text-xs text-slate-800 dark:text-slate-200">
       
       {/* 1. RICH INSTITUTIONAL PAGE HEADER BANNER */}
-      <div className="relative overflow-hidden rounded-3xl text-white shadow-2xl border border-white/10"
-        style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #0f172a 70%, #0c1a3a 100%)' }}>
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-lg border border-brand-500/30">
+        <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
 
-        {/* Decorative animated blobs */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-20 -left-20 w-80 h-80 rounded-full opacity-20 blur-3xl animate-pulse"
-            style={{ background: 'radial-gradient(circle, #6366f1, transparent)' }} />
-          <div className="absolute -bottom-20 -right-20 w-96 h-96 rounded-full opacity-15 blur-3xl"
-            style={{ background: 'radial-gradient(circle, #8b5cf6, transparent)', animationDelay: '1.5s' }} />
-          <div className="absolute top-0 right-1/3 w-64 h-64 rounded-full opacity-10 blur-2xl"
-            style={{ background: 'radial-gradient(circle, #3b82f6, transparent)' }} />
-          {/* Grid overlay */}
-          <div className="absolute inset-0 opacity-[0.04]"
-            style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-        </div>
-
-        <div className="relative z-10 p-6 md:p-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
-
-            {/* Left: Title Block */}
-            <div className="space-y-2">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full border text-xs font-black tracking-wide uppercase"
-                style={{ background: 'rgba(245,158,11,0.12)', borderColor: 'rgba(245,158,11,0.3)', color: '#fbbf24' }}>
-                <Shield className="w-3.5 h-3.5" />
-                <span>Institutional Configuration • System Control Center</span>
-              </div>
-
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-                Admin System Control Center
-              </h1>
-
-              <p className="text-slate-400 text-xs font-medium max-w-md leading-relaxed">
-                Manage institutional parameters, role-based access, system synchronization health, and background data integrity checks.
-              </p>
+          {/* Left: Title Block */}
+          <div className="space-y-2.5 max-w-2xl">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black uppercase">
+              <Shield className="w-3.5 h-3.5 text-amber-400" />
+              <span>Institutional Configuration • System Control Center</span>
             </div>
+
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white">
+              Admin System <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Control Center</span>
+            </h1>
+
+            <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide">
+              Manage institutional parameters, role-based access, system synchronization health, and background data integrity checks.
+            </p>
+          </div>
 
             {/* Right: Badges + Actions */}
             <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
@@ -617,8 +608,6 @@ export const SettingsPage: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
-
 
       {/* 2. COMPACT SYSTEM STATUS STRIP WITH LIVE PROBING */}
       <div className="glass-card p-4 rounded-2xl border border-slate-200 dark:border-navy-700 space-y-2.5">
@@ -629,7 +618,7 @@ export const SettingsPage: React.FC = () => {
               Live Subsystem Health Probes
             </span>
             {lastProbed && !isProbing && (
-              <span className="text-[10px] text-slate-400 font-medium">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-bold ml-2">
                 — Last probed {lastProbed.toLocaleTimeString()}
               </span>
             )}
@@ -690,12 +679,20 @@ export const SettingsPage: React.FC = () => {
             return (
               <div
                 key={`${item.key}-${probeKey}`}
-                className="p-2.5 rounded-xl border bg-slate-50/50 dark:bg-navy-950/50 border-slate-200 dark:border-navy-800 flex flex-col items-center justify-center text-center"
+                className={`flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all duration-300 ${
+                  isChecking
+                    ? 'bg-slate-50/50 border-slate-100'
+                    : isHealthy
+                      ? 'bg-emerald-50/30 border-emerald-100 hover:border-emerald-200 hover:shadow-sm'
+                      : isDegraded
+                        ? 'bg-amber-50/50 border-amber-200'
+                        : 'bg-rose-50/50 border-rose-200'
+                }`}
                 style={{
                   animation: probeKey > 0 ? `card-pop 0.35s cubic-bezier(0.4,0,0.2,1) ${idx * 40}ms both` : 'none'
                 }}
               >
-                <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider truncate w-full">{item.label}</span>
+                <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider truncate w-full text-center">{item.label}</span>
                 <span className={`font-black text-[10px] mt-1 px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${
                   isChecking
                     ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20 animate-pulse'
@@ -708,6 +705,7 @@ export const SettingsPage: React.FC = () => {
                           : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
                 }`}>
                   {isChecking && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />}
+                  {isHealthy && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
                   {isChecking ? 'Checking' : isHealthy ? 'Healthy' : isDegraded ? 'Degraded' : isOffline ? 'Offline' : isUnknown ? 'Unknown' : isFailed ? 'Failed' : 'Error'}
                 </span>
               </div>

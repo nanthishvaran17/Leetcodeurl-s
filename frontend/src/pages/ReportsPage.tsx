@@ -521,7 +521,7 @@ export const ReportsPage: React.FC = () => {
             </div>
 
             {/* Unified Report Builder Form Controls */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 p-5 bg-white/70 dark:bg-navy-950/70 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-inner items-start">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 p-5 bg-white/70 dark:bg-navy-950/70 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-inner items-start">
 
               {/* 1. Report Type — Premium Dropdown with Custom Colored Badges */}
               <div className="flex flex-col space-y-1.5 min-w-0 w-full relative z-[35]">
@@ -535,7 +535,7 @@ export const ReportsPage: React.FC = () => {
                         title: 'A. CONTEST REPORTS',
                         titleColor: 'text-brand-600 dark:text-brand-400',
                         options: [
-                          { value: 'FRIDAY_OFFICIAL_CONTEST', label: 'Friday Official Contest Result', pill: 'OFFICIAL', pillColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-200 border-indigo-300 dark:border-indigo-700' },
+                          { value: 'FRIDAY_OFFICIAL_CONTEST', label: 'Friday Contest Result', pill: 'OFFICIAL', pillColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-200 border-indigo-300 dark:border-indigo-700' },
                           { value: 'SUNDAY_LIVE_CONTEST', label: 'Sunday Live Contest Report', pill: 'LIVE', pillColor: 'bg-sky-100 text-sky-800 dark:bg-sky-900/60 dark:text-sky-200 border-sky-300 dark:border-sky-700' },
                           { value: 'WEEKLY_CONTEST_INTELLIGENCE', label: 'Weekly Contest Intelligence', pill: 'INTELLIGENCE', pillColor: 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200 border-blue-300 dark:border-blue-700' },
                           { value: 'CONTEST_ATTENDANCE_PARTICIPATION', label: 'Contest Attendance & Participation', pill: 'ATTENDANCE', pillColor: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700' },
@@ -588,7 +588,7 @@ export const ReportsPage: React.FC = () => {
                         >
                           <LayoutTemplate className="w-4 h-4 text-brand-500 shrink-0" />
                           {currentOpt && (
-                            <span className={`shrink-0 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${currentOpt.pillColor}`}>
+                            <span className={`w-24 min-w-[6rem] text-center shrink-0 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${currentOpt.pillColor}`}>
                               {currentOpt.pill}
                             </span>
                           )}
@@ -619,7 +619,7 @@ export const ReportsPage: React.FC = () => {
                                       onClick={() => { setSelectedReportType(opt.value); setRptTypeOpen(false); }}
                                       className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all ${isSelected ? 'bg-brand-600 text-white font-black shadow-md shadow-brand-500/20' : 'hover:bg-slate-100 dark:hover:bg-navy-800'}`}
                                     >
-                                      <span className={`w-20 min-w-[5rem] text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border ${isSelected ? 'bg-white/20 text-white border-white/30' : opt.pillColor}`}>
+                                      <span className={`w-24 min-w-[6rem] text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border ${isSelected ? 'bg-white/20 text-white border-white/30' : opt.pillColor}`}>
                                         {opt.pill}
                                       </span>
                                       <span className={`text-xs truncate flex-1 ${isSelected ? 'font-black text-white' : 'font-semibold text-slate-700 dark:text-slate-200'}`}>
@@ -699,62 +699,7 @@ export const ReportsPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* 4. Output Scope — Premium Dropdown */}
-              <div className="flex flex-col space-y-1.5 min-w-0 w-full relative z-[20]">
-                <span className="block text-xs font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider truncate">Output Scope</span>
-                <div className={`relative ${rptScopeOpen ? 'z-30' : 'z-10'}`}>
-                  {(() => {
-                    const scopeOptions = [
-                      { value: 'COLLEGE', pill: 'COLLEGE', label: 'College-wide', pillColor: 'bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-200 border-purple-300 dark:border-purple-700' },
-                      { value: 'DEPARTMENT', pill: 'DEPT', label: 'Department-wide', pillColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-200 border-blue-300 dark:border-blue-700' },
-                      { value: 'YEAR', pill: 'YEAR', label: 'Year-wise', pillColor: 'bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-200 border-sky-300 dark:border-sky-700' },
-                      { value: 'DEPT_YEAR', pill: 'DEPT+YR', label: 'Department + Year', pillColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700' },
-                      { value: 'CUSTOM', pill: 'CUSTOM', label: 'Custom Filters', pillColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-200 border-amber-300 dark:border-amber-700' },
-                    ];
-                    const currentScope = scopeOptions.find(s => s.value === selectedOutputScope) || scopeOptions[0];
 
-                    return (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => { setRptScopeOpen(p => !p); setRptTypeOpen(false); setRptYearOpen(false); }}
-                          className={`w-full flex items-center gap-2.5 px-3.5 py-2 h-11 min-h-[44px] rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none cursor-pointer ${rptScopeOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-slate-200 dark:border-slate-700 hover:border-brand-300'}`}
-                        >
-                          <Target className="w-4 h-4 text-purple-500 shrink-0" />
-                          {currentScope && (
-                            <span className={`shrink-0 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${currentScope.pillColor}`}>
-                              {currentScope.pill}
-                            </span>
-                          )}
-                          <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
-                            {currentScope ? currentScope.label : selectedOutputScope}
-                          </span>
-                          <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${rptScopeOpen ? 'rotate-180' : ''}`} />
-                        </button>
-
-                        {rptScopeOpen && (
-                          <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto p-1.5 space-y-1">
-                            {scopeOptions.map(opt => {
-                              const isSelected = selectedOutputScope === opt.value;
-                              return (
-                                <button key={opt.value} type="button"
-                                  onMouseDown={(e) => e.preventDefault()}
-                                  onClick={() => { setSelectedOutputScope(opt.value); setRptScopeOpen(false); }}
-                                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all ${isSelected ? 'bg-brand-600 text-white font-black shadow-md shadow-brand-500/20' : 'hover:bg-slate-100 dark:hover:bg-navy-800'}`}
-                                >
-                                  <span className={`w-16 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border ${isSelected ? 'bg-white/20 text-white border-white/30' : opt.pillColor}`}>{opt.pill}</span>
-                                  <span className={`text-xs truncate flex-1 ${isSelected ? 'font-black text-white' : 'font-semibold text-slate-700 dark:text-slate-200'}`}>{opt.label}</span>
-                                  {isSelected && <Check className="w-4 h-4 text-white shrink-0" strokeWidth={3} />}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </>
-                    );
-                  })()}
-                </div>
-              </div>
 
             </div>
 

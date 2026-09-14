@@ -103,8 +103,15 @@ async def dispatch_weekly_verification_emails(
     db: Session
 ):
     students = db.query(Student).filter(Student.is_active == True).all()
-    tasks = [verify_dual_leetcode_accounts(s, verification_week, notification_type, db) for s in students]
-    results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    results = []
+    batch_size = 50
+    for i in range(0, len(students), batch_size):
+        batch = students[i:i + batch_size]
+        tasks = [verify_dual_leetcode_accounts(s, verification_week, notification_type, db) for s in batch]
+        batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+        results.extend(batch_results)
+        await asyncio.sleep(0.1) # yield to event loop
     
     emails_sent = 0
     for res in results:

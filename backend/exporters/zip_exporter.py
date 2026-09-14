@@ -46,7 +46,7 @@ def export_zip_bundle_from_dataset(dataset: dict) -> bytes:
 
     summary_text = (
         f"=================================================================\n"
-        f"NANDHA ENGINEERING COLLEGE (AUTONOMOUS) — LEETCODE INTELLIGENCE\n"
+        f"NANDHA ENGINEERING COLLEGE (AUTONOMOUS) - LEETCODE INTELLIGENCE\n"
         f"INSTITUTIONAL REPORT BUNDLE MANIFEST\n"
         f"=================================================================\n\n"
         f"Contest / Session: {contest_name}\n"
@@ -82,6 +82,47 @@ def export_zip_bundle_from_dataset(dataset: dict) -> bytes:
         zf.writestr(f"{filename_base}.pdf", pdf_bytes)
         zf.writestr(f"{filename_base}.docx", word_bytes)
         zf.writestr(f"{filename_base}.csv", csv_bytes)
+        zf.writestr("README_MANIFEST.txt", summary_text.encode('utf-8'))
+
+    zip_buffer.seek(0)
+    return zip_buffer.getvalue()
+
+
+def export_student_zip_bundle_from_dataset(dataset: dict, student_name: str, reg_no: str, prefix: str) -> bytes:
+    """
+    Creates a ZIP bundle with only the PDF and Excel file for a single student.
+    """
+    from backend.exporters.student_excel_exporter import export_student_excel_from_dataset
+    from backend.exporters.student_pdf_exporter import export_student_pdf_from_dataset
+    
+    excel_bytes = export_student_excel_from_dataset(dataset, prefix)
+    pdf_bytes = export_student_pdf_from_dataset(dataset, prefix)
+    
+    safe_name = student_name.replace(" ", "_").replace("/", "_")
+    safe_reg = reg_no.replace(" ", "_")
+    base_name = f"Nandha_{prefix}_{safe_name}_{safe_reg}"
+
+    summary_text = (
+        f"=================================================================\n"
+        f"NANDHA ENGINEERING COLLEGE (AUTONOMOUS) - STUDENT INTELLIGENCE\n"
+        f"STUDENT REPORT BUNDLE MANIFEST\n"
+        f"=================================================================\n\n"
+        f"Student Name:      {student_name}\n"
+        f"Register No:       {reg_no}\n"
+        f"Generated At:      {dataset.get('generatedAtIST') or dataset.get('generatedAt', 'N/A')}\n\n"
+        f"-----------------------------------------------------------------\n"
+        f"INCLUDED ARCHIVE FILES\n"
+        f"-----------------------------------------------------------------\n"
+        f"1. {base_name}.xlsx\n"
+        f"2. {base_name}.pdf\n"
+        f"3. README_MANIFEST.txt\n\n"
+        f"=================================================================\n"
+    )
+
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr(f"{base_name}.xlsx", excel_bytes)
+        zf.writestr(f"{base_name}.pdf", pdf_bytes)
         zf.writestr("README_MANIFEST.txt", summary_text.encode('utf-8'))
 
     zip_buffer.seek(0)

@@ -686,7 +686,12 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       )}
 
       {activeTab === 'reports' && (
-        <ReportsAnalyticsView studentId={resolveTargetId()} />
+        <ReportsAnalyticsView 
+          studentId={resolveTargetId()} 
+          studentName={student.name}
+          regNo={student.reg_no || student.register_number}
+          deptName={student?.department?.name || student?.department?.code || student.dept || 'Department'}
+        />
       )}
       </div>
 

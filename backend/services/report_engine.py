@@ -53,6 +53,13 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         current_user=current_user
     )
 
+    if cfg_filters.get("student_id"):
+        target_id = int(cfg_filters.get("student_id"))
+        # We need to find the reg_no for this student_id first to filter the normalized StudentRow objects
+        student_obj = db.query(Student).filter(Student.id == target_id).first()
+        if student_obj:
+            students = [s for s in students if getattr(s, "reg_no", None) == student_obj.register_number]
+
     if config.report_type == "LEADERBOARD":
         students = sorted(
             students,

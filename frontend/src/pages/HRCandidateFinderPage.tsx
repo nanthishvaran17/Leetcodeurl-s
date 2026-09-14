@@ -778,10 +778,13 @@ export const HRCandidateFinderPage: React.FC = () => {
     }
   }, [filters]);
 
-  // Initial load
+  // Auto-fetch with debounce on filter changes (live match)
   useEffect(() => {
-    handleFind();
-  }, []);
+    const timer = setTimeout(() => {
+      handleFind();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [handleFind]);
 
   // Filter & sort logic
   useEffect(() => {
@@ -1069,6 +1072,9 @@ export const HRCandidateFinderPage: React.FC = () => {
     const readinessBg = readiness.includes("READY") ? "#dcfce7" : (readiness.includes("TRACK") ? "#fef9c3" : "#fee2e2");
     const readinessColor = readiness.includes("READY") ? "#15803d" : (readiness.includes("TRACK") ? "#854d0e" : "#b91c1c");
 
+    const origin = window.location.origin;
+    const logoUrl = `${origin}/nandha_emblem.png`;
+
     const html = `
       <!DOCTYPE html>
       <html>
@@ -1088,24 +1094,27 @@ export const HRCandidateFinderPage: React.FC = () => {
             line-height: 1.35;
           }
           .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
+            text-align: center;
             border-bottom: 2.5px solid #1e3a8a;
-            padding-bottom: 8px;
-            margin-bottom: 10px;
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+            position: relative;
           }
-          .title { font-size: 17px; font-weight: 900; color: #0f172a; letter-spacing: -0.3px; }
-          .subtitle { font-size: 9.5px; font-weight: 800; color: #2563eb; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 1px; }
+          .title { font-size: 19px; font-weight: 900; color: #1e3a8a; letter-spacing: 0.5px; margin-top: 5px; }
+          .subtitle { font-size: 9.5px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 3px; }
           .badge-ready {
+            position: absolute;
+            top: 5px;
+            right: 5px;
             background: ${readinessBg};
             color: ${readinessColor};
             border: 1.5px solid ${readinessColor};
-            padding: 4px 12px;
+            padding: 5px 14px;
             border-radius: 9999px;
             font-weight: 900;
-            font-size: 11px;
+            font-size: 11.5px;
             text-transform: uppercase;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
           }
           .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
           .info-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px; }
@@ -1163,11 +1172,10 @@ export const HRCandidateFinderPage: React.FC = () => {
       </head>
       <body>
         <div class="header">
-          <div>
-            <div class="title">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</div>
-            <div class="subtitle">Recruitment Intelligence • Executive Candidate Report</div>
-          </div>
           <div class="badge-ready">${readiness}</div>
+          <img src="${logoUrl}" alt="Logo" style="height: 48px; object-fit: contain; margin-bottom: 5px; opacity: 0.9;" onerror="this.style.display='none'" />
+          <div class="title">NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</div>
+          <div class="subtitle">Recruitment Intelligence • Executive Candidate Report</div>
         </div>
 
         <div class="info-grid">
@@ -1257,20 +1265,6 @@ export const HRCandidateFinderPage: React.FC = () => {
           <div class="metric-box">
             <div class="metric-box-label">Contest Top %</div>
             <div class="metric-box-val" style="color: #059669;">${topPct}</div>
-          </div>
-        </div>
-
-        <div class="two-col">
-          <div class="box-panel box-green">
-            <div class="panel-header">✓ Why Selected / Candidate Strengths</div>
-            ${selectionReasons.slice(0, 4).map((s: string) => `<div style="margin-bottom: 2px;">${s}</div>`).join('')}
-          </div>
-          <div class="box-panel box-blue">
-            <div class="panel-header">Placement Cell Assessment & Recommendation</div>
-            <div style="margin-bottom: 2px;"><strong>Candidate Rating:</strong> ${hrDecision.candidate_strength || '★★★★★'}</div>
-            <div style="margin-bottom: 2px;"><strong>Coding Proficiency:</strong> ${hrDecision.coding_eval || 'Excellent'}</div>
-            <div style="margin-bottom: 2px;"><strong>Recommended For:</strong> ${(Array.isArray(hrDecision.recommended_for) ? hrDecision.recommended_for.join(', ') : hrDecision.recommended_for) || 'Tier-1 Campus Drives'}</div>
-            <div><strong>Areas to Watch:</strong> ${watchList[0] || 'Maintain consistency'}</div>
           </div>
         </div>
 

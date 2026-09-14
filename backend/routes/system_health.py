@@ -1007,3 +1007,25 @@ def trigger_scheduler_now(db: Session = Depends(get_db)):
         "timestamp_ist": _format_ist(),
         "next_run_ist": "Sunday 08:00 AM IST"
     }
+
+@router.get('/memory')
+def get_memory_usage():
+    import os
+    import sys
+    try:
+        import psutil
+        process = psutil.Process(os.getpid())
+        mem_info = process.memory_info()
+        return {
+            'status': 'success',
+            'pid': os.getpid(),
+            'rss_mb': round(mem_info.rss / (1024 * 1024), 2),
+            'vms_mb': round(mem_info.vms / (1024 * 1024), 2)
+        }
+    except ImportError:
+        return {
+            'status': 'partial',
+            'error': 'psutil not installed',
+            'pid': os.getpid()
+        }
+

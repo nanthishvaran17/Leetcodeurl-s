@@ -1,3 +1,4 @@
+// million-ignore
 import React, { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { App as CapacitorApp } from '@capacitor/app';
@@ -877,7 +878,7 @@ export const App: React.FC = () => {
       )}
 
       {/* Viewport-Centered Student Profile Modal */}
-      {selectedStudent && activeTab !== 'profile' && typeof document !== 'undefined' && createPortal(
+      {selectedStudent && activeTab !== 'profile' && typeof document !== 'undefined' && (
         <div
           className="fixed inset-0 z-[100000] flex items-start justify-center p-3 sm:p-4 pt-6 sm:pt-7 overflow-y-auto bg-slate-950/80 backdrop-blur-md animate-fade-in"
           onClick={(e) => { if (e.target === e.currentTarget) setSelectedStudent(null); }}
@@ -887,7 +888,6 @@ export const App: React.FC = () => {
             aria-modal="true"
             aria-label={`Student profile for ${selectedStudent.name}`}
             className="w-full max-w-5xl bg-white dark:bg-navy-950 rounded-3xl shadow-2xl border border-slate-200 dark:border-navy-800 flex flex-col overflow-hidden my-auto max-h-[calc(100vh-3.5rem)] text-slate-900 dark:text-slate-100 animate-modal-content"
-            onClick={(e) => e.stopPropagation()}
           >
             <Suspense fallback={null}>
               <StudentProfilePage
@@ -896,8 +896,7 @@ export const App: React.FC = () => {
               />
             </Suspense>
           </div>
-        </div>,
-        document.body
+        </div>
       )}
 
       {/* EXIT CONFIRMATION DIALOG */}

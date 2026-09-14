@@ -307,7 +307,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     setLoading(true);
     setAuthStatusText('Dispatching secure OTP code...');
     try {
-      const res = await api.post('/auth/send-otp', { email: cleanEmail }, { timeout: 6000 });
+      const res = await api.post('/auth/send-otp', { email: cleanEmail }, { timeout: 45000 });
       const masked = res.data?.masked_email || maskEmail(cleanEmail);
       setRequestId(res.data?.request_id || `req_${Date.now()}`);
       setSuccessMsg(`Verification code sent to ${masked}. Please check your inbox.`);

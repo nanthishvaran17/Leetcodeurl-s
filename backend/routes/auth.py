@@ -1410,7 +1410,7 @@ async def forgot_password_request(req: ForgotPasswordRequest, request: Request, 
     
     otp_rec = PasswordResetOTP(
         user_id=user.id,
-        institutional_id=user.institutional_id,
+        institutional_id=user.institutional_id or user.username,
         email=user.email,
         otp_hash=otp_hash,
         expires_at=datetime.datetime.utcnow() + datetime.timedelta(minutes=10)

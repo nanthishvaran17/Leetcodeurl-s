@@ -405,10 +405,11 @@ def generate_master_10_sheet_workbook(
     current_user: Optional[User] = None,
     contest_id: Optional[int] = None,
     department: Optional[str] = "ALL",
-    year: Optional[str] = "ALL"
+    year: Optional[str] = "ALL",
+    report_type: str = "MASTER_10_SHEET"
 ) -> bytes:
     """
-    Generates the production-ready 10-Sheet Master Excel Intelligence Report.
+    Generates the production-ready 10-Sheet Master Excel Intelligence Report, or subset based on report_type.
     Fully role-scoped server-side (Principal, HOD, Staff) and filter-aware (Department, Year).
     """
     # Fetch base active student query
@@ -507,6 +508,21 @@ def generate_master_10_sheet_workbook(
         "09 1-4 Solvers",
         "10 Department Intelligence"
     ]
+
+    if report_type == "PRINCIPAL_EXECUTIVE":
+        sheet_names = ["01 Principal Executive", "05 Top Performers"]
+    elif report_type == "HOD_DEPARTMENT_INTELLIGENCE":
+        sheet_names = ["10 Department Intelligence", "02 Complete Student Roster", "05 Top Performers"]
+    elif report_type == "FACULTY_CONSOLIDATED":
+        sheet_names = ["02 Complete Student Roster", "04 Contest Performance"]
+    elif report_type == "DEPARTMENT_PERFORMANCE":
+        sheet_names = ["10 Department Intelligence"]
+    elif report_type == "SUNDAY_LIVE_CONTEST":
+        sheet_names = ["03 Contest Attendance", "04 Contest Performance", "05 Top Performers"]
+    elif report_type == "WEEKLY_CONTEST_INTELLIGENCE":
+        sheet_names = ["06 4-4 Perfect Solvers", "07 3-4 Solvers", "08 2-4 Solvers", "09 1-4 Solvers"]
+    elif report_type == "COLLEGE_EXECUTIVE":
+        sheet_names = ["01 Principal Executive", "10 Department Intelligence", "05 Top Performers"]
 
     for s_name in sheet_names:
         ws = wb.create_sheet(title=s_name)
