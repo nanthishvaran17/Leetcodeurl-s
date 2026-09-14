@@ -318,7 +318,7 @@ interface WeeklyContestPageProps {
 export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectStudent }) => {
   const { user } = useAuth();
   const { data: globalStudents = [] } = useStudentsQuery();
-  const { students: cachedStudents, isStale, lastUpdated } = getCachedSummary();
+  const { students: cachedStudents = [], isStale = false, lastUpdated = null } = getCachedSummary() || {};
   const [canonicalData, setCanonicalData] = useState<any>(cachedStudents?.length ? { students: cachedStudents } : null);
   const { departments } = useDepartments();
   const [sessionsList, setSessionsList] = useState<any[]>([]);

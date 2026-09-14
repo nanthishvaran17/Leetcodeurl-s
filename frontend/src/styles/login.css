@@ -1528,13 +1528,17 @@
   .field input[type="text"],
   .field input[type="email"],
   .field input[type="password"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     height: 42px !important;
     background: #F8FAFC !important;
     border: 1.5px solid #E2E8F0 !important;
     border-radius: 12px !important;
-    font-size: 0.9rem !important;
+    font-size: 0.88rem !important;
     color: #0B1B33 !important;
     padding-left: 2.5rem !important;
+    padding-right: 2.75rem !important;
   }
 
   .field input[type="text"]:focus,

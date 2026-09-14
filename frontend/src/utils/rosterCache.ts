@@ -46,7 +46,7 @@ export function saveCachedStudents(students: any[]): void {
 }
 
 export function getCachedSummary(): any {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === 'undefined') return { students: [], isStale: true, lastUpdated: null };
   checkCacheVersion();
   try {
     const cached = localStorage.getItem('nec_cached_summary');
@@ -59,7 +59,7 @@ export function getCachedSummary(): any {
   } catch (e) {
     console.warn('Could not read cached summary:', e);
   }
-  return null;
+  return { students: [], isStale: true, lastUpdated: null };
 }
 
 export function saveCachedSummary(summary: any): void {

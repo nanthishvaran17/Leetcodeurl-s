@@ -762,7 +762,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                             type="text"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            placeholder="username or faculty@nandhaengg.org"
+                            placeholder="username or email"
                             autoComplete="username"
                             autoCapitalize="none"
                             spellCheck={false}

@@ -560,42 +560,42 @@ export const SettingsPage: React.FC = () => {
           </div>
 
             {/* Right: Badges + Actions */}
-            <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
-              <span className="px-3 py-1.5 rounded-full font-black text-xs border flex items-center space-x-1.5"
+            <div className="flex flex-wrap items-center gap-2 max-w-full">
+              <span className="px-3 py-1.5 rounded-full font-black text-xs border flex items-center space-x-1.5 whitespace-nowrap flex-shrink-0"
                 style={{ background: 'rgba(16,185,129,0.15)', borderColor: 'rgba(16,185,129,0.3)', color: '#34d399' }}>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
                 <span>PRODUCTION</span>
               </span>
 
-              <span className="px-3 py-1.5 rounded-full font-bold text-xs border flex items-center space-x-1.5"
+              <span className="px-3 py-1.5 rounded-full font-bold text-xs border flex items-center space-x-1.5 whitespace-nowrap flex-shrink-0"
                 style={{ background: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.12)', color: '#cbd5e1' }}>
-                <Clock className="w-3.5 h-3.5" />
+                <Clock className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>Asia/Kolkata (IST)</span>
               </span>
 
               <button
                 type="button"
                 onClick={handleExportConfigJson}
-                className="px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center space-x-1.5 transition-all cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center space-x-1.5 transition-all cursor-pointer whitespace-nowrap flex-shrink-0"
                 style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.35)', color: '#a5b4fc' }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.35)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.2)')}
                 title="Export complete configuration JSON"
               >
-                <Download className="w-3.5 h-3.5" />
+                <Download className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>Export JSON</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => configFileInputRef.current?.click()}
-                className="px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center space-x-1.5 transition-all cursor-pointer"
+                className="px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center space-x-1.5 transition-all cursor-pointer whitespace-nowrap flex-shrink-0"
                 style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.35)', color: '#a5b4fc' }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.35)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.2)')}
                 title="Import configuration JSON"
               >
-                <Upload className="w-3.5 h-3.5" />
+                <Upload className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>Import JSON</span>
               </button>
               <input
