@@ -109,7 +109,8 @@
   padding: clamp(40px, 6vw, 80px);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 3.5rem;
   position: relative;
   overflow-y: auto;
   overflow-x: hidden;
@@ -152,20 +153,20 @@
 .brand-row {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
   z-index: 1;
   background: rgba(11, 27, 51, 0.85);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 14px;
-  padding: 0.9rem 1.2rem;
+  padding: 1.1rem 1.4rem;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .brand-mark {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   border-radius: 10px;
   flex-shrink: 0;
   filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.6));
@@ -207,7 +208,7 @@
 }
 
 .headline {
-  margin: 2rem 0;
+  margin: 0;
   z-index: 1;
 }
 

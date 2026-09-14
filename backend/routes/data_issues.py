@@ -138,7 +138,7 @@ def classify_student_issue(student: Student) -> dict:
         "department_code": dept_code,
         "department_name": canonical_dept,
         "department_short": short_dept,
-        "year_level": student.year_level or "II Year",
+        "year_level": normalize_canonical_year(student.year_level),
         "username": username or None,
         "leetcode_url": canonical_url,
         "url_status": url_status,
@@ -154,6 +154,34 @@ def classify_student_issue(student: Student) -> dict:
         "last_sync_raw": stats.last_successful_sync.isoformat() if (stats and stats.last_successful_sync) else None,
         "is_active": student.is_active
     }
+
+
+def normalize_canonical_year(yr: Optional[str]) -> str:
+    if not yr:
+        return "II Year"
+    clean = str(yr).strip().upper()
+    
+    # Direct exact & keyword checks
+    if clean in ["1", "I", "1ST", "1ST YEAR", "1ST YR", "1 YR", "I YEAR", "I YR", "2030"] or "FIRST" in clean or "FRESH" in clean:
+        return "I Year"
+    if clean in ["2", "II", "2ND", "2ND YEAR", "2ND YR", "2 YR", "II YEAR", "II YR", "2029"] or "SECOND" in clean or "SOPHOMORE" in clean:
+        return "II Year"
+    if clean in ["3", "III", "3RD", "3RD YEAR", "3RD YR", "3 YR", "III YEAR", "III YR", "2028"] or "THIRD" in clean or "JUNIOR" in clean:
+        return "III Year"
+    if clean in ["4", "IV", "4TH", "4TH YEAR", "4TH YR", "4 YR", "IV YEAR", "IV YR", "2027", "2026"] or "FOURTH" in clean or "SENIOR" in clean:
+        return "IV Year"
+
+    # Prefix checks for strings like "3 - CSE", "3rd", "III-CS", "3 YR"
+    if clean.startswith("1") or clean.startswith("I ") or clean == "I":
+        return "I Year"
+    if clean.startswith("2") or clean.startswith("II ") or clean == "II":
+        return "II Year"
+    if clean.startswith("3") or clean.startswith("III ") or clean == "III":
+        return "III Year"
+    if clean.startswith("4") or clean.startswith("IV ") or clean == "IV":
+        return "IV Year"
+
+    return "II Year"
 
 
 @router.get("/summary")
@@ -213,10 +241,23 @@ def get_data_issues_summary(
         if cat in dept_matrix[d]:
             dept_matrix[d][cat] += 1
 
-    # Year breakdown matrix
-    year_matrix = {}
+    # Year breakdown matrix with canonical year normalization
+    CANONICAL_YEARS = ["I Year", "II Year", "III Year", "IV Year"]
+    year_matrix = {
+        y: {
+            "year": y,
+            "total": 0,
+            "sync_failed": 0,
+            "missing_username": 0,
+            "not_started": 0,
+            "never_synced": 0,
+            "stale_data": 0,
+            "healthy": 0
+        } for y in CANONICAL_YEARS
+    }
+
     for c in classified:
-        y = c["year_level"]
+        y = normalize_canonical_year(c["year_level"])
         if y not in year_matrix:
             year_matrix[y] = {
                 "year": y,
@@ -233,10 +274,12 @@ def get_data_issues_summary(
         if cat in year_matrix[y]:
             year_matrix[y][cat] += 1
 
+    final_year_breakdown = [row for row in year_matrix.values() if row["total"] > 0]
+
     return {
         "counts": counts,
         "dept_breakdown": list(dept_matrix.values()),
-        "year_breakdown": sorted(list(year_matrix.values()), key=lambda x: x["year"])
+        "year_breakdown": final_year_breakdown
     }
 
 

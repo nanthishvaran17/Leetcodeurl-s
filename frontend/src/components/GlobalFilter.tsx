@@ -180,16 +180,61 @@ export const getDepartmentTheme = (opt: GlobalFilterOption | undefined, isSelect
     };
   }
 
-  // 8. CSE (General) → Blue
-  if (pill === 'CSE' || label.includes('COMPUTER SCIENCE AND ENGINEERING') || (label.includes('COMPUTER') && !label.includes('CYBER') && !label.includes('IOT'))) {
+  // 9. Academic Year 1ST -> Emerald
+  if (pill === '1ST' || val === '1' || label.includes('I YEAR') || label.includes('1ST YEAR')) {
     return {
-      iconBg: isSelected ? 'bg-white/20' : 'bg-blue-100 dark:bg-blue-950/80',
-      iconColor: isSelected ? 'text-white' : 'text-blue-600 dark:text-blue-400',
-      badgeBg: isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-blue-100 dark:bg-blue-950/90',
-      badgeText: isSelected ? 'text-white font-black' : 'text-blue-800 dark:text-blue-300',
-      badgeBorder: isSelected ? 'border-white/30' : 'border-blue-300 dark:border-blue-800',
-      hoverBg: 'hover:bg-blue-50/80 dark:hover:bg-blue-950/30',
-      selectedBg: 'bg-blue-600 text-white shadow-md shadow-blue-600/20 font-black',
+      iconBg: isSelected ? 'bg-white/20' : 'bg-emerald-100 dark:bg-emerald-950/80',
+      iconColor: isSelected ? 'text-white' : 'text-emerald-600 dark:text-emerald-400',
+      badgeBg: isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-emerald-100 dark:bg-emerald-950/90',
+      badgeText: isSelected ? 'text-white font-black' : 'text-emerald-800 dark:text-emerald-300',
+      badgeBorder: isSelected ? 'border-white/30' : 'border-emerald-300 dark:border-emerald-800',
+      hoverBg: 'hover:bg-emerald-50/80 dark:hover:bg-emerald-950/30',
+      selectedBg: 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20 font-black',
+      selectedText: 'text-white font-black',
+      selectedCheck: 'text-white'
+    };
+  }
+
+  // 10. Academic Year 2ND -> Amber / Gold
+  if (pill === '2ND' || val === '2' || label.includes('II YEAR') || label.includes('2ND YEAR')) {
+    return {
+      iconBg: isSelected ? 'bg-white/20' : 'bg-amber-100 dark:bg-amber-950/80',
+      iconColor: isSelected ? 'text-slate-950' : 'text-amber-600 dark:text-amber-400',
+      badgeBg: isSelected ? 'bg-white/20 text-slate-950 border-slate-950/30' : 'bg-amber-100 dark:bg-amber-950/90',
+      badgeText: isSelected ? 'text-slate-950 font-black' : 'text-amber-900 dark:text-amber-300',
+      badgeBorder: isSelected ? 'border-slate-950/30' : 'border-amber-300 dark:border-amber-800',
+      hoverBg: 'hover:bg-amber-50/80 dark:hover:bg-amber-950/30',
+      selectedBg: 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black',
+      selectedText: 'text-slate-950 font-black',
+      selectedCheck: 'text-slate-950'
+    };
+  }
+
+  // 11. Academic Year 3RD -> Purple / Violet
+  if (pill === '3RD' || val === '3' || label.includes('III YEAR') || label.includes('3RD YEAR')) {
+    return {
+      iconBg: isSelected ? 'bg-white/20' : 'bg-purple-100 dark:bg-purple-950/80',
+      iconColor: isSelected ? 'text-white' : 'text-purple-600 dark:text-purple-400',
+      badgeBg: isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-purple-100 dark:bg-purple-950/90',
+      badgeText: isSelected ? 'text-white font-black' : 'text-purple-800 dark:text-purple-300',
+      badgeBorder: isSelected ? 'border-white/30' : 'border-purple-300 dark:border-purple-800',
+      hoverBg: 'hover:bg-purple-50/80 dark:hover:bg-purple-950/30',
+      selectedBg: 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black',
+      selectedText: 'text-white font-black',
+      selectedCheck: 'text-white'
+    };
+  }
+
+  // 12. Academic Year 4TH -> Indigo
+  if (pill === '4TH' || val === '4' || label.includes('IV YEAR') || label.includes('4TH YEAR')) {
+    return {
+      iconBg: isSelected ? 'bg-white/20' : 'bg-indigo-100 dark:bg-indigo-950/80',
+      iconColor: isSelected ? 'text-white' : 'text-indigo-600 dark:text-indigo-400',
+      badgeBg: isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-indigo-100 dark:bg-indigo-950/90',
+      badgeText: isSelected ? 'text-white font-black' : 'text-indigo-800 dark:text-indigo-300',
+      badgeBorder: isSelected ? 'border-white/30' : 'border-indigo-300 dark:border-indigo-800',
+      hoverBg: 'hover:bg-indigo-50/80 dark:hover:bg-indigo-950/30',
+      selectedBg: 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20 font-black',
       selectedText: 'text-white font-black',
       selectedCheck: 'text-white'
     };
@@ -381,7 +426,20 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
     };
   }, [isOpen]);
 
-  const activeSearchPlaceholder = searchPlaceholder || (label ? `Search ${label.toLowerCase()}...` : 'Search department...');
+  const activeSearchPlaceholder = useMemo(() => {
+    if (searchPlaceholder) return searchPlaceholder;
+    if (label) return `Search ${label.toLowerCase()}...`;
+    if (options.some(o => o.value === '1' || o.pillText === '1ST' || o.label.toUpperCase().includes('YEAR') || o.label.toUpperCase().includes('ACADEMIC'))) {
+      return 'Search academic year...';
+    }
+    if (options.some(o => o.pillText === 'EXE' || o.pillText === 'FAC' || o.value === 'EXECUTIVE' || o.label.toUpperCase().includes('REPORT'))) {
+      return 'Search report type...';
+    }
+    if (options.some(o => o.pillText === 'A' || o.pillText === 'B' || o.label.toUpperCase().includes('SECTION') || o.label.toUpperCase().includes('COHORT'))) {
+      return 'Search section / cohort...';
+    }
+    return 'Search options...';
+  }, [searchPlaceholder, label, options]);
   const triggerTheme = getDepartmentTheme(selectedOption, false);
 
   return (
@@ -493,7 +551,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
               <div className="overflow-y-auto overscroll-contain space-y-1.5 py-1 flex-1 pr-1 custom-scrollbar">
                 {filteredOptions.length === 0 ? (
                   <div className="py-8 text-center text-xs font-bold text-slate-400">
-                    No departments match your search.
+                    No options match your search.
                   </div>
                 ) : (
                   filteredOptions.map((opt) => {
@@ -598,7 +656,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
               >
                 {filteredOptions.length === 0 ? (
                   <div className="py-8 text-center text-xs font-bold text-slate-400">
-                    No departments match your search.
+                    No options match your search.
                   </div>
                 ) : (
                   filteredOptions.map((opt) => {

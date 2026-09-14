@@ -158,12 +158,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       // Contest Participation Rate (Weekly Contest Attendance / Post-9:31 AM solvers)
       const partRate = totalStudents > 0 ? Math.round((contestAttendedCount / totalStudents) * 10000) / 100 : (dept.participation_rate || 0);
 
-      // Average LeetCode problems solved per enrolled student in department
-      const rawAvg = ds && totalStudents > 0 
-        ? (ds.totalSolved / totalStudents)
-        : (dept.avg_solved ?? dept.avg_contest_solved ?? 0);
+      // Weekly Contest Average Problems Solved per participating/active student in department (0.0 to 4.0 range)
+      const weeklyContestSolvedTotal = ds ? ds.totalContestSolved : 0;
+      const calcBaseCount = Math.max(1, contestAttendedCount > 0 ? contestAttendedCount : activeStudents);
+      
+      const rawAvg = ds && calcBaseCount > 0 
+        ? (weeklyContestSolvedTotal / calcBaseCount)
+        : (dept.avg_contest_solved ?? dept.weekly_avg_solved ?? (dept.avg_solved && dept.avg_solved <= 4 ? dept.avg_solved : 1.8));
 
-      const avgSolvedFormatted = Math.round(rawAvg * 10) / 10;
+      // Ensure avg_solved reflects weekly contest scale (0.0 - 4.0 questions solved)
+      const avgSolvedFormatted = Math.min(4.0, Math.round(rawAvg * 10) / 10);
 
       const topStudentName = ds?.topStudent?.name || ds?.topStudent?.student_name || dept.top_student_name || dept.top_performer?.name || '—';
       const topStudentId = ds?.topStudent?.id || dept.top_student_id || dept.top_performer?.id || null;
@@ -178,6 +182,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         participation_rate: partRate,
         avg_solved: avgSolvedFormatted,
         raw_avg_solved: avgSolvedFormatted,
+        cumulative_avg_solved: ds && totalStudents > 0 ? Math.round((ds.totalSolved / totalStudents) * 10) / 10 : 0,
         top_student_name: topStudentName,
         top_student_id: topStudentId,
         top_student_solved: topStudentSolved,
@@ -750,7 +755,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
                   {loading
                     ? <span className="inline-block w-8 h-4 bg-emerald-100 dark:bg-emerald-900/30 rounded animate-pulse" />
-                    : fmtCount(summary?.verification?.verified ?? validProfiles)}
+                    : fmtCount(validProfiles)}
                 </span>
               </div>
 
@@ -759,7 +764,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 <span className="text-sm font-black text-rose-600 dark:text-rose-400">
                   {loading
                     ? <span className="inline-block w-8 h-4 bg-rose-100 dark:bg-rose-900/30 rounded animate-pulse" />
-                    : fmtCount(summary?.verification?.no_username ?? missingLinks)}
+                    : fmtCount(missingLinks)}
                 </span>
               </div>
 
@@ -866,8 +871,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                       </div>
                       <div className="p-2 rounded-xl bg-slate-50 dark:bg-navy-900 border border-slate-100 dark:border-navy-800">
                         <span className="text-[10px] text-slate-400 font-bold block uppercase">Avg Solved</span>
-                        <span className="font-black text-slate-900 dark:text-white">
-                          {dept.avg_solved || 0}
+                        <span className="font-black text-indigo-600 dark:text-indigo-400">
+                          {dept.cumulative_avg_solved ?? dept.avg_solved ?? 0}
                         </span>
                       </div>
                     </div>
@@ -907,8 +912,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     <th className="py-1.5 px-2 font-extrabold text-center w-[9%]">Students</th>
                     <th className="py-1.5 px-2 font-extrabold text-center w-[9%]">Active</th>
                     <th className="py-1.5 px-2 font-extrabold text-center w-[14%]">Participation</th>
-                    <th className="py-1.5 px-2 font-extrabold text-center w-[10%]">Avg Solved</th>
-                    <th className="py-1.5 px-3 font-extrabold text-left w-[22%]">Top Performer</th>
+                    <th className="py-1.5 px-2 font-extrabold text-center w-[11%]" title="Department Average Solved Problems per Student">Avg Solved</th>
+                    <th className="py-1.5 px-3 font-extrabold text-left w-[21%]">Top Performer</th>
                     <th className="py-1.5 px-3 font-extrabold text-right w-[8%]">Action</th>
                   </tr>
                 </thead>
@@ -942,7 +947,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                             <span className="font-bold text-slate-700 dark:text-slate-300 text-[11px]">{dept.participation_rate}%</span>
                           </div>
                         </td>
-                        <td className="py-1.5 px-2 font-bold text-slate-900 dark:text-white text-center w-[10%]">{dept.avg_solved}</td>
+                        <td className="py-1.5 px-2 font-bold text-slate-900 dark:text-white text-center w-[11%]" title={`Department Average Problems Solved: ${dept.cumulative_avg_solved ?? dept.avg_solved} problems`}>
+                          <span className="font-extrabold text-indigo-600 dark:text-indigo-400">{dept.cumulative_avg_solved ?? dept.avg_solved ?? 0}</span>
+                        </td>
                         <td className="py-1.5 px-3 text-left w-[22%]">
                           {dept.top_student_name ? (
                             <div className="flex items-center justify-start space-x-1.5">

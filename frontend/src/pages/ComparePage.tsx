@@ -5,6 +5,7 @@ import {
   ArrowRightLeft, GraduationCap, School, Layers
 } from 'lucide-react';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
+import { GlobalFilter } from '../components/GlobalFilter';
 import api from '../services/api';
 import { StudentData } from '../components/LeaderboardTable';
 import { getCachedStudents } from '../utils/rosterCache';
@@ -112,15 +113,17 @@ export const ComparePage: React.FC = () => {
     if (groupDimension === 'DEPT') {
       return departments.map(d => ({
         key: String(d.id),
-        label: `${d.name} (${d.code}) - All Years`
+        label: `${d.name} (${d.code}) - All Years`,
+        pillText: d.code,
+        cleanLabel: `${d.name} — All Years`
       }));
     } else if (groupDimension === 'DEPT_YEAR') {
-      // Combined Department & Year Combo e.g. 2nd Year Cyber Security vs 2nd Year IoT
-      const list: { key: string; label: string }[] = [];
+      // Combined Department & Year Combo
+      const list: { key: string; label: string; pillText: string; cleanLabel: string }[] = [];
       const yearLabels: Record<string, string> = {
-        'II': '2nd Year (II)',
-        'III': '3rd Year (III)',
-        'IV': '4th Year (IV)'
+        'II': 'II Year (2nd Yr)',
+        'III': 'III Year (3rd Yr)',
+        'IV': 'IV Year (Final Yr)'
       };
       const years = ['II', 'III', 'IV'];
 
@@ -128,32 +131,39 @@ export const ComparePage: React.FC = () => {
         departments.forEach(d => {
           list.push({
             key: `${d.id}_${yr}`,
-            label: `${yearLabels[yr]} ${d.code} — ${d.name}`
+            label: `${yearLabels[yr]} ${d.code} — ${d.name}`,
+            pillText: d.code,
+            cleanLabel: `${yearLabels[yr]} • ${d.name}`
           });
         });
       });
       return list;
     } else if (groupDimension === 'YEAR') {
       return [
-        { key: 'II', label: 'II Year (Batch 2025 - 2029)' },
-        { key: 'III', label: 'III Year (Batch 2024 - 2028)' },
-        { key: 'IV', label: 'IV Year (Batch 2023 - 2027)' },
+        { key: 'II', label: 'II Year (Batch 2025 - 2029)', pillText: '2ND', cleanLabel: 'II Year (Batch 2025 – 2029)' },
+        { key: 'III', label: 'III Year (Batch 2024 - 2028)', pillText: '3RD', cleanLabel: 'III Year (Batch 2024 – 2028)' },
+        { key: 'IV', label: 'IV Year (Batch 2023 - 2027)', pillText: '4TH', cleanLabel: 'IV Year (Batch 2023 – 2027)' },
       ];
     } else {
       // SECTION
-      const secMap = new Map<string, string>();
+      const secMap = new Map<string, { label: string; pillText: string; cleanLabel: string }>();
       students.forEach(s => {
         const dId = s.department_id || s.department?.id || 1;
         const dCode = s.department?.code || 'DEPT';
+        const dName = s.department?.name || dCode;
         const yr = s.year_level || 'III';
         const secName = s.section?.name || 'A';
         const key = `${dId}_${yr}_${secName}`;
         const label = `${dCode} - ${yr} Year (${secName})`;
         if (!secMap.has(key)) {
-          secMap.set(key, label);
+          secMap.set(key, {
+            label,
+            pillText: `${dCode}`,
+            cleanLabel: `${yr} Year • Section ${secName} (${dName})`
+          });
         }
       });
-      return Array.from(secMap.entries()).map(([key, label]) => ({ key, label }));
+      return Array.from(secMap.entries()).map(([key, item]) => ({ key, ...item }));
     }
   }, [groupDimension, departments, students]);
 
@@ -894,7 +904,7 @@ export const ComparePage: React.FC = () => {
                   <Building2 className="w-5 h-5 text-brand-500" />
                   <span>Choose Group Comparison Dimension</span>
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">Compare performance by Dept & Year Batch (e.g. 2nd Yr Cyber vs 2nd Yr IoT), Department, Year, or Section</p>
+                <p className="text-xs text-slate-500 mt-0.5">Compare aggregate metrics across Departments, Academic Years, Batches, and Cohort Sections.</p>
               </div>
 
               {/* Sub-Dimension Tabs */}
@@ -909,7 +919,7 @@ export const ComparePage: React.FC = () => {
                   }`}
                 >
                   <Layers className="w-3.5 h-3.5 text-amber-400" />
-                  <span>By Dept & Year Batch (e.g. 2nd Cyber vs 2nd IoT)</span>
+                  <span>By Dept & Year Batch</span>
                 </button>
 
                 <button
@@ -953,49 +963,23 @@ export const ComparePage: React.FC = () => {
             {/* Select Group A vs Group B Dropdowns */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               
-              {/* Group A Selector — Premium Custom Dropdown */}
-              <div className="space-y-2">
-                <label className="block text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider">
+              {/* Group A Selector — Premium Institutional GlobalFilter */}
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-black text-brand-600 dark:text-brand-400 uppercase tracking-wide">
                   Select {groupDimension === 'DEPT_YEAR' ? 'Dept & Year Batch' : groupDimension === 'DEPT' ? 'Department' : groupDimension === 'YEAR' ? 'Academic Year' : 'Section'} A
                 </label>
-                <div className={`relative ${groupAOpen ? 'z-30' : 'z-10'}`}>
-                  <button
-                    type="button"
-                    onClick={() => { setGroupAOpen(p => !p); setGroupBOpen(false); setFighterAOpen(false); setFighterBOpen(false); }}
-                    className={`w-full flex items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none shadow-sm ${
-                      groupAOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-brand-400/40 hover:border-brand-400'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                      <Building2 className="w-4 h-4 text-brand-500 shrink-0" />
-                      <span className="text-xs font-black text-slate-900 dark:text-white truncate">
-                        {groupOptions.find(g => g.key === groupAKey)?.label || groupAKey || 'Select Group A'}
-                      </span>
-                    </div>
-                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform shrink-0 ${groupAOpen ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {groupAOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-brand-200 dark:border-navy-700 rounded-2xl shadow-lg max-h-64 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
-                      {groupOptions.map((g) => (
-                        <button
-                          key={g.key}
-                          type="button"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => { setGroupAKey(g.key); setGroupAOpen(false); }}
-                          className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-left transition-colors ${
-                            groupAKey === g.key ? 'bg-brand-50/70 dark:bg-brand-950/60' : 'hover:bg-slate-50 dark:hover:bg-navy-800'
-                          }`}
-                        >
-                          <span className={`text-xs truncate ${groupAKey === g.key ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-slate-700 dark:text-slate-300'}`}>
-                            {g.label}
-                          </span>
-                          {groupAKey === g.key && <Check className="w-4 h-4 text-brand-500 shrink-0" />}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <GlobalFilter
+                  value={groupAKey}
+                  onChange={(val) => setGroupAKey(val)}
+                  dropdownWidth="min-w-[440px]"
+                  searchPlaceholder={`Search ${groupDimension === 'DEPT_YEAR' ? 'Dept & Year' : 'Group A'}...`}
+                  options={groupOptions.map(g => ({
+                    value: g.key,
+                    label: g.cleanLabel || g.label,
+                    pillText: g.pillText || 'GRP'
+                  }))}
+                  icon={<Building2 className="w-4 h-4 text-brand-500" />}
+                />
 
                 {groupDimension === 'DEPT_YEAR' && (
                   <div className="flex items-center space-x-2 pt-1">
@@ -1013,49 +997,23 @@ export const ComparePage: React.FC = () => {
                 )}
               </div>
 
-              {/* Group B Selector — Premium Custom Dropdown */}
-              <div className="space-y-2">
-                <label className="block text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+              {/* Group B Selector — Premium Institutional GlobalFilter */}
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wide">
                   Select {groupDimension === 'DEPT_YEAR' ? 'Dept & Year Batch' : groupDimension === 'DEPT' ? 'Department' : groupDimension === 'YEAR' ? 'Academic Year' : 'Section'} B
                 </label>
-                <div className={`relative ${groupBOpen ? 'z-30' : 'z-10'}`}>
-                  <button
-                    type="button"
-                    onClick={() => { setGroupBOpen(p => !p); setGroupAOpen(false); setFighterAOpen(false); setFighterBOpen(false); }}
-                    className={`w-full flex items-center justify-between gap-2.5 px-4 py-3 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none shadow-sm ${
-                      groupBOpen ? 'border-indigo-400 ring-2 ring-indigo-400/20' : 'border-indigo-400/40 hover:border-indigo-400'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                      <Building2 className="w-4 h-4 text-indigo-500 shrink-0" />
-                      <span className="text-xs font-black text-slate-900 dark:text-white truncate">
-                        {groupOptions.find(g => g.key === groupBKey)?.label || groupBKey || 'Select Group B'}
-                      </span>
-                    </div>
-                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform shrink-0 ${groupBOpen ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {groupBOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-indigo-200 dark:border-navy-700 rounded-2xl shadow-lg max-h-64 overflow-y-auto divide-y divide-gray-100 dark:divide-navy-800">
-                      {groupOptions.map((g) => (
-                        <button
-                          key={g.key}
-                          type="button"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => { setGroupBKey(g.key); setGroupBOpen(false); }}
-                          className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-left transition-colors ${
-                            groupBKey === g.key ? 'bg-indigo-50/70 dark:bg-indigo-950/60' : 'hover:bg-slate-50 dark:hover:bg-navy-800'
-                          }`}
-                        >
-                          <span className={`text-xs truncate ${groupBKey === g.key ? 'font-black text-indigo-700 dark:text-indigo-300' : 'font-semibold text-slate-700 dark:text-slate-300'}`}>
-                            {g.label}
-                          </span>
-                          {groupBKey === g.key && <Check className="w-4 h-4 text-indigo-500 shrink-0" />}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <GlobalFilter
+                  value={groupBKey}
+                  onChange={(val) => setGroupBKey(val)}
+                  dropdownWidth="min-w-[440px]"
+                  searchPlaceholder={`Search ${groupDimension === 'DEPT_YEAR' ? 'Dept & Year' : 'Group B'}...`}
+                  options={groupOptions.map(g => ({
+                    value: g.key,
+                    label: g.cleanLabel || g.label,
+                    pillText: g.pillText || 'GRP'
+                  }))}
+                  icon={<Building2 className="w-4 h-4 text-indigo-500" />}
+                />
 
                 {groupDimension === 'DEPT_YEAR' && (
                   <div className="flex items-center space-x-2 pt-1">

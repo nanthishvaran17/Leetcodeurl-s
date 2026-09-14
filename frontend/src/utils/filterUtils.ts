@@ -129,10 +129,10 @@ export function normalizeAcademicYear(yr: any): NormalizedAcademicYear {
 
   const clean = String(yr).trim().toUpperCase();
 
-  if (clean === 'I' || clean === '1' || clean === '1ST' || clean === '1ST YEAR' || clean === 'I YEAR' || clean === '2029') return '1';
-  if (clean === 'II' || clean === '2' || clean === '2ND' || clean === '2ND YEAR' || clean === 'II YEAR' || clean === '2028') return '2';
-  if (clean === 'III' || clean === '3' || clean === '3RD' || clean === '3RD YEAR' || clean === 'III YEAR' || clean === '2027') return '3';
-  if (clean === 'IV' || clean === '4' || clean === '4TH' || clean === '4TH YEAR' || clean === 'IV YEAR' || clean === '2026') return '4';
+  if (clean === 'I' || clean === '1' || clean === '1ST' || clean === '1ST YEAR' || clean === 'I YEAR' || clean === '2030') return '1';
+  if (clean === 'II' || clean === '2' || clean === '2ND' || clean === '2ND YEAR' || clean === 'II YEAR' || clean === '2029') return '2';
+  if (clean === 'III' || clean === '3' || clean === '3RD' || clean === '3RD YEAR' || clean === 'III YEAR' || clean === '2028') return '3';
+  if (clean === 'IV' || clean === '4' || clean === '4TH' || clean === '4TH YEAR' || clean === 'IV YEAR' || clean === '2027' || clean === '2026') return '4';
 
   return clean;
 }

@@ -58,6 +58,7 @@ import {
 import api from '../services/api';
 import { DownloadState } from '../services/download/downloadTypes';
 import { ExportStatus } from '../components/ExportStatus';
+import { GlobalFilter, GlobalFilterOption } from '../components/GlobalFilter';
 
 import { useNotification } from '../context/NotificationContext';
 import { triggerDownload } from '../utils/mobileDownload';
@@ -1218,19 +1219,22 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
             {/* Contest Session Selector (4 cols) */}
             <div className="sm:col-span-4">
-              <label className="block text-[11px] font-black uppercase text-slate-500 mb-1.5">2. Select Contest</label>
-              <select
+              <GlobalFilter
+                label="2. Select Contest"
+                options={availableContests.map((c: any) => ({
+                  value: String(c.id),
+                  label: `${c.contest_name} (Session #${c.id})`,
+                  pillText: `SESSION #${c.id}`,
+                  pillColorClass: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20"
+                }))}
                 value={selectedContestId}
-                onChange={(e) => handleContestChange(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-              >
-                <option value="">[ Select Contest ]</option>
-                {availableContests.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.contest_name} (Session #{c.id})
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => handleContestChange(val)}
+                icon={<Calendar className="w-4 h-4 text-indigo-500" />}
+                placeholder="[ Select Contest ]"
+                searchPlaceholder="Search contest session..."
+                showSearch={true}
+                className="w-full"
+              />
             </div>
 
             {/* Explicit Run Button (2 cols) */}

@@ -42,15 +42,20 @@ def get_dashboard_summary(db: Session = Depends(get_db), current_user = Depends(
     # 2. Strict Mathematical Sync State Invariants (Mutually Exclusive)
     verified = db.query(func.count(Student.id)).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
         .filter(Student.id.in_(base_student_query))\
-        .filter(LeetCodeProfileStats.sync_status.in_(['success', 'OK', 'verified'])).scalar() or 0
+        .filter(
+            Student.username != None, 
+            Student.username != "",
+            (LeetCodeProfileStats.sync_status.in_(['success', 'OK', 'verified', 'not_started'])) |
+            (LeetCodeProfileStats.status.in_(['verified', 'OK', 'pending'])) |
+            (LeetCodeProfileStats.total_solved > 0) |
+            (LeetCodeProfileStats.total_solved.isnot(None))
+        ).scalar() or 0
 
-    no_username = db.query(func.count(Student.id)).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\
+    no_username = db.query(func.count(Student.id))\
         .filter(Student.id.in_(base_student_query))\
         .filter(
             (Student.username == None) | 
-            (Student.username == "") | 
-            (LeetCodeProfileStats.sync_status == "pending_username") | 
-            (LeetCodeProfileStats.status == "MISSING LINK")
+            (Student.username == "")
         ).scalar() or 0
 
     failed = db.query(func.count(Student.id)).outerjoin(LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id)\

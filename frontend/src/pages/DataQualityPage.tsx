@@ -7,6 +7,8 @@ import {
 import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { useDepartments } from '../contexts/DepartmentContext';
+import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
+import { GlobalFilter } from '../components/GlobalFilter';
 
 export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }> = ({ onNavigateTab }) => {
   const { notify } = useNotification();
@@ -139,43 +141,38 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
       </div>
 
       {/* Scope Filter Controls */}
-      <div className="bg-white dark:bg-navy-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center space-x-2">
-            <Building2 className="w-4 h-4 text-indigo-500" />
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Dept:</span>
-            <select
-              value={selectedDept}
-              onChange={(e) => setSelectedDept(e.target.value)}
-              className="bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-            >
-              <option value="ALL">All Departments</option>
-              {departments.map(d => (
-                <option key={d.code} value={d.code}>{d.name} ({d.code})</option>
-              ))}
-            </select>
-          </div>
+      <div className="bg-white dark:bg-navy-950 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-md flex flex-wrap items-end justify-between gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1 max-w-2xl">
+          {/* Department Filter */}
+          <PremiumDepartmentSelect
+            selectedDept={selectedDept}
+            onChange={(val) => setSelectedDept(val)}
+            useIdAsValue={false}
+            label="Department Scope"
+          />
 
-          <div className="flex items-center space-x-2">
-            <GraduationCap className="w-4 h-4 text-purple-500" />
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Year:</span>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              className="bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
-            >
-              <option value="ALL">All Academic Years</option>
-              <option value="2">2nd Year (II)</option>
-              <option value="3">3rd Year (III)</option>
-              <option value="4">4th Year (IV)</option>
-            </select>
-          </div>
+          {/* Academic Year Filter */}
+          <GlobalFilter
+            label="Academic Year"
+            value={selectedYear}
+            onChange={setSelectedYear}
+            dropdownWidth="min-w-[320px]"
+            searchPlaceholder="Search academic year..."
+            options={[
+              { value: "ALL", label: "All Academic Years", pillText: "ALL" },
+              { value: "1", label: "I Year", pillText: "1ST" },
+              { value: "2", label: "II Year", pillText: "2ND" },
+              { value: "3", label: "III Year", pillText: "3RD" },
+              { value: "4", label: "IV Year", pillText: "4TH" }
+            ]}
+            icon={<GraduationCap className="w-4 h-4 text-amber-500" />}
+          />
         </div>
 
         {(selectedDept !== 'ALL' || selectedYear !== 'ALL') && (
           <button
             onClick={() => { setSelectedDept('ALL'); setSelectedYear('ALL'); }}
-            className="text-xs font-bold text-rose-500 hover:text-rose-700 flex items-center space-x-1 cursor-pointer bg-rose-50 dark:bg-rose-950/40 px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-800"
+            className="text-xs font-bold text-rose-500 hover:text-rose-700 flex items-center space-x-1 cursor-pointer bg-rose-50 dark:bg-rose-950/40 px-3.5 py-2.5 rounded-2xl border border-rose-200 dark:border-rose-800 shadow-xs transition-all mb-0.5"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset Filters</span>

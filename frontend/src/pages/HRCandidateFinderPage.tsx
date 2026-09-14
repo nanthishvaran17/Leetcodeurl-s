@@ -1116,33 +1116,27 @@ export const HRCandidateFinderPage: React.FC = () => {
             text-transform: uppercase;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
           }
-          .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-          .info-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px; }
-          .info-row { display: flex; justify-content: space-between; padding: 2.5px 0; border-bottom: 1px dashed #e2e8f0; font-size: 10.5px; }
-          .info-row:last-child { border-bottom: none; }
-          .info-key { color: #64748b; font-weight: 700; }
+          .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px; }
+          .info-card { }
+          .info-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #f1f5f9; font-size: 10px; }
+          .info-key { color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 8px; letter-spacing: 0.5px; }
           .info-val { font-weight: 800; color: #0f172a; }
           
-          .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
-          .kpi-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 8px; text-align: center; }
-          .kpi-label { font-size: 8.5px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.3px; }
-          .kpi-val { font-size: 15px; font-weight: 900; margin-top: 1px; }
-
           .section-title {
-            font-size: 10.5px;
+            font-size: 9.5px;
             font-weight: 900;
-            color: #1e293b;
-            border-bottom: 1.5px solid #cbd5e1;
-            padding-bottom: 2px;
-            margin: 9px 0 6px 0;
+            color: #1e3a8a;
+            border-bottom: 2px solid #1e3a8a;
+            padding-bottom: 3px;
+            margin: 15px 0 10px 0;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
           }
 
-          .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 8px; }
-          .metric-box { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 5px 6px; text-align: center; }
-          .metric-box-label { font-size: 8px; font-weight: 800; color: #64748b; text-transform: uppercase; }
-          .metric-box-val { font-size: 13px; font-weight: 900; color: #0f172a; }
+          .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #e2e8f0; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; margin-bottom: 10px; }
+          .metric-box { background: #ffffff; padding: 8px 6px; text-align: center; }
+          .metric-box-label { font-size: 7.5px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+          .metric-box-val { font-size: 14px; font-weight: 900; color: #0f172a; margin-top: 3px; }
 
           .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
           .box-panel { padding: 7px 9px; border-radius: 8px; font-size: 9.5px; }
@@ -1165,12 +1159,20 @@ export const HRCandidateFinderPage: React.FC = () => {
             color: #94a3b8;
             font-weight: 700;
           }
+          .page-border {
+            border: 2px solid #1e3a8a;
+            padding: 16px;
+            min-height: 98vh;
+            position: relative;
+            box-sizing: border-box;
+          }
           @media print {
             body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
           }
         </style>
       </head>
       <body>
+        <div class="page-border">
         <div class="header">
           <div class="badge-ready">${readiness}</div>
           <img src="${logoUrl}" alt="Logo" style="height: 48px; object-fit: contain; margin-bottom: 5px; opacity: 0.9;" onerror="this.style.display='none'" />
@@ -1189,26 +1191,7 @@ export const HRCandidateFinderPage: React.FC = () => {
             <div class="info-row"><span class="info-key">Department</span><span class="info-val">${c.department} (${c.dept_code})</span></div>
             <div class="info-row"><span class="info-key">Degree & Batch</span><span class="info-val">${c.degree} • ${c.batch}</span></div>
             <div class="info-row"><span class="info-key">Year & Section</span><span class="info-val">${c.year_level} — Sec ${c.section}</span></div>
-            <div class="info-row"><span class="info-key">Primary Language</span><span class="info-val" style="color: #2563eb;">${c.primary_language}</span></div>
-          </div>
-        </div>
-
-        <div class="kpi-grid">
-          <div class="kpi-card">
-            <div class="kpi-label">Performance Score</div>
-            <div class="kpi-val" style="color: #7c3aed;">${perfScore} / 100</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Placement Readiness</div>
-            <div class="kpi-val" style="color: #16a34a;">${readiness}</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Interview Score</div>
-            <div class="kpi-val" style="color: #2563eb;">${interviewScore} / 100</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Risk Level & Trend</div>
-            <div class="kpi-val" style="color: #059669;">${riskLevel} (${trend})</div>
+            <div class="info-row"><span class="info-key">Primary Language</span><span class="info-val">${c.primary_language}</span></div>
           </div>
         </div>
 
@@ -1216,23 +1199,23 @@ export const HRCandidateFinderPage: React.FC = () => {
         <div class="metric-grid">
           <div class="metric-box">
             <div class="metric-box-label">Total Solved</div>
-            <div class="metric-box-val" style="color: #2563eb;">${totSolved}</div>
+            <div class="metric-box-val">${totSolved}</div>
           </div>
           <div class="metric-box">
             <div class="metric-box-label">Easy Solved</div>
-            <div class="metric-box-val" style="color: #059669;">${easySolved}</div>
+            <div class="metric-box-val">${easySolved}</div>
           </div>
           <div class="metric-box">
             <div class="metric-box-label">Medium Solved</div>
-            <div class="metric-box-val" style="color: #d97706;">${medSolved}</div>
+            <div class="metric-box-val">${medSolved}</div>
           </div>
           <div class="metric-box">
             <div class="metric-box-label">Hard Solved</div>
-            <div class="metric-box-val" style="color: #dc2626;">${hrdSolved}</div>
+            <div class="metric-box-val">${hrdSolved}</div>
           </div>
           <div class="metric-box">
             <div class="metric-box-label">Acceptance Rate</div>
-            <div class="metric-box-val" style="color: #059669;">${accRate}</div>
+            <div class="metric-box-val">${accRate}</div>
           </div>
           <div class="metric-box">
             <div class="metric-box-label">Total Submissions</div>
@@ -1240,7 +1223,7 @@ export const HRCandidateFinderPage: React.FC = () => {
           </div>
           <div class="metric-box">
             <div class="metric-box-label">Current Streak</div>
-            <div class="metric-box-val" style="color: #ea580c;">${streak} days</div>
+            <div class="metric-box-val">${streak} days</div>
           </div>
           <div class="metric-box">
             <div class="metric-box-label">Active Days</div>
@@ -1252,11 +1235,11 @@ export const HRCandidateFinderPage: React.FC = () => {
         <div class="metric-grid">
           <div class="metric-box">
             <div class="metric-box-label">Contest Rating</div>
-            <div class="metric-box-val" style="color: #7c3aed;">${contestRating}</div>
+            <div class="metric-box-val">${contestRating}</div>
           </div>
           <div class="metric-box">
             <div class="metric-box-label">Global Rank</div>
-            <div class="metric-box-val" style="color: #2563eb;">${globalRank}</div>
+            <div class="metric-box-val">${globalRank}</div>
           </div>
           <div class="metric-box">
             <div class="metric-box-label">Contests Attended</div>
@@ -1264,7 +1247,7 @@ export const HRCandidateFinderPage: React.FC = () => {
           </div>
           <div class="metric-box">
             <div class="metric-box-label">Contest Top %</div>
-            <div class="metric-box-val" style="color: #059669;">${topPct}</div>
+            <div class="metric-box-val">${topPct}</div>
           </div>
         </div>
 
@@ -1335,6 +1318,7 @@ export const HRCandidateFinderPage: React.FC = () => {
           <span>Nandha Engineering College • LeetCode Intelligence Engine</span>
           <span>Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</span>
           <span>Confidential — Placement & Training Cell</span>
+        </div>
         </div>
 
         <script>

@@ -668,13 +668,14 @@ const ReportHubModal: React.FC<{
               <GlobalFilter
                 value={selectedYear}
                 onChange={val => setSelectedYear(val)}
-                dropdownWidth="min-w-[260px]"
+                dropdownWidth="min-w-[320px]"
+                searchPlaceholder="Search academic year..."
                 options={[
                   { value: "ALL", label: "All Academic Years", pillText: "ALL" },
-                  { value: "1", label: "I Year", pillText: "1st" },
-                  { value: "2", label: "II Year", pillText: "2nd" },
-                  { value: "3", label: "III Year", pillText: "3rd" },
-                  { value: "4", label: "IV Year", pillText: "4th" }
+                  { value: "1", label: "I Year", pillText: "1ST" },
+                  { value: "2", label: "II Year", pillText: "2ND" },
+                  { value: "3", label: "III Year", pillText: "3RD" },
+                  { value: "4", label: "IV Year", pillText: "4TH" }
                 ]}
                 icon={<Calendar className="w-4 h-4 text-amber-500" />}
               />
@@ -686,6 +687,7 @@ const ReportHubModal: React.FC<{
                 value={selectedSection}
                 onChange={val => setSelectedSection(val)}
                 dropdownWidth="min-w-[240px]"
+                searchPlaceholder="Search section..."
                 options={[
                   { value: "ALL", label: "All Sections", pillText: "ALL" },
                   { value: "A", label: "Section A", pillText: "A" },

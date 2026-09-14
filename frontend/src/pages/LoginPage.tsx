@@ -1163,19 +1163,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
             <ShieldCheck size={16} className="stamp-icon" />
             <span>Secured & audited by institution</span>
           </div>
+
+          {/* Minimal Unified Footer (Moved inside right panel for full-height layout) */}
+          <footer className="login-copyright" role="contentinfo" style={{ marginTop: 'auto', paddingTop: '2rem' }}>
+            <p className="copyright-line" style={{ color: '#64748B', textShadow: 'none', fontWeight: 600 }}>
+              &copy; 2026 Nandha Engineering College. All rights reserved.
+            </p>
+            <p className="tagline-line" style={{ color: '#94A3B8', textShadow: 'none', marginTop: '4px' }}>
+              LEARN | SERVE | SUCCEED
+            </p>
+          </footer>
+
           </div>
         </motion.div>
       </main>
-
-      {/* Minimal Unified Footer */}
-      <footer className="login-copyright" role="contentinfo">
-        <p className="copyright-line">
-          &copy; 2026 Nandha Engineering College. All rights reserved.
-        </p>
-        <p className="tagline-line">
-          LEARN | SERVE | SUCCEED
-        </p>
-      </footer>
     </div>
   );
 };

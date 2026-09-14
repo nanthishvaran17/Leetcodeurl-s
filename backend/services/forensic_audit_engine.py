@@ -90,12 +90,23 @@ def build_normalized_forensic_report(
     # 2. Resolve Contest Session (Strict session_id validation - NO silent fallback to latest!)
     session_obj = None
     if session_id:
-        session_obj = db.query(WeeklySession).filter(
-            (WeeklySession.id == session_id) |
-            (WeeklySession.contest_id == str(session_id)) |
-            (WeeklySession.contest_id == f"weekly-contest-{session_id}") |
-            (WeeklySession.contest_name.ilike(f"%{session_id}%"))
-        ).first()
+        # 1. Primary key match (Exact WeeklySession.id)
+        session_obj = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+        
+        # 2. Exact contest_id string match (e.g. "weekly-contest-519")
+        if not session_obj:
+            session_obj = db.query(WeeklySession).filter(
+                (WeeklySession.contest_id == str(session_id)) |
+                (WeeklySession.contest_id == f"weekly-contest-{session_id}")
+            ).first()
+
+        # 3. Exact title match (e.g. "Weekly Contest 519")
+        if not session_obj:
+            session_obj = db.query(WeeklySession).filter(
+                (WeeklySession.contest_name.ilike(f"Weekly Contest {session_id}")) |
+                (WeeklySession.contest_name.ilike(f"Biweekly Contest {session_id}")) |
+                (WeeklySession.contest_name.ilike(f"% Contest {session_id}"))
+            ).first()
 
     if not session_obj and target_trace:
         cert = db.query(CertificateRecord).filter(CertificateRecord.verification_id.ilike(target_trace)).first()

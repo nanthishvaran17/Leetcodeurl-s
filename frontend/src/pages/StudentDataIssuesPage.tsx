@@ -43,6 +43,7 @@ import api from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { triggerDownload } from '../utils/mobileDownload';
 import { DownloadState } from '../services/download/downloadTypes';
+import { normalizeAcademicYear } from '../utils/filterUtils';
 import { ExportStatus } from '../components/ExportStatus';
 import { useDepartments } from '../contexts/DepartmentContext';
 
@@ -885,8 +886,8 @@ export const StudentDataIssuesPage: React.FC = () => {
                   <tr
                     key={idx}
                     onClick={() => {
-                      const yCode = row.year.replace('Year', '').trim();
-                      setSelectedYear(yCode);
+                      const norm = normalizeAcademicYear(row.year);
+                      setSelectedYear(norm === 'all' ? 'ALL' : norm);
                     }}
                     className="hover:bg-slate-50 dark:hover:bg-navy-800/60 transition-colors cursor-pointer"
                   >

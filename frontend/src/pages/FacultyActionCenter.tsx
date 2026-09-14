@@ -916,9 +916,10 @@ export const FacultyActionCenter: React.FC = () => {
           placeholder="All Years"
           icon={<GraduationCap size={16} />}
           options={[
-            { label: 'II Year (Sophomore)', value: 'II Year', icon: <User size={14} />, badge: 'Y2', badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' },
-            { label: 'III Year (Junior)', value: 'III Year', icon: <User size={14} />, badge: 'Y3', badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300' },
-            { label: 'IV Year (Senior)', value: 'IV Year', icon: <User size={14} />, badge: 'Y4', badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300' }
+            { label: 'I Year', value: 'I Year', icon: <User size={14} />, badge: 'Y1', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' },
+            { label: 'II Year', value: 'II Year', icon: <User size={14} />, badge: 'Y2', badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' },
+            { label: 'III Year', value: 'III Year', icon: <User size={14} />, badge: 'Y3', badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300' },
+            { label: 'IV Year', value: 'IV Year', icon: <User size={14} />, badge: 'Y4', badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300' }
           ]}
         />
         <div className="w-full flex items-center justify-between xl:w-auto xl:ml-auto gap-4 mt-2 xl:mt-0">
@@ -963,11 +964,70 @@ export const FacultyActionCenter: React.FC = () => {
           <span className="text-sm">Loading action queue...</span>
         </div>
       ) : items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 text-emerald-500">
-          <CheckCircle2 size={48} className="opacity-40 mb-4" />
-          <div className="text-xl font-bold">{hasFilters || kpiFilter ? 'No Students Found' : ' All Clear'}</div>
-          <div className="text-sm text-slate-500 dark:text-navy-400 mt-2">
-            {hasFilters || kpiFilter ? 'Try adjusting or clearing your filters to see more results.' : 'No students currently require faculty intervention.'}
+        <div className="relative overflow-hidden rounded-3xl bg-slate-900/90 dark:bg-navy-950/90 border border-emerald-500/25 dark:border-emerald-500/30 p-8 sm:p-12 text-center shadow-2xl backdrop-blur-xl transition-all duration-300">
+          {/* Decorative Ambient Radial Glow */}
+          <div className="absolute -top-24 -left-24 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 max-w-md mx-auto flex flex-col items-center">
+            {/* Animated Icon Ring */}
+            <div className="relative mb-5">
+              <div className="absolute -inset-2 rounded-3xl bg-gradient-to-r from-emerald-500 to-teal-500 opacity-25 blur-lg animate-pulse" />
+              <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 p-0.5 shadow-xl flex items-center justify-center">
+                <div className="w-full h-full rounded-[22px] bg-slate-950/90 flex items-center justify-center">
+                  {hasFilters || kpiFilter ? (
+                    <Search className="w-9 h-9 text-slate-400" />
+                  ) : (
+                    <CheckCircle2 className="w-9 h-9 text-emerald-400 animate-bounce-slow" />
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Pill Status Badge */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-black uppercase tracking-widest mb-3">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{hasFilters || kpiFilter ? 'Filter Scope Active' : 'Institutional Status: Optimal'}</span>
+            </div>
+
+            {/* Title */}
+            <h3 className="font-display text-2xl sm:text-3xl font-black text-white tracking-tight mb-2.5">
+              {hasFilters || kpiFilter ? 'No Matching Students Found' : 'All Students Operating at Target Health'}
+            </h3>
+
+            {/* Description */}
+            <p className="text-xs sm:text-sm text-slate-300 dark:text-slate-400 font-medium leading-relaxed mb-6 max-w-sm">
+              {hasFilters || kpiFilter
+                ? 'No student intervention records matched your currently selected department, academic year, priority, or KPI filters.'
+                : 'Zero critical risk warnings or pending intervention requests detected across all tracked engineering profiles.'}
+            </p>
+
+            {/* Interactive Action Buttons */}
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              {(hasFilters || kpiFilter) ? (
+                <button
+                  onClick={() => {
+                    setFilterPriority('');
+                    setFilterStatus('');
+                    setFilterYear('');
+                    setSearch('');
+                    setKpiFilter(null);
+                  }}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-black text-xs shadow-lg shadow-brand-500/20 transition-all cursor-pointer"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Reset All Filters
+                </button>
+              ) : (
+                <button
+                  onClick={() => loadData()}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-300 font-extrabold text-xs transition-all cursor-pointer"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Refresh Intelligence Signals
+                </button>
+              )}
+            </div>
           </div>
         </div>
       ) : (

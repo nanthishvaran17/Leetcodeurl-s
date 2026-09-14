@@ -410,17 +410,27 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     <div className="space-y-5 sm:space-y-6 pt-1 sm:pt-0 animate-fade-in font-sans pb-12">
 
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-lg border border-brand-500/30">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-2xl border border-brand-500/30 backdrop-blur-xl transition-all duration-300">
+        {/* Animated Decorative Ambient Light Beams */}
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl animate-pulse pointer-events-none" />
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl animate-pulse pointer-events-none delay-1000" />
+        <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-brand-400/50 to-transparent" />
+
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-4 max-w-2xl">
-            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black uppercase tracking-wider">
-              <UserPlus className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400" />
+          <div className="space-y-3.5 max-w-2xl">
+            {/* Live Pulsing Badge */}
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black uppercase tracking-wider backdrop-blur-md shadow-xs">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <UserPlus className="w-3.5 h-3.5 text-amber-400" />
               <span>STUDENT DIRECTORY — {serverTotalCount} ENROLLED</span>
             </div>
 
             <div className="space-y-1.5">
-              <h1 className="text-3xl md:text-4xl font-display font-black tracking-tight">
-                Student Master <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Directory</span>
+              <h1 className="text-3xl md:text-4xl font-display font-black tracking-tight leading-tight">
+                Student Master <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-300 via-teal-200 to-indigo-300 animate-pulse">Directory</span>
               </h1>
               <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide leading-relaxed">
                 Manage student profiles, LeetCode connectivity, and live synchronization across all institutional departments.
@@ -428,15 +438,15 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center space-x-3 flex-wrap gap-2">
+          <div className="flex items-center space-x-3 flex-wrap gap-3">
             {/* View Mode Toggle */}
-            <div className="flex items-center space-x-1 p-1 bg-white/5 rounded-lg border border-white/10 shadow-inner">
+            <div className="flex items-center space-x-1 p-1 bg-white/10 dark:bg-black/30 rounded-xl border border-white/15 shadow-inner backdrop-blur-md">
               <button
                 onClick={() => setViewMode('table')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                   viewMode === 'table'
-                    ? 'bg-white text-navy-950 shadow-sm'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-gradient-to-r from-white to-slate-100 text-navy-950 shadow-md scale-[1.02]'
+                    : 'text-slate-300 hover:text-white hover:bg-white/10'
                 }`}
               >
                 <List className="w-3.5 h-3.5" />
@@ -444,10 +454,10 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
               </button>
               <button
                 onClick={() => setViewMode('cards')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-[11px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                   viewMode === 'cards'
-                    ? 'bg-white text-navy-950 shadow-sm'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-gradient-to-r from-white to-slate-100 text-navy-950 shadow-md scale-[1.02]'
+                    : 'text-slate-300 hover:text-white hover:bg-white/10'
                 }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
@@ -455,21 +465,20 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
               </button>
             </div>
             
-            <div className="flex flex-wrap items-center gap-2 mt-4 lg:mt-0 justify-end">
-
+            <div className="flex flex-wrap items-center gap-2.5 justify-end">
               <button
                 onClick={onOpenImport}
-                className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-white font-bold text-[11px] uppercase tracking-wider flex items-center space-x-1.5 shadow-sm transition-all cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white font-black text-[11px] uppercase tracking-wider flex items-center space-x-2 shadow-sm transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer backdrop-blur-md"
               >
-                <UploadCloud className="w-3.5 h-3.5 text-brand-300" />
+                <UploadCloud className="w-4 h-4 text-brand-300" />
                 <span>Bulk Import</span>
               </button>
 
               <button
                 onClick={handleOpenAddModal}
-                className="px-3 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-400 text-white font-bold text-[11px] uppercase tracking-wider shadow-md shadow-brand-500/20 flex items-center space-x-1.5 transition-all cursor-pointer border border-brand-400/50"
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-500 to-indigo-600 hover:from-brand-400 hover:to-indigo-500 text-white font-black text-[11px] uppercase tracking-wider shadow-lg shadow-brand-500/25 flex items-center space-x-2 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer border border-brand-300/40"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-4 h-4" />
                 <span>Add Student</span>
               </button>
             </div>
@@ -608,117 +617,182 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
       {/* Add Student Modal */}
       {showAddModal && (
         <div className="modal-overlay-responsive animate-modal-backdrop">
-          <div className="modal-container-responsive max-w-md bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm animate-modal-content">
-            <div className="p-5 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50/50 dark:bg-navy-950/50 flex items-center justify-between">
-              <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Add New Student Record</h3>
-              <button onClick={handleCloseAddModal} className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer">
-               
-              </button>
+          <div className="modal-container-responsive max-w-lg bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden animate-modal-content">
+            
+            {/* Header */}
+            <div className="relative p-6 border-b border-slate-100 dark:border-slate-800/80 bg-gradient-to-r from-navy-900 via-indigo-950 to-navy-900 text-white overflow-hidden">
+              {/* Glowing ambient light effect */}
+              <div className="absolute -top-12 -right-12 w-32 h-32 bg-brand-500/20 rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none" />
+
+              <div className="relative flex items-center justify-between z-10">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2.5 rounded-2xl bg-white/10 dark:bg-white/10 backdrop-blur-md border border-white/15 text-brand-400 shadow-inner">
+                    <UserPlus className="w-5 h-5 text-brand-300" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-white tracking-tight">Add New Student Record</h3>
+                    <p className="text-xs text-slate-300 font-medium mt-0.5">
+                      Enroll student into institutional intelligence directory
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  type="button"
+                  onClick={handleCloseAddModal} 
+                  className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+                  title="Close modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
-            <form onSubmit={handleCreateStudent} className="p-5 flex-1 min-h-0 overflow-y-auto space-y-3.5 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Register Number</label>
-                <input
-                  type="text"
-                  value={regNo}
-                  onChange={(e) => setRegNo(e.target.value)}
-                  placeholder="e.g. 732224CC001"
-                  required
-                  className="w-full p-2.5 rounded-xl border bg-white dark:bg-navy-950"
-                />
-              </div>
+            <form onSubmit={handleCreateStudent} className="p-6 flex-1 min-h-0 overflow-y-auto space-y-4 text-xs custom-scrollbar">
+              
+              {/* Section 1: Primary Identification */}
+              <div className="space-y-3">
+                <span className="text-[10px] font-black uppercase text-brand-600 dark:text-brand-400 tracking-wider">
+                  1. Identity & Roster Info
+                </span>
 
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Student Name</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. AJAY A"
-                  required
-                  className="w-full p-2.5 rounded-xl border bg-white dark:bg-navy-950"
-                />
-              </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">
+                      Register Number <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={regNo}
+                      onChange={(e) => setRegNo(e.target.value)}
+                      placeholder="e.g. 732224CC001"
+                      required
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-navy-900/60 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-inner"
+                    />
+                  </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Department</label>
-                <GlobalFilter
-                  value={deptId?.toString() || ""}
-                  onChange={(val) => setDeptId(Number(val))}
-                  dropdownWidth="w-full"
-                  options={departments.map((d: any) => ({ value: String(d.id), label: d.name, pillText: d.code }))}
-                  icon={<Building2 className="w-5 h-5" />}
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Year Level</label>
-                <GlobalFilter
-                  value={yearLevel}
-                  onChange={(val) => setYearLevel(val)}
-                  dropdownWidth="w-full"
-                  options={[
-                    { value: "2", label: "II Year" },
-                    { value: "3", label: "III Year" },
-                    { value: "4", label: "IV Year" }
-                  ]}
-                  icon={<Calendar className="w-5 h-5" />}
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Personal Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="e.g. ajay@gmail.com"
-                  className="w-full p-2.5 rounded-xl border bg-white dark:bg-navy-950"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Institutional Email</label>
-                <input
-                  type="email"
-                  value={institutionalEmail}
-                  onChange={(e) => setInstitutionalEmail(e.target.value)}
-                  placeholder="e.g. 732224CC001@nandhaengg.org (optional)"
-                  className="w-full p-2.5 rounded-xl border bg-white dark:bg-navy-950"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">12th Cut-off</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={cutOffScore}
-                    onChange={(e) => setCutOffScore(e.target.value)}
-                    placeholder="e.g. 185.50"
-                    className="w-full p-2.5 rounded-xl border bg-white dark:bg-navy-950"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Accommodation</label>
-                  <GlobalFilter
-                    value={accommodationType}
-                    onChange={(val) => setAccommodationType(val)}
-                    dropdownWidth="w-full"
-                    options={[
-                      { value: "DAY SCHOLAR", label: "Day Scholar" },
-                      { value: "HOSTEL", label: "Hostel" }
-                    ]}
-                    icon={<Building2 className="w-5 h-5" />}
-                  />
+                  <div>
+                    <label className="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">
+                      Student Name <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. AJAY A"
+                      required
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-navy-900/60 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-inner"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* LeetCode URL with live validation */}
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">LeetCode Profile Link</label>
+              {/* Section 2: Department & Academic Year */}
+              <div className="space-y-3 pt-1">
+                <span className="text-[10px] font-black uppercase text-brand-600 dark:text-brand-400 tracking-wider">
+                  2. Academic Placement
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">Department</label>
+                    <GlobalFilter
+                      value={deptId?.toString() || ""}
+                      onChange={(val) => setDeptId(Number(val))}
+                      dropdownWidth="w-full"
+                      options={departments.map((d: any) => ({ value: String(d.id), label: d.name, pillText: d.code }))}
+                      icon={<Building2 className="w-4 h-4 text-brand-500" />}
+                      placeholder="Select Department"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">Year Level</label>
+                    <GlobalFilter
+                      value={yearLevel}
+                      onChange={(val) => setYearLevel(val)}
+                      dropdownWidth="w-full"
+                      options={[
+                        { value: "1", label: "I Year", pillText: "1ST" },
+                        { value: "2", label: "II Year", pillText: "2ND" },
+                        { value: "3", label: "III Year", pillText: "3RD" },
+                        { value: "4", label: "IV Year", pillText: "4TH" }
+                      ]}
+                      icon={<Calendar className="w-4 h-4 text-amber-500" />}
+                      placeholder="Select Academic Year"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 3: Contact & Accommodation */}
+              <div className="space-y-3 pt-1">
+                <span className="text-[10px] font-black uppercase text-brand-600 dark:text-brand-400 tracking-wider">
+                  3. Contact & Accommodation
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">Personal Email</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="e.g. ajay@gmail.com"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-navy-900/60 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-inner"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">Institutional Email</label>
+                    <input
+                      type="email"
+                      value={institutionalEmail}
+                      onChange={(e) => setInstitutionalEmail(e.target.value)}
+                      placeholder="e.g. 732224CC001@nandhaengg.org"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-navy-900/60 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-inner"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">12th Cut-off Score</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={cutOffScore}
+                      onChange={(e) => setCutOffScore(e.target.value)}
+                      placeholder="e.g. 185.50"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-navy-900/60 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all shadow-inner"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-extrabold text-slate-700 dark:text-slate-200 mb-1">Accommodation</label>
+                    <GlobalFilter
+                      value={accommodationType}
+                      onChange={(val) => setAccommodationType(val)}
+                      dropdownWidth="w-full"
+                      options={[
+                        { value: "DAY SCHOLAR", label: "Day Scholar", pillText: "DAY" },
+                        { value: "HOSTEL", label: "Hosteler", pillText: "HOSTEL" }
+                      ]}
+                      icon={<Building2 className="w-4 h-4 text-emerald-500" />}
+                      placeholder="Select Type"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 4: LeetCode Verification Link */}
+              <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase text-brand-600 dark:text-brand-400 tracking-wider">
+                    4. LeetCode Live Sync Integration
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-400">AUTOMATIC VERIFICATION</span>
+                </div>
+
                 <div className="relative">
                   <input
                     type="text"
@@ -726,41 +800,43 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                     value={leetcodeUrl}
                     onChange={(e) => handleLcUrlChange(e.target.value)}
                     placeholder="e.g. https://leetcode.com/u/ajay_a/"
-                    className={`w-full p-2.5 pr-9 rounded-xl border bg-white dark:bg-navy-950 transition-colors ${
+                    className={`w-full px-3.5 py-2.5 pr-10 rounded-xl border bg-slate-50/70 dark:bg-navy-900/60 font-medium text-slate-900 dark:text-white transition-all shadow-inner ${
                       lcValidation.status === 'valid'
-                        ? 'border-emerald-400 focus:ring-emerald-400'
+                        ? 'border-emerald-500 focus:ring-2 focus:ring-emerald-500/30'
                         : lcValidation.status === 'not_found' || lcValidation.status === 'identity_mismatch' || lcValidation.status === 'invalid_format'
-                        ? 'border-red-400 focus:ring-red-400'
-                        : 'border-slate-300 dark:border-slate-700'
-                    } focus:outline-none focus:ring-2`}
+                        ? 'border-rose-500 focus:ring-2 focus:ring-rose-500/30'
+                        : 'border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-brand-500/50'
+                    } focus:outline-none`}
                   />
                   {/* Inline status icon */}
-                  <div className="absolute right-2.5 top-2.5 pointer-events-none">
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     {lcValidation.status === 'validating' && <Loader2 className="w-4 h-4 text-brand-400 animate-spin" />}
                     {lcValidation.status === 'valid' && <CheckCircle className="w-4 h-4 text-emerald-500" />}
                     {(lcValidation.status === 'not_found' || lcValidation.status === 'identity_mismatch' || lcValidation.status === 'invalid_format') && (
-                      <XCircle className="w-4 h-4 text-red-500" />
+                      <XCircle className="w-4 h-4 text-rose-500" />
                     )}
                     {(lcValidation.status === 'rate_limited' || lcValidation.status === 'network_error' || lcValidation.status === 'fetch_failed') && (
                       <AlertTriangle className="w-4 h-4 text-amber-500" />
                     )}
                   </div>
                 </div>
-                {/* Validation chip */}
+
+                {/* Validation status chip */}
                 <LcValidationChip state={lcValidation} />
-                {/* If validation hard-failed, offer a skip hint */}
+
                 {!saveAllowed && (
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                    Fix the URL above, or clear it to save without a LeetCode link.
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500 italic">
+                    Tip: Fix the LeetCode URL above, or clear it to save record without profile sync.
                   </p>
                 )}
               </div>
 
-              <div className="flex items-center justify-end space-x-2 pt-2">
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
                 <button
                   type="button"
                   onClick={handleCloseAddModal}
-                  className="px-4 py-2 rounded-xl text-slate-500 font-bold hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="px-4 py-2.5 rounded-xl text-slate-600 dark:text-slate-300 font-extrabold hover:bg-slate-100 dark:hover:bg-navy-800 transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -768,19 +844,31 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
                   type="submit"
                   disabled={loading || !saveAllowed}
                   title={!saveAllowed ? 'Fix the LeetCode URL to continue' : undefined}
-                  className={`px-4 py-2 rounded-xl font-bold shadow-md transition-all ${
+                  className={`px-5 py-2.5 rounded-xl font-black text-xs shadow-lg transition-all cursor-pointer flex items-center gap-2 ${
                     loading || !saveAllowed
-                      ? 'bg-slate-300 dark:bg-slate-700 text-slate-400 cursor-not-allowed'
-                      : 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-600/30'
+                      ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed shadow-none'
+                      : 'bg-gradient-to-r from-brand-600 via-indigo-600 to-teal-500 hover:from-brand-500 hover:to-teal-400 text-white shadow-brand-500/25 hover:scale-[1.02]'
                   }`}
                 >
-                  {loading
-                    ? 'Adding...'
-                    : lcValidation.status === 'valid'
-                    ? `Save & Sync (${lcValidation.username})`
-                    : 'Save Student'}
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Enrolling...</span>
+                    </>
+                  ) : lcValidation.status === 'valid' ? (
+                    <>
+                      <CheckCircle className="w-4 h-4 text-white" />
+                      <span>Save & Verify ({lcValidation.username})</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-4 h-4 text-white" />
+                      <span>Save Student Record</span>
+                    </>
+                  )}
                 </button>
               </div>
+
             </form>
           </div>
         </div>

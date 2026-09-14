@@ -196,6 +196,32 @@ def execute_secure_download(
         }
     )
 
+@router.get("/reports/{filename}")
+def download_direct_report(filename: str, db: Session = Depends(get_db)):
+    """
+    Direct download endpoint for reports generated and stored in ReportCache.
+    """
+    from backend.models import ReportCache
+    import mimetypes
+    
+    record = db.query(ReportCache).filter(ReportCache.filename == filename).first()
+    
+    if not record or not record.storage_path or not os.path.exists(record.storage_path):
+        raise HTTPException(status_code=404, detail="Report data not found.")
+        
+    mime_type = record.mime_type or mimetypes.guess_type(record.storage_path)[0] or "application/octet-stream"
+    
+    with open(record.storage_path, "rb") as f:
+        file_bytes = f.read()
+        
+    return Response(
+        content=file_bytes,
+        media_type=mime_type,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "private, no-cache, no-store",
+        }
+    )
 
 def _dispatch_internal_endpoint(
     db: Session,

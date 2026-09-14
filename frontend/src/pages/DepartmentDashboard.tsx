@@ -9,6 +9,7 @@ import { getCachedStudents, saveCachedStudents } from '../utils/rosterCache';
 import { filterAndSortStudents } from '../utils/filterUtils';
 import { useNotification } from '../context/NotificationContext';
 import { CustomDropdown, DropdownOption } from '../components/CustomDropdown';
+import { GlobalFilter } from '../components/GlobalFilter';
 import { useGlobalData } from '../context/GlobalDataContext';
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
 import { useDepartmentsQuery } from '../hooks/useDashboardQueries';
@@ -153,20 +154,29 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
     <div className="space-y-8 pb-10 animate-fade-in">
       
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-8 shadow-lg border border-brand-500/30">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-2xl border border-brand-500/30 backdrop-blur-xl transition-all duration-300">
+        {/* Animated Decorative Ambient Light Beams */}
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-brand-500/15 rounded-full blur-3xl animate-pulse pointer-events-none" />
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl animate-pulse pointer-events-none delay-1000" />
+        <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-brand-400/50 to-transparent" />
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-6">
-          <div className="space-y-4">
-            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black">
-              <Layers className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-3.5 max-w-2xl">
+            {/* Live Pulsing Status Pill */}
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-[10px] sm:text-xs font-black uppercase tracking-wider backdrop-blur-md shadow-xs">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <Layers className="w-3.5 h-3.5 text-amber-400" />
               <span>DEPARTMENT ANALYTICS • INSTITUTIONAL EDITION (ALL DEPARTMENTS)</span>
             </div>
 
             <div className="space-y-1.5">
-              <h1 className="text-3xl md:text-4xl font-black tracking-tight">
-                Department & Academic <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Year Dashboard</span>
+              <h1 className="text-3xl md:text-4xl font-display font-black tracking-tight leading-tight">
+                Department & Academic <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-300 via-teal-200 to-indigo-300 animate-pulse">Year Dashboard</span>
               </h1>
-              <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide">
+              <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide leading-relaxed">
                 Filter students by Department, Academic Year, Name & Performance side-by-side
               </p>
             </div>
@@ -176,7 +186,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
             <button
               onClick={handleRefreshAllStats}
               disabled={isRefreshing}
-              className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 disabled:opacity-50 text-white rounded-2xl text-xs font-bold shadow-lg shadow-brand-600/30 transition-all cursor-pointer"
+              className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-500 to-indigo-600 hover:from-brand-400 hover:to-indigo-500 disabled:opacity-50 text-white rounded-2xl text-xs font-black shadow-lg shadow-brand-500/25 transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer border border-brand-300/40"
             >
               <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               <span>{isRefreshing ? 'Syncing Roster...' : 'Sync Live Stats'}</span>
@@ -240,17 +250,23 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           />
 
           {/* 2. Academic Year Filter */}
-          <CustomDropdown
-            id="dept-dashboard-year-filter"
+          <GlobalFilter
             label="Academic Year"
-            options={yearOptions}
             value={yearLevel}
             onChange={(val) => {
               setYearLevel(val);
               setDisplayCount(32);
             }}
-            icon={GraduationCap}
-            align="left"
+            dropdownWidth="min-w-[320px]"
+            searchPlaceholder="Search academic year..."
+            options={[
+              { value: "all", label: "All Academic Years", pillText: "ALL" },
+              { value: "1", label: "I Year", pillText: "1ST" },
+              { value: "2", label: "II Year", pillText: "2ND" },
+              { value: "3", label: "III Year", pillText: "3RD" },
+              { value: "4", label: "IV Year", pillText: "4TH" }
+            ]}
+            icon={<GraduationCap className="w-4 h-4 text-amber-500" />}
           />
 
           {/* 3. Name Search */}
