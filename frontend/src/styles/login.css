@@ -242,8 +242,8 @@
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.45; transform: scale(0.85); }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
 }
 
 .headline h1 {
@@ -670,7 +670,6 @@
 
 .submit-btn:active:not(:disabled) {
   background: #071324;
-  transform: scale(0.98);
 }
 
 .submit-btn:disabled {
@@ -700,7 +699,6 @@
 }
 
 .secondary-btn:active:not(:disabled) {
-  transform: scale(0.98);
 }
 
 /* Divider */
@@ -817,7 +815,7 @@
 }
 
 .help-trigger-btn:active {
-  transform: scale(0.99);
+  background: #E2E8F0;
 }
 
 .help-icon-box {
