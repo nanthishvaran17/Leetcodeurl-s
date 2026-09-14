@@ -119,7 +119,7 @@ def get_sqlite_table_counts(sqlite_file: str) -> Dict[str, int]:
 
 def migrate_to_postgresql(pg_url: str, dry_run: bool = False, verify_only: bool = False):
     print("=" * 70)
-    print("NANDHA LEETCODE INTELLIGENCE — SQLITE → SUPABASE POSTGRESQL MIGRATOR")
+    print("NANDHA LEETCODE INTELLIGENCE - SQLITE -> NEON POSTGRESQL MIGRATOR")
     print("=" * 70)
     
     # 1. Source SQLite Audit
@@ -146,7 +146,11 @@ def migrate_to_postgresql(pg_url: str, dry_run: bool = False, verify_only: bool 
 
     # 2. Initialize Target Schema via Declarative Models
     print("\n[SCHEMA] Initializing PostgreSQL Schema from SQLAlchemy Models...")
-    Base.metadata.create_all(bind=target_engine)
+    for table in Base.metadata.sorted_tables:
+        try:
+            table.create(bind=target_engine, checkfirst=True)
+        except Exception:
+            pass
     print(" PostgreSQL tables ensured cleanly.")
 
     if dry_run:

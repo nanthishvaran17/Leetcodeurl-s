@@ -79,12 +79,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     if (!data) return;
 
     if (data.type === 'sync_progress') {
+      const tot = data.total || summaryData?.total_students || students.length || 0;
       setSyncProgress({
-        total: data.total || 300,
+        total: tot,
         processed: data.processed,
-        successful: data.successful,
-        failed: data.failed,
-        pending_usernames: data.pending,
+        successful: data.successful ?? (data.processed - (data.failed || 0) - (data.pending || 0)),
+        failed: data.failed || 0,
+        pending_usernames: data.pending || 0,
         current_student: data.current_student,
         current_username: data.current_username,
         is_running: true
@@ -131,16 +132,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         return st;
       }));
     } else if (data.type === 'SYNC_COMPLETED') {
-      const tot = data.summary?.total_students || 300;
+      const tot = data.summary?.total_students || summaryData?.total_students || students.length || 0;
       const formattedTime = data.summary?.completed_at_ist || (data.summary?.completed_at ? new Date(data.summary.completed_at.endsWith('Z') ? data.summary.completed_at : data.summary.completed_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) + ' IST' : new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) + ' IST');
       setSyncProgress({
         total: tot,
         processed: tot,
-        successful: data.summary?.profile_verified ?? data.summary?.full_dataset_synced ?? tot,
+        successful: data.summary?.profile_verified ?? data.summary?.full_dataset_synced ?? (tot - (data.summary?.fetch_failed ?? 0) - (data.summary?.pending_username ?? 0)),
         failed: data.summary?.fetch_failed ?? 0,
         pending_usernames: data.summary?.pending_username ?? 0,
         is_running: false,
-        last_sync_time: formattedTime
+        last_sync_time: formattedTime,
+        triggered_by: data.summary?.triggered_by
       });
       setRefreshing(false);
       fetchFilteredStudents();
@@ -156,7 +158,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     const checkInitialSync = async () => {
       try {
         const statusData = await getSyncStatus();
-        const totalCount = statusData.total_students || statusData.total || 300;
+        const totalCount = statusData.total_students || statusData.total || summaryData?.total_students || students.length || 0;
         if (statusData.is_running) {
           setSyncProgress({
             total: totalCount,
@@ -167,17 +169,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             current_student: statusData.current_student,
             current_username: statusData.current_username,
             is_running: true,
-            last_sync_time: statusData.last_sync_timestamp
+            last_sync_time: statusData.last_sync_timestamp,
+            triggered_by: statusData.triggered_by || statusData.last_triggered_by
           });
           startPollingProgress();
         } else if (statusData.status === 'COMPLETED' || statusData.operation === 'COMPLETED') {
           const compProcessed = statusData.students_processed ?? statusData.completed ?? totalCount;
+          const successfulCount = statusData.successful ?? summaryData?.verified_profiles ?? Math.max(0, totalCount - (statusData.failed ?? summaryData?.failed_sync ?? 0) - (statusData.pending_usernames ?? summaryData?.pending_sync ?? 0));
           setSyncProgress({
             total: totalCount,
             processed: compProcessed,
-            successful: summaryData?.verified_profiles ?? statusData.successful ?? 244,
-            failed: summaryData?.failed_sync ?? statusData.failed ?? 37,
-            pending_usernames: summaryData?.pending_sync ?? statusData.pending_usernames ?? 19,
+            successful: successfulCount,
+            failed: statusData.failed ?? summaryData?.failed_sync ?? 0,
+            pending_usernames: statusData.pending_usernames ?? summaryData?.pending_sync ?? 0,
             current_student: undefined,
             current_username: undefined,
             is_running: false,
@@ -443,6 +447,40 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     }
 
     // 3. Default overall institutional multi-department subtitle banner
+    if (departments.length > 0) {
+      const formattedDepts = departments.map(d => formatDepartmentName(d));
+      const uniqueDepts = Array.from(new Set(formattedDepts));
+      
+      if (uniqueDepts.length === 1) {
+        return (
+          <>
+            across <span className="font-bold text-white">{uniqueDepts[0]}</span> department
+          </>
+        );
+      }
+      
+      if (uniqueDepts.length === 2) {
+        return (
+          <>
+            across <span className="font-bold text-white">{uniqueDepts[0]}</span> &amp; <span className="font-bold text-white">{uniqueDepts[1]}</span> departments
+          </>
+        );
+      }
+      
+      const lastDept = uniqueDepts.pop();
+      return (
+        <>
+          across {uniqueDepts.map((dept, index) => (
+            <React.Fragment key={index}>
+              <span className="font-bold text-white">{dept}</span>,{' '}
+            </React.Fragment>
+          ))}
+          &amp; <span className="font-bold text-white">{lastDept}</span> departments
+        </>
+      );
+    }
+
+    // Fallback if departments are not loaded yet
     return (
       <>
         across <span className="font-bold text-white">Cyber Security</span>, <span className="font-bold text-white">IoT</span>, &amp; <span className="font-bold text-white">Information Technology</span> departments
@@ -499,7 +537,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               ))}
             </div>
 
-            <p className="text-sm md:text-base text-slate-300 max-w-2xl leading-relaxed">
+            <p className="text-xs md:text-[13px] text-slate-300/90 max-w-3xl leading-relaxed">
               Institutional competitive programming intelligence {activeDepartmentDescription} with verified Sunday contest forensics and automated reporting.
             </p>
           </motion.div>
@@ -904,19 +942,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="flex flex-col">
                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Successful</span>
                 <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
-                  {syncProgress.successful > 0 ? syncProgress.successful : (summaryData?.verification?.verified ?? summaryData?.verified_profiles ?? 285)}
+                  {syncProgress.successful > 0
+                    ? syncProgress.successful
+                    : (summaryData?.verification?.verified ?? summaryData?.verified_profiles ?? Math.max(0, syncProgress.total - (syncProgress.failed || 0) - (syncProgress.pending_usernames || 0)))}
                 </span>
               </div>
               <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-3">
                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pending</span>
                 <span className="text-sm font-black text-amber-500">
-                  {syncProgress.pending_usernames !== undefined ? syncProgress.pending_usernames : (summaryData?.verification?.pending ?? summaryData?.pending_sync ?? 21)}
+                  {syncProgress.pending_usernames !== undefined
+                    ? syncProgress.pending_usernames
+                    : (summaryData?.verification?.pending ?? summaryData?.pending_sync ?? 0)}
                 </span>
               </div>
               <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-3">
                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Failed</span>
                 <span className="text-sm font-black text-rose-500">
-                  {syncProgress.failed}
+                  {syncProgress.failed ?? (summaryData?.failed_sync ?? 0)}
                 </span>
               </div>
             </div>

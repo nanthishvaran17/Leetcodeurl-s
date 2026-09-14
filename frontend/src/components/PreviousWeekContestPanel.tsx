@@ -128,6 +128,12 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedDeptFilter, setSelectedDeptFilter] = useState<string>('ALL');
   const [simulatingStudentId, setSimulatingStudentId] = useState<number | null>(null);
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(() => typeof window !== 'undefined' && window.innerWidth < 768 ? 10 : 25);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, selectedTypeFilter, selectedDeptFilter]);
 
   // Hook up live websocket updates in a batched way
   const { status: wsStatus, lastSyncAt, latestUpdate: wsLatestUpdate } = useContestWebSocket({
@@ -682,9 +688,144 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         </div>
       </div>
 
-      {/* Main Table */}
-      <div className="overflow-x-auto rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 shadow-sm">
-        <table className="w-full text-left border-collapse text-xs">
+      {/* Mobile-Friendly Cards View (block md:hidden, no horizontal table scroll) */}
+      <div className="block md:hidden space-y-2.5">
+        {filteredRecords.length === 0 ? (
+          <div className="p-8 text-center rounded-2xl bg-slate-50 dark:bg-navy-900/50 border border-slate-200 dark:border-navy-800 text-slate-400 text-xs">
+            No participation records found matching your active filters.
+          </div>
+        ) : (
+          filteredRecords.slice((page - 1) * pageSize, page * pageSize).map((r, idx) => {
+            const isAbsent = r.participation_type === 'NOT_PARTICIPATED';
+            const isMissingHandle = r.participation_type === 'MISSING_LEETCODE_USERNAME';
+            const isPending = r.participation_type === 'NOT_VERIFIED';
+            const isPublic = r.participation_type === 'PUBLIC';
+            const isVirtual = r.participation_type === 'VIRTUAL';
+            const cleanYear = r.year_level ? r.year_level.replace(/(?:\s*Year)+/gi, '').trim() + ' Year' : '';
+            const rankIndex = (page - 1) * pageSize + idx + 1;
+
+            return (
+              <div
+                key={`${r.student_id}-${idx}`}
+                onClick={() => onStudentClick && onStudentClick(r)}
+                className={`p-3.5 rounded-2xl border transition-all cursor-pointer bg-white dark:bg-navy-900 shadow-sm space-y-2.5 ${
+                  r.recently_updated
+                    ? 'border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/20'
+                    : 'border-slate-200 dark:border-navy-800 hover:border-brand-300'
+                }`}
+              >
+                {/* Header: Rank + Student Info + Status Pill */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-500 font-mono font-black text-[11px] flex items-center justify-center shrink-0">
+                      {rankIndex}
+                    </span>
+                    <div className="min-w-0">
+                      <h4 className="font-extrabold text-sm text-slate-900 dark:text-white truncate">
+                        {r.student_name}
+                      </h4>
+                      <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-mono mt-0.5 truncate">
+                        <span>{r.reg_no}</span>
+                        {cleanYear && <span>• {cleanYear}</span>}
+                        {r.department_name && (
+                          <span className="px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-bold text-[10px]">
+                            {r.department_name}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="shrink-0">
+                    {isPublic && (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                        LIVE
+                      </span>
+                    )}
+                    {isVirtual && (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30">
+                        VIRTUAL
+                      </span>
+                    )}
+                    {isAbsent && (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                        NOT PARTICIPATED
+                      </span>
+                    )}
+                    {(isMissingHandle || isPending) && (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                        MODE UNAVAILABLE
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Middle: Q1-Q4 Solve Question Pills */}
+                <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-navy-800">
+                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                    Solve Matrix:
+                  </span>
+                  <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold">
+                    {[
+                      { label: 'Q1', val: r.q1 },
+                      { label: 'Q2', val: r.q2 },
+                      { label: 'Q3', val: r.q3 },
+                      { label: 'Q4', val: r.q4 }
+                    ].map(q => (
+                      <span
+                        key={q.label}
+                        className={`px-2 py-0.5 rounded-lg flex items-center gap-1 ${
+                          q.val
+                            ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-black'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+                        }`}
+                      >
+                        <span className="text-[9px] text-slate-400">{q.label}:</span>
+                        <span>{q.val ? '1' : '0'}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Bottom Row: LeetCode Handle + Solved Count + Timing */}
+                <div className="flex items-center justify-between gap-2 pt-1 text-xs">
+                  <div className="min-w-0 truncate">
+                    {r.leetcode_username ? (
+                      <a
+                        href={`https://leetcode.com/u/${r.leetcode_username}/`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        className="font-mono text-indigo-600 dark:text-indigo-400 hover:underline font-bold text-xs truncate"
+                      >
+                        @{r.leetcode_username}
+                      </a>
+                    ) : (
+                      <span className="font-mono text-slate-400 italic text-[11px]">No Handle</span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0 font-mono">
+                    <span className="font-black text-slate-900 dark:text-white text-xs">
+                      {r.problems_solved} / 4
+                    </span>
+                    {(isPublic || isVirtual) && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold">
+                        <Clock className="w-3 h-3 text-indigo-500" />
+                        <span>{formatContestTime(r)}</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop Table View (hidden md:block) */}
+      <div className="hidden md:block overflow-x-auto rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-950 shadow-sm">
+        <table className="w-full text-left border-collapse text-xs min-w-[760px]">
           <thead>
             <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-navy-900/50 text-[11px] font-black uppercase text-slate-500 tracking-wider">
               <th className="py-3.5 px-4 text-center">#</th>
@@ -708,12 +849,14 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                 </td>
               </tr>
             ) : (
-              filteredRecords.map((r, idx) => {
+              filteredRecords.slice((page - 1) * pageSize, page * pageSize).map((r, idx) => {
                 const isAbsent = r.participation_type === 'NOT_PARTICIPATED';
                 const isMissingHandle = r.participation_type === 'MISSING_LEETCODE_USERNAME';
                 const isPending = r.participation_type === 'NOT_VERIFIED';
                 const isPublic = r.participation_type === 'PUBLIC';
                 const isVirtual = r.participation_type === 'VIRTUAL';
+                const cleanYear = r.year_level ? r.year_level.replace(/(?:\s*Year)+/gi, '').trim() + ' Year' : '';
+                const rankIndex = (page - 1) * pageSize + idx + 1;
 
                 return (
                   <tr 
@@ -723,7 +866,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                     }`}
                   >
                     <td className="py-3.5 px-4 text-center font-mono font-bold text-slate-400">
-                      {idx + 1}
+                      {rankIndex}
                     </td>
                     <td className="py-3.5 px-4">
                       <div 
@@ -734,7 +877,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                           {r.student_name}
                         </p>
                         <p className="text-[10px] font-mono text-slate-400">
-                          {r.reg_no} {r.year_level && `• ${r.year_level} Year`}
+                          {r.reg_no} {cleanYear && `• ${cleanYear}`}
                         </p>
                       </div>
                     </td>
@@ -832,6 +975,56 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Footer Controls */}
+      {filteredRecords.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-slate-500 font-medium">
+          <div>
+            Showing <strong className="text-slate-900 dark:text-white">{Math.min((page - 1) * pageSize + 1, filteredRecords.length)}</strong> to{' '}
+            <strong className="text-slate-900 dark:text-white">{Math.min(page * pageSize, filteredRecords.length)}</strong> of{' '}
+            <strong className="text-slate-900 dark:text-white">{filteredRecords.length}</strong> Students
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold">
+              <span className="text-[10px] text-slate-400 px-1 font-mono">Show:</span>
+              {[10, 25, 50, 100].map((sz) => (
+                <button
+                  key={sz}
+                  onClick={() => { setPageSize(sz); setPage(1); }}
+                  className={`px-2 py-0.5 rounded-lg transition-all cursor-pointer ${
+                    pageSize === sz
+                      ? 'bg-brand-600 text-white shadow-xs font-black'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  {sz}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 disabled:opacity-30 hover:bg-slate-50 dark:hover:bg-navy-800 transition font-bold cursor-pointer"
+              >
+                Previous
+              </button>
+              <span className="text-xs font-mono font-bold px-1">
+                {page} / {Math.ceil(filteredRecords.length / pageSize) || 1}
+              </span>
+              <button
+                disabled={page >= Math.ceil(filteredRecords.length / pageSize)}
+                onClick={() => setPage((p) => p + 1)}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 disabled:opacity-30 hover:bg-slate-50 dark:hover:bg-navy-800 transition font-bold cursor-pointer"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

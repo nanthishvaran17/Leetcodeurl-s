@@ -341,19 +341,19 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
                 href={leetCodeUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="px-3 py-2 min-h-[40px] rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-[11px] flex items-center space-x-1.5 shadow-md shadow-brand-600/30 transition-all hover:scale-105 shrink-0 whitespace-nowrap cursor-pointer"
+                className="w-10 h-10 sm:w-auto sm:min-h-[40px] sm:px-3 sm:py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-[11px] flex items-center justify-center space-x-1.5 shadow-md shadow-brand-600/30 transition-all hover:scale-105 shrink-0 whitespace-nowrap cursor-pointer"
               >
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                 <span className="hidden sm:inline">LeetCode</span>
               </a>
             ) : (
               <button
                 type="button"
                 onClick={() => notify.warning('No LeetCode Profile', 'LeetCode URL/username not found for this student.', { category: 'STUDENT PROFILE' })}
-                className="px-3 py-2 min-h-[40px] rounded-xl bg-slate-600/50 text-slate-400 font-bold text-[11px] flex items-center space-x-1.5 shrink-0 whitespace-nowrap cursor-pointer opacity-60"
+                className="w-10 h-10 sm:w-auto sm:min-h-[40px] sm:px-3 sm:py-2 rounded-xl bg-slate-600/50 text-slate-400 font-bold text-[11px] flex items-center justify-center space-x-1.5 shrink-0 whitespace-nowrap cursor-pointer opacity-60"
                 title="No LeetCode profile configured"
               >
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                 <span className="hidden sm:inline">LeetCode</span>
               </button>
             )}
@@ -362,9 +362,9 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             <button
               type="button"
               onClick={handleOpenEditModal}
-              className="px-3 py-2 min-h-[40px] rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-[11px] flex items-center space-x-1.5 shadow-md transition-all hover:scale-105 cursor-pointer shrink-0 whitespace-nowrap"
+              className="w-10 h-10 sm:w-auto sm:min-h-[40px] sm:px-3 sm:py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-[11px] flex items-center justify-center space-x-1.5 shadow-md shadow-amber-500/30 transition-all hover:scale-105 shrink-0 whitespace-nowrap cursor-pointer"
             >
-              <Edit3 className="w-3.5 h-3.5" />
+              <Edit3 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
               <span className="hidden sm:inline">Edit</span>
             </button>
 
@@ -373,7 +373,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               type="button"
               onClick={handleLiveFetch}
               disabled={isLiveFetching}
-              className={`px-3 py-2 min-h-[40px] rounded-xl font-bold text-[11px] flex items-center space-x-1.5 shadow-md transition-all hover:scale-105 disabled:opacity-50 cursor-pointer shrink-0 whitespace-nowrap ${
+              className={`w-10 h-10 sm:w-auto sm:min-h-[40px] sm:px-3 sm:py-2 rounded-xl font-bold text-[11px] flex items-center justify-center space-x-1.5 shadow-md transition-all hover:scale-105 shrink-0 whitespace-nowrap disabled:opacity-50 cursor-pointer ${
                 syncSuccess
                   ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/30'
                   : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/30'
@@ -381,12 +381,12 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             >
               {syncSuccess ? (
                 <>
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <CheckCircle2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                   <span className="hidden sm:inline">Synced!</span>
                 </>
               ) : (
                 <>
-                  <RefreshCw className={`w-3.5 h-3.5 ${isLiveFetching ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-4 h-4 sm:w-3.5 sm:h-3.5 ${isLiveFetching ? 'animate-spin' : ''}`} />
                   <span className="hidden sm:inline">{isLiveFetching ? 'Syncing...' : 'Sync'}</span>
                 </>
               )}
@@ -397,19 +397,19 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               type="button"
               onClick={handleGenerateCert}
               disabled={downloadingCert}
-              className="px-3 py-2 min-h-[40px] rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] flex items-center space-x-1.5 shadow-md shadow-amber-600/30 transition-all hover:scale-105 disabled:opacity-50 cursor-pointer shrink-0 whitespace-nowrap"
+              className="w-10 h-10 sm:w-auto sm:min-h-[40px] sm:px-3 sm:py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] flex items-center justify-center space-x-1.5 shadow-md shadow-amber-600/30 transition-all hover:scale-105 disabled:opacity-50 shrink-0 whitespace-nowrap cursor-pointer"
             >
-              <Award className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{downloadingCert ? 'Generating...' : 'Certificate'}</span>
+              <Award className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+              <span className="hidden sm:inline">{downloadingCert ? '...' : 'Certificate'}</span>
             </button>
 
             {/* 5. AUDIT */}
             <button
               type="button"
               onClick={() => setShowAuditModal(true)}
-              className="px-3 py-2 min-h-[40px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] flex items-center space-x-1.5 shadow-md shadow-emerald-600/30 transition-all hover:scale-105 cursor-pointer shrink-0 whitespace-nowrap"
+              className="w-10 h-10 sm:w-auto sm:min-h-[40px] sm:px-3 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] flex items-center justify-center space-x-1.5 shadow-md shadow-emerald-600/30 transition-all hover:scale-105 shrink-0 whitespace-nowrap cursor-pointer"
             >
-              <FileText className="w-3.5 h-3.5" />
+              <FileText className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
               <span className="hidden sm:inline">Audit</span>
             </button>
 
@@ -418,21 +418,21 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               type="button"
               onClick={handleDelete}
               disabled={isDeleting}
-              className="px-3 py-2 min-h-[40px] rounded-xl bg-rose-600/90 hover:bg-rose-600 text-white font-bold text-[11px] flex items-center space-x-1.5 shadow-md shadow-rose-600/30 transition-all hover:scale-105 disabled:opacity-50 cursor-pointer shrink-0 whitespace-nowrap"
+              className="w-10 h-10 sm:w-auto sm:min-h-[40px] sm:px-3 sm:py-2 rounded-xl bg-rose-600/90 hover:bg-rose-600 text-white font-bold text-[11px] flex items-center justify-center space-x-1.5 shadow-md shadow-rose-600/30 transition-all hover:scale-105 shrink-0 whitespace-nowrap disabled:opacity-50 cursor-pointer"
               title="Deactivate Student"
             >
-              <Trash2 className="w-3.5 h-3.5" />
+              <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
               <span className="hidden sm:inline">{isDeleting ? '...' : 'Deactivate'}</span>
             </button>
 
-          {/* CLOSE BUTTON (restored from reference commit) */}
+          {/* CLOSE BUTTON */}
           <button
             type="button"
             onClick={() => onBack()}
-            className="px-3 py-2 min-h-[40px] rounded-xl bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white transition-all font-black text-[11px] flex items-center space-x-1 cursor-pointer shrink-0 whitespace-nowrap"
+            className="w-10 h-10 sm:w-auto sm:min-h-[40px] sm:px-3 sm:py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white transition-all font-black text-[11px] flex items-center justify-center space-x-1 shrink-0 whitespace-nowrap cursor-pointer"
             title="Close Modal"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
             <span className="hidden sm:inline">Close</span>
           </button>
         </div>

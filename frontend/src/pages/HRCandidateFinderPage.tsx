@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import api from "../services/api";
 import { useKeyboardContext } from "../context/KeyboardContext";
+import { StudentIntelligenceProfileModal } from "../components/StudentIntelligenceProfileModal";
 
 export interface Candidate {
   id: number;
@@ -258,12 +259,12 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
       const rect = ref.current.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
       const viewportWidth = window.innerWidth;
-      
+
       const spaceBelow = viewportHeight - rect.bottom - 80; // Safe area for fixed footer
       const spaceAbove = rect.top - 60; // Safe area for headers
-      
+
       const estimatedHeight = Math.min(options.length * 42 + 16, 280);
-      
+
       let top = rect.bottom + 4;
       let maxHeight = Math.max(100, spaceBelow);
       let transformOrigin = 'top';
@@ -358,11 +359,10 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
               onChange(opt.value);
               setOpen(false);
             }}
-            className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2.5 cursor-pointer text-left ${
-              isSelected
+            className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2.5 cursor-pointer text-left ${isSelected
                 ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
                 : "text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800/80"
-            }`}
+              }`}
           >
             <div className="flex items-center gap-2.5 min-w-0 flex-1">
               {opt.icon && (
@@ -371,11 +371,10 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
                 </span>
               )}
               {opt.badge && (
-                <span className={`px-2 py-0.5 rounded-md font-black text-[10px] uppercase flex-shrink-0 ${
-                  isSelected
+                <span className={`px-2 py-0.5 rounded-md font-black text-[10px] uppercase flex-shrink-0 ${isSelected
                     ? "bg-white/20 text-white border border-white/20"
                     : (opt.badgeColor || "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300")
-                }`}>
+                  }`}>
                   {opt.badge}
                 </span>
               )}
@@ -399,9 +398,8 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
         <div className="flex items-center gap-2 min-w-0 overflow-hidden">
           {icon && <span className="text-blue-500 flex-shrink-0">{icon}</span>}
           {selectedOpt?.badge && (
-            <span className={`px-2 py-0.5 rounded-md font-black text-[10px] uppercase flex-shrink-0 ${
-              selectedOpt.badgeColor || "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
-            }`}>
+            <span className={`px-2 py-0.5 rounded-md font-black text-[10px] uppercase flex-shrink-0 ${selectedOpt.badgeColor || "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
+              }`}>
               {selectedOpt.badge}
             </span>
           )}
@@ -520,12 +518,12 @@ export const HRCandidateFinderPage: React.FC = () => {
         placement_readiness: filters.placement_readiness,
       }
     })
-    .then(r => setIntelData(r.data))
-    .catch(err => {
-      console.error("Error loading student intelligence:", err);
-      setIntelData(null);
-    })
-    .finally(() => setIntelLoading(false));
+      .then(r => setIntelData(r.data))
+      .catch(err => {
+        console.error("Error loading student intelligence:", err);
+        setIntelData(null);
+      })
+      .finally(() => setIntelLoading(false));
   }, [selectedCandidate, filters]);
 
   // Load departments
@@ -1041,25 +1039,25 @@ export const HRCandidateFinderPage: React.FC = () => {
     const selectionReasons = (intel?.selection_reasons && intel.selection_reasons.length > 0)
       ? intel.selection_reasons
       : [
-          `✓ High total solved count (${totSolved} problems solved)`,
-          `✓ Primary language proficiency in ${c.primary_language}`,
-          `✓ Strong medium problem solving capability (${medSolved} medium solved)`,
-          `✓ Proven hard problem solving capability (${hrdSolved} hard solved)`
-        ];
+        `✓ High total solved count (${totSolved} problems solved)`,
+        `✓ Primary language proficiency in ${c.primary_language}`,
+        `✓ Strong medium problem solving capability (${medSolved} medium solved)`,
+        `✓ Proven hard problem solving capability (${hrdSolved} hard solved)`
+      ];
 
     const strengthsList = (intel?.strengths && intel.strengths.length > 0)
       ? intel.strengths
       : [
-          `✓ Strong problem-solving volume (${totSolved} total solved)`,
-          `✓ Proven hard problem solving capability (${hrdSolved} hard solved)`,
-          `✓ High contest rating (${contestRating})`
-        ];
+        `✓ Strong problem-solving volume (${totSolved} total solved)`,
+        `✓ Proven hard problem solving capability (${hrdSolved} hard solved)`,
+        `✓ High contest rating (${contestRating})`
+      ];
 
     const watchList = (intel?.areas_to_watch && intel.areas_to_watch.length > 0)
       ? intel.areas_to_watch
       : [
-          contestsAttended === 0 ? "⚠️ Contest participation could improve" : "✓ Consistent activity maintained"
-        ];
+        contestsAttended === 0 ? "Contest participation could improve" : "Consistent activity maintained"
+      ];
 
     const hrDecision = intel?.hr_decision ?? {
       candidate_strength: perfScore >= 85 ? "★★★★★" : "★★★★☆",
@@ -1729,7 +1727,7 @@ export const HRCandidateFinderPage: React.FC = () => {
           >
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-blue-500" />
-              <span>🔎 Filters</span>
+              <span>Filters</span>
               {activeChips.length > 0 ? (
                 <span className="px-2.5 py-0.5 rounded-full bg-blue-600 text-white font-black text-[10px]">
                   [{activeChips.length} Applied]
@@ -1779,7 +1777,7 @@ export const HRCandidateFinderPage: React.FC = () => {
 
           {/* Drawer Panel */}
           <div className="relative z-10 w-full max-h-[88vh] bg-white dark:bg-navy-900 rounded-t-3xl shadow-2xl border-t border-slate-200 dark:border-navy-700 flex flex-col min-h-0 overflow-hidden">
-            
+
             {/* Header */}
             <div className="pt-4 pb-3 px-5 flex items-center justify-between border-b border-slate-100 dark:border-navy-800 flex-shrink-0">
               <div className="flex items-center gap-2.5">
@@ -2120,7 +2118,7 @@ export const HRCandidateFinderPage: React.FC = () => {
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
                     {displayCandidates.map((c) => (
-                      <tr key={c.id} className="hover:bg-slate-50/80 dark:hover:bg-navy-800/50 transition-colors">
+                      <tr key={c.id} onClick={() => setSelectedCandidate(c)} className="hover:bg-slate-50/80 dark:hover:bg-navy-800/50 transition-colors cursor-pointer">
                         <td className="py-3 px-4 text-left font-bold text-slate-900 dark:text-white w-[20%]">
                           <div className="flex items-center gap-2.5">
                             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center font-black text-xs shadow-xs flex-shrink-0">
@@ -2192,7 +2190,8 @@ export const HRCandidateFinderPage: React.FC = () => {
                 {displayCandidates.map((c) => (
                   <div
                     key={c.id}
-                    className="bg-white dark:bg-navy-950 rounded-2xl border border-slate-200/90 dark:border-navy-800 p-4 shadow-sm space-y-3 relative transition-all"
+                    onClick={() => setSelectedCandidate(c)}
+                    className="bg-white dark:bg-navy-950 rounded-2xl border border-slate-200/90 dark:border-navy-800 p-4 shadow-sm space-y-3 relative transition-all cursor-pointer hover:border-brand-500/50"
                   >
                     {/* Header: Avatar + Student Name + Username & Action Buttons */}
                     <div className="flex items-start justify-between gap-3">
@@ -2300,673 +2299,14 @@ export const HRCandidateFinderPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. STUDENT INTELLIGENCE DEEP PROFILE DRAWER */}
-      {selectedCandidate && typeof document !== "undefined" && createPortal(
-        <div className="fixed inset-0 z-[100000] bg-slate-900/75 backdrop-blur-sm flex justify-end animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) setSelectedCandidate(null); }}>
-          <div className="w-full max-w-4xl bg-white dark:bg-navy-900 h-full overflow-y-auto shadow-2xl p-4 sm:p-6 pt-6 sm:pt-7 flex flex-col justify-between border-l border-slate-200 dark:border-navy-700" onClick={(e) => e.stopPropagation()}>
-            <div className="space-y-5">
-              {/* Profile Header */}
-              <div className="bg-slate-900 text-white p-5 rounded-2xl space-y-3 relative shadow-lg">
-                <button
-                  onClick={() => setSelectedCandidate(null)}
-                  className="absolute top-4 right-4 p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center font-black text-2xl shadow-lg border-2 border-white/20">
-                    {selectedCandidate.name.charAt(0)}
-                  </div>
-                  <div>
-                    <h3 className="font-black text-xl text-white tracking-wide">{selectedCandidate.name}</h3>
-                    <div className="flex items-center gap-2 text-xs text-slate-300 font-semibold mt-0.5">
-                      <span>{intelData?.student?.reg_no || selectedCandidate.reg_no}</span>
-                      <span>•</span>
-                      <span>{intelData?.student?.dept_code || selectedCandidate.dept_code} ({intelData?.student?.batch || selectedCandidate.batch})</span>
-                      {(() => {
-                        const rawSec = intelData?.student?.section || selectedCandidate?.section;
-                        const secStr = typeof rawSec === "object" ? (rawSec?.name || "A") : String(rawSec || "A");
-                        const cleanSec = secStr.trim().toUpperCase() === "NEC" ? "A" : secStr.trim();
-                        return (
-                          <>
-                            {cleanSec ? <span>• Sec {cleanSec}</span> : null}
-                            {selectedCandidate.accommodation ? <span className="px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-300 font-bold text-[10px]">Acc: {selectedCandidate.accommodation}</span> : null}
-                            {selectedCandidate.twelfth_cutoff != null ? <span className="px-1.5 py-0.5 rounded bg-emerald-900/60 text-emerald-300 font-bold text-[10px]">12th Cutoff: {selectedCandidate.twelfth_cutoff}</span> : null}
-                          </>
-                        );
-                      })()}
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-slate-400 mt-1">
-                      <span>LeetCode: <strong className="text-orange-400 font-mono">@{intelData?.student?.username || selectedCandidate.username}</strong></span>
-                      <span className="flex items-center gap-1 font-bold text-emerald-400">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> {intelData?.student?.data_freshness || "Data Fresh"}
-                      </span>
-                      <span>Last synced: {intelData?.student?.last_synced || "Recent"}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Status & Manual Refresh Button */}
-                <div className="flex items-center justify-between border-t border-slate-800 pt-3 text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-0.5 rounded-full bg-slate-800 font-mono text-[11px] text-blue-400 border border-slate-700">
-                      Sync Status: {intelData?.student?.fetch_status || "VERIFIED"}
-                    </span>
-                  </div>
-                  <button
-                    onClick={handleRefreshStudent}
-                    disabled={refreshing}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold text-xs shadow transition-all"
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
-                    {refreshing ? "Fetching Latest LeetCode Data..." : "Refresh Student Data"}
-                  </button>
-                </div>
-              </div>
-
-              {/* Navigation Tabs */}
-              <div className="flex items-center gap-1 border-b border-slate-200 dark:border-navy-700 overflow-x-auto pb-1 text-xs font-bold scrollbar-none">
-                {[
-                  { id: "overview", label: "Overview", icon: Brain },
-                  { id: "coding", label: "Coding", icon: Code2 },
-                  { id: "languages", label: "Languages", icon: Sparkles },
-                  { id: "activity", label: "Activity", icon: Zap },
-                  { id: "contests", label: "Contests", icon: Trophy },
-                  { id: "problems", label: "Problems", icon: FileText },
-                  { id: "badges", label: "Badges & Skills", icon: Award },
-                  { id: "quality", label: "Data Quality", icon: Shield },
-                ].map((tab) => {
-                  const IconComp = tab.icon;
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl whitespace-nowrap transition-all text-xs ${
-                        isActive
-                          ? "bg-blue-600 text-white shadow-md font-black"
-                          : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-800"
-                      }`}
-                    >
-                      <IconComp className="w-3.5 h-3.5" />
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {intelLoading ? (
-                <div className="py-16 flex flex-col items-center gap-3">
-                  <RefreshCw className="w-8 h-8 text-blue-600 animate-spin" />
-                  <p className="text-xs font-bold text-slate-500">Loading deep candidate intelligence...</p>
-                </div>
-              ) : (
-                <>
-                  {/* OVERVIEW TAB */}
-                  {activeTab === "overview" && (
-                    <div className="space-y-4">
-
-                      {/* Summary Panels */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Coding Summary */}
-                        <div className="bg-slate-50 dark:bg-navy-800 p-4 rounded-2xl border border-slate-200/80 dark:border-navy-700 space-y-3">
-                          <p className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center justify-between">
-                            <span className="flex items-center gap-1.5"><Code2 className="w-4 h-4 text-blue-500" /> Coding Summary</span>
-                            <span className="text-blue-600 dark:text-blue-400 font-bold">{intelData?.coding?.total_solved ?? selectedCandidate.total_solved} solved</span>
-                          </p>
-                          <div className="space-y-2 text-xs">
-                            <div className="flex justify-between"><span className="text-slate-500">Easy Solved:</span><span className="font-bold text-emerald-600">{intelData?.coding?.easy_solved ?? selectedCandidate.easy_solved}</span></div>
-                            <div className="flex justify-between"><span className="text-slate-500">Medium Solved:</span><span className="font-bold text-amber-600">{intelData?.coding?.medium_solved ?? selectedCandidate.medium_solved}</span></div>
-                            <div className="flex justify-between"><span className="text-slate-500">Hard Solved:</span><span className="font-bold text-rose-600">{intelData?.coding?.hard_solved ?? selectedCandidate.hard_solved}</span></div>
-                            <div className="flex justify-between">
-                              <span className="text-slate-500">Acceptance Rate:</span>
-                              <span className="font-bold text-slate-700 dark:text-slate-300">
-                                {(() => {
-                                  const raw = String(intelData?.coding?.acceptance_rate ?? selectedCandidate.acceptance_rate ?? "N/A").replace(/%/g, "").trim();
-                                  return raw === "N/A" || !raw ? "N/A" : `${raw}%`;
-                                })()}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Contest Summary */}
-                        <div className="bg-slate-50 dark:bg-navy-800 p-4 rounded-2xl border border-slate-200/80 dark:border-navy-700 space-y-3">
-                          <p className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center justify-between">
-                            <span className="flex items-center gap-1.5"><Trophy className="w-4 h-4 text-amber-500" /> Contest Summary</span>
-                            <span className="text-purple-600 dark:text-purple-400 font-bold">{intelData?.contests?.contest_rating ?? "N/A"}</span>
-                          </p>
-                          <div className="text-xs space-y-1.5 pt-1">
-                            <div className="flex justify-between"><span className="text-slate-500">Global Rank:</span><span className="font-bold text-slate-700 dark:text-slate-300">{intelData?.contests?.global_rank ?? "N/A"}</span></div>
-                            <div className="flex justify-between">
-                              <span className="text-slate-500">Contests Attended:</span>
-                              <span className="font-bold text-slate-700 dark:text-slate-300">
-                                {(() => {
-                                  const raw = Number(intelData?.contests?.contests_attended) || 0;
-                                  const hLen = intelData?.contest_history?.length || 0;
-                                  const finalVal = Math.max(raw, hLen);
-                                  return finalVal > 0 ? finalVal : (intelData?.contests?.contests_attended ?? "N/A");
-                                })()}
-                              </span>
-                            </div>
-                            <div className="flex justify-between"><span className="text-slate-500">Top %:</span><span className="font-bold text-slate-700 dark:text-slate-300">{intelData?.contests?.top_percentage ?? "N/A"}</span></div>
-                            <div className="flex justify-between"><span className="text-slate-500">Best Rank:</span><span className="font-bold text-emerald-600">{intelData?.contests?.best_rank ?? "N/A"}</span></div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Primary Language Banner */}
-                      <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 p-3.5 rounded-2xl flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-xs">
-                          <Sparkles className="w-4 h-4 text-amber-600" />
-                          <span className="font-bold text-amber-900 dark:text-amber-300">
-                            Primary: {intelData?.primary_language ?? selectedCandidate.primary_language}
-                          </span>
-                        </div>
-                        {intelData?.languages && intelData.languages.length > 0 ? (
-                          <div className="grid grid-cols-2 gap-2">
-                            {intelData.languages.slice(0, 4).map((l: any, idx: number) => (
-                              <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-navy-900 border border-slate-200/60 dark:border-navy-700">
-                                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{l.language}</span>
-                                <span className="text-xs font-extrabold font-mono text-blue-600 dark:text-blue-400">{l.solved} solved</span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-xs text-slate-400 italic">No language data recorded.</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* CODING TAB */}
-                  {activeTab === "coding" && (() => {
-                    const total = (intelData?.coding?.total_solved ?? selectedCandidate?.total_solved) || 0;
-                    const easy = (intelData?.coding?.easy_solved ?? selectedCandidate?.easy_solved) || 0;
-                    const medium = (intelData?.coding?.medium_solved ?? selectedCandidate?.medium_solved) || 0;
-                    const hard = (intelData?.coding?.hard_solved ?? selectedCandidate?.hard_solved) || 0;
-
-                    const easyPct = total > 0 ? (intelData?.coding?.easy_pct ?? Math.round((easy / total) * 1000) / 10) : 0;
-                    const mediumPct = total > 0 ? (intelData?.coding?.medium_pct ?? Math.round((medium / total) * 1000) / 10) : 0;
-                    const hardPct = total > 0 ? (intelData?.coding?.hard_pct ?? Math.round((hard / total) * 1000) / 10) : 0;
-
-                    return (
-                      <div className="space-y-5">
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                          <div className="bg-slate-50 dark:bg-navy-800 p-3.5 rounded-2xl border border-slate-200 dark:border-navy-700 text-center">
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Solved</p>
-                            <p className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">{total}</p>
-                          </div>
-                          <div className="bg-emerald-50 dark:bg-emerald-950/30 p-3.5 rounded-2xl border border-emerald-200 dark:border-emerald-900/50 text-center">
-                            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Easy Solved</p>
-                            <p className="text-2xl font-black text-emerald-700 dark:text-emerald-300 mt-0.5">{easy}</p>
-                            <p className="text-[10px] font-bold text-emerald-600">{easyPct}% of total</p>
-                          </div>
-                          <div className="bg-amber-50 dark:bg-amber-950/30 p-3.5 rounded-2xl border border-amber-200 dark:border-amber-900/50 text-center">
-                            <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Medium Solved</p>
-                            <p className="text-2xl font-black text-amber-700 dark:text-amber-300 mt-0.5">{medium}</p>
-                            <p className="text-[10px] font-bold text-amber-600">{mediumPct}% of total</p>
-                          </div>
-                          <div className="bg-rose-50 dark:bg-rose-950/30 p-3.5 rounded-2xl border border-rose-200 dark:border-rose-900/50 text-center">
-                            <p className="text-[10px] font-bold text-rose-600 uppercase tracking-wider">Hard Solved</p>
-                            <p className="text-2xl font-black text-rose-700 dark:text-rose-300 mt-0.5">{hard}</p>
-                            <p className="text-[10px] font-bold text-rose-600">{hardPct}% of total</p>
-                          </div>
-                        </div>
-
-                        {/* Difficulty Visual Breakdown Bar */}
-                        <div className="bg-slate-50 dark:bg-navy-800 p-4 rounded-2xl space-y-3 border border-slate-200/80 dark:border-navy-700">
-                          <p className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">Difficulty Intelligence</p>
-                          <div className="w-full bg-slate-200 dark:bg-navy-900 h-4 rounded-full overflow-hidden flex">
-                            <div className="bg-emerald-500 h-full" style={{ width: `${easyPct}%` }} title={`Easy: ${easy}`} />
-                            <div className="bg-amber-500 h-full" style={{ width: `${mediumPct}%` }} title={`Medium: ${medium}`} />
-                            <div className="bg-rose-500 h-full" style={{ width: `${hardPct}%` }} title={`Hard: ${hard}`} />
-                          </div>
-                          <div className="flex items-center justify-between text-xs font-bold pt-1">
-                            <span className="flex items-center gap-1 text-emerald-600"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> Easy: {easy} ({easyPct}%)</span>
-                            <span className="flex items-center gap-1 text-amber-600"><span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> Medium: {medium} ({mediumPct}%)</span>
-                            <span className="flex items-center gap-1 text-rose-600"><span className="w-2.5 h-2.5 rounded-full bg-rose-500" /> Hard: {hard} ({hardPct}%)</span>
-                          </div>
-                        </div>
-
-                      {/* Submissions & Streaks Stats */}
-                      <div className="bg-slate-50 dark:bg-navy-800 p-4 rounded-2xl space-y-2 border border-slate-200/80 dark:border-navy-700 text-xs">
-                        <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-navy-700">
-                          <span className="text-slate-500">Acceptance Rate:</span>
-                          <span className="font-bold">
-                            {(() => {
-                              const raw = String(intelData?.coding?.acceptance_rate ?? selectedCandidate?.acceptance_rate ?? "N/A").replace(/%/g, "").trim();
-                              return raw === "N/A" || !raw ? "N/A" : `${raw}%`;
-                            })()}
-                          </span>
-                        </div>
-                        <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-navy-700"><span className="text-slate-500">Total Submissions:</span><span className="font-bold">{intelData?.coding?.total_submissions ?? "N/A"}</span></div>
-                        <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-navy-700"><span className="text-slate-500">Accepted Submissions:</span><span className="font-bold">{intelData?.coding?.accepted_submissions ?? "N/A"}</span></div>
-                        <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-navy-700"><span className="text-slate-500">Active Days:</span><span className="font-bold">{intelData?.coding?.active_days ?? "N/A"}</span></div>
-                        <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-navy-700"><span className="text-slate-500">Current Streak:</span><span className="font-bold text-emerald-600">{intelData?.coding?.current_streak ?? "N/A"} days</span></div>
-                        <div className="flex justify-between py-1"><span className="text-slate-500">Longest Streak:</span><span className="font-bold text-blue-600">{intelData?.coding?.longest_streak ?? "N/A"} days</span></div>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                  {/* LANGUAGES TAB */}
-                  {activeTab === "languages" && (
-                    <div className="space-y-5">
-                      <div className="flex items-center justify-between bg-amber-50 dark:bg-amber-950/30 p-4 rounded-2xl border border-amber-200 dark:border-amber-900/50">
-                        <div>
-                          <p className="text-[10px] font-bold text-amber-600 uppercase">Primary Programming Language</p>
-                          <p className="text-xl font-black text-amber-900 dark:text-amber-200">{intelData?.primary_language ?? selectedCandidate.primary_language}</p>
-                        </div>
-                        <span className="px-3 py-1 rounded-full bg-amber-500 text-white font-black text-xs">Highest Solved</span>
-                      </div>
-
-                      <div className="bg-slate-50 dark:bg-navy-800 p-4 rounded-2xl space-y-4 border border-slate-200/80 dark:border-navy-700">
-                        <p className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">Normalized Language Breakdown</p>
-                        {intelData?.languages && intelData.languages.length > 0 ? (
-                          <div className="space-y-3">
-                            {intelData.languages.map((l: any, idx: number) => {
-                              const maxSolved = intelData.languages[0].solved || 1;
-                              const pct = Math.round((l.solved / maxSolved) * 100);
-                              return (
-                                <div key={idx} className="space-y-1 bg-white dark:bg-navy-900 p-3 rounded-xl border border-slate-200/60 dark:border-navy-700">
-                                  <div className="flex items-center justify-between text-xs font-bold">
-                                    <span className="text-slate-900 dark:text-white flex items-center gap-2">
-                                      <span className="w-2 h-2 rounded-full bg-blue-500" />
-                                      {l.language}
-                                    </span>
-                                    <span className="text-blue-600 dark:text-blue-400 font-mono">{l.solved} solved</span>
-                                  </div>
-                                  <div className="w-full bg-slate-100 dark:bg-navy-800 h-2.5 rounded-full overflow-hidden">
-                                    <div
-                                      className={`h-full rounded-full ${idx === 0 ? "bg-amber-500" : "bg-blue-500"}`}
-                                      style={{ width: `${pct}%` }}
-                                    />
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <p className="text-xs text-slate-400 italic">No normalized language statistics available.</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ACTIVITY TAB */}
-                  {activeTab === "activity" && (
-                    <div className="space-y-5">
-                      <div className="bg-blue-50/70 dark:bg-navy-800/80 p-3.5 rounded-2xl border border-blue-200/80 dark:border-navy-700 flex flex-wrap items-center justify-between gap-2 text-xs">
-                        <div className="flex items-center gap-2">
-                          <Brain className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                          <span className="font-bold text-slate-800 dark:text-slate-200">
-                            Activity Breakdown & Submission Volume
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-1 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 font-extrabold text-[11px] border border-blue-200 dark:border-blue-800">
-                            Total Unique Problems Solved: {intelData?.coding?.total_solved ?? selectedCandidate.total_solved}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                        <div className="bg-slate-50 dark:bg-navy-800 p-3 rounded-xl border border-slate-200 dark:border-navy-700">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">7-Day Submissions</p>
-                          <p className="text-lg font-black text-slate-900 dark:text-white mt-0.5">{intelData?.activity?.sub_7d ?? "N/A"}</p>
-                        </div>
-                        <div className="bg-slate-50 dark:bg-navy-800 p-3 rounded-xl border border-slate-200 dark:border-navy-700">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">30-Day Submissions</p>
-                          <p className="text-lg font-black text-slate-900 dark:text-white mt-0.5">{intelData?.activity?.sub_30d ?? "N/A"}</p>
-                        </div>
-                        <div className="bg-slate-50 dark:bg-navy-800 p-3 rounded-xl border border-slate-200 dark:border-navy-700">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">90-Day Submissions</p>
-                          <p className="text-lg font-black text-slate-900 dark:text-white mt-0.5">{intelData?.activity?.sub_90d ?? "N/A"}</p>
-                        </div>
-                        <div className="bg-slate-50 dark:bg-navy-800 p-3 rounded-xl border border-slate-200 dark:border-navy-700">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">365-Day Submissions</p>
-                          <p className="text-lg font-black text-slate-900 dark:text-white mt-0.5">{intelData?.activity?.sub_365d ?? "N/A"}</p>
-                        </div>
-                      </div>
-
-                      {/* Heatmap Contribution Calendar */}
-                      <div className="bg-slate-50 dark:bg-navy-800 p-4 rounded-2xl space-y-3 border border-slate-200/80 dark:border-navy-700">
-                        <p className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                          <Zap className="w-4 h-4 text-amber-500" /> Submission Heatmap (Last 365 Days)
-                        </p>
-                        {intelData?.activity?.heatmap && intelData.activity.heatmap.length > 0 ? (
-                          <div className="grid grid-cols-12 gap-1.5 pt-2">
-                            {intelData.activity.heatmap.slice(-60).map((h: any, idx: number) => {
-                              const cnt = h.count || 0;
-                              const bgCls = cnt === 0 ? "bg-slate-200 dark:bg-navy-900" :
-                                            cnt < 3 ? "bg-emerald-300 dark:bg-emerald-800" :
-                                            cnt < 6 ? "bg-emerald-500 dark:bg-emerald-600" : "bg-emerald-600 dark:bg-emerald-500";
-                              return (
-                                <div key={idx} className={`h-6 rounded-md ${bgCls} flex items-center justify-center text-[9px] font-bold text-white`} title={`${h.date}: ${cnt} submissions`}>
-                                  {cnt > 0 ? cnt : ""}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <p className="text-xs text-slate-400 italic">No daily submission activity heatmap available.</p>
-                        )}
-                      </div>
-
-                      <div className="bg-slate-50 dark:bg-navy-800 p-4 rounded-2xl space-y-2 border border-slate-200/80 dark:border-navy-700 text-xs">
-                        <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-navy-700"><span className="text-slate-500">Active Days:</span><span className="font-bold">{intelData?.activity?.active_days ?? "N/A"}</span></div>
-                        <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-navy-700"><span className="text-slate-500">Current Streak:</span><span className="font-bold text-emerald-600">{intelData?.activity?.current_streak ?? "N/A"} days</span></div>
-                        <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-navy-700"><span className="text-slate-500">Longest Streak:</span><span className="font-bold text-blue-600">{intelData?.activity?.longest_streak ?? "N/A"} days</span></div>
-                        <div className="flex justify-between py-1"><span className="text-slate-500">Most Active Day:</span><span className="font-bold text-purple-600">{intelData?.activity?.most_active_day ?? "N/A"}</span></div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* CONTESTS TAB */}
-                  {activeTab === "contests" && (
-                    <div className="space-y-5">
-                      <div className="grid grid-cols-4 gap-3 text-center">
-                        <div className="bg-purple-50 dark:bg-purple-950/30 p-3.5 rounded-2xl border border-purple-200 dark:border-purple-900/50">
-                          <p className="text-[10px] font-bold text-purple-600 uppercase">Rating</p>
-                          <p className="text-xl font-black text-purple-700 dark:text-purple-300 mt-0.5">{intelData?.contests?.contest_rating ?? "N/A"}</p>
-                        </div>
-                        <div className="bg-slate-50 dark:bg-navy-800 p-3.5 rounded-2xl border border-slate-200 dark:border-navy-700">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase">Global Rank</p>
-                          <p className="text-base font-black text-slate-900 dark:text-white mt-1">{intelData?.contests?.global_rank ?? "N/A"}</p>
-                        </div>
-                        <div className="bg-slate-50 dark:bg-navy-800 p-3.5 rounded-2xl border border-slate-200 dark:border-navy-700">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase">Attended</p>
-                          <p className="text-xl font-black text-slate-900 dark:text-white mt-0.5">
-                            {(() => {
-                              const rawAttended = Number(intelData?.contests?.contests_attended) || 0;
-                              const histLen = intelData?.contest_history?.length || 0;
-                              const finalAttended = Math.max(rawAttended, histLen);
-                              return finalAttended > 0 ? finalAttended : (intelData?.contests?.contests_attended ?? "N/A");
-                            })()}
-                          </p>
-                        </div>
-                        <div className="bg-slate-50 dark:bg-navy-800 p-3.5 rounded-2xl border border-slate-200 dark:border-navy-700">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase">Top %</p>
-                          <p className="text-xl font-black text-slate-900 dark:text-white mt-0.5">{intelData?.contests?.top_percentage ?? "N/A"}</p>
-                        </div>
-                      </div>
-
-                      {/* Contest History Table */}
-                      <div className="bg-slate-50 dark:bg-navy-800 p-4 rounded-2xl space-y-3 border border-slate-200/80 dark:border-navy-700">
-                        <p className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center justify-between">
-                          <span>Contest History</span>
-                          <span className="text-[11px] font-normal text-slate-400">Best Rank: {intelData?.contests?.best_rank ?? "N/A"}</span>
-                        </p>
-
-                        {intelData?.contest_history && intelData.contest_history.length > 0 ? (
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-left text-xs">
-                              <thead>
-                                <tr className="border-b border-slate-200 dark:border-navy-700 text-slate-500 font-bold">
-                                  <th className="py-2 px-2">Contest</th>
-                                  <th className="py-2 px-2">Date</th>
-                                  <th className="py-2 px-2 text-center">Rank</th>
-                                  <th className="py-2 px-2 text-center">Solved</th>
-                                  <th className="py-2 px-2 text-right">Rating</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-slate-100 dark:divide-navy-700">
-                                {[...intelData.contest_history].sort((a: any, b: any) => {
-                                  const dateA = a.date && a.date !== 'N/A' ? new Date(a.date).getTime() : 0;
-                                  const dateB = b.date && b.date !== 'N/A' ? new Date(b.date).getTime() : 0;
-                                  if (dateA !== dateB) return dateB - dateA;
-                                  const numA = parseInt((a.contest_name || '').replace(/\D+/g, ''), 10) || 0;
-                                  const numB = parseInt((b.contest_name || '').replace(/\D+/g, ''), 10) || 0;
-                                  return numB - numA;
-                                }).map((h: any, idx: number) => (
-                                  <tr key={idx} className="hover:bg-slate-100/60 dark:hover:bg-navy-900/60">
-                                    <td className="py-2 px-2 font-bold text-slate-900 dark:text-white">{h.contest_name}</td>
-                                    <td className="py-2 px-2 text-slate-500 font-mono">{h.date}</td>
-                                    <td className="py-2 px-2 text-center font-mono font-bold text-purple-600">{h.contest_rank}</td>
-                                    <td className="py-2 px-2 text-center font-bold text-emerald-600">{h.problems_solved} / {h.total_problems}</td>
-                                    <td className="py-2 px-2 text-right font-black">{h.rating_after}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        ) : (
-                          <p className="text-xs text-slate-400 italic py-3 text-center">No contest history available</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* PROBLEMS TAB */}
-                  {activeTab === "problems" && (
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2">
-                        <div className="relative flex-1">
-                          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                          <input
-                            type="text"
-                            placeholder="Search problems..."
-                            value={probSearch}
-                            onChange={(e) => setProbSearch(e.target.value)}
-                            className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs font-medium"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="bg-slate-50 dark:bg-navy-800 p-4 rounded-2xl space-y-3 border border-slate-200/80 dark:border-navy-700">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">Recent Submissions & Solved Problems</p>
-                          <span className="text-[11px] font-bold text-slate-400 font-mono">
-                            {intelData?.submissions ? intelData.submissions.length : 0} items
-                          </span>
-                        </div>
-                        {intelData?.submissions && intelData.submissions.length > 0 ? (
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-left text-xs">
-                              <thead>
-                                <tr className="border-b border-slate-200 dark:border-navy-700 text-slate-700 dark:text-slate-300 font-black uppercase text-[10px] tracking-wider">
-                                  <th className="py-2.5 px-2">Problem</th>
-                                  <th className="py-2.5 px-2">Language</th>
-                                  <th className="py-2.5 px-2 text-center">Status</th>
-                                  <th className="py-2.5 px-2 text-center">Runtime / Memory</th>
-                                  <th className="py-2.5 px-2 text-right">Timestamp</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-slate-200/70 dark:divide-navy-700">
-                                {intelData.submissions
-                                  .filter((s: any) => !probSearch || s.title.toLowerCase().includes(probSearch.toLowerCase()))
-                                  .map((s: any, idx: number) => (
-                                    <tr key={idx} className="hover:bg-slate-100/80 dark:hover:bg-navy-900/60 transition-colors">
-                                      <td className="py-2.5 px-2 font-bold text-slate-900 dark:text-white">
-                                        <a
-                                          href={"https://leetcode.com/problems/" + (s.title_slug || "two-sum") + "/"}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 group"
-                                        >
-                                          <span>{s.title}</span>
-                                          <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 text-blue-500 transition-opacity" />
-                                        </a>
-                                      </td>
-                                      <td className="py-2.5 px-2">
-                                        <span className="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/50 text-[10px] font-extrabold">
-                                          {s.language}
-                                        </span>
-                                      </td>
-                                      <td className="py-2.5 px-2 text-center">
-                                        <span className="px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-900/50 text-[10px] font-extrabold">
-                                          {s.status}
-                                        </span>
-                                      </td>
-                                      <td className="py-2.5 px-2 text-center text-slate-700 dark:text-slate-200 font-mono font-semibold text-xs">
-                                        {s.runtime && s.runtime !== "N/A" ? `${s.runtime}` : "38 ms"} {s.memory && s.memory !== "N/A" ? `• ${s.memory}` : ""}
-                                      </td>
-                                      <td className="py-2.5 px-2 text-right text-slate-700 dark:text-slate-300 font-mono font-semibold text-xs">{s.timestamp}</td>
-                                    </tr>
-                                  ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        ) : (
-                          <p className="text-xs text-slate-400 italic py-3 text-center">No recent problem history recorded.</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* BADGES & SKILLS TAB */}
-                  {activeTab === "badges" && (
-                    <div className="space-y-5">
-                      <div className="bg-slate-50 dark:bg-navy-800 p-4 rounded-2xl space-y-3 border border-slate-200/80 dark:border-navy-700">
-                        <p className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                          <Award className="w-4 h-4 text-purple-500" /> Badges & Achievements
-                        </p>
-                        {intelData?.badges && intelData.badges.length > 0 ? (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {intelData.badges.map((b: any, idx: number) => (
-                              <BadgeCard key={idx} badge={b} />
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-xs text-slate-400 italic py-2">No badges earned yet</p>
-                        )}
-                      </div>
-
-                      {/* Topic Intelligence */}
-                      <div className="bg-slate-50 dark:bg-navy-800 p-4 rounded-2xl space-y-3 border border-slate-200/80 dark:border-navy-700">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                            <Target className="w-4 h-4 text-blue-500" /> Top Problem Topics & DSA Skill Distribution
-                          </p>
-                          <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-mono">
-                            DSA MAP
-                          </span>
-                        </div>
-                        {(() => {
-                          const tot = (intelData?.coding?.total_solved ?? selectedCandidate?.total_solved) || 0;
-                          const rawTopics = (intelData?.topics && intelData.topics.length > 0) ? intelData.topics : [
-                            { topic_name: "Arrays & Hashing", problems_solved: Math.max(1, Math.round(tot * 0.32)) },
-                            { topic_name: "Strings & Text Processing", problems_solved: Math.max(1, Math.round(tot * 0.22)) },
-                            { topic_name: "Dynamic Programming", problems_solved: Math.max(1, Math.round(tot * 0.16)) },
-                            { topic_name: "Two Pointers & Sliding Window", problems_solved: Math.max(1, Math.round(tot * 0.12)) },
-                            { topic_name: "Trees & Binary Search", problems_solved: Math.max(1, Math.round(tot * 0.10)) },
-                            { topic_name: "Math & Bit Manipulation", problems_solved: Math.max(1, Math.round(tot * 0.08)) },
-                          ];
-
-                          const maxT = rawTopics[0]?.problems_solved || 1;
-
-                          return (
-                            <div className="space-y-2.5 pt-1">
-                              {rawTopics.slice(0, 6).map((t: any, idx: number) => {
-                                const pct = Math.min(100, Math.max(10, Math.round((t.problems_solved / maxT) * 100)));
-                                const colors = [
-                                  "bg-blue-500 text-blue-600",
-                                  "bg-indigo-500 text-indigo-600",
-                                  "bg-purple-500 text-purple-600",
-                                  "bg-amber-500 text-amber-600",
-                                  "bg-emerald-500 text-emerald-600",
-                                  "bg-cyan-500 text-cyan-600"
-                                ];
-                                const colorClass = colors[idx % colors.length];
-                                return (
-                                  <div key={idx} className="space-y-1">
-                                    <div className="flex justify-between text-xs font-bold">
-                                      <span className="text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                                        <span className={`w-2 h-2 rounded-full ${colorClass.split(' ')[0]}`} />
-                                        {t.topic_name}
-                                      </span>
-                                      <span className={`font-mono ${colorClass.split(' ')[1]}`}>{t.problems_solved} solved</span>
-                                    </div>
-                                    <div className="w-full bg-slate-200 dark:bg-navy-900 h-2 rounded-full overflow-hidden">
-                                      <div className={`h-full rounded-full ${colorClass.split(' ')[0]}`} style={{ width: `${pct}%` }} />
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* DATA QUALITY TAB */}
-                  {activeTab === "quality" && (
-                    <div className="space-y-5">
-                      <div className="bg-slate-50 dark:bg-navy-800 p-4 rounded-2xl space-y-3 border border-slate-200/80 dark:border-navy-700">
-                        <p className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                          <Shield className="w-4 h-4 text-emerald-500" /> Data Verification Matrix
-                        </p>
-                        <div className="space-y-2 text-xs">
-                          <div className="flex justify-between p-2 rounded-xl bg-white dark:bg-navy-900 border border-slate-200/60 dark:border-navy-700">
-                            <span className="font-bold">Profile Identity Data</span>
-                            <span className="text-emerald-600 font-extrabold flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Verified</span>
-                          </div>
-                          <div className="flex justify-between p-2 rounded-xl bg-white dark:bg-navy-900 border border-slate-200/60 dark:border-navy-700">
-                            <span className="font-bold">Coding Statistics</span>
-                            <span className="text-emerald-600 font-extrabold flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Verified</span>
-                          </div>
-                          <div className="flex justify-between p-2 rounded-xl bg-white dark:bg-navy-900 border border-slate-200/60 dark:border-navy-700">
-                            <span className="font-bold">Language Statistics</span>
-                            <span className="text-emerald-600 font-extrabold flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Verified</span>
-                          </div>
-                          <div className="flex justify-between p-2 rounded-xl bg-white dark:bg-navy-900 border border-slate-200/60 dark:border-navy-700">
-                            <span className="font-bold">Contest History & Standing</span>
-                            <span className="text-emerald-600 font-extrabold flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Verified</span>
-                          </div>
-                          <div className="flex justify-between p-2 rounded-xl bg-white dark:bg-navy-900 border border-slate-200/60 dark:border-navy-700">
-                            <span className="font-bold">Activity Calendar</span>
-                            <span className="text-emerald-600 font-extrabold flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Verified</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Fetch Details */}
-                      <div className="bg-slate-50 dark:bg-navy-800 p-4 rounded-2xl space-y-2 border border-slate-200/80 dark:border-navy-700 text-xs">
-                        <p className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">Sync Log Metadata</p>
-                        <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-navy-700"><span className="text-slate-500">Fetch Duration:</span><span className="font-bold font-mono">{intelData?.fetch_details?.fetch_duration || "N/A"}</span></div>
-                        <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-navy-700"><span className="text-slate-500">Records Fetched:</span><span className="font-bold font-mono">{intelData?.fetch_details?.records_fetched || "N/A"}</span></div>
-                        <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-navy-700"><span className="text-slate-500">Records Updated:</span><span className="font-bold font-mono">{intelData?.fetch_details?.records_updated || "N/A"}</span></div>
-                        <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-navy-700"><span className="text-slate-500">Records Skipped:</span><span className="font-bold font-mono">{intelData?.fetch_details?.records_skipped || 0}</span></div>
-                        <div className="flex justify-between py-1 border-b border-slate-200/60 dark:border-navy-700"><span className="text-slate-500">Validation Warnings:</span><span className="font-bold font-mono text-emerald-600">{intelData?.fetch_details?.warnings || 0}</span></div>
-                        <div className="flex justify-between py-1"><span className="text-slate-500">Last Synced:</span><span className="font-bold">{intelData?.fetch_details?.last_synced || "Recent"}</span></div>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* Drawer Bottom Actions */}
-            <div className="flex items-center justify-between border-t border-slate-200 dark:border-navy-800 pt-4 mt-6">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => exportCandidateReportPDF(selectedCandidate, intelData)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition-all cursor-pointer"
-                >
-                  <FileText className="w-4 h-4 text-white" /> Export Report (PDF)
-                </button>
-                <a
-                  href={intelData?.student?.leetcode_url || selectedCandidate.leetcode_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs shadow transition-all"
-                >
-                  <ExternalLink className="w-4 h-4" /> LeetCode Profile
-                </a>
-              </div>
-              <button
-                onClick={() => setSelectedCandidate(null)}
-                className="px-4 py-2 rounded-xl border border-slate-200 dark:border-navy-700 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-50 dark:hover:bg-navy-800 transition-all"
-              >
-                Close Drawer
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
+      {/* 4. STUDENT INTELLIGENCE DEEP PROFILE MODAL */}
+      {selectedCandidate && (
+        <StudentIntelligenceProfileModal
+          studentId={selectedCandidate.id}
+          initialStudent={selectedCandidate}
+          onClose={() => setSelectedCandidate(null)}
+          onRefreshList={handleFind}
+        />
       )}
 
     </div>

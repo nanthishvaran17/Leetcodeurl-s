@@ -11,7 +11,11 @@ import { useMessagingWebSocket } from '../hooks/useMessagingWebSocket';
 import axios from 'axios';
 import { MessageSquare, Sparkles, Users, ShieldCheck, Plus, CheckCircle, Info, ArrowLeft } from 'lucide-react';
 
-export const MessagesPage: React.FC = () => {
+interface MessagesPageProps {
+  onNavigateTab?: (tab: string) => void;
+}
+
+export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => {
   const { token, user } = useAuth();
   
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -580,11 +584,23 @@ export const MessagesPage: React.FC = () => {
   const isSystemActive = isAiAgentActive || isTransparencyActive;
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-56px)] sm:h-[calc(100dvh-68px)] md:h-[calc(100vh-5rem)] bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-slate-200 sm:rounded-2xl overflow-hidden shadow-2xl dark:shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-800">
+    <div className="flex flex-col h-[calc(100dvh-8.5rem-env(safe-area-inset-bottom,0px))] sm:h-[calc(100dvh-9rem)] md:h-[calc(100vh-7rem)] bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-slate-200 sm:rounded-2xl overflow-hidden shadow-2xl dark:shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-800">
       
       {/* Top Institutional Intelligence Hub Header */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white px-6 py-5 sm:py-6 flex flex-wrap items-center justify-between gap-4 shrink-0 shadow-lg border-b border-brand-500/30 z-20">
+      <div className={`relative overflow-hidden bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white px-6 py-5 sm:py-6 flex-wrap items-center justify-between gap-4 shrink-0 shadow-lg border-b border-brand-500/30 z-20 ${
+        activeConversationId ? 'hidden md:flex' : 'flex'
+      }`}>
         <div className="relative z-10 flex items-center space-x-4">
+          {onNavigateTab && (
+            <button
+              onClick={() => onNavigateTab('dashboard')}
+              className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer flex items-center space-x-2 text-xs font-bold shadow-sm"
+              title="Go Back"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Back</span>
+            </button>
+          )}
           <div className="w-12 h-12 bg-brand-500/20 rounded-2xl flex items-center justify-center border border-brand-400/30 shadow-inner shrink-0">
             <Sparkles className="w-6 h-6 text-amber-400 animate-pulse" />
           </div>
@@ -689,12 +705,21 @@ export const MessagesPage: React.FC = () => {
                       <p className="text-xs text-slate-500 font-semibold mt-0.5">Objective evidence explaining your institutional standing.</p>
                     </div>
                   </div>
-                  {transparencyData?.studentName && (
-                    <div className="hidden sm:block text-right">
-                      <div className="text-sm font-bold text-slate-800 dark:text-slate-200">{transparencyData.studentName}</div>
-                      <div className="text-xs font-mono text-slate-400">{transparencyData.regNo} ({transparencyData.department})</div>
-                    </div>
-                  )}
+                  <div className="flex items-center space-x-4">
+                    {transparencyData?.studentName && (
+                      <div className="hidden sm:block text-right">
+                        <div className="text-sm font-bold text-slate-800 dark:text-slate-200">{transparencyData.studentName}</div>
+                        <div className="text-xs font-mono text-slate-400">{transparencyData.regNo} ({transparencyData.department})</div>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => setTransparencyData(null)}
+                      className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                      title="Close"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
                 </div>
 
                 {loadingTransparency ? (

@@ -1209,12 +1209,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
               <span>Secured & audited by institution</span>
             </div>
 
-            {/* Minimal Unified Footer (Moved inside right panel for full-height layout) */}
-            <footer className="login-copyright" role="contentinfo" style={{ marginTop: 'auto', paddingTop: '2.5rem' }}>
-              <p className="copyright-line" style={{ color: 'var(--text-secondary, #334155)', textShadow: 'none', fontWeight: 700, fontSize: '0.82rem' }}>
+            {/* Minimal Unified Footer */}
+            <footer className="login-copyright" role="contentinfo">
+              <p className="copyright-line">
                 &copy; 2026 Nandha Engineering College. All rights reserved.
               </p>
-              <p className="tagline-line" style={{ color: 'var(--secondary-navy, #0284C7)', textShadow: 'none', marginTop: '6px', fontWeight: 800, letterSpacing: '0.1em', fontSize: '0.78rem' }}>
+              <p className="tagline-line">
                 LEARN | SERVE | SUCCEED
               </p>
             </footer>

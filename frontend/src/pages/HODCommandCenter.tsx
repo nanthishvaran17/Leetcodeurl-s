@@ -883,6 +883,7 @@ export const HODCommandCenter: React.FC = () => {
   const [wsConnected, setWsConnected] = useState<boolean>(true);
 
   // Student Directory Table State
+  const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth < 768);
   const [students, setStudents] = useState<StudentRecord[]>([]);
   const [studentsTotal, setStudentsTotal] = useState<number>(0);
   const [studentsPage, setStudentsPage] = useState<number>(1);
@@ -893,6 +894,12 @@ export const HODCommandCenter: React.FC = () => {
   const [selectedDeptIntelligence, setSelectedDeptIntelligence] = useState<DeptBenchmark | null>(null);
   const [selectedStudentIds, setSelectedStudentIds] = useState<number[]>([]);
   const [batchTargetFaculty, setBatchTargetFaculty] = useState<number | null>(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Modals
   const [showStaffAllocationModal, setShowStaffAllocationModal] = useState<boolean>(false);
@@ -981,11 +988,12 @@ export const HODCommandCenter: React.FC = () => {
     const staffId = selectedStaff !== 'ALL' ? Number(selectedStaff) : undefined;
     const yearLevel = selectedYear !== 'ALL' ? selectedYear : undefined;
     const section = selectedSection !== 'ALL' ? selectedSection : undefined;
+    const pageSize = isMobile ? 6 : 15;
 
     try {
       const res = await getCommandCenterStudents({
         page: studentsPage,
-        page_size: 15,
+        page_size: pageSize,
         search: studentsSearch || undefined,
         dept_id: deptId,
         staff_id: staffId,
@@ -1001,7 +1009,7 @@ export const HODCommandCenter: React.FC = () => {
     } finally {
       setStudentsLoading(false);
     }
-  }, [studentsPage, studentsSearch, selectedDept, selectedStaff, selectedYear, selectedSection, selectedStatus]);
+  }, [studentsPage, studentsSearch, selectedDept, selectedStaff, selectedYear, selectedSection, selectedStatus, isMobile]);
 
   useEffect(() => {
     getCommandCenterDepartments().then(setDepartments).catch(() => {});
@@ -1745,10 +1753,117 @@ export const HODCommandCenter: React.FC = () => {
           </div>
         )}
 
-        {/* Table */}
-        <div className="overflow-x-auto table-responsive-container border border-slate-100 dark:border-navy-800 rounded-xl">
-          <table className="w-full text-left text-xs border-collapse mobile-card-table">
-            <thead className="hidden md:table-header-group">
+        {/* Mobile Student Cards (Compact, structured, no horizontal clipping) */}
+        <div className="block md:hidden space-y-2.5">
+          {studentsLoading ? (
+            <div className="py-8 text-center text-slate-400 text-xs font-medium">Loading live student roster...</div>
+          ) : students.length === 0 ? (
+            <div className="py-8 text-center text-slate-400 text-xs font-medium">No student records match the active scope filter.</div>
+          ) : (
+            students.map(s => {
+              const isChecked = selectedStudentIds.includes(s.id);
+              const cleanYear = s.year_level ? s.year_level.replace(/(?:\s*Year)+/gi, '').trim() + ' Year' : '';
+              return (
+                <div
+                  key={s.id}
+                  onClick={() => setSelectedStudentDetail(s)}
+                  className={`p-3.5 rounded-2xl border transition cursor-pointer bg-white dark:bg-navy-900 shadow-sm space-y-2.5 ${
+                    isChecked ? 'border-brand-500 bg-brand-50/30 dark:bg-brand-950/30' : 'border-slate-200 dark:border-navy-800 hover:border-brand-300'
+                  }`}
+                >
+                  {/* Top Row: Checkbox + Name + Status */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div onClick={e => e.stopPropagation()} className="pt-0.5">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={e => {
+                            if (e.target.checked) setSelectedStudentIds(prev => [...prev, s.id]);
+                            else setSelectedStudentIds(prev => prev.filter(id => id !== s.id));
+                          }}
+                          className="rounded text-brand-600 focus:ring-brand-500"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="font-extrabold text-sm text-slate-900 dark:text-white truncate block">
+                          {s.name}
+                        </span>
+                        <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-mono mt-0.5 truncate">
+                          <span>{s.reg_no}</span>
+                          {cleanYear && <span>• {cleanYear}</span>}
+                          {s.leetcode_username && (
+                            <span className="text-brand-600 dark:text-brand-400 font-bold truncate">@{s.leetcode_username}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <span className={`text-[10px] font-black font-mono px-2 py-0.5 rounded-lg shrink-0 ${
+                      s.status === 'ACTIVE'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300'
+                        : s.status === 'IMPROVING'
+                        ? 'bg-brand-50 text-brand-700 border border-brand-200 dark:bg-brand-950/40 dark:text-brand-300'
+                        : 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300'
+                    }`}>
+                      {s.status || 'ACTIVE'}
+                    </span>
+                  </div>
+
+                  {/* Middle Row: Score Metrics Strip (Solved, Weekly Change, Contest) */}
+                  <div className="grid grid-cols-3 gap-2 p-2 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-navy-800 text-center font-mono">
+                    <div>
+                      <span className="text-[9px] uppercase font-bold text-slate-400 block">Solved</span>
+                      <span className="text-xs font-black text-slate-900 dark:text-white">{s.total_solved}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] uppercase font-bold text-slate-400 block">Weekly Δ</span>
+                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                        {(() => {
+                          const w = String(s.weekly_change ?? 0);
+                          return w.startsWith('+') || w.startsWith('-') ? w : `+${w}`;
+                        })()}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] uppercase font-bold text-slate-400 block">Contest</span>
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{s.contest_standing || '—'}</span>
+                    </div>
+                  </div>
+
+                  {/* Bottom Row: Assigned Mentor + Last Activity + Inspect Button */}
+                  <div className="flex items-center justify-between gap-2 pt-1 text-[11px]">
+                    <div className="min-w-0 text-slate-500 truncate">
+                      <span className="text-[10px] text-slate-400 block">Assigned Mentor:</span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-300 truncate block">{s.assigned_staff || 'Unassigned'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {s.last_updated && (
+                        <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
+                          {s.last_updated}
+                        </span>
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedStudentDetail(s);
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-brand-400 border border-brand-500/20 font-bold text-xs transition cursor-pointer"
+                      >
+                        Inspect
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto table-responsive-container border border-slate-100 dark:border-navy-800 rounded-xl">
+          <table className="w-full min-w-[760px] text-left text-xs border-collapse">
+            <thead className="table-header-group">
               <tr className="bg-slate-50 dark:bg-navy-800 text-[11px] font-bold uppercase tracking-wider text-slate-500 font-mono">
                 <th className="py-3 px-3 w-8">
                   <input
@@ -1783,6 +1898,7 @@ export const HODCommandCenter: React.FC = () => {
               ) : (
                 students.map(s => {
                   const isChecked = selectedStudentIds.includes(s.id);
+                  const cleanYear = s.year_level ? s.year_level.replace(/(?:\s*Year)+/gi, '').trim() + ' Year' : '';
                   return (
                     <tr
                       key={s.id}
@@ -1801,7 +1917,7 @@ export const HODCommandCenter: React.FC = () => {
                       </td>
                       <td className="py-3 px-3 font-semibold text-slate-900 dark:text-white">
                         <div>{s.name}</div>
-                        <div className="text-[10px] text-slate-400 font-mono font-normal">{s.reg_no} • {s.year_level} Year</div>
+                        <div className="text-[10px] text-slate-400 font-mono font-normal">{s.reg_no}{cleanYear ? ` • ${cleanYear}` : ''}</div>
                       </td>
                       <td className="py-3 px-3 font-mono font-bold text-brand-600 dark:text-brand-400">
                         @{s.leetcode_username || 'unlinked'}
@@ -1849,14 +1965,14 @@ export const HODCommandCenter: React.FC = () => {
             <button
               disabled={studentsPage <= 1}
               onClick={() => setStudentsPage(p => p - 1)}
-              className="px-3 py-1 rounded-lg border border-slate-200 dark:border-navy-700 disabled:opacity-40"
+              className="px-3 py-1 rounded-lg border border-slate-200 dark:border-navy-700 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-navy-800 transition"
             >
               Previous
             </button>
             <button
-              disabled={students.length < 15}
+              disabled={studentsPage * (isMobile ? 6 : 15) >= studentsTotal || students.length < (isMobile ? 6 : 15)}
               onClick={() => setStudentsPage(p => p + 1)}
-              className="px-3 py-1 rounded-lg border border-slate-200 dark:border-navy-700 disabled:opacity-40"
+              className="px-3 py-1 rounded-lg border border-slate-200 dark:border-navy-700 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-navy-800 transition"
             >
               Next
             </button>
@@ -1882,7 +1998,7 @@ export const HODCommandCenter: React.FC = () => {
           </div>
 
           <div className="overflow-x-auto table-responsive-container stylish-scrollbar">
-            <table className="w-full text-left text-xs border-collapse whitespace-nowrap mobile-card-table">
+            <table className="w-full min-w-[700px] text-left text-xs border-collapse whitespace-nowrap">
               <thead className="hidden md:table-header-group">
                 <tr className="text-[10px] font-bold uppercase text-slate-500 font-mono border-b border-slate-100 dark:border-navy-800 bg-slate-50 dark:bg-navy-950/50">
                   <th className="py-2.5 px-3 rounded-tl-lg">Rank</th>
@@ -2305,7 +2421,7 @@ export const HODCommandCenter: React.FC = () => {
             {/* Red warning header */}
             <div className="bg-rose-50 dark:bg-rose-900/30 px-6 py-4 border-b border-rose-100 dark:border-rose-800/50 flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-rose-100 dark:bg-rose-800/60 flex items-center justify-center flex-shrink-0">
-                <span className="text-rose-600 dark:text-rose-400 text-lg">⚠️</span>
+                <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
               </div>
               <div>
                 <div className="font-display text-sm font-bold text-rose-800 dark:text-rose-200">Unassign All Mentees</div>

@@ -458,7 +458,7 @@ export const ChatWindow: React.FC<Props> = ({
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-4 md:px-8 lg:px-12 py-6 flex flex-col custom-scrollbar relative z-10"
+        className="flex-1 overflow-y-auto px-3 sm:px-6 md:px-8 py-3 sm:py-4 flex flex-col custom-scrollbar relative z-10"
       >
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
@@ -474,6 +474,11 @@ export const ChatWindow: React.FC<Props> = ({
           </div>
         ) : (
           messages.map((msg, idx) => {
+            // Skip empty phantom messages that have no content, no attachment, and no deleted status
+            if (!msg.content && !msg.attachmentFileId && !msg.localMediaUrl && !msg.isDeletedEveryone) {
+              return null;
+            }
+
             const isMe = msg.senderId === currentUserId;
             const isMenuOpen = activeMenuMessageId === msg.messageId;
             const prevMsg = idx > 0 ? messages[idx - 1] : null;
@@ -481,15 +486,15 @@ export const ChatWindow: React.FC<Props> = ({
             // Date separator check
             let showDateHeader = false;
             if (idx === 0) showDateHeader = true;
-            else {
-              const prevDate = parseSafeDate(messages[idx - 1].createdAt).toDateString();
+            else if (prevMsg) {
+              const prevDate = parseSafeDate(prevMsg.createdAt).toDateString();
               const currDate = parseSafeDate(msg.createdAt).toDateString();
               if (prevDate !== currDate) showDateHeader = true;
             }
 
             // Dynamic Margin for natural grouping
-            const isSameSenderAsPrev = prevMsg && prevMsg.senderId === msg.senderId;
-            const marginTopClass = showDateHeader ? 'mt-6' : (isSameSenderAsPrev ? 'mt-1' : 'mt-5');
+            const isSameSenderAsPrev = prevMsg && prevMsg.senderId === msg.senderId && !showDateHeader;
+            const marginTopClass = showDateHeader ? 'mt-3 sm:mt-4' : (isSameSenderAsPrev ? 'mt-1' : 'mt-2.5 sm:mt-3');
 
             // Reactions count
             const reactionsMap = msg.reactions || {};
@@ -501,8 +506,8 @@ export const ChatWindow: React.FC<Props> = ({
             return (
               <React.Fragment key={msg.messageId}>
                 {showDateHeader && (
-                  <div className="flex justify-center my-6">
-                    <span className="text-[10px] font-bold uppercase tracking-widest bg-white border border-slate-200 text-slate-400 px-4 py-1.5 rounded-full shadow-sm">
+                  <div className="flex justify-center my-2.5 sm:my-3.5 sticky top-1 z-10">
+                    <span className="text-[10px] sm:text-[10.5px] font-bold uppercase tracking-widest bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-700 text-slate-500 dark:text-slate-300 px-3.5 py-1 rounded-full shadow-xs">
                       {formatHeaderDate(msg.createdAt)}
                     </span>
                   </div>
@@ -511,17 +516,17 @@ export const ChatWindow: React.FC<Props> = ({
                 <div
                   id={`msg-${msg.messageId}`}
                   className={clsx(
-                    "flex flex-col w-full max-w-[85%] sm:max-w-[75%] md:max-w-[65%] group relative transition-all duration-200",
+                    "flex flex-col w-full max-w-[85%] sm:max-w-[75%] md:max-w-[65%] group relative transition-all duration-150",
                     isMe ? "ml-auto items-end" : "mr-auto items-start",
                     marginTopClass
                   )}
                 >
                   {/* Message Bubble Container */}
                   <div className={clsx(
-                    "px-4 py-2.5 rounded-[1.25rem] text-[14.5px] break-words relative shadow-sm leading-relaxed transition-all",
+                    "px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-[1.2rem] text-[14px] sm:text-[14.5px] break-words relative shadow-xs leading-relaxed transition-all",
                     isMe
                       ? (activeWallpaper.bubbleMeClass || "bg-brand-600 text-white") + " rounded-br-xs"
-                      : (activeWallpaper.bubbleOtherClass || "bg-white dark:bg-[#151b23] text-slate-900 dark:text-slate-100 border border-slate-200/70 dark:border-slate-800") + " rounded-bl-xs"
+                      : (activeWallpaper.bubbleOtherClass || "bg-white dark:bg-[#151b23] text-slate-900 dark:text-slate-100 border border-slate-200/80 dark:border-slate-800") + " rounded-bl-xs"
                   )}>
 
                     {/* Quoted Parent Reply Box */}
@@ -602,9 +607,16 @@ export const ChatWindow: React.FC<Props> = ({
                     )}
 
                     {/* Message Body Content */}
-                    <div className={clsx(msg.isDeletedEveryone && "italic opacity-70")}>
-                      {msg.content}
-                    </div>
+                    {msg.isDeletedEveryone ? (
+                      <div className="italic opacity-70 text-xs flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                        <Trash2 className="w-3.5 h-3.5 opacity-70 shrink-0" />
+                        <span>This message was deleted</span>
+                      </div>
+                    ) : (
+                      <div className="leading-relaxed">
+                        {msg.content}
+                      </div>
+                    )}
 
                     {/* Action Trigger Dots */}
                     <button
@@ -762,6 +774,7 @@ export const ChatWindow: React.FC<Props> = ({
       </div>
 
       {/* Floating Scroll Bottom Button */}
+      {/* Floating Scroll Bottom Button */}
       {showScrollBottom && (
         <button
           onClick={() => {
@@ -769,7 +782,7 @@ export const ChatWindow: React.FC<Props> = ({
             setShowScrollBottom(false);
             setNewMessagesCount(0);
           }}
-          className="absolute bottom-20 right-6 z-30 p-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1 font-bold text-xs"
+          className="absolute bottom-16 right-5 z-30 p-2 sm:p-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1 font-bold text-xs"
         >
           <ChevronDown className="w-4 h-4" />
           {newMessagesCount > 0 && <span>{newMessagesCount} new</span>}
@@ -777,59 +790,59 @@ export const ChatWindow: React.FC<Props> = ({
       )}
 
       {/* Input Composer Zone */}
-      <div className="p-3 md:p-4 lg:p-5 border-t border-slate-200 dark:border-slate-800/50 bg-white dark:bg-[#0B1120] shrink-0 relative z-20 pb-4 md:pb-5">
+      <div className="p-2.5 sm:p-3 md:p-3.5 border-t border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#0B1120]/95 backdrop-blur-md shrink-0 relative z-20">
 
         {/* Replying Preview Banner */}
         {replyingToMessage && (
-          <div className="mb-3 p-3 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center justify-between text-xs animate-in fade-in shadow-sm">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="p-1.5 bg-indigo-100 text-indigo-600 rounded-lg">
-                <Reply className="w-4 h-4 shrink-0" />
+          <div className="mb-2.5 p-2.5 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 rounded-xl flex items-center justify-between text-xs animate-in fade-in shadow-xs">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 rounded-lg shrink-0">
+                <Reply className="w-3.5 h-3.5" />
               </div>
               <div className="min-w-0">
-                <span className="font-extrabold text-indigo-900">
+                <span className="font-extrabold text-indigo-900 dark:text-indigo-200">
                   Replying to {replyingToMessage.senderId === currentUserId ? 'yourself' : conversation.otherUser.name}
                 </span>
-                <p className="truncate text-slate-600 font-medium mt-0.5">
+                <p className="truncate text-slate-600 dark:text-slate-400 font-medium text-[11px] mt-0.5">
                   {replyingToMessage.content}
                 </p>
               </div>
             </div>
             <button
               onClick={() => setReplyingToMessage(null)}
-              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-indigo-100 rounded-lg cursor-pointer transition-colors"
+              className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-indigo-100 dark:hover:bg-indigo-900 rounded-lg cursor-pointer transition-colors"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         )}
 
         {/* Editing Mode Banner */}
         {editingMessage && (
-          <div className="mb-3 p-3 bg-amber-50 border border-amber-100 rounded-xl flex items-center justify-between text-xs animate-in fade-in shadow-sm">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="p-1.5 bg-amber-100 text-amber-600 rounded-lg">
-                <Edit2 className="w-4 h-4 shrink-0" />
+          <div className="mb-2.5 p-2.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-900/50 rounded-xl flex items-center justify-between text-xs animate-in fade-in shadow-xs">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-1 bg-amber-100 dark:bg-amber-900 text-amber-600 dark:text-amber-300 rounded-lg shrink-0">
+                <Edit2 className="w-3.5 h-3.5" />
               </div>
-              <span className="font-extrabold text-amber-900">
+              <span className="font-extrabold text-amber-900 dark:text-amber-200">
                 Editing message...
               </span>
             </div>
             <button
               onClick={handleCancelEdit}
-              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-amber-100 rounded-lg cursor-pointer transition-colors"
+              className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-amber-100 dark:hover:bg-amber-900 rounded-lg cursor-pointer transition-colors"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         )}
 
         {/* Selected File Preview Banner */}
         {selectedFile && (
-          <div className="mb-3 p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs shadow-sm">
-            <div className="flex items-center gap-3 min-w-0">
+          <div className="mb-2.5 p-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center justify-between text-xs shadow-xs">
+            <div className="flex items-center gap-2.5 min-w-0">
               {localPreviewUrl ? (
-                <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-white">
+                <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700 bg-white">
                   {selectedFile.type.startsWith('video/') ? (
                     <video src={localPreviewUrl} className="w-full h-full object-cover" />
                   ) : (
@@ -837,27 +850,27 @@ export const ChatWindow: React.FC<Props> = ({
                   )}
                 </div>
               ) : (
-                <div className="p-1.5 bg-white shadow-sm rounded-lg border border-slate-200 shrink-0">
-                  <Paperclip className="w-4 h-4 text-emerald-500" />
+                <div className="p-1.5 bg-white dark:bg-slate-700 shadow-xs rounded-lg border border-slate-200 dark:border-slate-600 shrink-0">
+                  <Paperclip className="w-3.5 h-3.5 text-emerald-500" />
                 </div>
               )}
-              <span className="truncate font-bold text-slate-700">
+              <span className="truncate font-bold text-slate-700 dark:text-slate-200">
                 {selectedFile.name} <span className="text-slate-400 font-medium ml-1">({(selectedFile.size / 1024).toFixed(1)} KB)</span>
               </span>
             </div>
             <button
               onClick={() => setSelectedFile(null)}
-              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer transition-colors"
+              className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg cursor-pointer transition-colors"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         )}
 
         {/* Emoji Picker Popup (Lazy Loaded) */}
         {showEmojiPicker && (
-          <div className="absolute bottom-full right-4 mb-4 z-50 shadow-2xl rounded-2xl overflow-hidden border border-slate-200">
-            <React.Suspense fallback={<div className="p-4 text-xs font-bold text-slate-400 bg-white animate-pulse">Loading Emojis...</div>}>
+          <div className="absolute bottom-full right-4 mb-3 z-50 shadow-2xl rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
+            <React.Suspense fallback={<div className="p-4 text-xs font-bold text-slate-400 bg-white dark:bg-slate-900 animate-pulse">Loading Emojis...</div>}>
               <LazyEmojiPicker
                 onEmojiClick={(data) => setInputText(prev => prev + data.emoji)}
               />
@@ -866,7 +879,7 @@ export const ChatWindow: React.FC<Props> = ({
         )}
 
         {/* Form Inputs */}
-        <form onSubmit={handleSendSubmit} className="flex items-center gap-2 sm:gap-3 bg-white dark:bg-navy-900 border-2 border-indigo-100/80 dark:border-navy-700/80 rounded-2xl p-1.5 sm:p-2 shadow-md focus-within:shadow-xl focus-within:ring-4 focus-within:ring-indigo-500/15 focus-within:border-indigo-500 transition-all">
+        <form onSubmit={handleSendSubmit} className="flex items-center gap-1.5 sm:gap-2 bg-slate-50 dark:bg-navy-900/90 border border-slate-200/90 dark:border-navy-700/90 rounded-2xl p-1 sm:p-1.5 shadow-xs focus-within:shadow-md focus-within:ring-2 focus-within:ring-brand-500/20 focus-within:border-brand-500 transition-all">
           <input
             type="file"
             ref={fileInputRef}
@@ -877,19 +890,19 @@ export const ChatWindow: React.FC<Props> = ({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="p-2.5 text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-xl transition-all shrink-0 cursor-pointer"
+            className="p-2 text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-xl transition-all shrink-0 cursor-pointer"
             title="Attach File"
           >
-            <Paperclip className="w-5 h-5" />
+            <Paperclip className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           </button>
 
           <button
             type="button"
             onClick={() => setShowEmojiPicker(prev => !prev)}
-            className="p-2.5 text-slate-500 hover:text-amber-500 dark:text-slate-400 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-xl transition-all shrink-0 cursor-pointer hidden sm:block"
+            className="p-2 text-slate-500 hover:text-amber-500 dark:text-slate-400 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-xl transition-all shrink-0 cursor-pointer hidden sm:block"
             title="Emoji Picker"
           >
-            <Smile className="w-5 h-5" />
+            <Smile className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           </button>
 
           <input
@@ -898,19 +911,19 @@ export const ChatWindow: React.FC<Props> = ({
             placeholder={editingMessage ? "Update message..." : "Type your message..."}
             value={inputText}
             onChange={handleInputChange}
-            className="flex-1 px-3 py-2.5 bg-transparent text-sm sm:text-base text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none font-semibold min-w-0"
+            className="flex-1 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-transparent text-sm sm:text-base text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none font-medium min-w-0"
           />
 
           <button
             type="submit"
             disabled={(!inputText.trim() && !selectedFile) || isSending}
-            className="p-3 bg-gradient-to-r from-indigo-600 via-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 disabled:from-slate-200 disabled:to-slate-200 dark:disabled:from-navy-800 dark:disabled:to-navy-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white rounded-xl shadow-md shadow-indigo-600/20 disabled:shadow-none transition-all shrink-0 cursor-pointer active:scale-95 flex items-center justify-center min-w-[44px] min-h-[44px]"
+            className="p-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 disabled:from-slate-200 disabled:to-slate-200 dark:disabled:from-navy-800 dark:disabled:to-navy-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white rounded-xl shadow-xs transition-all shrink-0 cursor-pointer active:scale-95 flex items-center justify-center min-w-[36px] min-h-[36px] sm:min-w-[40px] sm:min-h-[40px]"
             title="Send Message"
           >
             {isSending ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
+              <Loader2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 animate-spin" />
             ) : (
-              <Send className="w-5 h-5" />
+              <Send className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             )}
           </button>
         </form>

@@ -13,7 +13,8 @@ from backend.models import (
     Student, Department, LeetCodeProfileStats,
     LeetCodeLanguageStats, LeetCodeContest, LeetCodeProblemStats, User,
     LeetCodeProfile, LeetCodeContestRatingHistory, LeetCodeBadge,
-    LeetCodeTopicStats, LeetCodeActivity, LeetCodeSubmission, StudentStatSnapshot
+    LeetCodeTopicStats, LeetCodeActivity, LeetCodeSubmission, StudentStatSnapshot,
+    WeeklyStudentProgress
 )
 from backend.services.authorization_service import apply_role_based_student_filter
 from backend.security import get_current_user_optional
@@ -665,7 +666,25 @@ def get_student_intelligence(
     else:
         recommended_for.extend(["Service Company", "Skill Mentorship"])
 
-    # 12. Data Quality & Sync Info
+    # 12. Cohort / Institutional Context
+    college_rank = "N/A"
+    dept_rank = "N/A"
+    year_rank = "N/A"
+    section_rank = "N/A"
+
+    prog = db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == student.id).order_by(WeeklyStudentProgress.id.desc()).first()
+    if prog:
+        college_rank = f"#{prog.college_rank}" if prog.college_rank else "N/A"
+        dept_rank = f"#{prog.dept_rank}" if prog.dept_rank else "N/A"
+        year_rank = f"#{prog.year_rank}" if prog.year_rank else "N/A"
+        section_rank = f"#{prog.section_rank}" if prog.section_rank else "N/A"
+
+    # Total counts for context benchmarks
+    dept_count = db.query(Student).filter(Student.department_id == student.department_id, Student.is_active == True).count()
+    college_count = db.query(Student).filter(Student.is_active == True).count()
+    year_count = db.query(Student).filter(Student.year_level == student.year_level, Student.is_active == True).count()
+
+    # 13. Data Quality & Sync Info
     last_synced_dt = getattr(probs, "fetched_at", None) or getattr(p_stats, "last_successful_sync", None) or (lc_prof.last_synced_at if lc_prof else None) or getattr(student, "created_at", None)
     last_synced_str = last_synced_dt.strftime("%Y-%m-%d %H:%M IST") if last_synced_dt else "Recent"
 
@@ -687,9 +706,30 @@ def get_student_intelligence(
             "batch": getattr(student, "batch", "2023-2027") or "2023-2027",
             "year_level": student.year_level or "III Year",
             "section": extract_section_name(student),
+            "accommodation": getattr(student, "accommodation", None),
+            "twelfth_cutoff": getattr(student, "twelfth_cutoff", None),
+            "institutional_email": getattr(student, "institutional_email", None),
+            "email": getattr(student, "email", None),
+            "phone_number": getattr(student, "phone_number", None),
+            "whatsapp_verified": getattr(student, "whatsapp_verified", False),
+            "codeforces_username": getattr(student, "codeforces_username", None),
+            "hackerrank_username": getattr(student, "hackerrank_username", None),
+            "college_rank": college_rank,
+            "dept_rank": dept_rank,
+            "year_rank": year_rank,
+            "section_rank": section_rank,
             "last_synced": last_synced_str,
             "data_freshness": "Fresh" if (last_synced_dt and (datetime.datetime.utcnow() - last_synced_dt.replace(tzinfo=None)).total_seconds() < 172800) else "Stale",
             "fetch_status": sync_state_str
+        },
+        "cohort_context": {
+            "college_rank": college_rank,
+            "dept_rank": dept_rank,
+            "year_rank": year_rank,
+            "section_rank": section_rank,
+            "college_student_count": college_count,
+            "dept_student_count": dept_count,
+            "year_student_count": year_count,
         },
         "coding": {
             "total_solved": tot,
@@ -1227,9 +1267,9 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     date_str = datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")
 
     # ==========================================
-    # SHEET 1: HR Candidate Finder (Main Executive Report)
+    # SHEET 1: Candidate Finder (Main Executive Report)
     # ==========================================
-    ws1 = wb.create_sheet(title="HR Candidate Finder")
+    ws1 = wb.create_sheet(title="Candidate Finder")
     ws1.sheet_view.showGridLines = True
     ws1.page_setup.orientation = ws1.ORIENTATION_LANDSCAPE
     ws1.page_setup.fitToWidth = 1
@@ -1237,12 +1277,12 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
 
     last_col_letter = "AA"
     ws1.merge_cells(f"A1:{last_col_letter}1")
-    ws1["A1"] = "NANDHA LEETCODE INTELLIGENCE — HR CANDIDATE FINDER"
+    ws1["A1"] = "NANDHA LEETCODE INTELLIGENCE — MANAGEMENT REPORT"
     ws1["A1"].font = FONT_TITLE; ws1["A1"].alignment = ALIGN_CENTER; ws1["A1"].fill = NAVY_FILL
     ws1.row_dimensions[1].height = 30
 
     ws1.merge_cells(f"A2:{last_col_letter}2")
-    ws1["A2"] = "Recruitment Intelligence Report • Student Performance • Placement Readiness • Risk Assessment"
+    ws1["A2"] = "Executive Management Overview"
     ws1["A2"].font = FONT_SUBTITLE; ws1["A2"].alignment = ALIGN_CENTER; ws1["A2"].fill = SUB_NAVY_FILL
     ws1.row_dimensions[2].height = 18
 
@@ -1405,7 +1445,7 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
         for col_idx, val in enumerate(row_vals, start=1):
             cell = ws1.cell(row=r_idx, column=col_idx, value=val)
             cell.font = FONT_DATA_BOLD if col_idx in (1, 2, 10, 22, 24, 25) else FONT_DATA
-            cell.alignment = ALIGN_LEFT if col_idx in (2, 3, 4, 5) else (ALIGN_RIGHT if col_idx in (1, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24) else ALIGN_CENTER)
+            cell.alignment = ALIGN_CENTER
             cell.border = _THIN_BORDER
 
             if r_idx % 2 == 1: cell.fill = ALT_ROW_FILL
@@ -1474,7 +1514,7 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     ws2.page_setup.fitToHeight = 0
 
     ws2.merge_cells("A1:P1")
-    ws2["A1"] = "HR CANDIDATE FINDER — STUDENT OVERVIEW"
+    ws2["A1"] = "MANAGEMENT REPORT — STUDENT OVERVIEW"
     ws2["A1"].font = FONT_TITLE; ws2["A1"].fill = NAVY_FILL; ws2["A1"].alignment = ALIGN_CENTER
     ws2.row_dimensions[1].height = 28
 
@@ -1517,8 +1557,8 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
         ]
         for col_idx, val in enumerate(row_vals, start=1):
             cell = ws2.cell(row=r_idx, column=col_idx, value=val)
-            cell.font = FONT_DATA_BOLD if col_idx in (1, 2, 8, 14) else FONT_DATA
-            cell.alignment = ALIGN_LEFT if col_idx in (2, 3) else ALIGN_CENTER
+            cell.font = FONT_DATA_BOLD if col_idx in (1, 2, 8, 13, 14) else FONT_DATA
+            cell.alignment = ALIGN_CENTER
             cell.border = _THIN_BORDER
             if r_idx % 2 == 1: cell.fill = ALT_ROW_FILL
 

@@ -118,6 +118,8 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
   const [loadingAuditLogs, setLoadingAuditLogs] = useState<boolean>(false);
   const [selectedAuditDetail, setSelectedAuditDetail] = useState<any | null>(null);
   const [loadingAuditDetail, setLoadingAuditDetail] = useState<boolean>(false);
+  const [auditPage, setAuditPage] = useState<number>(1);
+  const [auditPageSize, setAuditPageSize] = useState<number>(() => typeof window !== 'undefined' && window.innerWidth < 768 ? 10 : 25);
 
   // Schedule Automation State
   const [scheduleData, setScheduleData] = useState<any>(null);
@@ -913,28 +915,51 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
 
       {/* 4. CANONICAL OPERATIONS NAVIGATION BAR */}
-      <div className="flex items-center space-x-2 overflow-x-auto pb-1 border-b border-slate-200 dark:border-slate-800 no-scrollbar">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
         {[
-          { id: 'overview', label: 'Operations Overview' },
-          { id: 'integrity', label: 'Data Integrity Command' },
-          { id: 'forensic', label: 'Forensic Student Trace' },
-          { id: 'lineage', label: 'Data Lineage & Parity' },
-          { id: 'automation', label: 'Autonomous Sunday Session' },
-          { id: 'recovery', label: 'Database Recovery & Snapshots' },
-          { id: 'audit', label: 'Operations Audit Timeline' }
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveOpsTab(tab.id as any)}
-            className={`px-4 py-2.5 rounded-2xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
-              activeOpsTab === tab.id
-                ? 'bg-gradient-to-r from-indigo-600 to-brand-600 text-white shadow-lg shadow-indigo-500/25 scale-[1.02]'
-                : 'bg-white dark:bg-navy-950 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 border border-slate-200 dark:border-slate-800'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+          { id: 'overview', label: 'Operations Overview', icon: Activity, desc: 'Institutional telemetry & config' },
+          { id: 'integrity', label: 'Data Integrity Command', icon: ShieldCheck, desc: 'Production validation rules' },
+          { id: 'forensic', label: 'Forensic Student Trace', icon: Search, desc: 'Student x contest deep trace' },
+          { id: 'lineage', label: 'Data Lineage & Parity', icon: Layers, desc: 'DB vs API vs UI verification' },
+          { id: 'automation', label: 'Autonomous Sunday Session', icon: Zap, desc: 'Zero-touch cron engine' },
+          { id: 'recovery', label: 'Database Recovery & Snapshots', icon: Database, desc: 'Immutable backup & restore' },
+          { id: 'audit', label: 'Operations Audit Timeline', icon: Clock, desc: 'Comprehensive operational logs' }
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeOpsTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveOpsTab(tab.id as any)}
+              className={`w-full lg:w-auto px-4 py-3 lg:py-2.5 rounded-2xl text-xs font-black transition-all cursor-pointer flex items-center justify-between lg:justify-start gap-3 text-left ${
+                isActive
+                  ? 'bg-gradient-to-r from-indigo-600 to-brand-600 text-white shadow-lg shadow-indigo-500/25 scale-[1.01]'
+                  : 'bg-white dark:bg-navy-950 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 border border-slate-200 dark:border-slate-800 shadow-xs'
+              }`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className={`p-1.5 rounded-xl shrink-0 ${isActive ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-navy-900 text-slate-500 dark:text-slate-400'}`}>
+                  <Icon className="w-3.5 h-3.5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate font-black">{tab.label}</div>
+                  <div className={`text-[10px] font-normal truncate sm:hidden ${isActive ? 'text-indigo-100' : 'text-slate-400'}`}>
+                    {tab.desc}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {isActive ? (
+                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white/20 text-white">
+                    Active
+                  </span>
+                ) : (
+                  <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600 lg:hidden" />
+                )}
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       {/* 5. TAB 1: OPERATIONS OVERVIEW */}
@@ -1830,7 +1855,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
       {/* 11. TAB 7: OPERATIONS AUDIT TIMELINE */}
       {activeOpsTab === 'audit' && (
-        <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="p-4 sm:p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 gap-2">
             <div>
               <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
@@ -1840,7 +1865,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                 Authoritative backend server audit logs ordered by canonical event timestamp (Asia/Kolkata IST)
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[10px] font-mono font-black px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
                 SHA-256 INTEGRITY SEALED
               </span>
@@ -1855,72 +1880,214 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs font-bold">
-              <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider">
-                  <th className="py-2.5 px-3">Event ID</th>
-                  <th className="py-2.5 px-3">Event Timestamp (IST)</th>
-                  <th className="py-2.5 px-3">Administrator</th>
-                  <th className="py-2.5 px-3">Action & Route</th>
-                  <th className="py-2.5 px-3">Client IP / Device</th>
-                  <th className="py-2.5 px-3">Result</th>
-                  <th className="py-2.5 px-3 text-right">Forensic Detail</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                {((auditLogsList.length > 0 ? auditLogsList : data?.recentAudits) || []).map((audit: any) => (
-                  <tr
-                    key={audit.id || audit.audit_id}
-                    onClick={() => handleOpenAuditDetail(audit)}
-                    className="hover:bg-slate-50/80 dark:hover:bg-navy-900/40 cursor-pointer transition-all"
-                  >
-                    <td className="py-3 px-3 font-mono text-[11px] text-indigo-600 dark:text-indigo-400 font-bold">
-                      {audit.audit_id || `SEC-${audit.id}`}
-                    </td>
-                    <td className="py-3 px-3 font-mono text-[11px] text-slate-700 dark:text-slate-300">
-                      {audit.event_timestamp_formatted || audit.timestamp || 'N/A'}
-                    </td>
-                    <td className="py-3 px-3">
-                      <p className="text-slate-900 dark:text-white font-bold">{audit.admin_name || audit.user || 'System'}</p>
-                      <p className="text-[10px] text-slate-400 font-normal">{audit.admin_role || 'ADMIN'}</p>
-                    </td>
-                    <td className="py-3 px-3">
-                      <p className="text-slate-900 dark:text-white font-bold">{audit.action}</p>
-                      <p className="text-[10px] text-slate-500 font-mono">{audit.route || audit.target_id || audit.description}</p>
-                    </td>
-                    <td className="py-3 px-3 font-mono text-[10.5px] text-slate-500">
-                      <p>{audit.client_ip || audit.ip_address || '127.0.0.1'} ({audit.ip_version || 'IPv4'})</p>
-                      <p className="text-[9.5px] text-slate-400">{audit.browser || 'Web Browser'} • {audit.operating_system || 'Desktop'}</p>
-                    </td>
-                    <td className="py-3 px-3">
-                      <span
-                        className={`inline-block px-2 py-0.5 text-[10px] font-black rounded-md ${
-                          (audit.status || '').toUpperCase() === 'SUCCESS' || (audit.status || '').toUpperCase() === 'ALLOWED'
-                            ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
-                            : 'bg-rose-500/20 text-rose-600 dark:text-rose-400'
-                        }`}
+          {(() => {
+            const rawAudits = (auditLogsList.length > 0 ? auditLogsList : data?.recentAudits) || [];
+            const paginatedAudits = rawAudits.slice((auditPage - 1) * auditPageSize, auditPage * auditPageSize);
+
+            if (rawAudits.length === 0) {
+              return (
+                <div className="p-8 text-center rounded-2xl bg-slate-50 dark:bg-navy-900/50 border border-slate-200 dark:border-navy-800 text-slate-400 text-xs">
+                  No forensic audit logs recorded in the current active scope.
+                </div>
+              );
+            }
+
+            return (
+              <>
+                {/* Mobile Audit Cards (block md:hidden, no horizontal scroll) */}
+                <div className="block md:hidden space-y-2.5">
+                  {paginatedAudits.map((audit: any, idx: number) => {
+                    const isSuccess = (audit.status || '').toUpperCase() === 'SUCCESS' || (audit.status || '').toUpperCase() === 'ALLOWED';
+                    return (
+                      <div
+                        key={audit.id || audit.audit_id || idx}
+                        onClick={() => handleOpenAuditDetail(audit)}
+                        className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-navy-900 hover:border-brand-300 transition-all cursor-pointer shadow-sm space-y-2.5"
                       >
-                        {audit.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-right">
+                        {/* Event ID + Result Pill */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <span className="font-mono text-xs font-black text-indigo-600 dark:text-indigo-400">
+                              {audit.audit_id || `SEC-${audit.id}`}
+                            </span>
+                            <div className="text-[10.5px] font-mono text-slate-400 mt-0.5">
+                              {audit.event_timestamp_formatted || audit.timestamp || 'N/A'}
+                            </div>
+                          </div>
+
+                          <span
+                            className={`px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-full ${
+                              isSuccess
+                                ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                                : 'bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30'
+                            }`}
+                          >
+                            {audit.status || 'LOGGED'}
+                          </span>
+                        </div>
+
+                        {/* Admin & Action Details */}
+                        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-navy-800 space-y-1 text-xs">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">Administrator:</span>
+                            <span className="font-bold text-slate-900 dark:text-white truncate">
+                              {audit.admin_name || audit.user || 'System'} <span className="text-[10px] font-normal text-slate-400">({audit.admin_role || 'ADMIN'})</span>
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase">Action:</span>
+                            <span className="font-bold text-indigo-600 dark:text-indigo-400 font-mono text-[11px] truncate">
+                              {audit.action}
+                            </span>
+                          </div>
+                          {(audit.route || audit.target_id || audit.description) && (
+                            <div className="pt-1 border-t border-slate-100 dark:border-navy-800/80 text-[10.5px] font-mono text-slate-500 truncate">
+                              {audit.route || audit.target_id || audit.description}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Client Info + View Button */}
+                        <div className="flex items-center justify-between gap-2 pt-1 text-[11px]">
+                          <div className="font-mono text-[10px] text-slate-400 truncate">
+                            <span>{audit.client_ip || audit.ip_address || '127.0.0.1'}</span>
+                            {audit.browser && <span> • {audit.browser}</span>}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenAuditDetail(audit);
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-bold hover:bg-indigo-100 transition-all text-[11px] shrink-0"
+                          >
+                            View Detail →
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Desktop Table View (hidden md:block) */}
+                <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
+                  <table className="w-full text-left text-xs font-bold min-w-[760px]">
+                    <thead>
+                      <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider bg-slate-50/50 dark:bg-navy-900/50">
+                        <th className="py-2.5 px-3">Event ID</th>
+                        <th className="py-2.5 px-3">Event Timestamp (IST)</th>
+                        <th className="py-2.5 px-3">Administrator</th>
+                        <th className="py-2.5 px-3">Action & Route</th>
+                        <th className="py-2.5 px-3">Client IP / Device</th>
+                        <th className="py-2.5 px-3">Result</th>
+                        <th className="py-2.5 px-3 text-right">Forensic Detail</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                      {paginatedAudits.map((audit: any) => (
+                        <tr
+                          key={audit.id || audit.audit_id}
+                          onClick={() => handleOpenAuditDetail(audit)}
+                          className="hover:bg-slate-50/80 dark:hover:bg-navy-900/40 cursor-pointer transition-all"
+                        >
+                          <td className="py-3 px-3 font-mono text-[11px] text-indigo-600 dark:text-indigo-400 font-bold">
+                            {audit.audit_id || `SEC-${audit.id}`}
+                          </td>
+                          <td className="py-3 px-3 font-mono text-[11px] text-slate-700 dark:text-slate-300">
+                            {audit.event_timestamp_formatted || audit.timestamp || 'N/A'}
+                          </td>
+                          <td className="py-3 px-3">
+                            <p className="text-slate-900 dark:text-white font-bold">{audit.admin_name || audit.user || 'System'}</p>
+                            <p className="text-[10px] text-slate-400 font-normal">{audit.admin_role || 'ADMIN'}</p>
+                          </td>
+                          <td className="py-3 px-3">
+                            <p className="text-slate-900 dark:text-white font-bold">{audit.action}</p>
+                            <p className="text-[10px] text-slate-500 font-mono">{audit.route || audit.target_id || audit.description}</p>
+                          </td>
+                          <td className="py-3 px-3 font-mono text-[10.5px] text-slate-500">
+                            <p>{audit.client_ip || audit.ip_address || '127.0.0.1'} ({audit.ip_version || 'IPv4'})</p>
+                            <p className="text-[9.5px] text-slate-400">{audit.browser || 'Web Browser'} • {audit.operating_system || 'Desktop'}</p>
+                          </td>
+                          <td className="py-3 px-3">
+                            <span
+                              className={`inline-block px-2 py-0.5 text-[10px] font-black rounded-md ${
+                                (audit.status || '').toUpperCase() === 'SUCCESS' || (audit.status || '').toUpperCase() === 'ALLOWED'
+                                  ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                                  : 'bg-rose-500/20 text-rose-600 dark:text-rose-400'
+                              }`}
+                            >
+                              {audit.status}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 text-right">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenAuditDetail(audit);
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-black hover:bg-indigo-100 transition-all text-[11px]"
+                            >
+                              View Audit Log →
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination Controls */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-slate-500 font-medium">
+                  <div>
+                    Showing <strong className="text-slate-900 dark:text-white">{Math.min((auditPage - 1) * auditPageSize + 1, rawAudits.length)}</strong> to{' '}
+                    <strong className="text-slate-900 dark:text-white">{Math.min(auditPage * auditPageSize, rawAudits.length)}</strong> of{' '}
+                    <strong className="text-slate-900 dark:text-white">{rawAudits.length}</strong> Logs
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] font-bold">
+                      <span className="text-[10px] text-slate-400 px-1 font-mono">Show:</span>
+                      {[10, 25, 50, 100].map((sz) => (
+                        <button
+                          key={sz}
+                          onClick={() => { setAuditPageSize(sz); setAuditPage(1); }}
+                          className={`px-2 py-0.5 rounded-lg transition-all cursor-pointer ${
+                            auditPageSize === sz
+                              ? 'bg-brand-600 text-white shadow-xs font-black'
+                              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                          }`}
+                        >
+                          {sz}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
                       <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenAuditDetail(audit);
-                        }}
-                        className="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-black hover:bg-indigo-100 transition-all text-[11px]"
+                        disabled={auditPage <= 1}
+                        onClick={() => setAuditPage((p) => p - 1)}
+                        className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 disabled:opacity-30 hover:bg-slate-50 dark:hover:bg-navy-800 transition font-bold cursor-pointer"
                       >
-                        View Audit Log →
+                        Previous
                       </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      <span className="text-xs font-mono font-bold px-1">
+                        {auditPage} / {Math.ceil(rawAudits.length / auditPageSize) || 1}
+                      </span>
+                      <button
+                        disabled={auditPage >= Math.ceil(rawAudits.length / auditPageSize)}
+                        onClick={() => setAuditPage((p) => p + 1)}
+                        className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 disabled:opacity-30 hover:bg-slate-50 dark:hover:bg-navy-800 transition font-bold cursor-pointer"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
         </div>
       )}
 

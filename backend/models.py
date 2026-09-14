@@ -285,8 +285,8 @@ class WeeklyPublicResult(Base):
     student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
     reg_no = Column(String(50), nullable=False)
     name = Column(String(150), nullable=False)
-    dept = Column(String(20), nullable=False)
-    year = Column(String(10), nullable=False)
+    dept = Column(String(100), nullable=False)
+    year = Column(String(20), nullable=False)
 
     participation_status = Column(String(30), default="PENDING", index=True) # PUBLIC_ATTENDED, PUBLIC_NOT_ATTENDED, DATA_ERROR, PENDING
     state = Column(String(30), default="PENDING", index=True) # PENDING, FETCHING, SOURCE_FOUND, VALIDATING, VALIDATED, CLASSIFIED, FINALIZED, INVALID_USERNAME, FETCH_ERROR, SOURCE_TIMEOUT, RATE_LIMITED, DATA_ERROR, UNVERIFIED

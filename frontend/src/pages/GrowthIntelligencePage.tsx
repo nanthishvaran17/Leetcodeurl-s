@@ -93,6 +93,7 @@ export const GrowthIntelligencePage: React.FC = () => {
   const [deptFilter, setDeptFilter] = useState<string>('ALL');
   const [yearFilter, setYearFilter] = useState<string>('ALL');
   const [displayLimit, setDisplayLimit] = useState<number | 'ALL'>(10);
+  const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth < 768);
   const [sortMode, setSortMode] = useState<'total' | 'growth'>('total');
   const [deptOpen, setDeptOpen] = useState<boolean>(false);
   const [yearOpen, setYearOpen] = useState<boolean>(false);
@@ -103,6 +104,12 @@ export const GrowthIntelligencePage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Time Machine Inline Expansion state (One expanded student at a time)
   const [expandedStudentId, setExpandedStudentId] = useState<number | string | null>(null);
@@ -573,325 +580,524 @@ export const GrowthIntelligencePage: React.FC = () => {
             No activity found for the selected filters.
           </div>
         ) : (
-          <div className="table-responsive-container overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
-            <table className="w-full text-left text-xs mobile-card-table">
-              <thead className="bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 uppercase font-black text-[11px] border-b border-slate-200 dark:border-slate-800 tracking-wider hidden md:table-header-group">
-                <tr>
-                  <th className="py-3.5 px-4"># Rank</th>
-                  <th className="py-3.5 px-4">Student</th>
-                  <th className="py-3.5 px-4">Dept / Year</th>
-                  <th className="py-3.5 px-4">Total Solved</th>
-                  <th className="py-3.5 px-4 text-emerald-600 dark:text-emerald-400">Growth (+Delta)</th>
-                  <th className="py-3.5 px-4">Difficulty Breakdown</th>
-                  <th className="py-3.5 px-4">Rating Delta</th>
-                  <th className="py-3.5 px-4 text-right">Time Machine</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:border-slate-800 dark:divide-gray-800/80 bg-white dark:bg-navy-950 font-medium">
-                {(displayLimit === 'ALL' ? improvers : improvers.slice(0, Number(displayLimit))).map((imp, idx) => {
-                  const isExpanded = String(expandedStudentId) === String(imp.student_id);
-                  return (
-                    <React.Fragment key={imp.student_id}>
-                      <tr
-                        onClick={(e) => handleFetchStudentHistory(String(imp.student_id), imp.name, e)}
-                        className={`transition-colors cursor-pointer ${
-                          isExpanded
-                            ? 'bg-brand-50/80 dark:bg-navy-800/90 border-l-4 border-l-brand-500'
-                            : 'hover:bg-slate-50 dark:hover:bg-navy-800/60'
-                        }`}
-                      >
-                        
-                        {/* Rank Badge */}
-                        <td className="py-4 px-4 font-black text-slate-900 dark:text-white" data-label="Rank">
+          <>
+            {/* Mobile Leaderboard Cards (Compact, Full-width, Low Vertical Scroll) */}
+            <div className="block md:hidden space-y-3">
+              {(displayLimit === 'ALL' ? improvers : improvers.slice(0, Number(displayLimit))).map((imp, idx) => {
+                const isExpanded = String(expandedStudentId) === String(imp.student_id);
+                return (
+                  <div
+                    key={imp.student_id}
+                    className={`rounded-2xl bg-white dark:bg-navy-950 border transition-all p-3.5 shadow-sm space-y-2.5 ${
+                      isExpanded
+                        ? 'border-brand-500 ring-2 ring-brand-500/20 bg-brand-50/20 dark:bg-navy-900/80'
+                        : 'border-slate-200 dark:border-slate-800'
+                    }`}
+                  >
+                    {/* Header row: Rank, Student Info, Dept & Year */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div className="shrink-0">
                           {idx === 0 ? (
-                            <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black shadow-md shadow-amber-500/30 text-xs">
+                            <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black shadow-xs text-xs">
                               #1
                             </span>
                           ) : idx === 1 ? (
-                            <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-gradient-to-r from-slate-200 to-slate-300 text-slate-900 font-black shadow-sm text-xs">
+                            <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-xl bg-gradient-to-r from-slate-200 to-slate-300 text-slate-900 font-black shadow-xs text-xs">
                               #2
                             </span>
                           ) : idx === 2 ? (
-                            <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-gradient-to-r from-amber-700 to-amber-800 text-amber-100 font-black shadow-sm text-xs">
+                            <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-700 to-amber-800 text-amber-100 font-black shadow-xs text-xs">
                               #3
                             </span>
                           ) : (
-                            <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-extrabold text-xs">
+                            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-extrabold text-xs">
                               #{idx + 1}
                             </span>
                           )}
-                        </td>
-
-                        {/* Student Info */}
-                        <td className="py-4 px-4" data-label="Student">
-                          <div className="font-extrabold text-sm text-slate-900 dark:text-white tracking-tight hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-extrabold text-sm text-slate-900 dark:text-white truncate">
                             {imp.name}
-                          </div>
-                          <div className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400 mt-0.5">
+                          </h4>
+                          <div className="text-[11px] font-mono font-bold text-brand-600 dark:text-brand-400 truncate">
                             {imp.reg_no}
                           </div>
-                        </td>
+                        </div>
+                      </div>
 
-                        {/* Department / Year Pill */}
-                        <td className="py-4 px-4" data-label="Dept / Year">
-                          <span className="inline-block px-3 py-1 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-extrabold text-xs">
-                            {imp.department_code} • {imp.year_level} Yr
-                          </span>
-                        </td>
+                      <span className="shrink-0 px-2.5 py-1 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-extrabold text-[11px]">
+                        {imp.department_code} • {imp.year_level} Yr
+                      </span>
+                    </div>
 
-                        {/* Total Solved */}
-                        <td className="py-4 px-4 font-black text-sm text-slate-900 dark:text-white" data-label="Total Solved">
+                    {/* Solved Stats & Growth Delta Grid */}
+                    <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-navy-900/60 p-2.5 rounded-xl text-xs">
+                      <div>
+                        <div className="text-[9px] uppercase font-bold text-slate-400">Total Solved</div>
+                        <div className="font-mono font-black text-slate-900 dark:text-white mt-0.5 text-sm">
                           {imp.total_solved}
-                        </td>
-
-                        {/* Growth Delta */}
-                        <td className="py-4 px-4" data-label="Growth (+Delta)">
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[9px] uppercase font-bold text-slate-400">Growth (+Delta)</div>
+                        <div className="mt-0.5">
                           {imp.delta_solved === imp.total_solved ? (
-                            <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-slate-50 dark:bg-navy-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-navy-700 font-black text-sm shadow-sm" title="Initial Baseline">
-                              <span>—</span>
-                            </span>
+                            <span className="text-slate-500 font-bold text-xs">—</span>
                           ) : imp.delta_solved > 0 ? (
-                            <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-black text-sm shadow-sm">
-                              <span>+{imp.delta_solved}</span>
-                            </span>
-                          ) : imp.delta_solved < 0 ? (
-                            <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-black text-sm shadow-sm">
-                              <span>{imp.delta_solved}</span>
+                            <span className="font-bold text-emerald-600 dark:text-emerald-400 text-xs">
+                              +{imp.delta_solved}
                             </span>
                           ) : (
-                            <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-slate-50 dark:bg-navy-950 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-navy-800 font-black text-sm shadow-sm">
-                              <span>—</span>
-                            </span>
+                            <span className="font-bold text-slate-400 text-xs">—</span>
                           )}
-                        </td>
+                        </div>
+                      </div>
+                    </div>
 
-                        {/* Difficulty Breakdown */}
-                        <td className="py-4 px-4" data-label="Difficulty Breakdown">
-                          <div className="flex flex-wrap items-center gap-1.5 text-xs font-black">
-                            <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                              {imp.easy_solved} E (+{imp.delta_easy})
-                            </span>
-                            <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-                              {imp.medium_solved} M (+{imp.delta_medium})
-                            </span>
-                            <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
-                              {imp.hard_solved} H (+{imp.delta_hard})
-                            </span>
+                    {/* Breakdown Pills & Action */}
+                    <div className="flex items-center justify-between gap-2 pt-0.5">
+                      <div className="flex flex-wrap items-center gap-1 text-[10px] font-black">
+                        <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                          {imp.easy_solved} E (+{imp.delta_easy})
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                          {imp.medium_solved} M (+{imp.delta_medium})
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                          {imp.hard_solved} H (+{imp.delta_hard})
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={(e) => handleFetchStudentHistory(String(imp.student_id), imp.name, e)}
+                        className={`px-3 py-1.5 text-xs font-black rounded-xl transition-all flex items-center gap-1 shadow-sm shrink-0 cursor-pointer ${
+                          isExpanded
+                            ? 'bg-rose-600 text-white'
+                            : 'bg-brand-600 hover:bg-brand-700 text-white'
+                        }`}
+                      >
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>{isExpanded ? 'Close' : 'Timeline'}</span>
+                      </button>
+                    </div>
+
+                    {/* Expanded Time Machine Details on Mobile */}
+                    {isExpanded && (
+                      <div className="pt-3 border-t border-slate-200 dark:border-navy-800 space-y-4">
+                        {/* Header & Details Strip */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-sm">
+                          <div className="space-y-0.5">
+                            <h5 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wide">
+                              Active Filter Time Window
+                            </h5>
+                            <p className="text-xs text-brand-600 dark:text-brand-400 font-bold uppercase">
+                              {period === 'today' ? 'Today' : period === '7d' ? 'Last 7 Days' : period === '30d' ? 'Last 30 Days' : 'All Time'}
+                            </p>
                           </div>
-                        </td>
-
-                        {/* Rating Delta */}
-                        <td className="py-4 px-4" data-label="Rating Delta">
-                          {imp.delta_rating !== 0 ? (
-                            <span className={`font-black text-xs px-2.5 py-1 rounded-lg ${
-                              imp.delta_rating > 0
-                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                                : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
-                            }`}>
-                              {imp.delta_rating > 0 ? `+${imp.delta_rating}` : imp.delta_rating}
-                            </span>
-                          ) : (
-                            <span className="text-slate-400 font-bold">—</span>
-                          )}
-                        </td>
-
-                        {/* Time Machine Timeline Toggle Button */}
-                        <td className="py-4 px-4 text-right" data-label="Actions">
                           <button
                             type="button"
-                            onClick={(e) => handleFetchStudentHistory(String(imp.student_id), imp.name, e)}
-                            className={`px-3.5 py-2 text-xs font-black rounded-xl transition-all flex items-center space-x-1.5 shadow-md ml-auto ${
-                              isExpanded
-                                ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/30'
-                                : 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-600/30'
-                            }`}
+                            onClick={(e) => { e.stopPropagation(); setExpandedStudentId(null); }}
+                            className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 hover:bg-rose-500 hover:text-white transition-colors text-xs font-bold"
                           >
-                            <Clock className="w-3.5 h-3.5" />
-                            <span>{isExpanded ? 'Close' : 'Timeline'}</span>
-                            {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                            Close
                           </button>
-                        </td>
-                      </tr>
+                        </div>
 
-                      {/* INLINE EXPANDED DETAILS PANEL */}
-                      {isExpanded && (
-                        <tr key={`expanded-${imp.student_id}`} className="bg-slate-50/90 dark:bg-navy-950/90">
-                          <td colSpan={8} className="p-4 sm:p-6 border-b-2 border-brand-500/30">
-                            <div className="space-y-6">
-                              
-                              {/* Header & Details Strip */}
-                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-sm">
-                                <div className="space-y-1">
-                                  <div className="flex items-center space-x-2">
-                                    <h4 className="text-base font-black text-slate-900 dark:text-white">{imp.name}</h4>
-                                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300">
-                                      {imp.reg_no}
-                                    </span>
-                                    <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300">
-                                      {imp.department_code} • {imp.year_level} Yr
-                                    </span>
-                                  </div>
-                                  <p className="text-xs text-slate-500 font-semibold">
-                                    Active Filter Time Window: <strong className="text-brand-600 dark:text-brand-400 uppercase tracking-wide">{period === 'today' ? 'Today' : period === '7d' ? 'Last 7 Days' : period === '30d' ? 'Last 30 Days' : 'All Time'}</strong>
-                                  </p>
-                                </div>
+                        {/* Growth Breakdown Grid */}
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="p-2.5 rounded-xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-sm">
+                            <span className="text-[9px] font-extrabold uppercase text-slate-400">Total Solved</span>
+                            <div className="text-base font-black text-slate-900 dark:text-white mt-0.5">{imp.total_solved}</div>
+                          </div>
+                          <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/40 shadow-sm">
+                            <span className="text-[9px] font-extrabold uppercase text-indigo-600 dark:text-indigo-400">Period Delta</span>
+                            <div className="text-base font-black text-indigo-900 dark:text-indigo-100 mt-0.5">+{imp.delta_solved}</div>
+                          </div>
+                          <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/40 shadow-sm">
+                            <span className="text-[9px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400">Easy</span>
+                            <div className="text-sm font-black text-emerald-900 dark:text-emerald-100 mt-0.5">
+                              {imp.easy_solved} <span className="text-[10px] font-bold text-emerald-600">(+{imp.delta_easy})</span>
+                            </div>
+                          </div>
+                          <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/40 shadow-sm">
+                            <span className="text-[9px] font-extrabold uppercase text-amber-600 dark:text-amber-400">Medium</span>
+                            <div className="text-sm font-black text-amber-900 dark:text-amber-100 mt-0.5">
+                              {imp.medium_solved} <span className="text-[10px] font-bold text-amber-600">(+{imp.delta_medium})</span>
+                            </div>
+                          </div>
+                        </div>
 
-                                <button
-                                  type="button"
-                                  onClick={(e) => { e.stopPropagation(); setExpandedStudentId(null); }}
-                                  className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-rose-500 hover:text-white transition-colors text-xs font-bold flex items-center space-x-1"
-                                >
-                                  <span>Close Details</span>
-                                </button>
-                              </div>
+                        {/* Snapshot History Table on Mobile */}
+                        <div className="space-y-2">
+                          <h6 className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-1.5">
+                            <Clock className="w-3.5 h-3.5 text-brand-500" />
+                            <span>Time Machine Snapshots</span>
+                          </h6>
 
-                              {/* Growth Breakdown Grid */}
-                              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
-                                <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-sm">
-                                  <span className="text-[10px] font-extrabold uppercase text-slate-400">Total Solved</span>
-                                  <div className="text-lg font-black text-slate-900 dark:text-white mt-0.5">{imp.total_solved}</div>
-                                </div>
-                                <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/40 shadow-sm">
-                                  <span className="text-[10px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400">Easy Solved</span>
-                                  <div className="text-lg font-black text-emerald-900 dark:text-emerald-100 mt-0.5">
-                                    {imp.easy_solved} <span className="text-xs font-bold text-emerald-600">(+{imp.delta_easy})</span>
-                                  </div>
-                                </div>
-                                <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/40 shadow-sm">
-                                  <span className="text-[10px] font-extrabold uppercase text-amber-600 dark:text-amber-400">Medium Solved</span>
-                                  <div className="text-lg font-black text-amber-900 dark:text-amber-100 mt-0.5">
-                                    {imp.medium_solved} <span className="text-xs font-bold text-amber-600">(+{imp.delta_medium})</span>
-                                  </div>
-                                </div>
-                                <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 shadow-sm">
-                                  <span className="text-[10px] font-extrabold uppercase text-rose-600 dark:text-rose-400">Hard Solved</span>
-                                  <div className="text-lg font-black text-rose-900 dark:text-rose-100 mt-0.5">
-                                    {imp.hard_solved} <span className="text-xs font-bold text-rose-600">(+{imp.delta_hard})</span>
-                                  </div>
-                                </div>
-                                <div className="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/40 shadow-sm col-span-2 sm:col-span-1">
-                                  <span className="text-[10px] font-extrabold uppercase text-indigo-600 dark:text-indigo-400">Period Delta</span>
-                                  <div className="text-lg font-black text-indigo-900 dark:text-indigo-100 mt-0.5">+{imp.delta_solved}</div>
-                                </div>
-                              </div>
+                          {historyLoading ? (
+                            <div className="p-4 text-center text-xs font-bold text-slate-500 animate-pulse">
+                              Loading history snapshots...
+                            </div>
+                          ) : historySnapshots.length > 0 ? (
+                            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-950">
+                              <table className="w-full text-left text-xs min-w-[340px]">
+                                <thead className="bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 uppercase font-black text-[9px] border-b border-slate-200 dark:border-navy-800">
+                                  <tr>
+                                    <th className="py-2 px-2.5">Date</th>
+                                    <th className="py-2 px-2.5">Solved</th>
+                                    <th className="py-2 px-2.5 text-emerald-600">Delta</th>
+                                    <th className="py-2 px-2.5">Rating</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-200 dark:divide-navy-800 font-mono text-[11px]">
+                                  {historySnapshots.map((snap) => (
+                                    <tr key={snap.id} className="hover:bg-slate-50 dark:hover:bg-navy-800/60">
+                                      <td className="py-2 px-2.5 font-sans font-bold text-slate-800 dark:text-slate-200">
+                                        {new Date(snap.captured_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                      </td>
+                                      <td className="py-2 px-2.5 font-black text-slate-900 dark:text-white">{snap.total_solved}</td>
+                                      <td className="py-2 px-2.5 font-bold text-emerald-600">
+                                        {snap.delta_total > 0 ? `+${snap.delta_total}` : snap.delta_total === snap.total_solved ? 'Base' : '0'}
+                                      </td>
+                                      <td className="py-2 px-2.5 text-slate-600 dark:text-slate-400">{snap.contest_rating ?? '—'}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : (
+                            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 text-xs font-bold text-center">
+                              No history snapshots available yet.
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
 
-                              {/* Compact Area Chart */}
-                              {historySnapshots.length > 1 && (
-                                <div className="p-4 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-2.5">
-                                  <div className="flex items-center justify-between">
-                                    <h5 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-1.5">
-                                      <BarChart2 className="w-4 h-4 text-brand-500" />
-                                      <span>Solve Growth Trajectory</span>
-                                    </h5>
-                                    <span className="text-[11px] font-mono text-slate-400">{historySnapshots.length} Data Points</span>
-                                  </div>
-                                  <div className="h-44 w-full">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                      <AreaChart data={[...historySnapshots].reverse()}>
-                                        <defs>
-                                          <linearGradient id={`colorSolved-${imp.student_id}`} x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.4}/>
-                                            <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
-                                          </linearGradient>
-                                        </defs>
-                                        <XAxis
-                                          dataKey="captured_at"
-                                          tickFormatter={(val) => new Date(val).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                                          tick={{ fontSize: 10, fill: '#64748b' }}
-                                        />
-                                        <YAxis domain={['dataMin', 'dataMax']} tick={{ fontSize: 10, fill: '#64748b' }} />
-                                        <Tooltip
-                                          contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', fontSize: '11px', color: '#fff' }}
-                                          labelFormatter={(val) => new Date(val).toLocaleString()}
-                                        />
-                                        <Area type="monotone" dataKey="total_solved" stroke="#4f46e5" strokeWidth={2.5} fillOpacity={1} fill={`url(#colorSolved-${imp.student_id})`} />
-                                      </AreaChart>
-                                    </ResponsiveContainer>
-                                  </div>
-                                </div>
-                              )}
+            {/* Desktop Table View */}
+            <div className="hidden md:block table-responsive-container overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
+              <table className="w-full text-left text-xs min-w-[800px]">
+                <thead className="bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 uppercase font-black text-[11px] border-b border-slate-200 dark:border-slate-800 tracking-wider">
+                  <tr>
+                    <th className="py-3.5 px-4"># Rank</th>
+                    <th className="py-3.5 px-4">Student</th>
+                    <th className="py-3.5 px-4">Dept / Year</th>
+                    <th className="py-3.5 px-4">Total Solved</th>
+                    <th className="py-3.5 px-4 text-emerald-600 dark:text-emerald-400">Growth (+Delta)</th>
+                    <th className="py-3.5 px-4">Difficulty Breakdown</th>
+                    <th className="py-3.5 px-4">Rating Delta</th>
+                    <th className="py-3.5 px-4 text-right">Time Machine</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:border-slate-800 dark:divide-gray-800/80 bg-white dark:bg-navy-950 font-medium">
+                  {(displayLimit === 'ALL' ? improvers : improvers.slice(0, Number(displayLimit))).map((imp, idx) => {
+                    const isExpanded = String(expandedStudentId) === String(imp.student_id);
+                    return (
+                      <React.Fragment key={imp.student_id}>
+                        <tr
+                          onClick={(e) => handleFetchStudentHistory(String(imp.student_id), imp.name, e)}
+                          className={`transition-colors cursor-pointer ${
+                            isExpanded
+                              ? 'bg-brand-50/80 dark:bg-navy-800/90 border-l-4 border-l-brand-500'
+                              : 'hover:bg-slate-50 dark:hover:bg-navy-800/60'
+                          }`}
+                        >
+                          {/* Rank Badge */}
+                          <td className="py-4 px-4 font-black text-slate-900 dark:text-white">
+                            {idx === 0 ? (
+                              <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black shadow-md shadow-amber-500/30 text-xs">
+                                #1
+                              </span>
+                            ) : idx === 1 ? (
+                              <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-gradient-to-r from-slate-200 to-slate-300 text-slate-900 font-black shadow-sm text-xs">
+                                #2
+                              </span>
+                            ) : idx === 2 ? (
+                              <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-gradient-to-r from-amber-700 to-amber-800 text-amber-100 font-black shadow-sm text-xs">
+                                #3
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-extrabold text-xs">
+                                #{idx + 1}
+                              </span>
+                            )}
+                          </td>
 
-                              {/* Snapshot History Table */}
-                              <div className="space-y-2.5">
-                                <div className="flex items-center justify-between">
-                                  <h5 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-1.5">
-                                    <Clock className="w-4 h-4 text-brand-500" />
-                                    <span>Time Machine Historical Log</span>
-                                  </h5>
-                                </div>
-
-                                {historyLoading ? (
-                                  <div className="p-6 text-center text-xs font-bold text-slate-500 animate-pulse">
-                                    Loading historical snapshots...
-                                  </div>
-                                ) : historySnapshots.length > 0 ? (
-                                  <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-950">
-                                    <table className="w-full text-left text-xs">
-                                      <thead className="bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 uppercase font-black text-[10px] border-b border-slate-200 dark:border-navy-800">
-                                        <tr>
-                                          <th className="py-2.5 px-3.5">Captured At</th>
-                                          <th className="py-2.5 px-3.5">Total</th>
-                                          <th className="py-2.5 px-3.5 text-emerald-600">Easy</th>
-                                          <th className="py-2.5 px-3.5 text-amber-600">Medium</th>
-                                          <th className="py-2.5 px-3.5 text-rose-600">Hard</th>
-                                          <th className="py-2.5 px-3.5">Rating</th>
-                                          <th className="py-2.5 px-3.5 text-emerald-600">Delta</th>
-                                          <th className="py-2.5 px-3.5">Source</th>
-                                        </tr>
-                                      </thead>
-                                      <tbody className="divide-y divide-slate-200 dark:divide-navy-800 font-mono text-xs">
-                                        {historySnapshots.map((snap) => (
-                                          <tr key={snap.id} className="hover:bg-slate-50 dark:hover:bg-navy-800/60 transition-colors">
-                                            <td className="py-2.5 px-3.5 font-sans font-bold text-slate-800 dark:text-slate-200">
-                                              {new Date(snap.captured_at).toLocaleString([], { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                                            </td>
-                                            <td className="py-2.5 px-3.5 font-black text-slate-900 dark:text-white">{snap.total_solved}</td>
-                                            <td className="py-2.5 px-3.5 font-bold text-emerald-600 dark:text-emerald-400">{snap.easy_solved}</td>
-                                            <td className="py-2.5 px-3.5 font-bold text-amber-600 dark:text-amber-400">{snap.medium_solved}</td>
-                                            <td className="py-2.5 px-3.5 font-bold text-rose-600 dark:text-rose-400">{snap.hard_solved}</td>
-                                            <td className="py-2.5 px-3.5 font-bold text-slate-700 dark:text-slate-300">{snap.contest_rating ?? '—'}</td>
-                                            <td className="py-2.5 px-3.5">
-                                              {snap.delta_total === snap.total_solved ? (
-                                                <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-400 font-black text-[11px]" title="Initial Baseline Snapshot">
-                                                  — Baseline
-                                                </span>
-                                              ) : snap.delta_total > 0 ? (
-                                                <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-black text-[11px]">
-                                                  +{snap.delta_total}
-                                                </span>
-                                              ) : snap.delta_total < 0 ? (
-                                                <span className="px-2 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-black text-[11px]">
-                                                  {snap.delta_total}
-                                                </span>
-                                              ) : (
-                                                <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-400 font-black text-[11px]">
-                                                  +0
-                                                </span>
-                                              )}
-                                            </td>
-                                            <td className="py-2.5 px-3.5 text-[10px] font-sans font-bold text-slate-400">{snap.source || 'leetcode_sync'}</td>
-                                          </tr>
-                                        ))}
-                                      </tbody>
-                                    </table>
-                                  </div>
-                                ) : (
-                                  <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 text-xs font-bold text-center">
-                                    Historical snapshot data unavailable for this student yet.
-                                  </div>
-                                )}
-                              </div>
-
+                          {/* Student Info */}
+                          <td className="py-4 px-4">
+                            <div className="font-extrabold text-sm text-slate-900 dark:text-white tracking-tight hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
+                              {imp.name}
+                            </div>
+                            <div className="text-xs font-mono font-bold text-brand-600 dark:text-brand-400 mt-0.5">
+                              {imp.reg_no}
                             </div>
                           </td>
+
+                          {/* Department / Year Pill */}
+                          <td className="py-4 px-4">
+                            <span className="inline-block px-3 py-1 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-extrabold text-xs">
+                              {imp.department_code} • {imp.year_level} Yr
+                            </span>
+                          </td>
+
+                          {/* Total Solved */}
+                          <td className="py-4 px-4 font-black text-sm text-slate-900 dark:text-white">
+                            {imp.total_solved}
+                          </td>
+
+                          {/* Growth Delta */}
+                          <td className="py-4 px-4">
+                            {imp.delta_solved === imp.total_solved ? (
+                              <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-slate-50 dark:bg-navy-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-navy-700 font-black text-sm shadow-sm" title="Initial Baseline">
+                                <span>—</span>
+                              </span>
+                            ) : imp.delta_solved > 0 ? (
+                              <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-black text-sm shadow-sm">
+                                <span>+{imp.delta_solved}</span>
+                              </span>
+                            ) : imp.delta_solved < 0 ? (
+                              <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-black text-sm shadow-sm">
+                                <span>{imp.delta_solved}</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-slate-50 dark:bg-navy-950 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-navy-800 font-black text-sm shadow-sm">
+                                <span>—</span>
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Difficulty Breakdown */}
+                          <td className="py-4 px-4">
+                            <div className="flex flex-wrap items-center gap-1.5 text-xs font-black">
+                              <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                {imp.easy_solved} E (+{imp.delta_easy})
+                              </span>
+                              <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                                {imp.medium_solved} M (+{imp.delta_medium})
+                              </span>
+                              <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                                {imp.hard_solved} H (+{imp.delta_hard})
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Rating Delta */}
+                          <td className="py-4 px-4">
+                            {imp.delta_rating !== 0 ? (
+                              <span className={`font-black text-xs px-2.5 py-1 rounded-lg ${
+                                imp.delta_rating > 0
+                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                                  : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                              }`}>
+                                {imp.delta_rating > 0 ? `+${imp.delta_rating}` : imp.delta_rating}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 font-bold">—</span>
+                            )}
+                          </td>
+
+                          {/* Time Machine Timeline Toggle Button */}
+                          <td className="py-4 px-4 text-right">
+                            <button
+                              type="button"
+                              onClick={(e) => handleFetchStudentHistory(String(imp.student_id), imp.name, e)}
+                              className={`px-3.5 py-2 text-xs font-black rounded-xl transition-all flex items-center space-x-1.5 shadow-md ml-auto cursor-pointer ${
+                                isExpanded
+                                  ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/30'
+                                  : 'bg-brand-600 hover:bg-brand-700 text-white shadow-brand-600/30'
+                              }`}
+                            >
+                              <Clock className="w-3.5 h-3.5" />
+                              <span>{isExpanded ? 'Close' : 'Timeline'}</span>
+                              {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                            </button>
+                          </td>
                         </tr>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+
+                        {/* INLINE EXPANDED DETAILS PANEL */}
+                        {isExpanded && (
+                          <tr key={`expanded-${imp.student_id}`} className="bg-slate-50/90 dark:bg-navy-950/90">
+                            <td colSpan={8} className="p-4 sm:p-6 border-b-2 border-brand-500/30">
+                              <div className="space-y-6">
+                                {/* Header & Details Strip */}
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-sm">
+                                  <div className="space-y-1">
+                                    <div className="flex items-center space-x-2">
+                                      <h4 className="text-base font-black text-slate-900 dark:text-white">{imp.name}</h4>
+                                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300">
+                                        {imp.reg_no}
+                                      </span>
+                                      <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300">
+                                        {imp.department_code} • {imp.year_level} Yr
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-slate-500 font-semibold">
+                                      Active Filter Time Window: <strong className="text-brand-600 dark:text-brand-400 uppercase tracking-wide">{period === 'today' ? 'Today' : period === '7d' ? 'Last 7 Days' : period === '30d' ? 'Last 30 Days' : 'All Time'}</strong>
+                                    </p>
+                                  </div>
+
+                                  <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); setExpandedStudentId(null); }}
+                                    className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-rose-500 hover:text-white transition-colors text-xs font-bold flex items-center space-x-1 cursor-pointer"
+                                  >
+                                    <span>Close Details</span>
+                                  </button>
+                                </div>
+
+                                {/* Growth Breakdown Grid */}
+                                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
+                                  <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-sm">
+                                    <span className="text-[10px] font-extrabold uppercase text-slate-400">Total Solved</span>
+                                    <div className="text-lg font-black text-slate-900 dark:text-white mt-0.5">{imp.total_solved}</div>
+                                  </div>
+                                  <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/40 shadow-sm">
+                                    <span className="text-[10px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400">Easy Solved</span>
+                                    <div className="text-lg font-black text-emerald-900 dark:text-emerald-100 mt-0.5">
+                                      {imp.easy_solved} <span className="text-xs font-bold text-emerald-600">(+{imp.delta_easy})</span>
+                                    </div>
+                                  </div>
+                                  <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/40 shadow-sm">
+                                    <span className="text-[10px] font-extrabold uppercase text-amber-600 dark:text-amber-400">Medium Solved</span>
+                                    <div className="text-lg font-black text-amber-900 dark:text-amber-100 mt-0.5">
+                                      {imp.medium_solved} <span className="text-xs font-bold text-amber-600">(+{imp.delta_medium})</span>
+                                    </div>
+                                  </div>
+                                  <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 shadow-sm">
+                                    <span className="text-[10px] font-extrabold uppercase text-rose-600 dark:text-rose-400">Hard Solved</span>
+                                    <div className="text-lg font-black text-rose-900 dark:text-rose-100 mt-0.5">
+                                      {imp.hard_solved} <span className="text-xs font-bold text-rose-600">(+{imp.delta_hard})</span>
+                                    </div>
+                                  </div>
+                                  <div className="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/40 shadow-sm col-span-2 sm:col-span-1">
+                                    <span className="text-[10px] font-extrabold uppercase text-indigo-600 dark:text-indigo-400">Period Delta</span>
+                                    <div className="text-lg font-black text-indigo-900 dark:text-indigo-100 mt-0.5">+{imp.delta_solved}</div>
+                                  </div>
+                                </div>
+
+                                {/* Compact Area Chart */}
+                                {historySnapshots.length > 1 && (
+                                  <div className="p-4 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-2.5">
+                                    <div className="flex items-center justify-between">
+                                      <h5 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-1.5">
+                                        <BarChart2 className="w-4 h-4 text-brand-500" />
+                                        <span>Solve Growth Trajectory</span>
+                                      </h5>
+                                      <span className="text-[11px] font-mono text-slate-400">{historySnapshots.length} Data Points</span>
+                                    </div>
+                                    <div className="h-44 w-full">
+                                      <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={[...historySnapshots].reverse()}>
+                                          <defs>
+                                            <linearGradient id={`colorSolved-${imp.student_id}`} x1="0" y1="0" x2="0" y2="1">
+                                              <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.4}/>
+                                              <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
+                                            </linearGradient>
+                                          </defs>
+                                          <XAxis
+                                            dataKey="captured_at"
+                                            tickFormatter={(val) => new Date(val).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                            tick={{ fontSize: 10, fill: '#64748b' }}
+                                          />
+                                          <YAxis domain={['dataMin', 'dataMax']} tick={{ fontSize: 10, fill: '#64748b' }} />
+                                          <Tooltip
+                                            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', fontSize: '11px', color: '#fff' }}
+                                            labelFormatter={(val) => new Date(val).toLocaleString()}
+                                          />
+                                          <Area type="monotone" dataKey="total_solved" stroke="#4f46e5" strokeWidth={2.5} fillOpacity={1} fill={`url(#colorSolved-${imp.student_id})`} />
+                                        </AreaChart>
+                                      </ResponsiveContainer>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Snapshot History Table */}
+                                <div className="space-y-2.5">
+                                  <div className="flex items-center justify-between">
+                                    <h5 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-1.5">
+                                      <Clock className="w-4 h-4 text-brand-500" />
+                                      <span>Time Machine Historical Log</span>
+                                    </h5>
+                                  </div>
+
+                                  {historyLoading ? (
+                                    <div className="p-6 text-center text-xs font-bold text-slate-500 animate-pulse">
+                                      Loading historical snapshots...
+                                    </div>
+                                  ) : historySnapshots.length > 0 ? (
+                                    <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-950">
+                                      <table className="w-full text-left text-xs min-w-[500px]">
+                                        <thead className="bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 uppercase font-black text-[10px] border-b border-slate-200 dark:border-navy-800">
+                                          <tr>
+                                            <th className="py-2.5 px-3.5">Captured At</th>
+                                            <th className="py-2.5 px-3.5">Total</th>
+                                            <th className="py-2.5 px-3.5 text-emerald-600">Easy</th>
+                                            <th className="py-2.5 px-3.5 text-amber-600">Medium</th>
+                                            <th className="py-2.5 px-3.5 text-rose-600">Hard</th>
+                                            <th className="py-2.5 px-3.5">Rating</th>
+                                            <th className="py-2.5 px-3.5 text-emerald-600">Delta</th>
+                                            <th className="py-2.5 px-3.5">Source</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-200 dark:divide-navy-800 font-mono text-xs">
+                                          {historySnapshots.map((snap) => (
+                                            <tr key={snap.id} className="hover:bg-slate-50 dark:hover:bg-navy-800/60 transition-colors">
+                                              <td className="py-2.5 px-3.5 font-sans font-bold text-slate-800 dark:text-slate-200">
+                                                {new Date(snap.captured_at).toLocaleString([], { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                              </td>
+                                              <td className="py-2.5 px-3.5 font-black text-slate-900 dark:text-white">{snap.total_solved}</td>
+                                              <td className="py-2.5 px-3.5 font-bold text-emerald-600 dark:text-emerald-400">{snap.easy_solved}</td>
+                                              <td className="py-2.5 px-3.5 font-bold text-amber-600 dark:text-amber-400">{snap.medium_solved}</td>
+                                              <td className="py-2.5 px-3.5 font-bold text-rose-600 dark:text-rose-400">{snap.hard_solved}</td>
+                                              <td className="py-2.5 px-3.5 font-bold text-slate-700 dark:text-slate-300">{snap.contest_rating ?? '—'}</td>
+                                              <td className="py-2.5 px-3.5">
+                                                {snap.delta_total === snap.total_solved ? (
+                                                  <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-400 font-black text-[11px]" title="Initial Baseline Snapshot">
+                                                    — Baseline
+                                                  </span>
+                                                ) : snap.delta_total > 0 ? (
+                                                  <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-black text-[11px]">
+                                                    +{snap.delta_total}
+                                                  </span>
+                                                ) : snap.delta_total < 0 ? (
+                                                  <span className="px-2 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-black text-[11px]">
+                                                    {snap.delta_total}
+                                                  </span>
+                                                ) : (
+                                                  <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-navy-800 dark:text-slate-400 font-black text-[11px]">
+                                                    +0
+                                                  </span>
+                                                )}
+                                              </td>
+                                              <td className="py-2.5 px-3.5 text-[10px] font-sans font-bold text-slate-400">{snap.source || 'leetcode_sync'}</td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  ) : (
+                                    <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 text-xs font-bold text-center">
+                                      Historical snapshot data unavailable for this student yet.
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 

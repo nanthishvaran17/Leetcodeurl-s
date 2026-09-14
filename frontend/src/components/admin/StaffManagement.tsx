@@ -533,13 +533,13 @@ export const StaffManagement: React.FC = () => {
                         {/* Institutional ID & Department / Scope */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-slate-100 dark:border-navy-750/60 text-xs">
                           <div>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Institutional ID</span>
+                            <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest block mb-0.5">Institutional ID</span>
                             <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400 break-all text-xs">
                               {staff.institutional_id || `NEC-STAFF-${staff.id}`}
                             </span>
                           </div>
                           <div>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Department / Scope</span>
+                            <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest block mb-0.5">Department / Scope</span>
                             <span className="inline-block px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 max-w-full truncate">
                               {staff.department || 'INSTITUTIONAL'}
                             </span>
@@ -549,7 +549,7 @@ export const StaffManagement: React.FC = () => {
                         {/* Role & Workload */}
                         <div className="grid grid-cols-2 gap-3 text-xs">
                           <div>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Role</span>
+                            <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest block mb-0.5">Role</span>
                             <span className={`inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold border ${
                               staff.role === 'Faculty'
                                 ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20'
@@ -563,7 +563,7 @@ export const StaffManagement: React.FC = () => {
                             </span>
                           </div>
                           <div>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Workload</span>
+                            <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest block mb-0.5">Workload</span>
                             <div className="space-y-1">
                               <div className="text-xs font-black text-slate-700 dark:text-slate-300">
                                 {staff.assigned_count || 0} / {staff.max_capacity || 30}

@@ -776,7 +776,7 @@ export const App: React.FC = () => {
 
               {activeTab === 'messages' && (
                 isTabAllowed('messages')
-                  ? <MessagesPage />
+                  ? <MessagesPage onNavigateTab={handleTabChange} />
                   : renderAccessDenied('Messages')
               )}
 

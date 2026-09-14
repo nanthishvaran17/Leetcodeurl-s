@@ -186,6 +186,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         top_student_name: topStudentName,
         top_student_id: topStudentId,
         top_student_solved: topStudentSolved,
+        top_student_obj: ds?.topStudent || dept.top_performer || null,
       };
     });
   }, [rawDepartments, students]);
@@ -846,7 +847,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                         <div className="font-black text-sm text-slate-900 dark:text-white">
                           {dept.department_code}
                         </div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400 font-medium break-words whitespace-normal leading-snug">
+                        <div className="text-xs text-slate-600 dark:text-slate-400 font-semibold break-words whitespace-normal leading-snug">
                           {dept.department_name}
                         </div>
                       </div>
@@ -883,8 +884,10 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                         <button
                           type="button"
                           onClick={() => {
-                            if (dept.top_student_id && onSelectStudent) {
-                              onSelectStudent(dept.top_student_id);
+                            if (dept.top_student_obj && onSelectStudent) {
+                              onSelectStudent(dept.top_student_obj);
+                            } else if (dept.top_student_id && onSelectStudent) {
+                              onSelectStudent({ id: dept.top_student_id, reg_no: String(dept.top_student_id), name: dept.top_student_name });
                             }
                           }}
                           className={`font-bold text-amber-600 dark:text-amber-400 truncate block text-left ${dept.top_student_id && onSelectStudent ? 'hover:underline cursor-pointer' : ''}`}
@@ -937,7 +940,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                       <tr key={dept.department_code || dept.department_id} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors">
                         <td className="py-1.5 px-3 w-[25%]">
                           <div className="font-black text-sm text-slate-900 dark:text-white">{dept.department_code}</div>
-                          <div className="text-xs text-slate-500 mt-0.5 whitespace-normal leading-tight pr-2">{dept.department_name}</div>
+                          <div className="text-xs text-slate-600 dark:text-slate-400 font-semibold mt-0.5 whitespace-normal leading-tight pr-2">{dept.department_name}</div>
                         </td>
                         <td className="py-1.5 px-2 font-medium text-slate-600 dark:text-slate-300 text-center w-[9%]">{dept.total_students}</td>
                         <td className="py-1.5 px-2 font-medium text-emerald-600 dark:text-emerald-400 text-center w-[9%]">{dept.active_students ?? dept.active_count ?? Math.round(((dept.participation_rate || 0) / 100) * dept.total_students)}</td>
@@ -957,9 +960,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                             <div className="flex items-center justify-start space-x-1.5">
                               <button
                                 type="button"
-                                onClick={() => {
-                                  if (dept.top_student_id && onSelectStudent) {
-                                    onSelectStudent(dept.top_student_id);
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (dept.top_student_obj && onSelectStudent) {
+                                    onSelectStudent(dept.top_student_obj);
+                                  } else if (dept.top_student_id && onSelectStudent) {
+                                    onSelectStudent({ id: dept.top_student_id, reg_no: String(dept.top_student_id), name: dept.top_student_name });
                                   }
                                 }}
                                 className={`font-bold text-amber-600 dark:text-amber-400 truncate ${dept.top_student_id && onSelectStudent ? 'hover:text-amber-700 dark:hover:text-amber-300 hover:underline cursor-pointer' : ''}`}

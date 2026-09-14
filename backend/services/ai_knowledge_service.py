@@ -141,9 +141,10 @@ class AIKnowledgeEngine:
             }
 
         # 2. AI MODEL DELEGATION FOR NATURAL LANGUAGE UNDERSTANDING & TOOL CALLING
-        from backend.services.ai_gemini_service import AIGeminiEngine
-        if getattr(settings, "GEMINI_API_KEY", None):
-            return AIGeminiEngine.answer_query(
+        # Use Local Ollama LLM instead of Gemini for zero-cost, local inference
+        from backend.services.ai_ollama_service import AIOllamaEngine
+        if getattr(settings, "OLLAMA_BASE_URL", None):
+            return AIOllamaEngine.answer_query(
                 db=db,
                 query_text=query_text,
                 user=user,

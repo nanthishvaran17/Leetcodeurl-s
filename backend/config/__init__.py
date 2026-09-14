@@ -97,6 +97,8 @@ class Settings(BaseSettings):
     
     # AI Engine
     GEMINI_API_KEY: str = os.environ.get("GEMINI_API_KEY", "")
+    OLLAMA_BASE_URL: str = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+    OLLAMA_MODEL: str = os.environ.get("OLLAMA_MODEL", "llama3")
     
     # College Branding
     COLLEGE_NAME: str = "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)"

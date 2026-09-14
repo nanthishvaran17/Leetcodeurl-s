@@ -21,6 +21,31 @@ class AIChatRequest(BaseModel):
 
 router = APIRouter(prefix="/ai", tags=["AI Assistant"])
 
+@router.get("/health/ollama")
+def get_ollama_health():
+    import httpx
+    from backend.config import settings
+    url = f"{settings.OLLAMA_BASE_URL.rstrip('/')}/api/tags"
+    try:
+        with httpx.Client(timeout=3.0) as client:
+            res = client.get(url)
+            res.raise_for_status()
+            data = res.json()
+            models = [m.get("name") for m in data.get("models", [])]
+            return {
+                "available": True,
+                "model": settings.OLLAMA_MODEL,
+                "base_url": settings.OLLAMA_BASE_URL,
+                "installed_models": models
+            }
+    except Exception as e:
+        return {
+            "available": False,
+            "model": settings.OLLAMA_MODEL,
+            "base_url": settings.OLLAMA_BASE_URL,
+            "error": str(e)
+        }
+
 @router.post("/chat")
 def handle_ai_chat(
     req: AIChatRequest,

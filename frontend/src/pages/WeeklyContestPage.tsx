@@ -1439,15 +1439,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     <div className="space-y-5 sm:space-y-6 pt-1 sm:pt-0 animate-fade-in pb-12">
 
       {/* 1. SLEEK INSTITUTIONAL HERO HEADER */}
-      <div className={`relative overflow-hidden rounded-3xl text-white p-6 sm:p-8 shadow-2xl border transition-all duration-500 ${isLive
+      <div className={`relative overflow-hidden rounded-3xl text-white p-5 sm:p-7 md:p-8 shadow-2xl border transition-all duration-500 ${isLive
         ? 'bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 border-emerald-500/50 shadow-emerald-500/10 before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/5 before:to-transparent before:-translate-x-full before:animate-[shimmer_2s_infinite]'
         : 'bg-gradient-to-r from-slate-950 via-navy-950 to-slate-950 border-indigo-500/30 shadow-indigo-950/20'
         }`}>
 
-        <div className="relative z-10 flex items-center justify-between flex-wrap gap-6">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           {/* Left Context Info */}
           <div className="space-y-3 flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2">
               {isLive ? (
                 <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center space-x-1.5 shadow-md bg-rose-600 text-white animate-pulse">
                   <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
@@ -1471,12 +1471,13 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               )}
 
               <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
-                <Layers className="w-3.5 h-3.5 text-amber-400" />
-                <span>CONTEST ANALYTICS • INSTITUTIONAL EDITION (CYBER SECURITY, IOT & INFORMATION TECHNOLOGY)</span>
+                <Layers className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span className="hidden sm:inline">CONTEST ANALYTICS • INSTITUTIONAL EDITION (CYBER SECURITY, IOT & INFORMATION TECHNOLOGY)</span>
+                <span className="sm:hidden">CONTEST ANALYTICS • CSE / IOT / IT</span>
               </div>
 
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/10 text-slate-300 text-xs font-mono font-bold">
-                <Clock className="w-3.5 h-3.5 text-brand-400" />
+                <Clock className="w-3.5 h-3.5 text-brand-400 shrink-0" />
                 <span>08:00 AM – 09:30 AM IST</span>
               </span>
 
@@ -1491,23 +1492,22 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
               {wsLastSyncAt && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 text-slate-400 text-xs font-mono border border-white/10">
-                  <Clock className="w-3 h-3 text-slate-500" />
+                  <Clock className="w-3 h-3 text-slate-500 shrink-0" />
                   <span>Synced {wsLastSyncAt}</span>
                 </span>
               )}
 
               {wsSyncState === 'INITIAL_SYNC' && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-xs font-mono font-bold animate-pulse">
-                  <RefreshCw className="w-3 h-3 text-indigo-400 animate-spin" />
+                  <RefreshCw className="w-3 h-3 text-indigo-400 animate-spin shrink-0" />
                   <span>INITIAL SYNCING</span>
                 </span>
               )}
-
             </div>
 
             <div className="flex flex-col gap-1.5 md:gap-2">
-              <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-display tracking-tight text-white uppercase">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-display tracking-tight text-white uppercase font-black">
                   {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') ? (
                     <>
                       MY <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300 font-extrabold">{activeSessionObj?.contestName || 'WEEKLY CONTEST'}</span>
@@ -1519,16 +1519,16 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   )}
                 </h1>
                 
-                <div className="flex items-center gap-2 mt-1 sm:mt-0">
+                <div className="flex items-center gap-2">
                   {user?.role?.toLowerCase() === 'admin (system admin)' && (
-                    <span className="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/40 text-xs font-black uppercase tracking-wider flex items-center space-x-1.5 shadow-lg shadow-rose-500/10">
+                    <span className="px-2.5 py-0.5 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/40 text-xs font-black uppercase tracking-wider flex items-center space-x-1.5 shadow-lg shadow-rose-500/10">
                       <ShieldCheck className="w-3.5 h-3.5" />
                       <span>Admin</span>
                     </span>
                   )}
                   
                   {/* vs Previous Contest Badge */}
-                  <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-black tracking-wider flex items-center space-x-1 shadow-sm">
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-black tracking-wider flex items-center space-x-1 shadow-sm">
                     <TrendingUp className="w-3 h-3" />
                     <span>+12% vs Previous Contest</span>
                   </span>
@@ -1536,7 +1536,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </div>
             </div>
 
-            <div className="flex items-center flex-wrap gap-2 text-xs sm:text-sm text-slate-300 font-bold tracking-wide">
+            <div className="flex items-center flex-wrap gap-2 text-xs text-slate-300 font-bold tracking-wide">
               <span>NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</span>
               <span className="text-slate-500">•</span>
               <span className="text-indigo-300">
@@ -1554,17 +1554,17 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           </div>
 
           {/* Right Controls: Unified Session Selector, Date Picker & Admin Monitor Toggle */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-white/10 dark:bg-navy-950/80 p-2.5 rounded-2xl border border-white/15 backdrop-blur-md shadow-lg">
-            {/* Calendar Date Picker - Elegant Variant */}
-            <div className="flex items-center justify-between min-w-[150px] bg-gradient-to-r from-navy-950 to-slate-900/90 pl-3 pr-2 py-1.5 rounded-xl border border-indigo-500/20 shadow-lg hover:border-indigo-500/40 transition-all duration-300 focus-within:border-indigo-400 focus-within:ring-1 focus-within:ring-indigo-400/50">
-              <div className="flex items-center">
+          <div className="w-full lg:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white/10 dark:bg-navy-950/80 p-2.5 rounded-2xl border border-white/15 backdrop-blur-md shadow-lg">
+            {/* Calendar Date Picker */}
+            <div className="flex items-center justify-between min-w-[140px] bg-gradient-to-r from-navy-950 to-slate-900/90 pl-3 pr-2 py-2 rounded-xl border border-indigo-500/20 shadow-sm hover:border-indigo-500/40 transition-all duration-300 focus-within:border-indigo-400 focus-within:ring-1 focus-within:ring-indigo-400/50">
+              <div className="flex items-center flex-1">
                 <Calendar className="w-4 h-4 text-indigo-400 mr-2 shrink-0" />
                 <input
                   type="date"
                   value={customCalendarDate}
                   onChange={(e) => handleCalendarDateChange(e.target.value)}
                   style={{ colorScheme: 'dark' }}
-                  className="bg-transparent text-xs font-bold text-slate-200 outline-none cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-60 hover:[&::-webkit-calendar-picker-indicator]:opacity-100 transition-opacity"
+                  className="bg-transparent text-xs font-bold text-slate-200 outline-none cursor-pointer w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-60 hover:[&::-webkit-calendar-picker-indicator]:opacity-100 transition-opacity"
                 />
               </div>
               {customCalendarDate && (
@@ -1584,7 +1584,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             </div>
 
             {/* Session Dropdown Selector with Delete Option */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 flex-1 min-w-[180px]">
               <GlobalFilter
                 options={displaySessions.map((s) => {
                   const statusUp = (s.status || '').toUpperCase();
@@ -1617,7 +1617,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 placeholder="[ Select Contest Session ]"
                 searchPlaceholder="Search contest session..."
                 showSearch={true}
-                className="w-full sm:w-auto"
+                className="w-full"
                 dropdownWidth="w-[320px]"
               />
               
@@ -1625,7 +1625,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <button
                   type="button"
                   onClick={(e) => handleDeleteSession(activeSessionObj.sessionId, activeSessionObj.contestName, e)}
-                  className="p-2.5 bg-rose-500/20 hover:bg-rose-500/30 rounded-xl border border-rose-500/30 text-rose-400 hover:text-rose-300 transition-colors shadow-sm cursor-pointer"
+                  className="p-2.5 bg-rose-500/20 hover:bg-rose-500/30 rounded-xl border border-rose-500/30 text-rose-400 hover:text-rose-300 transition-colors shadow-sm cursor-pointer shrink-0"
                   title="Delete this Weekly Contest Session"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -1646,7 +1646,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   setShowAdminMonitor(false);
                 }
               }}
-              className="flex items-center space-x-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl border border-slate-600 transition-all cursor-pointer"
+              className="flex items-center justify-center space-x-1.5 px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl border border-slate-600 transition-all cursor-pointer shrink-0"
               title="Toggle Live Contest Monitor"
             >
               <Activity className="w-3.5 h-3.5 text-brand-400" />

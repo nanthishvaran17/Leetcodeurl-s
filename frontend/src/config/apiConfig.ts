@@ -7,7 +7,7 @@
 export const PRODUCTION_BACKEND_URL = 
   import.meta.env.VITE_API_URL || 
   import.meta.env.VITE_API_BASE_URL || 
-  'https://leetcodeurl-s-3mig.onrender.com';
+  'https://leetcodeurl-s-3fzh.onrender.com';
 
 /**
  * Detects if the current runtime environment is a Capacitor Native App (Android / iOS)
@@ -36,7 +36,7 @@ export const isCapacitorNative = (): boolean => {
 
 /**
  * Resolves the API Base URL dynamically based on execution environment:
- * 1. Capacitor Native Android/iOS App -> Uses absolute Backend HTTPS URL (https://leetcodeurl-s-3mig.onrender.com/api)
+ * 1. Capacitor Native Android/iOS App -> Uses absolute Backend HTTPS URL (https://leetcodeurl-s-3fzh.onrender.com/api)
  * 2. Web Browser (Vite dev server) -> Uses '/api' relative path proxied by Vite
  * 3. Production Web (Vercel) -> Uses absolute backend URL or explicit VITE_API_URL
  */
@@ -65,7 +65,7 @@ export const getApiBaseUrl = (): string => {
     return '/api';
   }
 
-  return 'https://leetcodeurl-s-3mig.onrender.com/api';
+  return 'https://leetcodeurl-s-3fzh.onrender.com/api';
 };
 
 export const API_BASE_URL = getApiBaseUrl();

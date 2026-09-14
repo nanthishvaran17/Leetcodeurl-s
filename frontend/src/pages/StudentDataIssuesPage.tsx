@@ -259,6 +259,21 @@ export const StudentDataIssuesPage: React.FC = () => {
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [downloadState, setDownloadState] = useState<any | null>(null);
 
+  // Responsive Pagination State
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+
+  // Auto-reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedDept, selectedYear, selectedIssue, searchQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(students.length / pageSize));
+  const paginatedStudents = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return students.slice(start, start + pageSize);
+  }, [students, currentPage, pageSize]);
+
   useEffect(() => {
     fetchSummaryData();
     fetchStudentsData();
@@ -764,7 +779,7 @@ export const StudentDataIssuesPage: React.FC = () => {
               <Search className="w-3.5 h-3.5 absolute left-3.5 top-2.5 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search Name, Reg No (732224CC044)..."
+                placeholder="Search Name, Reg No (732224CC031)..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-3.5 py-2 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-gray-400 font-bold focus:ring-2 focus:ring-brand-500"
@@ -983,8 +998,169 @@ export const StudentDataIssuesPage: React.FC = () => {
           </div>
         </div>
 
-        {/* The Table */}
-        <div className="overflow-x-auto">
+        {/* Mobile Cards View (block md:hidden) */}
+        <div className="block md:hidden p-3 space-y-3">
+          {loading ? (
+            <div className="p-10 text-center text-xs text-slate-500 font-bold space-y-2">
+              <RefreshCw className="w-6 h-6 animate-spin text-amber-500 mx-auto" />
+              <p>Analyzing and classifying student data issues...</p>
+            </div>
+          ) : students.length === 0 ? (
+            <div className="p-10 text-center text-xs text-slate-500 font-medium space-y-2">
+              <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
+              <p className="text-sm font-bold text-slate-900 dark:text-white">No issues found.</p>
+              <p>All records within this selection meet verification standards.</p>
+            </div>
+          ) : (
+            paginatedStudents.map((student) => {
+              const isSelected = selectedStudentIds.includes(student.id);
+              const isVerifyingThis = verifyingRowId === student.id;
+
+              return (
+                <div
+                  key={student.id}
+                  className={`p-3.5 rounded-2xl border transition-all space-y-2.5 ${
+                    isSelected
+                      ? 'bg-indigo-50/70 border-indigo-300 dark:bg-indigo-950/40 dark:border-indigo-700/60'
+                      : 'bg-white dark:bg-navy-900/60 border-slate-200 dark:border-navy-800 shadow-sm'
+                  }`}
+                >
+                  {/* Top Row: Checkbox + Name + RegNo/Dept/Year + Severity Badge */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-2.5 min-w-0">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleToggleSelectRow(student.id)}
+                        className="mt-1 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+                      />
+                      <div className="min-w-0">
+                        <div className="font-extrabold text-slate-900 dark:text-white text-sm truncate">
+                          {student.name}
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-wrap font-mono text-[11px] mt-0.5">
+                          <span className="font-bold text-indigo-600 dark:text-amber-400">{student.reg_no}</span>
+                          <span className="text-slate-300 dark:text-navy-700">•</span>
+                          <span className="font-semibold text-slate-600 dark:text-slate-300">{student.department_short}</span>
+                          <span className="text-slate-300 dark:text-navy-700">•</span>
+                          <span className="text-slate-500 dark:text-slate-400">{student.year_level}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <span className={`px-2 py-0.5 rounded-lg text-[9.5px] font-black uppercase tracking-wider shrink-0 ${
+                      student.severity === 'CRITICAL'
+                        ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-500/40'
+                        : student.severity === 'WARNING'
+                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-500/40'
+                        : student.severity === 'INFO'
+                        ? 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border border-sky-500/40'
+                        : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/40'
+                    }`}>
+                      {student.issue_label}
+                    </span>
+                  </div>
+
+                  {/* Middle Row: LeetCode Handle + URL Verification Status */}
+                  <div className="p-2 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-navy-800 flex items-center justify-between gap-2 text-xs font-mono">
+                    <div className="min-w-0 truncate">
+                      {student.username ? (
+                        <span className="font-bold text-sky-600 dark:text-sky-400 truncate">@{student.username}</span>
+                      ) : (
+                        <span className="text-rose-500 italic font-bold text-[11px]">No username</span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {student.leetcode_url ? (
+                        <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                          student.url_status === 'VERIFIED'
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/30'
+                            : student.url_status === 'INVALID'
+                            ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-500/30'
+                            : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-500/30'
+                        }`}>
+                          {student.url_status === 'VERIFIED' ? 'Verified URL' : student.url_status === 'INVALID' ? 'Invalid' : 'Needs Check'}
+                        </span>
+                      ) : (
+                        <span className="text-[9px] text-slate-400">— No URL —</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Problem Description & Recommended Action */}
+                  <div className="p-3.5 rounded-xl bg-slate-100 dark:bg-navy-950 border border-slate-300 dark:border-navy-800 space-y-2">
+                    <p className="text-slate-950 dark:text-white font-extrabold text-xs leading-relaxed">
+                      {student.error_description}
+                    </p>
+                    <div className="flex items-center gap-1.5 flex-wrap text-xs pt-0.5">
+                      <span className="px-1.5 py-0.5 rounded bg-amber-200/80 dark:bg-amber-900/50 text-amber-950 dark:text-amber-200 font-black text-[10px] uppercase tracking-wider border border-amber-400/60 dark:border-amber-700/50 shrink-0">Action</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-100">{student.recommended_action}</span>
+                    </div>
+                    {student.last_sync && (
+                      <div className="text-xs font-mono pt-2 border-t border-slate-200 dark:border-navy-800 flex items-center justify-between gap-2">
+                        <span className="text-slate-600 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider">Last Sync:</span>
+                        <span className="text-slate-950 dark:text-white font-black bg-white dark:bg-navy-900 px-2.5 py-0.5 rounded-lg border border-slate-300 dark:border-navy-700 shadow-xs">{student.last_sync}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Buttons Strip */}
+                  <div className="flex items-center justify-end gap-1.5 pt-0.5">
+                    {student.leetcode_url && (
+                      <a
+                        href={student.leetcode_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 dark:hover:bg-navy-700 text-sky-600 dark:text-sky-400 border border-slate-200 dark:border-navy-700 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                        title="Open profile"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Profile</span>
+                      </a>
+                    )}
+                    {student.leetcode_url && (
+                      <button
+                        onClick={() => handleCopyUrl(student)}
+                        className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-navy-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-navy-700 cursor-pointer"
+                        title="Copy URL"
+                      >
+                        {copiedId === student.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    )}
+                    {student.username && (
+                      <button
+                        onClick={() => handleVerifySingleUrl(student)}
+                        disabled={isVerifyingThis}
+                        className="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <ShieldCheck className={`w-3.5 h-3.5 ${isVerifyingThis ? 'animate-spin' : ''}`} />
+                        <span>Verify</span>
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleOpenRepairModal(student); }}
+                      className="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Repair</span>
+                    </button>
+                    <button
+                      onClick={() => handleRetrySyncSingle(student)}
+                      className="px-2.5 py-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>Retry</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop Table View (hidden md:block overflow-x-auto) */}
+        <div className="hidden md:block overflow-x-auto">
           {loading ? (
             <div className="p-16 text-center text-xs text-slate-500 font-bold space-y-3">
               <RefreshCw className="w-6 h-6 animate-spin text-amber-500 mx-auto" />
@@ -997,7 +1173,7 @@ export const StudentDataIssuesPage: React.FC = () => {
               <p>All records within this selection meet verification and synchronization standards.</p>
             </div>
           ) : (
-            <table className="w-full text-left text-xs mobile-card-table">
+            <table className="w-full text-left text-xs min-w-[760px]">
               <thead>
                 <tr className="bg-navy-950 text-white uppercase tracking-wider font-black text-[10px]">
                   <th className="py-3.5 px-4 w-10 text-center">
@@ -1018,14 +1194,14 @@ export const StudentDataIssuesPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-medium text-slate-800 dark:text-slate-200">
-                {students.map((student) => {
+                {paginatedStudents.map((student) => {
                   const isSelected = selectedStudentIds.includes(student.id);
                   const isVerifyingThis = verifyingRowId === student.id;
 
                   return (
                     <tr
                       key={student.id}
-                      className={`mobile-card-row hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors ${
+                      className={`hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors ${
                         isSelected ? 'bg-indigo-50/60 dark:bg-indigo-950/30' : ''
                       }`}
                     >
@@ -1104,15 +1280,18 @@ export const StudentDataIssuesPage: React.FC = () => {
 
                       {/* Exact Problem / Reason */}
                       <td className="py-3.5 px-4 max-w-xs">
-                        <p className="text-xs text-slate-800 dark:text-slate-300 font-bold leading-snug">{student.error_description}</p>
-                        <p className="text-[10px] text-amber-600 dark:text-amber-300 mt-1 font-semibold">
-                          Action: {student.recommended_action}
-                        </p>
+                        <p className="text-xs text-slate-950 dark:text-white font-extrabold leading-snug">{student.error_description}</p>
+                        <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                          <span className="px-1.5 py-0.5 rounded bg-amber-200/80 dark:bg-amber-900/50 text-amber-950 dark:text-amber-200 font-black text-[9.5px] uppercase tracking-wider border border-amber-400/60 dark:border-amber-700/50 shrink-0">Action</span>
+                          <span className="font-bold text-slate-900 dark:text-slate-100 text-xs">{student.recommended_action}</span>
+                        </div>
                       </td>
 
                       {/* Last Sync */}
-                      <td className="py-3.5 px-3 font-mono text-[11px] text-slate-500 dark:text-slate-400">
-                        {student.last_sync}
+                      <td className="py-3.5 px-3">
+                        <div className="font-mono text-xs font-black text-slate-950 dark:text-white bg-slate-100 dark:bg-navy-950 px-2.5 py-1 rounded-lg border border-slate-300 dark:border-navy-800 inline-block shadow-xs">
+                          {student.last_sync || 'Never Synced'}
+                        </div>
                       </td>
 
                       {/* Row Action Buttons */}
@@ -1170,6 +1349,61 @@ export const StudentDataIssuesPage: React.FC = () => {
             </table>
           )}
         </div>
+
+        {/* Dynamic Pagination Controls */}
+        {students.length > 0 && (
+          <div className="p-4 bg-slate-50 dark:bg-navy-950 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            <div className="text-slate-500 dark:text-slate-400 font-medium">
+              Showing <span className="font-bold text-slate-900 dark:text-white">{(currentPage - 1) * pageSize + 1}</span> to{' '}
+              <span className="font-bold text-slate-900 dark:text-white">{Math.min(currentPage * pageSize, students.length)}</span> of{' '}
+              <span className="font-bold text-slate-900 dark:text-white">{students.length}</span> issues
+            </div>
+
+            <div className="flex items-center gap-3 flex-wrap justify-center">
+              {/* Page Size Selector */}
+              <div className="flex items-center gap-1 text-slate-500 font-mono">
+                <span className="text-[11px]">Per page:</span>
+                {[10, 25, 50, 100].map(sz => (
+                  <button
+                    key={sz}
+                    onClick={() => {
+                      setPageSize(sz);
+                      setCurrentPage(1);
+                    }}
+                    className={`px-2 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      pageSize === sz
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'bg-white dark:bg-navy-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-navy-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    {sz}
+                  </button>
+                ))}
+              </div>
+
+              {/* Page Navigation */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  disabled={currentPage <= 1}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-navy-700 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                >
+                  Previous
+                </button>
+                <span className="font-mono font-bold text-slate-700 dark:text-slate-300 px-2">
+                  {currentPage} / {totalPages}
+                </span>
+                <button
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-navy-700 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 8. REPAIR USERNAME MODAL */}

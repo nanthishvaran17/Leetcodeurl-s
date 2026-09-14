@@ -559,8 +559,9 @@ export const SettingsPage: React.FC = () => {
             </p>
           </div>
 
-            {/* Right: Badges + Actions */}
-            <div className="flex flex-wrap items-center gap-2 max-w-full">
+          {/* Right: Badges + Actions */}
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full lg:w-auto">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="px-3 py-1.5 rounded-full font-black text-xs border flex items-center space-x-1.5 whitespace-nowrap flex-shrink-0"
                 style={{ background: 'rgba(16,185,129,0.15)', borderColor: 'rgba(16,185,129,0.3)', color: '#34d399' }}>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
@@ -572,11 +573,13 @@ export const SettingsPage: React.FC = () => {
                 <Clock className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>Asia/Kolkata (IST)</span>
               </span>
+            </div>
 
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={handleExportConfigJson}
-                className="px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center space-x-1.5 transition-all cursor-pointer whitespace-nowrap flex-shrink-0"
+                className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer whitespace-nowrap"
                 style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.35)', color: '#a5b4fc' }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.35)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.2)')}
@@ -589,7 +592,7 @@ export const SettingsPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => configFileInputRef.current?.click()}
-                className="px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center space-x-1.5 transition-all cursor-pointer whitespace-nowrap flex-shrink-0"
+                className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer whitespace-nowrap"
                 style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.35)', color: '#a5b4fc' }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.35)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.2)')}
@@ -598,27 +601,28 @@ export const SettingsPage: React.FC = () => {
                 <Upload className="w-3.5 h-3.5 flex-shrink-0" />
                 <span>Import JSON</span>
               </button>
-              <input
-                type="file"
-                ref={configFileInputRef}
-                onChange={handleImportConfigJson}
-                accept=".json"
-                className="hidden"
-              />
             </div>
+            <input
+              type="file"
+              ref={configFileInputRef}
+              onChange={handleImportConfigJson}
+              accept=".json"
+              className="hidden"
+            />
           </div>
         </div>
+      </div>
 
       {/* 2. COMPACT SYSTEM STATUS STRIP WITH LIVE PROBING */}
       <div className="glass-card p-4 rounded-2xl border border-slate-200 dark:border-navy-700 space-y-2.5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2 flex-wrap">
             <Activity className={`w-4 h-4 ${isProbing ? 'text-amber-500 animate-pulse' : 'text-emerald-500'}`} />
             <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
               Live Subsystem Health Probes
             </span>
             {lastProbed && !isProbing && (
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-bold ml-2">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-bold">
                 — Last probed {lastProbed.toLocaleTimeString()}
               </span>
             )}
@@ -629,7 +633,7 @@ export const SettingsPage: React.FC = () => {
             type="button"
             onClick={fetchSystemHealth}
             disabled={isProbing}
-            className={`relative overflow-hidden inline-flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all select-none ${
+            className={`relative overflow-hidden inline-flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all select-none self-end sm:self-auto ${
               isProbing
                 ? 'text-amber-600 bg-amber-500/15 border border-amber-500/30 cursor-not-allowed'
                 : 'text-brand-600 dark:text-brand-400 bg-brand-500/10 hover:bg-brand-500/20 border border-brand-500/20 hover:border-brand-500/40 cursor-pointer active:scale-95'
@@ -715,8 +719,28 @@ export const SettingsPage: React.FC = () => {
       </div>
 
       {/* 3. QUICK JUMP / SECTION NAVIGATION BAR */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl glass-card border border-slate-200 dark:border-navy-700">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full no-scrollbar">
+      <div className="flex flex-col gap-3 p-3 sm:p-4 rounded-2xl glass-card border border-slate-200 dark:border-navy-700">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-2 border-b border-slate-100 dark:border-navy-800">
+          <div className="flex items-center gap-2">
+            <SlidersHorizontal className="w-4 h-4 text-brand-500" />
+            <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
+              System Modules & Sections
+            </span>
+          </div>
+          <div className="relative w-full sm:w-auto sm:min-w-[240px]">
+            <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+            <input
+              type="text"
+              value={settingsSearch}
+              onChange={(e) => setSettingsSearch(e.target.value)}
+              placeholder="Search configuration..."
+              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 font-medium"
+            />
+          </div>
+        </div>
+
+        {/* Responsive Section Buttons (One-by-one on mobile, flex wrap on desktop) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:flex lg:flex-wrap gap-2">
           {[
             { id: 'staff', label: 'Staff Management', icon: Shield },
             { id: 'staff_verification', label: 'Staff Verification', icon: UserCheck },
@@ -728,32 +752,32 @@ export const SettingsPage: React.FC = () => {
             { id: 'snapshots', label: 'Database Snapshots', icon: Database },
             { id: 'maintenance', label: 'Maintenance', icon: Server },
             { id: 'security', label: 'Security Activity', icon: Lock }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveSectionFilter(tab.id)}
-              className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center space-x-1.5 cursor-pointer whitespace-nowrap flex-shrink-0 ${
-                activeSectionFilter === tab.id
-                  ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
-                  : 'bg-slate-100 dark:bg-navy-950 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-800'
-              }`}
-            >
-              <tab.icon className="w-3.5 h-3.5 flex-shrink-0" />
-              <span>{tab.label}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="relative w-full sm:w-auto sm:min-w-[200px] flex-1 max-w-xs">
-          <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
-          <input
-            type="text"
-            value={settingsSearch}
-            onChange={(e) => setSettingsSearch(e.target.value)}
-            placeholder="Search configuration..."
-            className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 font-medium"
-          />
+          ].map(tab => {
+            const Icon = tab.icon;
+            const isActive = activeSectionFilter === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveSectionFilter(tab.id)}
+                className={`w-full lg:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl font-bold text-xs transition-all flex items-center justify-between lg:justify-start gap-2.5 cursor-pointer text-left ${
+                  isActive
+                    ? 'bg-brand-600 text-white shadow-md shadow-brand-500/25 scale-[1.01]'
+                    : 'bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-800 border border-slate-200 dark:border-slate-800'
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="truncate">{tab.label}</span>
+                </div>
+                {isActive && (
+                  <span className="text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-white/20 text-white shrink-0 lg:hidden">
+                    Active
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -1007,49 +1031,7 @@ export const SettingsPage: React.FC = () => {
           </div>
         )}
 
-        {/* 7. SECTION IV — REPORT INTEGRITY & EMAIL DELIVERY */}
-        {activeSectionFilter === 'smtp' && (
-          <div className="glass-card p-5 rounded-2xl border border-slate-200 dark:border-navy-700 space-y-3.5">
-            <div className="flex items-center justify-between border-b pb-2.5 dark:border-navy-700">
-              <h2 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-2 uppercase tracking-wide">
-                <FileText className="w-4 h-4 text-purple-500" />
-                <span>Report Integrity & Multi-Format Generation</span>
-              </h2>
-              <span className="text-[10px] font-mono text-slate-400 uppercase">Section IV</span>
-            </div>
 
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 text-[11px] font-mono flex flex-wrap items-center justify-center gap-2 text-slate-600 dark:text-slate-400 text-center">
-              <span>Database</span>
-              <ArrowRight className="w-3 h-3 text-brand-500" />
-              <span>Canonical Matrix</span>
-              <ArrowRight className="w-3 h-3 text-brand-500" />
-              <span>Preview</span>
-              <ArrowRight className="w-3 h-3 text-brand-500" />
-              <span>Excel (.xlsx)</span>
-              <ArrowRight className="w-3 h-3 text-brand-500" />
-              <span>PDF (.pdf)</span>
-              <ArrowRight className="w-3 h-3 text-brand-500" />
-              <span>Word (.docx)</span>
-              <ArrowRight className="w-3 h-3 text-brand-500" />
-              <span>ZIP (.zip)</span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[11px] text-center font-bold">
-              {[
-                { label: 'Preview', status: 'Enforced' },
-                { label: 'Excel (.xlsx)', status: 'Enforced' },
-                { label: 'PDF (.pdf)', status: 'Enforced' },
-                { label: 'Word (.docx)', status: 'Enforced' },
-                { label: 'ZIP Bundle', status: 'Enforced' },
-              ].map(fmt => (
-                <div key={fmt.label} className="p-2.5 rounded-xl border bg-slate-50/50 dark:bg-navy-950/50 border-slate-200 dark:border-navy-700">
-                  <div className="text-slate-400 text-[9px] uppercase">{fmt.label}</div>
-                  <div className="text-emerald-600 dark:text-emerald-400 font-mono mt-0.5 font-black">{fmt.status}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* 8. SECTION V — EMAIL DELIVERY & SMTP */}
         {(activeSectionFilter === 'ALL' || activeSectionFilter === 'smtp') && (

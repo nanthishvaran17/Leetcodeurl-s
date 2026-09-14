@@ -679,6 +679,7 @@ export const FacultyActionCenter: React.FC = () => {
   const [syncMsg, setSyncMsg] = useState('');
 
   // Filters
+  const [isMobile, setIsMobile] = useState<boolean>(() => typeof window !== 'undefined' && window.innerWidth < 768);
   const [filterPriority, setFilterPriority] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterYear, setFilterYear] = useState('');
@@ -686,7 +687,24 @@ export const FacultyActionCenter: React.FC = () => {
   const [filterOverdue, setFilterOverdue] = useState(false);
   const [filterEscalated, setFilterEscalated] = useState(false);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
+  const [pageSize, setPageSize] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768 ? 10 : 50);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return '—';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    } catch {
+      return dateStr;
+    }
+  };
 
   // Sort
   const [sortBy, setSortBy] = useState('priority_score');
@@ -938,13 +956,13 @@ export const FacultyActionCenter: React.FC = () => {
                </button>
             )}
           </div>
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-800 p-1 rounded-xl border border-slate-200 dark:border-navy-700 hidden sm:flex">
-            <span className="text-[10px] font-bold text-slate-500 dark:text-navy-400 px-1.5 font-mono">Show:</span>
-            {[20, 50, 100, 200].map((sz) => (
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-800 p-1 rounded-xl border border-slate-200 dark:border-navy-700">
+            <span className="text-[10px] font-bold text-slate-500 dark:text-navy-400 px-1 font-mono">Show:</span>
+            {(isMobile ? [10, 25, 50] : [20, 50, 100, 200]).map((sz) => (
               <button
                 key={sz}
                 onClick={() => { setPageSize(sz); setPage(1); }}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-2 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   pageSize === sz
                     ? 'bg-indigo-600 text-white shadow-xs font-black'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
@@ -1031,145 +1049,258 @@ export const FacultyActionCenter: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="table-responsive-container rounded-2xl bg-white dark:bg-navy-850 border border-slate-200 dark:border-navy-700 backdrop-blur-sm shadow-sm overflow-hidden">
-          <table className="mobile-card-table w-full table-fixed min-w-[800px] md:min-w-0">
-            <colgroup>
-              <col style={{ width: '22%' }} />
-              <col style={{ width: '12%' }} />
-              <col style={{ width: '8%' }} />
-              <col style={{ width: '20%' }} />
-              <col style={{ width: '10%' }} />
-              <col style={{ width: '13%' }} />
-              <col style={{ width: '8%' }} />
-              <col style={{ width: '7%' }} />
-            </colgroup>
-            <thead className="hidden md:table-header-group border-b border-slate-200 dark:border-navy-700 bg-slate-100/90 dark:bg-navy-950">
-              <tr>
-                {[['Student', 'student_name'], ['Priority', 'priority_score'], ['Stats', ''], ['Signal', ''], ['Status', 'status'], ['Faculty', ''], ['Due', 'due_date'], ['Actions', '']].map(([label, col]) => (
-                  <th key={label} className={`${thCls} ${col ? 'cursor-pointer hover:text-slate-800 dark:hover:text-slate-100 select-none' : ''}`} onClick={() => col && toggleSort(col)}>
-                    <span className="inline-flex items-center gap-1">{label} {col && <SortIcon col={col} />}</span>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-navy-700/60">
-              {items.map((item) => {
-                const statusCls = STATUS_CONFIG[item.status] || 'bg-slate-100 text-slate-600 border border-slate-200';
-                const isExpanded = expandedRow === item.id;
-                return (
-                  <React.Fragment key={item.id}>
-                    <tr
-                      onClick={() => setExpandedRow(isExpanded ? null : item.id)}
-                      className={`cursor-pointer transition-colors ${isExpanded ? 'bg-indigo-50/40 dark:bg-navy-800/80' : 'hover:bg-slate-50/80 dark:hover:bg-navy-700/40'}`}
+        <>
+          {/* Mobile Intervention Cards (Compact, 100% width, no wasted space) */}
+          <div className="block md:hidden space-y-3">
+            {items.map((item) => {
+              const statusCls = STATUS_CONFIG[item.status] || 'bg-slate-100 text-slate-600 border border-slate-200';
+              const isExpanded = expandedRow === item.id;
+              return (
+                <div
+                  key={item.id}
+                  className="rounded-2xl bg-white dark:bg-navy-850 border border-slate-200 dark:border-navy-700 p-3.5 shadow-sm space-y-2.5 transition-all"
+                >
+                  {/* Top: Student Details + Priority & Status */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate">
+                        {item.student_name}
+                      </h4>
+                      <div className="text-[11px] font-medium text-slate-500 dark:text-navy-300 truncate mt-0.5">
+                        {item.reg_no} · {item.department_code} · {item.year_level}
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <PriorityBadge priority={item.priority} score={item.priority_score} reason={item.priority_score_reason} />
+                      <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full ${statusCls}`}>
+                        {item.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Stats & Signal Grid */}
+                  <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-navy-900/60 p-2 rounded-xl text-xs">
+                    <div>
+                      <div className="text-[9px] uppercase font-bold text-slate-400">Coding Stats</div>
+                      <div className="font-mono font-bold text-slate-800 dark:text-slate-200 mt-0.5 text-[11px]">
+                        Solved: {item.total_solved} <span className="text-slate-400 font-normal">| R: {item.current_rating}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] uppercase font-bold text-slate-400">Signal Trigger</div>
+                      <div className="font-medium text-slate-700 dark:text-slate-300 truncate mt-0.5 text-[11px]" title={item.signal_type}>
+                        {item.signal_type}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mentor & Due Date Row */}
+                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-navy-400">
+                    <div className="flex items-center gap-1.5 truncate max-w-[60%]">
+                      <User size={12} className="text-slate-400 shrink-0" />
+                      <span className="truncate font-semibold text-indigo-600 dark:text-indigo-400 text-[11px]">
+                        {item.assigned_faculty_name || 'Unassigned'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-[11px] font-mono shrink-0">
+                      <Calendar size={12} className="text-slate-400" />
+                      <span>{formatDate(item.due_date)}</span>
+                    </div>
+                  </div>
+
+                  {/* Buttons Row */}
+                  <div className="flex items-center gap-2 pt-0.5">
+                    <button
+                      onClick={() => setUpdateItem(item)}
+                      className="flex-1 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition font-black text-xs shadow-md shadow-indigo-500/20 flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      {/* Student */}
-                      <td className={tdCls} data-label="Student">
-                        <div className="font-bold text-slate-800 dark:text-slate-100 truncate">{item.student_name}</div>
-                        <div className="text-[10px] font-semibold text-slate-500 dark:text-navy-400 truncate">{item.reg_no} · {item.department_code} · {item.year_level}</div>
-                      </td>
+                      <Zap size={12} />
+                      <span>Take Action</span>
+                    </button>
+                    <button
+                      onClick={() => setViewItem(item)}
+                      title="View Student Coding Profile"
+                      className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-700 hover:bg-slate-200 dark:hover:bg-navy-600 text-slate-600 dark:text-slate-300 transition text-xs font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <Eye size={13} />
+                      <span>Profile</span>
+                    </button>
+                    <button
+                      onClick={() => setExpandedRow(isExpanded ? null : item.id)}
+                      className="p-2 rounded-xl border border-slate-200 dark:border-navy-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-navy-800 transition text-xs cursor-pointer"
+                      title="Toggle details"
+                    >
+                      {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                    </button>
+                  </div>
 
-                      {/* Priority */}
-                      <td className={tdCls} data-label="Priority" onClick={e => e.stopPropagation()}>
-                        <PriorityBadge priority={item.priority} score={item.priority_score} reason={item.priority_score_reason} />
-                      </td>
-
-                      {/* Stats */}
-                      <td className={tdCls} data-label="Stats">
-                        <div className="text-[11px] font-semibold text-slate-600 dark:text-navy-300 space-y-0.5">
-                          <div>Rating: {item.current_rating}</div>
-                          <div>Solved: {item.total_solved}</div>
+                  {/* Expanded Detail on Mobile */}
+                  {isExpanded && (
+                    <div className="pt-2 border-t border-slate-100 dark:border-navy-800 space-y-1.5 text-xs">
+                      <div>
+                        <div className="text-[9px] font-black uppercase text-slate-400">Recommended Action</div>
+                        <div className="text-brand-600 dark:text-brand-400 font-bold mt-0.5">{item.recommended_action || '—'}</div>
+                      </div>
+                      {item.action_taken && (
+                        <div>
+                          <div className="text-[9px] font-black uppercase text-slate-400">Action Taken</div>
+                          <div className="text-slate-700 dark:text-slate-300 mt-0.5">{item.action_taken}</div>
                         </div>
-                      </td>
-
-                      {/* Signal */}
-                      <td className={tdCls} data-label="Signal">
-                        <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 leading-snug line-clamp-2">{item.signal_type}</div>
-                        <div className="flex gap-1.5 flex-wrap mt-1">
-                          {item.is_escalated && <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-bold">ESC</span>}
-                          {item.is_overdue_followup && <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 font-bold">{item.days_overdue}d overdue</span>}
+                      )}
+                      {item.faculty_notes && (
+                        <div>
+                          <div className="text-[9px] font-black uppercase text-slate-400">Faculty Notes</div>
+                          <div className="text-slate-700 dark:text-slate-300 mt-0.5">{item.faculty_notes}</div>
                         </div>
-                      </td>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
 
-                      {/* Status */}
-                      <td className={tdCls} data-label="Status">
-                        <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full ${statusCls}`}>{item.status}</span>
-                      </td>
+          {/* Desktop Table View */}
+          <div className="hidden md:block table-responsive-container rounded-2xl bg-white dark:bg-navy-850 border border-slate-200 dark:border-navy-700 backdrop-blur-sm shadow-sm overflow-hidden">
+            <table className="w-full table-fixed min-w-[800px]">
+              <colgroup>
+                <col style={{ width: '22%' }} />
+                <col style={{ width: '12%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '20%' }} />
+                <col style={{ width: '10%' }} />
+                <col style={{ width: '13%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '7%' }} />
+              </colgroup>
+              <thead className="table-header-group border-b border-slate-200 dark:border-navy-700 bg-slate-100/90 dark:bg-navy-950">
+                <tr>
+                  {[['Student', 'student_name'], ['Priority', 'priority_score'], ['Stats', ''], ['Signal', ''], ['Status', 'status'], ['Faculty', ''], ['Due', 'due_date'], ['Actions', '']].map(([label, col]) => (
+                    <th key={label} className={`${thCls} ${col ? 'cursor-pointer hover:text-slate-800 dark:hover:text-slate-100 select-none' : ''}`} onClick={() => col && toggleSort(col)}>
+                      <span className="inline-flex items-center gap-1">{label} {col && <SortIcon col={col} />}</span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-navy-700/60">
+                {items.map((item) => {
+                  const statusCls = STATUS_CONFIG[item.status] || 'bg-slate-100 text-slate-600 border border-slate-200';
+                  const isExpanded = expandedRow === item.id;
+                  return (
+                    <React.Fragment key={item.id}>
+                      <tr
+                        onClick={() => setExpandedRow(isExpanded ? null : item.id)}
+                        className={`cursor-pointer transition-colors ${isExpanded ? 'bg-indigo-50/40 dark:bg-navy-800/80' : 'hover:bg-slate-50/80 dark:hover:bg-navy-700/40'}`}
+                      >
+                        {/* Student */}
+                        <td className={tdCls}>
+                          <div className="font-bold text-slate-800 dark:text-slate-100 truncate">{item.student_name}</div>
+                          <div className="text-[10px] font-semibold text-slate-500 dark:text-navy-400 truncate">{item.reg_no} · {item.department_code} · {item.year_level}</div>
+                        </td>
 
-                      {/* Faculty */}
-                      <td className={tdCls} data-label="Faculty">
-                        <div className={`text-xs font-bold truncate ${item.assigned_faculty_name ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-navy-500'}`}>
-                          {item.assigned_faculty_name || '— Unassigned'}
-                        </div>
-                      </td>
+                        {/* Priority */}
+                        <td className={tdCls} onClick={e => e.stopPropagation()}>
+                          <PriorityBadge priority={item.priority} score={item.priority_score} reason={item.priority_score_reason} />
+                        </td>
 
-                      {/* Due Date */}
-                      <td className={tdCls} data-label="Due Date">
-                        <div className="text-[11px] font-semibold text-slate-500 dark:text-navy-400">{item.due_date || '—'}</div>
-                      </td>
+                        {/* Stats */}
+                        <td className={tdCls}>
+                          <div className="text-[11px] font-semibold text-slate-600 dark:text-navy-300 space-y-0.5">
+                            <div>Rating: {item.current_rating}</div>
+                            <div>Solved: {item.total_solved}</div>
+                          </div>
+                        </td>
 
-                      {/* Actions */}
-                      <td className={tdCls} data-label="Actions" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => setUpdateItem(item)}
-                            title="Take Action on Student"
-                            className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition cursor-pointer shadow-md shadow-indigo-500/20 flex items-center gap-1.5 text-xs font-black"
-                          >
-                            <Zap size={12} />
-                            <span>Take Action</span>
-                          </button>
-                          <button
-                            onClick={() => setViewItem(item)}
-                            title="View Student Coding Profile"
-                            className="p-1.5 rounded-xl bg-slate-100 dark:bg-navy-700 hover:bg-slate-200 dark:hover:bg-navy-600 text-slate-600 dark:text-slate-300 transition cursor-pointer"
-                          >
-                            <Eye size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                        {/* Signal */}
+                        <td className={tdCls}>
+                          <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 leading-snug line-clamp-2">{item.signal_type}</div>
+                          <div className="flex gap-1.5 flex-wrap mt-1">
+                            {item.is_escalated && <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-bold">ESC</span>}
+                            {item.is_overdue_followup && <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 font-bold">{item.days_overdue}d overdue</span>}
+                          </div>
+                        </td>
 
-                    {/* Expanded detail row */}
-                    {isExpanded && (
-                      <tr className="bg-brand-500/5 dark:bg-navy-950/60">
-                        <td colSpan={8} className="px-5 py-4">
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
-                            <div>
-                              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Recommended Action</div>
-                              <div className="text-xs text-brand-600 dark:text-brand-400 font-bold">{item.recommended_action || '—'}</div>
-                            </div>
-                            <div>
-                              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Action Taken</div>
-                              <div className="text-xs text-slate-700 dark:text-slate-300">{item.action_taken || 'No action recorded yet'}</div>
-                            </div>
-                            <div>
-                              <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Faculty Notes</div>
-                              <div className="text-xs text-slate-700 dark:text-slate-300">{item.faculty_notes || 'No private notes'}</div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => setUpdateItem(item)}
-                                className="px-3.5 py-2 rounded-xl bg-violet-500/15 border border-violet-500/30 text-violet-600 dark:text-violet-400 text-xs font-black hover:bg-violet-500/25 transition flex items-center gap-1.5 cursor-pointer"
-                              >
-                                <FileText size={13} /> Update & Follow-up
-                              </button>
-                              <button
-                                onClick={() => setViewItem(item)}
-                                className="px-3 py-2 rounded-xl bg-brand-500/15 border border-brand-500/30 text-brand-600 dark:text-brand-400 text-xs font-black hover:bg-brand-500/25 transition flex items-center gap-1.5 cursor-pointer"
-                              >
-                                <Eye size={13} /> Full Profile
-                              </button>
-                            </div>
+                        {/* Status */}
+                        <td className={tdCls}>
+                          <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full ${statusCls}`}>{item.status}</span>
+                        </td>
+
+                        {/* Faculty */}
+                        <td className={tdCls}>
+                          <div className={`text-xs font-bold truncate ${item.assigned_faculty_name ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-navy-500'}`}>
+                            {item.assigned_faculty_name || '— Unassigned'}
+                          </div>
+                        </td>
+
+                        {/* Due Date */}
+                        <td className={tdCls}>
+                          <div className="text-[11px] font-semibold text-slate-500 dark:text-navy-400">{formatDate(item.due_date)}</div>
+                        </td>
+
+                        {/* Actions */}
+                        <td className={tdCls} onClick={e => e.stopPropagation()}>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => setUpdateItem(item)}
+                              title="Take Action on Student"
+                              className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition cursor-pointer shadow-md shadow-indigo-500/20 flex items-center gap-1.5 text-xs font-black"
+                            >
+                              <Zap size={12} />
+                              <span>Take Action</span>
+                            </button>
+                            <button
+                              onClick={() => setViewItem(item)}
+                              title="View Student Coding Profile"
+                              className="p-1.5 rounded-xl bg-slate-100 dark:bg-navy-700 hover:bg-slate-200 dark:hover:bg-navy-600 text-slate-600 dark:text-slate-300 transition cursor-pointer"
+                            >
+                              <Eye size={14} />
+                            </button>
                           </div>
                         </td>
                       </tr>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+
+                      {/* Expanded detail row */}
+                      {isExpanded && (
+                        <tr className="bg-brand-500/5 dark:bg-navy-950/60">
+                          <td colSpan={8} className="px-5 py-4">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+                              <div>
+                                <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Recommended Action</div>
+                                <div className="text-xs text-brand-600 dark:text-brand-400 font-bold">{item.recommended_action || '—'}</div>
+                              </div>
+                              <div>
+                                <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Action Taken</div>
+                                <div className="text-xs text-slate-700 dark:text-slate-300">{item.action_taken || 'No action recorded yet'}</div>
+                              </div>
+                              <div>
+                                <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Faculty Notes</div>
+                                <div className="text-xs text-slate-700 dark:text-slate-300">{item.faculty_notes || 'No private notes'}</div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => setUpdateItem(item)}
+                                  className="px-3.5 py-2 rounded-xl bg-violet-500/15 border border-violet-500/30 text-violet-600 dark:text-violet-400 text-xs font-black hover:bg-violet-500/25 transition flex items-center gap-1.5 cursor-pointer"
+                                >
+                                  <FileText size={13} /> Update & Follow-up
+                                </button>
+                                <button
+                                  onClick={() => setViewItem(item)}
+                                  className="px-3 py-2 rounded-xl bg-brand-500/15 border border-brand-500/30 text-brand-600 dark:text-brand-400 text-xs font-black hover:bg-brand-500/25 transition flex items-center gap-1.5 cursor-pointer"
+                                >
+                                  <Eye size={13} /> Full Profile
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {/* Pagination */}
