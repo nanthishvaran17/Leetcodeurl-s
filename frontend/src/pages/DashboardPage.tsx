@@ -864,15 +864,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                         </span>
                       </div>
                       <div className="p-2 rounded-xl bg-slate-50 dark:bg-navy-900 border border-slate-100 dark:border-navy-800">
-                        <span className="text-[10px] text-slate-400 font-bold block uppercase">Participation</span>
+                        <span className="text-[10px] text-slate-400 font-bold block uppercase">Weekly Attended</span>
                         <span className="font-extrabold text-indigo-600 dark:text-indigo-400">
-                          {dept.participation_rate || 0}%
+                          {dept.contest_attended || 0}
                         </span>
                       </div>
                       <div className="p-2 rounded-xl bg-slate-50 dark:bg-navy-900 border border-slate-100 dark:border-navy-800">
-                        <span className="text-[10px] text-slate-400 font-bold block uppercase">Avg Solved</span>
+                        <span className="text-[10px] text-slate-400 font-bold block uppercase">Attended %</span>
                         <span className="font-black text-indigo-600 dark:text-indigo-400">
-                          {dept.cumulative_avg_solved ?? dept.avg_solved ?? 0}
+                          {dept.total_students > 0 ? Math.round(((dept.contest_attended || 0) / dept.total_students) * 100) : 0}%
                         </span>
                       </div>
                     </div>
@@ -908,12 +908,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <table className="w-full text-left text-xs whitespace-nowrap border-collapse table-fixed">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-navy-700 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[11px]">
-                    <th className="py-1.5 px-3 font-extrabold text-left w-[28%]">Department</th>
+                    <th className="py-1.5 px-3 font-extrabold text-left w-[25%]">Department</th>
                     <th className="py-1.5 px-2 font-extrabold text-center w-[9%]">Students</th>
                     <th className="py-1.5 px-2 font-extrabold text-center w-[9%]">Active</th>
-                    <th className="py-1.5 px-2 font-extrabold text-center w-[14%]">Participation</th>
-                    <th className="py-1.5 px-2 font-extrabold text-center w-[11%]" title="Department Average Solved Problems per Student">Avg Solved</th>
-                    <th className="py-1.5 px-3 font-extrabold text-left w-[21%]">Top Performer</th>
+                    <th className="py-1.5 px-2 font-extrabold text-center w-[15%]" title="Number of Students Who Attended Last Completed Weekly Contest">Contest Attended</th>
+                    <th className="py-1.5 px-2 font-extrabold text-center w-[11%]">Attended %</th>
+                    <th className="py-1.5 px-3 font-extrabold text-left w-[23%]">Top Performer</th>
                     <th className="py-1.5 px-3 font-extrabold text-right w-[8%]">Action</th>
                   </tr>
                 </thead>
@@ -931,26 +931,28 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                       if (!isACse && isBCse) return 1;
                       return (a.department_code || '').localeCompare(b.department_code || '');
                     })
-                    .map((dept) => (
+                    .map((dept) => {
+                      const attPct = dept.total_students > 0 ? Math.round(((dept.contest_attended || 0) / dept.total_students) * 100) : 0;
+                      return (
                       <tr key={dept.department_code || dept.department_id} className="hover:bg-slate-50 dark:hover:bg-navy-800/50 transition-colors">
-                        <td className="py-1.5 px-3 w-[28%]">
+                        <td className="py-1.5 px-3 w-[25%]">
                           <div className="font-black text-sm text-slate-900 dark:text-white">{dept.department_code}</div>
                           <div className="text-xs text-slate-500 mt-0.5 whitespace-normal leading-tight pr-2">{dept.department_name}</div>
                         </td>
                         <td className="py-1.5 px-2 font-medium text-slate-600 dark:text-slate-300 text-center w-[9%]">{dept.total_students}</td>
                         <td className="py-1.5 px-2 font-medium text-emerald-600 dark:text-emerald-400 text-center w-[9%]">{dept.active_students ?? dept.active_count ?? Math.round(((dept.participation_rate || 0) / 100) * dept.total_students)}</td>
-                        <td className="py-1.5 px-2 text-center w-[14%]">
+                        <td className="py-1.5 px-2 font-extrabold text-indigo-600 dark:text-indigo-400 text-center text-sm w-[15%]" title={`Last Weekly Contest Attendance: ${dept.contest_attended || 0} students`}>
+                          <span className="px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/60 dark:border-indigo-800/50">{dept.contest_attended || 0}</span>
+                        </td>
+                        <td className="py-1.5 px-2 text-center w-[11%]">
                           <div className="flex items-center justify-center space-x-2">
-                            <div className="w-14 h-1.5 bg-slate-200 dark:bg-navy-700 rounded-full overflow-hidden">
-                              <div style={{ width: `${dept.participation_rate}%` }} className="h-full bg-indigo-500 rounded-full"></div>
+                            <div className="w-12 h-1.5 bg-slate-200 dark:bg-navy-700 rounded-full overflow-hidden">
+                              <div style={{ width: `${attPct}%` }} className="h-full bg-indigo-500 rounded-full"></div>
                             </div>
-                            <span className="font-bold text-slate-700 dark:text-slate-300 text-[11px]">{dept.participation_rate}%</span>
+                            <span className="font-bold text-slate-700 dark:text-slate-300 text-[11px]">{attPct}%</span>
                           </div>
                         </td>
-                        <td className="py-1.5 px-2 font-bold text-slate-900 dark:text-white text-center w-[11%]" title={`Department Average Problems Solved: ${dept.cumulative_avg_solved ?? dept.avg_solved} problems`}>
-                          <span className="font-extrabold text-indigo-600 dark:text-indigo-400">{dept.cumulative_avg_solved ?? dept.avg_solved ?? 0}</span>
-                        </td>
-                        <td className="py-1.5 px-3 text-left w-[22%]">
+                        <td className="py-1.5 px-3 text-left w-[23%]">
                           {dept.top_student_name ? (
                             <div className="flex items-center justify-start space-x-1.5">
                               <button
@@ -994,7 +996,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                           </button>
                         </td>
                       </tr>
-                    ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

@@ -32,6 +32,7 @@ import {
   prefetchContest, 
   logContestTelemetry 
 } from '../services/contestCache';
+import { useStudentsQuery } from '../hooks/useStudentsQuery';
 
 // Animated Count-Up component for headline stat numbers
 const AnimatedNumber: React.FC<{ value: number; suffix?: string; duration?: number }> = ({ value, suffix = '', duration = 600 }) => {
@@ -316,6 +317,7 @@ interface WeeklyContestPageProps {
 
 export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectStudent }) => {
   const { user } = useAuth();
+  const { data: globalStudents = [] } = useStudentsQuery();
   const { students: cachedStudents, isStale, lastUpdated } = getCachedSummary();
   const [canonicalData, setCanonicalData] = useState<any>(cachedStudents?.length ? { students: cachedStudents } : null);
   const { departments } = useDepartments();
@@ -375,6 +377,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   // New Feature States
   const [showExportMenu, setShowExportMenu] = useState<boolean>(false);
   const exportMenuRef = useRef<HTMLDivElement>(null);
+  const adminMonitorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -1587,9 +1590,19 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   const statusUp = (s.status || '').toUpperCase();
                   const isCompleted = statusUp.includes('FINAL') || statusUp.includes('COMPLET');
                   const isScheduled = statusUp.includes('SCHEDULE');
+
+                  let rawDate = s.sessionDate || '';
+                  let formattedDate = rawDate;
+                  if (rawDate.includes('-')) {
+                    const parts = rawDate.split('-');
+                    if (parts.length === 3 && parts[0].length === 4) {
+                      formattedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
+                    }
+                  }
+
                   return {
                     value: String(s.sessionId),
-                    label: `${s.sessionDate || ''} — ${s.contestName}`,
+                    label: `${formattedDate} — ${s.contestName}`,
                     pillText: isScheduled ? 'SCHEDULED' : (isCompleted ? 'FINALIZED' : (statusUp || 'ACTIVE')),
                     pillColorClass: isScheduled
                       ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
@@ -1600,12 +1613,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 })}
                 value={selectedSessionId ? String(selectedSessionId) : ''}
                 onChange={(val) => handleSelectSession(Number(val))}
-                icon={<Trophy className="w-4 h-4 text-amber-400" />}
+                hideIcon={true}
                 placeholder="[ Select Contest Session ]"
                 searchPlaceholder="Search contest session..."
                 showSearch={true}
                 className="w-full sm:w-auto"
-                dropdownWidth="w-[340px]"
+                dropdownWidth="w-[320px]"
               />
               
               {(user?.role?.toLowerCase().includes('admin') || user?.role?.toLowerCase() === 'system admin') && activeSessionObj && (
@@ -1622,7 +1635,17 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
             {/* Admin Live Monitor Toggle */}
             <button
-              onClick={() => setShowAdminMonitor(!showAdminMonitor)}
+              onClick={() => {
+                if (!showAdminMonitor) {
+                  setShowAdminMonitor(true);
+                  setAdminSubTab('live_monitor');
+                  setTimeout(() => {
+                    adminMonitorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 120);
+                } else {
+                  setShowAdminMonitor(false);
+                }
+              }}
               className="flex items-center space-x-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl border border-slate-600 transition-all cursor-pointer"
               title="Toggle Live Contest Monitor"
             >
@@ -1790,7 +1813,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
       {/* 1D. ADMIN LIVE CONTEST OPERATIONS & WORKER TELEMETRY SUITE */}
       {showAdminMonitor && (
-        <div className="p-5 sm:p-7 rounded-3xl bg-slate-900 text-white border border-slate-700/80 shadow-lg space-y-6 animate-fade-in">
+        <div ref={adminMonitorRef} className="p-5 sm:p-7 rounded-3xl bg-slate-900 text-white border border-slate-700/80 shadow-lg space-y-6 animate-fade-in scroll-mt-6">
           {/* Header with Title, Worker Badge, and Action Status */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div className="flex items-center space-x-3">
@@ -2233,15 +2256,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               )}
             </div>
           )}
-        </div>
-      )}
 
-      {/* LIVE STUDENT MONITOR PANEL */}
-      {showAdminMonitor && adminSubTab === 'live_monitor' && (
-        <div className="p-5 sm:p-6 rounded-3xl bg-slate-900 border border-slate-700 shadow-lg animate-fade-in">
-          <React.Suspense fallback={<div className="p-8 text-center text-xs font-bold text-slate-400 animate-pulse">Loading Live Monitor Chart Engine...</div>}>
-            <LiveStudentMonitor />
-          </React.Suspense>
+          {/* Tab 7: Live Student Monitor */}
+          {adminSubTab === 'live_monitor' && (
+            <div className="pt-2 animate-fade-in">
+              <React.Suspense fallback={<div className="p-8 text-center text-xs font-bold text-slate-400 animate-pulse">Loading Live Monitor Chart Engine...</div>}>
+                <LiveStudentMonitor />
+              </React.Suspense>
+            </div>
+          )}
         </div>
       )}
 
@@ -2657,15 +2680,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Attendance Status</p>
-                {!attOpen && (
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${({ 'ALL':'bg-slate-400','ALL_ATTENDED':'bg-indigo-500','PUBLIC_ATTENDED':'bg-emerald-500','VIRTUAL_ATTENDED':'bg-purple-500','PUBLIC_NOT_ATTENDED':'bg-rose-400','DATA_ERROR':'bg-amber-500' } as any)[selectedAttendanceFilter] || 'bg-slate-400'}`} />
-                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
-                      {({ 'ALL':'All Statuses','ALL_ATTENDED':'Participated','PUBLIC_ATTENDED':'Public Attended','VIRTUAL_ATTENDED':'Virtual Attended','PUBLIC_NOT_ATTENDED':'Not Attended','DATA_ERROR':'Data Errors' } as any)[selectedAttendanceFilter] || 'All Statuses'}
-                    </span>
-                  </div>
-                )}
-                {attOpen && <p className="text-[10px] text-slate-400 mt-0.5 italic">Choose a status below...</p>}
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${({ 'ALL':'bg-slate-400','ALL_ATTENDED':'bg-indigo-500','PUBLIC_ATTENDED':'bg-emerald-500','VIRTUAL_ATTENDED':'bg-purple-500','PUBLIC_NOT_ATTENDED':'bg-rose-400','DATA_ERROR':'bg-amber-500' } as any)[selectedAttendanceFilter] || 'bg-slate-400'}`} />
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                    {({ 'ALL':'All Statuses','ALL_ATTENDED':'Participated','PUBLIC_ATTENDED':'Public Attended','VIRTUAL_ATTENDED':'Virtual Attended','PUBLIC_NOT_ATTENDED':'Not Attended','DATA_ERROR':'Data Errors' } as any)[selectedAttendanceFilter] || 'All Statuses'}
+                  </span>
+                </div>
               </div>
               <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${attOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -2763,22 +2783,34 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   for (const [key, val] of Object.entries(departmentStats)) {
                     if (normalizeDepartment(key) === deptNorm || key === dept.code || key === dept.name) {
                       const dVal: any = val;
-                      total = dVal?.total || 0;
-                      attended = (dVal?.public || 0) + (dVal?.virtual || 0);
+                      total = Number(dVal?.total || dVal?.totalStudents || 0);
+                      attended = Number(dVal?.public ?? dVal?.publicAttended ?? dVal?.officialAttended ?? dVal?.actual ?? 0) + 
+                                 Number(dVal?.virtual ?? dVal?.virtualAttended ?? 0);
+                      if (attended === 0 && dVal?.attended) {
+                        attended = Number(dVal.attended);
+                      }
                       break;
                     }
                   }
                 }
 
-                // 2. Fallback if departmentStats is unpopulated: calculate dynamically from matrix/cached data
-                if (total === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0)) {
-                  const studentPool = matrixRows.length > 0 ? matrixRows : (cachedStudents || []);
+                // 2. Check matrixRows or cachedStudents (if available) for dynamic calculation of attended count
+                if (attended === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0)) {
+                  const studentPool = matrixRows.length > 0 ? matrixRows : cachedStudents;
                   const deptStudents = studentPool.filter((s: any) => normalizeDepartment(s.dept || s.department || s.department_code) === deptNorm);
-                  total = deptStudents.length;
-                  attended = deptStudents.filter((s: any) => {
-                    const st = (s.participation_status || s.status || '').toUpperCase();
-                    return st === 'PUBLIC_ATTENDED' || st === 'PUBLIC' || st === 'ATTENDED' || st === 'VIRTUAL_ATTENDED' || st === 'VIRTUAL';
-                  }).length;
+                  if (deptStudents.length > 0) {
+                    if (total === 0) total = deptStudents.length;
+                    attended = deptStudents.filter((s: any) => {
+                      const st = (s.participation_status || s.status || '').toUpperCase();
+                      return st === 'PUBLIC_ATTENDED' || st === 'PUBLIC' || st === 'ATTENDED' || st === 'VIRTUAL_ATTENDED' || st === 'VIRTUAL';
+                    }).length;
+                  }
+                }
+
+                // 3. Fallback for total student count from master roster
+                if (total === 0 && globalStudents.length > 0) {
+                  const deptGlobalStudents = globalStudents.filter((s: any) => normalizeDepartment(s.dept || s.department || s.department_code) === deptNorm);
+                  total = deptGlobalStudents.length;
                 }
 
                 return (
@@ -3175,7 +3207,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             ) : (
               <>
                 <ChevronDown className="w-4 h-4" />
-                <span>View Full Breakdown & Student Roster ({matrixRows.length} Students)</span>
+                <span>View Full Breakdown & Student Roster ({matrixRows.length || totalRows || globalStudents.length || 0} Students)</span>
               </>
             )}
           </button>
@@ -3569,38 +3601,45 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                           if (normalizeDepartment(key) === deptNorm || key === dept.code || key === dept.name) {
                             const dVal: any = val;
                             dStats = {
-                              total: dVal?.total || 0,
-                              public: dVal?.public || 0,
-                              virtual: dVal?.virtual || 0,
-                              not_attended: dVal?.not_attended || 0,
-                              errors: dVal?.errors || 0
+                              total: Number(dVal?.total || 0),
+                              public: Number(dVal?.public ?? dVal?.publicAttended ?? dVal?.officialAttended ?? dVal?.actual ?? 0),
+                              virtual: Number(dVal?.virtual ?? dVal?.virtualAttended ?? 0),
+                              not_attended: Number(dVal?.not_attended ?? dVal?.notAttended ?? 0),
+                              errors: Number(dVal?.errors ?? dVal?.totalErrors ?? dVal?.dataErrors ?? 0)
                             };
                             break;
                           }
                         }
                       }
 
-                      if (dStats.total === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0)) {
-                        const studentPool = matrixRows.length > 0 ? matrixRows : (cachedStudents || []);
+                      if (dStats.public === 0 && dStats.virtual === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0)) {
+                        const studentPool = matrixRows.length > 0 ? matrixRows : cachedStudents;
                         const deptStudents = studentPool.filter((s: any) => normalizeDepartment(s.dept || s.department || s.department_code) === deptNorm);
-                        const tot = deptStudents.length;
-                        const pub = deptStudents.filter((s: any) => {
-                          const st = (s.participation_status || s.status || '').toUpperCase();
-                          return st === 'PUBLIC_ATTENDED' || st === 'PUBLIC' || st === 'ATTENDED';
-                        }).length;
-                        const virt = deptStudents.filter((s: any) => {
-                          const st = (s.participation_status || s.status || '').toUpperCase();
-                          return st === 'VIRTUAL_ATTENDED' || st === 'VIRTUAL';
-                        }).length;
-                        const notAtt = deptStudents.filter((s: any) => {
-                          const st = (s.participation_status || s.status || '').toUpperCase();
-                          return st === 'PUBLIC_NOT_ATTENDED' || st === 'NOT_ATTENDED';
-                        }).length;
-                        const errs = deptStudents.filter((s: any) => {
-                          const st = (s.participation_status || s.status || '').toUpperCase();
-                          return st === 'DATA_ERROR' || st === 'SOURCE_ERROR' || st === 'CONFLICT';
-                        }).length;
-                        dStats = { total: tot, public: pub, virtual: virt, not_attended: notAtt, errors: errs };
+                        if (deptStudents.length > 0) {
+                          const tot = deptStudents.length;
+                          const pub = deptStudents.filter((s: any) => {
+                            const st = (s.participation_status || s.status || '').toUpperCase();
+                            return st === 'PUBLIC_ATTENDED' || st === 'PUBLIC' || st === 'ATTENDED';
+                          }).length;
+                          const virt = deptStudents.filter((s: any) => {
+                            const st = (s.participation_status || s.status || '').toUpperCase();
+                            return st === 'VIRTUAL_ATTENDED' || st === 'VIRTUAL';
+                          }).length;
+                          const notAtt = deptStudents.filter((s: any) => {
+                            const st = (s.participation_status || s.status || '').toUpperCase();
+                            return st === 'PUBLIC_NOT_ATTENDED' || st === 'NOT_ATTENDED';
+                          }).length;
+                          const errs = deptStudents.filter((s: any) => {
+                            const st = (s.participation_status || s.status || '').toUpperCase();
+                            return st === 'DATA_ERROR' || st === 'SOURCE_ERROR' || st === 'CONFLICT';
+                          }).length;
+                          dStats = { total: dStats.total || tot, public: pub, virtual: virt, not_attended: notAtt, errors: errs };
+                        }
+                      }
+
+                      if (dStats.total === 0 && globalStudents.length > 0) {
+                        const deptGlobal = globalStudents.filter((s: any) => normalizeDepartment(s.dept || s.department || s.department_code) === deptNorm);
+                        dStats.total = deptGlobal.length;
                       }
 
                       const tot = dStats.total || 0;

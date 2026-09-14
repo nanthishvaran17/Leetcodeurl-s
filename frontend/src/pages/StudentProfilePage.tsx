@@ -329,7 +329,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           <div className="flex-1">
             <h2 className="text-lg sm:text-xl font-black text-white">{detail?.name || student?.name}</h2>
             <p className="text-[10px] sm:text-xs text-brand-300 font-mono font-bold mt-0.5 truncate max-w-sm">
-              {detail?.reg_no || student?.reg_no} • {detail?.department?.name || detail?.department?.code || student?.department?.code} {detail?.year_level ? `• ${detail.year_level} Year` : ''}
+              {detail?.reg_no || student?.reg_no} • {detail?.department?.name || detail?.department?.code || student?.department?.code} {detail?.year_level ? `• ${String(detail.year_level).replace(/\s*Yr\s*/gi, '').replace(/\s*Year\s*/gi, '').trim()} Year` : ''}
             </p>
           </div>
         </div>
@@ -583,6 +583,8 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           totalSolved={detail?.stats?.total_solved || 0}
           collegeRank={detail?.college_rank || 1}
           streakCount={detail?.streak_count || 0}
+          leetcodeUsername={detail?.username || detail?.leetcode_username || ''}
+          contestRating={detail?.stats?.contest_rating || 0}
         />
       </div>
 

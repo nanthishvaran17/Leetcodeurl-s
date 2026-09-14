@@ -171,44 +171,26 @@ def generate_student_report(
             "generatedAtIST": datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")
         }
 
-        fmt = format.lower()
+        fmt = "pdf"
         rpt = report_type.upper()
 
-        file_bytes = None
+        # PDF-Only Generation Engine
+        from backend.exporters.student_pdf_exporter import export_student_pdf_from_dataset
+        file_bytes = export_student_pdf_from_dataset({"rows": [student_report_data], **student_report_data}, rpt)
         ext = "pdf"
         mime = "application/pdf"
-
-        if fmt == "pdf":
-            from backend.exporters.student_pdf_exporter import export_student_pdf_from_dataset
-            file_bytes = export_student_pdf_from_dataset({"rows": [student_report_data], **student_report_data}, rpt)
-            ext = "pdf"
-        elif fmt in ("excel", "xlsx"):
-            from backend.exporters.student_excel_exporter import export_student_excel_from_dataset
-            file_bytes = export_student_excel_from_dataset({"rows": [student_report_data], **student_report_data}, rpt)
-            ext = "xlsx"
-            mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        elif fmt == "both":
-            from backend.exporters.zip_exporter import export_student_zip_bundle_from_dataset
-            file_bytes = export_student_zip_bundle_from_dataset(
-                {"rows": [student_report_data], **student_report_data}, 
-                student_report_data["name"], 
-                student_report_data["reg_no"],
-                rpt
-            )
-            ext = "zip"
-            mime = "application/zip"
-        else:
-            raise ValueError(f"Unsupported format: {format}")
         
-        # File naming
+        # File naming strictly adhering to institutional standard
         safe_name = student.name.replace(" ", "_").replace("/", "_")
         safe_reg = student.reg_no.replace(" ", "_")
 
         prefix = 'Student_Report'
-        if rpt in ('OFFICIAL_SUMMARY', 'SUMMARY'): prefix = 'Student_Summary'
-        if rpt in ('WEEKLY_CONTEST_MATRIX', 'MATRIX'): prefix = 'Student_Contest_Matrix'
+        if 'SUMMARY' in rpt:
+            prefix = 'Student_Summary'
+        elif 'MATRIX' in rpt or 'CONTEST' in rpt:
+            prefix = 'Student_Contest_Matrix'
 
-        filename = f"Nandha_{prefix}_{safe_name}_{safe_reg}.{ext}"
+        filename = f"Nandha_{prefix}_{safe_name}_{safe_reg}.pdf"
 
         # Save to cache securely
         storage_dir = os.path.join(os.getcwd(), "cache", "reports")
@@ -235,6 +217,8 @@ def generate_student_report(
             existing_record.file_size_bytes = file_size
             existing_record.status = "READY"
             existing_record.generated_at = datetime.datetime.utcnow()
+            db.flush()
+            cache_id = existing_record.id
         else:
             cache_record = ReportCache(
                 institution_id="NEC",
@@ -253,9 +237,18 @@ def generate_student_report(
                 status="READY"
             )
             db.add(cache_record)
+            db.flush()
+            cache_id = cache_record.id
             
         db.commit()
-        return file_bytes
+        return {
+            "status": "READY",
+            "download_url": f"/api/reports/cached-download/{cache_id}",
+            "filename": filename,
+            "mime_type": mime,
+            "file_size_bytes": file_size,
+            "cache_id": cache_id
+        }
         
     finally:
         REPORT_GENERATION_SEMAPHORE.release()

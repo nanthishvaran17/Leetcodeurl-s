@@ -1221,15 +1221,30 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             <div className="sm:col-span-4">
               <GlobalFilter
                 label="2. Select Contest"
-                options={availableContests.map((c: any) => ({
-                  value: String(c.id),
-                  label: `${c.contest_name} (Session #${c.id})`,
-                  pillText: `#${c.id}`,
-                  pillColorClass: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20"
-                }))}
+                options={availableContests.map((c: any) => {
+                  let rawDate = c.session_date || c.date || c.created_at || '';
+                  let formattedDate = '';
+                  if (rawDate) {
+                    if (rawDate.includes('T')) rawDate = rawDate.split('T')[0];
+                    if (rawDate.includes('-')) {
+                      const parts = rawDate.split('-');
+                      if (parts.length === 3 && parts[0].length === 4) {
+                        formattedDate = `${parts[2]}.${parts[1]}.${parts[0]} — `;
+                      } else {
+                        formattedDate = `${rawDate} — `;
+                      }
+                    }
+                  }
+                  return {
+                    value: String(c.id),
+                    label: `${formattedDate}${c.contest_name || `Weekly Contest ${c.id}`}`,
+                    pillText: `#${c.id}`,
+                    pillColorClass: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20"
+                  };
+                })}
                 value={selectedContestId}
                 onChange={(val) => handleContestChange(val)}
-                icon={<Calendar className="w-4 h-4 text-indigo-500" />}
+                hideIcon={true}
                 placeholder="[ Select Contest ]"
                 searchPlaceholder="Search contest session..."
                 showSearch={true}

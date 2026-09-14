@@ -19,24 +19,24 @@ interface LoginPageProps {
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
   const { user, isAuthenticated, authState, login, authError, clearAuthError } = useAuth();
-  
+
   useEffect(() => {
     if (isAuthenticated || user) {
       onSuccess();
     }
   }, [isAuthenticated, user, onSuccess]);
-  
+
   const pageVariants: Variants = {
     initial: { opacity: 0, y: 8 },
-    animate: { 
-      opacity: 1, 
-      y: 0, 
-      transition: { 
-        duration: 0.25, 
+    animate: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.25,
         ease: 'easeOut',
         staggerChildren: 0.08,
         delayChildren: 0.3
-      } 
+      }
     },
     exit: { opacity: 0, y: -8, transition: { duration: 0.15, ease: 'easeIn' } }
   };
@@ -66,43 +66,43 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
 
   const mobileLogoVariants: Variants = {
     hidden: { opacity: 0, y: -15 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      transition: { duration: 0.2, ease: 'easeOut' } 
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.2, ease: 'easeOut' }
     }
   };
 
   const mobileTextVariants: Variants = {
     hidden: { opacity: 0, y: 8 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      transition: { duration: 0.2, ease: 'easeOut' } 
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.2, ease: 'easeOut' }
     }
   };
 
   const mobileCardVariants: Variants = {
     hidden: { opacity: 0, y: 12 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      transition: { duration: 0.2, ease: 'easeOut' } 
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.2, ease: 'easeOut' }
     }
   };
 
   const mobileFormStagger: Variants = {
     initial: { opacity: 0, y: 6 },
-    animate: { 
-      opacity: 1, 
-      y: 0, 
-      transition: { duration: 0.15, ease: 'easeOut' } 
+    animate: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.15, ease: 'easeOut' }
     }
   };
 
   // Auth Mode: 'password' | 'otp'
   const [authMode, setAuthMode] = useState<'password' | 'otp'>('password');
-  
+
   // Views: 'login' | 'forgot_password' | 'help'
   const [currentView, setCurrentView] = useState<'login' | 'forgot_password' | 'help'>('login');
 
@@ -178,7 +178,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         const data = res.data;
         const total = data?.total || 307;
         const verified = data?.verified || 290;
-        
+
         setLiveStats({
           totalStudents: total,
           verifiedStudents: verified,
@@ -510,8 +510,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
       {/* ========================================================
           MOBILE HERO / HEADER: Official Floating Institutional Branding
           ======================================================== */}
-      <motion.div 
-        className="mobile-top-branding hide-on-desktop" 
+      <motion.div
+        className="mobile-top-branding hide-on-desktop"
         role="banner"
         variants={mobileContainerVariants}
         initial={shouldAnimateMobileEntrance ? "hidden" : "visible"}
@@ -548,631 +548,676 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         <div className="panel-left hide-on-mobile">
           <div className="grid-texture"></div>
           <svg className="seal" viewBox="0 0 200 200" aria-hidden="true">
-            <circle cx="100" cy="100" r="95" fill="none" stroke="#eae7de" strokeWidth="1"/>
-            <circle cx="100" cy="100" r="80" fill="none" stroke="#eae7de" strokeWidth="1"/>
-            <circle cx="100" cy="100" r="80" fill="none" stroke="#eae7de" strokeWidth="0.5" strokeDasharray="2 4"/>
+            <circle cx="100" cy="100" r="95" fill="none" stroke="#eae7de" strokeWidth="1" />
+            <circle cx="100" cy="100" r="80" fill="none" stroke="#eae7de" strokeWidth="1" />
+            <circle cx="100" cy="100" r="80" fill="none" stroke="#eae7de" strokeWidth="0.5" strokeDasharray="2 4" />
             <text x="100" y="30" fill="#eae7de" fontSize="9" fontFamily="Inter, sans-serif" textAnchor="middle">VERIFIED · AUDITED · TRACKED</text>
             <text x="100" y="178" fill="#eae7de" fontSize="9" fontFamily="Inter, sans-serif" textAnchor="middle">NANDHA ENGINEERING COLLEGE</text>
           </svg>
 
-          <div className="brand-row">
-            <CollegeLogo className="brand-mark" size={48} />
-            <div className="brand-text">
-              <p className="eyebrow">INSTITUTIONAL PORTAL</p>
-              <p className="name">Nandha Intelligence</p>
-              <p className="sub">Nandha Engineering College (Autonomous) · Erode</p>
-            </div>
-          </div>
+          <motion.div
+            className="left-panel-content"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.12,
+                  delayChildren: 0.1
+                }
+              }
+            }}
+          >
+            <motion.div
+              className="brand-row"
+              variants={{
+                hidden: { opacity: 0, y: -18 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
+              }}
+              whileHover={{ y: -2, transition: { duration: 0.2 } }}
+            >
+              <CollegeLogo className="brand-mark" size={48} />
+              <div className="brand-text">
+                <p className="eyebrow">INSTITUTIONAL PORTAL</p>
+                <p className="name">Nandha Intelligence</p>
+                <p className="sub">Nandha Engineering College (Autonomous) · Erode</p>
+              </div>
+            </motion.div>
 
-          <div className="headline">
-            <span className="kicker">
-              <span className="kicker-dot" aria-hidden="true" />
-              ZERO MOCK DATA · LIVE SYNC
-            </span>
-            <h1>
-              <span className="block">Every submission,</span>
-              <span className="block">verified and on record.</span>
-            </h1>
-            <p>
-              Real-time algorithmic analytics and forensic evaluation for{' '}
-              <strong>{liveStats ? liveStats.totalStudents.toLocaleString('en-IN') : '307'}</strong> tracked engineers across the institution.
-            </p>
-          </div>
+            <div className="headline">
+              <motion.span
+                className="kicker"
+                variants={{
+                  hidden: { opacity: 0, scale: 0.92, y: 10 },
+                  visible: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] } }
+                }}
+              >
+                <span className="kicker-dot" aria-hidden="true" />
+                ZERO MOCK DATA · LIVE SYNC
+              </motion.span>
+              <motion.h1
+                variants={{
+                  hidden: { opacity: 0, y: 18 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } }
+                }}
+              >
+                <span className="block">Every submission,</span>
+                <span className="block">verified and on record.</span>
+              </motion.h1>
+              <motion.p
+                variants={{
+                  hidden: { opacity: 0, y: 12 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
+                }}
+              >
+                Real-time algorithmic telemetry, automated contest verification, and institutional benchmark analytics across all academic cohorts.
+              </motion.p>
+            </div>
 
-          <div className="audit-log">
-            <div className="audit-row audit-row--blue">
-              <span className="label">Engineers tracked<span className="desc">Live rating & contest sync</span></span>
-              <span className="value value--blue">
-                {liveStats ? liveStats.totalStudents.toLocaleString('en-IN') : '307'}
-              </span>
-            </div>
-            <div className="audit-row audit-row--green">
-              <span className="label">Pipeline<span className="desc">Autonomous Sunday verification</span></span>
-              <span className="value value--green">ACTIVE</span>
-            </div>
-            <div className="audit-row audit-row--amber">
-              <span className="label">Integrity audit<span className="desc">
-                {liveStats ? `${liveStats.verifiedStudents.toLocaleString('en-IN')} verified profiles` : 'Zero mock data parity'}
-              </span></span>
-              <span className="value value--amber">{liveStats ? liveStats.integrityStatus : 'PASS'}</span>
-            </div>
-          </div>
+            <motion.div
+              className="audit-log"
+              variants={{
+                hidden: { opacity: 0, y: 22 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
+              }}
+              whileHover={{ y: -2, transition: { duration: 0.2 } }}
+            >
+              <div className="audit-row audit-row--blue">
+                <span className="label">Engineers tracked<span className="desc">Live rating & contest sync</span></span>
+                <span className="value value--blue">
+                  {liveStats ? liveStats.totalStudents.toLocaleString('en-IN') : '307'}
+                </span>
+              </div>
+              <div className="audit-row audit-row--green">
+                <span className="label">Pipeline<span className="desc">Autonomous Sunday verification</span></span>
+                <span className="value value--green">ACTIVE</span>
+              </div>
+              <div className="audit-row audit-row--amber">
+                <span className="label">Integrity audit<span className="desc">
+                  {liveStats ? `${liveStats.verifiedStudents.toLocaleString('en-IN')} verified profiles` : 'Zero mock data parity'}
+                </span></span>
+                <span className="value value--amber">{liveStats ? liveStats.integrityStatus : 'PASS'}</span>
+              </div>
+            </motion.div>
+          </motion.div>
         </div>
 
         {/* ========================================================
             RIGHT LOGIN PANEL (Frosted Glass Card Surface)
             ======================================================== */}
-        <motion.div 
+        <motion.div
           className={`panel-right ${isShaking ? 'shake-anim' : ''}`}
           variants={shouldAnimateMobileEntrance ? mobileCardVariants : undefined}
           initial={shouldAnimateMobileEntrance ? "hidden" : undefined}
           animate={shouldAnimateMobileEntrance ? "visible" : undefined}
         >
           <div className="login-content-wrapper">
-          <div className="form-head">
-            <div className="form-head-title-row">
-              <h2>
+            <div className="form-head">
+              <div className="form-head-title-row">
+                <h2>
+                  {currentView === 'help'
+                    ? 'Institutional Help Desk'
+                    : (currentView === 'forgot_password' ? 'Reset Workspace Password' : 'Sign in to your workspace')}
+                </h2>
+              </div>
+              <p>
                 {currentView === 'help'
-                  ? 'Institutional Help Desk'
-                  : (currentView === 'forgot_password' ? 'Reset Workspace Password' : 'Sign in to your workspace')}
-              </h2>
+                  ? 'Support for authorized personnel, faculty, and enrolled students.'
+                  : (currentView === 'forgot_password'
+                    ? 'Verify your identity to reset your institutional credentials.'
+                    : 'Use your institutional email to authenticate.')}
+              </p>
             </div>
-            <p>
-              {currentView === 'help'
-                ? 'Support for authorized personnel, faculty, and enrolled students.'
-                : (currentView === 'forgot_password'
-                  ? 'Verify your identity to reset your institutional credentials.'
-                  : 'Use your institutional email to authenticate.')}
-            </p>
-          </div>
 
-          <AnimatePresence mode="wait">
-            {(error || authError) && (
-              <motion.div
-                key="error"
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                className="error-banner"
-                role="alert"
-              >
-                <AlertCircle size={18} className="shrink-0" />
-                <span className="flex-1 min-w-0">{error || authError}</span>
-                <button
-                  type="button"
-                  onClick={() => { setError(''); clearAuthError(); }}
-                  className="banner-close-btn"
-                  aria-label="Dismiss error"
+            <AnimatePresence mode="wait">
+              {(error || authError) && (
+                <motion.div
+                  key="error"
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  className="error-banner"
+                  role="alert"
                 >
-                  <X size={16} />
-                </button>
-              </motion.div>
-            )}
-            
-            {successMsg && (
-              <motion.div
-                key="success"
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                className="success-banner"
-                role="status"
-              >
-                <CheckCircle2 size={18} className="shrink-0" />
-                <span className="flex-1 min-w-0">{successMsg}</span>
-                <button
-                  type="button"
-                  onClick={() => setSuccessMsg('')}
-                  className="banner-close-btn"
-                  aria-label="Dismiss success message"
-                >
-                  <X size={16} />
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence mode="wait">
-            {/* VIEW: Main Login */}
-            {currentView === 'login' && (
-              <motion.div
-                key="login"
-                variants={pageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                className="view-wrapper"
-              >
-                {/* Segmented Control Tabs */}
-                <motion.div className="tabs" role="tablist" aria-label="Login authentication method" variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
+                  <AlertCircle size={18} className="shrink-0" />
+                  <span className="flex-1 min-w-0">{error || authError}</span>
                   <button
                     type="button"
-                    role="tab"
-                    aria-selected={authMode === 'password'}
-                    className={authMode === 'password' ? 'active' : ''}
-                    onClick={() => { setAuthMode('password'); setError(''); clearAuthError(); }}
+                    onClick={() => { setError(''); clearAuthError(); }}
+                    className="banner-close-btn"
+                    aria-label="Dismiss error"
                   >
-                    Password
-                  </button>
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={authMode === 'otp'}
-                    className={authMode === 'otp' ? 'active' : ''}
-                    onClick={() => { setAuthMode('otp'); setError(''); clearAuthError(); }}
-                  >
-                    Secure OTP
+                    <X size={16} />
                   </button>
                 </motion.div>
+              )}
 
-                {/* Password Form */}
-                {authMode === 'password' ? (
-                  <form onSubmit={handlePasswordLogin} noValidate>
-                    <motion.div className="field" variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
-                      <label htmlFor="userId">Institutional Email or User ID</label>
-                      <div className="input-wrap">
-                        <Mail className="input-icon" size={19} aria-hidden="true" />
-                        <input
-                          id="userId"
-                          type="text"
-                          value={username}
-                          onChange={(e) => setUsername(e.target.value)}
-                          placeholder="username or faculty@nandhaengg.org"
-                          autoComplete="username"
-                          autoCapitalize="none"
-                          spellCheck={false}
-                          required
-                          disabled={loading}
-                        />
-                      </div>
-                    </motion.div>
-
-                    <motion.div className="field" variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
-                      <label htmlFor="password">Password</label>
-                      <div className="input-wrap">
-                        <Lock className="input-icon" size={19} aria-hidden="true" />
-                        <input
-                          id="password"
-                          type={showPassword ? "text" : "password"}
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          placeholder="••••••••"
-                          autoComplete="current-password"
-                          required
-                          disabled={loading}
-                        />
-                        <button
-                          type="button"
-                          className="toggle-visibility"
-                          onClick={() => setShowPassword(!showPassword)}
-                          aria-label={showPassword ? "Hide password" : "Show password"}
-                        >
-                          {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
-                        </button>
-                      </div>
-                    </motion.div>
-
-                    <motion.div className="row-between" variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
-                      <label className="remember">
-                        <input
-                          type="checkbox"
-                          checked={rememberMe}
-                          onChange={(e) => setRememberMe(e.target.checked)}
-                        />
-                        <span>Remember me</span>
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => { setCurrentView('forgot_password'); setForgotStep('dob'); setError(''); setSuccessMsg(''); }}
-                        className="forgot"
-                      >
-                        Forgot password?
-                      </button>
-                    </motion.div>
-
-                    <motion.button className="submit-btn" type="submit" disabled={loading} variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
-                      {loading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin shrink-0" size={18} />
-                          <span>{authStatusText || 'Signing in...'}</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>Sign in to workspace</span>
-                          <ArrowRight size={18} strokeWidth={2.5} className="btn-arrow" />
-                        </>
-                      )}
-                    </motion.button>
-                  </form>
-                ) : (
-                  /* OTP Form */
-                  <form onSubmit={otpStep === 'email' ? handleSendOtp : handleVerifyOtp} noValidate>
-                    <div className="field">
-                      <label htmlFor="otpEmail">Institutional Email</label>
-                      <div className="input-wrap">
-                        <Mail className="input-icon" size={19} aria-hidden="true" />
-                        <input
-                          id="otpEmail"
-                          type="email"
-                          value={otpEmail}
-                          onChange={(e) => setOtpEmail(e.target.value)}
-                          placeholder="faculty@nandhaengg.org"
-                          autoComplete="email"
-                          autoCapitalize="none"
-                          spellCheck={false}
-                          required
-                          disabled={loading || otpStep === 'verify'}
-                        />
-                      </div>
-                    </div>
-
-                    {otpStep === 'verify' && (
-                      <div className="field">
-                        <label>6-Digit Secure OTP</label>
-                        <div className="otp-boxes-row">
-                          {otpDigits.map((digit, index) => (
-                            <input
-                              key={index}
-                              ref={digitRefs[index]}
-                              type="text"
-                              inputMode="numeric"
-                              autoComplete="one-time-code"
-                              pattern="\d{1}"
-                              maxLength={1}
-                              className="otp-box"
-                              value={digit}
-                              onChange={(e) => handleDigitChange(index, e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Backspace' && !digit && index > 0) {
-                                  digitRefs[index - 1].current?.focus();
-                                }
-                              }}
-                              disabled={loading}
-                              required
-                            />
-                          ))}
-                        </div>
-                        <div className="otp-actions-row">
-                          <button
-                            type="button"
-                            onClick={() => { setOtpStep('email'); setOtpDigits(['', '', '', '', '', '']); setError(''); }}
-                            className="forgot"
-                          >
-                            Change Email
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handleSendOtp}
-                            disabled={loading || resendCooldown > 0}
-                            className="forgot"
-                          >
-                            {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Code'}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    <button
-                      className="submit-btn"
-                      type="submit"
-                      disabled={loading || (otpStep === 'verify' && otpDigits.join('').length !== 6)}
-                    >
-                      <span>{loading ? 'Processing...' : (otpStep === 'email' ? 'Send OTP Code' : 'Verify & Sign In')}</span>
-                      {!loading && <ArrowRight size={18} strokeWidth={2.5} className="btn-arrow" />}
-                    </button>
-                  </form>
-                )}
-
-                {/* Single Institutional Help Row */}
-                <div className="help-card-row">
+              {successMsg && (
+                <motion.div
+                  key="success"
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  className="success-banner"
+                  role="status"
+                >
+                  <CheckCircle2 size={18} className="shrink-0" />
+                  <span className="flex-1 min-w-0">{successMsg}</span>
                   <button
                     type="button"
-                    className="help-trigger-btn"
-                    onClick={() => { setCurrentView('help'); setError(''); }}
+                    onClick={() => setSuccessMsg('')}
+                    className="banner-close-btn"
+                    aria-label="Dismiss success message"
                   >
-                    <div className="help-icon-box">
-                      <HelpCircle size={18} />
-                    </div>
-                    <div className="help-text-box">
-                      <span className="help-title">Need help accessing your account?</span>
-                      <span className="help-subtitle">Contact your institution administrator.</span>
-                    </div>
-                    <ChevronRight size={16} className="help-chevron" />
+                    <X size={16} />
                   </button>
-                </div>
-              </motion.div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-            {/* VIEW: Forgot Password Flow */}
-            {currentView === 'forgot_password' && (
-              <motion.div
-                key="forgot"
-                variants={pageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                className="view-wrapper"
-              >
-                {/* Step Indicator */}
-                <div className="steps-indicator">
-                  {(['dob', 'verify_otp', 'reset_password', 'success'] as const).map((step, i) => {
-                    const stepIdx = ['dob', 'verify_otp', 'reset_password', 'success'].indexOf(forgotStep);
-                    const done = i < stepIdx;
-                    const active = step === forgotStep;
-                    return (
-                      <div key={step} className="step-item">
-                        <div className={`step-dot ${done ? 'done' : ''} ${active ? 'active' : ''}`}>
-                          {done ? '' : i + 1}
-                        </div>
-                        {i < 3 && <div className={`step-line ${done ? 'done' : ''}`} />}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* STEP 1: Identity Verification */}
-                {forgotStep === 'dob' && (
-                  <form onSubmit={handleForgotVerifyDob} noValidate>
-                    <p className="step-desc">
-                      Enter your <strong>Institutional ID / Username</strong>, email, and Date of Birth to receive a password reset code.
-                    </p>
-                    <div className="field">
-                      <label htmlFor="forgotId">Username / Institutional ID</label>
-                      <div className="input-wrap">
-                        <User className="input-icon" size={19} />
-                        <input
-                          id="forgotId"
-                          type="text"
-                          value={forgotInstId}
-                          onChange={(e) => setForgotInstId(e.target.value)}
-                          placeholder="e.g. 732224CC101 or staff username"
-                          required
-                          disabled={loading}
-                          autoFocus
-                        />
-                      </div>
-                    </div>
-                    <div className="field">
-                      <label htmlFor="forgotEmail">Registered Email</label>
-                      <div className="input-wrap">
-                        <Mail className="input-icon" size={19} />
-                        <input
-                          id="forgotEmail"
-                          type="email"
-                          value={forgotEmail}
-                          onChange={(e) => setForgotEmail(e.target.value)}
-                          placeholder="faculty@nandhaengg.org"
-                          required
-                          disabled={loading}
-                        />
-                      </div>
-                    </div>
-                    <div className="field">
-                      <label htmlFor="forgotDob">Date of Birth (DD/MM/YYYY)</label>
-                      <div className="input-wrap">
-                        <Calendar className="input-icon" size={19} />
-                        <input
-                          id="forgotDob"
-                          type="text"
-                          value={forgotDob}
-                          onChange={(e) => {
-                            let val = e.target.value.replace(/\D/g, '');
-                            if (val.length >= 3 && val.length <= 4) val = val.slice(0, 2) + '/' + val.slice(2);
-                            else if (val.length >= 5) val = val.slice(0, 2) + '/' + val.slice(2, 4) + '/' + val.slice(4, 8);
-                            setForgotDob(val);
-                          }}
-                          placeholder="DD/MM/YYYY"
-                          maxLength={10}
-                          required
-                          disabled={loading}
-                        />
-                      </div>
-                    </div>
-                    <div className="row-between" style={{ marginTop: '8px', marginBottom: '16px' }}>
-                      <button
-                        type="button"
-                        onClick={() => { setCurrentView('login'); setAuthMode('password'); setError(''); setSuccessMsg(''); }}
-                        className="forgot"
-                      >
-                        ← Back to Sign In
-                      </button>
-                    </div>
-                    <button className="submit-btn" type="submit" disabled={loading}>
-                      <span>{loading ? 'Verifying...' : 'Send OTP to Email'}</span>
-                      {!loading && <ArrowRight size={18} strokeWidth={2.5} className="btn-arrow" />}
-                    </button>
-                  </form>
-                )}
-
-                {/* STEP 2: Enter OTP */}
-                {forgotStep === 'verify_otp' && (
-                  <form onSubmit={handleForgotVerifyOtp} noValidate>
-                    <div className="text-center" style={{ textAlign: 'center', marginBottom: '16px' }}>
-                      <p className="step-desc">
-                        A 6-digit verification code was sent to<br />
-                        <strong>{forgotEmail}</strong>.
-                      </p>
-                    </div>
-                    <div className="field">
-                      <label htmlFor="resetCode">6-Digit Reset Code</label>
-                      <input
-                        id="resetCode"
-                        type="text"
-                        inputMode="numeric"
-                        pattern="\d{6}"
-                        maxLength={6}
-                        value={forgotResetToken}
-                        onChange={(e) => setForgotResetToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                        placeholder="000000"
-                        className="otp-single-input"
-                        required
-                        disabled={loading}
-                        autoFocus
-                      />
-                    </div>
-                    <div className="row-between" style={{ marginTop: '8px', marginBottom: '16px' }}>
-                      <button
-                        type="button"
-                        onClick={() => { setForgotStep('dob'); setForgotResetToken(''); setError(''); setSuccessMsg(''); }}
-                        className="forgot"
-                      >
-                        ← Change Details
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleForgotVerifyDob}
-                        disabled={loading}
-                        className="forgot"
-                      >
-                        Resend Code
-                      </button>
-                    </div>
-                    <button className="submit-btn" type="submit" disabled={loading || forgotResetToken.length !== 6}>
-                      <span>{loading ? 'Verifying...' : 'Verify Code'}</span>
-                      {!loading && <ArrowRight size={18} strokeWidth={2.5} className="btn-arrow" />}
-                    </button>
-                  </form>
-                )}
-
-                {/* STEP 3: Set New Password */}
-                {forgotStep === 'reset_password' && (
-                  <form onSubmit={handleForgotResetPassword} noValidate>
-                    <p className="step-desc">
-                      Code verified. Choose a new secure password for your workspace account.
-                    </p>
-                    <div className="field">
-                      <label htmlFor="newPass">New Password</label>
-                      <div className="input-wrap">
-                        <Lock className="input-icon" size={19} />
-                        <input
-                          id="newPass"
-                          type={showPassword ? 'text' : 'password'}
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          placeholder="Minimum 6 characters"
-                          required
-                          disabled={loading}
-                          autoFocus
-                        />
-                        <button
-                          type="button"
-                          className="toggle-visibility"
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
-                          {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
-                        </button>
-                      </div>
-                    </div>
-                    <div className="field">
-                      <label htmlFor="confPass">Confirm New Password</label>
-                      <div className="input-wrap">
-                        <Lock className="input-icon" size={19} />
-                        <input
-                          id="confPass"
-                          type={showPassword ? 'text' : 'password'}
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          placeholder="Repeat password"
-                          required
-                          disabled={loading}
-                        />
-                      </div>
-                    </div>
-                    <button
-                      className="submit-btn"
-                      type="submit"
-                      disabled={loading || newPassword !== confirmPassword || newPassword.length < 6}
-                    >
-                      <span>{loading ? 'Updating...' : 'Save Password & Sign In'}</span>
-                      {!loading && <ArrowRight size={18} strokeWidth={2.5} className="btn-arrow" />}
-                    </button>
-                  </form>
-                )}
-
-                {/* STEP 4: Success */}
-                {forgotStep === 'success' && (
-                  <div className="forgot-success-box">
-                    <div className="success-icon-circle">
-                      <Check size={32} strokeWidth={3} />
-                    </div>
-                    <h3>Password Updated Successfully</h3>
-                    <p>
-                      Your credentials have been updated. You can now sign in with your new password.
-                    </p>
+            <AnimatePresence mode="wait">
+              {/* VIEW: Main Login */}
+              {currentView === 'login' && (
+                <motion.div
+                  key="login"
+                  variants={pageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="view-wrapper"
+                >
+                  {/* Segmented Control Tabs */}
+                  <motion.div className="tabs" role="tablist" aria-label="Login authentication method" variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
                     <button
                       type="button"
-                      className="submit-btn"
-                      onClick={() => {
-                        setCurrentView('login');
-                        setAuthMode('password');
-                        setError('');
-                        setSuccessMsg('');
-                        setForgotInstId('');
-                        setForgotEmail('');
-                        setForgotDob('');
-                        setForgotResetToken('');
-                        setNewPassword('');
-                        setConfirmPassword('');
-                      }}
+                      role="tab"
+                      aria-selected={authMode === 'password'}
+                      className={authMode === 'password' ? 'active' : ''}
+                      onClick={() => { setAuthMode('password'); setError(''); clearAuthError(); }}
                     >
-                      <span>Sign In Now</span>
-                      <ArrowRight size={18} strokeWidth={2.5} className="btn-arrow" />
+                      Password
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={authMode === 'otp'}
+                      className={authMode === 'otp' ? 'active' : ''}
+                      onClick={() => { setAuthMode('otp'); setError(''); clearAuthError(); }}
+                    >
+                      Secure OTP
+                    </button>
+                  </motion.div>
+
+                  {/* Password Form */}
+                  {authMode === 'password' ? (
+                    <form onSubmit={handlePasswordLogin} noValidate>
+                      <motion.div className="field" variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
+                        <label htmlFor="userId">Institutional Email or User ID</label>
+                        <div className="input-wrap">
+                          <Mail className="input-icon" size={19} aria-hidden="true" />
+                          <input
+                            id="userId"
+                            type="text"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="username or faculty@nandhaengg.org"
+                            autoComplete="username"
+                            autoCapitalize="none"
+                            spellCheck={false}
+                            required
+                            disabled={loading}
+                          />
+                        </div>
+                      </motion.div>
+
+                      <motion.div className="field" variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
+                        <label htmlFor="password">Password</label>
+                        <div className="input-wrap">
+                          <Lock className="input-icon" size={19} aria-hidden="true" />
+                          <input
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="••••••••"
+                            autoComplete="current-password"
+                            required
+                            disabled={loading}
+                          />
+                          <button
+                            type="button"
+                            className="toggle-visibility"
+                            onClick={() => setShowPassword(!showPassword)}
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                          >
+                            {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
+                          </button>
+                        </div>
+                      </motion.div>
+
+                      <motion.div className="row-between" variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
+                        <label className="remember">
+                          <input
+                            type="checkbox"
+                            checked={rememberMe}
+                            onChange={(e) => setRememberMe(e.target.checked)}
+                          />
+                          <span>Remember me</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => { setCurrentView('forgot_password'); setForgotStep('dob'); setError(''); setSuccessMsg(''); }}
+                          className="forgot"
+                        >
+                          Forgot password?
+                        </button>
+                      </motion.div>
+
+                      <motion.button className="submit-btn" type="submit" disabled={loading} variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
+                        {loading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin shrink-0" size={18} />
+                            <span>{authStatusText || 'Signing in...'}</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Sign in to workspace</span>
+                            <ArrowRight size={18} strokeWidth={2.5} className="btn-arrow" />
+                          </>
+                        )}
+                      </motion.button>
+                    </form>
+                  ) : (
+                    /* OTP Form */
+                    <form onSubmit={otpStep === 'email' ? handleSendOtp : handleVerifyOtp} noValidate>
+                      <div className="field">
+                        <label htmlFor="otpEmail">Institutional Email</label>
+                        <div className="input-wrap">
+                          <Mail className="input-icon" size={19} aria-hidden="true" />
+                          <input
+                            id="otpEmail"
+                            type="email"
+                            value={otpEmail}
+                            onChange={(e) => setOtpEmail(e.target.value)}
+                            placeholder="faculty@nandhaengg.org"
+                            autoComplete="email"
+                            autoCapitalize="none"
+                            spellCheck={false}
+                            required
+                            disabled={loading || otpStep === 'verify'}
+                          />
+                        </div>
+                      </div>
+
+                      {otpStep === 'verify' && (
+                        <div className="field">
+                          <label>6-Digit Secure OTP</label>
+                          <div className="otp-boxes-row">
+                            {otpDigits.map((digit, index) => (
+                              <input
+                                key={index}
+                                ref={digitRefs[index]}
+                                type="text"
+                                inputMode="numeric"
+                                autoComplete="one-time-code"
+                                pattern="\d{1}"
+                                maxLength={1}
+                                className="otp-box"
+                                value={digit}
+                                onChange={(e) => handleDigitChange(index, e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Backspace' && !digit && index > 0) {
+                                    digitRefs[index - 1].current?.focus();
+                                  }
+                                }}
+                                disabled={loading}
+                                required
+                              />
+                            ))}
+                          </div>
+                          <div className="otp-actions-row">
+                            <button
+                              type="button"
+                              onClick={() => { setOtpStep('email'); setOtpDigits(['', '', '', '', '', '']); setError(''); }}
+                              className="forgot"
+                            >
+                              Change Email
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleSendOtp}
+                              disabled={loading || resendCooldown > 0}
+                              className="forgot"
+                            >
+                              {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Code'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      <button
+                        className="submit-btn"
+                        type="submit"
+                        disabled={loading || (otpStep === 'verify' && otpDigits.join('').length !== 6)}
+                      >
+                        <span>{loading ? 'Processing...' : (otpStep === 'email' ? 'Send OTP Code' : 'Verify & Sign In')}</span>
+                        {!loading && <ArrowRight size={18} strokeWidth={2.5} className="btn-arrow" />}
+                      </button>
+                    </form>
+                  )}
+
+                  {/* Single Institutional Help Row */}
+                  <div className="help-card-row">
+                    <button
+                      type="button"
+                      className="help-trigger-btn"
+                      onClick={() => { setCurrentView('help'); setError(''); }}
+                    >
+                      <div className="help-icon-box">
+                        <HelpCircle size={18} />
+                      </div>
+                      <div className="help-text-box">
+                        <span className="help-title">Need help accessing your account?</span>
+                        <span className="help-subtitle">Contact your institution administrator.</span>
+                      </div>
+                      <ChevronRight size={16} className="help-chevron" />
                     </button>
                   </div>
-                )}
-              </motion.div>
-            )}
+                </motion.div>
+              )}
 
-            {/* VIEW: Help Desk */}
-            {currentView === 'help' && (
-              <motion.div
-                key="help"
-                variants={pageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                className="view-wrapper"
-              >
-                <div className="help-list">
-                  <div className="help-list-item">
-                    <div className="help-list-title">Student & Faculty Login Inquiries</div>
-                    <div className="help-list-desc">Use your institutional register number or faculty ID to sign in. In case of handle changes, contact your department HOD.</div>
-                  </div>
-                  <div className="help-list-item">
-                    <div className="help-list-title">OTP Delivery & Account Recovery</div>
-                    <div className="help-list-desc">OTP codes are sent to your registered college email. If not received, verify your spam folder or use password reset.</div>
-                  </div>
-                  <div className="help-list-item highlight">
-                    <div className="help-list-title">Institution Support Desk</div>
-                    <div className="help-list-desc">Email: nanthishvaran17@gmail.com · Nandha Engineering College (Autonomous)</div>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  className="submit-btn secondary-btn"
-                  onClick={() => setCurrentView('login')}
+              {/* VIEW: Forgot Password Flow */}
+              {currentView === 'forgot_password' && (
+                <motion.div
+                  key="forgot"
+                  variants={pageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="view-wrapper"
                 >
-                  <span>Return to Sign In</span>
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                  {/* Step Indicator */}
+                  <div className="steps-indicator">
+                    {(['dob', 'verify_otp', 'reset_password', 'success'] as const).map((step, i) => {
+                      const stepIdx = ['dob', 'verify_otp', 'reset_password', 'success'].indexOf(forgotStep);
+                      const done = i < stepIdx;
+                      const active = step === forgotStep;
+                      return (
+                        <div key={step} className="step-item">
+                          <div className={`step-dot ${done ? 'done' : ''} ${active ? 'active' : ''}`}>
+                            {done ? '' : i + 1}
+                          </div>
+                          {i < 3 && <div className={`step-line ${done ? 'done' : ''}`} />}
+                        </div>
+                      );
+                    })}
+                  </div>
 
-          {/* Security Message */}
-          <div className="stamp" role="note" aria-label="Security verification notice">
-            <ShieldCheck size={16} className="stamp-icon" />
-            <span>Secured & audited by institution</span>
-          </div>
+                  {/* STEP 1: Identity Verification */}
+                  {forgotStep === 'dob' && (
+                    <form onSubmit={handleForgotVerifyDob} noValidate>
+                      <p className="step-desc">
+                        Enter your <strong>Institutional ID / Username</strong>, email, and Date of Birth to receive a password reset code.
+                      </p>
+                      <div className="field">
+                        <label htmlFor="forgotId">Username / Institutional ID</label>
+                        <div className="input-wrap">
+                          <User className="input-icon" size={19} />
+                          <input
+                            id="forgotId"
+                            type="text"
+                            value={forgotInstId}
+                            onChange={(e) => setForgotInstId(e.target.value)}
+                            placeholder="staff username"
+                            required
+                            disabled={loading}
+                            autoFocus
+                          />
+                        </div>
+                      </div>
+                      <div className="field">
+                        <label htmlFor="forgotEmail">Registered Email</label>
+                        <div className="input-wrap">
+                          <Mail className="input-icon" size={19} />
+                          <input
+                            id="forgotEmail"
+                            type="email"
+                            value={forgotEmail}
+                            onChange={(e) => setForgotEmail(e.target.value)}
+                            placeholder="faculty@nandhaengg.org"
+                            required
+                            disabled={loading}
+                          />
+                        </div>
+                      </div>
+                      <div className="field">
+                        <label htmlFor="forgotDob">Date of Birth (DD/MM/YYYY)</label>
+                        <div className="input-wrap">
+                          <Calendar className="input-icon" size={19} />
+                          <input
+                            id="forgotDob"
+                            type="text"
+                            value={forgotDob}
+                            onChange={(e) => {
+                              let val = e.target.value.replace(/\D/g, '');
+                              if (val.length >= 3 && val.length <= 4) val = val.slice(0, 2) + '/' + val.slice(2);
+                              else if (val.length >= 5) val = val.slice(0, 2) + '/' + val.slice(2, 4) + '/' + val.slice(4, 8);
+                              setForgotDob(val);
+                            }}
+                            placeholder="DD/MM/YYYY"
+                            maxLength={10}
+                            required
+                            disabled={loading}
+                          />
+                        </div>
+                      </div>
+                      <div className="row-between" style={{ marginTop: '8px', marginBottom: '16px' }}>
+                        <button
+                          type="button"
+                          onClick={() => { setCurrentView('login'); setAuthMode('password'); setError(''); setSuccessMsg(''); }}
+                          className="forgot"
+                        >
+                          ← Back to Sign In
+                        </button>
+                      </div>
+                      <button className="submit-btn" type="submit" disabled={loading}>
+                        <span>{loading ? 'Verifying...' : 'Send OTP to Email'}</span>
+                        {!loading && <ArrowRight size={18} strokeWidth={2.5} className="btn-arrow" />}
+                      </button>
+                    </form>
+                  )}
 
-          {/* Minimal Unified Footer (Moved inside right panel for full-height layout) */}
-          <footer className="login-copyright" role="contentinfo" style={{ marginTop: 'auto', paddingTop: '2rem' }}>
-            <p className="copyright-line" style={{ color: '#64748B', textShadow: 'none', fontWeight: 600 }}>
-              &copy; 2026 Nandha Engineering College. All rights reserved.
-            </p>
-            <p className="tagline-line" style={{ color: '#94A3B8', textShadow: 'none', marginTop: '4px' }}>
-              LEARN | SERVE | SUCCEED
-            </p>
-          </footer>
+                  {/* STEP 2: Enter OTP */}
+                  {forgotStep === 'verify_otp' && (
+                    <form onSubmit={handleForgotVerifyOtp} noValidate>
+                      <div className="text-center" style={{ textAlign: 'center', marginBottom: '16px' }}>
+                        <p className="step-desc">
+                          A 6-digit verification code was sent to<br />
+                          <strong>{forgotEmail}</strong>.
+                        </p>
+                      </div>
+                      <div className="field">
+                        <label htmlFor="resetCode">6-Digit Reset Code</label>
+                        <input
+                          id="resetCode"
+                          type="text"
+                          inputMode="numeric"
+                          pattern="\d{6}"
+                          maxLength={6}
+                          value={forgotResetToken}
+                          onChange={(e) => setForgotResetToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                          placeholder="000000"
+                          className="otp-single-input"
+                          required
+                          disabled={loading}
+                          autoFocus
+                        />
+                      </div>
+                      <div className="row-between" style={{ marginTop: '8px', marginBottom: '16px' }}>
+                        <button
+                          type="button"
+                          onClick={() => { setForgotStep('dob'); setForgotResetToken(''); setError(''); setSuccessMsg(''); }}
+                          className="forgot"
+                        >
+                          ← Change Details
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleForgotVerifyDob}
+                          disabled={loading}
+                          className="forgot"
+                        >
+                          Resend Code
+                        </button>
+                      </div>
+                      <button className="submit-btn" type="submit" disabled={loading || forgotResetToken.length !== 6}>
+                        <span>{loading ? 'Verifying...' : 'Verify Code'}</span>
+                        {!loading && <ArrowRight size={18} strokeWidth={2.5} className="btn-arrow" />}
+                      </button>
+                    </form>
+                  )}
+
+                  {/* STEP 3: Set New Password */}
+                  {forgotStep === 'reset_password' && (
+                    <form onSubmit={handleForgotResetPassword} noValidate>
+                      <p className="step-desc">
+                        Code verified. Choose a new secure password for your workspace account.
+                      </p>
+                      <div className="field">
+                        <label htmlFor="newPass">New Password</label>
+                        <div className="input-wrap">
+                          <Lock className="input-icon" size={19} />
+                          <input
+                            id="newPass"
+                            type={showPassword ? 'text' : 'password'}
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="Minimum 6 characters"
+                            required
+                            disabled={loading}
+                            autoFocus
+                          />
+                          <button
+                            type="button"
+                            className="toggle-visibility"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="field">
+                        <label htmlFor="confPass">Confirm New Password</label>
+                        <div className="input-wrap">
+                          <Lock className="input-icon" size={19} />
+                          <input
+                            id="confPass"
+                            type={showPassword ? 'text' : 'password'}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="Repeat password"
+                            required
+                            disabled={loading}
+                          />
+                        </div>
+                      </div>
+                      <button
+                        className="submit-btn"
+                        type="submit"
+                        disabled={loading || newPassword !== confirmPassword || newPassword.length < 6}
+                      >
+                        <span>{loading ? 'Updating...' : 'Save Password & Sign In'}</span>
+                        {!loading && <ArrowRight size={18} strokeWidth={2.5} className="btn-arrow" />}
+                      </button>
+                    </form>
+                  )}
+
+                  {/* STEP 4: Success */}
+                  {forgotStep === 'success' && (
+                    <div className="forgot-success-box">
+                      <div className="success-icon-circle">
+                        <Check size={32} strokeWidth={3} />
+                      </div>
+                      <h3>Password Updated Successfully</h3>
+                      <p>
+                        Your credentials have been updated. You can now sign in with your new password.
+                      </p>
+                      <button
+                        type="button"
+                        className="submit-btn"
+                        onClick={() => {
+                          setCurrentView('login');
+                          setAuthMode('password');
+                          setError('');
+                          setSuccessMsg('');
+                          setForgotInstId('');
+                          setForgotEmail('');
+                          setForgotDob('');
+                          setForgotResetToken('');
+                          setNewPassword('');
+                          setConfirmPassword('');
+                        }}
+                      >
+                        <span>Sign In Now</span>
+                        <ArrowRight size={18} strokeWidth={2.5} className="btn-arrow" />
+                      </button>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              {/* VIEW: Help Desk */}
+              {currentView === 'help' && (
+                <motion.div
+                  key="help"
+                  variants={pageVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  className="view-wrapper"
+                >
+                  <div className="help-list">
+                    <div className="help-list-item">
+                      <div className="help-list-title">Student & Faculty Login Inquiries</div>
+                      <div className="help-list-desc">Use your institutional register number or faculty ID to sign in. In case of handle changes, contact your department HOD.</div>
+                    </div>
+                    <div className="help-list-item">
+                      <div className="help-list-title">OTP Delivery & Account Recovery</div>
+                      <div className="help-list-desc">OTP codes are sent to your registered college email. If not received, verify your spam folder or use password reset.</div>
+                    </div>
+                    <div className="help-list-item highlight">
+                      <div className="help-list-title">Institution Support Desk</div>
+                      <div className="help-list-desc">Email: nanthishvaran17@gmail.com · Nandha Engineering College (Autonomous)</div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="submit-btn secondary-btn"
+                    onClick={() => setCurrentView('login')}
+                  >
+                    <span>Return to Sign In</span>
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Security Message */}
+            <div className="stamp" role="note" aria-label="Security verification notice">
+              <ShieldCheck size={16} className="stamp-icon" />
+              <span>Secured & audited by institution</span>
+            </div>
+
+            {/* Minimal Unified Footer (Moved inside right panel for full-height layout) */}
+            <footer className="login-copyright" role="contentinfo" style={{ marginTop: 'auto', paddingTop: '2.5rem' }}>
+              <p className="copyright-line" style={{ color: 'var(--text-secondary, #334155)', textShadow: 'none', fontWeight: 700, fontSize: '0.82rem' }}>
+                &copy; 2026 Nandha Engineering College. All rights reserved.
+              </p>
+              <p className="tagline-line" style={{ color: 'var(--secondary-navy, #0284C7)', textShadow: 'none', marginTop: '6px', fontWeight: 800, letterSpacing: '0.1em', fontSize: '0.78rem' }}>
+                LEARN | SERVE | SUCCEED
+              </p>
+            </footer>
 
           </div>
         </motion.div>

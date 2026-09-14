@@ -552,15 +552,15 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 
       <div className="responsive-table-container w-full min-w-0 overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm bg-white dark:bg-navy-950 flex flex-col">
         {/* Table Header Wrapper (Sticky) */}
-        <div className="hidden md:flex bg-slate-50 dark:bg-navy-950 text-slate-500 dark:text-slate-400 font-extrabold border-b border-slate-200 dark:border-navy-800 uppercase tracking-wider text-[11px] w-[1400px] min-w-[1400px] items-center">
+        <div className="hidden md:flex bg-slate-50 dark:bg-navy-950 text-slate-500 dark:text-slate-400 font-extrabold border-b border-slate-200 dark:border-navy-800 uppercase tracking-wider text-[11px] w-full min-w-full md:min-w-[1100px] items-center">
           <div className="flex-none w-10 py-3 px-3 text-center">
              <input type="checkbox" checked={deferredSortedStudents.length > 0 && selectedIds.length === deferredSortedStudents.length} onChange={toggleAll} className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer" />
           </div>
           <div className="flex-none w-24 py-3 px-3 text-left">Rank</div>
           <div className="flex-none w-32 py-3 px-3 text-left">Register No</div>
-          <div className="flex-none w-52 py-3 px-3 pl-5 text-left">Student</div>
-          <div className="flex-none w-28 py-3 px-3 text-left">Dept / Year</div>
-          <div className="flex-none w-36 py-3 px-3 text-left">LeetCode Handle</div>
+          <div className="flex-1 min-w-[200px] py-3 px-3 pl-5 text-left">Student</div>
+          <div className="flex-none w-36 py-3 px-3 text-left">Dept / Year</div>
+          <div className="flex-1 min-w-[160px] py-3 px-3 text-left">LeetCode Handle</div>
           <div className="flex-none w-24 py-3 px-3 text-center">Solved</div>
           <div className="flex-none w-32 py-3 px-3 text-center">Contest</div>
           <div className="flex-none w-24 py-3 px-3 text-center">Rating</div>
@@ -570,7 +570,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
         </div>
         
         {/* Virtualized Body */}
-        <div className="flex-1 w-full md:w-[1400px] md:min-w-[1400px]">
+        <div className="flex-1 w-full min-w-full md:min-w-[1100px]">
           {loading ? (
             <div className="flex flex-col items-center justify-center space-y-2 h-full py-12">
               <RefreshCw className="w-6 h-6 animate-spin text-brand-500" />

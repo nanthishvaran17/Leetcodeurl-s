@@ -19,6 +19,7 @@ export interface GlobalFilterProps {
   value: string;
   onChange: (value: string) => void;
   icon?: React.ReactNode;
+  hideIcon?: boolean;
   className?: string;
   dropdownWidth?: string;
   placeholder?: string;
@@ -268,6 +269,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
   value,
   onChange,
   icon,
+  hideIcon = false,
   className = '',
   dropdownWidth = 'min-w-[580px]',
   placeholder = 'Select an option',
@@ -458,41 +460,43 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={twMerge(
-            "relative w-full flex items-center justify-between px-3.5 py-2 h-11 min-h-[44px] bg-white dark:bg-navy-950",
-            "border transition-all duration-200 outline-none select-none rounded-2xl cursor-pointer shadow-sm text-left",
+            "relative w-full flex items-center justify-between px-3 py-1.5 h-9 min-h-[36px] bg-white dark:bg-navy-950",
+            "border transition-all duration-200 outline-none select-none rounded-xl cursor-pointer shadow-xs text-left",
             isOpen 
               ? "border-brand-400 ring-2 ring-brand-400/20" 
               : "border-slate-200 dark:border-slate-700 hover:border-brand-300"
           )}
         >
-          <div className="flex items-center space-x-2.5 overflow-hidden min-w-0 flex-1 pr-2">
-            <div className={clsx(
-              "w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors border",
-              triggerTheme.iconBg,
-              isOpen ? "border-brand-300" : "border-slate-200/60 dark:border-navy-700/60"
-            )}>
-              <span className={isOpen ? "text-brand-600 dark:text-brand-400" : triggerTheme.iconColor}>
-                {selectedOption?.icon || icon || <Filter className="w-3.5 h-3.5" />}
-              </span>
-            </div>
+          <div className="flex items-center space-x-2 overflow-hidden min-w-0 flex-1 pr-1.5">
+            {!hideIcon && (selectedOption?.icon || icon) && (
+              <div className={clsx(
+                "w-5 h-5 rounded-md flex items-center justify-center shrink-0 transition-colors border",
+                triggerTheme.iconBg,
+                isOpen ? "border-brand-300" : "border-slate-200/60 dark:border-navy-700/60"
+              )}>
+                <span className={isOpen ? "text-brand-600 dark:text-brand-400" : triggerTheme.iconColor}>
+                  {selectedOption?.icon || icon}
+                </span>
+              </div>
+            )}
             
             {selectedOption?.hidePill !== true && (
               <div className={clsx(
-                "shrink-0 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border",
+                "shrink-0 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md border",
                 triggerTheme.badgeBg, triggerTheme.badgeText, triggerTheme.badgeBorder
               )}>
                 {getPillText(selectedOption)}
               </div>
             )}
             
-            <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 truncate flex-1 text-left">
+            <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate flex-1 text-left">
               {selectedOption ? selectedOption.label : placeholder}
             </span>
           </div>
 
           <ChevronDown 
             className={clsx(
-              "w-4 h-4 shrink-0 transition-transform duration-200 ml-1",
+              "w-3.5 h-3.5 shrink-0 transition-transform duration-200 ml-1",
               isOpen ? "rotate-180 text-brand-500" : "text-slate-400 dark:text-slate-500"
             )} 
           />
@@ -505,52 +509,52 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
             onClick={() => setIsOpen(false)}
           >
             <div 
-              className="bg-white dark:bg-navy-950 rounded-t-3xl border-t border-slate-200 dark:border-navy-700 p-4 space-y-3 max-h-[85vh] flex flex-col w-full shadow-2xl animate-slide-up"
+              className="bg-white dark:bg-navy-950 rounded-t-2xl border-t border-slate-200 dark:border-navy-700 p-3.5 space-y-2.5 max-h-[80vh] flex flex-col w-full shadow-2xl animate-slide-up"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-2.5">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-2">
                 <div className="flex items-center space-x-2">
-                  {icon || <Filter className="w-5 h-5 text-brand-500" />}
-                  <h3 className="font-extrabold text-sm text-slate-900 dark:text-white uppercase tracking-wider">
+                  {icon || <Filter className="w-4 h-4 text-brand-500" />}
+                  <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
                     {label || 'Select Option'}
                   </h3>
                 </div>
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="p-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
+                  className="p-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer min-h-[32px] min-w-[32px] flex items-center justify-center"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Mobile Search Bar */}
               {showSearch && options.length > 3 && (
                 <div className="relative flex items-center">
-                  <Search className="w-4 h-4 absolute left-3 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                  <Search className="w-3.5 h-3.5 absolute left-2.5 text-slate-400 dark:text-slate-500 pointer-events-none" />
                   <input
                     ref={searchInputRef}
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder={activeSearchPlaceholder}
-                    className="w-full pl-9 pr-8 py-2 rounded-xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-xs font-bold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all shadow-xs"
+                    className="w-full pl-8 pr-7 py-1.5 rounded-lg bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-xs font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500/20 focus:border-brand-500 transition-all shadow-xs"
                   />
                   {searchQuery && (
                     <button
                       type="button"
                       onClick={() => setSearchQuery('')}
-                      className="absolute right-2.5 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"
+                      className="absolute right-2 p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <X className="w-3 h-3" />
                     </button>
                   )}
                 </div>
               )}
 
-              <div className="overflow-y-auto overscroll-contain space-y-1.5 py-1 flex-1 pr-1 custom-scrollbar">
+              <div className="overflow-y-auto overscroll-contain space-y-1 py-1 flex-1 pr-1 custom-scrollbar">
                 {filteredOptions.length === 0 ? (
-                  <div className="py-8 text-center text-xs font-bold text-slate-400">
+                  <div className="py-6 text-center text-xs font-bold text-slate-400">
                     No options match your search.
                   </div>
                 ) : (
@@ -566,36 +570,47 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
                           setIsOpen(false);
                         }}
                         className={clsx(
-                          "w-full flex items-center justify-between p-3 min-h-[44px] rounded-xl transition-all duration-150 text-left cursor-pointer border-b border-slate-100 dark:border-navy-900/60 last:border-0",
+                          "w-full flex items-center justify-between p-2 min-h-[36px] rounded-lg transition-all duration-150 text-left cursor-pointer border-b border-slate-100 dark:border-navy-900/60 last:border-0",
                           isSelected
                             ? theme.selectedBg
                             : `${theme.hoverBg} bg-white dark:bg-navy-950`
                         )}
                       >
-                        <div className="flex items-center space-x-3 flex-1 min-w-0 pr-2">
-                          <div className={clsx(
-                            "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-colors shadow-2xs",
-                            theme.iconBg,
-                            isSelected ? "border-transparent" : "border-slate-200/60 dark:border-navy-700/60"
-                          )}>
-                            <span className={theme.iconColor}>{opt.icon || icon || <Filter className="w-4 h-4" />}</span>
-                          </div>
+                        <div className="flex items-center space-x-2 flex-1 min-w-0 pr-2">
+                          {!hideIcon && (opt.icon || icon) && (
+                            <div className={clsx(
+                              "w-6 h-6 rounded-md flex items-center justify-center shrink-0 border transition-colors shadow-2xs",
+                              theme.iconBg,
+                              isSelected ? "border-transparent" : "border-slate-200/60 dark:border-navy-700/60"
+                            )}>
+                              <span className={isSelected ? "!text-white" : theme.iconColor}>
+                                {React.isValidElement(opt.icon || icon)
+                                  ? React.cloneElement((opt.icon || icon) as React.ReactElement<any>, {
+                                      className: twMerge(
+                                        ((opt.icon || icon) as React.ReactElement<any>).props?.className || '',
+                                        isSelected ? '!text-white' : ''
+                                      )
+                                    })
+                                  : (opt.icon || icon)}
+                              </span>
+                            </div>
+                          )}
                           {opt.hidePill !== true && (
                             <span className={clsx(
-                              "text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border shadow-2xs whitespace-nowrap",
+                              "text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md text-center shrink-0 border shadow-2xs whitespace-nowrap",
                               theme.badgeBg, theme.badgeText, theme.badgeBorder
                             )}>
                               {getPillText(opt)}
                             </span>
                           )}
                           <span className={clsx(
-                            "text-xs font-extrabold flex-1 min-w-0 tracking-tight leading-snug break-words hyphens-none",
+                            "text-xs font-bold flex-1 min-w-0 tracking-tight leading-snug truncate",
                             isSelected ? theme.selectedText : "text-slate-900 dark:text-white"
                           )}>
                             {opt.label}
                           </span>
                         </div>
-                        {isSelected && <Check className={clsx("w-4 h-4 shrink-0 ml-2", theme.selectedCheck)} strokeWidth={3} />}
+                        {isSelected && <Check className={clsx("w-3.5 h-3.5 shrink-0 ml-1.5", theme.selectedCheck)} strokeWidth={3} />}
                       </button>
                     );
                   })
@@ -620,29 +635,29 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
             }}
             className="animate-in fade-in zoom-in-95 duration-150"
           >
-            <div className="bg-white dark:bg-navy-950 rounded-[1.25rem] shadow-[0_20px_50px_rgba(0,0,0,0.22)] border border-slate-200 dark:border-navy-700/90 overflow-hidden flex flex-col">
+            <div className="bg-white dark:bg-navy-950 rounded-xl shadow-xl border border-slate-200 dark:border-navy-700/90 overflow-hidden flex flex-col">
               
               {/* Desktop Search Header Bar */}
               {showSearch && options.length > 3 && (
-                <div className="p-2.5 border-b border-slate-100 dark:border-navy-800 bg-slate-50/80 dark:bg-navy-900/80 sticky top-0 z-10 backdrop-blur-md">
+                <div className="p-2 border-b border-slate-100 dark:border-navy-800 bg-slate-50/80 dark:bg-navy-900/80 sticky top-0 z-10 backdrop-blur-md">
                   <div className="relative flex items-center">
-                    <Search className="w-4 h-4 absolute left-3 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                    <Search className="w-3.5 h-3.5 absolute left-2.5 text-slate-400 dark:text-slate-500 pointer-events-none" />
                     <input
                       ref={searchInputRef}
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder={activeSearchPlaceholder}
-                      className="w-full pl-9 pr-8 py-2 rounded-xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-xs font-bold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all shadow-xs"
+                      className="w-full pl-8 pr-7 py-1.5 rounded-lg bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-xs font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500/30 focus:border-brand-500 transition-all shadow-xs"
                       onClick={(e) => e.stopPropagation()}
                     />
                     {searchQuery && (
                       <button
                         type="button"
                         onClick={() => setSearchQuery('')}
-                        className="absolute right-2.5 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"
+                        className="absolute right-2 p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md cursor-pointer"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <X className="w-3 h-3" />
                       </button>
                     )}
                   </div>
@@ -652,10 +667,10 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
               {/* Options List */}
               <div 
                 style={{ maxHeight: `${coords.maxHeight}px` }} 
-                className="overflow-y-auto overscroll-contain py-1.5 custom-scrollbar"
+                className="overflow-y-auto overscroll-contain py-1 custom-scrollbar"
               >
                 {filteredOptions.length === 0 ? (
-                  <div className="py-8 text-center text-xs font-bold text-slate-400">
+                  <div className="py-6 text-center text-xs font-bold text-slate-400">
                     No options match your search.
                   </div>
                 ) : (
@@ -672,31 +687,42 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
                           setIsOpen(false);
                         }}
                         className={clsx(
-                          "w-full flex items-center justify-between px-3.5 py-2.5 min-h-[44px] transition-all duration-150 outline-none text-left cursor-pointer border-b border-slate-100 dark:border-navy-900/60 last:border-0",
+                          "w-full flex items-center justify-between px-3 py-1.5 min-h-[36px] transition-all duration-150 outline-none text-left cursor-pointer border-b border-slate-100 dark:border-navy-900/40 last:border-0",
                           isSelected 
                             ? theme.selectedBg 
                             : `${theme.hoverBg} bg-white dark:bg-navy-950`
                         )}
                       >
-                        <div className="flex items-center space-x-3 flex-1 min-w-0 pr-3">
-                          <div className={clsx(
-                            "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-colors shadow-2xs",
-                            theme.iconBg,
-                            isSelected ? "border-transparent" : "border-slate-200/60 dark:border-navy-700/60"
-                          )}>
-                            <span className={theme.iconColor}>{opt.icon || icon || <Filter className="w-4 h-4" />}</span>
-                          </div>
+                        <div className="flex items-center space-x-2 flex-1 min-w-0 pr-2">
+                          {!hideIcon && (opt.icon || icon) && (
+                            <div className={clsx(
+                              "w-6 h-6 rounded-md flex items-center justify-center shrink-0 border transition-colors shadow-2xs",
+                              theme.iconBg,
+                              isSelected ? "border-transparent" : "border-slate-200/60 dark:border-navy-700/60"
+                            )}>
+                              <span className={isSelected ? "!text-white" : theme.iconColor}>
+                                {React.isValidElement(opt.icon || icon)
+                                  ? React.cloneElement((opt.icon || icon) as React.ReactElement<any>, {
+                                      className: twMerge(
+                                        ((opt.icon || icon) as React.ReactElement<any>).props?.className || '',
+                                        isSelected ? '!text-white' : ''
+                                      )
+                                    })
+                                  : (opt.icon || icon)}
+                              </span>
+                            </div>
+                          )}
                           
                           {opt.hidePill !== true && (
                             <div className={clsx(
-                              "text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border shadow-2xs whitespace-nowrap",
+                              "text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md text-center shrink-0 border shadow-2xs whitespace-nowrap",
                               theme.badgeBg, theme.badgeText, theme.badgeBorder
                             )}>
                               {getPillText(opt)}
                             </div>
                           )}
                           <span className={clsx(
-                            "text-xs sm:text-sm font-extrabold flex-1 min-w-0 tracking-tight leading-snug",
+                            "text-xs font-bold flex-1 min-w-0 tracking-tight leading-tight truncate",
                             isSelected ? theme.selectedText : "text-slate-900 dark:text-white"
                           )}>
                             {opt.label}
@@ -704,7 +730,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
                         </div>
 
                         {isSelected && (
-                          <Check className={clsx("w-4 h-4 shrink-0 ml-2", theme.selectedCheck)} strokeWidth={3} />
+                          <Check className={clsx("w-3.5 h-3.5 shrink-0 ml-1.5", theme.selectedCheck)} strokeWidth={3} />
                         )}
                       </button>
                     );

@@ -89,7 +89,7 @@ export const FastStudentRow = memo(({
         }
         onView(student, e);
       }}
-      className="flex flex-col md:flex-row p-4 md:py-2.5 md:px-0 gap-3 md:gap-0 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10 transition-colors duration-150 group font-medium text-xs border border-slate-100 md:border-t-0 md:border-x-0 md:border-b dark:border-navy-800/60 cursor-pointer w-full md:w-[1400px] md:min-w-[1400px] items-start md:items-center bg-white md:bg-transparent dark:bg-navy-950 md:dark:bg-transparent rounded-2xl md:rounded-none shadow-sm md:shadow-none mb-3 md:mb-0 min-h-[52px]"
+      className="flex flex-col md:flex-row p-4 md:py-2.5 md:px-0 gap-3 md:gap-0 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10 transition-colors duration-150 group font-medium text-xs border border-slate-100 md:border-t-0 md:border-x-0 md:border-b dark:border-navy-800/60 cursor-pointer w-full min-w-full md:min-w-[1100px] items-start md:items-center bg-white md:bg-transparent dark:bg-navy-950 md:dark:bg-transparent rounded-2xl md:rounded-none shadow-sm md:shadow-none mb-3 md:mb-0 min-h-[52px]"
     >
       {/* MOBILE LAYOUT */}
       <div className="flex md:hidden items-center justify-between w-full">
@@ -97,10 +97,11 @@ export const FastStudentRow = memo(({
             <input type="checkbox" checked={isSelected} onChange={() => toggleStudent(student.id)} className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer" onClick={(e) => e.stopPropagation()} />
             {isSolver ? getRankBadge(effectiveCollegeRank) : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-300">Unranked</span>}
          </div>
-         <div className="flex items-center gap-2 text-[10px] font-bold">
-            <span className="text-slate-500 dark:text-slate-400">{student.department?.code || student.department?.name || '—'}</span>
-            <span className="text-slate-500 dark:text-slate-400">{student.year_level} Yr</span>
-         </div>
+          <div className="flex items-center gap-1 text-[11px] font-bold">
+             <span className="text-slate-900 dark:text-white font-extrabold">{student.department?.code || student.department?.name || '—'}</span>
+             <span className="text-slate-600 dark:text-slate-300 shrink-0 font-extrabold px-0.5">/</span>
+             <span className="text-slate-800 dark:text-slate-200 font-extrabold">{String(student.year_level || '').replace(/\s*Yr\s*/gi, '').replace(/\s*Year\s*/gi, '').trim()} Yr</span>
+          </div>
       </div>
 
       <div className="flex md:hidden items-center gap-3 w-full">
@@ -166,7 +167,7 @@ export const FastStudentRow = memo(({
         </span>
       </div>
 
-      <div className="hidden md:flex flex-none w-52 px-3 items-center justify-start text-left">
+      <div className="hidden md:flex flex-1 min-w-[200px] px-3 items-center justify-start text-left">
         <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onView(student, e); }} className="flex items-center space-x-3 w-full text-left">
           <div className="shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-brand-500 to-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-sm">
             {student.name.charAt(0).toUpperCase()}
@@ -179,12 +180,13 @@ export const FastStudentRow = memo(({
         </button>
       </div>
 
-      <div className="hidden md:flex flex-none w-28 px-3 text-[11px] font-bold flex-col justify-center self-center my-auto overflow-hidden min-h-[44px]">
-        <span className="text-slate-900 dark:text-white block truncate leading-tight">{student.department?.code || student.department?.name || '—'}</span>
-        <span className="text-slate-500 dark:text-slate-400 block truncate leading-tight mt-0.5">{String(student.year_level || '').replace(/\s*Yr\s*/gi, '').replace(/\s*Year\s*/gi, '').trim()} Yr</span>
+      <div className="hidden md:flex flex-none w-36 px-3 text-[11px] font-bold items-center justify-start gap-0.5 self-center my-auto overflow-hidden min-h-[44px]">
+        <span className="text-slate-900 dark:text-white truncate font-extrabold">{student.department?.code || student.department?.name || '—'}</span>
+        <span className="text-slate-600 dark:text-slate-300 shrink-0 font-extrabold px-0.5">/</span>
+        <span className="text-slate-800 dark:text-slate-200 shrink-0 font-extrabold">{String(student.year_level || '').replace(/\s*Yr\s*/gi, '').replace(/\s*Year\s*/gi, '').trim()} Yr</span>
       </div>
 
-      <div className="hidden md:flex flex-none w-36 px-3 items-center justify-start self-center my-auto overflow-hidden min-h-[44px]">
+      <div className="hidden md:flex flex-1 min-w-[160px] px-3 items-center justify-start self-center my-auto overflow-hidden min-h-[44px]">
         {student.username ? (
           <a href={`https://leetcode.com/u/${student.username}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center my-auto leading-normal truncate" onClick={(e) => e.stopPropagation()}>
             @{student.username}
