@@ -9,7 +9,7 @@ import { getApiUrl, getAuthHeaders } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useMessagingWebSocket } from '../hooks/useMessagingWebSocket';
 import axios from 'axios';
-import { MessageSquare, Sparkles, Users, ShieldCheck, Plus, CheckCircle, Info, ArrowLeft } from 'lucide-react';
+import { MessageSquare, Sparkles, Users, ShieldCheck, Plus, CheckCircle, Info, ArrowLeft, X } from 'lucide-react';
 
 interface MessagesPageProps {
   onNavigateTab?: (tab: string) => void;
