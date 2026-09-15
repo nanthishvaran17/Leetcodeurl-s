@@ -194,8 +194,14 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // --- 0. BAILOUT FOR AUTH ROUTES ---
+    const isAuthRoute = config.url && (config.url.includes('auth/login') || config.url.includes('auth/refresh') || config.url.includes('auth/session'));
+    if (isAuthRoute) {
+      return Promise.reject(error);
+    }
+
     // --- 1. HANDLE AUTHENTICATION FAILURES (401) ---
-    if (error.response && error.response.status === 401 && !config.url?.includes('/auth/login') && !config.url?.includes('/auth/refresh') && !config.url?.includes('/auth/session')) {
+    if (error.response && error.response.status === 401) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
