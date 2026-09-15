@@ -502,14 +502,18 @@ export const StudentDataIssuesPage: React.FC = () => {
     }
   };
 
-  // Download Excel (Instant Direct Download <1s)
+  // Download Excel (Instant Direct Download <1s, supports selected student filter)
   const handleDownloadExcel = async () => {
     setIsExporting(true);
     notify.dismissCategory('EXPORT CENTER');
-    notify.info('Downloading Excel', 'Preparing instant report download...', { category: 'EXPORT CENTER' });
+    const isSelectedMode = selectedStudentIds.length > 0;
+    const countMsg = isSelectedMode ? `Preparing report for ${selectedStudentIds.length} selected students...` : 'Preparing instant report download...';
+    notify.info('Downloading Excel', countMsg, { category: 'EXPORT CENTER' });
     try {
       const dateTag = new Date().toISOString().split('T')[0];
-      const filename = `NANDHA_Data_Issues_Report_${dateTag}.xlsx`;
+      const filename = isSelectedMode 
+        ? `NANDHA_Selected_${selectedStudentIds.length}_Students_Report_${dateTag}.xlsx`
+        : `NANDHA_Data_Issues_Report_${dateTag}.xlsx`;
       
       const res = await downloadManager.download({
         endpoint: '/data-issues/export-excel',
@@ -518,13 +522,15 @@ export const StudentDataIssuesPage: React.FC = () => {
           department: selectedDept,
           year_level: selectedYear,
           issue_type: selectedIssue,
-          search: searchQuery
+          search: searchQuery || undefined,
+          student_ids: isSelectedMode ? selectedStudentIds.join(',') : undefined
         },
         mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       });
 
       if (res.success) {
-        notify.success('Download Complete', `${filename} generated and saved.`, { category: 'EXPORT CENTER' });
+        const succMsg = isSelectedMode ? `Excel report for ${selectedStudentIds.length} selected students saved.` : `${filename} generated and saved.`;
+        notify.success('Download Complete', succMsg, { category: 'EXPORT CENTER' });
       } else {
         notify.error('Export Error', res.error || 'Failed to download Excel report.', { category: 'EXPORT CENTER' });
       }
@@ -536,14 +542,18 @@ export const StudentDataIssuesPage: React.FC = () => {
     }
   };
 
-  // Download CSV (Instant Direct Download <1s)
+  // Download CSV (Instant Direct Download <1s, supports selected student filter)
   const handleDownloadCsv = async () => {
     setIsExporting(true);
     notify.dismissCategory('EXPORT CENTER');
-    notify.info('Downloading CSV', 'Preparing instant report download...', { category: 'EXPORT CENTER' });
+    const isSelectedMode = selectedStudentIds.length > 0;
+    const countMsg = isSelectedMode ? `Preparing CSV report for ${selectedStudentIds.length} selected students...` : 'Preparing instant report download...';
+    notify.info('Downloading CSV', countMsg, { category: 'EXPORT CENTER' });
     try {
       const dateTag = new Date().toISOString().split('T')[0];
-      const filename = `NANDHA_Data_Issues_Report_${dateTag}.csv`;
+      const filename = isSelectedMode 
+        ? `NANDHA_Selected_${selectedStudentIds.length}_Students_Report_${dateTag}.csv`
+        : `NANDHA_Data_Issues_Report_${dateTag}.csv`;
       
       const res = await downloadManager.download({
         endpoint: '/data-issues/export-csv',
@@ -552,13 +562,15 @@ export const StudentDataIssuesPage: React.FC = () => {
           department: selectedDept,
           year_level: selectedYear,
           issue_type: selectedIssue,
-          search: searchQuery
+          search: searchQuery || undefined,
+          student_ids: isSelectedMode ? selectedStudentIds.join(',') : undefined
         },
         mimeType: 'text/csv'
       });
 
       if (res.success) {
-        notify.success('Download Complete', `${filename} generated and saved.`, { category: 'EXPORT CENTER' });
+        const succMsg = isSelectedMode ? `CSV report for ${selectedStudentIds.length} selected students saved.` : `${filename} generated and saved.`;
+        notify.success('Download Complete', succMsg, { category: 'EXPORT CENTER' });
       } else {
         notify.error('Export Error', res.error || 'Failed to download CSV report.', { category: 'EXPORT CENTER' });
       }
@@ -947,11 +959,31 @@ export const StudentDataIssuesPage: React.FC = () => {
             </span>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 flex-wrap gap-y-2">
+            <button
+              onClick={handleDownloadExcel}
+              disabled={isExporting}
+              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow cursor-pointer transition-all flex items-center space-x-1.5"
+              title="Download Excel report containing only selected students"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export Selected Excel ({selectedStudentIds.length})</span>
+            </button>
+
+            <button
+              onClick={handleDownloadCsv}
+              disabled={isExporting}
+              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow cursor-pointer transition-all flex items-center space-x-1.5"
+              title="Download CSV report containing only selected students"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Export Selected CSV ({selectedStudentIds.length})</span>
+            </button>
+
             <button
               onClick={handleBulkVerifySelected}
               disabled={isBulking}
-              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow cursor-pointer transition-all flex items-center space-x-1.5"
+              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow cursor-pointer transition-all flex items-center space-x-1.5"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Verify Selected URLs</span>

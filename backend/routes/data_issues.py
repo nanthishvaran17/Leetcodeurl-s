@@ -284,16 +284,17 @@ def get_data_issues_summary(
 
 @router.get("/students")
 def get_data_issues_students(
-    department: Optional[str] = Query("all", description="All, CSE(CS), or CSE(IOT)"),
+    department: Optional[str] = Query("all", description="All or specific department code"),
     year_level: Optional[str] = Query("all", description="All, II Year, III Year, IV Year"),
     issue_type: Optional[str] = Query("all", description="Specific issue category or critical"),
     search: Optional[str] = Query(None, description="Search term across name, reg_no, username, issue"),
-    limit: int = Query(500, ge=1, le=1000),
+    student_ids: Optional[str] = Query(None, description="Comma-separated student IDs for selected bulk operations"),
+    limit: int = Query(500, ge=1, le=10000),
     db: Session = Depends(get_db),
     current_user=Depends(require_security_access(resource_name="Data Issues Students", dept_scoped=True))
 ):
     """
-    Returns filtered student issues list for Cyber Security and IoT with full URL validation metadata.
+    Returns filtered student issues list with full URL validation metadata.
     """
     from backend.services.authorization_service import apply_role_based_student_filter
     
@@ -307,6 +308,13 @@ def get_data_issues_students(
     students = query.all()
 
     classified = [classify_student_issue(s) for s in students]
+
+    # 0. Filter by explicit student_ids if provided
+    if student_ids and student_ids.strip():
+        raw_ids = [int(x.strip()) for x in student_ids.split(",") if x.strip().isdigit()]
+        if raw_ids:
+            id_set = set(raw_ids)
+            classified = [c for c in classified if c["id"] in id_set]
 
     # 1. Filter by Department
     if department and department.lower() != "all":
@@ -538,11 +546,13 @@ def _sanitize_val(val: Any) -> str:
     s = re.sub(r'[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F-\x9F]', '', s)
     return s
 
-def generate_data_issues_excel_bytes(db: Session, department: str, year_level: str, issue_type: str, search: str) -> bytes:
+def generate_data_issues_excel_bytes(
+    db: Session, department: str, year_level: str, issue_type: str, search: str, student_ids: Optional[str] = None
+) -> bytes:
     import openpyxl
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
-    res = get_data_issues_students(department, year_level, issue_type, search, limit=5000, db=db)
+    res = get_data_issues_students(department, year_level, issue_type, search, student_ids=student_ids, limit=10000, db=db)
     students_data = res["students"]
 
     wb = openpyxl.Workbook()
@@ -563,7 +573,10 @@ def generate_data_issues_excel_bytes(db: Session, department: str, year_level: s
     ws.merge_cells("A2:O2")
     sub_cell = ws["A2"]
     date_str = datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")
-    sub_cell.value = f"Student Data Quality & LeetCode Telemetry Audit Report • Generated: {date_str} • Filter: Dept={department}, Year={year_level}, Issue={issue_type} ({len(students_data)} Records)"
+    if student_ids and student_ids.strip():
+        sub_cell.value = f"Selected Student Data Quality Audit Report • Generated: {date_str} • ({len(students_data)} Selected Records)"
+    else:
+        sub_cell.value = f"Student Data Quality & LeetCode Telemetry Audit Report • Generated: {date_str} • Filter: Dept={department}, Year={year_level}, Issue={issue_type} ({len(students_data)} Records)"
     sub_cell.font = Font(name="Times New Roman", size=10, bold=True, color="FFFFFF")
     sub_cell.fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid")
     sub_cell.alignment = Alignment(horizontal="center", vertical="center")
@@ -698,9 +711,11 @@ def generate_data_issues_excel_bytes(db: Session, department: str, year_level: s
     return buf.getvalue()
 
 
-def generate_data_issues_csv_bytes(db: Session, department: str, year_level: str, issue_type: str, search: str) -> bytes:
+def generate_data_issues_csv_bytes(
+    db: Session, department: str, year_level: str, issue_type: str, search: str, student_ids: Optional[str] = None
+) -> bytes:
     import csv
-    res = get_data_issues_students(department, year_level, issue_type, search, limit=5000, db=db)
+    res = get_data_issues_students(department, year_level, issue_type, search, student_ids=student_ids, limit=10000, db=db)
     students_data = res["students"]
 
     buf = io.StringIO()
@@ -740,14 +755,15 @@ def export_issues_excel(
     year_level: Optional[str] = Query("all"),
     issue_type: Optional[str] = Query("all"),
     search: Optional[str] = Query(None),
+    student_ids: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
     """
-    Direct ultra-fast (<1s) Excel streaming export.
+    Direct ultra-fast (<1s) Excel streaming export supporting selected student IDs filter.
     """
     excel_bytes = generate_data_issues_excel_bytes(
         db=db, department=department, year_level=year_level, 
-        issue_type=issue_type, search=search
+        issue_type=issue_type, search=search, student_ids=student_ids
     )
     date_str = datetime.datetime.now().strftime("%Y-%m-%d")
     filename = f"NANDHA_Data_Issues_Report_{date_str}.xlsx"
@@ -763,14 +779,15 @@ def export_issues_csv(
     year_level: Optional[str] = Query("all"),
     issue_type: Optional[str] = Query("all"),
     search: Optional[str] = Query(None),
+    student_ids: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
     """
-    Direct ultra-fast (<1s) CSV streaming export.
+    Direct ultra-fast (<1s) CSV streaming export supporting selected student IDs filter.
     """
     csv_bytes = generate_data_issues_csv_bytes(
         db=db, department=department, year_level=year_level, 
-        issue_type=issue_type, search=search
+        issue_type=issue_type, search=search, student_ids=student_ids
     )
     date_str = datetime.datetime.now().strftime("%Y-%m-%d")
     filename = f"NANDHA_Data_Issues_Report_{date_str}.csv"
