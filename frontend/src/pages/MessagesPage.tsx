@@ -691,36 +691,50 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
           )}
 
           {isTransparencyActive && (
-            <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 dark:bg-[#060B14] flex items-center justify-center">
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl space-y-6">
-                
-                {/* Header */}
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-5">
-                  <div className="flex items-center space-x-3.5">
-                    <div className="p-3.5 bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl shadow-lg ring-4 ring-emerald-50 dark:ring-emerald-950/30">
-                      <ShieldCheck className="w-7 h-7" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Student Standing & Transparency</h2>
-                      <p className="text-xs text-slate-500 font-semibold mt-0.5">Objective evidence explaining your institutional standing.</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    {transparencyData?.studentName && (
-                      <div className="hidden sm:block text-right">
-                        <div className="text-sm font-bold text-slate-800 dark:text-slate-200">{transparencyData.studentName}</div>
-                        <div className="text-xs font-mono text-slate-400">{transparencyData.regNo} ({transparencyData.department})</div>
+            <div className="flex-1 min-h-0 flex flex-col bg-slate-50 dark:bg-[#060B14] relative">
+              {/* Mobile Back Button Header */}
+              <div className="md:hidden w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-3 shrink-0 flex items-center justify-between shadow-sm z-10">
+                <button 
+                  onClick={() => setActiveConversationId(null)} 
+                  className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg flex items-center space-x-1.5"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  <span className="text-sm font-semibold">Back</span>
+                </button>
+                <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">Transparency & Standing</span>
+                <div className="w-9"></div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 md:p-8 flex items-start md:items-center justify-center">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl space-y-6 my-auto">
+                  
+                  {/* Header */}
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-5">
+                    <div className="flex items-center space-x-3.5">
+                      <div className="p-3.5 bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl shadow-lg ring-4 ring-emerald-50 dark:ring-emerald-950/30">
+                        <ShieldCheck className="w-7 h-7" />
                       </div>
-                    )}
-                    <button
-                      onClick={() => setTransparencyData(null)}
-                      className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
-                      title="Close"
-                    >
-                      <X className="w-6 h-6" />
-                    </button>
+                      <div>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Student Standing & Transparency</h2>
+                        <p className="text-xs text-slate-500 font-semibold mt-0.5">Objective evidence explaining your institutional standing.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      {transparencyData?.studentName && (
+                        <div className="hidden sm:block text-right">
+                          <div className="text-sm font-bold text-slate-800 dark:text-slate-200">{transparencyData.studentName}</div>
+                          <div className="text-xs font-mono text-slate-400">{transparencyData.regNo} ({transparencyData.department})</div>
+                        </div>
+                      )}
+                      <button
+                        onClick={() => setActiveConversationId(null)}
+                        className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                        title="Close"
+                      >
+                        <X className="w-6 h-6" />
+                      </button>
+                    </div>
                   </div>
-                </div>
 
                 {loadingTransparency ? (
                   <div className="text-center py-12 space-y-3">
@@ -798,7 +812,8 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
                 )}
               </div>
             </div>
-          )}
+          </div>
+        )}
         </div>
 
         {/* ZONE 3: Institutional Profile Panel */}
