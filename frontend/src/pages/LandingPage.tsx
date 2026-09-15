@@ -56,7 +56,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [solvedFilter, setSolvedFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('top_solved');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
-  const [students, setStudents] = useState<StudentData[]>(() => getCachedStudents());
+  const [students, setStudents] = useState<StudentData[]>(() => {
+    const cached = getCachedStudents();
+    return cached.filter((s: any) => s.department_id === 1 || s.department_id === 2);
+  });
   const [displayCount, setDisplayCount] = useState<number>(32);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [refreshingId, setRefreshingId] = useState<number | null>(null);
@@ -338,21 +341,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     try {
       const res = await api.get('/students/leaderboard-fast');
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-        setStudents(res.data);
-        saveCachedStudents(res.data);
+        const filtered = res.data.filter((s: any) => s.department_id === 1 || s.department_id === 2);
+        setStudents(filtered);
+        saveCachedStudents(filtered);
         return;
       }
       const res2 = await api.get('/students');
       if (res2.data && Array.isArray(res2.data) && res2.data.length > 0) {
-        setStudents(res2.data);
-        saveCachedStudents(res2.data);
+        const filtered2 = res2.data.filter((s: any) => s.department_id === 1 || s.department_id === 2);
+        setStudents(filtered2);
+        saveCachedStudents(filtered2);
         return;
       }
-      // If DB returns empty for any reason, preserve cached students
-      setStudents(prev => (prev && prev.length > 0) ? prev : getCachedStudents());
+      setStudents(prev => (prev && prev.length > 0) ? prev : getCachedStudents().filter((s: any) => s.department_id === 1 || s.department_id === 2));
     } catch (err) {
       console.warn("fetchFilteredStudents error, preserving cached students:", err);
-      setStudents(prev => (prev && prev.length > 0) ? prev : getCachedStudents());
+      setStudents(prev => (prev && prev.length > 0) ? prev : getCachedStudents().filter((s: any) => s.department_id === 1 || s.department_id === 2));
     }
   };
 
@@ -586,8 +590,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               const calculatedVerified = students.filter(s =>
                 s.stats?.sync_status === 'success' || s.stats?.sync_status === 'OK' || s.stats?.sync_status === 'verified' || s.stats?.sync_status === 'stale' || (s.stats?.total_solved !== null && (s.stats?.total_solved ?? 0) > 0)
               ).length;
-              const totalStudents = summaryData?.scope?.total_students ?? (students.length > 0 ? students.length : 314);
-              const verifiedCount = Math.max(summaryData?.verification?.verified ?? 0, summaryData?.verified_profiles ?? 0, calculatedVerified);
+              const totalStudents = students.length > 0 ? students.length : 308;
+              const verifiedCount = calculatedVerified;
               const lastVerifiedTs = students
                 .map(s => s.stats?.last_verified_at)
                 .filter(Boolean)
@@ -645,14 +649,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           const calculatedProblems = students.reduce((acc, s) => acc + (s.stats?.total_solved || 0), 0);
           const calculatedActiveSolvers = students.filter(s => (s.stats?.total_solved || 0) > 0).length;
 
-          const totalStudents = summaryData?.scope?.total_students ?? (students.length > 0 ? students.length : 314);
-          const verified = Math.max(summaryData?.verification?.verified ?? 0, summaryData?.verified_profiles ?? 0, calculatedVerified);
-          const pending = (summaryData?.verification?.pending !== undefined && summaryData.verification.pending !== null) ? summaryData.verification.pending : calculatedPending;
-          const failed = (summaryData?.verification?.failed !== undefined && summaryData.verification.failed !== null) ? summaryData.verification.failed : calculatedFailed;
-          const noUsername = (summaryData?.verification?.no_username !== undefined && summaryData.verification.no_username !== null) ? summaryData.verification.no_username : calculatedNoUsername;
+          const totalStudents = students.length > 0 ? students.length : 308;
+          const verified = calculatedVerified;
+          const pending = calculatedPending;
+          const failed = calculatedFailed;
+          const noUsername = calculatedNoUsername;
 
-          const activeSolvers = Math.max(summaryData?.performance?.active_students ?? 0, summaryData?.active_solvers ?? 0, calculatedActiveSolvers);
-          const verifiedProblems = Math.max(summaryData?.performance?.total_problems_solved ?? 0, summaryData?.total_problems_solved ?? 0, calculatedProblems);
+          const activeSolvers = calculatedActiveSolvers;
+          const verifiedProblems = calculatedProblems;
 
           return (
             <>

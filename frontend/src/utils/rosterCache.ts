@@ -1,7 +1,7 @@
 // Lightweight localStorage Cache Manager for Student & Summary Data
 // Eliminates ~300KB synchronous import of canonical static roster on initial bundle load
 
-const CACHE_VERSION = '2026.09.14.v3';
+const CACHE_VERSION = '2026.09.15.v1';
 
 export function checkCacheVersion(): void {
   if (typeof window === 'undefined') return;
