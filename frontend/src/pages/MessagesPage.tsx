@@ -584,32 +584,36 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
   const isSystemActive = isAiAgentActive || isTransparencyActive;
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-8.5rem-env(safe-area-inset-bottom,0px))] sm:h-[calc(100dvh-9rem)] md:h-[calc(100vh-7rem)] bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-slate-200 sm:rounded-2xl overflow-hidden shadow-2xl dark:shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-800">
+    <div className="flex flex-col h-[calc(100dvh-8.5rem-env(safe-area-inset-bottom,0px))] sm:h-[calc(100dvh-9rem)] md:h-[calc(100vh-7rem)] bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-slate-200 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl dark:shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-800">
       
       {/* Top Institutional Intelligence Hub Header */}
-      <div className={`relative overflow-hidden bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white px-6 py-5 sm:py-6 flex-wrap items-center justify-between gap-4 shrink-0 shadow-lg border-b border-brand-500/30 z-20 ${
+      <div className={`m-2.5 sm:m-4 p-4 sm:p-5 rounded-2xl sm:rounded-3xl relative overflow-hidden bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 text-white flex-wrap items-center justify-between gap-4 shrink-0 shadow-xl border border-indigo-500/30 dark:border-indigo-500/40 z-20 backdrop-blur-md ${
         activeConversationId ? 'hidden md:flex' : 'flex'
       }`}>
-        <div className="relative z-10 flex items-center space-x-4">
+        <div className="relative z-10 flex items-center space-x-3.5 sm:space-x-4">
           {onNavigateTab && (
             <button
               onClick={() => onNavigateTab('dashboard')}
-              className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer flex items-center space-x-2 text-xs font-bold shadow-sm"
+              className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer flex items-center space-x-2 text-xs font-bold shadow-md hover:scale-105 active:scale-95"
               title="Go Back"
             >
               <ArrowLeft className="w-4 h-4" />
               <span className="hidden sm:inline">Back</span>
             </button>
           )}
-          <div className="w-12 h-12 bg-brand-500/20 rounded-2xl flex items-center justify-center border border-brand-400/30 shadow-inner shrink-0">
-            <Sparkles className="w-6 h-6 text-amber-400 animate-pulse" />
+          <div className="w-11 h-11 sm:w-12 sm:h-12 bg-indigo-500/20 rounded-2xl flex items-center justify-center border border-indigo-400/30 shadow-inner shrink-0 ring-4 ring-indigo-500/10">
+            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400 animate-pulse" />
           </div>
           <div>
-            <h1 className="text-lg sm:text-xl md:text-2xl font-black tracking-wider leading-tight text-white uppercase">
-              INSTITUTIONAL <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">INTELLIGENCE HUB</span>
+            <h1 className="text-base sm:text-lg md:text-xl font-black tracking-wider leading-tight text-white uppercase">
+              INSTITUTIONAL <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-300">INTELLIGENCE HUB</span>
             </h1>
-            <p className="text-xs sm:text-sm text-slate-300 font-bold mt-1 tracking-wide">
-              Communication <span className="text-brand-400/60 px-1.5">•</span> Context <span className="text-brand-400/60 px-1.5">•</span> Verified Data <span className="text-brand-400/60 px-1.5">•</span> Intelligence <span className="text-brand-400/60 px-1.5">•</span> Action
+            <p className="text-[11px] sm:text-xs text-slate-300 font-semibold mt-0.5 tracking-wide flex flex-wrap items-center gap-1.5">
+              <span>Communication</span> <span className="text-indigo-400/60">•</span>
+              <span>Context</span> <span className="text-indigo-400/60">•</span>
+              <span>Verified Data</span> <span className="text-indigo-400/60">•</span>
+              <span>Intelligence</span> <span className="text-indigo-400/60">•</span>
+              <span>Action</span>
             </p>
           </div>
         </div>
