@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Layers, Users, Trophy, CheckCircle2, RefreshCw, LayoutGrid, List, ChevronDown, Building2, GraduationCap, RotateCcw, Filter, AlertCircle, Search, X, ArrowUpDown, Star, Flame } from 'lucide-react';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import api from '../services/api';
-import { useQuery } from '@tanstack/react-query';
 import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { StudentFlipCard } from '../components/StudentFlipCard';
 import { getCachedStudents, saveCachedStudents } from '../utils/rosterCache';
@@ -54,25 +53,113 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
     }
   }, [sortBy]);
 
-  const { data: paginatedData, isLoading, refetch } = useQuery({
-    queryKey: ['students-dashboard', selectedDept, yearLevel, nameSearch, solvedFilter, sortBy, displayCount],
-    queryFn: async () => {
-      const params: any = { paginated: true, page: 1, limit: displayCount };
-      if (selectedDept !== 'all' && selectedDept !== 'ALL') params.dept_id = selectedDept;
-      if (yearLevel !== 'all' && yearLevel !== 'ALL') params.year_level = yearLevel;
-      if (nameSearch.trim()) params.search = nameSearch.trim();
-      if (solvedParams.min_solved !== undefined) params.min_solved = solvedParams.min_solved;
-      if (solvedParams.max_solved !== undefined) params.max_solved = solvedParams.max_solved;
-      if (sortParam) params.sort_by = sortParam;
+  // ── Use the globally-cached leaderboard data instead of a separate slow API call ──
+  // All 308 students are already loaded by useStudentsQuery (leaderboard-fast endpoint with
+  // 10-minute in-memory cache). Filtering client-side is instant vs. 30s+ per API call.
+  const { data: allStudents = [], isLoading, refetch } = useStudentsQuery();
 
-      const res = await api.get('/students', { params });
-      return res.data;
-    },
-    staleTime: 30 * 1000
-  });
+  const finalStudentList = useMemo(() => {
+    let list = [...allStudents] as any[];
 
-  const finalStudentList = paginatedData?.items || [];
-  const totalStudents = paginatedData?.total || 0;
+    // Department filter
+    if (selectedDept !== 'all' && selectedDept !== 'ALL') {
+      const deptIdNum = Number(selectedDept);
+      if (!isNaN(deptIdNum) && deptIdNum > 0) {
+        list = list.filter((s: any) => s.department_id === deptIdNum || s.department?.id === deptIdNum);
+      }
+    }
+
+    // Year level filter
+    if (yearLevel !== 'all' && yearLevel !== 'ALL') {
+      const yrClean = String(yearLevel).trim().toUpperCase().replace('YEAR', '').trim();
+      list = list.filter((s: any) => {
+        const yr = String(s.year_level ?? '').trim().toUpperCase().replace('YEAR', '').trim();
+        return yr === yrClean;
+      });
+    }
+
+    // Name search filter
+    if (nameSearch.trim()) {
+      const q = nameSearch.trim().toLowerCase();
+      list = list.filter((s: any) =>
+        s.name?.toLowerCase().includes(q) ||
+        s.reg_no?.toLowerCase().includes(q) ||
+        s.username?.toLowerCase().includes(q)
+      );
+    }
+
+    // Performance / solved range filter
+    const { min_solved, max_solved } = solvedParams;
+    if (min_solved !== undefined || max_solved !== undefined) {
+      list = list.filter((s: any) => {
+        const solved = Number(s.stats?.total_solved ?? s.total_solved ?? 0);
+        if (max_solved === 0 && min_solved === 0) return solved <= 0;
+        if (min_solved !== undefined && solved < min_solved) return false;
+        if (max_solved !== undefined && max_solved > 0 && solved > max_solved) return false;
+        return true;
+      });
+    }
+
+    // Sorting
+    list.sort((a: any, b: any) => {
+      const solvedA = Number(a.stats?.total_solved ?? a.total_solved ?? 0);
+      const solvedB = Number(b.stats?.total_solved ?? b.total_solved ?? 0);
+      const ratingA = Number(a.stats?.contest_rating ?? 0);
+      const ratingB = Number(b.stats?.contest_rating ?? 0);
+      const streakA = Number(a.streak_count ?? a.stats?.max_streak ?? 0);
+      const streakB = Number(b.streak_count ?? b.stats?.max_streak ?? 0);
+
+      switch (sortBy) {
+        case 'top_solved': return solvedB - solvedA || a.name?.localeCompare(b.name);
+        case 'low_solved': return solvedA - solvedB || a.name?.localeCompare(b.name);
+        case 'name_asc':   return (a.name ?? '').localeCompare(b.name ?? '');
+        case 'name_desc':  return (b.name ?? '').localeCompare(a.name ?? '');
+        case 'streak':     return streakB - streakA || solvedB - solvedA;
+        case 'rating':     return ratingB - ratingA || solvedB - solvedA;
+        default:           return solvedB - solvedA;
+      }
+    });
+
+    // Apply displayCount limit
+    return list.slice(0, displayCount);
+  }, [allStudents, selectedDept, yearLevel, nameSearch, solvedParams, sortBy, displayCount]);
+
+  const totalStudents = useMemo(() => {
+    // Total BEFORE displayCount slice (for the header count)
+    let list = [...allStudents] as any[];
+    if (selectedDept !== 'all' && selectedDept !== 'ALL') {
+      const deptIdNum = Number(selectedDept);
+      if (!isNaN(deptIdNum) && deptIdNum > 0) {
+        list = list.filter((s: any) => s.department_id === deptIdNum || s.department?.id === deptIdNum);
+      }
+    }
+    if (yearLevel !== 'all' && yearLevel !== 'ALL') {
+      const yrClean = String(yearLevel).trim().toUpperCase().replace('YEAR', '').trim();
+      list = list.filter((s: any) => {
+        const yr = String(s.year_level ?? '').trim().toUpperCase().replace('YEAR', '').trim();
+        return yr === yrClean;
+      });
+    }
+    if (nameSearch.trim()) {
+      const q = nameSearch.trim().toLowerCase();
+      list = list.filter((s: any) =>
+        s.name?.toLowerCase().includes(q) ||
+        s.reg_no?.toLowerCase().includes(q) ||
+        s.username?.toLowerCase().includes(q)
+      );
+    }
+    const { min_solved, max_solved } = solvedParams;
+    if (min_solved !== undefined || max_solved !== undefined) {
+      list = list.filter((s: any) => {
+        const solved = Number(s.stats?.total_solved ?? s.total_solved ?? 0);
+        if (max_solved === 0 && min_solved === 0) return solved <= 0;
+        if (min_solved !== undefined && solved < min_solved) return false;
+        if (max_solved !== undefined && max_solved > 0 && solved > max_solved) return false;
+        return true;
+      });
+    }
+    return list.length;
+  }, [allStudents, selectedDept, yearLevel, nameSearch, solvedParams]);
 
   const handleRefreshAllStats = async () => {
     setIsRefreshing(true);
@@ -246,7 +333,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
               setSelectedDept(val === 'ALL' ? 'all' : val);
               setDisplayCount(32);
             }}
-            useIdAsValue={false}
+            useIdAsValue={true}
           />
 
           {/* 2. Academic Year Filter */}
@@ -336,7 +423,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
           <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">
             {selectedDept === 'all' || selectedDept === 'ALL'
               ? 'All Departments'
-              : (departments.find(d => String(d.id) === String(selectedDept) || d.code === selectedDept)?.name || selectedDept)}
+              : (departments.find(d => String(d.id) === String(selectedDept))?.name || selectedDept)}
             {' • '}
             {yearLevel === 'all' || yearLevel === 'ALL'
               ? 'All Academic Years'

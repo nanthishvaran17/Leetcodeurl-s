@@ -59,115 +59,123 @@ async def _deferred_startup_tasks():
                 is_pg = "postgresql" in db_url_str or "postgres" in db_url_str
 
                 if is_pg:
-                    # Execute each ALTER TABLE in an isolated atomic transaction to prevent multi-table deadlocks
-                    pg_statements = [
-                        """
-                        ALTER TABLE students
-                            ADD COLUMN IF NOT EXISTS primary_leetcode_id VARCHAR(100),
-                            ADD COLUMN IF NOT EXISTS secondary_leetcode_id VARCHAR(100),
-                            ADD COLUMN IF NOT EXISTS secondary_status VARCHAR(50) DEFAULT 'none';
-                        """,
-                        """
-                        ALTER TABLE student_contest_participations
-                            ADD COLUMN IF NOT EXISTS official_attendance_state VARCHAR(30),
-                            ADD COLUMN IF NOT EXISTS is_frozen BOOLEAN DEFAULT FALSE,
-                            ADD COLUMN IF NOT EXISTS frozen_at TIMESTAMP WITH TIME ZONE,
-                            ADD COLUMN IF NOT EXISTS post_contest_solves_count INTEGER DEFAULT 0,
-                            ADD COLUMN IF NOT EXISTS solved_problems TEXT,
-                            ADD COLUMN IF NOT EXISTS confidence VARCHAR(50) DEFAULT 'HIGH',
-                            ADD COLUMN IF NOT EXISTS verification_level VARCHAR(50),
-                            ADD COLUMN IF NOT EXISTS verification_evidence TEXT;
-                        """,
-                        """
-                        ALTER TABLE weekly_session_snapshots
-                            ADD COLUMN IF NOT EXISTS is_sequence_broken BOOLEAN DEFAULT FALSE;
-                        """,
-                        """
-                        ALTER TABLE admin_audit_logs
-                            ADD COLUMN IF NOT EXISTS audit_id VARCHAR(100),
-                            ADD COLUMN IF NOT EXISTS event_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                            ADD COLUMN IF NOT EXISTS admin_user_id INTEGER,
-                            ADD COLUMN IF NOT EXISTS admin_name VARCHAR(150),
-                            ADD COLUMN IF NOT EXISTS admin_email VARCHAR(150),
-                            ADD COLUMN IF NOT EXISTS admin_role VARCHAR(50) DEFAULT 'ADMIN',
-                            ADD COLUMN IF NOT EXISTS access_level VARCHAR(50) DEFAULT 'LEVEL_1',
-                            ADD COLUMN IF NOT EXISTS action VARCHAR(100),
-                            ADD COLUMN IF NOT EXISTS action_type VARCHAR(50) DEFAULT 'GENERAL',
-                            ADD COLUMN IF NOT EXISTS action_classification VARCHAR(50) DEFAULT 'SECURITY_ACCESS',
-                            ADD COLUMN IF NOT EXISTS status VARCHAR(30) DEFAULT 'SUCCESS',
-                            ADD COLUMN IF NOT EXISTS severity VARCHAR(30) DEFAULT 'INFO',
-                            ADD COLUMN IF NOT EXISTS target_type VARCHAR(50),
-                            ADD COLUMN IF NOT EXISTS target_id VARCHAR(100),
-                            ADD COLUMN IF NOT EXISTS resource_name VARCHAR(150),
-                            ADD COLUMN IF NOT EXISTS route VARCHAR(255),
-                            ADD COLUMN IF NOT EXISTS http_method VARCHAR(10),
-                            ADD COLUMN IF NOT EXISTS ip_address VARCHAR(50),
-                            ADD COLUMN IF NOT EXISTS client_ip VARCHAR(50),
-                            ADD COLUMN IF NOT EXISTS ip_version VARCHAR(10) DEFAULT 'IPv4',
-                            ADD COLUMN IF NOT EXISTS session_id VARCHAR(100),
-                            ADD COLUMN IF NOT EXISTS request_id VARCHAR(100),
-                            ADD COLUMN IF NOT EXISTS correlation_id VARCHAR(100),
-                            ADD COLUMN IF NOT EXISTS browser VARCHAR(100),
-                            ADD COLUMN IF NOT EXISTS browser_version VARCHAR(50),
-                            ADD COLUMN IF NOT EXISTS operating_system VARCHAR(100),
-                            ADD COLUMN IF NOT EXISTS device_type VARCHAR(50),
-                            ADD COLUMN IF NOT EXISTS user_agent_category VARCHAR(100),
-                            ADD COLUMN IF NOT EXISTS user_agent VARCHAR(500),
-                            ADD COLUMN IF NOT EXISTS authentication_status VARCHAR(50) DEFAULT 'AUTHENTICATED',
-                            ADD COLUMN IF NOT EXISTS authorization_result VARCHAR(50) DEFAULT 'ALLOWED',
-                            ADD COLUMN IF NOT EXISTS permission_checked VARCHAR(100),
-                            ADD COLUMN IF NOT EXISTS risk_level VARCHAR(30) DEFAULT 'LOW',
-                            ADD COLUMN IF NOT EXISTS denial_reason TEXT,
-                            ADD COLUMN IF NOT EXISTS request_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                            ADD COLUMN IF NOT EXISTS response_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                            ADD COLUMN IF NOT EXISTS response_status INTEGER DEFAULT 200,
-                            ADD COLUMN IF NOT EXISTS response_time_ms DOUBLE PRECISION DEFAULT 0.0,
-                            ADD COLUMN IF NOT EXISTS trace_id VARCHAR(100),
-                            ADD COLUMN IF NOT EXISTS event_hash VARCHAR(100),
-                            ADD COLUMN IF NOT EXISTS previous_event_hash VARCHAR(100),
-                            ADD COLUMN IF NOT EXISTS integrity_status VARCHAR(30) DEFAULT 'VERIFIED',
-                            ADD COLUMN IF NOT EXISTS institution_id VARCHAR(50) DEFAULT 'NEC',
-                            ADD COLUMN IF NOT EXISTS institution_branding_version VARCHAR(50) DEFAULT 'v1.0',
-                            ADD COLUMN IF NOT EXISTS institution_logo_reference VARCHAR(100) DEFAULT 'nandha_emblem.png',
-                            ADD COLUMN IF NOT EXISTS description TEXT,
-                            ADD COLUMN IF NOT EXISTS metadata_json JSONB,
-                            ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                            ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
-                        """,
-                        """
-                        ALTER TABLE weekly_sessions
-                            ADD COLUMN IF NOT EXISTS manual_review_required_at TIMESTAMP WITH TIME ZONE,
-                            ADD COLUMN IF NOT EXISTS manual_review_reason TEXT,
-                            ADD COLUMN IF NOT EXISTS last_successful_source_fetch TIMESTAMP WITH TIME ZONE,
-                            ADD COLUMN IF NOT EXISTS last_reconciliation_attempt TIMESTAMP WITH TIME ZONE,
-                            ADD COLUMN IF NOT EXISTS reconciliation_failure_count INTEGER DEFAULT 0,
-                            ADD COLUMN IF NOT EXISTS last_error_code VARCHAR(100),
-                            ADD COLUMN IF NOT EXISTS last_error_message_safe TEXT,
-                            ADD COLUMN IF NOT EXISTS finalization_method VARCHAR(50),
-                            ADD COLUMN IF NOT EXISTS finalized_by VARCHAR(150),
-                            ADD COLUMN IF NOT EXISTS scheduled_start TIMESTAMP WITH TIME ZONE,
-                            ADD COLUMN IF NOT EXISTS actual_start TIMESTAMP WITH TIME ZONE,
-                            ADD COLUMN IF NOT EXISTS scheduled_end TIMESTAMP WITH TIME ZONE,
-                            ADD COLUMN IF NOT EXISTS actual_end TIMESTAMP WITH TIME ZONE,
-                            ADD COLUMN IF NOT EXISTS baseline_status VARCHAR(30) DEFAULT 'PENDING',
-                            ADD COLUMN IF NOT EXISTS last_fetch_at TIMESTAMP WITH TIME ZONE,
-                            ADD COLUMN IF NOT EXISTS last_event_id INTEGER DEFAULT 0,
-                            ADD COLUMN IF NOT EXISTS worker_heartbeat TIMESTAMP WITH TIME ZONE,
-                            ADD COLUMN IF NOT EXISTS worker_status VARCHAR(30) DEFAULT 'IDLE',
-                            ADD COLUMN IF NOT EXISTS worker_instance_id VARCHAR(100),
-                            ADD COLUMN IF NOT EXISTS retry_count INTEGER DEFAULT 0,
-                            ADD COLUMN IF NOT EXISTS last_error TEXT,
-                            ADD COLUMN IF NOT EXISTS finalized BOOLEAN DEFAULT FALSE,
-                            ADD COLUMN IF NOT EXISTS report_generation_status VARCHAR(30) DEFAULT 'PENDING',
-                            ADD COLUMN IF NOT EXISTS email_dispatch_status VARCHAR(30) DEFAULT 'PENDING';
-                        """
-                    ]
-                    for stmt in pg_statements:
-                        try:
-                            with engine.begin() as atomic_conn:
-                                atomic_conn.execute(text(stmt))
-                        except Exception as _st_err:
-                            logger.warning(f"[STARTUP] Atomic migration stmt note: {_st_err}")
+                    has_col = False
+                    try:
+                        res = conn.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name='students' AND column_name='primary_leetcode_id';"))
+                        has_col = res.fetchone() is not None
+                    except Exception:
+                        pass
+
+                    if not has_col:
+                        # Execute each ALTER TABLE in an isolated atomic transaction to prevent multi-table deadlocks
+                        pg_statements = [
+                            """
+                            ALTER TABLE students
+                                ADD COLUMN IF NOT EXISTS primary_leetcode_id VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS secondary_leetcode_id VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS secondary_status VARCHAR(50) DEFAULT 'none';
+                            """,
+                            """
+                            ALTER TABLE student_contest_participations
+                                ADD COLUMN IF NOT EXISTS official_attendance_state VARCHAR(30),
+                                ADD COLUMN IF NOT EXISTS is_frozen BOOLEAN DEFAULT FALSE,
+                                ADD COLUMN IF NOT EXISTS frozen_at TIMESTAMP WITH TIME ZONE,
+                                ADD COLUMN IF NOT EXISTS post_contest_solves_count INTEGER DEFAULT 0,
+                                ADD COLUMN IF NOT EXISTS solved_problems TEXT,
+                                ADD COLUMN IF NOT EXISTS confidence VARCHAR(50) DEFAULT 'HIGH',
+                                ADD COLUMN IF NOT EXISTS verification_level VARCHAR(50),
+                                ADD COLUMN IF NOT EXISTS verification_evidence TEXT;
+                            """,
+                            """
+                            ALTER TABLE weekly_session_snapshots
+                                ADD COLUMN IF NOT EXISTS is_sequence_broken BOOLEAN DEFAULT FALSE;
+                            """,
+                            """
+                            ALTER TABLE admin_audit_logs
+                                ADD COLUMN IF NOT EXISTS audit_id VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS event_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                                ADD COLUMN IF NOT EXISTS admin_user_id INTEGER,
+                                ADD COLUMN IF NOT EXISTS admin_name VARCHAR(150),
+                                ADD COLUMN IF NOT EXISTS admin_email VARCHAR(150),
+                                ADD COLUMN IF NOT EXISTS admin_role VARCHAR(50) DEFAULT 'ADMIN',
+                                ADD COLUMN IF NOT EXISTS access_level VARCHAR(50) DEFAULT 'LEVEL_1',
+                                ADD COLUMN IF NOT EXISTS action VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS action_type VARCHAR(50) DEFAULT 'GENERAL',
+                                ADD COLUMN IF NOT EXISTS action_classification VARCHAR(50) DEFAULT 'SECURITY_ACCESS',
+                                ADD COLUMN IF NOT EXISTS status VARCHAR(30) DEFAULT 'SUCCESS',
+                                ADD COLUMN IF NOT EXISTS severity VARCHAR(30) DEFAULT 'INFO',
+                                ADD COLUMN IF NOT EXISTS target_type VARCHAR(50),
+                                ADD COLUMN IF NOT EXISTS target_id VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS resource_name VARCHAR(150),
+                                ADD COLUMN IF NOT EXISTS route VARCHAR(255),
+                                ADD COLUMN IF NOT EXISTS http_method VARCHAR(10),
+                                ADD COLUMN IF NOT EXISTS ip_address VARCHAR(50),
+                                ADD COLUMN IF NOT EXISTS client_ip VARCHAR(50),
+                                ADD COLUMN IF NOT EXISTS ip_version VARCHAR(10) DEFAULT 'IPv4',
+                                ADD COLUMN IF NOT EXISTS session_id VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS request_id VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS correlation_id VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS browser VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS browser_version VARCHAR(50),
+                                ADD COLUMN IF NOT EXISTS operating_system VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS device_type VARCHAR(50),
+                                ADD COLUMN IF NOT EXISTS user_agent_category VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS user_agent VARCHAR(500),
+                                ADD COLUMN IF NOT EXISTS authentication_status VARCHAR(50) DEFAULT 'AUTHENTICATED',
+                                ADD COLUMN IF NOT EXISTS authorization_result VARCHAR(50) DEFAULT 'ALLOWED',
+                                ADD COLUMN IF NOT EXISTS permission_checked VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS risk_level VARCHAR(30) DEFAULT 'LOW',
+                                ADD COLUMN IF NOT EXISTS denial_reason TEXT,
+                                ADD COLUMN IF NOT EXISTS request_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                                ADD COLUMN IF NOT EXISTS response_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                                ADD COLUMN IF NOT EXISTS response_status INTEGER DEFAULT 200,
+                                ADD COLUMN IF NOT EXISTS response_time_ms DOUBLE PRECISION DEFAULT 0.0,
+                                ADD COLUMN IF NOT EXISTS trace_id VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS event_hash VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS previous_event_hash VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS integrity_status VARCHAR(30) DEFAULT 'VERIFIED',
+                                ADD COLUMN IF NOT EXISTS institution_id VARCHAR(50) DEFAULT 'NEC',
+                                ADD COLUMN IF NOT EXISTS institution_branding_version VARCHAR(50) DEFAULT 'v1.0',
+                                ADD COLUMN IF NOT EXISTS institution_logo_reference VARCHAR(100) DEFAULT 'nandha_emblem.png',
+                                ADD COLUMN IF NOT EXISTS description TEXT,
+                                ADD COLUMN IF NOT EXISTS metadata_json JSONB,
+                                ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                                ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+                            """,
+                            """
+                            ALTER TABLE weekly_sessions
+                                ADD COLUMN IF NOT EXISTS manual_review_required_at TIMESTAMP WITH TIME ZONE,
+                                ADD COLUMN IF NOT EXISTS manual_review_reason TEXT,
+                                ADD COLUMN IF NOT EXISTS last_successful_source_fetch TIMESTAMP WITH TIME ZONE,
+                                ADD COLUMN IF NOT EXISTS last_reconciliation_attempt TIMESTAMP WITH TIME ZONE,
+                                ADD COLUMN IF NOT EXISTS reconciliation_failure_count INTEGER DEFAULT 0,
+                                ADD COLUMN IF NOT EXISTS last_error_code VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS last_error_message_safe TEXT,
+                                ADD COLUMN IF NOT EXISTS finalization_method VARCHAR(50),
+                                ADD COLUMN IF NOT EXISTS finalized_by VARCHAR(150),
+                                ADD COLUMN IF NOT EXISTS scheduled_start TIMESTAMP WITH TIME ZONE,
+                                ADD COLUMN IF NOT EXISTS actual_start TIMESTAMP WITH TIME ZONE,
+                                ADD COLUMN IF NOT EXISTS scheduled_end TIMESTAMP WITH TIME ZONE,
+                                ADD COLUMN IF NOT EXISTS actual_end TIMESTAMP WITH TIME ZONE,
+                                ADD COLUMN IF NOT EXISTS baseline_status VARCHAR(30) DEFAULT 'PENDING',
+                                ADD COLUMN IF NOT EXISTS last_fetch_at TIMESTAMP WITH TIME ZONE,
+                                ADD COLUMN IF NOT EXISTS last_event_id INTEGER DEFAULT 0,
+                                ADD COLUMN IF NOT EXISTS worker_heartbeat TIMESTAMP WITH TIME ZONE,
+                                ADD COLUMN IF NOT EXISTS worker_status VARCHAR(30) DEFAULT 'IDLE',
+                                ADD COLUMN IF NOT EXISTS worker_instance_id VARCHAR(100),
+                                ADD COLUMN IF NOT EXISTS retry_count INTEGER DEFAULT 0,
+                                ADD COLUMN IF NOT EXISTS last_error TEXT,
+                                ADD COLUMN IF NOT EXISTS finalized BOOLEAN DEFAULT FALSE,
+                                ADD COLUMN IF NOT EXISTS report_generation_status VARCHAR(30) DEFAULT 'PENDING',
+                                ADD COLUMN IF NOT EXISTS email_dispatch_status VARCHAR(30) DEFAULT 'PENDING';
+                            """
+                        ]
+                        for stmt in pg_statements:
+                            try:
+                                with engine.begin() as atomic_conn:
+                                    atomic_conn.execute(text(stmt))
+                            except Exception as _st_err:
+                                logger.warning(f"[STARTUP] Atomic migration stmt note: {_st_err}")
                 else:
                     # SQLite dialect fallback column additions
                     try:
@@ -435,6 +443,65 @@ async def _deferred_startup_tasks():
 
         except Exception as e:
             logger.warning(f"[STARTUP] Scheduler initialization note: {e}")
+
+    # STEP 5: LEADERBOARD CACHE PRE-WARM
+    # Runs in background 5s after startup so the first frontend page load
+    # finds a hot cache instead of waiting 30–60s for a cold Neon DB query.
+    async def _prewarm_leaderboard_cache():
+        await asyncio.sleep(5)
+        try:
+            from backend.cache import cache
+            from backend.routes.students import get_leaderboard_fast
+            import datetime
+
+            def _build_cache():
+                from backend.database import SessionLocal
+                from backend.models import (
+                    Student, LeetCodeProfileStats, WeeklyStudentProgress,
+                    WeeklyPublicResult, WeeklyVirtualResult, WeeklySession,
+                    LeetCodeContestRatingHistory, LeetCodeAccount
+                )
+                from sqlalchemy.orm import joinedload
+                from sqlalchemy import desc, nullslast
+                import re, orjson
+
+                with SessionLocal() as db:
+                    students = (
+                        db.query(Student)
+                        .outerjoin(Student.stats)
+                        .options(
+                            joinedload(Student.department),
+                            joinedload(Student.stats),
+                            joinedload(Student.lc_activity),
+                        )
+                        .filter((Student.is_active == True) | (Student.is_active.is_(None)))
+                        .order_by(nullslast(desc(LeetCodeProfileStats.total_solved)), Student.name.asc())
+                        .all()
+                    )
+                    if not students:
+                        return b'[]'
+                    logger.info(f"[PREWARM] Loaded {len(students)} students for cache pre-warm.")
+                    return orjson.dumps([{"id": s.id, "name": s.name} for s in students[:1]])  # minimal ping
+
+            cache_key = "leaderboard_fast:public:None:None:None"
+            existing = cache.get(cache_key)
+            if not existing:
+                logger.info("[PREWARM] Warming leaderboard cache in background...")
+                await asyncio.to_thread(_build_cache)
+                # Trigger the real endpoint logic via internal HTTP to properly warm cache
+                import urllib.request
+                try:
+                    urllib.request.urlopen("http://127.0.0.1:8000/api/students/leaderboard-fast", timeout=60)
+                    logger.info("[PREWARM] Leaderboard cache warmed successfully.")
+                except Exception as _http_err:
+                    logger.warning(f"[PREWARM] Cache pre-warm HTTP note: {_http_err}")
+            else:
+                logger.info("[PREWARM] Leaderboard cache already warm, skipping.")
+        except Exception as _pw_err:
+            logger.warning(f"[PREWARM] Leaderboard pre-warm note: {_pw_err}")
+
+    asyncio.create_task(_prewarm_leaderboard_cache())
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -1007,3 +1074,6 @@ logger.info("LeetCode Performance Tracker API is fully ready & live sync engine 
 # reload trigger
 
 # Trigger reload
+
+# reload
+# Reload backend to clear deadlocked DB connection pool

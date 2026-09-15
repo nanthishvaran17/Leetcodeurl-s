@@ -245,6 +245,8 @@ def run_db_migrations():
                 continue
             try:
                 with engine.begin() as pg_conn:
+                    # 10-second cap per ALTER TABLE so a lock never stalls the server boot
+                    pg_conn.execute(sql_text("SET LOCAL statement_timeout = '10s'"))
                     pg_conn.execute(sql_text(migration_sql))
                     print(f"[PG Migration] Added column {c_name} to {t_name}")
             except Exception as _col_err:

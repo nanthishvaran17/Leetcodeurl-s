@@ -67,27 +67,176 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
 
-/* Mobile height fix for login frame auto-fitting & Safe Centering */
+/* ========================================================
+   MOBILE VIEWPORT & ZERO UNWANTED BOTTOM SPACE FIX (< 900px)
+   ======================================================== */
 @media (max-width: 899px) {
   .login-page-container {
-    padding: 1.5rem 1rem !important; /* Less padding on small screens */
-    align-items: center;
-    justify-content: flex-start; /* Start from top to allow safe scrolling */
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    height: auto !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    padding: max(6px, env(safe-area-inset-top, 6px)) 8px max(8px, env(safe-area-inset-bottom, 8px)) 8px !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
   }
-  /* On mobile, use auto margins to vertically center if space permits, else scroll normally */
+
   .mobile-top-branding {
-    margin-top: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    width: 100% !important;
+    margin-top: 0 !important;
+    margin-bottom: 4px !important;
+    flex-shrink: 0 !important;
+    z-index: 10 !important;
   }
+
+  .mobile-jubilee-badge {
+    width: clamp(40px, 4.5vh, 52px) !important;
+    height: clamp(40px, 4.5vh, 52px) !important;
+    margin-bottom: 2px !important;
+  }
+
+  .mobile-eyebrow {
+    font-size: clamp(0.62rem, 0.85vh, 0.7rem) !important;
+    margin: 0 0 1px 0 !important;
+  }
+
+  .mobile-title {
+    font-size: clamp(1.15rem, 1.8vh, 1.35rem) !important;
+    margin: 0 0 1px 0 !important;
+  }
+
+  .mobile-subtitle {
+    font-size: clamp(0.68rem, 0.95vh, 0.75rem) !important;
+    margin: 0 !important;
+  }
+
   .login-frame {
-    min-height: auto !important;
-    height: max-content !important;
-    padding-bottom: 24px !important;
-    margin-bottom: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: calc(100% - 16px) !important;
+    max-width: 420px !important;
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 0 !important;
+    margin: 4px auto !important;
+    border-radius: 18px !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    box-shadow: 0 15px 35px -10px rgba(6, 29, 54, 0.25) !important;
   }
+
   .panel-right {
-    min-height: auto !important;
-    height: max-content !important;
-    flex: none !important;
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 0.85rem 0.85rem 0.65rem 0.85rem !important;
+    flex: 0 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    box-sizing: border-box !important;
+  }
+
+  .login-content-wrapper {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .form-head {
+    margin-bottom: 0.6rem !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+
+  .form-head h2 {
+    font-size: clamp(1.15rem, 1.8vh, 1.35rem) !important;
+  }
+
+  .tabs {
+    height: 40px !important;
+    margin-bottom: 0.6rem !important;
+  }
+
+  .tabs button {
+    height: 32px !important;
+    font-size: 0.82rem !important;
+  }
+
+  .field {
+    margin-bottom: 0.6rem !important;
+  }
+
+  .field label {
+    font-size: 0.8rem !important;
+    margin-bottom: 3px !important;
+  }
+
+  .field input[type="text"],
+  .field input[type="email"],
+  .field input[type="password"] {
+    height: 42px !important;
+    font-size: 0.86rem !important;
+  }
+
+  .row-between {
+    margin-bottom: 0.6rem !important;
+    min-height: 24px !important;
+  }
+
+  .submit-btn {
+    height: 42px !important;
+    font-size: 0.88rem !important;
+  }
+
+  .help-card-row {
+    margin-top: 0.6rem !important;
+  }
+
+  .help-trigger-btn {
+    min-height: 40px !important;
+    padding: 0.55rem 0.75rem !important;
+  }
+
+  .stamp {
+    margin-top: 0.4rem !important;
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+    font-size: 0.72rem !important;
+  }
+
+  .login-copyright {
+    margin-top: 0.35rem !important;
+    margin-bottom: 0 !important;
+    padding: 0 0 2px 0 !important;
+    min-height: 0 !important;
+    flex-shrink: 0 !important;
+  }
+
+  .copyright-line {
+    font-size: 0.72rem !important;
+    margin-bottom: 1px !important;
+  }
+
+  .tagline-line {
+    font-size: 0.65rem !important;
   }
 }
 
@@ -97,3 +246,4 @@
     justify-content: center;
   }
 }
+

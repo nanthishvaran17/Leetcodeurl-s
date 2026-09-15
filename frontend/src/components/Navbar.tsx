@@ -96,7 +96,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       NANDHA INTELLIGENCE
                     </span>
                     <span className="hidden sm:inline-flex px-1.5 py-0.2 text-[9px] font-black rounded bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 whitespace-nowrap flex-shrink-0">
-                      {freshness?.total_students ? `${freshness.total_students} STUDENTS` : '1500+ STUDENTS'}
+                      {freshness?.total_students ? `${freshness.total_students} STUDENTS` : '308 STUDENTS'}
                     </span>
                   </div>
                   <span className="text-[8.5px] xs:text-[9px] leading-tight sm:text-[11px] sm:leading-snug text-slate-500 dark:text-slate-400 font-semibold tracking-wide truncate">

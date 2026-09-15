@@ -11,10 +11,12 @@ import { GlobalModalBackdrop } from '../GlobalModalBackdrop';
 import { CreateStaffModal } from './CreateStaffModal';
 import { EditStaffModal } from './EditStaffModal';
 
+let cachedStaffList: any[] | null = null;
+
 export const StaffManagement: React.FC = () => {
-  const [staffList, setStaffList] = useState<any[]>([]);
+  const [staffList, setStaffList] = useState<any[]>(cachedStaffList || []);
   const { departments } = useDepartments();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(!cachedStaffList);
   const [submitting, setSubmitting] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [creationSuccess, setCreationSuccess] = useState<any>(null);
@@ -121,15 +123,17 @@ export const StaffManagement: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
 
-  const fetchStaff = async () => {
-    setLoading(true);
+  const fetchStaff = async (silent = false) => {
+    if (!silent && !cachedStaffList) setLoading(true);
     setErrorState(null);
     try {
       const res = await api.get('/admin/staff-list');
       if (res.data && Array.isArray(res.data)) {
         setStaffList(res.data);
+        cachedStaffList = res.data;
       } else {
         setStaffList([]);
+        cachedStaffList = [];
       }
     } catch (err: any) {
       if (axios.isCancel(err) || err?.name === 'CanceledError' || err?.code === 'ERR_CANCELED') {
@@ -360,7 +364,7 @@ export const StaffManagement: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={fetchStaff}
+            onClick={() => fetchStaff()}
             className="p-2 rounded-xl border border-slate-200 dark:border-navy-700 hover:bg-slate-50 dark:hover:bg-navy-750 text-slate-500 transition-colors cursor-pointer"
             title="Refresh staff list"
           >
@@ -451,7 +455,7 @@ export const StaffManagement: React.FC = () => {
             {errorState.type !== 'FORBIDDEN' && (
               <button
                 type="button"
-                onClick={fetchStaff}
+                onClick={() => fetchStaff()}
                 className="px-4 py-2 rounded-xl bg-brand-600 text-white font-bold text-xs hover:bg-brand-700 transition-all shadow-sm cursor-pointer"
               >
                 Retry Request

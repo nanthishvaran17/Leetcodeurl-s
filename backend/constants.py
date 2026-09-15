@@ -9,10 +9,10 @@ def is_production_department(code: str, name: str = "") -> bool:
     if not code:
         return False
     code_upper = code.upper().strip()
-    name_upper = name.upper().strip() if name else ""
-
-    for kw in EXCLUDED_DEPT_KEYWORDS:
-        if kw in code_upper or kw in name_upper:
-            return False
+    
+    # User explicitly requested ONLY Cyber Security and IoT to be visible on the leaderboard
+    ALLOWED_CODES = ["CSE(CS)", "CSE(IOT)"]
+    if code_upper not in ALLOWED_CODES:
+        return False
 
     return True

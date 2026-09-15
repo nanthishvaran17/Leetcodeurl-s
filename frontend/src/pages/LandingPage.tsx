@@ -331,7 +331,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     try {
       const res = await api.get('/departments');
       if (res.data && Array.isArray(res.data) && res.data.length >= 1) {
-        setDepartments(res.data);
+        // Filter to only show Cyber Security (id: 1) and IoT (id: 2)
+        const filteredDepts = res.data.filter((d: any) => d.id === 1 || d.id === 2);
+        setDepartments(filteredDepts.length > 0 ? filteredDepts : res.data);
       }
     } catch (err) {
       console.warn("Failed to fetch departments:", err);
@@ -499,7 +501,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     // Fallback if departments are not loaded yet
     return (
       <>
-        across <span className="font-bold text-white">Cyber Security</span>, <span className="font-bold text-white">IoT</span>, &amp; <span className="font-bold text-white">Information Technology</span> departments
+        across <span className="font-bold text-white">Cyber Security</span> &amp; <span className="font-bold text-white">IoT</span> departments
       </>
     );
   }, [selectedDept, departments, user]);

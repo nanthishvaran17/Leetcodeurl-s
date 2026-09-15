@@ -1,5 +1,6 @@
 import datetime
-from pydantic import BaseModel, ConfigDict
+import json
+from pydantic import BaseModel, ConfigDict, field_validator
 from typing import List, Optional, Any, Dict, Union
 
 # Department Schemas
@@ -176,6 +177,17 @@ class StudentOut(StudentBase):
     contest_number: Optional[int] = None
     has_virtual: Optional[bool] = False
     model_config = ConfigDict(from_attributes=True, extra="allow")
+    @field_validator('badge_list', mode='before')
+    @classmethod
+    def parse_badge_list(cls, v):
+        import json
+        if isinstance(v, str):
+            try:
+                parsed = json.loads(v)
+                return [s.strip() for s in parsed if isinstance(s, str)] if isinstance(parsed, list) else []
+            except Exception:
+                return []
+        return v if isinstance(v, list) else []
 
 class StudentListOut(StudentBase):
     id: int
@@ -208,6 +220,17 @@ class StudentListOut(StudentBase):
     contest_number: Optional[int] = None
     has_virtual: Optional[bool] = False
     model_config = ConfigDict(from_attributes=True, extra="allow")
+    @field_validator('badge_list', mode='before')
+    @classmethod
+    def parse_badge_list(cls, v):
+        import json
+        if isinstance(v, str):
+            try:
+                parsed = json.loads(v)
+                return [s.strip() for s in parsed if isinstance(s, str)] if isinstance(parsed, list) else []
+            except Exception:
+                return []
+        return v if isinstance(v, list) else []
 
 class StudentPaginatedOut(BaseModel):
     total: int

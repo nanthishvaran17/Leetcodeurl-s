@@ -448,9 +448,9 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
     <div className={twMerge('flex flex-col space-y-1.5 min-w-0 w-full', className)}>
       {/* Optional Top Label */}
       {label && (
-        <span className="block text-xs font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider truncate">
-          {label}
-        </span>
+        <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate flex items-center justify-between h-4 leading-4 m-0 p-0">
+          <span>{label}</span>
+        </label>
       )}
 
       <div className="relative">
@@ -460,11 +460,11 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={twMerge(
-            "relative w-full flex items-center justify-between px-3 py-1.5 h-9 min-h-[36px] bg-white dark:bg-navy-950",
-            "border transition-all duration-200 outline-none select-none rounded-xl cursor-pointer shadow-xs text-left",
+            "relative w-full flex items-center justify-between px-3.5 py-2 h-11 min-h-[44px] bg-white dark:bg-navy-950",
+            "border transition-all duration-200 outline-none select-none rounded-2xl cursor-pointer shadow-sm text-left group",
             isOpen 
-              ? "border-brand-400 ring-2 ring-brand-400/20" 
-              : "border-slate-200 dark:border-slate-700 hover:border-brand-300"
+              ? "border-brand-500 ring-2 ring-brand-500/20 shadow-md shadow-brand-500/10" 
+              : "border-slate-200 dark:border-slate-700 hover:border-brand-500/40"
           )}
         >
           <div className="flex items-center space-x-2 overflow-hidden min-w-0 flex-1 pr-1.5">

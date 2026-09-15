@@ -22,7 +22,10 @@ interface DepartmentContextType {
 const DepartmentContext = createContext<DepartmentContextType | undefined>(undefined);
 
 export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [departments, setDepartments] = useState<Department[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([
+    { id: 1, code: 'CSE(CS)', name: 'Computer Science and Engineering (Cyber Security)', pillText: 'CSE(CS)' },
+    { id: 2, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)' }
+  ]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isHodScope, setIsHodScope] = useState(false);
@@ -45,7 +48,11 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       // Backend returns scoped list for HOD, full list for others
       const res = await api.get('/departments');
       if (res.data && Array.isArray(res.data)) {
-        const mappedDepts = res.data.map((d: any) => {
+        // Apply institutional restriction: Only show Cyber Security (id: 1) and IoT (id: 2)
+        const filteredData = res.data.filter((d: any) => d.id === 1 || d.id === 2);
+        const sourceData = filteredData.length > 0 ? filteredData : res.data;
+        
+        const mappedDepts = sourceData.map((d: any) => {
           const code = d.code || d.name || '';
           const rawName = d.name || d.code || '';
           const name = (code.toUpperCase() === 'IT' || rawName.toUpperCase() === 'IT')
@@ -60,7 +67,10 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         });
         setDepartments(mappedDepts);
       } else {
-        setDepartments([]);
+        setDepartments([
+          { id: 1, code: 'CSE(CS)', name: 'Computer Science and Engineering (Cyber Security)', pillText: 'CSE(CS)' },
+          { id: 2, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)' }
+        ]);
       }
 
       // Determine scope flags from user role
@@ -73,7 +83,11 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     } catch (err: any) {
       console.error('[DepartmentContext] Failed to fetch departments:', err);
       setError(err.message || 'Failed to fetch departments');
-      setDepartments([]);
+      // On error, still fallback to the two required departments
+      setDepartments([
+        { id: 1, code: 'CSE(CS)', name: 'Computer Science and Engineering (Cyber Security)', pillText: 'CSE(CS)' },
+        { id: 2, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)' }
+      ]);
     } finally {
       setIsLoading(false);
     }

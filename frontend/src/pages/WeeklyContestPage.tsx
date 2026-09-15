@@ -2304,7 +2304,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       {activeTab === 'matrix' && (
         <>
           {/* 2. UNIFIED COHESIVE FILTER & ACTION COMMAND BAR */}
-          <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4 no-print">
+          <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4 no-print mb-6">
         {/* Row 1: Search Input + Full Consolidated Action Toolbar */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           {/* Real-time Search Input */}
@@ -2814,17 +2814,37 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 }
 
                 return (
-                  <div key={dept.code} className={`p-4 rounded-2xl ${color.bg} border ${color.border} flex items-center justify-between shadow-sm hover:shadow-md transition-shadow`}>
-                    <div>
-                      <h4 className={`text-xs font-black uppercase ${color.text} flex items-center gap-1.5`}>
-                        <Building2 className="w-3.5 h-3.5" />
-                        <span>{dept.name}</span>
-                      </h4>
-                      <p className="text-[10px] text-slate-500 font-medium mt-1">Total Active Students: {total}</p>
+                  <div
+                    key={dept.code}
+                    className={`p-4 rounded-2xl ${color.bg} border ${color.border} flex flex-col justify-between shadow-sm hover:shadow-md transition-all space-y-3 min-w-0`}
+                  >
+                    {/* Top Row: Icon + Code Badge (Left) & Participated Count (Right) */}
+                    <div className="flex items-start justify-between gap-2 border-b border-slate-200/50 dark:border-navy-800/50 pb-2">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <div className={`p-1 rounded-md ${color.bg} border ${color.border} shrink-0`}>
+                          <Building2 className={`w-3.5 h-3.5 ${color.text}`} />
+                        </div>
+                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider shrink-0 ${color.text} bg-white/80 dark:bg-navy-900/80 border ${color.border}`}>
+                          {dept.code}
+                        </span>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className={`text-xl font-black font-mono leading-none ${color.stat}`}>{attended}</p>
+                        <p className={`text-[9px] font-black uppercase tracking-wider ${color.label} mt-0.5`}>Participated</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className={`text-2xl font-black ${color.stat}`}>{attended}</p>
-                      <p className={`text-[10px] font-bold ${color.label}`}>Participated</p>
+
+                    {/* Middle Row: Full Department Name */}
+                    <div className="min-w-0 my-0.5">
+                      <h4 className={`text-[11px] font-black uppercase leading-snug tracking-tight ${color.text} line-clamp-2`} title={dept.name}>
+                        {dept.name}
+                      </h4>
+                    </div>
+
+                    {/* Bottom Row: Active Student Count */}
+                    <div className="pt-2 border-t border-slate-200/40 dark:border-navy-800/40 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold">
+                      <span>Active Students</span>
+                      <span className="font-mono font-black text-slate-800 dark:text-slate-200">{total}</span>
                     </div>
                   </div>
                 );

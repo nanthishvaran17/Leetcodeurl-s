@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, Variants, useReducedMotion } from 'framer-motion';
 import '../styles/login.css';
+import '../styles/login-updates.css';
 import {
   Lock, Mail, User, Eye, EyeOff, CheckCircle2, AlertCircle,
   ArrowRight, RefreshCw, HelpCircle, ShieldCheck,

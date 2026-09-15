@@ -166,14 +166,8 @@ export const SettingsPage: React.FC = () => {
     setIsProbing(true);
     setSystemHealth(null);
     
-    // Ensure the animation runs for at least 800ms so it doesn't flash instantly
-    const minDelay = new Promise(resolve => setTimeout(resolve, 800));
-    
     try {
-      const [res] = await Promise.all([
-        api.get('/settings/system-health'),
-        minDelay
-      ]);
+      const res = await api.get('/settings/system-health');
       
       if (res.data && res.data.components) {
         setSystemHealth(res.data);

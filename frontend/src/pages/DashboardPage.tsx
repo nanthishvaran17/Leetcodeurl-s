@@ -831,7 +831,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 .filter((dept: any) => {
                   const code = (dept.department_code || dept.code || '').toUpperCase();
                   const name = (dept.department_name || dept.name || '').toUpperCase();
-                  return !code.includes('TEST') && !name.includes('TEST');
+                  return !code.includes('TEST') && !name.includes('TEST') && dept.total_students > 0;
                 })
                 .sort((a: any, b: any) => {
                   const isACse = (a.department_code || '').startsWith('CSE');
@@ -925,7 +925,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                     .filter((dept: any) => {
                       const code = (dept.department_code || dept.code || '').toUpperCase();
                       const name = (dept.department_name || dept.name || '').toUpperCase();
-                      return !code.includes('TEST') && !name.includes('TEST');
+                      return !code.includes('TEST') && !name.includes('TEST') && dept.total_students > 0;
                     })
                     .sort((a, b) => {
                       const isACse = (a.department_code || '').startsWith('CSE');

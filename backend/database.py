@@ -41,22 +41,22 @@ from sqlalchemy.pool import NullPool
 engine_kwargs = {}
 if "postgresql" in db_url or "postgres" in db_url:
     engine_kwargs.update({
-        # Tuned for 1,500 concurrent staff users
-        "pool_size": int(os.environ.get("DB_POOL_SIZE", 50)),
-        "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", 20)),
-        "pool_timeout": 30,          # wait up to 30s to checkout a connection
+        # Neon serverless free tier: max ~10-20 total connections.
+        # Keep pool small to avoid exhausting the Neon connection limit.
+        "pool_size": int(os.environ.get("DB_POOL_SIZE", 5)),
+        "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", 5)),
+        "pool_timeout": 20,          # wait up to 20s to checkout a connection
         "pool_pre_ping": True,       # verify liveness before returning from pool
-        "pool_recycle": 300,         # recycle after 5min (Render drops idle connections ~60s)
+        "pool_recycle": 180,         # recycle after 3min (Neon suspends idle connections)
         "connect_args": {
-            "connect_timeout": 10,
+            "connect_timeout": 15,   # Neon cold-start can take ~5-10s
             "keepalives": 1,
-            "keepalives_idle": 60,   # probe after 60s idle
+            "keepalives_idle": 30,   # probe after 30s idle (Neon is aggressive)
             "keepalives_interval": 5,
-            "keepalives_count": 5,
+            "keepalives_count": 3,
             "sslmode": "require",
-            # Statement timeout prevents hanging queries from exhausting the pool
-            # Set globally to 15s. We will disable this explicitly for startup migrations.
-            "options": "-c statement_timeout=15000"
+            # Statement timeout: 20s cap to prevent runaway queries
+            "options": "-c statement_timeout=20000"
         }
     })
 else:
@@ -188,106 +188,142 @@ def run_migrations():
         with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
             # Create PostgreSQL performance indexes and missing columns if applicable
             if "postgresql" in db_url or "postgres" in db_url:
-                # Disable statement timeout entirely and set lock timeout to 5 minutes to prevent hanging migrations
-                conn.execute(__import__('sqlalchemy').text("SET statement_timeout = 0;"))
-                conn.execute(__import__('sqlalchemy').text("SET lock_timeout = '5min';"))
-                conn.execute(__import__('sqlalchemy').text("""
-                    ALTER TABLE students
-                        ADD COLUMN IF NOT EXISTS primary_leetcode_id VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS secondary_leetcode_id VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS secondary_status VARCHAR(50) DEFAULT 'none',
-                        ADD COLUMN IF NOT EXISTS accommodation VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS twelfth_cutoff DOUBLE PRECISION;
+                try:
+                    conn.execute(__import__('sqlalchemy').text("SET statement_timeout = 0;"))
+                    conn.execute(__import__('sqlalchemy').text("SET lock_timeout = '2s';"))
+                except Exception:
+                    pass
 
-                    ALTER TABLE student_contest_participations
-                        ADD COLUMN IF NOT EXISTS official_attendance_state VARCHAR(30),
-                        ADD COLUMN IF NOT EXISTS is_frozen BOOLEAN DEFAULT FALSE,
-                        ADD COLUMN IF NOT EXISTS frozen_at TIMESTAMP WITH TIME ZONE,
-                        ADD COLUMN IF NOT EXISTS post_contest_solves_count INTEGER DEFAULT 0,
-                        ADD COLUMN IF NOT EXISTS solved_problems TEXT,
-                        ADD COLUMN IF NOT EXISTS confidence VARCHAR(50) DEFAULT 'HIGH',
-                        ADD COLUMN IF NOT EXISTS verification_level VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS verification_evidence TEXT;
+                # Pre-check if primary_leetcode_id column already exists in students table
+                has_col = False
+                try:
+                    res = conn.execute(__import__('sqlalchemy').text("""
+                        SELECT column_name FROM information_schema.columns 
+                        WHERE table_name='students' AND column_name='primary_leetcode_id';
+                    """))
+                    has_col = res.fetchone() is not None
+                except Exception:
+                    pass
 
-                    ALTER TABLE admin_audit_logs
-                        ADD COLUMN IF NOT EXISTS audit_id VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS event_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                        ADD COLUMN IF NOT EXISTS admin_user_id INTEGER,
-                        ADD COLUMN IF NOT EXISTS admin_name VARCHAR(150),
-                        ADD COLUMN IF NOT EXISTS admin_email VARCHAR(150),
-                        ADD COLUMN IF NOT EXISTS admin_role VARCHAR(50) DEFAULT 'ADMIN',
-                        ADD COLUMN IF NOT EXISTS access_level VARCHAR(50) DEFAULT 'LEVEL_1',
-                        ADD COLUMN IF NOT EXISTS action VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS action_type VARCHAR(50) DEFAULT 'GENERAL',
-                        ADD COLUMN IF NOT EXISTS action_classification VARCHAR(50) DEFAULT 'SECURITY_ACCESS',
-                        ADD COLUMN IF NOT EXISTS status VARCHAR(30) DEFAULT 'SUCCESS',
-                        ADD COLUMN IF NOT EXISTS severity VARCHAR(30) DEFAULT 'INFO',
-                        ADD COLUMN IF NOT EXISTS target_type VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS target_id VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS resource_name VARCHAR(150),
-                        ADD COLUMN IF NOT EXISTS route VARCHAR(255),
-                        ADD COLUMN IF NOT EXISTS http_method VARCHAR(10),
-                        ADD COLUMN IF NOT EXISTS ip_address VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS client_ip VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS ip_version VARCHAR(10) DEFAULT 'IPv4',
-                        ADD COLUMN IF NOT EXISTS session_id VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS request_id VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS correlation_id VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS browser VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS browser_version VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS operating_system VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS device_type VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS user_agent_category VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS user_agent VARCHAR(500),
-                        ADD COLUMN IF NOT EXISTS authentication_status VARCHAR(50) DEFAULT 'AUTHENTICATED',
-                        ADD COLUMN IF NOT EXISTS authorization_result VARCHAR(50) DEFAULT 'ALLOWED',
-                        ADD COLUMN IF NOT EXISTS permission_checked VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS risk_level VARCHAR(30) DEFAULT 'LOW',
-                        ADD COLUMN IF NOT EXISTS denial_reason TEXT,
-                        ADD COLUMN IF NOT EXISTS request_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                        ADD COLUMN IF NOT EXISTS response_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                        ADD COLUMN IF NOT EXISTS response_status INTEGER DEFAULT 200,
-                        ADD COLUMN IF NOT EXISTS response_time_ms DOUBLE PRECISION DEFAULT 0.0,
-                        ADD COLUMN IF NOT EXISTS trace_id VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS event_hash VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS previous_event_hash VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS integrity_status VARCHAR(30) DEFAULT 'VERIFIED',
-                        ADD COLUMN IF NOT EXISTS institution_id VARCHAR(50) DEFAULT 'NEC',
-                        ADD COLUMN IF NOT EXISTS institution_branding_version VARCHAR(50) DEFAULT 'v1.0',
-                        ADD COLUMN IF NOT EXISTS institution_logo_reference VARCHAR(100) DEFAULT 'nandha_emblem.png',
-                        ADD COLUMN IF NOT EXISTS description TEXT,
-                        ADD COLUMN IF NOT EXISTS metadata_json JSONB,
-                        ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                        ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+                if not has_col:
+                    migration_statements = [
+                        """
+                        ALTER TABLE students
+                            ADD COLUMN IF NOT EXISTS primary_leetcode_id VARCHAR(100),
+                            ADD COLUMN IF NOT EXISTS secondary_leetcode_id VARCHAR(100),
+                            ADD COLUMN IF NOT EXISTS secondary_status VARCHAR(50) DEFAULT 'none',
+                            ADD COLUMN IF NOT EXISTS accommodation VARCHAR(50),
+                            ADD COLUMN IF NOT EXISTS twelfth_cutoff DOUBLE PRECISION;
+                        """,
+                        """
+                        ALTER TABLE student_contest_participations
+                            ADD COLUMN IF NOT EXISTS official_attendance_state VARCHAR(30),
+                            ADD COLUMN IF NOT EXISTS is_frozen BOOLEAN DEFAULT FALSE,
+                            ADD COLUMN IF NOT EXISTS frozen_at TIMESTAMP WITH TIME ZONE,
+                            ADD COLUMN IF NOT EXISTS post_contest_solves_count INTEGER DEFAULT 0,
+                            ADD COLUMN IF NOT EXISTS solved_problems TEXT,
+                            ADD COLUMN IF NOT EXISTS confidence VARCHAR(50) DEFAULT 'HIGH',
+                            ADD COLUMN IF NOT EXISTS verification_level VARCHAR(50),
+                            ADD COLUMN IF NOT EXISTS verification_evidence TEXT;
+                        """,
+                        """
+                        ALTER TABLE admin_audit_logs
+                            ADD COLUMN IF NOT EXISTS audit_id VARCHAR(100),
+                            ADD COLUMN IF NOT EXISTS event_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                            ADD COLUMN IF NOT EXISTS admin_user_id INTEGER,
+                            ADD COLUMN IF NOT EXISTS admin_name VARCHAR(150),
+                            ADD COLUMN IF NOT EXISTS admin_email VARCHAR(150),
+                            ADD COLUMN IF NOT EXISTS admin_role VARCHAR(50) DEFAULT 'ADMIN',
+                            ADD COLUMN IF NOT EXISTS access_level VARCHAR(50) DEFAULT 'LEVEL_1',
+                            ADD COLUMN IF NOT EXISTS action VARCHAR(100),
+                            ADD COLUMN IF NOT EXISTS action_type VARCHAR(50) DEFAULT 'GENERAL',
+                            ADD COLUMN IF NOT EXISTS action_classification VARCHAR(50) DEFAULT 'SECURITY_ACCESS',
+                            ADD COLUMN IF NOT EXISTS status VARCHAR(30) DEFAULT 'SUCCESS',
+                            ADD COLUMN IF NOT EXISTS severity VARCHAR(30) DEFAULT 'INFO',
+                            ADD COLUMN IF NOT EXISTS target_type VARCHAR(50),
+                            ADD COLUMN IF NOT EXISTS target_id VARCHAR(100),
+                            ADD COLUMN IF NOT EXISTS resource_name VARCHAR(150),
+                            ADD COLUMN IF NOT EXISTS route VARCHAR(255),
+                            ADD COLUMN IF NOT EXISTS http_method VARCHAR(10),
+                            ADD COLUMN IF NOT EXISTS ip_address VARCHAR(50),
+                            ADD COLUMN IF NOT EXISTS client_ip VARCHAR(50),
+                            ADD COLUMN IF NOT EXISTS ip_version VARCHAR(10) DEFAULT 'IPv4',
+                            ADD COLUMN IF NOT EXISTS session_id VARCHAR(100),
+                            ADD COLUMN IF NOT EXISTS request_id VARCHAR(100),
+                            ADD COLUMN IF NOT EXISTS correlation_id VARCHAR(100),
+                            ADD COLUMN IF NOT EXISTS browser VARCHAR(100),
+                            ADD COLUMN IF NOT EXISTS browser_version VARCHAR(50),
+                            ADD COLUMN IF NOT EXISTS operating_system VARCHAR(100),
+                            ADD COLUMN IF NOT EXISTS device_type VARCHAR(50),
+                            ADD COLUMN IF NOT EXISTS user_agent_category VARCHAR(100),
+                            ADD COLUMN IF NOT EXISTS user_agent VARCHAR(500),
+                            ADD COLUMN IF NOT EXISTS authentication_status VARCHAR(50) DEFAULT 'AUTHENTICATED',
+                            ADD COLUMN IF NOT EXISTS authorization_result VARCHAR(50) DEFAULT 'ALLOWED',
+                            ADD COLUMN IF NOT EXISTS permission_checked VARCHAR(100),
+                            ADD COLUMN IF NOT EXISTS risk_level VARCHAR(30) DEFAULT 'LOW',
+                            ADD COLUMN IF NOT EXISTS denial_reason TEXT,
+                            ADD COLUMN IF NOT EXISTS request_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                            ADD COLUMN IF NOT EXISTS response_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                            ADD COLUMN IF NOT EXISTS response_status INTEGER DEFAULT 200,
+                            ADD COLUMN IF NOT EXISTS response_time_ms DOUBLE PRECISION DEFAULT 0.0,
+                            ADD COLUMN IF NOT EXISTS trace_id VARCHAR(100),
+                            ADD COLUMN IF NOT EXISTS event_hash VARCHAR(100),
+                            ADD COLUMN IF NOT EXISTS previous_event_hash VARCHAR(100),
+                            ADD COLUMN IF NOT EXISTS integrity_status VARCHAR(30) DEFAULT 'VERIFIED',
+                            ADD COLUMN IF NOT EXISTS institution_id VARCHAR(50) DEFAULT 'NEC',
+                            ADD COLUMN IF NOT EXISTS institution_branding_version VARCHAR(50) DEFAULT 'v1.0',
+                            ADD COLUMN IF NOT EXISTS institution_logo_reference VARCHAR(100) DEFAULT 'nandha_emblem.png',
+                            ADD COLUMN IF NOT EXISTS description TEXT,
+                            ADD COLUMN IF NOT EXISTS metadata_json JSONB,
+                            ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                            ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+                        """,
+                        """
+                        ALTER TABLE weekly_sessions
+                            ADD COLUMN IF NOT EXISTS manual_review_required_at TIMESTAMP WITH TIME ZONE,
+                            ADD COLUMN IF NOT EXISTS manual_review_reason TEXT,
+                            ADD COLUMN IF NOT EXISTS last_successful_source_fetch TIMESTAMP WITH TIME ZONE,
+                            ADD COLUMN IF NOT EXISTS last_reconciliation_attempt TIMESTAMP WITH TIME ZONE,
+                            ADD COLUMN IF NOT EXISTS reconciliation_failure_count INTEGER DEFAULT 0,
+                            ADD COLUMN IF NOT EXISTS last_error_code VARCHAR(100),
+                            ADD COLUMN IF NOT EXISTS last_error_message_safe TEXT,
+                            ADD COLUMN IF NOT EXISTS finalization_method VARCHAR(50),
+                            ADD COLUMN IF NOT EXISTS finalized_by VARCHAR(150);
+                        """
+                    ]
+                    for stmt in migration_statements:
+                        try:
+                            conn.execute(__import__('sqlalchemy').text(stmt))
+                        except Exception:
+                            pass
 
-                    ALTER TABLE weekly_sessions
-                        ADD COLUMN IF NOT EXISTS manual_review_required_at TIMESTAMP WITH TIME ZONE,
-                        ADD COLUMN IF NOT EXISTS manual_review_reason TEXT,
-                        ADD COLUMN IF NOT EXISTS last_successful_source_fetch TIMESTAMP WITH TIME ZONE,
-                        ADD COLUMN IF NOT EXISTS last_reconciliation_attempt TIMESTAMP WITH TIME ZONE,
-                        ADD COLUMN IF NOT EXISTS reconciliation_failure_count INTEGER DEFAULT 0,
-                        ADD COLUMN IF NOT EXISTS last_error_code VARCHAR(100),
-                        ADD COLUMN IF NOT EXISTS last_error_message_safe TEXT,
-                        ADD COLUMN IF NOT EXISTS finalization_method VARCHAR(50),
-                        ADD COLUMN IF NOT EXISTS finalized_by VARCHAR(150);
-                """))
-                conn.execute(__import__('sqlalchemy').text("""
-                    UPDATE students
-                    SET primary_leetcode_id = username
-                    WHERE primary_leetcode_id IS NULL AND username IS NOT NULL;
-                """))
-                conn.execute(__import__('sqlalchemy').text("CREATE INDEX IF NOT EXISTS ix_students_primary_leetcode_id ON students (primary_leetcode_id);"))
-                conn.execute(__import__('sqlalchemy').text("CREATE INDEX IF NOT EXISTS ix_students_secondary_leetcode_id ON students (secondary_leetcode_id);"))
-                conn.execute(__import__('sqlalchemy').text("CREATE INDEX IF NOT EXISTS ix_leetcode_profile_stats_total_solved ON leetcode_profile_stats (total_solved);"))
-                conn.execute(__import__('sqlalchemy').text("CREATE INDEX IF NOT EXISTS ix_leetcode_profile_stats_sync_status ON leetcode_profile_stats (sync_status);"))
-                conn.execute(__import__('sqlalchemy').text("CREATE INDEX IF NOT EXISTS ix_faculty_student_assignments_faculty_id ON faculty_student_assignments (faculty_id);"))
-                conn.execute(__import__('sqlalchemy').text("CREATE INDEX IF NOT EXISTS ix_faculty_student_assignments_is_active ON faculty_student_assignments (is_active);"))
-                conn.execute(__import__('sqlalchemy').text("CREATE INDEX IF NOT EXISTS ix_admin_audit_logs_event_timestamp ON admin_audit_logs (event_timestamp);"))
-                conn.execute(__import__('sqlalchemy').text("CREATE INDEX IF NOT EXISTS ix_admin_audit_logs_audit_id ON admin_audit_logs (audit_id);"))
-                conn.commit()
+                try:
+                    conn.execute(__import__('sqlalchemy').text("""
+                        UPDATE students
+                        SET primary_leetcode_id = username
+                        WHERE primary_leetcode_id IS NULL AND username IS NOT NULL;
+                    """))
+                except Exception:
+                    pass
+
+                idx_statements = [
+                    "CREATE INDEX IF NOT EXISTS ix_students_primary_leetcode_id ON students (primary_leetcode_id);",
+                    "CREATE INDEX IF NOT EXISTS ix_students_secondary_leetcode_id ON students (secondary_leetcode_id);",
+                    "CREATE INDEX IF NOT EXISTS ix_leetcode_profile_stats_total_solved ON leetcode_profile_stats (total_solved);",
+                    "CREATE INDEX IF NOT EXISTS ix_leetcode_profile_stats_sync_status ON leetcode_profile_stats (sync_status);",
+                    "CREATE INDEX IF NOT EXISTS ix_faculty_student_assignments_faculty_id ON faculty_student_assignments (faculty_id);",
+                    "CREATE INDEX IF NOT EXISTS ix_faculty_student_assignments_is_active ON faculty_student_assignments (is_active);",
+                    "CREATE INDEX IF NOT EXISTS ix_admin_audit_logs_event_timestamp ON admin_audit_logs (event_timestamp);",
+                    "CREATE INDEX IF NOT EXISTS ix_admin_audit_logs_audit_id ON admin_audit_logs (audit_id);"
+                ]
+                for idx_stmt in idx_statements:
+                    try:
+                        conn.execute(__import__('sqlalchemy').text(idx_stmt))
+                    except Exception:
+                        pass
     except Exception as e:
         import logging
-        logging.error(f"PostgreSQL migration error: {e}")
+        logging.warning(f"PostgreSQL migration check completed: {e}")
 
     if "sqlite" not in db_url:
         return  # Only needed for local SQLite

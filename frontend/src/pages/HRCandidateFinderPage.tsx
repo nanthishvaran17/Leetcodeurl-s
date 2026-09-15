@@ -436,6 +436,48 @@ export const HRCandidateFinderPage: React.FC = () => {
     results: false,
   });
 
+  const [desktopAccordions, setDesktopAccordions] = useState<Record<string, boolean>>({
+    academic: true,
+    identity: false,
+    coding: false,
+    contest: false,
+    results: false,
+  });
+
+  const toggleDesktopAccordion = (section: string) => {
+    setDesktopAccordions(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const showSectionFilter = useMemo(() => {
+    const dept = (filters.department || "").toUpperCase().trim();
+    if (dept === "ALL" || dept === "") return true;
+    if (
+      dept.includes("IOT") ||
+      dept.includes("CS)") ||
+      dept.includes("CYBER") ||
+      dept.includes("SECURITY") ||
+      dept === "CSE(CS)" ||
+      dept === "CSE(IOT)" ||
+      dept === "CS"
+    ) {
+      return false;
+    }
+    const deptCandidates = allCandidates.filter(
+      c => (c.dept_code || "").toUpperCase() === dept || (c.department || "").toUpperCase() === dept
+    );
+    if (deptCandidates.length > 0) {
+      const secs = new Set(
+        deptCandidates
+          .map(c => String(c.section || "").trim().toUpperCase())
+          .filter(s => s && s !== "N/A" && s !== "NONE" && s !== "NULL")
+      );
+      if (secs.size <= 1 && !secs.has("B") && !secs.has("C")) {
+        return false;
+      }
+    }
+    return true;
+  }, [filters.department, allCandidates]);
+
   const toggleMobileAccordion = (section: string) => {
     setMobileAccordions(prev => ({ ...prev, [section]: !prev[section] }));
   };
@@ -668,20 +710,19 @@ export const HRCandidateFinderPage: React.FC = () => {
     try {
       const res = await api.get("/hr-candidate-finder/candidates", {
         params: {
-          department: filters.department,
-          year_level: filters.year_level,
-          batch: filters.batch,
-          section: filters.section,
-          accommodation: filters.accommodation,
-          min_twelfth_cutoff: filters.twelfth_cutoff.active ? filters.twelfth_cutoff.val1 : undefined,
-          primary_language: filters.primary_language,
-          min_total: filters.total_solved.active && filters.total_solved.op === ">=" ? filters.total_solved.val1 : 0,
-          min_medium: filters.medium_solved.active && filters.medium_solved.op === ">=" ? filters.medium_solved.val1 : 0,
-          min_hard: filters.hard_solved.active && filters.hard_solved.op === ">=" ? filters.hard_solved.val1 : 0,
-          min_rating: filters.contest_rating.active && filters.contest_rating.op === ">=" ? filters.contest_rating.val1 : 0,
-          placement_readiness: filters.placement_readiness,
-          risk_level: filters.risk_level,
-          profile_class: filters.profile_class,
+          department: "all",
+          year_level: "all",
+          batch: "all",
+          section: "all",
+          accommodation: "all",
+          primary_language: "all",
+          min_total: 0,
+          min_medium: 0,
+          min_hard: 0,
+          min_rating: 0,
+          placement_readiness: "all",
+          risk_level: "all",
+          profile_class: "all",
           top_n: 10000
         }
       });
@@ -774,14 +815,11 @@ export const HRCandidateFinderPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, []);
 
-  // Auto-fetch with debounce on filter changes (live match)
+  // Fetch candidates once on component mount for instant zero-delay search
   useEffect(() => {
-    const timer = setTimeout(() => {
-      handleFind();
-    }, 400);
-    return () => clearTimeout(timer);
+    handleFind();
   }, [handleFind]);
 
   // Filter & sort logic
@@ -1390,7 +1428,7 @@ export const HRCandidateFinderPage: React.FC = () => {
   };
 
   const renderAcademicSection = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${showSectionFilter ? 'xl:grid-cols-7' : 'xl:grid-cols-6'} gap-3`}>
       <div>
         <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Department</label>
         <CustomSelectPopover
@@ -1427,15 +1465,17 @@ export const HRCandidateFinderPage: React.FC = () => {
           icon={<Sparkles className="w-4 h-4 text-cyan-500" />}
         />
       </div>
-      <div>
-        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Section</label>
-        <CustomSelectPopover
-          value={filters.section}
-          onChange={val => setFilters(p => ({ ...p, section: val }))}
-          options={sectionOptions}
-          icon={<Users className="w-4 h-4 text-amber-500" />}
-        />
-      </div>
+      {showSectionFilter && (
+        <div>
+          <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Section</label>
+          <CustomSelectPopover
+            value={filters.section}
+            onChange={val => setFilters(p => ({ ...p, section: val }))}
+            options={sectionOptions}
+            icon={<Users className="w-4 h-4 text-amber-500" />}
+          />
+        </div>
+      )}
       <div>
         <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Accommodation</label>
         <CustomSelectPopover
@@ -1873,94 +1913,202 @@ export const HRCandidateFinderPage: React.FC = () => {
         {/* TOP ACCENT DECORATIVE LINE */}
         <div className="h-1.5 w-full bg-gradient-to-r from-blue-600 via-purple-600 via-emerald-500 to-indigo-600 rounded-t-3xl -mt-6 -mx-6 md:-mx-8 mb-6" />
 
+        {/* WORKSPACE TOOLBAR */}
+        <div className="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-slate-100 dark:border-navy-800">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold border border-blue-200/60 dark:border-blue-800/60">
+              <Filter className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
+                <span>Candidate Requirements Filter Workspace</span>
+                {activeChips.length > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white font-black text-[10px]">
+                    {activeChips.length} Applied
+                  </span>
+                )}
+              </h2>
+              <p className="text-[11px] font-bold text-slate-400">Click any section header to expand or collapse filter criteria</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                const allOpen = Object.values(desktopAccordions).every(Boolean);
+                setDesktopAccordions({
+                  academic: !allOpen,
+                  identity: !allOpen,
+                  coding: !allOpen,
+                  contest: !allOpen,
+                  results: !allOpen,
+                });
+              }}
+              className="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5 border border-slate-200 dark:border-navy-700"
+            >
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${Object.values(desktopAccordions).every(Boolean) ? 'rotate-180' : ''}`} />
+              <span>{Object.values(desktopAccordions).every(Boolean) ? "Collapse All" : "Expand All"}</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="px-3.5 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 font-bold text-xs transition-colors cursor-pointer flex items-center gap-1.5 border border-rose-200 dark:border-rose-800/60"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-rose-500" />
+              <span>Reset All</span>
+            </button>
+          </div>
+        </div>
+
         {/* SECTION 1: ACADEMIC FILTERS */}
-        <div className="bg-gradient-to-br from-blue-50/60 via-slate-50/30 to-indigo-50/40 dark:from-navy-950/80 dark:via-blue-950/20 dark:to-navy-900/60 p-5 rounded-2xl border border-blue-100/90 dark:border-blue-900/40 shadow-2xs hover:shadow-md hover:border-blue-300/60 dark:hover:border-blue-700/50 transition-all space-y-3.5">
-          <div className="flex items-center justify-between">
-            <div className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20 shadow-2xs">
+        <div className="bg-gradient-to-br from-blue-50/60 via-slate-50/30 to-indigo-50/40 dark:from-navy-950/80 dark:via-blue-950/20 dark:to-navy-900/60 rounded-2xl border border-blue-100/90 dark:border-blue-900/40 shadow-2xs hover:border-blue-300/60 dark:hover:border-blue-700/50 transition-all overflow-hidden">
+          <button
+            type="button"
+            onClick={() => toggleDesktopAccordion('academic')}
+            className="w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-blue-100/30 dark:hover:bg-blue-950/30 transition-colors"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20 shadow-2xs shrink-0">
                 <Users className="w-4 h-4" />
               </div>
-              <span>Academic Criteria</span>
+              <span className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">Academic Criteria</span>
+              {accordionSections[0].activeCount > 0 && (
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-500 text-white shadow-2xs">
+                  {accordionSections[0].activeCount} Active
+                </span>
+              )}
+              {!desktopAccordions.academic && (
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate hidden xl:inline-block ml-2">
+                  (Dept: {filters.department} • Degree: {filters.degree} • Batch: {filters.batch})
+                </span>
+              )}
             </div>
-            {accordionSections[0].activeCount > 0 && (
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-500 text-white shadow-2xs">
-                {accordionSections[0].activeCount} Active
-              </span>
-            )}
-          </div>
-          {renderAcademicSection()}
+            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${desktopAccordions.academic ? "rotate-180 text-blue-500" : ""}`} />
+          </button>
+          {desktopAccordions.academic && (
+            <div className="px-5 pb-5 pt-1 border-t border-blue-100/60 dark:border-blue-900/30 animate-fadeIn">
+              {renderAcademicSection()}
+            </div>
+          )}
         </div>
 
         {/* SECTION 2: STUDENT IDENTITY */}
-        <div className="bg-gradient-to-br from-purple-50/60 via-slate-50/30 to-fuchsia-50/40 dark:from-purple-950/40 dark:via-navy-950/40 dark:to-navy-900/60 p-5 rounded-2xl border border-purple-100/90 dark:border-purple-900/40 shadow-2xs hover:shadow-md hover:border-purple-300/60 dark:hover:border-purple-700/50 transition-all space-y-3.5">
-          <div className="flex items-center justify-between">
-            <div className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20 shadow-2xs">
+        <div className="bg-gradient-to-br from-purple-50/60 via-slate-50/30 to-fuchsia-50/40 dark:from-purple-950/40 dark:via-navy-950/40 dark:to-navy-900/60 rounded-2xl border border-purple-100/90 dark:border-purple-900/40 shadow-2xs hover:border-purple-300/60 dark:hover:border-purple-700/50 transition-all overflow-hidden">
+          <button
+            type="button"
+            onClick={() => toggleDesktopAccordion('identity')}
+            className="w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-purple-100/30 dark:hover:bg-purple-950/30 transition-colors"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20 shadow-2xs shrink-0">
                 <Search className="w-4 h-4" />
               </div>
-              <span>Student Identity</span>
+              <span className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">Student Identity</span>
+              {accordionSections[1].activeCount > 0 && (
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-500 text-white shadow-2xs">
+                  {accordionSections[1].activeCount} Active
+                </span>
+              )}
+              {!desktopAccordions.identity && (filters.name_search || filters.reg_no_search || filters.username_search) && (
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate hidden xl:inline-block ml-2">
+                  (Search: {filters.name_search || filters.reg_no_search || filters.username_search})
+                </span>
+              )}
             </div>
-            {accordionSections[1].activeCount > 0 && (
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-500 text-white shadow-2xs">
-                {accordionSections[1].activeCount} Active
-              </span>
-            )}
-          </div>
-          {renderIdentitySection()}
+            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${desktopAccordions.identity ? "rotate-180 text-purple-500" : ""}`} />
+          </button>
+          {desktopAccordions.identity && (
+            <div className="px-5 pb-5 pt-1 border-t border-purple-100/60 dark:border-purple-900/30 animate-fadeIn">
+              {renderIdentitySection()}
+            </div>
+          )}
         </div>
 
         {/* SECTION 3: CODING PERFORMANCE */}
-        <div className="bg-gradient-to-br from-emerald-50/60 via-slate-50/30 to-teal-50/40 dark:from-emerald-950/40 dark:via-navy-950/40 dark:to-navy-900/60 p-5 rounded-2xl border border-emerald-100/90 dark:border-emerald-900/40 shadow-2xs hover:shadow-md hover:border-emerald-300/60 dark:hover:border-emerald-700/50 transition-all space-y-3.5">
-          <div className="flex items-center justify-between">
-            <div className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20 shadow-2xs">
+        <div className="bg-gradient-to-br from-emerald-50/60 via-slate-50/30 to-teal-50/40 dark:from-emerald-950/40 dark:via-navy-950/40 dark:to-navy-900/60 rounded-2xl border border-emerald-100/90 dark:border-emerald-900/40 shadow-2xs hover:border-emerald-300/60 dark:hover:border-emerald-700/50 transition-all overflow-hidden">
+          <button
+            type="button"
+            onClick={() => toggleDesktopAccordion('coding')}
+            className="w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-emerald-100/30 dark:hover:bg-emerald-950/30 transition-colors"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20 shadow-2xs shrink-0">
                 <Code2 className="w-4 h-4" />
               </div>
-              <span>Coding Performance</span>
+              <span className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">Coding Performance</span>
+              {accordionSections[2].activeCount > 0 && (
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500 text-white shadow-2xs">
+                  {accordionSections[2].activeCount} Active
+                </span>
+              )}
+              {!desktopAccordions.coding && (
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate hidden xl:inline-block ml-2">
+                  (Lang: {filters.primary_language} • Solved: {filters.total_solved.active ? `≥${filters.total_solved.val1}` : 'All'})
+                </span>
+              )}
             </div>
-            {accordionSections[2].activeCount > 0 && (
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500 text-white shadow-2xs">
-                {accordionSections[2].activeCount} Active
-              </span>
-            )}
-          </div>
-          {renderCodingSection()}
+            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${desktopAccordions.coding ? "rotate-180 text-emerald-500" : ""}`} />
+          </button>
+          {desktopAccordions.coding && (
+            <div className="px-5 pb-5 pt-1 border-t border-emerald-100/60 dark:border-emerald-900/30 animate-fadeIn">
+              {renderCodingSection()}
+            </div>
+          )}
         </div>
 
         {/* SECTION 4: CONTEST PERFORMANCE */}
-        <div className="bg-gradient-to-br from-amber-50/60 via-slate-50/30 to-orange-50/40 dark:from-amber-950/40 dark:via-navy-950/40 dark:to-navy-900/60 p-5 rounded-2xl border border-amber-100/90 dark:border-amber-900/40 shadow-2xs hover:shadow-md hover:border-amber-300/60 dark:hover:border-amber-700/50 transition-all space-y-3.5">
-          <div className="flex items-center justify-between">
-            <div className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 shadow-2xs">
+        <div className="bg-gradient-to-br from-amber-50/60 via-slate-50/30 to-orange-50/40 dark:from-amber-950/40 dark:via-navy-950/40 dark:to-navy-900/60 rounded-2xl border border-amber-100/90 dark:border-amber-900/40 shadow-2xs hover:border-amber-300/60 dark:hover:border-amber-700/50 transition-all overflow-hidden">
+          <button
+            type="button"
+            onClick={() => toggleDesktopAccordion('contest')}
+            className="w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-amber-100/30 dark:hover:bg-amber-950/30 transition-colors"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 shadow-2xs shrink-0">
                 <Trophy className="w-4 h-4" />
               </div>
-              <span>Contest Performance</span>
+              <span className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">Contest Performance</span>
+              {accordionSections[3].activeCount > 0 && (
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white shadow-2xs">
+                  {accordionSections[3].activeCount} Active
+                </span>
+              )}
             </div>
-            {accordionSections[3].activeCount > 0 && (
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white shadow-2xs">
-                {accordionSections[3].activeCount} Active
-              </span>
-            )}
-          </div>
-          {renderContestSection()}
+            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${desktopAccordions.contest ? "rotate-180 text-amber-500" : ""}`} />
+          </button>
+          {desktopAccordions.contest && (
+            <div className="px-5 pb-5 pt-1 border-t border-amber-100/60 dark:border-amber-900/30 animate-fadeIn">
+              {renderContestSection()}
+            </div>
+          )}
         </div>
 
         {/* SECTION 5: RESULTS OPTIONS */}
-        <div className="bg-gradient-to-br from-slate-100/80 via-slate-50/50 to-blue-50/30 dark:from-navy-950/80 dark:via-navy-900/60 dark:to-slate-900/60 p-5 rounded-2xl border border-slate-200/90 dark:border-navy-700 shadow-2xs hover:shadow-md transition-all space-y-3.5">
-          <div className="flex items-center justify-between">
-            <div className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-300 flex items-center justify-center border border-slate-500/20 shadow-2xs">
+        <div className="bg-gradient-to-br from-slate-100/80 via-slate-50/50 to-blue-50/30 dark:from-navy-950/80 dark:via-navy-900/60 dark:to-slate-900/60 rounded-2xl border border-slate-200/90 dark:border-navy-700 shadow-2xs hover:border-slate-300 dark:hover:border-navy-600 transition-all overflow-hidden">
+          <button
+            type="button"
+            onClick={() => toggleDesktopAccordion('results')}
+            className="w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-slate-200/40 dark:hover:bg-navy-800/40 transition-colors"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-7 h-7 rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-300 flex items-center justify-center border border-slate-500/20 shadow-2xs shrink-0">
                 <BarChart2 className="w-4 h-4" />
               </div>
-              <span>Results & Sorting Options</span>
+              <span className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">Results & Sorting Options</span>
+              {accordionSections[4].activeCount > 0 && (
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-600 text-white shadow-2xs">
+                  {accordionSections[4].activeCount} Active
+                </span>
+              )}
             </div>
-            {accordionSections[4].activeCount > 0 && (
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-600 text-white shadow-2xs">
-                {accordionSections[4].activeCount} Active
-              </span>
-            )}
-          </div>
-          {renderResultsSection()}
+            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${desktopAccordions.results ? "rotate-180 text-slate-500" : ""}`} />
+          </button>
+          {desktopAccordions.results && (
+            <div className="px-5 pb-5 pt-1 border-t border-slate-200/80 dark:border-navy-800 animate-fadeIn">
+              {renderResultsSection()}
+            </div>
+          )}
         </div>
 
         {/* PRIMARY ACTION AREA */}

@@ -705,7 +705,7 @@ export const WeeklyIntelligenceReport: React.FC<WeeklyIntelligenceReportProps> =
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 font-mono">
-                  {departments.map((dept: any) => (
+                  {departments.filter((dept: any) => dept.total_students > 0).map((dept: any) => (
                     <tr key={dept.department} className="hover:bg-slate-800/30 transition-colors">
                       <td className="py-3.5 px-4 font-sans font-bold text-slate-100 flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-blue-400" />
