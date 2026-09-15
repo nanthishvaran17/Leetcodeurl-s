@@ -251,61 +251,33 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     setLoading(true);
     setAuthStatusText('Signing in...');
 
-    // Attempt login — with 4-stage automatic retry to handle cold starts & network glitches smoothly
-    const attemptLogin = async (attempt: number): Promise<boolean> => {
-      try {
-        const res = await api.post('/auth/login', { username: cleanUser, password: cleanPass }, { timeout: 45000 });
-        console.log('[LOGIN] Response status:', res.status, 'data keys:', Object.keys(res.data || {}));
-        if (res.data && res.data.access_token) {
-          setSuccessMsg('Authentication verified. Directing to workspace...');
-          login(res.data.access_token, res.data.user);
-          setTimeout(() => { onSuccess(); }, 180);
-          return true;
-        }
-        return false;
-      } catch (err: any) {
-        const status = err?.response?.status;
-        const detail = err?.response?.data?.detail;
-        const errMsg = err?.message || 'unknown';
-        console.error(`[LOGIN_ERROR] attempt=${attempt} status=${status} detail=${detail} message=${errMsg}`);
-
-        // If it's a real auth failure (401/403), don't retry — show actual detail
-        if (status === 401 || status === 403) {
-          setError(detail || 'Invalid username or password.');
-          return true;
-        }
-
-        // Network error or server cold start — retry up to 4 times with warm-up
-        if (attempt === 1 && (!status || status >= 500 || !err.response)) {
-          setAuthStatusText('Waking up server (~15-30s cold start)... Retrying (attempt 2 of 4)...');
-          await new Promise(r => setTimeout(r, 2500));
-          return await attemptLogin(2);
-        }
-        if (attempt === 2 && (!status || status >= 500 || !err.response)) {
-          setAuthStatusText('Connecting to institutional server... (attempt 3 of 4)...');
-          await new Promise(r => setTimeout(r, 3500));
-          return await attemptLogin(3);
-        }
-        if (attempt === 3 && (!status || status >= 500 || !err.response)) {
-          setAuthStatusText('Finalizing server verification link... (attempt 4 of 4)...');
-          await new Promise(r => setTimeout(r, 4500));
-          return await attemptLogin(4);
-        }
-
-        // Final failure
-        if (detail) {
-          setError(detail);
-        } else if (!err.response || (err.message && err.message.toLowerCase().includes('network error'))) {
-          setError('Cannot reach server. Please check your connection and tap to retry.');
-        } else {
-          setError(`Login failed (${err.message || status || 'network issue'}). Please try again.`);
-        }
-        return true;
-      }
-    };
-
     try {
-      await attemptLogin(1);
+      const res = await api.post('/auth/login', {
+        username: username.trim().toLowerCase(),
+        password
+      });
+      if (res.data?.access_token) {
+        setAuthStatusText('Authenticating...');
+        setSuccessMsg('Authentication verified. Directing to workspace...');
+        login(res.data.access_token, res.data.user);
+        setTimeout(() => { onSuccess(); }, 180);
+      }
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const detail = err?.response?.data?.detail;
+      const errMsg = err?.message || 'unknown';
+      console.error(`[LOGIN_ERROR] status=${status} detail=${detail} message=${errMsg}`);
+
+      if (detail) {
+        setError(detail);
+      } else if (status === 401 || status === 403) {
+        setError('Invalid username or password.');
+      } else if (!err.response || errMsg.toLowerCase().includes('network error')) {
+        setError('Cannot reach server. Please check your connection and tap to retry.');
+      } else {
+        setError(`Login failed (${errMsg || status || 'network issue'}). Please try again.`);
+      }
+      triggerShake();
     } finally {
       setLoading(false);
       setAuthStatusText('');
