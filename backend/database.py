@@ -55,7 +55,8 @@ if "postgresql" in db_url or "postgres" in db_url:
             "keepalives_count": 5,
             "sslmode": "require",
             # Statement timeout prevents hanging queries from exhausting the pool
-            "options": "-c statement_timeout=15000"
+            # Set to 120s to allow heavy startup migrations to complete on Neon
+            "options": "-c statement_timeout=120000"
         }
     })
 else:
