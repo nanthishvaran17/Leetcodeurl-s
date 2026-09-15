@@ -114,6 +114,14 @@ api.interceptors.request.use(async (config) => {
   if (config.url && config.url.startsWith('/api/')) {
     config.url = config.url.substring(4);
   }
+
+  // Fix: Provide the actual Origin header for Capacitor requests to pass backend CSRF validation.
+  // CapacitorHttp native fetch drops the Origin header in some WebView versions.
+  // We use window.location.origin to supply the real origin (not hardcoded).
+  if (isCapacitorNative()) {
+    config.headers['Origin'] = window.location.origin;
+  }
+
   try {
     // Skip token attachment for auth endpoints to prevent Firebase from hanging
     const isAuthRoute = config.url && (config.url.includes('/auth/login') || config.url.includes('/auth/refresh'));

@@ -64,6 +64,36 @@
   box-shadow: none;
 }
 
+@media (max-width: 899px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+}
+@media (min-width: 900px) {
+  .hide-on-desktop {
+    display: none !important;
+  }
+}
+
+.mobile-footer-float {
+  width: 100%;
+  text-align: center;
+  padding: 10px 0;
+  margin-top: auto;
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.mobile-footer-float .copyright-line {
+  color: rgba(255, 255, 255, 0.7) !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+.mobile-footer-float .tagline-line {
+  color: rgba(255, 255, 255, 0.5) !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+
 /* ========================================================
    MOBILE VIEWPORT & ZERO UNWANTED BOTTOM SPACE FIX (< 900px)
    ======================================================== */

@@ -72,8 +72,8 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
     
     # We strictly enforce only two departments as per Absolute Rule 4.
     allowed_depts = [
-        {"code": "CSE(CS)", "sheet_name": "CSE — Cyber Security", "full_name": "Department of Computer Science and Engineering (Cyber Security)"},
-        {"code": "CSE(IOT)", "sheet_name": "CSE — IoT", "full_name": "Department of Computer Science and Engineering (IoT)"}
+        {"code": "CSE(CS)", "sheet_name": "Cyber Security", "full_name": "Department of Computer Science and Engineering (Cyber Security)"},
+        {"code": "CSE(IOT)", "sheet_name": "Internet of Things", "full_name": "Department of Computer Science and Engineering (IoT)"}
     ]
 
     for dept_spec in allowed_depts:
@@ -131,9 +131,9 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
             cell.border = outer_border
             
         sub_headers = [
-            ("C5", "Above 500"), ("D5", "250 - 500"), ("E5", "100 - 249"), ("F5", "1 - 99"), ("G5", "0"),
-            ("H5", "4Q"), ("I5", "3Q"), ("J5", "2Q"), ("K5", "1Q"),
-            ("L5", "Rating > 1500"), ("M5", "Ranking < 20000")
+            ("C5", "Above 500"), ("D5", "250–500"), ("E5", "Less than 250"), ("F5", "Less than 100"), ("G5", "Not Yet Started"),
+            ("H5", "4 Q Solved"), ("I5", "3 Q Solved"), ("J5", "2 Q Solved"), ("K5", "1 Q Solved"),
+            ("L5", "Rating Above 1500"), ("M5", "Ranking Below 20000")
         ]
         
         for pos, val in sub_headers:

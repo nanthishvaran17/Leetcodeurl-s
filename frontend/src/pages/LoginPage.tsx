@@ -11,6 +11,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 
 import { CollegeLogo } from '../components/CollegeLogo';
+import { GoogleSignInButton } from '../components/GoogleSignInButton';
 import api from '../services/api';
 import { isCapacitorNative } from '../config/apiConfig';
 
@@ -491,7 +492,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
   };
 
   return (
-    <div className="login-page-container">
+    <div className={`login-page-container ${isCapacitorNative() ? 'is-capacitor' : ''}`}>
       <img
         src="/nandha_aerial_bg_mobile.webp"
         alt="Nandha Campus Aerial View"
@@ -919,6 +920,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                     </form>
                   )}
 
+                  {/* Google Login Divider & Button */}
+                  <div className="google-auth-section" style={{ width: '100%', marginTop: '4px', marginBottom: '8px' }}>
+                    <div className="divider" style={{ display: 'flex', alignItems: 'center', margin: '14px 0', fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.1em' }}>
+                      <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-light)' }}></div>
+                      <span style={{ padding: '0 12px', opacity: 0.7 }}>OR CONTINUE WITH</span>
+                      <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-light)' }}></div>
+                    </div>
+                    <GoogleSignInButton className="w-full" />
+                  </div>
+
                   {/* Single Institutional Help Row */}
                   <div className="help-card-row">
                     <button
@@ -1220,8 +1231,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
               <span>Secured & audited by institution</span>
             </div>
 
-            {/* Minimal Unified Footer */}
-            <footer className="login-copyright" role="contentinfo">
+            {/* Minimal Unified Footer - Desktop */}
+            <footer className="login-copyright hide-on-mobile" role="contentinfo">
               <p className="copyright-line">
                 &copy; 2026 Nandha Engineering College. All rights reserved.
               </p>
@@ -1233,6 +1244,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
           </div>
         </motion.div>
       </main>
+
+      {/* Minimal Unified Footer - Mobile */}
+      <footer className="login-copyright hide-on-desktop mobile-footer-float" role="contentinfo">
+        <p className="copyright-line">
+          &copy; 2026 Nandha Engineering College. All rights reserved.
+        </p>
+        <p className="tagline-line">
+          LEARN | SERVE | SUCCEED
+        </p>
+      </footer>
     </div>
   );
 };

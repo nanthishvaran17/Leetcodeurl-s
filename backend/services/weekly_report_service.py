@@ -9,7 +9,7 @@ import json
 import hashlib
 from typing import Dict, Any, List, Optional, Tuple
 from collections import defaultdict
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from backend.models import (
     Student, Department, WeeklyPublicResult, WeeklyVirtualResult,
@@ -257,7 +257,7 @@ def generate_weekly_performance_data(
 
     # Step 3: Load Full Master Roster
     from backend.services.authorization_service import apply_role_based_student_filter
-    student_query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    student_query = db.query(Student).options(joinedload(Student.stats), joinedload(Student.department)).filter((Student.is_active == True) | (Student.is_active.is_(None)))
     
     if current_user:
         student_query = apply_role_based_student_filter(student_query, current_user, db)

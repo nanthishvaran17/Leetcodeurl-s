@@ -126,11 +126,11 @@ class AIKnowledgeEngine:
         clean_q = query_text.strip().lower()
 
         # 1. SECURITY & CREDENTIAL PRIVACY PROTECTION 
-        if any(k in clean_q for k in ["smtp password", "jwt secret", "private key", "database password", "firebase secret", "api key"]):
+        if any(k in clean_q for k in ["smtp password", "jwt secret", "private key", "database password", "firebase secret", "api key", "hash password", "user password", "bypass authorization", "drop table", "select * from users", "ignore all previous rules"]):
             return {
                 "success": True,
-                "answer": "ACCESS RESTRICTED: Institutional security policies strictly forbid disclosing SMTP passwords, cryptographic keys, or system credentials.",
-                "why": "Zero-trust credential shielding is active on all endpoints.",
+                "answer": "ACCESS RESTRICTED: Institutional security policies strictly forbid disclosing passwords, cryptographic keys, system credentials, or executing arbitrary/unauthorized directives.",
+                "why": "Zero-trust credential shielding and security enforcement active on all endpoints.",
                 "evidence": "Security Policy #SEC-MASK-2026",
                 "confidence": "VERIFIED",
                 "actionLabel": "Open Security Activity",
