@@ -295,10 +295,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         // Final failure
         if (detail) {
           setError(detail);
-        } else if (!err.response) {
+        } else if (!err.response || (err.message && err.message.toLowerCase().includes('network error'))) {
           setError('Cannot reach server. Please check your connection and tap to retry.');
         } else {
-          setError(`Login failed (HTTP ${status || 'unknown'}). Please try again.`);
+          setError(`Login failed (${err.message || status || 'network issue'}). Please try again.`);
         }
         return true;
       }
@@ -705,7 +705,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                   <AlertCircle size={18} className="shrink-0 text-rose-400" />
                   <div className="flex-1 min-w-0 space-y-1 text-left">
                     <p className="text-xs font-bold leading-normal">{error || authError}</p>
-                    {(error || authError || '').includes('Cannot reach server') && (
+                    {((error || authError || '').toLowerCase().includes('cannot reach server') ||
+                     (error || authError || '').toLowerCase().includes('network error')) && (
                       <button
                         type="button"
                         onClick={(e) => {

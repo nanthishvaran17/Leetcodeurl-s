@@ -605,14 +605,11 @@ def _add_cors_headers_to_response(request, response_headers) -> None:
     """Attaches origin-specific CORS headers to response headers dict or MutableHeaders."""
     origin = request.headers.get("origin")
     if origin:
-        import re
-        allowed_regex = r"https://.*\.netlify\.app|https://.*\.web\.app|https://.*\.firebaseapp\.com|https://.*\.vercel\.app|https://.*\.pages\.dev|https://.*\.loca\.lt"
-        if origin in origins or re.match(allowed_regex, origin):
-            response_headers["Access-Control-Allow-Origin"] = origin
-            response_headers["Access-Control-Allow-Credentials"] = "true"
-            response_headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-            response_headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept, Origin, User-Agent, DNT, Cache-Control, X-Mx-ReqToken, X-Requested-With, Bypass-Tunnel-Reminder"
-            response_headers["Access-Control-Expose-Headers"] = "Content-Disposition, Content-Length, Content-Type, X-Cache"
+        response_headers["Access-Control-Allow-Origin"] = origin
+        response_headers["Access-Control-Allow-Credentials"] = "true"
+        response_headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        response_headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept, Origin, User-Agent, DNT, Cache-Control, X-Mx-ReqToken, X-Requested-With, Bypass-Tunnel-Reminder"
+        response_headers["Access-Control-Expose-Headers"] = "Content-Disposition, Content-Length, Content-Type, X-Cache"
 
 @app.middleware("http")
 async def ultra_fast_memory_cache_middleware(request, call_next):
