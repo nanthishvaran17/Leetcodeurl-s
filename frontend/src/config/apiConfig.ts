@@ -4,10 +4,7 @@
  */
 
 // Primary Production Backend Base URL
-export const PRODUCTION_BACKEND_URL = 
-  import.meta.env.VITE_API_URL || 
-  import.meta.env.VITE_API_BASE_URL || 
-  'https://leetcodeurl-s-3fzh.onrender.com';
+export const PRODUCTION_BACKEND_URL = 'https://leetcodeurl-s-3fzh.onrender.com';
 
 /**
  * Detects if the current runtime environment is a Capacitor Native App (Android / iOS)
@@ -55,11 +52,8 @@ export const getApiBaseUrl = (): string => {
     return '/api';
   }
 
-  if (import.meta.env.VITE_API_URL) {
-    const envBase = import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '').replace(/\/+$/, '');
-    return `${envBase}/api`;
-  }
-
+  // If it's a Vercel deployment (or any production web build), forcefully use the correct Render URL
+  // We ignore VITE_API_URL here because Vercel might have stale environment variables pointing to a dead Render instance.
   return 'https://leetcodeurl-s-3fzh.onrender.com/api';
 };
 
