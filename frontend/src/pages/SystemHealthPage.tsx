@@ -915,7 +915,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
 
 
       {/* 4. CANONICAL OPERATIONS NAVIGATION BAR */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-2.5 pb-2 border-b border-slate-200 dark:border-slate-800">
         {[
           { id: 'overview', label: 'Operations Overview', icon: Activity, desc: 'Institutional telemetry & config' },
           { id: 'integrity', label: 'Data Integrity Command', icon: ShieldCheck, desc: 'Production validation rules' },
@@ -931,30 +931,34 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
             <button
               key={tab.id}
               onClick={() => setActiveOpsTab(tab.id as any)}
-              className={`w-full lg:w-auto px-4 py-3 lg:py-2.5 rounded-2xl text-xs font-black transition-all cursor-pointer flex items-center justify-between lg:justify-start gap-3 text-left ${
+              className={`w-full lg:w-auto px-4 py-3 rounded-2xl text-xs transition-all cursor-pointer flex items-center justify-between gap-3.5 text-left border ${
                 isActive
-                  ? 'bg-gradient-to-r from-indigo-600 to-brand-600 text-white shadow-lg shadow-indigo-500/25 scale-[1.01]'
-                  : 'bg-white dark:bg-navy-950 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-800 border border-slate-200 dark:border-slate-800 shadow-xs'
+                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white shadow-md shadow-blue-500/20 border-blue-500/40 ring-1 ring-white/20'
+                  : 'bg-white dark:bg-navy-950 text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-navy-900 border-slate-200 dark:border-navy-800 shadow-xs'
               }`}
             >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className={`p-1.5 rounded-xl shrink-0 ${isActive ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-navy-900 text-slate-500 dark:text-slate-400'}`}>
-                  <Icon className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`p-2 rounded-xl shrink-0 transition-colors ${
+                  isActive ? 'bg-white/20 text-white backdrop-blur-sm' : 'bg-slate-100 dark:bg-navy-900 text-slate-600 dark:text-slate-400'
+                }`}>
+                  <Icon className="w-4 h-4" />
                 </div>
-                <div className="min-w-0">
-                  <div className="truncate font-black">{tab.label}</div>
-                  <div className={`text-[10px] font-normal truncate sm:hidden ${isActive ? 'text-indigo-100' : 'text-slate-400'}`}>
+                <div className="min-w-0 leading-snug">
+                  <div className={`font-bold text-sm tracking-tight truncate ${isActive ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
+                    {tab.label}
+                  </div>
+                  <div className={`text-[11px] font-medium truncate mt-0.5 ${isActive ? 'text-blue-100/90' : 'text-slate-500 dark:text-slate-400'}`}>
                     {tab.desc}
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 {isActive ? (
-                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-white/20 text-white">
-                    Active
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 text-white border border-white/25 backdrop-blur-sm shadow-xs">
+                    ACTIVE
                   </span>
                 ) : (
-                  <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600 lg:hidden" />
+                  <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-navy-700" />
                 )}
               </div>
             </button>

@@ -502,61 +502,69 @@ export const StudentDataIssuesPage: React.FC = () => {
     }
   };
 
-  // Download Excel
+  // Download Excel (Instant Direct Download <1s)
   const handleDownloadExcel = async () => {
     setIsExporting(true);
     notify.dismissCategory('EXPORT CENTER');
+    notify.info('Downloading Excel', 'Preparing instant report download...', { category: 'EXPORT CENTER' });
     try {
-      const filename = `Student_Data_Issues_${new Date().getTime()}.xlsx`;
-      const res = await downloadManager.downloadJob({
-        report_type: 'DATA_ISSUES_EXCEL',
-        format: 'xlsx',
-        filters: {
+      const dateTag = new Date().toISOString().split('T')[0];
+      const filename = `NANDHA_Data_Issues_Report_${dateTag}.xlsx`;
+      
+      const res = await downloadManager.download({
+        endpoint: '/data-issues/export-excel',
+        filename,
+        params: {
           department: selectedDept,
           year_level: selectedYear,
           issue_type: selectedIssue,
           search: searchQuery
         },
-        filename,
-        onStateChange: (state) => setDownloadState(state)
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       });
 
-      if (!res.success) {
+      if (res.success) {
+        notify.success('Download Complete', `${filename} generated and saved.`, { category: 'EXPORT CENTER' });
+      } else {
         notify.error('Export Error', res.error || 'Failed to download Excel report.', { category: 'EXPORT CENTER' });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      notify.error('Export Error', 'Failed to schedule Excel report.', { category: 'EXPORT CENTER' });
+      notify.error('Export Error', err.message || 'Failed to download Excel report.', { category: 'EXPORT CENTER' });
     } finally {
       setIsExporting(false);
     }
   };
 
-  // Download CSV
+  // Download CSV (Instant Direct Download <1s)
   const handleDownloadCsv = async () => {
     setIsExporting(true);
     notify.dismissCategory('EXPORT CENTER');
+    notify.info('Downloading CSV', 'Preparing instant report download...', { category: 'EXPORT CENTER' });
     try {
-      const filename = `Student_Data_Issues_${new Date().getTime()}.csv`;
-      const res = await downloadManager.downloadJob({
-        report_type: 'DATA_ISSUES_CSV',
-        format: 'csv',
-        filters: {
+      const dateTag = new Date().toISOString().split('T')[0];
+      const filename = `NANDHA_Data_Issues_Report_${dateTag}.csv`;
+      
+      const res = await downloadManager.download({
+        endpoint: '/data-issues/export-csv',
+        filename,
+        params: {
           department: selectedDept,
           year_level: selectedYear,
           issue_type: selectedIssue,
           search: searchQuery
         },
-        filename,
-        onStateChange: (state) => setDownloadState(state)
+        mimeType: 'text/csv'
       });
 
-      if (!res.success) {
+      if (res.success) {
+        notify.success('Download Complete', `${filename} generated and saved.`, { category: 'EXPORT CENTER' });
+      } else {
         notify.error('Export Error', res.error || 'Failed to download CSV report.', { category: 'EXPORT CENTER' });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      notify.error('Export Error', 'Failed to schedule CSV report.', { category: 'EXPORT CENTER' });
+      notify.error('Export Error', err.message || 'Failed to download CSV report.', { category: 'EXPORT CENTER' });
     } finally {
       setIsExporting(false);
     }
@@ -927,11 +935,14 @@ export const StudentDataIssuesPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="p-4 rounded-2xl bg-gradient-to-r from-indigo-950 via-slate-900 to-navy-950 text-white border border-indigo-500/40 shadow-xl flex items-center justify-between flex-wrap gap-4 text-xs font-bold"
         >
-          <div className="flex items-center space-x-3">
-            <span className="px-2.5 py-1 rounded-lg bg-indigo-500/30 text-indigo-300 font-mono font-black text-sm">
-              {selectedStudentIds.length} Selected
-            </span>
-            <span className="text-slate-300">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500/25 border border-indigo-400/40 text-indigo-200 font-mono font-black text-sm whitespace-nowrap shadow-inner shrink-0">
+              <span className="flex items-center justify-center min-w-[20px] h-5 px-1 rounded-md bg-indigo-500 text-white text-xs font-black">
+                {selectedStudentIds.length}
+              </span>
+              <span>Selected</span>
+            </div>
+            <span className="text-slate-200 font-medium truncate">
               {bulkProgress || "Choose an administrative bulk action for selected students:"}
             </span>
           </div>

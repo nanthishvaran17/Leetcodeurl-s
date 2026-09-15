@@ -151,7 +151,7 @@ def get_command_center_summary(
 
         # Active staff list for Scope Selector & Performance Table
         staff_users_q = db.query(User).options(joinedload(User.department)).filter(
-            or_(User.role.ilike("%Staff%"), User.role.ilike("%Faculty%")),
+            User.role != "Student",
             User.is_active == True
         )
         if dept_id:
@@ -306,7 +306,14 @@ def get_students(
     q = apply_role_based_student_filter(q, current_user, db)
 
     if year_level and year_level != "ALL":
-        q = q.filter(Student.year_level == year_level)
+        years_map_dict = {
+            "I": ["1", "I", "1st", "I Year", "1 Year"],
+            "II": ["2", "II", "2nd", "II Year", "2 Year"],
+            "III": ["3", "III", "3rd", "III Year", "3 Year"],
+            "IV": ["4", "IV", "4th", "IV Year", "4 Year"]
+        }
+        y_matches = years_map_dict.get(year_level, [year_level])
+        q = q.filter(Student.year_level.in_(y_matches))
     if section and section != "ALL":
         from backend.models import Section
         q = q.filter(Student.section.has(Section.name.ilike(section)))

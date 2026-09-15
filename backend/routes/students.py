@@ -9,7 +9,7 @@ from backend.database import get_db
 from backend.models import Student, LeetCodeProfileStats, AuditLog, WeeklyStudentProgress, User
 from backend.services.authorization_service import apply_role_based_student_filter, require_staff_student_access
 from backend.schemas import StudentOut, StudentCreate, ContestResultOut, StudentListOut
-from backend.routes.auth import get_current_user
+from backend.routes.auth import get_current_user, is_protected_super_admin
 from backend.security import require_security_access, get_current_user_optional
 from backend.leetcode_client import fetch_leetcode_profile, extract_leetcode_username
 from backend.ranking import update_all_rankings_and_badges
@@ -895,9 +895,15 @@ def bulk_delete_students(
     if not req.student_ids:
         raise HTTPException(status_code=400, detail="No student IDs provided for deletion.")
 
-    count = len(req.student_ids)
-
     students = db.query(Student).filter(Student.id.in_(req.student_ids)).all()
+    protected_ids = {s.id for s in students if is_protected_super_admin(s.email)}
+    safe_student_ids = [sid for sid in req.student_ids if sid not in protected_ids]
+    if not safe_student_ids:
+        raise HTTPException(status_code=403, detail="SECURITY VIOLATION: Primary Super Admin profile is immutable and cannot be deleted.")
+    req.student_ids = safe_student_ids
+
+    count = len(req.student_ids)
+    students = [s for s in students if s.id in safe_student_ids]
     emails_to_notify = [(s.email, s.name) for s in students if s.email]
 
     if req.soft_delete:

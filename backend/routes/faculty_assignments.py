@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from backend.database import get_db
 from backend.models import User, Student, FacultyStudentAssignment
 from backend.security import require_role
+from backend.routes.auth import assert_not_protected_super_admin
 from backend.services.faculty_assignment_service import faculty_assignment_service, MAX_STUDENTS_PER_FACULTY
 from backend.logger import logger
 
@@ -243,6 +244,8 @@ def delete_staff_member(
     faculty = db.query(User).filter(User.id == faculty_id).first()
     if not faculty:
         raise HTTPException(status_code=404, detail="Faculty member not found.")
+
+    assert_not_protected_super_admin(faculty, "deleted or deactivated")
 
     user_role = (current_user.role or "").strip().lower()
     if user_role in ["hod"] and current_user.department_id != faculty.department_id:

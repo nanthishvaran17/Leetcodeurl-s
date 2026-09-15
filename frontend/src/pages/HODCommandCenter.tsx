@@ -1997,7 +1997,93 @@ export const HODCommandCenter: React.FC = () => {
             </span>
           </div>
 
-          <div className="overflow-x-auto table-responsive-container stylish-scrollbar">
+          {/* Mobile View Cards (Fits without horizontal scroll) */}
+          <div className="md:hidden space-y-3">
+            {deptMatrix.map(d => {
+              const isSelected = selectedDept === String(d.department_id);
+              const badgeStyle = getDeptBadgeStyle(d.department_code);
+              return (
+                <div
+                  key={d.department_id}
+                  onClick={() => {
+                    setSelectedDept(String(d.department_id));
+                    setSelectedDeptIntelligence(d);
+                  }}
+                  className={`p-3.5 rounded-xl border transition cursor-pointer space-y-2.5 ${
+                    isSelected 
+                      ? 'bg-brand-50/70 dark:bg-brand-900/30 border-brand-500 shadow-md ring-1 ring-brand-500/50' 
+                      : 'bg-slate-50/70 dark:bg-navy-950/70 border-slate-200 dark:border-navy-800'
+                  }`}
+                >
+                  {/* Top Bar */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      {d.rank === 1 ? (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-400/20 text-amber-700 dark:text-amber-300 border border-amber-400/40">#1</span>
+                      ) : d.rank === 2 ? (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-black bg-slate-200 dark:bg-navy-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-navy-600">#2</span>
+                      ) : d.rank === 3 ? (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-600/20 text-amber-800 dark:text-amber-400 border border-amber-600/40">#3</span>
+                      ) : (
+                        <span className="font-extrabold text-slate-600 dark:text-slate-400 text-xs">{d.rank ? `#${d.rank}` : '-'}</span>
+                      )}
+                      <span className={`px-2 py-0.5 rounded-md text-[11px] font-black border uppercase tracking-wider ${badgeStyle}`}>
+                        {d.department_code}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-black border ${
+                        d.health_status === 'Excellent' || d.health_status === 'Healthy' ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30' :
+                        d.health_status === 'Needs Attention' ? 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/40' :
+                        'bg-rose-500/15 text-rose-800 dark:text-rose-300 border-rose-500/40'
+                      }`}>
+                        {d.health_status || 'Unknown'}
+                      </span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSelectedDeptIntelligence(d); }}
+                        className="px-2 py-0.5 rounded text-[11px] font-bold bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 dark:bg-navy-800 dark:hover:bg-navy-700 dark:text-brand-300 dark:border-navy-700 inline-flex items-center gap-1"
+                      >
+                        <Activity size={11} />
+                        <span>Inspect</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Metrics 3-Col Grid */}
+                  <div className="grid grid-cols-3 gap-2 pt-1 font-mono text-xs">
+                    <div className="p-2 rounded-lg bg-white dark:bg-navy-900 border border-slate-100 dark:border-navy-800">
+                      <div className="text-[9px] text-slate-400 font-semibold uppercase">Roster</div>
+                      <div className="font-extrabold text-slate-900 dark:text-white mt-0.5">{d.student_count}</div>
+                      <div className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold">{d.active_count} active</div>
+                    </div>
+
+                    <div className="p-2 rounded-lg bg-white dark:bg-navy-900 border border-slate-100 dark:border-navy-800">
+                      <div className="text-[9px] text-slate-400 font-semibold uppercase">Avg Solved</div>
+                      <div className="font-extrabold text-slate-900 dark:text-white mt-0.5 flex items-center justify-between">
+                        <span>{d.avg_solved}</span>
+                        <span className={`text-[10px] ${d.performance_trend === '↑' ? 'text-emerald-600' : d.performance_trend === '↓' ? 'text-rose-600' : 'text-slate-400'}`}>
+                          {d.performance_trend === '↑' ? '↑' : d.performance_trend === '↓' ? '↓' : '—'}
+                        </span>
+                      </div>
+                      <div className="text-[9px] text-indigo-600 dark:text-indigo-400 font-bold">{d.completion_rate || 0}% comp</div>
+                    </div>
+
+                    <div className="p-2 rounded-lg bg-white dark:bg-navy-900 border border-slate-100 dark:border-navy-800">
+                      <div className="text-[9px] text-slate-400 font-semibold uppercase">Mentors</div>
+                      <div className="font-extrabold text-slate-900 dark:text-white mt-0.5">{d.faculty_mentors || 0}</div>
+                      <div className="text-[9px] text-slate-500 font-bold">
+                        {d.at_risk_students ? <span className="text-rose-500 font-black">{d.at_risk_students} risk</span> : '0 risk'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto table-responsive-container stylish-scrollbar">
             <table className="w-full min-w-[700px] text-left text-xs border-collapse whitespace-nowrap">
               <thead className="hidden md:table-header-group">
                 <tr className="text-[10px] font-bold uppercase text-slate-500 font-mono border-b border-slate-100 dark:border-navy-800 bg-slate-50 dark:bg-navy-950/50">

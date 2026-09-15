@@ -429,6 +429,30 @@ EXACT_TWO_ADMIN_EMAILS = {
     "santhoshkumar@nandhaengg.org"
 }
 
+PROTECTED_SUPER_ADMIN_EMAILS = {
+    "nanthishvaran17@gmail.com",
+    "nanthishvaran117@gmail.com"
+}
+
+def is_protected_super_admin(email_or_user: Any) -> bool:
+    """Returns True if the email or User instance belongs to the immutable Super Admin."""
+    if not email_or_user:
+        return False
+    if isinstance(email_or_user, str):
+        return email_or_user.strip().lower() in PROTECTED_SUPER_ADMIN_EMAILS
+    email = getattr(email_or_user, "email", "") or ""
+    return email.strip().lower() in PROTECTED_SUPER_ADMIN_EMAILS
+
+def assert_not_protected_super_admin(email_or_user: Any, action_desc: str = "deactivated, deleted, or demoted"):
+    """Raises HTTP 403 Forbidden if attempting a destructive operation on Super Admin."""
+    if is_protected_super_admin(email_or_user):
+        target = email_or_user if isinstance(email_or_user, str) else getattr(email_or_user, "email", "Super Admin")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"SECURITY VIOLATION: Primary Super Admin '{target}' is immutable and cannot be {action_desc}."
+        )
+
+
 def mask_email_str(email_str: str) -> str:
     if not email_str or "@" not in email_str:
         return email_str

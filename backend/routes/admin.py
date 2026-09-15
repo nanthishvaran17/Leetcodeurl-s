@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 from backend.database import get_db
 from backend.models import AdminAuditLog, EmailDelivery, EmailAttachment, ReportRecipient, User
-from backend.routes.auth import get_current_user, get_current_user_from_request
+from backend.routes.auth import get_current_user, get_current_user_from_request, assert_not_protected_super_admin, is_protected_super_admin
 from backend.services.audit_service import log_admin_action
 from backend.security import require_security_access
 from backend.logger import logger
@@ -1067,6 +1067,8 @@ def update_staff_user(
         valid_roles = {"super admin": "Super Admin", "administrator": "Administrator", "department hod": "Department HOD", "staff mentor": "Staff Mentor", "faculty mentor": "Faculty Mentor", "admin": "Admin", "faculty": "Faculty", "staff": "Staff", "hod": "HOD", "viewer": "Viewer"}
         matched_role = valid_roles.get(r_cleaned.lower(), r_cleaned)
         if staff_user.role != matched_role:
+            if is_protected_super_admin(staff_user) and matched_role.lower() not in ["super admin", "admin", "administrator"]:
+                assert_not_protected_super_admin(staff_user, "demoted from Super Admin role")
             changes_made['role'] = matched_role
             staff_user.role = matched_role
 
@@ -1098,6 +1100,8 @@ def update_staff_user(
         changes_made["date_of_birth"] = staff_user.date_of_birth
 
     if payload.is_active is not None and staff_user.is_active != payload.is_active:
+        if not payload.is_active:
+            assert_not_protected_super_admin(staff_user, "deactivated")
         changes_made['status'] = "Active" if payload.is_active else "Inactive"
         staff_user.is_active = payload.is_active
 
@@ -1490,6 +1494,7 @@ def toggle_staff_status(
         raise HTTPException(status_code=404, detail="Staff account not found.")
 
     if staff.is_active:
+        assert_not_protected_super_admin(staff, "disabled or deactivated")
         staff.is_active = False
         db.commit()
         msg = "Staff account disabled successfully. Existing student allocations are preserved in history."

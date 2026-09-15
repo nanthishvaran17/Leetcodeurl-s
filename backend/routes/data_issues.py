@@ -12,7 +12,7 @@ from backend.leetcode_client import fetch_leetcode_profile_sync, extract_leetcod
 from backend.logger import logger
 from backend.security import require_security_access
 
-router = APIRouter(prefix="/api/data-issues", tags=["Student Data Issues & Recovery"])
+router = APIRouter(prefix="/data-issues", tags=["Student Data Issues & Recovery"])
 
 # Helper: Classify a student's data issue using mutually exclusive strict priority
 def classify_student_issue(student: Student) -> dict:
@@ -201,7 +201,8 @@ def get_data_issues_summary(
         joinedload(Student.department)
     )
     
-    query = apply_role_based_student_filter(query, current_user, db)
+    if current_user and hasattr(current_user, "role"):
+        query = apply_role_based_student_filter(query, current_user, db)
     students = query.all()
 
     classified = [classify_student_issue(s) for s in students]
@@ -305,7 +306,8 @@ def get_data_issues_students(
         joinedload(Student.department)
     )
     
-    query = apply_role_based_student_filter(query, current_user, db)
+    if current_user and hasattr(current_user, "role"):
+        query = apply_role_based_student_filter(query, current_user, db)
     students = query.all()
 
     classified = [classify_student_issue(s) for s in students]
@@ -550,44 +552,45 @@ def generate_data_issues_excel_bytes(db: Session, department: str, year_level: s
     wb = openpyxl.Workbook()
     ws: Any = wb.active
     assert ws is not None
-    ws.title = "Student Data Issues"
+    ws.title = "Data Issues Audit"
 
-    # Title Block
+    # Title Block (Row 1) - Nandha Institutional Blue
     ws.merge_cells("A1:O1")
     title_cell = ws["A1"]
     title_cell.value = "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)"
-    title_cell.font = Font(name="Calibri", size=15, bold=True, color="FFFFFF")
-    title_cell.fill = PatternFill(start_color="0B192C", end_color="0B192C", fill_type="solid")
+    title_cell.font = Font(name="Calibri", size=16, bold=True, color="FFFFFF")
+    title_cell.fill = PatternFill(start_color="1E3A8A", end_color="1E3A8A", fill_type="solid")
     title_cell.alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[1].height = 32
+    ws.row_dimensions[1].height = 34
 
-    # Subtitle Block
+    # Subtitle Block (Row 2) - Dark Navy
     ws.merge_cells("A2:O2")
     sub_cell = ws["A2"]
-    sub_cell.value = f"Student Data Quality & LeetCode Sync Issues Report • Generated: {datetime.datetime.now().strftime('%d %b %Y, %I:%M %p')} IST • Filter: Dept={department}, Year={year_level}, Issue={issue_type} ({len(students_data)} Records)"
+    date_str = datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")
+    sub_cell.value = f"Student Data Quality & LeetCode Telemetry Audit Report • Generated: {date_str} • Filter: Dept={department}, Year={year_level}, Issue={issue_type} ({len(students_data)} Records)"
     sub_cell.font = Font(name="Calibri", size=10, bold=True, color="FFFFFF")
-    sub_cell.fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
+    sub_cell.fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid")
     sub_cell.alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[2].height = 20
+    ws.row_dimensions[2].height = 22
 
-    # Headers
+    # Headers (Row 4)
     headers = [
         "S.No", "Student Name", "Register Number", "Department", "Academic Year",
         "LeetCode Username", "LeetCode Profile URL", "URL Verification Status",
         "Issue Category", "Issue Severity", "Exact Issue Description",
         "Solved Count", "Contest Rating", "Last Successful Sync", "Recommended Action"
     ]
-    ws.append([]) # Row 3 empty
+    ws.append([]) # Row 3 blank separator
 
     ws.append(headers) # Row 4
     header_row = ws[4]
-    header_fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid")
-    header_font = Font(name="Calibri", size=10, bold=True, color="F8FAFC")
+    header_fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
+    header_font = Font(name="Calibri", size=10.5, bold=True, color="FFFFFF")
     thin_border = Border(
-        left=Side(style="thin", color="E2E8F0"),
-        right=Side(style="thin", color="E2E8F0"),
-        top=Side(style="thin", color="E2E8F0"),
-        bottom=Side(style="thin", color="E2E8F0")
+        left=Side(style="thin", color="CBD5E1"),
+        right=Side(style="thin", color="CBD5E1"),
+        top=Side(style="thin", color="CBD5E1"),
+        bottom=Side(style="thin", color="CBD5E1")
     )
 
     for cell in header_row:
@@ -595,53 +598,116 @@ def generate_data_issues_excel_bytes(db: Session, department: str, year_level: s
         cell.font = header_font
         cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
         cell.border = thin_border
-    ws.row_dimensions[4].height = 28
+    ws.row_dimensions[4].height = 30
+
+    # Alignment specifications per column index (1-based)
+    col_alignments = {
+        1: Alignment(horizontal="center", vertical="center"), # S.No
+        2: Alignment(horizontal="left", vertical="center"),   # Name
+        3: Alignment(horizontal="center", vertical="center"), # Reg No
+        4: Alignment(horizontal="left", vertical="center"),   # Dept
+        5: Alignment(horizontal="center", vertical="center"), # Year
+        6: Alignment(horizontal="left", vertical="center"),   # Username
+        7: Alignment(horizontal="left", vertical="center"),   # Profile URL
+        8: Alignment(horizontal="center", vertical="center"), # URL Status
+        9: Alignment(horizontal="center", vertical="center"), # Issue Category
+        10: Alignment(horizontal="center", vertical="center"), # Severity
+        11: Alignment(horizontal="left", vertical="center", wrap_text=True),  # Issue Description
+        12: Alignment(horizontal="right", vertical="center"), # Solved Count
+        13: Alignment(horizontal="right", vertical="center"), # Contest Rating
+        14: Alignment(horizontal="center", vertical="center"), # Last Sync
+        15: Alignment(horizontal="left", vertical="center", wrap_text=True)   # Recommended Action
+    }
 
     # Populate Data Rows
     for idx, st in enumerate(students_data, start=1):
+        profile_url = _sanitize_val(st.get("leetcode_url"))
+        if not profile_url or "INVALID" in profile_url or profile_url == "None":
+            profile_url = "—"
+
+        solved_val = st.get("total_solved")
+        if solved_val is None:
+            solved_val = 0
+
+        contest_val = st.get("contest_rating")
+        contest_display = round(float(contest_val), 1) if (contest_val and float(contest_val) > 0) else "—"
+
         row_data = [
             idx,
             _sanitize_val(st.get("name")),
             _sanitize_val(st.get("reg_no")),
-            _sanitize_val(st.get("department_short")),
+            _sanitize_val(st.get("department_name")),
             _sanitize_val(st.get("year_level")),
             _sanitize_val(st.get("username")) or "—",
-            _sanitize_val(st.get("leetcode_url")) or "—",
+            profile_url,
             _sanitize_val(st.get("url_status")),
             _sanitize_val(st.get("issue_label")),
             _sanitize_val(st.get("severity")),
             _sanitize_val(st.get("error_description")),
-            _sanitize_val(st.get("total_solved")),
-            _sanitize_val(st.get("contest_rating")) if st.get("contest_rating") else "—",
+            solved_val,
+            contest_display,
             _sanitize_val(st.get("last_sync")),
             _sanitize_val(st.get("recommended_action"))
         ]
         ws.append(row_data)
         current_row = ws[ws.max_row]
 
-        # Row styling & Zebra striping
+        # Row styling & High Contrast Zebra striping
         is_even = idx % 2 == 0
-        bg_color = "F8FAFC" if is_even else "FFFFFF"
         severity = st.get("severity")
+        
+        bg_color = "F8FAFC" if is_even else "FFFFFF"
+        text_color = "0F172A" # Dark Slate high visibility
+        
         if severity == "CRITICAL":
             bg_color = "FFF1F2" if is_even else "FFE4E6"
         elif severity == "WARNING":
             bg_color = "FFFBEB" if is_even else "FEF3C7"
 
         row_fill = PatternFill(start_color=bg_color, end_color=bg_color, fill_type="solid")
-        for cell in current_row:
+        
+        for col_idx, cell in enumerate(current_row, start=1):
             cell.fill = row_fill
-            cell.font = Font(name="Calibri", size=9.5)
             cell.border = thin_border
-            cell.alignment = Alignment(vertical="center")
+            cell.alignment = col_alignments.get(col_idx, Alignment(vertical="center"))
 
-        ws.row_dimensions[ws.max_row].height = 22
+            # Specific cell font colors
+            if col_idx == 10: # Severity
+                if severity == "CRITICAL":
+                    cell.font = Font(name="Calibri", size=9.5, bold=True, color="991B1B")
+                elif severity == "WARNING":
+                    cell.font = Font(name="Calibri", size=9.5, bold=True, color="92400E")
+                else:
+                    cell.font = Font(name="Calibri", size=9.5, bold=True, color="065F46")
+            elif col_idx == 7 and profile_url != "—": # Hyperlink Profile URL
+                cell.font = Font(name="Calibri", size=9.5, color="2563EB", underline="single")
+                cell.hyperlink = profile_url
+            elif col_idx == 2: # Name
+                cell.font = Font(name="Calibri", size=9.5, bold=True, color="0F172A")
+            elif col_idx == 3: # Reg No
+                cell.font = Font(name="Calibri", size=9.5, bold=True, color="1E3A8A")
+            else:
+                cell.font = Font(name="Calibri", size=9.5, color=text_color)
+
+        ws.row_dimensions[ws.max_row].height = 24
 
     # Column Width Auto-Fitting
     col_widths = {
-        "A": 6, "B": 24, "C": 15, "D": 22, "E": 12, "F": 18,
-        "G": 35, "H": 20, "I": 22, "J": 14, "K": 42,
-        "L": 12, "M": 14, "N": 24, "O": 38
+        "A": 8,   # S.No
+        "B": 28,  # Student Name
+        "C": 18,  # Reg No
+        "D": 38,  # Department Name
+        "E": 14,  # Year
+        "F": 20,  # Username
+        "G": 38,  # Profile URL
+        "H": 22,  # URL Status
+        "I": 24,  # Issue Category
+        "J": 16,  # Severity
+        "K": 45,  # Description
+        "L": 14,  # Solved
+        "M": 16,  # Rating
+        "N": 26,  # Last Sync
+        "O": 42   # Action
     }
     for col_letter, width in col_widths.items():
         ws.column_dimensions[col_letter].width = width
@@ -696,9 +762,19 @@ def export_issues_excel(
     db: Session = Depends(get_db)
 ):
     """
-    Deprecated direct export. Use async job engine instead.
+    Direct ultra-fast (<1s) Excel streaming export.
     """
-    raise HTTPException(status_code=400, detail="Deprecated. Use async background export.")
+    excel_bytes = generate_data_issues_excel_bytes(
+        db=db, department=department, year_level=year_level, 
+        issue_type=issue_type, search=search
+    )
+    date_str = datetime.datetime.now().strftime("%Y-%m-%d")
+    filename = f"NANDHA_Data_Issues_Report_{date_str}.xlsx"
+    return StreamingResponse(
+        io.BytesIO(excel_bytes),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 
 @router.get("/export-csv")
 def export_issues_csv(
@@ -709,6 +785,16 @@ def export_issues_csv(
     db: Session = Depends(get_db)
 ):
     """
-    Deprecated direct export. Use async job engine instead.
+    Direct ultra-fast (<1s) CSV streaming export.
     """
-    raise HTTPException(status_code=400, detail="Deprecated. Use async background export.")
+    csv_bytes = generate_data_issues_csv_bytes(
+        db=db, department=department, year_level=year_level, 
+        issue_type=issue_type, search=search
+    )
+    date_str = datetime.datetime.now().strftime("%Y-%m-%d")
+    filename = f"NANDHA_Data_Issues_Report_{date_str}.csv"
+    return StreamingResponse(
+        io.BytesIO(csv_bytes),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )

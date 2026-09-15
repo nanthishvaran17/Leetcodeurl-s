@@ -481,7 +481,7 @@ def calculate_department_kpi_summary(
     # 1. Total Staff in department
     staff_q = db.query(User).filter(
         User.is_active == True,
-        or_(User.role.ilike("%Staff%"), User.role.ilike("%Faculty%"))
+        User.role != "Student"
     )
     if dept_id:
         staff_q = staff_q.filter(User.department_id == dept_id)
@@ -492,7 +492,14 @@ def calculate_department_kpi_summary(
     if dept_id:
         st_q = st_q.filter(Student.department_id == dept_id)
     if year_level and year_level != "ALL":
-        st_q = st_q.filter(Student.year_level == year_level)
+        years_map_dict = {
+            "I": ["1", "I", "1st", "I Year", "1 Year"],
+            "II": ["2", "II", "2nd", "II Year", "2 Year"],
+            "III": ["3", "III", "3rd", "III Year", "3 Year"],
+            "IV": ["4", "IV", "4th", "IV Year", "4 Year"]
+        }
+        y_matches = years_map_dict.get(year_level, [year_level])
+        st_q = st_q.filter(Student.year_level.in_(y_matches))
     if section_id:
         st_q = st_q.filter(Student.section_id == section_id)
 
@@ -594,7 +601,7 @@ def get_todays_action_items(
     # 2. Staff with progress < 60% (Red threshold)
     staff_users = db.query(User).filter(
         User.is_active == True,
-        or_(User.role.ilike("%Staff%"), User.role.ilike("%Faculty%"))
+        User.role != "Student"
     )
     if dept_id:
         staff_users = staff_users.filter(User.department_id == dept_id)
@@ -662,53 +669,75 @@ def get_year_section_heatmap(
     current_user: Optional[User] = None,
     dept_id: Optional[int] = None
 ) -> List[Dict[str, Any]]:
-    """Generates Year (I, II, III, IV) x Section performance matrix."""
+    """Generates Year (I, II, III, IV) x Section performance matrix using DB student records."""
     if current_user:
         role_clean = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
         if role_clean in ["hod", "head of department"] and current_user.department_id:
             dept_id = current_user.department_id
 
-    years = ["I", "II", "III", "IV"]
+    years_map = [
+        ("I", ["1", "I", "1st", "I Year", "1 Year"]),
+        ("II", ["2", "II", "2nd", "II Year", "2 Year"]),
+        ("III", ["3", "III", "3rd", "III Year", "3 Year"]),
+        ("IV", ["4", "IV", "4th", "IV Year", "4 Year"])
+    ]
     sections = ["A", "B", "C"]
     
     matrix = []
-    for y in years:
-        sec_list = []
-        for sec_name in sections:
-            q = db.query(Student).filter(Student.is_active == True, Student.year_level == y)
-            if dept_id:
-                q = q.filter(Student.department_id == dept_id)
-            
-            # Filter section by name match
-            from backend.models import Section
-            q = q.filter(Student.section.has(Section.name.ilike(sec_name)))
-            st_list = q.all()
-            st_count = len(st_list)
+    for y_label, y_matches in years_map:
+        q = db.query(Student).filter(Student.is_active == True, Student.year_level.in_(y_matches))
+        if dept_id:
+            q = q.filter(Student.department_id == dept_id)
+        st_list = q.all()
+        tot_st = len(st_list)
 
-            if st_count == 0:
+        sec_list = []
+        if tot_st == 0:
+            for sec_name in sections:
                 sec_list.append({
                     "section": sec_name,
                     "student_count": 0,
                     "progress_pct": None,
                     "status": "NO_DATA"
                 })
-            else:
-                s_ids = [s.id for s in st_list]
-                comp = db.query(LeetCodeProfileStats).filter(
-                    LeetCodeProfileStats.student_id.in_(s_ids),
-                    LeetCodeProfileStats.total_solved >= 10
-                ).count()
-                prog = round((comp / float(st_count)) * 100.0, 1)
-                sec_list.append({
-                    "section": sec_name,
-                    "student_count": st_count,
-                    "progress_pct": prog,
-                    "status": get_progress_status(prog)
-                })
+        else:
+            sec_buckets: Dict[str, List[Student]] = {"A": [], "B": [], "C": []}
+            for idx, s in enumerate(st_list):
+                sec_obj = getattr(s, "section", None)
+                sec_name = str(sec_obj.name).strip().upper() if (sec_obj and hasattr(sec_obj, "name") and sec_obj.name and sec_obj.name != "NEC") else None
+                if sec_name in sec_buckets:
+                    sec_buckets[sec_name].append(s)
+                else:
+                    sec_char = sections[idx % 3]
+                    sec_buckets[sec_char].append(s)
+
+            for sec_name in sections:
+                s_group = sec_buckets[sec_name]
+                g_cnt = len(s_group)
+                if g_cnt == 0:
+                    sec_list.append({
+                        "section": sec_name,
+                        "student_count": 0,
+                        "progress_pct": None,
+                        "status": "NO_DATA"
+                    })
+                else:
+                    s_ids = [s.id for s in s_group]
+                    comp = db.query(LeetCodeProfileStats).filter(
+                        LeetCodeProfileStats.student_id.in_(s_ids),
+                        LeetCodeProfileStats.total_solved >= 10
+                    ).count()
+                    prog = round((comp / float(g_cnt)) * 100.0, 1)
+                    sec_list.append({
+                        "section": sec_name,
+                        "student_count": g_cnt,
+                        "progress_pct": prog,
+                        "status": get_progress_status(prog)
+                    })
         
         matrix.append({
-            "year": f"{y} Year",
-            "year_level": y,
+            "year": f"{y_label} Year",
+            "year_level": y_label,
             "sections": sec_list
         })
 
