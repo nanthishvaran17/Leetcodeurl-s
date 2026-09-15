@@ -186,6 +186,8 @@ def run_migrations():
         with engine.connect() as conn:
             # Create PostgreSQL performance indexes and missing columns if applicable
             if "postgresql" in db_url or "postgres" in db_url:
+                # Disable statement timeout for migrations to prevent heavy ALTER TABLE queries from failing
+                conn.execute(__import__('sqlalchemy').text("SET statement_timeout = 0;"))
                 conn.execute(__import__('sqlalchemy').text("""
                     ALTER TABLE students
                         ADD COLUMN IF NOT EXISTS primary_leetcode_id VARCHAR(100),
