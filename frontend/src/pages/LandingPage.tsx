@@ -11,6 +11,7 @@ import api, { triggerFullSync, triggerTargetedSync, getSyncStatus } from '../ser
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import { filterAndSortStudents, formatDepartmentName, normalizeDepartment } from '../utils/filterUtils';
 import { getCachedStudents, saveCachedStudents } from '../utils/rosterCache';
+import { CANONICAL_ROSTER } from '../data/canonicalRosterData';
 import { CustomDropdown, DropdownOption } from '../components/CustomDropdown';
 import { useAuth } from '../context/AuthContext';
 
@@ -58,7 +59,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [students, setStudents] = useState<StudentData[]>(() => {
     const cached = getCachedStudents();
-    return cached.filter((s: any) => s.department_id === 1 || s.department_id === 2);
+    const source = (cached && cached.length > 0) ? cached : (CANONICAL_ROSTER || []);
+    return source.filter((s: any) => s.department_id === 1 || s.department_id === 2);
   });
   const [displayCount, setDisplayCount] = useState<number>(32);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -353,10 +355,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         saveCachedStudents(filtered2);
         return;
       }
-      setStudents(prev => (prev && prev.length > 0) ? prev : getCachedStudents().filter((s: any) => s.department_id === 1 || s.department_id === 2));
+      setStudents(prev => {
+        if (prev && prev.length > 0) return prev;
+        const cached = getCachedStudents();
+        const source = (cached && cached.length > 0) ? cached : (CANONICAL_ROSTER || []);
+        return source.filter((s: any) => s.department_id === 1 || s.department_id === 2);
+      });
     } catch (err) {
       console.warn("fetchFilteredStudents error, preserving cached students:", err);
-      setStudents(prev => (prev && prev.length > 0) ? prev : getCachedStudents().filter((s: any) => s.department_id === 1 || s.department_id === 2));
+      setStudents(prev => {
+        if (prev && prev.length > 0) return prev;
+        const cached = getCachedStudents();
+        const source = (cached && cached.length > 0) ? cached : (CANONICAL_ROSTER || []);
+        return source.filter((s: any) => s.department_id === 1 || s.department_id === 2);
+      });
     }
   };
 
