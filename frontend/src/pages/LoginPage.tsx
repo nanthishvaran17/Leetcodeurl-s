@@ -251,7 +251,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     setLoading(true);
     setAuthStatusText('Signing in...');
 
-    // Attempt login — with 3-stage automatic retry to handle cold starts & network glitches
+    // Attempt login — with 4-stage automatic retry to handle cold starts & network glitches smoothly
     const attemptLogin = async (attempt: number): Promise<boolean> => {
       try {
         const res = await api.post('/auth/login', { username: cleanUser, password: cleanPass }, { timeout: 45000 });
@@ -275,23 +275,28 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
           return true;
         }
 
-        // Network error or server cold start — retry up to 3 times with warm-up
+        // Network error or server cold start — retry up to 4 times with warm-up
         if (attempt === 1 && (!status || status >= 500 || !err.response)) {
-          setAuthStatusText('Server warming up — retrying (attempt 2 of 3)...');
-          await new Promise(r => setTimeout(r, 3000));
+          setAuthStatusText('Waking up server (~15-30s cold start)... Retrying (attempt 2 of 4)...');
+          await new Promise(r => setTimeout(r, 2500));
           return await attemptLogin(2);
         }
         if (attempt === 2 && (!status || status >= 500 || !err.response)) {
-          setAuthStatusText('Re-establishing server link (attempt 3 of 3)...');
-          await new Promise(r => setTimeout(r, 4000));
+          setAuthStatusText('Connecting to institutional server... (attempt 3 of 4)...');
+          await new Promise(r => setTimeout(r, 3500));
           return await attemptLogin(3);
+        }
+        if (attempt === 3 && (!status || status >= 500 || !err.response)) {
+          setAuthStatusText('Finalizing server verification link... (attempt 4 of 4)...');
+          await new Promise(r => setTimeout(r, 4500));
+          return await attemptLogin(4);
         }
 
         // Final failure
         if (detail) {
           setError(detail);
         } else if (!err.response) {
-          setError('Cannot reach server. Please check your connection and try again in a moment.');
+          setError('Cannot reach server. Please check your connection and tap to retry.');
         } else {
           setError(`Login failed (HTTP ${status || 'unknown'}). Please try again.`);
         }
