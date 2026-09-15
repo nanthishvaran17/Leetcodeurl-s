@@ -29,6 +29,17 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
     if config.report_type and config.report_type.upper() in CONTEST_REPORT_TYPES:
         return build_contest_performance_report(db, config, current_user=current_user)
 
+    if config.report_type and config.report_type.upper() == "WEEKLY_STUDENT_PERFORMANCE":
+        return {
+            "reportId": "WEEKLY_STUDENT_PERFORMANCE",
+            "reportType": "WEEKLY_STUDENT_PERFORMANCE",
+            "title": "Weekly Student Performance",
+            "dataStatus": "READY",
+            "rows": [],
+            "metrics": {},
+            "info": "Preview not supported for this report. Please download the Excel file."
+        }
+
     if config.report_type and config.report_type.upper() in ("FIVE_WEEK_PERFORMANCE_TREND", "BATCH_PERFORMANCE"):
         from backend.services.five_week_trend_service import build_five_week_trend_report
         return build_five_week_trend_report(db, config, current_user=current_user)

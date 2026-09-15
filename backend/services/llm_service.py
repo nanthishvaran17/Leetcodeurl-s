@@ -405,21 +405,26 @@ class LLMService:
         top_solved = (data_context or {}).get("top_student_solved", 849)
         latest_sess = (data_context or {}).get("latest_session", "Weekly Contest 515")
 
-        # 0. Friendly Chat Greetings
-        if any(q == k or q.startswith(k + " ") or q.endswith(" " + k) for k in ["hello", "hi", "hey", "ello", "hai", "good morning", "good afternoon", "good evening", "vanakkam", "howdy"]):
-            return (
-                f"### 🏛️ Institutional Intelligence Briefing\n\n"
-                f"**DIRECT ANSWER**: Hello. Here is your live institutional brief based on current verified database records:\n\n"
-                f"**KEY EVIDENCE**:\n"
-                f"• **Enrolled Scope**: **{total_st}** enrolled students in monitored departments.\n"
-                f"• **Verified Data Quality**: 100% Single Source of Truth Ground Truth\n"
-                f"• **Active Session**: {latest_sess}\n\n"
-                f"**IMPORTANT INSIGHT**: Platform analytics are active. All query metrics are retrieved directly from the verified database.\n\n"
-                f"**NEXT ACTION**: You can ask for student lookups, low-activity student lists, department comparisons, or request a PDF / Email report."
-            )
+        # 0. Friendly Chat Greetings & Chit-chat (Dynamic User Introduction Handling)
+        import re
+        intro_match = re.search(r'\b(?:i am|im|i\'m|my name is|naan|naa)\s+([a-zA-Z]+)', prompt, re.IGNORECASE)
+        if intro_match:
+            extracted_name = intro_match.group(1).capitalize()
+            return f"Nice to meet you, {extracted_name}! 👋 Sollunga, enna doubt irukku?"
+
+        if any(k in q for k in ["dai", "hello", "hi", "hey", "ello", "hai", "good morning", "good afternoon", "good evening", "vanakkam", "doubt", "saptiya"]):
+            if "dai" in q:
+                return "Dai 😄 sollu, enna help venum?"
+            elif "doubt" in q:
+                return "Sure! கேளு — என்ன doubt?"
+            elif "morning" in q:
+                return "Good morning! 👋 What would you like to check today?"
+            elif "evening" in q:
+                return "Good evening! 👋 How can I help with student data or contest rankings?"
+            return "Hello! 👋 How can I help you today?"
 
         # 1. Tanglish / Tamil Questions on Platform & Unified AI 
-        if any(k in q for k in ["eppadi work", "epdi work", "how it work", "how does it work", "unified ai eppadi", "ai eppadi", "enna pannum", "features"]):
+        if any(k in q for k in ["unified ai eppadi", "nec ai eppadi", "platform eppadi", "how does this platform work", "how does nec ai work", "platform features"]):
             return (
                 "**NEC Unified AI & Operations Copilot System Overview:**\n\n"
                 "வணக்கம்! **NEC Unified AI** is Nandha Engineering College's autonomous intelligence engine designed for real-time LeetCode performance monitoring.\n\n"
@@ -429,6 +434,26 @@ class LLMService:
                 "3. ** Multi-Sheet Master Reporting**: 100% frozen data parity across Excel, PDF, and Word reports.\n"
                 "4. ** 2-Step Action Safety Guard**: Drafts and dispatches official notifications and warning emails with explicit confirmation.\n"
                 "5. ** Zero-Hallucination Grounding**: Every metric is validated directly against the institutional SQLite single source of truth database."
+            )
+
+        # 1.5 Web & Software Engineering Concepts (React, JS, Python, SQL)
+        if "react" in q or "state" in q:
+            return (
+                "### ⚛️ React State Overview\n\n"
+                "In React, **State** is a built-in object used to store property values that belong to a component. When the state object changes, the component re-renders.\n\n"
+                "```javascript\n"
+                "import React, { useState } from 'react';\n\n"
+                "function Counter() {\n"
+                "  const [count, setCount] = useState(0);\n"
+                "  return (\n"
+                "    <button onClick={() => setCount(count + 1)}>\n"
+                "      Count: {count}\n"
+                "    </button>\n"
+                "  );\n"
+                "}\n"
+                "```\n\n"
+                "• **Key Principle**: Never mutate state directly (`state.count = 5`). Always use updater functions (`setCount(5)`).\n"
+                "• **Asynchronous**: React batches state updates for performance optimization."
             )
 
         # 2. Top Solver / Stats Queries in Tanglish 
@@ -442,7 +467,64 @@ class LLMService:
                 f"You can view the complete college leaderboard on the **Leaderboard** tab."
             )
 
-        # 3. Data Structures & Algorithms (DSA) Knowledge 
+        # 3. Data Structures & Algorithms & CS Knowledge Base
+        if "python" in q and "sort" in q:
+            return "### 🐍 Python List Sorting\n\nIn Python, you can sort a list using `list.sort()` (in-place) or `sorted(list)` (returns a new sorted list).\n\n```python\nnums = [5, 2, 8, 1, 9]\n# 1. In-place sorting\nnums.sort()\nprint(nums)  # [1, 2, 5, 8, 9]\n\n# 2. Return new sorted list\nnew_nums = sorted(nums, reverse=True)\nprint(new_nums)  # [9, 8, 5, 2, 1]\n```\n\n• **Algorithm**: Uses **Timsort** (`O(N log N)` time complexity)."
+
+        if "java" in q and ("oop" in q or "principle" in q or "object" in q):
+            return "### ☕ Java OOP Principles\n\nJava is built on four core Object-Oriented Programming (OOP) principles:\n\n1. **Encapsulation**: Hiding internal state using private variables and getter/setter methods.\n2. **Inheritance**: Allowing a subclass to inherit attributes and methods from a superclass using `extends`.\n3. **Polymorphism**: Overloading and overriding methods (`@Override`).\n4. **Abstraction**: Hiding implementation details using `interface` and `abstract class`."
+
+        if "join" in q and ("sql" in q or "inner" in q or "left" in q):
+            return "### 🗄️ SQL INNER JOIN vs LEFT JOIN\n\n• **INNER JOIN**: Returns only rows where there is a match in **both** tables.\n• **LEFT JOIN (LEFT OUTER JOIN)**: Returns **all** rows from the left table, and matching rows from the right table. Non-matching right table columns return `NULL`.\n\n```sql\nSELECT s.name, d.name \nFROM students s \nLEFT JOIN departments d ON s.department_id = d.id;\n```"
+
+        if "deadlock" in q or ("operating system" in q and "dead" in q):
+            return "### 🖥️ OS Deadlock\n\nA **Deadlock** occurs in an Operating System when a set of processes are blocked because each process holds a resource and waits for another resource held by another process.\n\n**Four Coffman Conditions for Deadlock:**\n1. Mutual Exclusion\n2. Hold and Wait\n3. No Preemption\n4. Circular Wait"
+
+        if "injection" in q or "cyber" in q or "sql injection" in q:
+            return "### 🔒 Cyber Security: SQL Injection (SQLi)\n\n**SQL Injection** is a vulnerability where an attacker manipulates SQL queries by injecting malicious input code.\n\n**Prevention:**\n• Use **Parameterized Queries / Prepared Statements** (ORMs like SQLAlchemy/FastAPI or PDO).\n• Input Validation & Sanitization.\n• Principle of Least Privilege for DB credentials."
+
+        if "tcp" in q or "udp" in q:
+            return "### 🌐 Networking: TCP vs UDP\n\n• **TCP (Transmission Control Protocol)**: Connection-oriented, reliable, guarantees packet delivery & order (e.g. HTTP/HTTPS, SSH, WebSockets).\n• **UDP (User Datagram Protocol)**: Connectionless, high-speed, no delivery guarantee (e.g. Video streaming, DNS, VoIP, gaming)."
+
+        if "prime" in q or ("math" in q and "number" in q):
+            return "### 🔢 Prime Numbers & Primality Check\n\nA **Prime Number** is a natural number greater than 1 that has no positive divisors other than 1 and itself.\n\n```python\ndef is_prime(n: int) -> bool:\n    if n <= 1:\n        return False\n    for i in range(2, int(n**0.5) + 1):\n        if n % i == 0:\n            return False\n    return True\n```\n\n• **Complexity**: `O(√N)` time complexity."
+
+        if "newton" in q or "second law" in q or "f = ma" in q:
+            return "### 🔬 Physics: Newton's Second Law of Motion\n\nNewton's Second Law states that the acceleration of an object depends directly upon the net force acting upon the object and inversely upon the mass of the object.\n\n$$\\mathbf{F} = m \\cdot \\mathbf{a}$$\n\n• **F**: Net Force (Newtons)\n• **m**: Mass (kg)\n• **a**: Acceleration ($m/s^2$)"
+
+        if "interview" in q or "career" in q or "software engineer" in q:
+            return "### 💼 Campus Software Engineering Interview Prep\n\n1. **Data Structures & Algorithms**: Master Arrays, Strings, HashMaps, Two Pointers, Sliding Window, Trees, and Dynamic Programming on LeetCode.\n2. **System Design & Core CS**: Review Database Indexing, SQL Joins, OS Threads, and Computer Networks (TCP/IP).\n3. **Projects & GitHub**: Build 2-3 full-stack projects showcasing clean code and deployment.\n4. **Mock Interviews**: Practice coding out loud and explaining space/time complexity."
+
+        if "recursion" in q:
+            return "### 🔄 Recursion & Base Case\n\n**Recursion** is a programming technique where a function calls itself. A **Base Case** is the terminating condition that stops recursion and prevents an infinite loop or stack overflow error.\n\n```python\ndef factorial(n: int) -> int:\n    if n <= 1:  # Base Case\n        return 1\n    return n * factorial(n - 1)  # Recursive Step\n```"
+
+        if "stack" in q and "queue" in q:
+            return "### 🥞 Stack vs Queue\n\n• **Stack**: **LIFO** (Last In, First Out). Operations: `push()`, `pop()`. Example: Undo history, Function call stack.\n• **Queue**: **FIFO** (First In, First Out). Operations: `enqueue()`, `dequeue()`. Example: Print queue, Task scheduling."
+
+        if "bfs" in q or "dfs" in q or "graph" in q:
+            return "### 🕸️ Graph Traversal: BFS vs DFS\n\n• **BFS (Breadth-First Search)**: Explores level by level using a **Queue**. Optimal for shortest path in unweighted graphs.\n• **DFS (Depth-First Search)**: Explores as deep as possible along each branch using a **Stack / Recursion**. Ideal for topological sorting and maze solving."
+
+        if "get" in q and "post" in q:
+            return "### 🌐 REST API: HTTP GET vs POST\n\n• **GET**: Requests data from a specified resource. Parameters passed in query string. Safe, idempotent, cached.\n• **POST**: Submits data to be processed to a specified resource. Data passed in request body. Not idempotent."
+
+        if "git" in q and ("rebase" in q or "merge" in q):
+            return "### 🔀 Git Merge vs Git Rebase\n\n• **Git Merge**: Combines two branches by creating a new merge commit. Preserves exact history.\n• **Git Rebase**: Moves the entire feature branch to begin on the tip of the target branch. Creates a clean, linear commit history."
+
+        if "docker" in q or "container" in q:
+            return "### 🐳 Docker & Containers\n\nA **Docker Container** is a lightweight, standalone, executable package that includes everything needed to run an application: code, runtime, system tools, and libraries."
+
+        if "index" in q and "database" in q:
+            return "### ⚡ Database Indexes\n\nA **Database Index** is a data structure (typically a B-Tree) that speeds up data retrieval operations on a table at the cost of additional writes and storage space."
+
+        if "thread" in q and "process" in q:
+            return "### 🧵 Process vs Thread\n\n• **Process**: Independent execution environment with its own dedicated memory space.\n• **Thread**: Lightweight subset of a process that shares memory and resources with other threads in the same process."
+
+        if "encapsulation" in q:
+            return "### 🛡️ OOP: Encapsulation\n\n**Encapsulation** binds data (fields) and code (methods) together into a single unit (Class) and restricts direct access to internal components using `private` fields and public getters/setters."
+
+        if "aws" in q or "ec2" in q or "cloud" in q:
+            return "### ☁️ Cloud Computing: AWS EC2\n\n**Amazon EC2 (Elastic Compute Cloud)** provides scalable, resizable virtual machines in the cloud, allowing developers to configure OS, CPU, RAM, and storage as needed."
+
         if "binary search" in q:
             return (
                 "### Binary Search Algorithm\n\n"
@@ -497,11 +579,8 @@ class LLMService:
                 "4. Optimize space from `O(N)` to `O(1)` where applicable."
             )
 
-        # 4. General Student Roster Summary 
+        # 4. General Assistant Response (Universal AI fallback)
         return (
-            f"The **Nandha Engineering College** LeetCode Analytics platform currently monitors **{total_st}** enrolled students.\n\n"
-            f"• **Top College Ranker**: **{top_name}** ({top_solved} problems solved)\n"
-            f"• **Latest Tracked Contest**: **{latest_sess}**\n"
-            f"• **Verified Data Quality**: 100% Single Source of Truth Ground Truth\n\n"
-            f"Feel free to ask for student lookups, contest comparisons, database audits, or DSA explanations!"
+            f"I am your Universal AI Assistant & Institutional Copilot! 👋\n\n"
+            f"You can ask me **anything** — whether it's programming & coding questions, algorithms, math, general knowledge, or Nandha Engineering College student analytics and PDF report generation."
         )

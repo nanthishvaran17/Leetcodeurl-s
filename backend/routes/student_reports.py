@@ -41,3 +41,29 @@ def generate_isolated_student_report(
         "mime_type": result["mime_type"],
         "file_size_bytes": result["file_size_bytes"]
     }
+
+@router.post("/generate-direct")
+def generate_isolated_student_report_direct(
+    req: StudentReportRequest,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    from backend.services.student_report_service import generate_student_report
+    from fastapi.responses import Response
+    
+    file_bytes, filename, mime_type = generate_student_report(
+        db=db,
+        student_id=req.student_id,
+        report_type=req.report_type,
+        format=req.format,
+        current_user=current_user,
+        return_bytes=True
+    )
+    
+    return Response(
+        content=file_bytes,
+        media_type=mime_type,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        }
+    )

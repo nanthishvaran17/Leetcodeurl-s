@@ -41,13 +41,11 @@ from sqlalchemy.pool import NullPool
 engine_kwargs = {}
 if "postgresql" in db_url or "postgres" in db_url:
     engine_kwargs.update({
-        # Neon serverless free tier: max ~10-20 total connections.
-        # Keep pool small to avoid exhausting the Neon connection limit.
-        "pool_size": int(os.environ.get("DB_POOL_SIZE", 5)),
-        "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", 5)),
-        "pool_timeout": 20,          # wait up to 20s to checkout a connection
+        "pool_size": int(os.environ.get("DB_POOL_SIZE", 20)),
+        "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", 25)),
+        "pool_timeout": 30,          # wait up to 30s to checkout a connection
         "pool_pre_ping": True,       # verify liveness before returning from pool
-        "pool_recycle": 180,         # recycle after 3min (Neon suspends idle connections)
+        "pool_recycle": 120,         # recycle after 2min (Neon suspends idle connections)
         "connect_args": {
             "connect_timeout": 15,   # Neon cold-start can take ~5-10s
             "keepalives": 1,

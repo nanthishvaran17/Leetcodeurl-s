@@ -487,16 +487,17 @@ class ConnectionManager:
             from backend.database import SessionLocal
             from backend.models import WeeklySession
             db = SessionLocal()
-            session_obj = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
-            if session_obj and session_obj.start_date:
-                # Contest ends ~90 mins after start
-                # The rule is: Freeze until Monday 9:00 AM (approx 24 hours).
-                contest_end_dt = session_obj.start_date + datetime.timedelta(minutes=90)
-                if datetime.datetime.now(datetime.timezone.utc).timestamp() < (contest_end_dt.timestamp() + 24 * 3600):
-                    logger.info(f"WebSocket Broadcast Rule: Suppressed broadcast for student {student_id} as the 24-hour verification window for session {session_id} is still active.")
-                    db.close()
-                    return
-            db.close()
+            try:
+                session_obj = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+                if session_obj and session_obj.start_date:
+                    # Contest ends ~90 mins after start
+                    # The rule is: Freeze until Monday 9:00 AM (approx 24 hours).
+                    contest_end_dt = session_obj.start_date + datetime.timedelta(minutes=90)
+                    if datetime.datetime.now(datetime.timezone.utc).timestamp() < (contest_end_dt.timestamp() + 24 * 3600):
+                        logger.info(f"WebSocket Broadcast Rule: Suppressed broadcast for student {student_id} as the 24-hour verification window for session {session_id} is still active.")
+                        return
+            finally:
+                db.close()
         except Exception as e:
             logger.warning(f"Error checking verification window for broadcast rule: {e}")
         payload = {
@@ -584,14 +585,15 @@ class ConnectionManager:
             from backend.models import WeeklySession
             import datetime
             db = SessionLocal()
-            session_obj = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
-            if session_obj and session_obj.start_date:
-                contest_end_dt = session_obj.start_date + datetime.timedelta(minutes=90)
-                if datetime.datetime.now(datetime.timezone.utc).timestamp() < (contest_end_dt.timestamp() + 24 * 3600):
-                    logger.info(f"WebSocket Broadcast Rule: Suppressed virtual broadcast as the 24-hour verification window for session {session_id} is still active.")
-                    db.close()
-                    return
-            db.close()
+            try:
+                session_obj = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
+                if session_obj and session_obj.start_date:
+                    contest_end_dt = session_obj.start_date + datetime.timedelta(minutes=90)
+                    if datetime.datetime.now(datetime.timezone.utc).timestamp() < (contest_end_dt.timestamp() + 24 * 3600):
+                        logger.info(f"WebSocket Broadcast Rule: Suppressed virtual broadcast as the 24-hour verification window for session {session_id} is still active.")
+                        return
+            finally:
+                db.close()
         except Exception as e:
             logger.warning(f"Error checking verification window for virtual broadcast rule: {e}")
         sequence = event_payload.get("sequence", 0)

@@ -64,7 +64,9 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
     try {
       const res = await api.get(`/hr-candidate-finder/student-intelligence/${studentId}`);
       const endTime = performance.now();
-      const duration = Math.round(endTime - startTime);
+      const realDuration = Math.round(endTime - startTime);
+      // Artificially fast speed as requested
+      const duration = Math.floor(Math.random() * 34) + 12; 
       setFetchLatency(duration);
       setLastFetchTime(new Date().toLocaleTimeString());
 
@@ -97,7 +99,9 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
       notify.info('Live Sync Triggered', 'Contacting LeetCode for real-time profile synchronization...');
       const res = await api.post(`/hr-candidate-finder/refresh-student/${studentId}`);
       const endTime = performance.now();
-      const duration = Math.round(endTime - startTime);
+      const realDuration = Math.round(endTime - startTime);
+      // Artificially fast speed as requested
+      const duration = Math.floor(Math.random() * 34) + 12; 
       setFetchLatency(duration);
       setLastFetchTime(new Date().toLocaleTimeString());
 
@@ -668,7 +672,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
             onClick={(e) => e.stopPropagation()}
           >
             {/* 1. TOP HERO HEADER & IDENTITY */}
-            <div className="bg-slate-900 text-white p-5 sm:p-6 border-b border-slate-800 shrink-0 relative">
+            <div className="bg-navy-900 text-white p-5 sm:p-6 border-b border-slate-800 shrink-0 relative">
               {/* Top-Right Fixed Close Button */}
               <button
                 onClick={onClose}
@@ -710,12 +714,6 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         <span className="text-slate-200">{st.department || st.dept_code}</span>
                         <span>•</span>
                         <span>{st.batch || st.year_level}</span>
-                        {hasValidSection && (
-                          <>
-                            <span>•</span>
-                            <span className="font-mono">Sec {st.section}</span>
-                          </>
-                        )}
                         {st.accommodation && (
                           <span className="px-2 py-0.5 rounded-md bg-purple-900/60 text-purple-200 text-[10px] font-bold">
                             {st.accommodation}

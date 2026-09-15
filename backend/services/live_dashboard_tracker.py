@@ -138,21 +138,24 @@ class LiveDashboardTracker:
         db = SessionLocal()
         try:
             active_students = await self.get_active_students(db)
-            slugs_set = set(self.title_slugs)
-            fetched_at = int(get_current_ist_datetime().timestamp())
-            
-            all_submissions = []
-            failed_count = 0
-            
-            async with httpx.AsyncClient() as client:
-                results = []
-                batch_size = 50
-                for i in range(0, len(active_students), batch_size):
-                    batch = active_students[i:i + batch_size]
-                    tasks = [self._fetch_student_submissions(client, s, slugs_set) for s in batch]
-                    batch_results = await asyncio.gather(*tasks, return_exceptions=True)
-                    results.extend(batch_results)
-                    await asyncio.sleep(0.1)
+        finally:
+            db.close()
+
+        slugs_set = set(self.title_slugs)
+        fetched_at = int(get_current_ist_datetime().timestamp())
+        
+        all_submissions = []
+        failed_count = 0
+        
+        async with httpx.AsyncClient() as client:
+            results = []
+            batch_size = 50
+            for i in range(0, len(active_students), batch_size):
+                batch = active_students[i:i + batch_size]
+                tasks = [self._fetch_student_submissions(client, s, slugs_set) for s in batch]
+                batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+                results.extend(batch_results)
+                await asyncio.sleep(0.1)
                 
             for res in results:
                 if isinstance(res, Exception) or res is None:

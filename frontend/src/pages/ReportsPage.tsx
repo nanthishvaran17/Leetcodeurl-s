@@ -159,7 +159,7 @@ export const ReportsPage: React.FC = () => {
     
     if (endpoint.includes('export-official-college-summary')) { report_type = 'COLLEGE_EXECUTIVE'; format = 'excel'; }
     else if (endpoint.includes('export-student-performance-detail')) { report_type = 'STUDENT_PERFORMANCE'; format = 'excel'; }
-    else if (endpoint.includes('export-weekly-contest-matrix')) { report_type = 'BATCH_PERFORMANCE'; format = 'excel'; } 
+    else if (endpoint.includes('export-weekly-contest-matrix')) { report_type = 'CONTEST_ATTENDANCE_PARTICIPATION'; format = 'excel'; } 
     else if (endpoint.includes('export-master-tracker')) { report_type = 'STUDENT_MASTER'; format = 'excel'; }
     else if (endpoint.includes('/reports/download')) { report_type = 'MASTER_10_SHEET'; format = 'excel'; }
     else if (endpoint.includes('/reports/hod')) { report_type = 'HOD_DEPARTMENT_INTELLIGENCE'; format = 'excel'; }
@@ -262,6 +262,12 @@ export const ReportsPage: React.FC = () => {
   };
 
   const handleGenerateUniversalReport = async (overrideType?: string, overrideFilters?: any) => {
+    // Instant offline check to prevent endless spinning
+    if (!navigator.onLine) {
+      notify.error('Network Offline', 'Please check your internet connection and try again.', { category: 'REPORTS' });
+      return;
+    }
+
     setIsGeneratingUniversal(true);
     setReportError(null);
     notify.dismissCategory('REPORTS');
@@ -279,6 +285,7 @@ export const ReportsPage: React.FC = () => {
         output_scope: output_scope,
         filters: overrideFilters || {}
       });
+
       setActiveUniversalPreviewId(res.data.reportId || res.data.report_id);
       notify.success('Report Ready', 'Universal report generated successfully.', { category: 'REPORTS' });
     } catch (err: any) {
@@ -339,6 +346,21 @@ export const ReportsPage: React.FC = () => {
       onClick: () => {
         const q = getActiveFilterQueryParams();
         downloadReportFile(`/reports/export-excel?report_type=FIVE_WEEK_PERFORMANCE_TREND${q}`, 'Five_Week_Performance_Trend_Report.xlsx');
+      }
+    },
+    {
+      id: 'contest-attendance',
+      title: 'Contest Attendance & Participation',
+      badge: 'WEEKLY CONTEST MATRIX',
+      badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+      description: 'Comprehensive grid mapping every student’s contest attendance across the academic year. Provides a complete weekly attendance matrix and performance breakdown.',
+      filename: 'Contest_Attendance_and_Participation.xlsx',
+      icon: FileSpreadsheet,
+      iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+      btnGradient: 'from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-600/30',
+      onClick: () => {
+        const q = getActiveFilterQueryParams();
+        downloadReportFile(`/reports/export-weekly-contest-matrix${q}`, 'Contest_Attendance_and_Participation.xlsx');
       }
     },
     {
@@ -699,134 +721,20 @@ export const ReportsPage: React.FC = () => {
                 </div>
               </div>
 
-
-
             </div>
 
-            {/* Action Button Bar */}
-            <div className="flex items-center justify-between flex-wrap gap-4 pt-2">
-              <div className="flex items-start sm:items-center space-x-2 text-xs text-slate-500 dark:text-slate-400 font-bold min-w-0 flex-1">
-                <Sparkles className="w-4 h-4 text-amber-500 shrink-0 mt-0.5 sm:mt-0" />
-                <span className="flex flex-wrap items-center gap-1.5 leading-snug">
-                  <span>Workflow:</span>
-                  <b>1. Select Parameters</b>
-                  <span className="text-slate-300 dark:text-slate-600 hidden sm:inline">→</span>
-                  <b>2. Generate Preview</b>
-                  <span className="text-slate-300 dark:text-slate-600 hidden sm:inline">→</span>
-                  <b>3. Review & Export</b>
-                </span>
-              </div>
-
-              <div className="flex items-center space-x-2 flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const filename = `${selectedReportType}_${selectedDept}_${selectedYear}.xlsx`;
-                    downloadReportFile(`/reports/export-excel?report_type=${selectedReportType}&department=${selectedDept}&year=${selectedYear}&output_scope=${selectedOutputScope}`, filename);
-                  }}
-                  className="flex items-center space-x-1.5 px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
-                  title="Direct Download Excel (.xlsx)"
-                >
-                  <FileSpreadsheet className="w-4 h-4" />
-                  <span>Excel (.xlsx)</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const filename = `${selectedReportType}_${selectedDept}_${selectedYear}.pdf`;
-                    downloadReportFile(`/reports/export-pdf?report_type=${selectedReportType}&department=${selectedDept}&year=${selectedYear}&output_scope=${selectedOutputScope}`, filename);
-                  }}
-                  className="flex items-center space-x-1.5 px-3.5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
-                  title="Direct Download PDF (.pdf)"
-                >
-                  <FileText className="w-4 h-4" />
-                  <span>PDF (.pdf)</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const filename = `${selectedReportType}_${selectedDept}_${selectedYear}.docx`;
-                    downloadReportFile(`/reports/export-word?report_type=${selectedReportType}&department=${selectedDept}&year=${selectedYear}&output_scope=${selectedOutputScope}`, filename);
-                  }}
-                  className="flex items-center space-x-1.5 px-3.5 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
-                  title="Direct Download Word (.docx)"
-                >
-                  <FileText className="w-4 h-4" />
-                  <span>Word (.docx)</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleGenerateUniversalReport()}
-                  disabled={isGeneratingUniversal}
-                  className="flex items-center space-x-2.5 px-6 py-2.5 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-700 hover:to-purple-700 disabled:opacity-50 text-white font-black text-xs sm:text-sm rounded-xl shadow-xl shadow-brand-500/25 transition-all transform hover:scale-105 cursor-pointer"
-                >
-                  <Sparkles className={`w-4 h-4 ${isGeneratingUniversal ? 'animate-spin' : ''}`} />
-                  <span>{isGeneratingUniversal ? 'Building Dataset...' : 'Generate Preview'}</span>
-                </button>
-              </div>
+            <div className="flex justify-end pt-4 border-t border-slate-200 dark:border-navy-800">
+              <button
+                type="button"
+                onClick={() => handleGenerateUniversalReport()}
+                disabled={isGeneratingUniversal}
+                className="flex items-center space-x-2.5 px-6 py-2.5 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-700 hover:to-purple-700 disabled:opacity-50 text-white font-black text-xs sm:text-sm rounded-xl shadow-xl shadow-brand-500/25 transition-all transform hover:scale-[1.02] cursor-pointer"
+              >
+                <Sparkles className={`w-4 h-4 ${isGeneratingUniversal ? 'animate-spin' : ''}`} />
+                <span>{isGeneratingUniversal ? 'Building Dataset...' : 'Generate Preview'}</span>
+              </button>
             </div>
           </div>
-
-          {/* Pre-Formatted Institutional Exports & Download Hub */}
-          <div className="space-y-4 pt-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="p-2.5 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-                  <FileSpreadsheet className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white">Pre-Formatted Exports & Download Hub</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">1-Click download official institutional Excel workbooks, weekly contest matrices, PDF summaries, and Word documents.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {reportCards.map((card) => {
-                const Icon = card.icon;
-                const isDownloading = downloadingFiles[card.filename];
-                return (
-                  <div key={card.id} className="glass-card p-5 rounded-2xl border border-slate-200 dark:border-navy-800 hover:border-brand-500/40 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 bg-white dark:bg-navy-950">
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className={`p-3 rounded-2xl ${card.iconBg}`}>
-                          <Icon className="w-5 h-5" />
-                        </div>
-                        <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border ${card.badgeColor}`}>
-                          {card.badge}
-                        </span>
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-black text-slate-900 dark:text-white">{card.title}</h4>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-3 leading-relaxed font-medium">
-                          {card.description}
-                        </p>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={card.onClick}
-                      disabled={isDownloading}
-                      className={`w-full flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-black text-white bg-gradient-to-r ${card.btnGradient} transition-all transform hover:scale-[1.02] cursor-pointer disabled:opacity-50`}
-                    >
-                      {isDownloading ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Download className="w-4 h-4" />
-                      )}
-                      <span>{isDownloading ? 'Generating Report...' : `Download ${card.filename.split('.').pop()?.toUpperCase()}`}</span>
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-
 
           {/* Universal Report Previewer */}
           {activeUniversalPreviewId && (

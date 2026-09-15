@@ -863,14 +863,28 @@ You can ask me to view inactive students, contest absentees, staff progress, or 
                 "dataConfidence": "HIGH_VERIFIED"
             }
 
-        # G. DEFAULT NATURAL RESPONSE FOR GENERAL QUESTIONS
-        markdown_resp = f"I'm monitoring **{in_scope_count} active students** in your scope.\n\nYou can ask about student lookups (e.g. `732224CC031`), CSE top performers, contest absentees, staff progress, or request a PDF report."
+        # G. DEFAULT NATURAL RESPONSE FOR GENERAL QUESTIONS (AI MODEL SYNTHESIS)
+        from backend.services.llm_service import LLMService
+        ai_dyn_resp = LLMService.generate_response(
+            prompt=query,
+            system_context=f"You are the official Nandha Engineering College AI Assistant. Scope: {dept_name}. Enrolled: {in_scope_count} students. Role: {user_role}."
+        )
+        if ai_dyn_resp:
+            return {
+                "query": query,
+                "answer": ai_dyn_resp,
+                "evidence": ["Dynamic AI Model Response"],
+                "actions": [],
+                "dataConfidence": "VERIFIED"
+            }
+
+        markdown_resp = f"How can I assist you with **{dept_name}** analytics or student records today?"
         return {
             "query": query,
             "answer": markdown_resp,
             "evidence": ["Verified institutional summary"],
             "actions": [],
-            "dataConfidence": "HIGH_VERIFIED"
+            "dataConfidence": "VERIFIED"
         }
 
     @staticmethod

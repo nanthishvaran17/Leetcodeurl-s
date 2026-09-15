@@ -497,7 +497,6 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
     logger.info(f"[WORKER] Worker started for job: {job_id} in mode {sync_mode}")
     from backend.services.canonical_sync_pipeline import run_full_pipeline
 
-    db = SessionLocal()
     try:
         summary = await run_full_pipeline(
             job_id=job_id,
@@ -582,7 +581,6 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
                 import time as _t; _t.sleep(0.3)
             finally:
                 _db.close()
-        db.close()
 
 
 def _process_single_student_sync(db: Session, job_id: str, student: Student, res: Any) -> Tuple[bool, bool, bool]:

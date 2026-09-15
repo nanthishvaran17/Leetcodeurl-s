@@ -2188,25 +2188,7 @@ export const HRCandidateFinderPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Compact Metric Cards */}
-            <div className="grid grid-cols-4 gap-2 w-full sm:w-auto">
-              <div className="bg-white dark:bg-navy-900 px-3 py-2 rounded-xl border border-slate-200 dark:border-navy-700 shadow-sm text-center">
-                <span className="text-[10px] font-bold text-slate-400 block uppercase">Found</span>
-                <span className="text-base font-black text-slate-900 dark:text-white">{summaryCounts.total}</span>
-              </div>
-              <div className="bg-emerald-50 dark:bg-emerald-950/30 px-3 py-2 rounded-xl border border-emerald-200 dark:border-emerald-900/40 text-center">
-                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 block uppercase">Ready</span>
-                <span className="text-base font-black text-emerald-700 dark:text-emerald-300">{summaryCounts.ready}</span>
-              </div>
-              <div className="bg-amber-50 dark:bg-amber-950/30 px-3 py-2 rounded-xl border border-amber-200 dark:border-amber-900/40 text-center">
-                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 block uppercase">Near Ready</span>
-                <span className="text-base font-black text-amber-700 dark:text-amber-300">{summaryCounts.nearReady}</span>
-              </div>
-              <div className="bg-rose-50 dark:bg-rose-950/30 px-3 py-2 rounded-xl border border-rose-200 dark:border-rose-900/40 text-center">
-                <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 block uppercase">Attention</span>
-                <span className="text-base font-black text-rose-700 dark:text-rose-300">{summaryCounts.attention}</span>
-              </div>
-            </div>
+
           </div>
         </div>
 

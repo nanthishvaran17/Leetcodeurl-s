@@ -38,6 +38,7 @@ EXT_MEDIA_TYPES = {
     "student_detail": ("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
     "master_tracker": ("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
     "weekly_contest_matrix": ("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+    "contest_attendance_participation": ("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
     "weekly_performance": ("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
     "college_format": ("xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
     "word": ("docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
@@ -522,10 +523,10 @@ def generate_report_bytes(
         from backend.excel_handler import generate_8_sheet_master_tracker
         return generate_8_sheet_master_tracker(db, current_user=current_user)
 
-    # 5. Weekly Contest Matrix
-    if rpt == "WEEKLY_CONTEST_MATRIX":
+    # 5. Weekly Contest Matrix / Contest Attendance & Participation
+    if rpt in ("WEEKLY_CONTEST_MATRIX", "CONTEST_ATTENDANCE_PARTICIPATION"):
         from backend.excel_handler import generate_weekly_contest_matrix_excel
-        return generate_weekly_contest_matrix_excel(db, current_user=current_user)
+        return generate_weekly_contest_matrix_excel(db, batch_label=batch if batch != "ALL" else "2028", current_user=current_user)
 
     # 5. Universal Report Engine (Student Performance, Official College Summary, Session Contests)
     from backend.services.report_engine import build_universal_report

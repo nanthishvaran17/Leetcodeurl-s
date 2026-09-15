@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 import asyncio
 import datetime
+import json
 import os
 
 from backend.database import get_db
@@ -469,6 +470,15 @@ async def get_students(
         verified_solvers_sorted = sorted(verified_solvers, key=lambda x: (x.stats.total_solved or 0, x.stats.contest_rating or 0), reverse=True)
         rank_map = {st.id: r + 1 for r, st in enumerate(verified_solvers_sorted)}
 
+        def parse_badge_list(b):
+            if isinstance(b, str):
+                try:
+                    p = json.loads(b)
+                    return [str(x).strip() for x in p] if isinstance(p, list) else []
+                except:
+                    pass
+            return b if isinstance(b, list) else []
+
         results = []
         for st in students:
             st_out = StudentListOut.model_validate(st)
@@ -536,7 +546,7 @@ async def get_students(
                 if (st_out.streak_count is None or st_out.streak_count == 0) and latest_prog.streak_count:
                     st_out.streak_count = latest_prog.streak_count if is_verified else 0
                 st_out.consistency_score = latest_prog.consistency_score if is_verified else 0.0
-                st_out.badge_list = latest_prog.badge_list or []
+                st_out.badge_list = parse_badge_list(latest_prog.badge_list)
             else:
                 st_out.college_rank = rank_map.get(st.id) if is_verified else None
 
@@ -770,7 +780,16 @@ def get_student_detail(student_id: str, request: Request, db: Session = Depends(
         st_out.weekly_progress = latest_prog.weekly_progress
         st_out.streak_count = latest_prog.streak_count
         st_out.consistency_score = latest_prog.consistency_score
-        st_out.badge_list = latest_prog.badge_list or []
+        
+        def _parse_badges(b):
+            if isinstance(b, str):
+                try:
+                    p = json.loads(b)
+                    return [str(x).strip() for x in p] if isinstance(p, list) else []
+                except: pass
+            return b if isinstance(b, list) else []
+            
+        st_out.badge_list = _parse_badges(latest_prog.badge_list)
         
     return st_out
 

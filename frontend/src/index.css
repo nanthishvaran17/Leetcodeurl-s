@@ -1087,4 +1087,4 @@ body:has(.modal-backdrop) .ai-floating-widget {
   display: none !important;
 }
 .global-scroll-lock { overflow: hidden !important; }
-html, body { overflow-x: hidden; max-width: 100vw; }
+body { overflow-x: hidden; max-width: 100vw; }

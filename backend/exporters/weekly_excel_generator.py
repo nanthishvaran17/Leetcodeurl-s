@@ -42,11 +42,31 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
     align_left = Alignment(horizontal='left', vertical='center', wrap_text=True)
 
     def setup_page_layout(ws):
+        # 16. Reset worksheet print settings
+        ws.sheet_properties.pageSetUpPr.fitToPage = True
+        
+        # 6. Landscape orientation
         ws.page_setup.orientation = ws.ORIENTATION_LANDSCAPE
         ws.page_setup.paperSize = ws.PAPERSIZE_A4
+        
+        # 7. Fit to 1 page wide by 1 page tall
         ws.page_setup.fitToPage = True
         ws.page_setup.fitToWidth = 1
-        ws.page_setup.fitToHeight = 0
+        ws.page_setup.fitToHeight = 1
+        
+        # 8. Set appropriate page margins
+        ws.page_margins.left = 0.25
+        ws.page_margins.right = 0.25
+        ws.page_margins.top = 0.30
+        ws.page_margins.bottom = 0.30
+        
+        # 17. Remove existing page breaks
+        ws.row_breaks = []
+        ws.col_breaks = []
+        
+        # 18. Clear print titles if any
+        ws.print_title_rows = None
+        ws.print_title_cols = None
 
     dept_summaries = data.get("department_summaries", [])
     
@@ -179,6 +199,10 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
         widths = {'A': 30, 'B': 18, 'C': 12, 'D': 12, 'E': 12, 'F': 12, 'G': 12, 'H': 10, 'I': 10, 'J': 10, 'K': 10, 'L': 15, 'M': 15}
         for col, width in widths.items():
             ws.column_dimensions[col].width = width
+
+        # 15. Determine the actual last used row dynamically and set print area
+        actual_last_row = current_row - 1
+        ws.print_area = f"A1:M{actual_last_row}"
 
     # Cleanup default sheet
     if "Sheet" in wb.sheetnames:

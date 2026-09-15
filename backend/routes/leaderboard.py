@@ -151,7 +151,15 @@ async def get_leaderboard(
                     if (st_out.streak_count is None or st_out.streak_count == 0) and latest_prog.streak_count:
                         st_out.streak_count = latest_prog.streak_count
                     st_out.consistency_score = latest_prog.consistency_score
-                    st_out.badge_list = latest_prog.badge_list or []
+                    def _parse_badges(b):
+                        import json
+                        if isinstance(b, str):
+                            try:
+                                p = json.loads(b)
+                                return [str(x).strip() for x in p] if isinstance(p, list) else []
+                            except: pass
+                        return b if isinstance(b, list) else []
+                    st_out.badge_list = _parse_badges(latest_prog.badge_list)
                 results.append(st_out)
 
             final_results = results
@@ -215,7 +223,15 @@ def get_top_performers(db: Session = Depends(get_db)):
         if latest_prog:
             st_out.weekly_progress = latest_prog.weekly_progress
             st_out.streak_count = latest_prog.streak_count
-            st_out.badge_list = latest_prog.badge_list or []
+            def _parse_badges(b):
+                import json
+                if isinstance(b, str):
+                    try:
+                        p = json.loads(b)
+                        return [str(x).strip() for x in p] if isinstance(p, list) else []
+                    except: pass
+                return b if isinstance(b, list) else []
+            st_out.badge_list = _parse_badges(latest_prog.badge_list)
         st_outs.append(st_out)
 
     highest_solved = max(st_outs, key=lambda x: (x.stats.total_solved or 0) if x.stats else 0, default=None)

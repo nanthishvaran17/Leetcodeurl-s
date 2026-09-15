@@ -1677,22 +1677,22 @@ def generate_weekly_contest_matrix_excel(db: Session, batch_label: str = "2028",
         dept = db.query(Department).filter(Department.id == dept_id).first()
         code_label = dept.code.replace("/", "-")[:20] if dept else "DEPT"
         
-        ws_m = wb.create_sheet(title=f"MATRIX - {code_label}")
+        ws_m = wb.create_sheet(title=f"Contest Attendance - {code_label}"[:31])
         create_batch_performance_matrix_sheet(ws_m, db, dept_id, current_user)
 
         ws_d = wb.create_sheet(title=f"DETAILS - {code_label}")
         create_weekly_contest_matrix_sheet(ws_d, db, batch_label, dept_id, current_user)
     else:
         # Sheet 1: Matrix - CSE(CS)
-        ws_cs_m = wb.create_sheet(title="MATRIX - CSE(CS)")
+        ws_cs_m = wb.create_sheet(title="Contest Attendance - CS"[:31])
         create_batch_performance_matrix_sheet(ws_cs_m, db, cs_dept.id if cs_dept else None, current_user)
 
         # Sheet 2: Matrix - CSE(IOT)
-        ws_iot_m = wb.create_sheet(title="MATRIX - CSE(IOT)")
+        ws_iot_m = wb.create_sheet(title="Contest Attendance - IOT"[:31])
         create_batch_performance_matrix_sheet(ws_iot_m, db, iot_dept.id if iot_dept else None, current_user)
 
         # Sheet 3: Matrix - ALL DEPTS
-        ws_all_m = wb.create_sheet(title="MATRIX - ALL DEPTS")
+        ws_all_m = wb.create_sheet(title="Contest Attendance - ALL"[:31])
         create_batch_performance_matrix_sheet(ws_all_m, db, None, current_user)
 
         # Sheet 4: Details - CSE(CS)

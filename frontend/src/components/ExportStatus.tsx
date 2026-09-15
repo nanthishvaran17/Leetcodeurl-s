@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileSpreadsheet, CheckCircle2, AlertTriangle, X, RefreshCw, Download, Sparkles, Zap, ArrowRight } from 'lucide-react';
+import { FileSpreadsheet, CheckCircle2, AlertTriangle, X, RefreshCw, Sparkles, Loader2 } from 'lucide-react';
 import { DownloadState } from '../services/download/downloadTypes';
 
 interface ExportStatusProps {
@@ -19,47 +19,44 @@ export const ExportStatus: React.FC<ExportStatusProps> = ({ state, onRetry, onCl
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, y: 40, scale: 0.95 }}
+        initial={{ opacity: 0, y: 20, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 30, scale: 0.95 }}
-        transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-        className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] right-4 left-4 sm:left-auto z-[100060] p-4 sm:p-5 bg-slate-950/90 dark:bg-navy-950/90 backdrop-blur-xl rounded-3xl shadow-[0_12px_40px_rgba(15,23,42,0.6)] text-white max-w-[calc(100vw-2rem)] sm:max-w-md w-full border border-brand-500/40 font-sans overflow-hidden"
+        exit={{ opacity: 0, y: 15, scale: 0.96 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+        className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))] right-4 left-4 sm:left-auto z-[100060] bg-slate-900/85 backdrop-blur-2xl rounded-3xl shadow-2xl shadow-slate-950/50 text-white max-w-[calc(100vw-2rem)] sm:max-w-[420px] w-full border border-white/[0.08] font-sans overflow-hidden"
       >
-        {/* Glowing Top Ambient Glow Bar */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-400 animate-pulse" />
+        {/* Subtle premium gradient background effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-brand-500/5 pointer-events-none" />
+        
+        {/* Top edge highlight */}
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50" />
 
-        {/* Floating Radial Background Glows */}
-        <div className="absolute -top-12 -right-12 w-28 h-28 bg-brand-500/20 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute -bottom-12 -left-12 w-28 h-28 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none" />
-
-        <div className="relative z-10 space-y-3.5">
-          {/* Header Row */}
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className={`p-2 rounded-2xl shrink-0 ${
+        <div className="relative z-10 p-5 sm:p-6 space-y-4">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className={`p-2.5 rounded-2xl flex items-center justify-center shrink-0 ${
                 isFailed 
-                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' 
+                  ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' 
                   : isCompleted 
-                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]' 
-                  : 'bg-brand-500/20 text-brand-400 border border-brand-500/30 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
+                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                  : 'bg-brand-500/10 text-brand-400 border border-brand-500/20'
               }`}>
                 {isFailed ? (
-                  <AlertTriangle size={20} className="animate-bounce" />
+                  <AlertTriangle size={18} strokeWidth={2.5} />
                 ) : isCompleted ? (
-                  <CheckCircle2 size={20} className="animate-pulse text-emerald-400" />
+                  <CheckCircle2 size={18} strokeWidth={2.5} className="text-emerald-400" />
                 ) : (
-                  <FileSpreadsheet size={20} className="animate-pulse text-brand-400" />
+                  <FileSpreadsheet size={18} strokeWidth={2.5} className="text-brand-400" />
                 )}
               </div>
 
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-indigo-200">
-                    INSTANT REPORT ENGINE
-                  </span>
-                </div>
-                <h3 className="font-extrabold text-sm sm:text-base text-white tracking-tight truncate mt-0.5">
-                  {isFailed ? 'Report Generation Alert' : isGenerating ? 'Preparing Data Report...' : 'Report Download Complete'}
+              <div className="min-w-0 flex flex-col justify-center">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">
+                  Instant Report Engine
+                </span>
+                <h3 className="font-bold text-sm sm:text-[15px] text-white tracking-tight truncate">
+                  {isFailed ? 'Generation Interrupted' : isGenerating ? 'Preparing Data Report' : 'Download Complete'}
                 </h3>
               </div>
             </div>
@@ -67,82 +64,83 @@ export const ExportStatus: React.FC<ExportStatusProps> = ({ state, onRetry, onCl
             {onClose && (
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-all shrink-0 cursor-pointer"
+                className="p-1.5 rounded-full text-slate-500 hover:text-slate-300 hover:bg-slate-800/50 transition-colors shrink-0 -mt-1 -mr-1"
                 aria-label="Close"
               >
-                <X size={18} />
+                <X size={16} strokeWidth={2.5} />
               </button>
             )}
           </div>
 
-          {/* Generating Animated State */}
-          {isGenerating && (
-            <div className="space-y-3 pt-1">
-              <div className="flex items-center justify-between text-xs text-slate-300 font-medium">
-                <div className="flex items-center gap-2">
-                  <div className="relative flex items-center justify-center">
-                    <span className="w-2 h-2 rounded-full bg-brand-400 animate-ping absolute" />
-                    <span className="w-2 h-2 rounded-full bg-brand-500" />
+          {/* Body Content */}
+          <div className="pl-14">
+            {/* Generating State */}
+            {isGenerating && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-[13px]">
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <Loader2 size={14} className="animate-spin text-brand-400" />
+                    <span className="font-medium tracking-wide">Compiling high-contrast metrics...</span>
                   </div>
-                  <span className="font-semibold text-slate-200">Compiling high-contrast metrics...</span>
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-md">Processing</span>
                 </div>
-                <span className="text-[11px] font-mono text-brand-300 font-bold">processing</span>
-              </div>
 
-              {/* Glowing Shimmer Progress Bar */}
-              <div className="relative w-full bg-slate-800/80 rounded-full h-2.5 overflow-hidden border border-white/10 p-0.5">
-                <motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-blue-500 via-indigo-400 to-emerald-400 shadow-[0_0_12px_rgba(59,130,246,0.8)] relative"
-                  initial={{ width: '15%' }}
-                  animate={{ width: ['20%', '85%', '95%'] }}
-                  transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer" />
-                </motion.div>
-              </div>
-            </div>
-          )}
-
-          {/* Failed State */}
-          {isFailed && (
-            <div className="space-y-3 pt-1">
-              <p className="text-xs text-slate-300 leading-relaxed">
-                We couldn't compile the requested report right now. Please verify backend connection and try again.
-              </p>
-
-              <div className="flex items-center gap-2 pt-1">
-                {onRetry && (
-                  <button
-                    onClick={onRetry}
-                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white text-xs font-extrabold shadow-md transition-all cursor-pointer inline-flex items-center gap-1.5"
+                {/* Sleek Progress Bar */}
+                <div className="w-full bg-slate-800/60 rounded-full h-1.5 overflow-hidden">
+                  <motion.div
+                    className="h-full rounded-full bg-gradient-to-r from-blue-500 to-brand-400 relative"
+                    initial={{ width: '0%' }}
+                    animate={{ width: ['20%', '60%', '90%'] }}
+                    transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
                   >
-                    <RefreshCw size={13} className="animate-spin" />
-                    <span>Retry Download</span>
-                  </button>
-                )}
-                {onClose && (
-                  <button
-                    onClick={onClose}
-                    className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 text-xs font-bold transition-all cursor-pointer"
-                  >
-                    Close
-                  </button>
-                )}
+                    <div className="absolute inset-0 bg-white/20 w-full animate-[shimmer_1.5s_infinite]" style={{ backgroundImage: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)' }} />
+                  </motion.div>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Completed State */}
-          {isCompleted && (
-            <div className="space-y-2 pt-1">
-              <div className="flex items-center gap-2 text-xs text-emerald-300 font-semibold">
-                <Sparkles size={14} className="text-emerald-400 animate-spin" />
-                <span>Your file has been generated and saved cleanly.</span>
+            {/* Failed State */}
+            {isFailed && (
+              <div className="space-y-4">
+                <p className="text-[13px] text-slate-300 leading-relaxed font-medium">
+                  We couldn't compile the requested report right now. Please verify your connection and try again.
+                </p>
+
+                <div className="flex items-center gap-3">
+                  {onRetry && (
+                    <button
+                      onClick={onRetry}
+                      className="px-4 py-2 rounded-xl bg-white text-slate-900 hover:bg-slate-100 text-[13px] font-bold shadow-sm transition-all flex items-center gap-2"
+                    >
+                      <RefreshCw size={14} strokeWidth={2.5} />
+                      <span>Retry Request</span>
+                    </button>
+                  )}
+                  {onClose && (
+                    <button
+                      onClick={onClose}
+                      className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-[13px] font-bold transition-all"
+                    >
+                      Dismiss
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+
+            {/* Completed State */}
+            {isCompleted && (
+              <div className="flex items-start gap-2.5 bg-emerald-500/10 border border-emerald-500/10 rounded-xl p-3">
+                <Sparkles size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+                <p className="text-[13px] text-emerald-100/90 font-medium leading-snug">
+                  Your report has been successfully generated and is ready for review.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </motion.div>
     </AnimatePresence>
   );
 };
+

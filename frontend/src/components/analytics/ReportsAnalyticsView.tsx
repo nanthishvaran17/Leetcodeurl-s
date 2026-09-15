@@ -39,51 +39,32 @@ export const ReportsAnalyticsView: React.FC<ReportsAnalyticsProps> = ({
     setSuccess(null);
 
     try {
-      let baseUrl = `/student-reports/generate`;
+      let baseUrl = `/student-reports/generate-direct`;
       let payload = {
         student_id: studentId,
         report_type: reportType,
         format: 'pdf'
       };
-      let res = await api.post(baseUrl, payload);
 
-      // Background generation polling
-      let pollCount = 0;
-      while (res.data.status === 'GENERATING' && pollCount < 40) {
-        pollCount++;
-        setSuccess(`Generating PDF report in background... (${pollCount * 1.5}s)`);
-        await new Promise((r) => setTimeout(r, 1500));
-        res = await api.get(baseUrl);
-      }
+      const safeName = studentName ? studentName.replace(/[^a-zA-Z0-9]/g, '_') : 'Student';
+      const safeReg = regNo || 'Report';
+      let prefix = 'Student_Report';
+      if (reportType === 'summary') prefix = 'Student_Summary';
+      if (reportType === 'matrix') prefix = 'Student_Contest_Matrix';
       
-      if (res.data.status === 'READY' && res.data.download_url) {
-        setSuccess('PDF report ready! Downloading...');
-        let dlUrl = res.data.download_url;
-        if (dlUrl.startsWith('/api/')) {
-          dlUrl = dlUrl.substring(4);
-        }
-        
-        const safeName = studentName ? studentName.replace(/[^a-zA-Z0-9]/g, '_') : 'Student';
-        const safeReg = regNo || 'Report';
-        let prefix = 'Student_Report';
-        if (reportType === 'summary') prefix = 'Student_Summary';
-        if (reportType === 'matrix') prefix = 'Student_Contest_Matrix';
-        
-        const filename = `Nandha_${prefix}_${safeName}_${safeReg}.pdf`;
+      const filename = `Nandha_${prefix}_${safeName}_${safeReg}.pdf`;
 
-        const dlRes = await downloadManager.download({
-          endpoint: dlUrl,
-          filename,
-        });
+      const dlRes = await downloadManager.download({
+        endpoint: baseUrl,
+        method: 'POST',
+        data: payload,
+        filename,
+      });
 
-        if (dlRes.success) {
-          setSuccess(`PDF Report downloaded successfully!`);
-        } else {
-          setError(dlRes.error || 'Failed to download PDF report file.');
-          setSuccess(null);
-        }
+      if (dlRes.success) {
+        setSuccess(`PDF Report downloaded successfully!`);
       } else {
-        setError('Report generation taking longer than expected. Please try again.');
+        setError(dlRes.error || 'Failed to download PDF report file.');
         setSuccess(null);
       }
     } catch (err: any) {

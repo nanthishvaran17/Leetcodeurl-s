@@ -19,7 +19,8 @@ def generate_student_report(
     student_id: int,
     report_type: str,
     format: str,
-    current_user=None
+    current_user=None,
+    return_bytes=False
 ) -> bytes:
     """
     Isolated entrypoint for generating Student Reports.
@@ -201,6 +202,9 @@ def generate_student_report(
             f.write(file_bytes)
         
         file_size = len(file_bytes)
+
+        if return_bytes:
+            return file_bytes, filename, mime_type
 
         # Check for existing cache record to update
         existing_record = db.query(ReportCache).filter(

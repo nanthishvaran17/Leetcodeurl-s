@@ -55,15 +55,15 @@ class StudentNumberedCanvas(canvas.Canvas):
         if self._pageNumber > 1:
             self.setStrokeColor(colors.HexColor("#CBD5E1"))
             self.setLineWidth(0.5)
-            self.line(margin + 10, p_height - 40, p_width - margin - 10, p_height - 40)
+            self.line(margin + 10, p_height - 46, p_width - margin - 10, p_height - 46)
             
             self.setFont("Helvetica-Bold", 8)
             self.setFillColor(colors.HexColor("#1B365D"))
-            self.drawString(margin + 12, p_height - 34, "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)")
+            self.drawString(margin + 12, p_height - 40, "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)")
             
             self.setFont("Helvetica-Oblique", 8)
             self.setFillColor(colors.HexColor("#64748B"))
-            self.drawRightString(p_width - margin - 12, p_height - 34, "INDIVIDUAL STUDENT LEETCODE INTELLIGENCE REPORT")
+            self.drawRightString(p_width - margin - 12, p_height - 40, "INDIVIDUAL STUDENT LEETCODE INTELLIGENCE REPORT")
 
         # Footer Bottom Line
         self.setStrokeColor(colors.HexColor("#CBD5E1"))
@@ -112,9 +112,9 @@ def _get_common_styles():
         'DocTag',
         parent=styles['Normal'],
         fontName='Helvetica-Oblique',
-        fontSize=8.5,
-        leading=11,
-        textColor=colors.HexColor('#64748B'),
+        fontSize=9,
+        leading=12,
+        textColor=colors.HexColor('#0369A1'),
         alignment=1,
         spaceAfter=10
     )
@@ -302,7 +302,7 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
     Filename target: Nandha_Student_Report_<NAME>_<REGISTER>.pdf
     """
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=48, bottomMargin=48)
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=54, bottomMargin=48)
     styles = _get_common_styles()
     rows = dataset.get("rows", [])
     s = rows[0] if rows else dataset
@@ -377,7 +377,7 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
         ('RIGHTPADDING', (0, 0), (0, 0), 10),
     ]))
     story.append(t_summary)
-    story.append(PageBreak())
+    # story.append(PageBreak())  # Removed to fix unwanted empty space
 
     # ----------------------------------------------------
     # PAGE 2: PROBLEM SOLVING & DIFFICULTY ANALYTICS
@@ -456,7 +456,7 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
         ('RIGHTPADDING', (0, 0), (0, 0), 10),
     ]))
     story.append(t_ps_nar)
-    story.append(PageBreak())
+    # story.append(PageBreak())  # Removed to fix unwanted empty space
 
     # ----------------------------------------------------
     # PAGE 3: CONTEST INTELLIGENCE & HISTORY
@@ -495,7 +495,7 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
             Paragraph(f"<font color='#059669'><b>{ch.get('participation_type', 'OFFICIAL')}</b></font>", styles['td'])
         ])
 
-    t_contest = Table(c_table_data, colWidths=[2.2*inch, 0.9*inch, 1.0*inch, 0.8*inch, 0.9*inch, 0.9*inch, 0.6*inch])
+    t_contest = Table(c_table_data, colWidths=[2.0*inch, 0.9*inch, 1.0*inch, 0.8*inch, 0.9*inch, 0.9*inch, 0.8*inch])
     t_contest.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2E5B88')),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CBD5E1')),
@@ -523,7 +523,7 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
         ('RIGHTPADDING', (0, 0), (0, 0), 10),
     ]))
     story.append(t_c_ins)
-    story.append(PageBreak())
+    # story.append(PageBreak())  # Removed to fix unwanted empty space
 
     # ----------------------------------------------------
     # PAGE 4: PROGRAMMING LANGUAGE & DSA TOPIC INTELLIGENCE
@@ -607,7 +607,7 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F8FAFC')])
     ]))
     story.append(t_dsa)
-    story.append(PageBreak())
+    # story.append(PageBreak())  # Removed to fix unwanted empty space
 
     # ----------------------------------------------------
     # PAGE 5: ACHIEVEMENT PROFILE & AI PERFORMANCE INSIGHTS
@@ -631,7 +631,7 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
         ('RIGHTPADDING', (0, 0), (0, 0), 12),
     ]))
     story.append(t_ai)
-    story.append(PageBreak())
+    # story.append(PageBreak())  # Removed to fix unwanted empty space
 
     # ----------------------------------------------------
     # PAGE 6: STUDENT ACTION PLAN & AUDIT SNAPSHOT
@@ -670,7 +670,7 @@ def generate_student_summary_pdf(dataset: dict) -> bytes:
     Filename target: Nandha_Student_Summary_<NAME>_<REGISTER>.pdf
     """
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=48, bottomMargin=48)
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=36, bottomMargin=50)
     styles = _get_common_styles()
     rows = dataset.get("rows", [])
     s = rows[0] if rows else dataset
@@ -685,7 +685,7 @@ def generate_student_summary_pdf(dataset: dict) -> bytes:
     )
 
     story.append(_build_student_identity_table(s, styles))
-    story.append(Spacer(1, 12))
+    story.append(Spacer(1, 6))
 
     tot_solved = int(s.get("total_solved") or 0)
     easy_cnt = int(s.get("easy") or 0)
@@ -712,7 +712,7 @@ def generate_student_summary_pdf(dataset: dict) -> bytes:
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
     ]))
     story.append(t_kpi)
-    story.append(Spacer(1, 12))
+    story.append(Spacer(1, 6))
 
     overview_text = (
         f"<b>Summary Overview:</b> Student <b>{s.get('name', 'N/A')}</b> ({s.get('reg_no', 'N/A')}) has accumulated "
@@ -724,16 +724,16 @@ def generate_student_summary_pdf(dataset: dict) -> bytes:
     t_ov.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (0, 0), colors.HexColor('#F0F9FF')),
         ('BOX', (0, 0), (0, 0), 1, colors.HexColor('#1B365D')),
-        ('TOPPADDING', (0, 0), (0, 0), 8),
-        ('BOTTOMPADDING', (0, 0), (0, 0), 8),
-        ('LEFTPADDING', (0, 0), (0, 0), 12),
-        ('RIGHTPADDING', (0, 0), (0, 0), 12),
+        ('TOPPADDING', (0, 0), (0, 0), 6),
+        ('BOTTOMPADDING', (0, 0), (0, 0), 6),
+        ('LEFTPADDING', (0, 0), (0, 0), 10),
+        ('RIGHTPADDING', (0, 0), (0, 0), 10),
     ]))
     story.append(t_ov)
-    story.append(Spacer(1, 14))
+    story.append(Spacer(1, 8))
 
     story.append(Paragraph("1. DIFFICULTY DISTRIBUTION SUMMARY", styles['section_hdr']))
-    story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#1B365D"), spaceAfter=5))
+    story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#1B365D"), spaceAfter=4))
 
     ez_pct = round((easy_cnt / tot_solved * 100), 1) if tot_solved > 0 else 0
     med_pct = round((med_cnt / tot_solved * 100), 1) if tot_solved > 0 else 0
@@ -751,15 +751,15 @@ def generate_student_summary_pdf(dataset: dict) -> bytes:
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1B365D')),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CBD5E1')),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('TOPPADDING', (0, 0), (-1, -1), 5),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F8FAFC')])
     ]))
     story.append(t_d)
-    story.append(Spacer(1, 14))
+    story.append(Spacer(1, 8))
 
     story.append(Paragraph("2. EXECUTIVE ACTION PLAN & PLACEMENT ROADMAP", styles['section_hdr']))
-    story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#1B365D"), spaceAfter=5))
+    story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#1B365D"), spaceAfter=4))
 
     roadmap_text = (
         "• <b>Primary Technical Focus:</b> Maintain consistent practice in Medium/Hard Dynamic Programming & Graph problems.<br/>"
@@ -770,10 +770,10 @@ def generate_student_summary_pdf(dataset: dict) -> bytes:
     t_rm.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (0, 0), colors.HexColor('#F8FAFC')),
         ('BOX', (0, 0), (0, 0), 1, colors.HexColor('#CBD5E1')),
-        ('TOPPADDING', (0, 0), (0, 0), 8),
-        ('BOTTOMPADDING', (0, 0), (0, 0), 8),
-        ('LEFTPADDING', (0, 0), (0, 0), 12),
-        ('RIGHTPADDING', (0, 0), (0, 0), 12),
+        ('TOPPADDING', (0, 0), (0, 0), 6),
+        ('BOTTOMPADDING', (0, 0), (0, 0), 6),
+        ('LEFTPADDING', (0, 0), (0, 0), 10),
+        ('RIGHTPADDING', (0, 0), (0, 0), 10),
     ]))
     story.append(t_rm)
 
@@ -791,7 +791,7 @@ def generate_student_contest_matrix_pdf(dataset: dict) -> bytes:
     Filename target: Nandha_Student_Contest_Matrix_<NAME>_<REGISTER>.pdf
     """
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=48, bottomMargin=48)
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=36, bottomMargin=50)
     styles = _get_common_styles()
     rows = dataset.get("rows", [])
     s = rows[0] if rows else dataset
@@ -806,7 +806,7 @@ def generate_student_contest_matrix_pdf(dataset: dict) -> bytes:
     )
 
     story.append(_build_student_identity_table(s, styles))
-    story.append(Spacer(1, 10))
+    story.append(Spacer(1, 6))
 
     contest_history = s.get("contest_history", [])
     if not contest_history:
@@ -837,10 +837,10 @@ def generate_student_contest_matrix_pdf(dataset: dict) -> bytes:
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
     ]))
     story.append(t_mkpi)
-    story.append(Spacer(1, 10))
+    story.append(Spacer(1, 6))
 
     story.append(Paragraph(f"WEEKLY CONTEST PERFORMANCE MATRIX — {len(contest_history)} RECORDED CONTESTS", styles['section_hdr']))
-    story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#1B365D"), spaceAfter=5))
+    story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#1B365D"), spaceAfter=4))
 
     matrix_headers = [
         Paragraph("Contest Name", styles['th_left']),
@@ -874,7 +874,7 @@ def generate_student_contest_matrix_pdf(dataset: dict) -> bytes:
             Paragraph(f"<font color='#059669'><b>{ch.get('participation_type', 'OFFICIAL')}</b></font>", styles['td'])
         ])
 
-    t_matrix = Table(c_matrix_data, colWidths=[2.0*inch, 0.85*inch, 0.85*inch, 0.75*inch, 0.8*inch, 0.8*inch, 0.75*inch, 0.5*inch])
+    t_matrix = Table(c_matrix_data, colWidths=[1.8*inch, 0.8*inch, 0.85*inch, 0.7*inch, 0.8*inch, 0.8*inch, 0.75*inch, 0.8*inch])
     t_matrix.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1B365D')),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CBD5E1')),
@@ -884,7 +884,7 @@ def generate_student_contest_matrix_pdf(dataset: dict) -> bytes:
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F8FAFC')])
     ]))
     story.append(t_matrix)
-    story.append(Spacer(1, 12))
+    story.append(Spacer(1, 8))
 
     matrix_text = (
         f"• <b>Contest Standing:</b> Candidate <b>{s.get('name', 'N/A')}</b> has participated in <b>{len(contest_history)} contest sessions</b>, maintaining an official rating of <b>{rating_val}</b>.<br/>"
@@ -895,10 +895,10 @@ def generate_student_contest_matrix_pdf(dataset: dict) -> bytes:
     t_m_summary.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (0, 0), colors.HexColor('#F0F9FF')),
         ('BOX', (0, 0), (0, 0), 1, colors.HexColor('#1B365D')),
-        ('TOPPADDING', (0, 0), (0, 0), 8),
-        ('BOTTOMPADDING', (0, 0), (0, 0), 8),
-        ('LEFTPADDING', (0, 0), (0, 0), 12),
-        ('RIGHTPADDING', (0, 0), (0, 0), 12),
+        ('TOPPADDING', (0, 0), (0, 0), 6),
+        ('BOTTOMPADDING', (0, 0), (0, 0), 6),
+        ('LEFTPADDING', (0, 0), (0, 0), 10),
+        ('RIGHTPADDING', (0, 0), (0, 0), 10),
     ]))
     story.append(t_m_summary)
 

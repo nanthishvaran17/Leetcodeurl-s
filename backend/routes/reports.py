@@ -1315,6 +1315,18 @@ def download_universal_excel(
         eff_att = status if (status and status != "ALL") else attendance
         eff_search = searchQuery if (searchQuery and searchQuery.strip()) else search
 
+        if report_id == "WEEKLY_STUDENT_PERFORMANCE":
+            from backend.services.weekly_performance_report_service import generate_weekly_performance_excel
+            excel_bytes = generate_weekly_performance_excel(db, eff_dept)
+            if not excel_bytes or len(excel_bytes) < 100:
+                raise ValueError("Generated Excel file is empty or corrupted.")
+            r_filename = f"Weekly_Performance_{eff_dept}.xlsx"
+            return Response(
+                content=excel_bytes,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": f'attachment; filename="{r_filename}"'}
+            )
+
         dataset, r_filename = _get_dataset_for_id(
             report_id, db, 
             dept=eff_dept, 

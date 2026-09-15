@@ -1,20 +1,14 @@
 .login-page-container {
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: 2rem;
+  padding: 0;
   background-color: var(--bg-body, #f8fafc);
-  background-image: 
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.8));
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
+  background-image: none;
   position: relative;
   z-index: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden; /* Prevent page-level scroll */
 }
 
 .login-page-container::before {
@@ -24,6 +18,7 @@
   background: radial-gradient(circle at bottom, rgba(56, 189, 248, 0.2) 0%, transparent 60%);
   pointer-events: none;
   z-index: -1;
+  display: none;
 }
 
 /* Subtle circuit pattern at bottom */
@@ -41,30 +36,32 @@
   opacity: 0.3;
   pointer-events: none;
   z-index: -1;
+  display: none;
 }
 
 .dark .login-page-container {
-  background-image: 
-    linear-gradient(to bottom, rgba(2, 6, 23, 0.6), rgba(2, 6, 23, 0.95));
+  background-image: none;
 }
 
 .login-frame {
   display: flex;
   width: 100%;
-  max-width: 1100px;
-  min-height: 650px;
+  max-width: none;
+  height: 100vh;
+  height: 100dvh;
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-radius: 24px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.4) inset;
+  border-radius: 0;
+  box-shadow: none;
   overflow: hidden;
   position: relative;
+  margin: 0;
 }
 
 .dark .login-frame {
   background: rgba(15, 23, 42, 0.75);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  box-shadow: none;
 }
 
 /* ========================================================
