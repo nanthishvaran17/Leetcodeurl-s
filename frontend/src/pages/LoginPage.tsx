@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 
 import { CollegeLogo } from '../components/CollegeLogo';
 import api from '../services/api';
+import { isCapacitorNative } from '../config/apiConfig';
 
 interface LoginPageProps {
   onSuccess: () => void;
@@ -48,6 +49,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Proactive background server pre-warm to eliminate cold-start connection errors
+  useEffect(() => {
+    let active = true;
+    api.get('/health', { timeout: 15000 }).catch(() => {
+      if (active && isCapacitorNative()) {
+        api.get('/system-health', { timeout: 10000 }).catch(() => {});
+      }
+    });
+    return () => { active = false; };
   }, []);
 
   const prefersReducedMotion = useReducedMotion();
@@ -239,11 +251,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     setLoading(true);
     setAuthStatusText('Signing in...');
 
-    // Attempt login — with one automatic retry after a brief warm-up pause
-    // to gracefully handle Render free-tier cold starts.
+    // Attempt login — with 3-stage automatic retry to handle cold starts & network glitches
     const attemptLogin = async (attempt: number): Promise<boolean> => {
       try {
-        const res = await api.post('/auth/login', { username: cleanUser, password: cleanPass }, { timeout: 60000 });
+        const res = await api.post('/auth/login', { username: cleanUser, password: cleanPass }, { timeout: 45000 });
         console.log('[LOGIN] Response status:', res.status, 'data keys:', Object.keys(res.data || {}));
         if (res.data && res.data.access_token) {
           setSuccessMsg('Authentication verified. Directing to workspace...');
@@ -258,17 +269,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         const errMsg = err?.message || 'unknown';
         console.error(`[LOGIN_ERROR] attempt=${attempt} status=${status} detail=${detail} message=${errMsg}`);
 
-        // If it's a real auth failure (401/403), don't retry — show the actual message
+        // If it's a real auth failure (401/403), don't retry — show actual detail
         if (status === 401 || status === 403) {
           setError(detail || 'Invalid username or password.');
-          return true; // Handled
+          return true;
         }
 
-        // Network error or server cold start — retry once after warm-up
+        // Network error or server cold start — retry up to 3 times with warm-up
         if (attempt === 1 && (!status || status >= 500 || !err.response)) {
-          setAuthStatusText('Server warming up — retrying...');
-          await new Promise(r => setTimeout(r, 8000));
+          setAuthStatusText('Server warming up — retrying (attempt 2 of 3)...');
+          await new Promise(r => setTimeout(r, 3000));
           return await attemptLogin(2);
+        }
+        if (attempt === 2 && (!status || status >= 500 || !err.response)) {
+          setAuthStatusText('Re-establishing server link (attempt 3 of 3)...');
+          await new Promise(r => setTimeout(r, 4000));
+          return await attemptLogin(3);
         }
 
         // Final failure
@@ -681,8 +697,24 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                   className="error-banner"
                   role="alert"
                 >
-                  <AlertCircle size={18} className="shrink-0" />
-                  <span className="flex-1 min-w-0">{error || authError}</span>
+                  <AlertCircle size={18} className="shrink-0 text-rose-400" />
+                  <div className="flex-1 min-w-0 space-y-1 text-left">
+                    <p className="text-xs font-bold leading-normal">{error || authError}</p>
+                    {(error || authError || '').includes('Cannot reach server') && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          setError('');
+                          clearAuthError();
+                          if (username && password) handlePasswordLogin(e);
+                        }}
+                        className="inline-flex items-center space-x-1 text-[11px] font-black underline hover:text-white transition-colors cursor-pointer"
+                      >
+                        <RefreshCw className="w-3 h-3 animate-spin-hover" />
+                        <span>Tap here to retry login now</span>
+                      </button>
+                    )}
+                  </div>
                   <button
                     type="button"
                     onClick={() => { setError(''); clearAuthError(); }}
