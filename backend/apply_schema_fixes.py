@@ -82,6 +82,16 @@ def apply_fixes():
             """))
             logger.info("  ✓ student_contest_participations.official_attendance_state")
 
+            # 6. Cleanup unneeded departments and their students (Keep only CS(1) and IoT(2))
+            logger.info("Cleaning up unneeded departments and students (Keeping only CS/IoT)...")
+            
+            # Since some tables reference students/departments without ON DELETE CASCADE,
+            # we simply delete students directly. 
+            conn.execute(text("DELETE FROM students WHERE department_id NOT IN (1, 2)"))
+            conn.execute(text("DELETE FROM departments WHERE id NOT IN (1, 2)"))
+            
+            logger.info("  ✓ Successfully enforced CS/IoT-only data constraint.")
+
             conn.commit()
             logger.info("Schema fixes applied successfully — all columns verified.")
 

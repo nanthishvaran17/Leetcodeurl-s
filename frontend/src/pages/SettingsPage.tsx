@@ -739,8 +739,8 @@ export const SettingsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Responsive Section Buttons (One-by-one on mobile, flex wrap on desktop) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:flex lg:flex-wrap gap-2">
+        {/* Responsive Section Buttons (Horizontally scrollable on mobile, flex wrap on desktop) */}
+        <div className="flex overflow-x-auto sm:flex-wrap gap-2 pb-2 sm:pb-0 hide-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
           {[
             { id: 'staff', label: 'Staff Management', icon: Shield },
             { id: 'staff_verification', label: 'Staff Verification', icon: UserCheck },
@@ -760,21 +760,16 @@ export const SettingsPage: React.FC = () => {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveSectionFilter(tab.id)}
-                className={`w-full lg:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl font-bold text-xs transition-all flex items-center justify-between lg:justify-start gap-2.5 cursor-pointer text-left ${
+                className={`flex-shrink-0 px-3.5 py-2.5 sm:py-2 rounded-xl font-bold text-xs transition-all flex items-center gap-2.5 cursor-pointer text-left whitespace-nowrap ${
                   isActive
                     ? 'bg-brand-600 text-white shadow-md shadow-brand-500/25 scale-[1.01]'
                     : 'bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-800 border border-slate-200 dark:border-slate-800'
                 }`}
               >
-                <div className="flex items-center gap-2 min-w-0">
+                <div className="flex items-center gap-2">
                   <Icon className="w-3.5 h-3.5 flex-shrink-0" />
                   <span className="truncate">{tab.label}</span>
                 </div>
-                {isActive && (
-                  <span className="text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-white/20 text-white shrink-0 lg:hidden">
-                    Active
-                  </span>
-                )}
               </button>
             );
           })}

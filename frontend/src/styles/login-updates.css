@@ -3,8 +3,6 @@
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
   padding: 2rem;
   background-color: var(--bg-body, #f8fafc);
   background-image: 
@@ -69,16 +67,33 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
 
-/* Mobile height fix for login frame auto-fitting */
+/* Mobile height fix for login frame auto-fitting & Safe Centering */
 @media (max-width: 899px) {
+  .login-page-container {
+    padding: 1.5rem 1rem !important; /* Less padding on small screens */
+    align-items: center;
+    justify-content: flex-start; /* Start from top to allow safe scrolling */
+  }
+  /* On mobile, use auto margins to vertically center if space permits, else scroll normally */
+  .mobile-top-branding {
+    margin-top: auto !important;
+  }
   .login-frame {
     min-height: auto !important;
     height: max-content !important;
     padding-bottom: 24px !important;
+    margin-bottom: auto !important;
   }
   .panel-right {
     min-height: auto !important;
     height: max-content !important;
     flex: none !important;
+  }
+}
+
+@media (min-width: 900px) {
+  .login-page-container {
+    align-items: center;
+    justify-content: center;
   }
 }
