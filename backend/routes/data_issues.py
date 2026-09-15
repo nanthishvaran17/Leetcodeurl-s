@@ -194,9 +194,7 @@ def get_data_issues_summary(
     """
     from backend.services.authorization_service import apply_role_based_student_filter
     
-    query = db.query(Student).join(Department, Student.department_id == Department.id).filter(
-        Department.code.in_(["CSE(CS)", "CSE(IOT)"])
-    ).options(
+    query = db.query(Student).outerjoin(Department, Student.department_id == Department.id).options(
         joinedload(Student.stats),
         joinedload(Student.department)
     )
@@ -299,9 +297,7 @@ def get_data_issues_students(
     """
     from backend.services.authorization_service import apply_role_based_student_filter
     
-    query = db.query(Student).join(Department, Student.department_id == Department.id).filter(
-        Department.code.in_(["CSE(CS)", "CSE(IOT)"])
-    ).options(
+    query = db.query(Student).outerjoin(Department, Student.department_id == Department.id).options(
         joinedload(Student.stats),
         joinedload(Student.department)
     )
