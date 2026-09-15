@@ -1209,7 +1209,7 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     """
     Generates a professional multi-sheet Management Report Excel Workbook matching Nandha Intelligence standard.
     Includes Student Intelligence, Student Overview, Difficulty Analysis, and Department Performance Analysis.
-    No HR terminology or risk/placement sheets included.
+    No HR terminology, performance scores, or risk/placement sheets included.
     """
     wb = openpyxl.Workbook()
     wb.remove(wb.active)
@@ -1221,13 +1221,11 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     BLUE_KPI = PatternFill(start_color="1D4ED8", end_color="1D4ED8", fill_type="solid")
     GREEN_KPI = PatternFill(start_color="166534", end_color="166534", fill_type="solid")
     AMBER_KPI = PatternFill(start_color="B45309", end_color="B45309", fill_type="solid")
-    PURPLE_KPI = PatternFill(start_color="6D28D9", end_color="6D28D9", fill_type="solid")
     CYAN_KPI = PatternFill(start_color="0F766E", end_color="0F766E", fill_type="solid")
 
     GRP_ID_FILL = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
     GRP_SOLVE_FILL = PatternFill(start_color="1E4620", end_color="1E4620", fill_type="solid")
     GRP_CONTEST_FILL = PatternFill(start_color="4A154B", end_color="4A154B", fill_type="solid")
-    GRP_SCORE_FILL = PatternFill(start_color="C05621", end_color="C05621", fill_type="solid")
 
     ALT_ROW_FILL = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
 
@@ -1248,7 +1246,6 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     avg_tot = round(sum(float(c.get("total_solved", 0) or 0) for c in candidates) / tot_cnt, 1) if tot_cnt > 0 else 0
     avg_acc = round(sum(float(c.get("acceptance_rate", 0) or 0) for c in candidates) / tot_cnt, 1) if tot_cnt > 0 else 0
     avg_rat = round(sum(float(c.get("contest_rating", 0) or 0) for c in candidates) / tot_cnt, 1) if tot_cnt > 0 else 0
-    avg_perf = round(sum(float(c.get("performance_score", 0) or 0) for c in candidates) / tot_cnt, 1) if tot_cnt > 0 else 0
 
     date_str = datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")
 
@@ -1261,7 +1258,7 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     ws1.page_setup.fitToWidth = 1
     ws1.page_setup.fitToHeight = 0
 
-    last_col_letter = "X"
+    last_col_letter = "U"
     ws1.merge_cells(f"A1:{last_col_letter}1")
     ws1["A1"] = "NANDHA LEETCODE INTELLIGENCE — MANAGEMENT REPORT"
     ws1["A1"].font = FONT_TITLE; ws1["A1"].alignment = ALIGN_CENTER; ws1["A1"].fill = NAVY_FILL
@@ -1278,11 +1275,10 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     ws1.row_dimensions[3].height = 18
 
     kpis = [
-        ("A", "D", "TOTAL STUDENTS", tot_cnt, BLUE_KPI),
-        ("E", "H", "AVG SOLVED", avg_tot, GREEN_KPI),
-        ("I", "L", "AVG PERFORMANCE SCORE", f"{avg_perf} / 100", PURPLE_KPI),
-        ("M", "P", "AVG CONTEST RATING", avg_rat, AMBER_KPI),
-        ("Q", "U", "AVG ACCEPTANCE RATE", f"{avg_acc}%", CYAN_KPI)
+        ("A", "E", "TOTAL STUDENTS", tot_cnt, BLUE_KPI),
+        ("F", "J", "AVG SOLVED", avg_tot, GREEN_KPI),
+        ("K", "O", "AVG CONTEST RATING", avg_rat, AMBER_KPI),
+        ("P", "U", "AVG ACCEPTANCE RATE", f"{avg_acc}%", CYAN_KPI)
     ]
 
     for c_start, c_end, lbl, val, fill_style in kpis:
@@ -1305,8 +1301,7 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     crit_list = [
         ("Applied Filter String", filters_desc),
         ("Total Exported Students", tot_cnt),
-        ("Average Solved Count", avg_tot),
-        ("Average Performance Score", f"{avg_perf} / 100")
+        ("Average Solved Count", avg_tot)
     ]
     for idx, (lbl, val) in enumerate(crit_list, start=9):
         ws1.cell(row=idx, column=1, value=lbl).font = FONT_DATA_BOLD
@@ -1321,11 +1316,11 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     tot_med = sum(int(c.get("medium_solved", 0) or 0) for c in candidates)
     tot_hrd = sum(int(c.get("hard_solved", 0) or 0) for c in candidates)
 
-    ws1["W8"] = "Difficulty"; ws1["X8"] = "Problems"
-    ws1["W8"].font = FONT_DATA_BOLD; ws1["X8"].font = FONT_DATA_BOLD
-    ws1["W9"] = "Easy"; ws1["W9"].font = FONT_DATA; ws1["X9"] = tot_easy; ws1["X9"].font = FONT_DATA_BOLD
-    ws1["W10"] = "Medium"; ws1["W10"].font = FONT_DATA; ws1["X10"] = tot_med; ws1["X10"].font = FONT_DATA_BOLD
-    ws1["W11"] = "Hard"; ws1["W11"].font = FONT_DATA; ws1["X11"] = tot_hrd; ws1["X11"].font = FONT_DATA_BOLD
+    ws1["T8"] = "Difficulty"; ws1["U8"] = "Problems"
+    ws1["T8"].font = FONT_DATA_BOLD; ws1["U8"].font = FONT_DATA_BOLD
+    ws1["T9"] = "Easy"; ws1["T9"].font = FONT_DATA; ws1["U9"] = tot_easy; ws1["U9"].font = FONT_DATA_BOLD
+    ws1["T10"] = "Medium"; ws1["T10"].font = FONT_DATA; ws1["U10"] = tot_med; ws1["U10"].font = FONT_DATA_BOLD
+    ws1["T11"] = "Hard"; ws1["T11"].font = FONT_DATA; ws1["U11"] = tot_hrd; ws1["U11"].font = FONT_DATA_BOLD
 
     chart2 = BarChart()
     chart2.type = "col"
@@ -1333,8 +1328,8 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     chart2.title = "Problem Difficulty Breakdown"
     chart2.y_axis.title = "Total Solved"
     chart2.x_axis.title = "Difficulty"
-    data2 = Reference(ws1, min_col=24, min_row=8, max_row=11)
-    cats2 = Reference(ws1, min_col=23, min_row=9, max_row=11)
+    data2 = Reference(ws1, min_col=21, min_row=8, max_row=11)
+    cats2 = Reference(ws1, min_col=20, min_row=9, max_row=11)
     chart2.add_data(data2, titles_from_data=True)
     chart2.set_categories(cats2)
     chart2.width = 13; chart2.height = 7.5
@@ -1346,16 +1341,13 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     ws1["I24"] = "LEETCODE SOLVING & ACTIVITY"; ws1["I24"].font = FONT_HEADER; ws1["I24"].fill = GRP_SOLVE_FILL; ws1["I24"].alignment = ALIGN_CENTER
     ws1.merge_cells("R24:U24")
     ws1["R24"] = "CONTEST METRICS"; ws1["R24"].font = FONT_HEADER; ws1["R24"].fill = GRP_CONTEST_FILL; ws1["R24"].alignment = ALIGN_CENTER
-    ws1.merge_cells("V24:X24")
-    ws1["V24"] = "PERFORMANCE SCORES"; ws1["V24"].font = FONT_HEADER; ws1["V24"].fill = GRP_SCORE_FILL; ws1["V24"].alignment = ALIGN_CENTER
 
     ws1.row_dimensions[24].height = 20
 
     headers1 = [
         "Rank", "Student Name", "Register No", "Roll No", "Department", "Degree", "Batch", "Section",
         "Primary Language", "Total Solved", "Easy", "Medium", "Hard", "Acceptance %", "Submissions", "Current Streak", "Active Days",
-        "Contest Rating", "Global Rank", "Contests Attended", "Top %",
-        "Performance Score", "Interview Readiness", "Overall Score"
+        "Contest Rating", "Global Rank", "Contests Attended", "Top %"
     ]
 
     for c_idx, h in enumerate(headers1, start=1):
@@ -1367,9 +1359,7 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     for i, c in enumerate(candidates):
         r_idx = 26 + i
         tot = int(c.get("total_solved", 0) or 0)
-        perf = int(c.get("performance_score", 0) or 0)
         rat = float(c.get("contest_rating", 0) or 0)
-        overall = round((tot * 0.2) + (perf * 0.5) + (rat * 0.02), 1)
 
         rat_str = f"{rat:.2f}" if rat > 0 else "—"
         rank_str = clean_cell_value(c.get("global_rank", "—"))
@@ -1396,15 +1386,12 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
             rat_str,
             rank_str,
             clean_cell_value(c.get("contests_attended", 0)),
-            f"{c.get('contest_top_pct', 0)}%" if c.get("contest_top_pct") is not None else "—",
-            perf,
-            clean_cell_value(c.get("interview_readiness", "—")),
-            overall
+            f"{c.get('contest_top_pct', 0)}%" if c.get("contest_top_pct") is not None else "—"
         ]
 
         for col_idx, val in enumerate(row_vals, start=1):
             cell = ws1.cell(row=r_idx, column=col_idx, value=val)
-            cell.font = FONT_DATA_BOLD if col_idx in (1, 2, 10, 22, 24) else FONT_DATA
+            cell.font = FONT_DATA_BOLD if col_idx in (1, 2, 10) else FONT_DATA
             cell.alignment = ALIGN_CENTER
             cell.border = _THIN_BORDER
 
@@ -1412,7 +1399,7 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
 
         ws1.row_dimensions[r_idx].height = 20
 
-    ws1.auto_filter.ref = f"A25:X{25 + tot_cnt}"
+    ws1.auto_filter.ref = f"A25:U{25 + tot_cnt}"
     ws1.freeze_panes = "A26"
 
     min_widths_sheet1 = {
@@ -1436,10 +1423,7 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
         "R": 16,  # Contest Rating
         "S": 16,  # Global Rank
         "T": 16,  # Contests Attended
-        "U": 12,  # Top %
-        "V": 16,  # Performance Score
-        "W": 16,  # Interview Readiness
-        "X": 14   # Overall Score
+        "U": 12   # Top %
     }
 
     for col in ws1.columns:
@@ -1457,19 +1441,19 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     ws2.page_setup.fitToWidth = 1
     ws2.page_setup.fitToHeight = 0
 
-    ws2.merge_cells("A1:N1")
+    ws2.merge_cells("A1:M1")
     ws2["A1"] = "MANAGEMENT REPORT — STUDENT OVERVIEW"
     ws2["A1"].font = FONT_TITLE; ws2["A1"].fill = NAVY_FILL; ws2["A1"].alignment = ALIGN_CENTER
     ws2.row_dimensions[1].height = 28
 
-    ws2.merge_cells("A2:N2")
+    ws2.merge_cells("A2:M2")
     ws2["A2"] = f"Generated: {date_str}   |   Total Students: {tot_cnt}   |   Filters: {filters_desc}"
     ws2["A2"].font = FONT_META; ws2["A2"].fill = GRAY_META_FILL; ws2["A2"].alignment = ALIGN_CENTER
     ws2.row_dimensions[2].height = 18
 
     headers2 = [
         "Rank", "Student Name", "Register No", "Department", "Batch", "Section", "Language",
-        "Total Solved", "Easy", "Medium", "Hard", "Acceptance %", "Contest Rating", "Performance Score"
+        "Total Solved", "Easy", "Medium", "Hard", "Acceptance %", "Contest Rating"
     ]
 
     for c_idx, h in enumerate(headers2, start=1):
@@ -1493,17 +1477,16 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
             int(c.get("medium_solved", 0) or 0),
             int(c.get("hard_solved", 0) or 0),
             f"{c.get('acceptance_rate', 0)}%",
-            float(c.get("contest_rating", 0) or 0),
-            int(c.get("performance_score", 0) or 0)
+            float(c.get("contest_rating", 0) or 0)
         ]
         for col_idx, val in enumerate(row_vals, start=1):
             cell = ws2.cell(row=r_idx, column=col_idx, value=val)
-            cell.font = FONT_DATA_BOLD if col_idx in (1, 2, 8, 14) else FONT_DATA
+            cell.font = FONT_DATA_BOLD if col_idx in (1, 2, 8) else FONT_DATA
             cell.alignment = ALIGN_CENTER
             cell.border = _THIN_BORDER
             if r_idx % 2 == 1: cell.fill = ALT_ROW_FILL
 
-    ws2.auto_filter.ref = f"A4:N{4 + tot_cnt}"
+    ws2.auto_filter.ref = f"A4:M{4 + tot_cnt}"
     ws2.freeze_panes = "A5"
     for col in ws2.columns:
         col_letter = get_column_letter(col[0].column)
@@ -1562,7 +1545,7 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     ws4 = wb.create_sheet(title="Department Analysis")
     ws4.sheet_view.showGridLines = True
 
-    ws4.merge_cells("A1:F1")
+    ws4.merge_cells("A1:E1")
     ws4["A1"] = "DEPARTMENT-WISE PERFORMANCE SUMMARY"
     ws4["A1"].font = FONT_TITLE; ws4["A1"].fill = NAVY_FILL; ws4["A1"].alignment = ALIGN_CENTER
 
@@ -1573,7 +1556,7 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
             dept_map[d] = []
         dept_map[d].append(c)
 
-    headers4 = ["Department", "Students", "Total Solved", "Avg Solved", "Avg Rating", "Avg Performance"]
+    headers4 = ["Department", "Students", "Total Solved", "Avg Solved", "Avg Rating"]
     for c_idx, h in enumerate(headers4, start=1):
         cell = ws4.cell(row=3, column=c_idx, value=h)
         cell.font = FONT_HEADER; cell.fill = SUB_NAVY_FILL; cell.alignment = ALIGN_CENTER; cell.border = _THIN_BORDER
@@ -1584,9 +1567,8 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
         t_solv = sum(int(x.get("total_solved", 0) or 0) for x in d_cands)
         a_solv = round(t_solv / cnt, 1) if cnt > 0 else 0
         a_rat = round(sum(float(x.get("contest_rating", 0) or 0) for x in d_cands) / cnt, 1) if cnt > 0 else 0
-        a_perf = round(sum(float(x.get("performance_score", 0) or 0) for x in d_cands) / cnt, 1) if cnt > 0 else 0
 
-        row_vals = [dept_code, cnt, t_solv, a_solv, a_rat, a_perf]
+        row_vals = [dept_code, cnt, t_solv, a_solv, a_rat]
         for c_i, val in enumerate(row_vals, start=1):
             cell = ws4.cell(row=r_curr, column=c_i, value=val)
             cell.font = FONT_DATA_BOLD if c_i in (1, 2, 4) else FONT_DATA
@@ -1604,7 +1586,7 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     chart4.add_data(data4, titles_from_data=True)
     chart4.set_categories(cats4)
     chart4.width = 12; chart4.height = 8
-    ws4.add_chart(chart4, "H3")
+    ws4.add_chart(chart4, "G3")
 
     for col in ws4.columns:
         col_letter = get_column_letter(col[0].column)

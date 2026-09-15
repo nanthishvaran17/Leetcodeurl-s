@@ -993,7 +993,7 @@ export const HRCandidateFinderPage: React.FC = () => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `HR_Candidate_Finder_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      link.download = `NANDHA_Management_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
