@@ -554,20 +554,20 @@ def generate_data_issues_excel_bytes(db: Session, department: str, year_level: s
     ws.merge_cells("A1:O1")
     title_cell = ws["A1"]
     title_cell.value = "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)"
-    title_cell.font = Font(name="Calibri", size=16, bold=True, color="FFFFFF")
+    title_cell.font = Font(name="Times New Roman", size=16, bold=True, color="FFFFFF")
     title_cell.fill = PatternFill(start_color="1E3A8A", end_color="1E3A8A", fill_type="solid")
     title_cell.alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[1].height = 34
+    ws.row_dimensions[1].height = 36
 
     # Subtitle Block (Row 2) - Dark Navy
     ws.merge_cells("A2:O2")
     sub_cell = ws["A2"]
     date_str = datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")
     sub_cell.value = f"Student Data Quality & LeetCode Telemetry Audit Report • Generated: {date_str} • Filter: Dept={department}, Year={year_level}, Issue={issue_type} ({len(students_data)} Records)"
-    sub_cell.font = Font(name="Calibri", size=10, bold=True, color="FFFFFF")
+    sub_cell.font = Font(name="Times New Roman", size=10, bold=True, color="FFFFFF")
     sub_cell.fill = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid")
     sub_cell.alignment = Alignment(horizontal="center", vertical="center")
-    ws.row_dimensions[2].height = 22
+    ws.row_dimensions[2].height = 24
 
     # Headers (Row 4)
     headers = [
@@ -581,7 +581,7 @@ def generate_data_issues_excel_bytes(db: Session, department: str, year_level: s
     ws.append(headers) # Row 4
     header_row = ws[4]
     header_fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
-    header_font = Font(name="Calibri", size=10.5, bold=True, color="FFFFFF")
+    header_font = Font(name="Times New Roman", size=11, bold=True, color="FFFFFF")
     thin_border = Border(
         left=Side(style="thin", color="CBD5E1"),
         right=Side(style="thin", color="CBD5E1"),
@@ -594,26 +594,11 @@ def generate_data_issues_excel_bytes(db: Session, department: str, year_level: s
         cell.font = header_font
         cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
         cell.border = thin_border
-    ws.row_dimensions[4].height = 30
+    ws.row_dimensions[4].height = 32
 
-    # Alignment specifications per column index (1-based)
-    col_alignments = {
-        1: Alignment(horizontal="center", vertical="center"), # S.No
-        2: Alignment(horizontal="left", vertical="center"),   # Name
-        3: Alignment(horizontal="center", vertical="center"), # Reg No
-        4: Alignment(horizontal="left", vertical="center"),   # Dept
-        5: Alignment(horizontal="center", vertical="center"), # Year
-        6: Alignment(horizontal="left", vertical="center"),   # Username
-        7: Alignment(horizontal="left", vertical="center"),   # Profile URL
-        8: Alignment(horizontal="center", vertical="center"), # URL Status
-        9: Alignment(horizontal="center", vertical="center"), # Issue Category
-        10: Alignment(horizontal="center", vertical="center"), # Severity
-        11: Alignment(horizontal="left", vertical="center", wrap_text=True),  # Issue Description
-        12: Alignment(horizontal="right", vertical="center"), # Solved Count
-        13: Alignment(horizontal="right", vertical="center"), # Contest Rating
-        14: Alignment(horizontal="center", vertical="center"), # Last Sync
-        15: Alignment(horizontal="left", vertical="center", wrap_text=True)   # Recommended Action
-    }
+    # Mandatory 100% CENTER alignment across ALL 15 columns as explicitly requested
+    center_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    col_alignments = {i: center_alignment for i in range(1, 16)}
 
     # Populate Data Rows
     for idx, st in enumerate(students_data, start=1):
@@ -665,27 +650,27 @@ def generate_data_issues_excel_bytes(db: Session, department: str, year_level: s
         for col_idx, cell in enumerate(current_row, start=1):
             cell.fill = row_fill
             cell.border = thin_border
-            cell.alignment = col_alignments.get(col_idx, Alignment(vertical="center"))
+            cell.alignment = center_alignment
 
-            # Specific cell font colors
+            # Specific cell font styling (Times New Roman with high-contrast text)
             if col_idx == 10: # Severity
                 if severity == "CRITICAL":
-                    cell.font = Font(name="Calibri", size=9.5, bold=True, color="991B1B")
+                    cell.font = Font(name="Times New Roman", size=10, bold=True, color="991B1B")
                 elif severity == "WARNING":
-                    cell.font = Font(name="Calibri", size=9.5, bold=True, color="92400E")
+                    cell.font = Font(name="Times New Roman", size=10, bold=True, color="92400E")
                 else:
-                    cell.font = Font(name="Calibri", size=9.5, bold=True, color="065F46")
+                    cell.font = Font(name="Times New Roman", size=10, bold=True, color="065F46")
             elif col_idx == 7 and profile_url != "—": # Hyperlink Profile URL
-                cell.font = Font(name="Calibri", size=9.5, color="2563EB", underline="single")
+                cell.font = Font(name="Times New Roman", size=10, color="1D4ED8", underline="single", bold=True)
                 cell.hyperlink = profile_url
             elif col_idx == 2: # Name
-                cell.font = Font(name="Calibri", size=9.5, bold=True, color="0F172A")
+                cell.font = Font(name="Times New Roman", size=10, bold=True, color="0F172A")
             elif col_idx == 3: # Reg No
-                cell.font = Font(name="Calibri", size=9.5, bold=True, color="1E3A8A")
+                cell.font = Font(name="Times New Roman", size=10, bold=True, color="1E3A8A")
             else:
-                cell.font = Font(name="Calibri", size=9.5, color=text_color)
+                cell.font = Font(name="Times New Roman", size=10, bold=True, color=text_color)
 
-        ws.row_dimensions[ws.max_row].height = 24
+        ws.row_dimensions[ws.max_row].height = 26
 
     # Column Width Auto-Fitting
     col_widths = {
