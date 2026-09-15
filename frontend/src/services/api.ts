@@ -115,15 +115,20 @@ api.interceptors.request.use(async (config) => {
     config.url = config.url.substring(4);
   }
   try {
-    let jwtToken = null;
-    if (jwtToken && !config.headers.Authorization) {
-      config.headers.Authorization = `Bearer ${jwtToken}`;
-    } else if (!jwtToken && !config.headers.Authorization) {
-      const { getAuthInstance, getOrInitAuth } = await import('./firebase');
-      const auth = getAuthInstance() || getOrInitAuth();
-      if (auth?.currentUser) {
-        const token = await auth.currentUser.getIdToken();
-        if (token) config.headers.Authorization = `Bearer ${token}`;
+    // Skip token attachment for auth endpoints to prevent Firebase from hanging
+    const isAuthRoute = config.url && (config.url.includes('/auth/login') || config.url.includes('/auth/refresh'));
+    
+    if (!isAuthRoute) {
+      let jwtToken = null;
+      if (jwtToken && !config.headers.Authorization) {
+        config.headers.Authorization = `Bearer ${jwtToken}`;
+      } else if (!jwtToken && !config.headers.Authorization) {
+        const { getAuthInstance, getOrInitAuth } = await import('./firebase');
+        const auth = getAuthInstance() || getOrInitAuth();
+        if (auth?.currentUser) {
+          const token = await auth.currentUser.getIdToken();
+          if (token) config.headers.Authorization = `Bearer ${token}`;
+        }
       }
     }
   } catch (e) {
