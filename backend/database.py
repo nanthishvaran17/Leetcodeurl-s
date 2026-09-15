@@ -55,8 +55,8 @@ if "postgresql" in db_url or "postgres" in db_url:
             "keepalives_count": 5,
             "sslmode": "require",
             # Statement timeout prevents hanging queries from exhausting the pool
-            # Set to 120s to allow heavy startup migrations to complete on Neon
-            "options": "-c statement_timeout=120000"
+            # Set globally to 15s. We will disable this explicitly for startup migrations.
+            "options": "-c statement_timeout=15000"
         }
     })
 else:
@@ -184,11 +184,13 @@ def run_migrations():
         pass
 
     try:
-        with engine.connect() as conn:
+        # Use AUTOCOMMIT to ensure SET statement_timeout is applied outside a transaction block
+        with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
             # Create PostgreSQL performance indexes and missing columns if applicable
             if "postgresql" in db_url or "postgres" in db_url:
-                # Disable statement timeout for migrations to prevent heavy ALTER TABLE queries from failing
+                # Disable statement timeout entirely and set lock timeout to 5 minutes to prevent hanging migrations
                 conn.execute(__import__('sqlalchemy').text("SET statement_timeout = 0;"))
+                conn.execute(__import__('sqlalchemy').text("SET lock_timeout = '5min';"))
                 conn.execute(__import__('sqlalchemy').text("""
                     ALTER TABLE students
                         ADD COLUMN IF NOT EXISTS primary_leetcode_id VARCHAR(100),
