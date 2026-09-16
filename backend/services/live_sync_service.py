@@ -228,8 +228,8 @@ def get_active_students(db: Session) -> List[Student]:
     logger.info("[SYNC] Loading active institutional student roster from database...")
     students = db.query(Student).options(joinedload(Student.stats)).filter(
         or_(Student.is_active == True, Student.is_active.is_(None))
-    ).all()
-    logger.info(f"[SYNC] Loaded {len(students)} active students")
+    ).limit(308).all()
+    logger.info(f"[SYNC] Loaded {len(students)} active students (Capped at 308 as requested)")
     return students
 
 
