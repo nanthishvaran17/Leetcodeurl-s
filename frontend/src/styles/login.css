@@ -1249,13 +1249,17 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(6, 29, 54, 0.70) 0%, rgba(6, 42, 77, 0.85) 100%);
-    z-index: 0;
+    background: 
+      linear-gradient(180deg, rgba(7, 19, 36, 0.72) 0%, rgba(11, 27, 51, 0.50) 45%, rgba(7, 19, 36, 0.92) 100%),
+      radial-gradient(ellipse at 25% 25%, rgba(56, 189, 248, 0.16) 0%, transparent 65%) !important;
+    z-index: -1;
     pointer-events: none;
   }
 
   .dark .login-page-container::after {
-    background: linear-gradient(180deg, rgba(3, 10, 20, 0.75) 0%, rgba(7, 19, 36, 0.85) 100%);
+    background: 
+      linear-gradient(180deg, rgba(7, 19, 36, 0.72) 0%, rgba(11, 27, 51, 0.50) 45%, rgba(7, 19, 36, 0.92) 100%),
+      radial-gradient(ellipse at 25% 25%, rgba(56, 189, 248, 0.16) 0%, transparent 65%) !important;
   }
 
   .dark .login-page-container {
@@ -1274,19 +1278,7 @@
   }
 
   /* ANDROID APK / CAPACITOR NATIVE OVERRIDES */
-  .login-page-container.is-capacitor::after {
-    background: 
-      linear-gradient(180deg, rgba(7, 19, 36, 0.72) 0%, rgba(11, 27, 51, 0.50) 45%, rgba(7, 19, 36, 0.92) 100%),
-      radial-gradient(ellipse at 25% 25%, rgba(56, 189, 248, 0.16) 0%, transparent 65%) !important;
-  }
-
-  .dark .login-page-container.is-capacitor::after {
-    background: 
-      linear-gradient(180deg, rgba(7, 19, 36, 0.72) 0%, rgba(11, 27, 51, 0.50) 45%, rgba(7, 19, 36, 0.92) 100%),
-      radial-gradient(ellipse at 25% 25%, rgba(56, 189, 248, 0.16) 0%, transparent 65%) !important;
-  }
-
-  .login-page-container.is-capacitor .mobile-lcp-hero {
+  .login-page-container .mobile-lcp-hero {
     filter: brightness(0.65) contrast(1.15) saturate(1.1) !important;
   }
 
