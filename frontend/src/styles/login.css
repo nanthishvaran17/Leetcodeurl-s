@@ -1280,7 +1280,7 @@
 
   /* ANDROID APK / CAPACITOR NATIVE OVERRIDES */
   .login-page-container .mobile-lcp-hero {
-    filter: brightness(0.65) contrast(1.15) saturate(1.1) !important;
+    filter: contrast(1.1) saturate(1.1) !important;
   }
 
   /* Floating Header / Branding directly over campus background */
@@ -1318,11 +1318,14 @@
   .mobile-eyebrow {
     font-size: clamp(0.58rem, 0.8vh, 0.65rem);
     font-weight: 800;
-    letter-spacing: 0.3em;
+    letter-spacing: 0.15em;
     color: #7DD3FC;
     text-transform: uppercase;
     margin: 0 0 1px 0;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 1);
+    white-space: normal;
+    word-break: break-word;
+    max-width: 100%;
   }
 
   .dark .mobile-eyebrow {

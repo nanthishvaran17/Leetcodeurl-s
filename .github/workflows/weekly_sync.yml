@@ -13,7 +13,8 @@ jobs:
     timeout-minutes: 60
 
     env:
-      DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+      DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL || secrets.DATABASE_URL }}
+      ENVIRONMENT: production
       TIMEZONE: Asia/Kolkata
       CONCURRENCY_WORKERS: 15
       REQUEST_DELAY: 0.3

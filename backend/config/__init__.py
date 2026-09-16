@@ -28,8 +28,11 @@ WEAK_PASSWORDS = {
 
 class Settings(BaseSettings):
     APP_NAME: str = "College LeetCode Weekly Tracker"
-    # Auth & Security Configuration
-    ENVIRONMENT: str = os.environ.get("ENVIRONMENT", "local" if "pytest" in sys.modules or os.environ.get("PYTEST_CURRENT_TEST") else "production")
+    ENVIRONMENT: str = os.environ.get(
+        "ENVIRONMENT",
+        "testing" if ("pytest" in sys.modules or os.environ.get("PYTEST_CURRENT_TEST"))
+        else ("production" if os.environ.get("DATABASE_URL", "").startswith(("postgresql://", "postgres://")) else "local")
+    )
     
     DATABASE_URL: Optional[str] = os.environ.get("DATABASE_URL")
 

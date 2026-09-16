@@ -19,6 +19,23 @@ from backend.services.authorization_service import apply_role_based_student_filt
 
 @router.get("/dashboard-summary", response_model=DashboardSummary)
 def get_dashboard_summary(db: Session = Depends(get_db), current_user = Depends(get_current_user_optional)):
+    import time
+    from sqlalchemy.exc import OperationalError
+    import logging
+
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            return _get_dashboard_summary_impl(db, current_user)
+        except OperationalError as e:
+            if attempt < max_retries - 1:
+                logging.warning(f"[DB_RETRY] Transient DB error in dashboard-summary (attempt {attempt+1}/{max_retries}): {e}")
+                db.rollback()
+                time.sleep(0.5 * (attempt + 1))
+                continue
+            raise
+
+def _get_dashboard_summary_impl(db: Session, current_user):
     from sqlalchemy import func
     
     user_id = current_user.id if current_user else "public"

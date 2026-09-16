@@ -112,6 +112,7 @@ if "postgresql" in db_url or "postgres" in db_url:
                         "[DB_POOL] Invalidating broken PostgreSQL connection: "
                         f"{type(orig).__name__}: {str(orig)[:120]}"
                     )
+                    exception_context.is_disconnect = True
                     conn.invalidate()
     except ImportError:
         pass  # psycopg2 not available in this environment
@@ -122,8 +123,21 @@ def get_db():
     db = SessionLocal()
     try:
         yield db
+    except Exception:
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        raise
     finally:
-        db.close()
+        try:
+            db.close()
+        except Exception:
+            try:
+                db.invalidate()
+            except Exception:
+                pass
+
 
 
 from contextlib import contextmanager
@@ -168,7 +182,13 @@ def get_db_session():
             else:
                 raise
         finally:
-            db.close()
+            try:
+                db.close()
+            except Exception:
+                try:
+                    db.invalidate()
+                except Exception:
+                    pass
     if last_exc:
         raise last_exc
 

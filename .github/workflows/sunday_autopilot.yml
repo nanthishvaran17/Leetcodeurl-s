@@ -34,7 +34,8 @@ jobs:
     timeout-minutes: 45
 
     env:
-      DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
+      DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL || secrets.DATABASE_URL }}
+      ENVIRONMENT: production
       TIMEZONE: Asia/Kolkata
       SMTP_HOST: smtp.gmail.com
       SMTP_PORT: 587

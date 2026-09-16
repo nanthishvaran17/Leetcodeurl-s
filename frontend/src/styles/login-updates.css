@@ -21,23 +21,6 @@
   display: none;
 }
 
-/* Subtle circuit pattern at bottom */
-.login-page-container::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 30vh;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-  background-size: 20px 20px;
-  mask-image: linear-gradient(to top, rgba(0,0,0,1), transparent);
-  -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1), transparent);
-  opacity: 0.3;
-  pointer-events: none;
-  z-index: -1;
-  display: none;
-}
 
 .dark .login-page-container {
   background-image: none;
@@ -143,8 +126,11 @@
     font-size: clamp(0.58rem, 0.8vh, 0.65rem) !important;
     margin: 0 0 1px 0 !important;
     color: #7DD3FC !important;
-    letter-spacing: 0.3em !important;
+    letter-spacing: 0.15em !important;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 1) !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    max-width: 100% !important;
   }
 
   .mobile-title {
@@ -276,4 +262,102 @@
     justify-content: center;
   }
 }
+
+/* ==========================================================================
+   ANDROID APK / CAPACITOR NATIVE ONLY — EXTENDED HEIGHT LOGIN CARD
+   ========================================================================== */
+.login-page-container.is-capacitor .login-frame {
+  width: calc(100% - 24px) !important;
+  max-width: 420px !important;
+  border-radius: 26px !important;
+  margin: 8px auto !important;
+  box-shadow: 0 20px 45px -10px rgba(6, 29, 54, 0.32),
+              0 4px 16px rgba(6, 29, 54, 0.12) !important;
+}
+
+.login-page-container.is-capacitor .panel-right {
+  padding: 1.5rem 1.25rem 1.65rem 1.25rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.login-page-container.is-capacitor .form-head {
+  margin-bottom: 1.1rem !important;
+}
+
+.login-page-container.is-capacitor .tabs {
+  height: 44px !important;
+  margin-bottom: 1.15rem !important;
+  border-radius: 12px !important;
+  padding: 3px !important;
+}
+
+.login-page-container.is-capacitor .tabs button {
+  height: 36px !important;
+  border-radius: 9px !important;
+  font-size: 0.86rem !important;
+}
+
+.login-page-container.is-capacitor .field {
+  margin-bottom: 1.1rem !important;
+}
+
+.login-page-container.is-capacitor .field label {
+  font-size: 0.84rem !important;
+  margin-bottom: 6px !important;
+}
+
+.login-page-container.is-capacitor .field input[type="text"],
+.login-page-container.is-capacitor .field input[type="email"],
+.login-page-container.is-capacitor .field input[type="password"] {
+  height: 46px !important;
+  font-size: 0.88rem !important;
+  border-radius: 12px !important;
+}
+
+.login-page-container.is-capacitor .row-between {
+  margin-bottom: 1.15rem !important;
+  min-height: 28px !important;
+}
+
+.login-page-container.is-capacitor .submit-btn {
+  height: 46px !important;
+  font-size: 0.9rem !important;
+  border-radius: 12px !important;
+}
+
+.login-page-container.is-capacitor .help-card-row {
+  margin-top: 1.25rem !important;
+}
+
+.login-page-container.is-capacitor .help-trigger-btn {
+  min-height: 48px !important;
+  padding: 0.75rem 0.9rem !important;
+  border-radius: 14px !important;
+}
+
+.login-page-container.is-capacitor .stamp {
+  margin-top: 1.15rem !important;
+  margin-bottom: 0.25rem !important;
+  font-size: 0.76rem !important;
+}
+
+.login-page-container.is-capacitor .login-copyright {
+  margin-top: 0.65rem !important;
+  margin-bottom: 0.35rem !important;
+  text-align: center !important;
+}
+
+.login-page-container.is-capacitor .copyright-line {
+  font-size: 0.74rem !important;
+  color: #FFFFFF !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7) !important;
+}
+
+.login-page-container.is-capacitor .tagline-line {
+  font-size: 0.68rem !important;
+  color: #7DD3FC !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7) !important;
+}
+
 

@@ -39,47 +39,47 @@ class StudentNumberedCanvas(canvas.Canvas):
         
         # Dimensions for A4
         p_width, p_height = A4
-        margin = 24.0
+        margin = 18.0
         
         # Outer Border
         self.setStrokeColor(colors.HexColor('#1B365D'))
-        self.setLineWidth(1.5)
+        self.setLineWidth(1.2)
         self.rect(margin, margin, p_width - (2 * margin), p_height - (2 * margin))
         
         # Inner Border Line
         self.setStrokeColor(colors.HexColor('#94A3B8'))
         self.setLineWidth(0.5)
-        self.rect(margin + 4, margin + 4, p_width - (2 * margin) - 8, p_height - (2 * margin) - 8)
+        self.rect(margin + 3.5, margin + 3.5, p_width - (2 * margin) - 7, p_height - (2 * margin) - 7)
         
         # Header Line on Page 2+
         if self._pageNumber > 1:
             self.setStrokeColor(colors.HexColor("#CBD5E1"))
             self.setLineWidth(0.5)
-            self.line(margin + 10, p_height - 46, p_width - margin - 10, p_height - 46)
+            self.line(margin + 8, p_height - 42, p_width - margin - 8, p_height - 42)
             
             self.setFont("Helvetica-Bold", 8)
             self.setFillColor(colors.HexColor("#1B365D"))
-            self.drawString(margin + 12, p_height - 40, "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)")
+            self.drawString(margin + 10, p_height - 35, "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)")
             
             self.setFont("Helvetica-Oblique", 8)
             self.setFillColor(colors.HexColor("#64748B"))
-            self.drawRightString(p_width - margin - 12, p_height - 40, "INDIVIDUAL STUDENT LEETCODE INTELLIGENCE REPORT")
+            self.drawRightString(p_width - margin - 10, p_height - 35, "INDIVIDUAL STUDENT LEETCODE INTELLIGENCE REPORT")
 
-        # Footer Bottom Line
+        # Footer Bottom Separator Line (at y=42)
         self.setStrokeColor(colors.HexColor("#CBD5E1"))
         self.setLineWidth(0.5)
-        self.line(margin + 10, 40, p_width - margin - 10, 40)
+        self.line(margin + 8, 42, p_width - margin - 8, 42)
         
-        # Footer text
+        # Footer text (at y=29, centered nicely above inner border bottom y=21.5)
         self.setFont("Helvetica", 8)
         self.setFillColor(colors.HexColor("#64748B"))
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M IST")
         left_footer = f"Nandha Engineering College, Erode – 638 052 | Confidential Student Record • {timestamp}"
         page_str = f"Page {self._pageNumber} of {page_count}"
         
-        self.drawString(margin + 12, 26, left_footer)
+        self.drawString(margin + 10, 29, left_footer)
         self.setFont("Helvetica-Bold", 8)
-        self.drawRightString(p_width - margin - 12, 26, page_str)
+        self.drawRightString(p_width - margin - 10, 29, page_str)
         
         self.restoreState()
 
