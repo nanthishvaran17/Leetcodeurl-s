@@ -281,6 +281,11 @@ api.interceptors.response.use(
 // Stale-While-Revalidate GET Override for extreme speed
 const originalGet = api.get;
 api.get = async function (url: string, config?: any) {
+  // Never cache live sync endpoints
+  if (url.includes('/sync/status') || url.includes('/sync/jobs')) {
+    return originalGet.call(api, url, config);
+  }
+
   const key = getRequestKey(url, config);
   const cached = responseCache.get(key);
   
