@@ -158,30 +158,63 @@ def get_command_center_summary(
             staff_users_q = staff_users_q.filter(User.department_id == dept_id)
         staff_users = staff_users_q.all()
         
+        # Single efficient aggregation query for all staff assignments
+        from sqlalchemy import func, or_
+        staff_assigned_stats_q = db.query(
+            FacultyStudentAssignment.faculty_id.label("faculty_id"),
+            func.count(Student.id).label("assigned_cnt"),
+            func.sum(
+                func.case(
+                    (or_((LeetCodeProfileStats.total_solved > 0),
+                         ((LeetCodeProfileStats.easy_solved + LeetCodeProfileStats.medium_solved + LeetCodeProfileStats.hard_solved) > 0)),
+                     1),
+                    else_=0
+                )
+            ).label("active_cnt"),
+            func.sum(
+                func.case(
+                    (LeetCodeProfileStats.total_solved >= 10, 1),
+                    else_=0
+                )
+            ).label("completed_cnt"),
+            func.coalesce(func.sum(LeetCodeProfileStats.total_solved), 0).label("total_coding_activity")
+        ).join(
+            Student, FacultyStudentAssignment.student_id == Student.id
+        ).outerjoin(
+            LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
+        ).filter(
+            FacultyStudentAssignment.is_active == True,
+            Student.is_active == True
+        )
+        if dept_id:
+            staff_assigned_stats_q = staff_assigned_stats_q.filter(Student.department_id == dept_id)
+        
+        staff_assigned_rows = staff_assigned_stats_q.group_by(FacultyStudentAssignment.faculty_id).all()
+        
+        staff_stats_map = {
+            r.faculty_id: {
+                "assigned_cnt": int(r.assigned_cnt or 0),
+                "active_cnt": int(r.active_cnt or 0),
+                "completed_cnt": int(r.completed_cnt or 0),
+                "coding_activity": int(r.total_coding_activity or 0)
+            }
+            for r in staff_assigned_rows
+        }
+
         staff_list = []
         for u in staff_users:
-            assigned_rows = db.query(Student, LeetCodeProfileStats).join(
-                FacultyStudentAssignment, FacultyStudentAssignment.student_id == Student.id
-            ).outerjoin(
-                LeetCodeProfileStats, Student.id == LeetCodeProfileStats.student_id
-            ).filter(
-                FacultyStudentAssignment.faculty_id == u.id,
-                FacultyStudentAssignment.is_active == True,
-                Student.is_active == True
-            ).all()
-    
-            assigned_cnt = len(assigned_rows)
-            active_cnt = sum(
-                1 for s, st in assigned_rows
-                if st and ((st.total_solved or 0) > 0 or (st.easy_solved or 0) + (st.medium_solved or 0) + (st.hard_solved or 0) > 0)
-            )
-            completed_cnt = sum(1 for s, st in assigned_rows if st and (st.total_solved or 0) >= 10)
+            s_stat = staff_stats_map.get(u.id, {"assigned_cnt": 0, "active_cnt": 0, "completed_cnt": 0, "coding_activity": 0})
+            assigned_cnt = s_stat["assigned_cnt"]
+            active_cnt = s_stat["active_cnt"]
+            completed_cnt = s_stat["completed_cnt"]
+            coding_act = s_stat["coding_activity"]
+            
             pending_cnt = max(0, assigned_cnt - completed_cnt)
             staff_prog = round((completed_cnt / float(assigned_cnt)) * 100.0, 1) if assigned_cnt > 0 else 0.0
             
             traffic_status = "GREEN" if staff_prog >= 80.0 else ("AMBER" if staff_prog >= 60.0 else "RED")
             d_code = u.department.code if u.department else dept_code
-    
+
             staff_list.append({
                 "id": u.id,
                 "username": u.username,
@@ -200,7 +233,7 @@ def get_command_center_summary(
                 "is_active": u.is_active,
                 "joined_date": u.created_at.strftime("%Y-%m-%d") if u.created_at else "N/A",
                 "last_active": u.last_activity.strftime("%Y-%m-%d") if u.last_activity else "N/A",
-                "coding_activity": sum(st.total_solved or 0 for s, st in assigned_rows if st)
+                "coding_activity": coding_act
             })
     
         # Unassigned student count in this scope

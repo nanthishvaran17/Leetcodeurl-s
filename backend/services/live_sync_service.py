@@ -222,13 +222,29 @@ async def broadcast_sync_event(event_data: Dict[str, Any]):
         logger.warning(f"WebSocket broadcast error: {e}")
 
 
-def get_active_students(db: Session) -> List[Student]:
-    """Returns active student roster from database dynamically."""
+_ACTIVE_STUDENTS_CACHE = None
+_ACTIVE_STUDENTS_CACHE_TIME = 0.0
+_ACTIVE_STUDENTS_LOCK = threading.Lock()
+
+def get_active_students(db: Session, force_refresh: bool = False) -> List[Student]:
+    """Returns active student roster from database dynamically with ultra-fast memory caching."""
+    global _ACTIVE_STUDENTS_CACHE, _ACTIVE_STUDENTS_CACHE_TIME
+    now = time.time()
+    
+    with _ACTIVE_STUDENTS_LOCK:
+        if not force_refresh and _ACTIVE_STUDENTS_CACHE is not None and (now - _ACTIVE_STUDENTS_CACHE_TIME < 15.0):
+            return _ACTIVE_STUDENTS_CACHE
+
     from sqlalchemy.orm import joinedload
     logger.info("[SYNC] Loading active institutional student roster from database...")
     students = db.query(Student).options(joinedload(Student.stats)).filter(
         or_(Student.is_active == True, Student.is_active.is_(None))
     ).all()
+    
+    with _ACTIVE_STUDENTS_LOCK:
+        _ACTIVE_STUDENTS_CACHE = students
+        _ACTIVE_STUDENTS_CACHE_TIME = now
+
     logger.info(f"[SYNC] Loaded {len(students)} active students from database")
     return students
 
