@@ -561,7 +561,7 @@ Click the button below to view or export the verified PDF document."""
                 limit_num = val
                 break
         
-        num_match = re.search(r'\btop\s*(\d{1,3})\b|\b(\d{1,3})\s*(users?|students?|solvers?)\b', q_clean)
+        num_match = re.search(r'\btop\s*(\d{1,3})\b|\b(\d{1,3})\s*(users?|students?|solvers?|performers?|top)\b', q_clean)
         if num_match:
             limit_num = int(num_match.group(1) or num_match.group(2))
 
@@ -778,7 +778,7 @@ I can show specific student progress assigned to any faculty member."""
                     db.query(LeetCodeLanguageStats, Student)
                     .join(Student, LeetCodeLanguageStats.student_id == Student.id)
                     .filter(Student.id.in_(student_ids), LeetCodeLanguageStats.language_name.ilike(f"%{lang_match}%"))
-                    .order_by(desc(LeetCodeLanguageStats.problems_solved))
+                    .order_by(desc(func.coalesce(LeetCodeLanguageStats.problems_solved, 0)))
                     .limit(limit_num)
                     .all()
                 )
@@ -799,7 +799,7 @@ I can show specific student progress assigned to any faculty member."""
                 top_stats = (
                     db.query(LeetCodeProfileStats)
                     .filter(LeetCodeProfileStats.student_id.in_(student_ids))
-                    .order_by(desc(LeetCodeProfileStats.total_solved))
+                    .order_by(desc(func.coalesce(LeetCodeProfileStats.total_solved, 0)))
                     .limit(limit_num)
                     .all()
                 )

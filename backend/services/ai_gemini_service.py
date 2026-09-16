@@ -319,6 +319,7 @@ def execute_count_students(
     user: Optional[User],
     department: Optional[str] = None,
     year_level: Optional[str] = None,
+    batch: Optional[str] = None,
     status: Optional[str] = None
 ) -> Dict[str, Any]:
     """Counts authoritative matching students within user's authorized scope."""
@@ -339,6 +340,9 @@ def execute_count_students(
         norm_y = y_map.get(clean_y, clean_y)
         q = q.filter(Student.year_level.ilike(f"%{norm_y}%"))
 
+    if batch and batch.upper() != "ALL":
+        q = q.filter(Student.batch.ilike(f"%{batch}%"))
+
     if status and status.upper() != "ALL":
         if status.upper() == "INACTIVE":
             q = q.filter(or_(LeetCodeProfileStats.id == None, LeetCodeProfileStats.total_solved == 0))
@@ -350,6 +354,7 @@ def execute_count_students(
         "count": total_count,
         "department": department or "ALL",
         "year_level": year_level or "ALL",
+        "batch": batch or "ALL",
         "status": status or "ALL"
     }
 
@@ -1167,15 +1172,35 @@ CORE RULES:
 
                 dept = "CSE(IOT)" if "iot" in lower_q else ("CSE(CS)" if any(k in lower_q for k in ["cyber", "cse(cs)", "cse-cs"]) or re.search(r'\bcs\b', lower_q) else None)
                 year = "III" if any(k in lower_q for k in ["iii", "3rd"]) else ("IV" if any(k in lower_q for k in ["iv", "4th", " 4 "]) else None)
+                batch_match = None
+                if "2023" in lower_q: batch_match = "2023-2027"
+                elif "2024" in lower_q: batch_match = "2024-2028"
+                elif "2025" in lower_q: batch_match = "2025-2029"
+                elif "2026" in lower_q: batch_match = "2026-2030"
 
-                # Special case: Total students count query
-                if "total students" in lower_q or ("how many" in lower_q and "monitored" in lower_q):
+                # Unfiltered Total students count query
+                if ("total students" in lower_q or ("how many" in lower_q and "monitored" in lower_q)) and not (dept or year or batch_match or min_s or min_r):
                     tool_res = execute_count_students(db, user)
                     ans = f"### 📊 Verified Institutional Student Count\n\nCurrently monitoring **{tool_res.get('count')} total students** in your authorized scope."
                     return {
                         "success": True,
                         "answer": ans,
                         "why": "Resilient student count execution",
+                        "confidence": "VERIFIED",
+                        "source": "Verified Institutional Database",
+                        "dataStatus": "VERIFIED",
+                        "requestId": req_id
+                    }
+
+                # Filtered Student Count Query
+                if any(kw in lower_q for kw in ["how many", "count", "number of students", "students count"]) and not (min_s or min_r):
+                    tool_res = execute_count_students(db, user, department=dept, year_level=year, batch=batch_match)
+                    cnt = tool_res.get("count", 0)
+                    ans = f"### 📊 Verified Institutional Student Count ({dept or 'Overall'} {batch_match or year or ''})\n\nFound **{cnt} students** matching your criteria in the database."
+                    return {
+                        "success": True,
+                        "answer": ans,
+                        "why": "Resilient filtered student count execution",
                         "confidence": "VERIFIED",
                         "source": "Verified Institutional Database",
                         "dataStatus": "VERIFIED",

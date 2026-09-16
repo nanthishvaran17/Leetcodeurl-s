@@ -4,14 +4,14 @@
    ======================================================== */
 
 :root {
-  --primary-navy: #0B1B33;
-  --secondary-navy: #13294B;
-  --navy-dark: #071324;
-  --blue-accent: #2563EB;
-  --blue-hover: #1D4ED8;
-  --blue-subtle: #EFF6FF;
+  --primary-navy: #002B49;
+  --secondary-navy: #006A94;
+  --navy-dark: #004E7A;
+  --blue-accent: #00A6D6;
+  --blue-hover: #008eb8;
+  --blue-subtle: #F0F5FA;
   
-  --bg-page: #F8FAFC;
+  --bg-page: #F5F9FC;
   --bg-card: #FFFFFF;
   --field-bg: #F8FAFC;
   --field-border: #E2E8F0;
@@ -1250,16 +1250,16 @@
     position: absolute;
     inset: 0;
     background: 
-      linear-gradient(180deg, rgba(7, 19, 36, 0.72) 0%, rgba(11, 27, 51, 0.50) 45%, rgba(7, 19, 36, 0.92) 100%),
-      radial-gradient(ellipse at 25% 25%, rgba(56, 189, 248, 0.16) 0%, transparent 65%) !important;
+      linear-gradient(180deg, rgba(0, 106, 148, 0.75) 0%, rgba(0, 78, 122, 0.95) 100%),
+      radial-gradient(ellipse at 25% 25%, rgba(0, 166, 214, 0.20) 0%, transparent 65%) !important;
     z-index: -1;
     pointer-events: none;
   }
 
   .dark .login-page-container::after {
     background: 
-      linear-gradient(180deg, rgba(7, 19, 36, 0.72) 0%, rgba(11, 27, 51, 0.50) 45%, rgba(7, 19, 36, 0.92) 100%),
-      radial-gradient(ellipse at 25% 25%, rgba(56, 189, 248, 0.16) 0%, transparent 65%) !important;
+      linear-gradient(180deg, rgba(0, 106, 148, 0.85) 0%, rgba(0, 78, 122, 0.98) 100%),
+      radial-gradient(ellipse at 25% 25%, rgba(0, 166, 214, 0.20) 0%, transparent 65%) !important;
   }
 
   .dark .login-page-container {
@@ -1318,10 +1318,10 @@
     font-size: clamp(0.65rem, 0.95vh, 0.72rem);
     font-weight: 800;
     letter-spacing: 0.14em;
-    color: #00AEEF;
+    color: #38BDF8;
     text-transform: uppercase;
     margin: 0 0 1px 0;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9), 0 0 12px rgba(0, 0, 0, 0.6);
   }
 
   .dark .mobile-eyebrow {
@@ -1621,7 +1621,7 @@
     min-width: 0 !important;
     box-sizing: border-box !important;
     height: 44px !important;
-    background: #F8FAFC !important;
+    background: #F0F5FA !important;
     border: 1.5px solid #E2E8F0 !important;
     border-radius: 10px !important;
     font-size: 0.88rem !important;
@@ -1632,7 +1632,7 @@
 
   .field input::placeholder {
     font-size: 0.84rem !important;
-    color: #94A3B8 !important;
+    color: #667F99 !important;
   }
 
   .field input[type="text"]:focus,

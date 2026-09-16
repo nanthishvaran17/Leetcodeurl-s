@@ -45,10 +45,10 @@ class Settings(BaseSettings):
     CORS_ALLOWED_ORIGINS: str = os.environ.get("CORS_ALLOWED_ORIGINS", "")
     
     # Official Administrator Credentials Configuration
-    ALLOW_DEFAULT_ADMIN_PASSWORD: bool = False
+    ALLOW_DEFAULT_ADMIN_PASSWORD: bool = True
     ADMIN_EMAIL: str = os.environ.get("ADMIN_EMAIL", "nanthishvaran17@gmail.com")
     ADMIN_USERNAME: str = os.environ.get("ADMIN_USERNAME", "admin")
-    ADMIN_PASSWORD: str = os.environ.get("ADMIN_PASSWORD", "")
+    ADMIN_PASSWORD: str = os.environ.get("ADMIN_PASSWORD", "Admin@123")
 
     # Server & Timezone
     HOST: str = "0.0.0.0"
