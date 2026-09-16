@@ -1316,9 +1316,9 @@
   }
 
   .mobile-eyebrow {
-    font-size: clamp(0.65rem, 0.95vh, 0.72rem);
+    font-size: clamp(0.58rem, 0.8vh, 0.65rem);
     font-weight: 800;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.3em;
     color: #7DD3FC;
     text-transform: uppercase;
     margin: 0 0 1px 0;
