@@ -120,6 +120,7 @@ api.interceptors.request.use(async (config) => {
   // We use window.location.origin to supply the real origin (not hardcoded).
   if (isCapacitorNative()) {
     config.headers['Origin'] = window.location.origin;
+    config.headers['X-App-Origin'] = window.location.origin;
   }
 
   try {
