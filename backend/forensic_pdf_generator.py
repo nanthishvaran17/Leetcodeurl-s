@@ -214,9 +214,10 @@ def generate_forensic_audit_pdf(
     story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#1E3A8A'), spaceAfter=10))
 
     # 2. Metadata Bar
+    from backend.exporters.student_pdf_exporter import derive_student_batch_and_year
     dept_name = dept_name_str
     dept_code = dept_code_str
-    batch_str = st_data.get("batch") or ("2025–2029" if year_str == "II" else ("2024–2028" if year_str == "III" else "2023–2027"))
+    batch_str, year_str = derive_student_batch_and_year(student_reg, st_data.get("batch"), year_str)
     contest_name = c_title_name
     session_date = c_date
 

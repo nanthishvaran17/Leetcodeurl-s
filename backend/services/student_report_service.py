@@ -44,10 +44,16 @@ def generate_student_report(
         # Real-time stats fallback
         rt_stats = student.stats
     
+        from backend.exporters.student_pdf_exporter import derive_student_batch_and_year
+
         dept_name = student.department.name if student.department else "Computer Science and Engineering"
         dept_code = student.department.code if student.department else "CSE"
         section_name = student.section.name if student.section else "Sec A"
-        year_level = student.year_level or "III"
+        batch_str, year_level = derive_student_batch_and_year(
+            student.reg_no,
+            student.batch,
+            student.year_level
+        )
         
         # Metrics Resolution
         total_solved = (rt_stats.total_solved if rt_stats and rt_stats.total_solved is not None 
@@ -141,6 +147,9 @@ def generate_student_report(
 
         acceptance_rate = 74.0 if total_solved > 100 else 68.5
 
+        tz_ist = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+        now_ist = datetime.datetime.now(tz_ist)
+
         # Build Unified StudentReportData
         student_report_data = {
             "student_id": student.id,
@@ -150,6 +159,7 @@ def generate_student_report(
             "dept_code": dept_code,
             "section": section_name,
             "year": year_level,
+            "batch": batch_str,
             "username": student.username or student.reg_no,
             "total_solved": total_solved,
             "easy": easy_solved,
@@ -168,8 +178,8 @@ def generate_student_report(
             "contest_history": contest_history,
             "languages": languages,
             "dsa_topics": dsa_topics,
-            "generatedAt": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "generatedAtIST": datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")
+            "generatedAt": now_ist.strftime("%Y-%m-%d %H:%M:%S"),
+            "generatedAtIST": now_ist.strftime("%d %b %Y, %I:%M %p IST")
         }
 
         fmt = "pdf"

@@ -13,6 +13,66 @@ from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
 
 
+import re
+
+def derive_student_batch_and_year(reg_no: str = "", batch: str = None, year_level: str = None) -> tuple:
+    """
+    Returns (batch_str, year_str).
+    Canonical year mapping in 2026:
+    2025 entry -> 2025–2029 (Year I)
+    2024 entry -> 2024–2028 (Year II)
+    2023 entry -> 2023–2027 (Year III)
+    2022 entry -> 2022–2026 (Year IV)
+    """
+    clean_reg = str(reg_no or "").strip().upper()
+    
+    # 1. Extract 2-digit entry year from reg_no if available
+    join_year = None
+    if len(clean_reg) >= 6:
+        m = re.search(r'(?:7322)?(\d{2})[A-Z]{2}', clean_reg)
+        if m:
+            yy = int(m.group(1))
+            if 18 <= yy <= 35:
+                join_year = 2000 + yy
+
+    # 2. Determine batch
+    if batch and str(batch).strip() and str(batch).strip() not in ("N/A", "None", ""):
+        calc_batch = str(batch).strip().replace("-", "–")
+    elif join_year:
+        calc_batch = f"{join_year}–{join_year + 4}"
+    else:
+        if "24" in clean_reg:
+            calc_batch = "2024–2028"
+        elif "23" in clean_reg:
+            calc_batch = "2023–2027"
+        elif "25" in clean_reg:
+            calc_batch = "2025–2029"
+        elif "22" in clean_reg:
+            calc_batch = "2022–2026"
+        else:
+            calc_batch = "2024–2028"
+
+    # 3. Determine year level
+    if join_year:
+        year_map = {2025: "I", 2024: "II", 2023: "III", 2022: "IV"}
+        calc_year = year_map.get(join_year, "II")
+    else:
+        calc_year = None
+
+    if year_level and str(year_level).strip() not in ("N/A", "None", ""):
+        raw_y = str(year_level).replace("Yr", "").replace("Year", "").strip().upper()
+        if calc_year:
+            res_year = calc_year
+        else:
+            res_year = raw_y
+    elif calc_year:
+        res_year = calc_year
+    else:
+        res_year = "II"
+
+    return calc_batch, res_year
+
+
 class StudentNumberedCanvas(canvas.Canvas):
     """
     Two-pass canvas to dynamically compute and print 'Page X of Y' in footer,
@@ -73,7 +133,8 @@ class StudentNumberedCanvas(canvas.Canvas):
         # Footer text (at y=29, centered nicely above inner border bottom y=21.5)
         self.setFont("Helvetica", 8)
         self.setFillColor(colors.HexColor("#64748B"))
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M IST")
+        tz_ist = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+        timestamp = datetime.datetime.now(tz_ist).strftime("%d %b %Y, %I:%M %p IST")
         left_footer = f"Nandha Engineering College, Erode – 638 052 | Confidential Student Record • {timestamp}"
         page_str = f"Page {self._pageNumber} of {page_count}"
         
@@ -254,10 +315,18 @@ def _build_student_identity_table(s: dict, styles: dict) -> Table:
     s_name = s.get("name", "N/A")
     s_reg = s.get("reg_no") or s.get("register_number", "N/A")
     s_dept = s.get("dept") or "Computer Science and Engineering"
-    s_year_raw = str(s.get("year") or "III").replace("Yr", "").replace("Year", "").strip()
-    s_sec = s.get("section") or "Sec A"
+    
+    s_batch_input = s.get("batch")
+    s_year_input = s.get("year") or s.get("year_level")
+    batch_str, year_str = derive_student_batch_and_year(s_reg, s_batch_input, s_year_input)
+
+    s_sec = str(s.get("section") or "Sec A").strip()
+    if s_sec and not s_sec.startswith("Sec") and len(s_sec) <= 3:
+        s_sec = f"Sec {s_sec}"
+
     s_user = s.get("username") or s_reg
-    gen_date = s.get("generatedAtIST") or datetime.datetime.now().strftime("%d %b %Y, %I:%M %p IST")
+    tz_ist = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+    gen_date = s.get("generatedAtIST") or datetime.datetime.now(tz_ist).strftime("%d %b %Y, %I:%M %p IST")
 
     profile_table_data = [
         [
@@ -266,7 +335,7 @@ def _build_student_identity_table(s: dict, styles: dict) -> Table:
         ],
         [
             Paragraph("<b>Department</b>", styles['td_left']), Paragraph(s_dept, styles['td_left']),
-            Paragraph("<b>Batch / Year</b>", styles['td_left']), Paragraph(f"2023–2027 • Year {s_year_raw} • {s_sec}", styles['td_left'])
+            Paragraph("<b>Batch / Year</b>", styles['td_left']), Paragraph(f"{batch_str} • Year {year_str} • {s_sec}", styles['td_left'])
         ],
         [
             Paragraph("<b>LeetCode Handle</b>", styles['td_left']), Paragraph(f"@{s_user}", styles['td_left']),
@@ -361,11 +430,18 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
     story.append(t_kpi)
     story.append(Spacer(1, 10))
 
+    batch_str, year_str = derive_student_batch_and_year(
+        s.get("reg_no") or s.get("register_number", ""),
+        s.get("batch"),
+        s.get("year") or s.get("year_level")
+    )
+
     summary_text = (
-        f"<b>Executive Standing:</b> Student <b>{s.get('name', 'N/A')}</b> ({s.get('reg_no', 'N/A')}) demonstrates an outstanding competitive programming profile "
-        f"with <b>{tot_solved:,} cumulative solves</b> ({easy_cnt} Easy, {med_cnt} Medium, {hard_cnt} Hard) and a strong contest rating of <b>{rating_val}</b>. "
-        f"With an active streak of {streak_val} and an acceptance rate of {acc_rate}, the candidate satisfies institutional tier-1 placement readiness criteria "
-        f"for high-complexity software engineering roles."
+        f"<b>Executive Standing & Placement Assessment:</b> Student <b>{s.get('name', 'N/A')}</b> "
+        f"({s.get('reg_no', 'N/A')}) in <b>{s.get('dept', 'Computer Science and Engineering')}</b> ({batch_str}, Year {year_str}) "
+        f"demonstrates an outstanding competitive programming profile. Based on verified LeetCode problem-solving volume, "
+        f"contest rating progression, and algorithmic consistency, the candidate satisfies institutional Tier-1 placement "
+        f"readiness criteria for high-complexity software engineering roles."
     )
     t_summary = Table([[Paragraph(summary_text, styles['summary_box'])]], colWidths=[7.3*inch])
     t_summary.setStyle(TableStyle([

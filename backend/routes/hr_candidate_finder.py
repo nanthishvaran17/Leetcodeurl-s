@@ -18,6 +18,7 @@ from backend.models import (
 )
 from backend.services.authorization_service import apply_role_based_student_filter
 from backend.security import get_current_user_optional
+from backend.exporters.student_pdf_exporter import derive_student_batch_and_year
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
@@ -703,8 +704,8 @@ def get_student_intelligence(
             "department": student.department.name if student.department else "Computer Science",
             "dept_code": dept_code,
             "degree": getattr(student, "degree", "B.E.") or "B.E.",
-            "batch": getattr(student, "batch", "2023-2027") or "2023-2027",
-            "year_level": student.year_level or "III Year",
+            "batch": getattr(student, "batch", None) or derive_student_batch_and_year(student.reg_no, student.batch, student.year_level)[0],
+            "year_level": derive_student_batch_and_year(student.reg_no, student.batch, student.year_level)[1],
             "section": extract_section_name(student),
             "accommodation": getattr(student, "accommodation", None),
             "twelfth_cutoff": getattr(student, "twelfth_cutoff", None),
@@ -1142,8 +1143,8 @@ def search_candidates(
             "department": st.department.name if st.department else "Computer Science",
             "dept_code": dept_code,
             "degree": getattr(st, "degree", "B.E.") or "B.E.",
-            "batch": getattr(st, "batch", "2023-2027") or "2023-2027",
-            "year_level": st.year_level or "III Year",
+            "batch": getattr(st, "batch", None) or derive_student_batch_and_year(st.reg_no, st.batch, st.year_level)[0],
+            "year_level": derive_student_batch_and_year(st.reg_no, st.batch, st.year_level)[1],
             "section": extract_section_name(st),
             "primary_language": primary_lang,
             "total_solved": tot,
