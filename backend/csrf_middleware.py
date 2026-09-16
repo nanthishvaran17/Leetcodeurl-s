@@ -10,16 +10,16 @@ async def global_csrf_middleware(request: Request, call_next):
             res_headers["Access-Control-Allow-Origin"] = origin
             res_headers["Access-Control-Allow-Credentials"] = "true"
             res_headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-            res_headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept, Origin, User-Agent, DNT, Cache-Control, X-Mx-ReqToken, X-Requested-With, Bypass-Tunnel-Reminder, X-App-Origin"
+            res_headers["Access-Control-Allow-Hfgeaders"] = "Authorization, Content-Type, Accept, Origin, User-Agent, DNT, Cache-Control, X-Mx-ReqToken, X-Requested-With, Bypass-Tunnel-Reminder"
             res_headers["Access-Control-Expose-Headers"] = "Content-Disposition, Content-Length, Content-Type, X-Cache"
 
 
     if request.method in ("POST", "PUT", "PATCH", "DELETE"):
         # We only enforce CSRF on API routes.
         if request.url.path.startswith("/api/"):
-            raw_origin = request.headers.get("Origin") or request.headers.get("Referer") or request.headers.get("X-App-Origin")
+            raw_origin = request.headers.get("Origin") or request.headers.get("Referer")
             if not raw_origin:
-                # To fail closed for cookie-based CSRF, we must require Origin/Referer/X-App-Origin
+                # To fail closed for cookie-based CSRF, we must require Origin/Referer
                 response = JSONResponse(status_code=403, content={"detail": "CSRF validation failed. Origin/Referer missing."})
                 _add_cors_headers_to_response(request, response.headers)
                 return response

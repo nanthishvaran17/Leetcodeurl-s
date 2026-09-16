@@ -204,7 +204,7 @@ def generate_student_report(
         file_size = len(file_bytes)
 
         if return_bytes:
-            return file_bytes, filename, mime_type
+            return file_bytes, filename, mime
 
         # Check for existing cache record to update
         existing_record = db.query(ReportCache).filter(
