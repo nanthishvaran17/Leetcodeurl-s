@@ -2507,7 +2507,7 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
                   </div>
                   <div>
                     <span className="text-[10px] text-slate-500 uppercase block">Academic Year</span>
-                    <span className="font-bold text-navy-950">{forensicResult.student.year} Year (Batch {forensicResult.student.batch || (forensicResult.student.year === 'I' ? '2025-2029' : forensicResult.student.year === 'II' ? '2024-2028' : forensicResult.student.year === 'III' ? '2023-2027' : '2022-2026')})</span>
+                    <span className="font-bold text-navy-950">{forensicResult.student.year} Year (Batch {forensicResult.student.batch || (forensicResult.student.year === 'I' ? '2026-2030' : forensicResult.student.year === 'II' ? '2025-2029' : forensicResult.student.year === 'III' ? '2024-2028' : '2023-2027')})</span>
                   </div>
                   <div className="col-span-2 pt-1 border-t border-slate-200">
                     <span className="text-[10px] text-slate-500 uppercase block">LeetCode Profile</span>

@@ -177,7 +177,7 @@
   }
 
   .form-head {
-    margin-bottom: 0.75rem !important;
+    margin-bottom: 0.68rem !important;
     margin-top: 0 !important;
     padding-top: 0 !important;
   }
@@ -187,17 +187,17 @@
   }
 
   .tabs {
-    height: 42px !important;
-    margin-bottom: 0.75rem !important;
+    height: 40px !important;
+    margin-bottom: 0.68rem !important;
   }
 
   .tabs button {
-    height: 34px !important;
+    height: 32px !important;
     font-size: 0.82rem !important;
   }
 
   .field {
-    margin-bottom: 0.75rem !important;
+    margin-bottom: 0.68rem !important;
   }
 
   .field label {
@@ -213,8 +213,18 @@
   }
 
   .row-between {
-    margin-bottom: 0.8rem !important;
+    margin-bottom: 0.72rem !important;
     min-height: 24px !important;
+    gap: 8px !important;
+  }
+
+  .remember {
+    font-size: 0.82rem !important;
+  }
+
+  .forgot {
+    font-size: 0.82rem !important;
+    white-space: nowrap !important;
   }
 
   .submit-btn {
@@ -223,23 +233,23 @@
   }
 
   .help-card-row {
-    margin-top: 0.8rem !important;
+    margin-top: 0.72rem !important;
   }
 
   .help-trigger-btn {
     min-height: 44px !important;
-    padding: 0.65rem 0.75rem !important;
+    padding: 0.6rem 0.75rem !important;
   }
 
   .stamp {
-    margin-top: 0.65rem !important;
+    margin-top: 0.55rem !important;
     margin-bottom: 0 !important;
     padding: 0 !important;
     font-size: 0.72rem !important;
   }
 
   .login-copyright {
-    margin-top: 0.35rem !important;
+    margin-top: 0.3rem !important;
     margin-bottom: 0 !important;
     padding: 0 0 2px 0 !important;
     min-height: 0 !important;

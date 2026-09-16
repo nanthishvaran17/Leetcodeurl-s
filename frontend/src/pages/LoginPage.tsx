@@ -765,7 +765,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                   {authMode === 'password' ? (
                     <form onSubmit={handlePasswordLogin} noValidate>
                       <motion.div className="field" variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
-                        <label htmlFor="userId">Institutional Email or User ID</label>
+                        <label htmlFor="userId">Institutional Email / User ID</label>
                         <div className="input-wrap">
                           <Mail className="input-icon" size={19} aria-hidden="true" />
                           <input
@@ -834,7 +834,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                           </>
                         ) : (
                           <>
-                            <span>Sign in to workspace</span>
+                            <span>Sign In</span>
                             <ArrowRight size={18} strokeWidth={2.5} className="btn-arrow" />
                           </>
                         )}

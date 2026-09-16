@@ -18,11 +18,11 @@ import re
 def derive_student_batch_and_year(reg_no: str = "", batch: str = None, year_level: str = None) -> tuple:
     """
     Returns (batch_str, year_str).
-    Canonical year mapping in 2026:
-    2025 entry -> 2025–2029 (Year I)
-    2024 entry -> 2024–2028 (Year II)
-    2023 entry -> 2023–2027 (Year III)
-    2022 entry -> 2022–2026 (Year IV)
+    Institutional year mapping:
+    2026 entry -> 2026–2030 (Year I)
+    2025 entry -> 2025–2029 (Year II)
+    2024 entry -> 2024–2028 (Year III)
+    2023 entry -> 2023–2027 (Year IV)
     """
     clean_reg = str(reg_no or "").strip().upper()
     
@@ -43,32 +43,38 @@ def derive_student_batch_and_year(reg_no: str = "", batch: str = None, year_leve
     else:
         if "24" in clean_reg:
             calc_batch = "2024–2028"
-        elif "23" in clean_reg:
-            calc_batch = "2023–2027"
         elif "25" in clean_reg:
             calc_batch = "2025–2029"
+        elif "23" in clean_reg:
+            calc_batch = "2023–2027"
+        elif "26" in clean_reg:
+            calc_batch = "2026–2030"
         elif "22" in clean_reg:
             calc_batch = "2022–2026"
         else:
             calc_batch = "2024–2028"
 
-    # 3. Determine year level
+    # 3. Determine year level per institutional rule:
+    # 2024 -> III
+    # 2025 -> II
+    # 2023 -> IV
+    # 2026 -> I
     if join_year:
-        year_map = {2025: "I", 2024: "II", 2023: "III", 2022: "IV"}
-        calc_year = year_map.get(join_year, "II")
+        year_map = {2026: "I", 2025: "II", 2024: "III", 2023: "IV"}
+        calc_year = year_map.get(join_year, "III")
     else:
-        calc_year = None
-
-    if year_level and str(year_level).strip() not in ("N/A", "None", ""):
-        raw_y = str(year_level).replace("Yr", "").replace("Year", "").strip().upper()
-        if calc_year:
-            res_year = calc_year
+        if "24" in clean_reg:
+            calc_year = "III"
+        elif "25" in clean_reg:
+            calc_year = "II"
+        elif "23" in clean_reg:
+            calc_year = "IV"
+        elif "26" in clean_reg:
+            calc_year = "I"
         else:
-            res_year = raw_y
-    elif calc_year:
-        res_year = calc_year
-    else:
-        res_year = "II"
+            calc_year = "III"
+
+    res_year = calc_year
 
     return calc_batch, res_year
 
