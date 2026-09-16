@@ -11,7 +11,6 @@ import {
 import { useAuth } from '../context/AuthContext';
 
 import { CollegeLogo } from '../components/CollegeLogo';
-import { GoogleSignInButton } from '../components/GoogleSignInButton';
 import api from '../services/api';
 import { isCapacitorNative } from '../config/apiConfig';
 
@@ -919,16 +918,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                       </button>
                     </form>
                   )}
-
-                  {/* Google Login Divider & Button */}
-                  <div className="google-auth-section" style={{ width: '100%', marginTop: '4px', marginBottom: '8px' }}>
-                    <div className="divider" style={{ display: 'flex', alignItems: 'center', margin: '14px 0', fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700, letterSpacing: '0.1em' }}>
-                      <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-light)' }}></div>
-                      <span style={{ padding: '0 12px', opacity: 0.7 }}>OR CONTINUE WITH</span>
-                      <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-light)' }}></div>
-                    </div>
-                    <GoogleSignInButton className="w-full" />
-                  </div>
 
                   {/* Single Institutional Help Row */}
                   <div className="help-card-row">
