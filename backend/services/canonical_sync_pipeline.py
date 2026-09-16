@@ -571,17 +571,7 @@ async def run_full_pipeline(
                 
             student_records_deduped = list(unique_records.values())
 
-            # Also deduplicate by username so we don't spam the same leetcode profile concurrently
-            unique_usernames = set()
-            final_students = []
-            
-            for r in student_records_deduped:
-                username, _, _ = extract_leetcode_username(r.username or r.leetcode_url)
-                username_key = username.lower() if username else f"ID_{r.id}"
-                
-                if username_key not in unique_usernames:
-                    unique_usernames.add(username_key)
-                    final_students.append(r)
+            final_students = student_records_deduped
             
             class DummyStudent:
                 def __init__(self, id, name, username, leetcode_url, reg_no):
