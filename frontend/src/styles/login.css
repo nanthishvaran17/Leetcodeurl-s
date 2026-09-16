@@ -1319,15 +1319,15 @@
     font-size: clamp(0.65rem, 0.95vh, 0.72rem);
     font-weight: 800;
     letter-spacing: 0.14em;
-    color: var(--blue-accent, #00A6D6);
+    color: #7DD3FC;
     text-transform: uppercase;
     margin: 0 0 1px 0;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9), 0 0 12px rgba(0, 0, 0, 0.6);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 1);
   }
 
   .dark .mobile-eyebrow {
-    color: var(--blue-accent, #00A6D6);
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+    color: #7DD3FC;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 1);
   }
 
   .mobile-title {
