@@ -189,8 +189,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
       try {
         const res = await api.get('/public/stats', { timeout: 10000 });
         const data = res.data;
-        const total = data?.total || 307;
-        const verified = data?.verified || 290;
+        const total = data?.active || data?.total || 308;
+        const verified = data?.verified || data?.with_leetcode_handle || 308;
 
         setLiveStats({
           totalStudents: total,
@@ -621,7 +621,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
               <div className="audit-row audit-row--blue">
                 <span className="label">Engineers tracked<span className="desc">Live rating & contest sync</span></span>
                 <span className="value value--blue">
-                  {liveStats ? liveStats.totalStudents.toLocaleString('en-IN') : '307'}
+                  {liveStats ? liveStats.totalStudents.toLocaleString('en-IN') : '308'}
                 </span>
               </div>
               <div className="audit-row audit-row--green">

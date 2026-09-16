@@ -398,7 +398,7 @@ export const ReportsPage: React.FC = () => {
       title: 'Principal Executive Intelligence Report',
       badge: 'INSTITUTION-WIDE OVERVIEW',
       badgeColor: 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20',
-      description: 'High-level executive institutional overview: Total enrolled students (1,569), verified solvers, attendance %, 4/4 solver count, department comparative matrix, and top achievements.',
+      description: 'High-level executive institutional overview: Total enrolled students, verified solvers, attendance %, 4/4 solver count, department comparative matrix, and top achievements.',
       filename: 'Principal_Executive_Intelligence_Report.xlsx',
       icon: FileSpreadsheet,
       iconBg: 'bg-brand-500/10 text-brand-600 dark:text-brand-400',
