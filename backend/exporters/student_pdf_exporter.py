@@ -341,7 +341,7 @@ def _build_student_identity_table(s: dict, styles: dict) -> Table:
         ],
         [
             Paragraph("<b>Department</b>", styles['td_left']), Paragraph(s_dept, styles['td_left']),
-            Paragraph("<b>Batch / Year</b>", styles['td_left']), Paragraph(f"{batch_str} • Year {year_str} • {s_sec}", styles['td_left'])
+            Paragraph("<b>Batch / Year</b>", styles['td_left']), Paragraph(f"{batch_str} • Year {year_str}", styles['td_left'])
         ],
         [
             Paragraph("<b>LeetCode Handle</b>", styles['td_left']), Paragraph(f"@{s_user}", styles['td_left']),
