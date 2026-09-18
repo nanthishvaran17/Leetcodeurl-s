@@ -73,6 +73,8 @@ def calculate_student_risk_engine(db: Session, student: Student, override_weight
 
     # 2. INACTIVITY DAYS DEDUCTION
     last_update = stats.last_successful_sync or stats.last_updated or now
+    if last_update and last_update.tzinfo is None:
+        last_update = last_update.replace(tzinfo=datetime.timezone.utc)
     days_inactive = (now - last_update).days if last_update else 0
 
     # 3. CONTEST PARTICIPATION & RATING TREND
