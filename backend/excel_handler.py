@@ -11,7 +11,7 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from typing import List, Dict, Any, Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, defer
 
 from backend.models import (
     Student, Department, LeetCodeProfileStats, LeetCodeAccount, WeeklyStudentProgress,
@@ -1097,6 +1097,11 @@ def generate_8_sheet_master_tracker(db: Session, current_user: Optional[User] = 
     )
 
     query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    query = query.options(
+        joinedload(Student.department),
+        joinedload(Student.stats),
+        joinedload(Student.section)
+    )
     query = apply_role_based_student_filter(query, current_user, db)
     all_students = query.all()
 

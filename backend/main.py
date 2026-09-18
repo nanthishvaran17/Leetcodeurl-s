@@ -6,7 +6,7 @@ import string
 from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, Request, Response, Depends, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, ORJSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -353,6 +353,7 @@ async def _deferred_startup_tasks():
             logger.info("[STARTUP] Step 3: Scheduler Initialization...")
             start_scheduler()
             from backend.services.schedule_service import get_or_create_default_schedule, register_apscheduler_job
+            from backend.database import SessionLocal
             with SessionLocal() as _sched_db:
                 _cfg = get_or_create_default_schedule(_sched_db)
                 register_apscheduler_job(_cfg)
@@ -421,7 +422,7 @@ async def _deferred_startup_tasks():
                                 )
 
                             recovery_record.status = "COMPLETED"
-                            recovery_record.completed_at = _dt.datetime.now(datetime.timezone.utc)
+                            recovery_record.completed_at = _dt.datetime.now(_dt.timezone.utc)
                             _recovery_db.commit()
                             logger.info("[STARTUP] Missed job recovery completed.")
                         else:
@@ -521,7 +522,7 @@ app = FastAPI(
     title="College LeetCode Weekly Tracker API",
     description="Backend API for LeetCode weekly tracking, analytics, leaderboards, Excel/PDF reporting and notifications.",
     version="2.2.0",
-    default_response_class=JSONResponse,
+    default_response_class=ORJSONResponse,
     lifespan=lifespan
 )
 
@@ -650,6 +651,7 @@ _CACHE_TTL_MAP: dict = {
     "/api/weekly-contests/active-contest": 30,
     "/api/placement-eligibility/students": 120,
     "/api/gamification/leaderboard": 60,
+    "/api/hr-candidate-finder/candidates": 30,
 }
 
 def purge_api_memory_cache():

@@ -21,7 +21,7 @@ router = APIRouter(prefix="/api/students", tags=["Students"])
 
 from sqlalchemy import func
 
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, defer
 
 from backend.cache import cache
 from sqlalchemy import desc, asc, nullslast
@@ -96,7 +96,7 @@ async def get_leaderboard_fast(
                 .options(
                     joinedload(Student.department),
                     joinedload(Student.stats),
-                    joinedload(Student.lc_activity),
+                    joinedload(Student.lc_activity).defer("submission_calendar_json"),
                 )
                 .filter((Student.is_active == True) | (Student.is_active.is_(None)))
             )

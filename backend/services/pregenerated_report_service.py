@@ -302,6 +302,8 @@ def _build_and_store_report_worker(
             filter_hash=filter_hash,
             current_user=current_user
         )
+    except Exception as e:
+        logger.exception(f"[REPORT_GEN_ERROR] Failed to build {report_type} ({format}) hash={filter_hash[:8]}: {e}")
     finally:
         db.close()
         with _GLOBAL_LOCK:

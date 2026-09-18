@@ -504,21 +504,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
       {/* ========================================================
           MOBILE HERO / HEADER: Official Floating Institutional Branding
           ======================================================== */}
-      <motion.div
+      <div
         className="mobile-top-branding hide-on-desktop"
         role="banner"
-        variants={mobileContainerVariants}
-        initial={shouldAnimateMobileEntrance ? "hidden" : "visible"}
-        animate="visible"
       >
-        <motion.div className="mobile-jubilee-badge" variants={mobileLogoVariants}>
+        <div className="mobile-jubilee-badge">
           <picture>
             <source srcSet="/nec_25_logo.webp" type="image/webp" />
             <img
               src="/nec_25_logo.png"
               alt="25 NEC Silver Jubilee"
               className="mobile-jubilee-img"
-              loading="lazy"
+              loading="eager"
+              fetchPriority="high"
               decoding="async"
               width={70}
               height={70}
@@ -528,11 +526,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
               }}
             />
           </picture>
-        </motion.div>
-        <motion.span className="mobile-eyebrow" variants={mobileTextVariants}>INSTITUTIONAL PORTAL</motion.span>
-        <motion.h1 className="mobile-title" variants={mobileTextVariants}>Nandha Intelligence</motion.h1>
-        <motion.p className="mobile-subtitle" variants={mobileTextVariants}>Nandha Engineering College (Autonomous) · Erode</motion.p>
-      </motion.div>
+        </div>
+        <span className="mobile-eyebrow">INSTITUTIONAL PORTAL</span>
+        <h1 className="mobile-title">Nandha Intelligence</h1>
+        <p className="mobile-subtitle">Nandha Engineering College (Autonomous) · Erode</p>
+      </div>
 
       {/* Main Login Frame / Card */}
       <main className="login-frame" role="main">

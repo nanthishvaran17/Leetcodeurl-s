@@ -53,8 +53,8 @@ if "postgresql" in db_url or "postgres" in db_url:
             "keepalives_interval": 5,
             "keepalives_count": 3,
             "sslmode": "require",
-            # Statement timeout: 20s cap to prevent runaway queries
-            "options": "-c statement_timeout=20000"
+            # Statement timeout: Removed for Neon Connection Pooler compatibility
+            # "options": "-c statement_timeout=20000"
         }
     })
 else:
@@ -842,7 +842,7 @@ def run_migrations():
                 inspector = inspect(conn)
                 if inspector.has_table("report_cache"):
                     existing_cols = {c["name"] for c in inspector.get_columns("report_cache")}
-                    date_type = "TIMESTAMP" if "postgresql" in str(engine.dialect.name).lower() else "DATETIME"
+                    date_type = "TIMESTAMP" if "postgresql" in engine.dialect.name.lower() else "DATETIME"
                     report_cache_cols = [
                         ("filter_hash", "VARCHAR(64)"),
                         ("report_type", "VARCHAR(100)"),
