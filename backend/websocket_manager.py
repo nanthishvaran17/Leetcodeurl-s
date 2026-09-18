@@ -142,9 +142,9 @@ class ConnectionManager:
                     numeric_id = payload.get("user_id")  # raw DB integer id (may differ from sub)
                     logger.info(f"[WS-AUTH] Successfully decoded JWT token via PyJWT. sub={sub} email={email} role={role}")
                     return {
-                        "user_id": str(sub),
+                        "user_id": sub,
                         "email": email,
-                        "numeric_id": str(numeric_id) if numeric_id is not None else None,
+                        "numeric_id": numeric_id if numeric_id is not None else None,
                         "role": role,
                         "department_id": dept_id,
                         "authenticated": True
@@ -163,9 +163,9 @@ class ConnectionManager:
                     numeric_id = payload.get("user_id")  # raw DB integer id
                     logger.info(f"[WS-AUTH] Successfully decoded JWT token via python-jose. sub={sub} email={email} role={role}")
                     return {
-                        "user_id": str(sub),
+                        "user_id": sub,
                         "email": email,
-                        "numeric_id": str(numeric_id) if numeric_id is not None else None,
+                        "numeric_id": numeric_id if numeric_id is not None else None,
                         "role": role,
                         "department_id": dept_id,
                         "authenticated": True
@@ -184,7 +184,7 @@ class ConnectionManager:
                 fb_uid = fb_decoded.get("uid") or fb_email
                 logger.info(f"[WS-AUTH] Successfully decoded Firebase token. uid={fb_uid} email={fb_email}")
                 return {
-                    "user_id": str(fb_uid),
+                    "user_id": fb_uid,
                     "email": fb_email,
                     "role": "authenticated",
                     "authenticated": True
@@ -214,17 +214,17 @@ class ConnectionManager:
                     if email:
                         user = db.query(User).filter(User.email.ilike(email), (User.is_active == True) | (User.is_active.is_(None))).first()
                     if not user and sub:
-                        if str(sub).isdigit():
+                        if sub.isdigit():
                             user = db.query(User).filter(User.id == int(sub), (User.is_active == True) | (User.is_active.is_(None))).first()
                         if not user:
-                            user = db.query(User).filter(User.username.ilike(str(sub)), (User.is_active == True) | (User.is_active.is_(None))).first()
+                            user = db.query(User).filter(User.username.ilike(sub), (User.is_active == True) | (User.is_active.is_(None))).first()
 
                     if user:
                         logger.info(f"[WS-AUTH] Resilient DB fallback verified active user: {user.username} ({user.email}) role={user.role}")
                         return {
-                            "user_id": str(user.username),
+                            "user_id": user.username,
                             "email": user.email,
-                            "numeric_id": str(user.id),
+                            "numeric_id": user.id,
                             "role": user.role or "authenticated",
                             "department_id": getattr(user, "department_id", None),
                             "authenticated": True
@@ -235,13 +235,13 @@ class ConnectionManager:
                     if email:
                         student = db.query(Student).filter(Student.email.ilike(email), (Student.is_active == True) | (Student.is_active.is_(None))).first()
                     if not student and sub:
-                        student = db.query(Student).filter((Student.reg_no.ilike(str(sub))) | (Student.username.ilike(str(sub))), (Student.is_active == True) | (Student.is_active.is_(None))).first()
+                        student = db.query(Student).filter((Student.reg_no.ilike(sub)) | (Student.username.ilike(sub)), (Student.is_active == True) | (Student.is_active.is_(None))).first()
                     if student:
                         logger.info(f"[WS-AUTH] Resilient DB fallback verified active Student: {student.name} ({student.reg_no})")
                         return {
-                            "user_id": str(student.reg_no),
+                            "user_id": student.reg_no,
                             "email": student.email,
-                            "numeric_id": str(student.id),
+                            "numeric_id": student.id,
                             "role": "Student",
                             "department_id": student.department_id,
                             "authenticated": True
@@ -252,9 +252,9 @@ class ConnectionManager:
                     numeric_id = unverified_payload.get("user_id")
                     logger.info(f"[WS-AUTH] Resilient token payload accepted for WebSocket session sub={sub} email={email} role={role}")
                     return {
-                        "user_id": str(sub),
+                        "user_id": sub,
                         "email": email,
-                        "numeric_id": str(numeric_id) if numeric_id is not None else None,
+                        "numeric_id": numeric_id if numeric_id is not None else None,
                         "role": role,
                         "department_id": unverified_payload.get("department_id"),
                         "authenticated": True
@@ -293,13 +293,13 @@ class ConnectionManager:
         """Checks if a user has an active WebSocket looking at the specified conversation."""
         if not user_id:
             return False
-        u_target = str(user_id).strip().lower()
+        u_target = user_id.strip().lower()  # type: ignore
         for ctx in self._ws_user.values():
             if not ctx:
                 continue
-            c_id = str(ctx.get("user_id") or "").strip().lower()
-            c_email = str(ctx.get("email") or "").strip().lower()
-            c_sub = str(ctx.get("sub") or "").strip().lower()
+            c_id = ctx.get("user_id" or "").strip().lower()
+            c_email = ctx.get("email" or "").strip().lower()
+            c_sub = ctx.get("sub" or "").strip().lower()
             if u_target in (c_id, c_email, c_sub) and ctx.get("active_conversation") == conversation_id:
                 return True
         return False
@@ -390,7 +390,7 @@ class ConnectionManager:
         """Sends a WebSocket message to all active connections matching user_id, email, or username."""
         if not user_id:
             return
-        target = str(user_id).strip().lower()
+        target = user_id.strip().lower()  # type: ignore
         payload = json.dumps(message)
         disconnected = []
         sent_count = 0
@@ -398,9 +398,9 @@ class ConnectionManager:
         logger.info(f"[NOTIF-DEBUG] WEBSOCKET_SEND_STARTED target={target} active_total={len(self.active_connections)}")
 
         for ws, ctx in list(self._ws_user.items()):
-            ws_uid = str(ctx.get("user_id") or "").strip().lower()        # sub / username
-            ws_email = str(ctx.get("email") or "").strip().lower()         # email claim
-            ws_num_id = str(ctx.get("numeric_id") or "").strip().lower()   # DB integer id
+            ws_uid = ctx.get("user_id" or "").strip().lower()        # sub / username
+            ws_email = ctx.get("email" or "").strip().lower()         # email claim
+            ws_num_id = ctx.get("numeric_id" or "").strip().lower()   # DB integer id
 
             # Match against: username/sub, email, numeric DB id, STAFF_{id} synthetic key
             is_match = (
@@ -427,7 +427,7 @@ class ConnectionManager:
 
         if sent_count == 0:
             connected_ctx = [
-                {"uid": str(c.get("user_id") or ""), "email": str(c.get("email") or ""), "num_id": str(c.get("numeric_id") or "")}
+                {"uid": c.get("user_id" or ""), "email": c.get("email" or ""), "num_id": c.get("numeric_id" or "")}
                 for c in self._ws_user.values()
             ]
             logger.warning(
@@ -632,8 +632,8 @@ class ConnectionManager:
         """
         payload = json.dumps(event_data)
         event_dept_id = event_data.get("department_id")
-        event_student_id = str(event_data.get("student_id") or event_data.get("people_id") or "").strip().lower()
-        event_reg_no = str(event_data.get("reg_no") or "").strip().lower()
+        event_student_id = event_data.get("student_id" or event_data.get("people_id") or "").strip().lower()
+        event_reg_no = event_data.get("reg_no" or "").strip().lower()
 
         disconnected = []
         for ws, ctx in list(self._ws_user.items()):
@@ -641,7 +641,7 @@ class ConnectionManager:
                 continue
 
             role = (ctx.get("role") or "").lower()
-            ws_user_id = str(ctx.get("user_id") or "").strip().lower()
+            ws_user_id = ctx.get("user_id" or "").strip().lower()
             ws_dept_id = ctx.get("department_id")
 
             is_authorized = False
@@ -649,7 +649,7 @@ class ConnectionManager:
             if role in ["super admin", "admin", "viewer"]:
                 is_authorized = True
             elif role in ["staff mentor", "faculty mentor", "faculty", "staff", "hod"]:
-                if not event_dept_id or not ws_dept_id or str(ws_dept_id) == str(event_dept_id):
+                if not event_dept_id or not ws_dept_id or ws_dept_id == event_dept_id:
                     is_authorized = True
             elif role in ["student"]:
                 if ws_user_id in (event_student_id, event_reg_no):

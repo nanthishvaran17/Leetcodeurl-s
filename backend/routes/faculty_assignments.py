@@ -72,11 +72,11 @@ def get_my_assigned_students(
     department scope. This guarantees Staff A never sees Staff B's students even if both are
     in the same department or if the caller has HOD/Admin role.
     """
-    assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))
+    assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))  # type: ignore
 
     if not assigned_ids:
         return {
-            "faculty_id": int(current_user.id),
+            "faculty_id": int(current_user.id),  # type: ignore
             "faculty_name": current_user.username,
             "total_assigned": 0,
             "recommended_ratio": 20,
@@ -122,7 +122,7 @@ def get_my_assigned_students(
     workload_status = "WITHIN CAPACITY" if count < 30 else ("AT CAPACITY" if count == 30 else "OVER CAPACITY")
 
     return {
-        "faculty_id": int(current_user.id),
+        "faculty_id": int(current_user.id),  # type: ignore
         "faculty_name": current_user.username,
         "total_assigned": count,
         "recommended_ratio": 20,
@@ -158,7 +158,7 @@ def get_faculty_assignments(
     students = db.query(Student).filter(Student.id.in_(assigned_ids)).all() if assigned_ids else []
 
     return {
-        "faculty_id": int(faculty.id),
+        "faculty_id": int(faculty.id),  # type: ignore
         "faculty_name": faculty.username,
         "department_id": faculty.department_id,
         "total_assigned": len(students),
@@ -205,7 +205,7 @@ def assign_students(
         db=db,
         faculty_id=payload.faculty_id,
         student_ids=payload.student_ids,
-        assigned_by_id=int(current_user.id),
+        assigned_by_id=int(current_user.id),  # type: ignore
         background_tasks=background_tasks
     )
 
@@ -261,7 +261,7 @@ def delete_staff_member(
 
     # Soft-delete the faculty user record to preserve historical mentor notes and audits
     faculty_name = faculty.username
-    faculty.is_active = False
+    faculty.is_active = False  # type: ignore
     db.commit()
 
     return {
@@ -292,7 +292,7 @@ def auto_distribute_students(
         db=db,
         department_id=payload.department_id,
         student_ids=payload.student_ids,
-        assigned_by_id=int(current_user.id)
+        assigned_by_id=int(current_user.id)  # type: ignore
     )
 
 
@@ -331,11 +331,11 @@ def get_faculty_workload_summary(
     workload = []
 
     for fac in faculty_list:
-        count = assigned_counts.get(int(fac.id), 0)
+        count = assigned_counts.get(int(fac.id), 0)  # type: ignore
         status_code = "NORMAL" if count < 20 else ("AT_RATIO" if count == 20 else ("ABOVE_RATIO" if count <= 30 else "HIGH_WORKLOAD"))
         status_label = "Normal" if count < 20 else ("At Ratio" if count == 20 else ("Above Ratio" if count <= 30 else "High Workload"))
         workload.append({
-            "faculty_id": int(fac.id),
+            "faculty_id": int(fac.id),  # type: ignore
             "faculty_name": fac.username,
             "email": fac.email,
             "role": fac.role,
@@ -422,7 +422,7 @@ def get_my_mentoring_summary(
     """Returns summary KPIs for the authenticated mentor's assigned student portfolio."""
     from backend.models import StaffFollowUp, StaffAlert
 
-    assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))
+    assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))  # type: ignore
     if not assigned_ids:
         return {
             "total_assigned": 0,
@@ -467,12 +467,12 @@ def get_my_mentoring_summary(
 
     avg_solved = round(total_solved_sum / total_assigned, 1) if total_assigned > 0 else 0.0
     pending_followups = db.query(StaffFollowUp).filter(
-        StaffFollowUp.staff_id == int(current_user.id),
+        StaffFollowUp.staff_id == int(current_user.id),  # type: ignore
         StaffFollowUp.status == "PENDING"
     ).count()
 
     unread_alerts = db.query(StaffAlert).filter(
-        StaffAlert.staff_id == int(current_user.id),
+        StaffAlert.staff_id == int(current_user.id),  # type: ignore
         StaffAlert.is_read == False
     ).count()
 
@@ -480,7 +480,7 @@ def get_my_mentoring_summary(
     post_930_summary = {"students_detected": 0, "total_post_930_solves": 0}
     try:
         from backend.routes.weekly_contests import get_post_930_solvers
-        post_930_data = get_post_930_solvers(
+        post_930_data = get_post_930_solvers(  # type: ignore
             session_date=None, dept=None,
             year_level=None, section=None, min_post_window_solves=1,
             sort_by="latest", search=None, student_id=None, db=db
@@ -491,7 +491,7 @@ def get_my_mentoring_summary(
         pass
 
     return {
-        "faculty_id": int(current_user.id),
+        "faculty_id": int(current_user.id),  # type: ignore
         "faculty_name": current_user.username,
         "total_assigned": total_assigned,
         "active_students": active_count,
@@ -501,8 +501,8 @@ def get_my_mentoring_summary(
         "at_risk": at_risk_count,
         "pending_followups": pending_followups,
         "unread_alerts": unread_alerts,
-        "post_930_solvers_count": post_930_summary.get("students_detected", 0),
-        "post_930_total_solves": post_930_summary.get("total_post_930_solves", 0),
+        "post_930_solvers_count": post_930_summary.get("students_detected", 0),  # type: ignore
+        "post_930_total_solves": post_930_summary.get("total_post_930_solves", 0),  # type: ignore
         "workload_capacity": 30,
         "workload_status": "WITHIN CAPACITY" if total_assigned < 30 else ("AT CAPACITY" if total_assigned == 30 else "OVER CAPACITY"),
         "weekly_progress_avg": avg_solved,
@@ -516,7 +516,7 @@ def get_priority_students(
     current_user: User = Depends(require_role("Faculty", "faculty", "Staff", "staff", "HOD", "hod", "Admin", "Super Admin"))
 ):
     """Returns assigned students requiring immediate attention."""
-    assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))
+    assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))  # type: ignore
     if not assigned_ids:
         return []
 
@@ -571,7 +571,7 @@ def get_student_notes(
 
     user_role = (current_user.role or "").strip().lower()
     if user_role in ["staff", "faculty"]:
-        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))
+        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))  # type: ignore
         if student_id not in assigned_ids:
             raise HTTPException(status_code=403, detail="Access Denied: Student is not assigned to your portfolio.")
 
@@ -601,7 +601,7 @@ def create_student_note(
 
     user_role = (current_user.role or "").strip().lower()
     if user_role in ["staff", "faculty"]:
-        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))
+        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))  # type: ignore
         if payload.student_id not in assigned_ids:
             raise HTTPException(status_code=403, detail="Access Denied: Student is not assigned to your portfolio.")
 
@@ -620,7 +620,7 @@ def create_student_note(
         "note": {
             "id": new_note.id,
             "student_id": new_note.student_id,
-            "faculty_id": int(new_note.faculty_id),
+            "faculty_id": int(new_note.faculty_id),  # type: ignore
             "faculty_name": current_user.username,
             "note": new_note.note,
             "escalation_level": new_note.escalation_level,
@@ -639,7 +639,7 @@ def get_staff_follow_ups(
     from backend.models import StaffFollowUp
 
     query = db.query(StaffFollowUp).options(joinedload(StaffFollowUp.student)).filter(
-        StaffFollowUp.staff_id == int(current_user.id)
+        StaffFollowUp.staff_id == int(current_user.id)  # type: ignore
     )
     if status_filter:
         query = query.filter(StaffFollowUp.status == status_filter.upper())
@@ -674,7 +674,7 @@ def create_staff_follow_up(
 
     user_role = (current_user.role or "").strip().lower()
     if user_role in ["staff", "faculty"]:
-        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))
+        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))  # type: ignore
         if payload.student_id not in assigned_ids:
             raise HTTPException(status_code=403, detail="Access Denied: Student is not assigned to your portfolio.")
 
@@ -714,17 +714,17 @@ def update_staff_follow_up(
 
     follow_up = db.query(StaffFollowUp).filter(
         StaffFollowUp.id == follow_up_id,
-        StaffFollowUp.staff_id == int(current_user.id)
+        StaffFollowUp.staff_id == int(current_user.id)  # type: ignore
     ).first()
 
     if not follow_up:
         raise HTTPException(status_code=404, detail="Follow-up task not found.")
 
-    follow_up.status = payload.status.upper()
+    follow_up.status = payload.status.upper()  # type: ignore
     if payload.notes:
-        follow_up.notes = payload.notes
+        follow_up.notes = payload.notes  # type: ignore
     if payload.status.upper() == "COMPLETED":
-        follow_up.completed_at = datetime.datetime.now(datetime.timezone.utc)
+        follow_up.completed_at = datetime.datetime.now(datetime.timezone.utc)  # type: ignore
 
     db.commit()
     return {"success": True, "message": f"Follow-up status updated to {follow_up.status}."}
@@ -739,7 +739,7 @@ def get_staff_alerts(
     from backend.models import StaffAlert
 
     alerts = db.query(StaffAlert).options(joinedload(StaffAlert.student)).filter(
-        StaffAlert.staff_id == int(current_user.id)
+        StaffAlert.staff_id == int(current_user.id)  # type: ignore
     ).order_by(StaffAlert.created_at.desc()).all()
 
     return [
@@ -770,7 +770,7 @@ def mark_alerts_as_read(
 
     db.query(StaffAlert).filter(
         StaffAlert.id.in_(alert_ids),
-        StaffAlert.staff_id == int(current_user.id)
+        StaffAlert.staff_id == int(current_user.id)  # type: ignore
     ).update({"is_read": True}, synchronize_session=False)
 
     db.commit()
@@ -785,7 +785,7 @@ def get_weekly_staff_report(
     """Generates automated weekly summary report for staff."""
     from backend.models import StaffFollowUp
 
-    assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))
+    assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))  # type: ignore
     students = db.query(Student).outerjoin(Student.stats).options(
         joinedload(Student.stats)
     ).filter(Student.id.in_(assigned_ids)).all() if assigned_ids else []
@@ -807,7 +807,7 @@ def get_weekly_staff_report(
             active_cnt += 1
 
     pending_followups = db.query(StaffFollowUp).filter(
-        StaffFollowUp.staff_id == int(current_user.id),
+        StaffFollowUp.staff_id == int(current_user.id),  # type: ignore
         StaffFollowUp.status == "PENDING"
     ).count()
 
@@ -841,7 +841,7 @@ async def faculty_live_sync(
     - Transactionally writes live updates to PostgreSQL / SQLite.
     - Logs audit record in faculty_action_audit_logs.
     """
-    faculty_id = int(current_user.id)
+    faculty_id = int(current_user.id)  # type: ignore
     if _faculty_sync_locks.get(faculty_id, False):
         return {
             "status": "ALREADY_RUNNING",

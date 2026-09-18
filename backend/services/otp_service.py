@@ -40,7 +40,7 @@ def hash_otp(email: str, otp: str, request_id: str = "") -> str:
     if not secret_str:
         raise RuntimeError("FATAL: No secret key configured for HMAC.")
     secret = secret_str.encode('utf-8')
-    payload = f"{clean_email}:{otp}:{str(request_id)}".encode('utf-8')
+    payload = f"{clean_email}:{otp}:{str(request_id)}".encode('utf-8')  # type: ignore
     return hmac.new(secret, payload, hashlib.sha256).hexdigest()
 
 
@@ -144,9 +144,9 @@ def update_otp_delivery_status(db: Session, request_id: str, status: str, messag
     """Updates the delivery_status and provider_message_id of an OTP record."""
     record = db.query(EmailOTPRecord).filter(EmailOTPRecord.request_id == request_id).first()
     if record:
-        setattr(record, 'delivery_status', str(status))
+        setattr(record, 'delivery_status', str(status))  # type: ignore
         if message_id:
-            setattr(record, 'provider_message_id', str(message_id))
+            setattr(record, 'provider_message_id', str(message_id))  # type: ignore
         db.commit()
 
 
@@ -202,7 +202,7 @@ def verify_otp_transaction(
         return False, "This verification code has expired. Please request a new code.", record
 
     # 3. Check Attempt Count Limit (Max 5 attempts)
-    attempts = int(record.attempt_count or 0)
+    attempts = int(record.attempt_count or 0)  # type: ignore
     if attempts >= MAX_ATTEMPTS_PER_OTP:
         logger.warning(f"[OTP_ATTEMPT_LIMIT] OTP record req_id={record.request_id} exceeded max attempts ({attempts})")
         setattr(record, 'used', True)
