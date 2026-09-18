@@ -126,10 +126,7 @@ class ConnectionManager:
         if env_key and env_key not in secret_keys:
             secret_keys.append(env_key)
 
-        fallback_key = "super-secret-key-change-this-in-production-2026"
-        if fallback_key not in secret_keys:
-            secret_keys.append(fallback_key)
-
+        # Avoid using hardcoded fallback keys in production
         last_jwt_error = None
         for s_key in secret_keys:
             # Only use HS256 for plain string keys. RS256 requires an RSA key object.
@@ -659,7 +656,7 @@ class ConnectionManager:
                     is_authorized = True
             else:
                 # Default fallback for active session subscribers
-                is_authorized = True
+                is_authorized = False
 
             if is_authorized:
                 try:

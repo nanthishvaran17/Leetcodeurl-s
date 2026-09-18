@@ -17,14 +17,15 @@ export class ErrorBoundary extends React.Component<any, any> {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '20px', background: 'white', color: 'red', height: '100vh', overflow: 'auto' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 'bold' }}>Something went wrong.</h1>
-          <pre style={{ marginTop: '20px', whiteSpace: 'pre-wrap' }}>
-            {this.state.error && this.state.error.toString()}
-          </pre>
-          <pre style={{ marginTop: '20px', whiteSpace: 'pre-wrap' }}>
-            {this.state.error && this.state.error.stack}
-          </pre>
+        <div style={{ padding: '40px', background: '#0f172a', color: 'white', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>Something went wrong.</h1>
+          <p style={{ color: '#94a3b8', marginBottom: '24px' }}>We encountered an unexpected error. Please try reloading the page.</p>
+          <button 
+            onClick={() => window.location.reload()}
+            style={{ padding: '10px 20px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 500 }}
+          >
+            Reload Page
+          </button>
         </div>
       );
     }

@@ -525,7 +525,8 @@ class NotificationService:
                                 "type": str(event_type),
                                 "category": str(category),
                                 "actionRoute": raw_route,
-                                "priority": str(eff_priority)
+                                "priority": str(eff_priority),
+                                **({str(k): str(v) for k, v in (metadata or {}).items() if v is not None})
                             },
                             android=messaging.AndroidConfig(
                                 priority="high" if is_high_priority else "normal",

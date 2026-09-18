@@ -267,7 +267,7 @@ def delete_staff_member(
     return {
         "success": True,
         "message": f"Staff member '{faculty_name}' deleted successfully.",
-        "unassigned_count": 0
+        "unassigned_count": deleted_assignments
     }
 
 

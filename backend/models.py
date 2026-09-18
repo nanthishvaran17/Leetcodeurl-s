@@ -79,7 +79,7 @@ class Student(Base):
     email_status = Column(String(50), default="pending") # pending, generated, needs_verification, error
     
     leetcode_url = Column(String(255), nullable=True)
-    username = Column(String(100), index=True, nullable=True)
+    username = Column(String(100), index=True, unique=True, nullable=True)
     primary_leetcode_id = Column(String(100), index=True, nullable=True)
     secondary_leetcode_id = Column(String(100), index=True, nullable=True)
     secondary_status = Column(String(50), default="none") # none, pending_approval, approved
@@ -2998,6 +2998,9 @@ class ReportJob(Base):
     job_id = Column(String(100), primary_key=True, index=True)
     report_type = Column(String(100), index=True, nullable=False)
     requested_by = Column(String(100), index=True, nullable=False)
+    institution_id = Column(String(100), index=True, nullable=True)
+    department_id = Column(String(100), index=True, nullable=True)
+    role = Column(String(50), nullable=True)
     status = Column(String(50), index=True, nullable=False, default="QUEUED") # QUEUED, PROCESSING, COMPLETED, FAILED
     progress = Column(Integer, default=0)
     error_code = Column(String(100), nullable=True)

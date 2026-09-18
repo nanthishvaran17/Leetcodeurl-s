@@ -809,6 +809,11 @@ def create_student(
     if username:
         username = username.lower()
         std_url = f"https://leetcode.com/u/{username}/"
+        
+        # Prevent duplicate username registration
+        existing_username = db.query(Student).filter(func.lower(Student.username) == username).first()
+        if existing_username:
+            raise HTTPException(status_code=400, detail=f"LeetCode username '{username}' is already registered to student {existing_username.reg_no}.")
 
     from backend.services.email_identity_service import check_and_generate_email
     
@@ -1191,6 +1196,14 @@ def update_student(
     old_u_norm = (old_username or "").strip().lower()
     new_u_norm = (student.username or "").strip().lower()
     username_changed = bool(url_changed or (new_u_norm and old_u_norm != new_u_norm))
+    
+    if username_changed and new_u_norm:
+        existing_username = db.query(Student).filter(
+            func.lower(Student.username) == new_u_norm,
+            Student.id != student.id
+        ).first()
+        if existing_username:
+            raise HTTPException(status_code=400, detail=f"LeetCode username '{student.username}' is already registered to student {existing_username.reg_no}.")
 
     if username_changed:
         from backend.leetcode_fetcher import clear_leetcode_cache

@@ -740,9 +740,12 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
 
         st.recent_contest_name = res.get("recent_contest_name")
         st.recent_contest_score = res.get("recent_contest_score")
-        st.public_profile_ranking = res.get("public_profile_ranking")
-        st.contest_rating = contest_rating
-        st.contest_global_ranking = global_ranking
+        if res.get("public_profile_ranking") is not None:
+            st.public_profile_ranking = res.get("public_profile_ranking")
+        if contest_rating is not None:
+            st.contest_rating = contest_rating
+        if global_ranking is not None:
+            st.contest_global_ranking = global_ranking
 
         streak_val = res.get("max_streak") or res.get("streak")
         active_days_val = res.get("active_days") or res.get("total_active_days")

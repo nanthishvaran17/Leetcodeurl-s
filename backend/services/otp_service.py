@@ -36,7 +36,9 @@ def hash_ip(ip_address: Optional[str]) -> str:
 def hash_otp(email: str, otp: str, request_id: str = "") -> str:
     """Returns HMAC-SHA256 digest of OTP bound to email, request_id and OTP_HMAC_SECRET."""
     clean_email = email.lower().strip()
-    secret_str = getattr(settings, "OTP_HMAC_SECRET", "") or getattr(settings, "SECRET_KEY", "fallback-secret-key")
+    secret_str = getattr(settings, "OTP_HMAC_SECRET", "") or getattr(settings, "SECRET_KEY", "")
+    if not secret_str:
+        raise RuntimeError("FATAL: No secret key configured for HMAC.")
     secret = secret_str.encode('utf-8')
     payload = f"{clean_email}:{otp}:{str(request_id)}".encode('utf-8')
     return hmac.new(secret, payload, hashlib.sha256).hexdigest()

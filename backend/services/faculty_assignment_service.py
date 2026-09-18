@@ -111,13 +111,24 @@ class FacultyAssignmentService:
                     detail=f"Invalid student IDs provided: {list(missing)}"
                 )
 
+            assigner = db.query(User).filter(User.id == assigned_by_id).first() if assigned_by_id else None
+            is_assigner_admin = assigner and getattr(assigner, "role", "").lower() in ["admin", "super admin"]
+            
             for st in students:
+                # 1. Institution Isolation
+                if faculty.institution_id and st.institution_id and st.institution_id != faculty.institution_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail=f"Cross-institution assignment forbidden. Student '{st.name}' belongs to a different institution."
+                    )
+                    
+                # 2. Department Isolation
                 if faculty.department_id and st.department_id and st.department_id != faculty.department_id:
                     # If staff member has no assigned students yet, update their department to match the students
                     if current_count == 0:
                         faculty.department_id = st.department_id
                         db.commit()
-                    elif not assigned_by_id:
+                    elif not is_assigner_admin:
                         raise HTTPException(
                             status_code=status.HTTP_403_FORBIDDEN,
                             detail=f"Cross-department assignment forbidden. Student '{st.name}' ({st.reg_no}) belongs to a different department."
