@@ -518,7 +518,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
               src="/nec_25_logo.png"
               alt="25 NEC Silver Jubilee"
               className="mobile-jubilee-img"
-              loading="lazy"
+              loading="eager"
+              fetchPriority="high"
               decoding="async"
               width={70}
               height={70}
