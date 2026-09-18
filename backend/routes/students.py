@@ -96,7 +96,7 @@ async def get_leaderboard_fast(
                 .options(
                     joinedload(Student.department),
                     joinedload(Student.stats),
-                    joinedload(Student.lc_activity).defer(LeetCodeActivity.submission_calendar_json),
+                    joinedload(Student.lc_activity).defer(LeetCodeActivity.submission_calendar_json),  # type: ignore
                 )
                 .filter((Student.is_active == True) | (Student.is_active.is_(None)))
             )
