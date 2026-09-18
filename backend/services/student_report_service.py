@@ -8,7 +8,7 @@ from fastapi import HTTPException
 
 from backend.models import (
     Student, Department, StudentStatSnapshot, StudentContestSnapshot,
-    ContestParticipation, ReportCache
+    ContestParticipation, ReportCache, WeeklyStudentProgress, LeetCodeProfileStats
 )
 
 # Global Semaphore to prevent OOM on Render. Allows max 2 concurrent report generation jobs.
@@ -71,14 +71,53 @@ def generate_student_report(
 
         contest_rating = (rt_stats.contest_rating if rt_stats and rt_stats.contest_rating is not None 
                           else (stats.contest_rating if stats else 0.0))
-        global_rank = (rt_stats.contest_global_ranking if rt_stats and rt_stats.contest_global_ranking 
-                       else "N/A")
+
+        # 1. Global Rank Resolution
+        raw_global_rank = None
+        if rt_stats:
+            raw_global_rank = rt_stats.contest_global_ranking or rt_stats.public_profile_ranking
+        if not raw_global_rank and stats:
+            raw_global_rank = getattr(stats, "contest_global_ranking", None) or getattr(stats, "public_profile_ranking", None)
+            
+        if raw_global_rank and str(raw_global_rank).strip() not in ("0", "N/A", "None"):
+            global_rank = f"#{int(raw_global_rank):,}"
+        else:
+            global_rank = "N/A"
+
+        # 2. College Rank Resolution
+        raw_college_rank = None
+        prog = db.query(WeeklyStudentProgress).filter(
+            WeeklyStudentProgress.student_id == student_id
+        ).order_by(WeeklyStudentProgress.id.desc()).first()
+        
+        if prog and prog.college_rank:
+            raw_college_rank = prog.college_rank
+        else:
+            all_verified = db.query(Student).join(
+                StudentStatSnapshot, Student.id == StudentStatSnapshot.student_id, isouter=True
+            ).filter(Student.is_active == True).all()
+            
+            def get_solved_and_rating(st):
+                s_stat = st.stats
+                t_sol = (s_stat.total_solved if s_stat and s_stat.total_solved is not None else 0)
+                c_rat = (s_stat.contest_rating if s_stat and s_stat.contest_rating is not None else 0.0)
+                return (t_sol, c_rat)
+
+            sorted_st = sorted(all_verified, key=get_solved_and_rating, reverse=True)
+            for idx, st_item in enumerate(sorted_st, start=1):
+                if st_item.id == student_id:
+                    raw_college_rank = idx
+                    break
+
+        if raw_college_rank and str(raw_college_rank) not in ("N/A", "None", ""):
+            college_rank = str(raw_college_rank)
+        else:
+            college_rank = "N/A"
+
         active_streak = (rt_stats.max_streak if rt_stats and rt_stats.max_streak 
                          else (student.stats.max_streak if student.stats and student.stats.max_streak else 0))
         active_days = (rt_stats.active_days if rt_stats and rt_stats.active_days 
                        else max(10, min(180, total_solved // 15)))
-
-        college_rank = getattr(student, "college_rank", "N/A")
         
         # Fetch Contest Participations
         contest_participations = db.query(ContestParticipation).filter(

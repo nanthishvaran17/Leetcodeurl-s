@@ -390,6 +390,38 @@ async def daily_auto_refresh_job():
     finally:
         db.close()
 
+@with_global_lock('daily_db_cleanup_job', timeout_minutes=15)
+async def daily_db_cleanup_job():
+    """Scheduled daily at 03:00 AM IST: Cleans up old logs and notifications older than 14 days."""
+    logger.info("[SCHEDULER] 03:00 AM IST: Executing Database Cleanup Job (14 days retention)...")
+    db = SessionLocal()
+    try:
+        from sqlalchemy import text
+        cleanup_queries = [
+            "DELETE FROM notification_records WHERE created_at < NOW() - INTERVAL '14 days';",
+            "DELETE FROM email_queue_items WHERE created_at < NOW() - INTERVAL '14 days';",
+            "DELETE FROM submission_log WHERE created_at < NOW() - INTERVAL '14 days';",
+            "DELETE FROM scheduled_job_executions WHERE scheduled_at < NOW() - INTERVAL '14 days';",
+            "DELETE FROM admin_audit_logs WHERE event_timestamp < NOW() - INTERVAL '14 days';",
+            "DELETE FROM email_deliveries WHERE sent_at < NOW() - INTERVAL '14 days';",
+            "DELETE FROM audit_logs WHERE created_at < NOW() - INTERVAL '14 days';"
+        ]
+        total_deleted = 0
+        for q in cleanup_queries:
+            try:
+                res = db.execute(text(q))
+                total_deleted += res.rowcount
+            except Exception as ex:
+                logger.warning(f"[SCHEDULER] Cleanup query failed: {ex}")
+        db.commit()
+        logger.info(f"[SCHEDULER] Database Cleanup complete. Deleted ~{total_deleted} old records.")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"[SCHEDULER] Error in daily_db_cleanup_job: {e}")
+    finally:
+        db.close()
+
+
 last_public_run_time = None
 last_virtual_run_time = None
 
@@ -968,6 +1000,15 @@ def start_scheduler():
         max_instances=1,
         coalesce=True,
         misfire_grace_time=7200
+    )
+
+    # Database Auto-Cleanup: Every day at 03:00 AM IST
+    scheduler.add_job(
+        daily_db_cleanup_job,
+        CronTrigger(hour=3, minute=0, timezone=IST),
+        id='daily_db_cleanup_0300',
+        replace_existing=True,
+        max_instances=1, coalesce=True, misfire_grace_time=3600
     )
 
     scheduler.start()

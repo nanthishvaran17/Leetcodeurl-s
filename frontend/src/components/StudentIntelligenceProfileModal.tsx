@@ -753,11 +753,31 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all cursor-pointer"
+                        title="Primary LeetCode Account"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
-                        <span>@{st.username || 'LeetCode'}</span>
+                        <span>Primary: @{st.username || 'LeetCode'}</span>
                       </a>
                     )}
+
+                    {(st.secondary_accounts || st.leetcode_accounts || initialStudent?.secondary_accounts || initialStudent?.leetcode_accounts || []).map((acc: any, idx: number) => {
+                      const secUser = acc.leetcode_username || acc.username;
+                      if (!secUser) return null;
+                      const secUrl = acc.profile_url || `https://leetcode.com/u/${secUser}/`;
+                      return (
+                        <a
+                          key={acc.id || idx}
+                          href={secUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 text-xs font-bold transition-all cursor-pointer"
+                          title="Secondary LeetCode Account"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>Secondary: @{secUser}</span>
+                        </a>
+                      );
+                    })}
 
                     <button
                       onClick={handleRefreshStudent}

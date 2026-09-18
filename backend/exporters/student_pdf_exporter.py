@@ -401,12 +401,16 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
     easy_cnt = int(s.get("easy") or 0)
     med_cnt = int(s.get("medium") or 0)
     hard_cnt = int(s.get("hard") or 0)
-    rating_val = str(s.get("contest_rating") or s.get("rating") or "1,746.3")
-    rank_val = str(s.get("college_rank") or s.get("rank") or "5")
-    global_rank = str(s.get("global_rank") or "#94,251")
-    streak_val = f"{s.get('active_streak', 21)} Days"
-    contests_val = str(s.get("contests_attended") or len(s.get("contest_history", [])) or 10)
-    acc_rate = f"{s.get('acceptance_rate', 74.0)}%"
+    rating_val = str(s.get("contest_rating") or s.get("rating") or "—")
+    raw_col_rank = str(s.get("college_rank") or s.get("rank") or "N/A")
+    rank_val = f"#{raw_col_rank}" if (raw_col_rank != "N/A" and not raw_col_rank.startswith("#")) else raw_col_rank
+
+    raw_glob_rank = str(s.get("global_rank") or "N/A")
+    global_rank = f"#{raw_glob_rank}" if (raw_glob_rank != "N/A" and not raw_glob_rank.startswith("#")) else raw_glob_rank
+
+    streak_val = f"{s.get('active_streak', 0)} Days"
+    contests_val = str(s.get("contests_attended") or len(s.get("contest_history", [])) or 0)
+    acc_rate = f"{s.get('acceptance_rate', 0.0)}%"
 
     kpi_grid_data = [
         [
@@ -421,7 +425,7 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
             [Paragraph(streak_val, styles['kpi_num']), Paragraph("ACTIVE STREAK", styles['kpi_lbl'])],
             [Paragraph(contests_val, styles['kpi_num']), Paragraph("CONTESTS", styles['kpi_lbl'])],
             [Paragraph(acc_rate, styles['kpi_num']), Paragraph("ACCEPTANCE RATE", styles['kpi_lbl'])],
-            [Paragraph(f"#{rank_val}", styles['kpi_num']), Paragraph("COLLEGE RANK", styles['kpi_lbl'])],
+            [Paragraph(rank_val, styles['kpi_num']), Paragraph("COLLEGE RANK", styles['kpi_lbl'])],
         ]
     ]
 
@@ -773,15 +777,16 @@ def generate_student_summary_pdf(dataset: dict) -> bytes:
     easy_cnt = int(s.get("easy") or 0)
     med_cnt = int(s.get("medium") or 0)
     hard_cnt = int(s.get("hard") or 0)
-    rating_val = str(s.get("contest_rating") or s.get("rating") or "1,746.3")
-    rank_val = str(s.get("college_rank") or s.get("rank") or "5")
-    streak_val = f"{s.get('active_streak', 21)} Days"
+    rating_val = str(s.get("contest_rating") or s.get("rating") or "—")
+    raw_col_rank = str(s.get("college_rank") or s.get("rank") or "N/A")
+    rank_val = f"#{raw_col_rank}" if (raw_col_rank != "N/A" and not raw_col_rank.startswith("#")) else raw_col_rank
+    streak_val = f"{s.get('active_streak', 0)} Days"
 
     kpi_summary_data = [
         [
             [Paragraph(f"{tot_solved:,}", styles['kpi_num']), Paragraph("TOTAL SOLVED", styles['kpi_lbl'])],
             [Paragraph(str(rating_val), styles['kpi_num']), Paragraph("CONTEST RATING", styles['kpi_lbl'])],
-            [Paragraph(f"#{rank_val}", styles['kpi_num']), Paragraph("COLLEGE RANK", styles['kpi_lbl'])],
+            [Paragraph(rank_val, styles['kpi_num']), Paragraph("COLLEGE RANK", styles['kpi_lbl'])],
             [Paragraph(streak_val, styles['kpi_num']), Paragraph("ACTIVE STREAK", styles['kpi_lbl'])],
         ]
     ]
@@ -898,9 +903,10 @@ def generate_student_contest_matrix_pdf(dataset: dict) -> bytes:
             {"contest_name": "Weekly Contest 469", "contest_date": "2026-08-24", "rank": 980, "solved": 4, "score": "4 / 4", "rating_before": "1,680.0", "rating_after": "1,712.5", "participation_type": "OFFICIAL"}
         ]
 
-    rating_val = str(s.get("contest_rating") or s.get("rating") or "1,746.3")
+    rating_val = str(s.get("contest_rating") or s.get("rating") or "—")
     contests_cnt = str(len(contest_history))
-    global_rank = str(s.get("global_rank") or "#94,251")
+    raw_glob_rank = str(s.get("global_rank") or "N/A")
+    global_rank = f"#{raw_glob_rank}" if (raw_glob_rank != "N/A" and not raw_glob_rank.startswith("#")) else raw_glob_rank
 
     matrix_kpis = [
         [
