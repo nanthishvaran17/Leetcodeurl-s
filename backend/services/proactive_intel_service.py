@@ -182,7 +182,7 @@ class ProactiveIntelService:
             ).first()
             if last_sync_row and last_sync_row[0]:
                 dt = last_sync_row[0]
-                now_utc = datetime.datetime.utcnow()
+                now_utc = datetime.datetime.now(datetime.timezone.utc)
                 diff_h = (now_utc - dt).total_seconds() / 3600
                 ist_dt = dt + datetime.timedelta(hours=5, minutes=30)
                 last_str = ist_dt.strftime("%d %b, %I:%M %p IST")

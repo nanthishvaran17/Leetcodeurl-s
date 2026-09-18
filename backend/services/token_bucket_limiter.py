@@ -77,6 +77,15 @@ class TokenBucketRateLimiter:
 
             await asyncio.sleep(wait_time)
 
+
+    async def __aenter__(self):
+        await self.acquire_token()
+        await self._semaphore.acquire()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        self._semaphore.release()
+
     async def execute(
         self,
         request_func: Callable[[], Any],

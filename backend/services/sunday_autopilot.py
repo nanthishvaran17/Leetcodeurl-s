@@ -403,7 +403,7 @@ class UniversalWeeklyContestAutopilot:
                 session.status = "SCHEDULED"
             if session.pipeline_state == "DISCOVERED" or not session.pipeline_state:
                 session.pipeline_state = "READY"
-                session.pipeline_last_updated = datetime.datetime.utcnow()
+                session.pipeline_last_updated = datetime.datetime.now(datetime.timezone.utc)
             db.commit()
 
             self.current_phase = session.pipeline_state
@@ -450,7 +450,7 @@ class UniversalWeeklyContestAutopilot:
             session.sync_status = " Syncing"
             if session.pipeline_state != "LIVE":
                 session.pipeline_state = "LIVE"
-                session.pipeline_last_updated = datetime.datetime.utcnow()
+                session.pipeline_last_updated = datetime.datetime.now(datetime.timezone.utc)
             db.commit()
 
             self.current_phase = session.pipeline_state
@@ -553,7 +553,7 @@ class UniversalWeeklyContestAutopilot:
             if session.pipeline_state != "FINALIZED":
                 session.status = "FINALIZING"
                 session.pipeline_state = AutopilotState.FINALIZING
-                session.pipeline_last_updated = datetime.datetime.utcnow()
+                session.pipeline_last_updated = datetime.datetime.now(datetime.timezone.utc)
                 session.last_reconciliation_attempt = datetime.datetime.now(datetime.timezone.utc)
                 db.commit()
 
@@ -610,7 +610,7 @@ class UniversalWeeklyContestAutopilot:
             session.report_generation_status = "PENDING"
             session.finalization_method = getattr(session, 'finalization_method', None) or "AUTOMATIC"
             session.last_successful_source_fetch = now_utc
-            session.pipeline_last_updated = datetime.datetime.utcnow()
+            session.pipeline_last_updated = datetime.datetime.now(datetime.timezone.utc)
             db.commit()
 
             live_cnt = reconciliation.get("live_attended", 0)
@@ -687,7 +687,7 @@ class UniversalWeeklyContestAutopilot:
 
             session.pipeline_state = "REPORTS_GENERATED"
             session.report_generation_status = "COMPLETED"
-            session.pipeline_last_updated = datetime.datetime.utcnow()
+            session.pipeline_last_updated = datetime.datetime.now(datetime.timezone.utc)
             db.commit()
 
             self.current_phase = session.pipeline_state
@@ -737,7 +737,7 @@ class UniversalWeeklyContestAutopilot:
 
             session.pipeline_state = "PUBLISHED"
             session.email_dispatch_status = "COMPLETED"
-            session.pipeline_last_updated = datetime.datetime.utcnow()
+            session.pipeline_last_updated = datetime.datetime.now(datetime.timezone.utc)
             db.commit()
 
             self.current_phase = session.pipeline_state
@@ -845,13 +845,13 @@ class UniversalWeeklyContestAutopilot:
                     sync_status=" Verified"
                 )
                 session.pipeline_state = "DISCOVERED"
-                session.pipeline_last_updated = datetime.datetime.utcnow()
+                session.pipeline_last_updated = datetime.datetime.now(datetime.timezone.utc)
                 db.add(session)
                 db.commit()
                 db.refresh(session)
             elif not session.pipeline_state:
                 session.pipeline_state = "DISCOVERED"
-                session.pipeline_last_updated = datetime.datetime.utcnow()
+                session.pipeline_last_updated = datetime.datetime.now(datetime.timezone.utc)
                 db.commit()
 
             self.current_phase = session.pipeline_state
@@ -964,7 +964,7 @@ class UniversalWeeklyContestAutopilot:
                 logger.info(f"[AUTOPILOT_RECOVERY] Detected Sunday live contest window ({now_ist.strftime('%H:%M:%S IST')}). Resuming LIVE engine...")
                 session.status = "LIVE"
                 session.pipeline_state = "LIVE"
-                session.pipeline_last_updated = datetime.datetime.utcnow()
+                session.pipeline_last_updated = datetime.datetime.now(datetime.timezone.utc)
                 db.commit()
                 self.current_phase = "LIVE"
             elif is_sunday and current_time >= time_0930 and session.status in ("LIVE", "RUNNING", "SCHEDULED"):

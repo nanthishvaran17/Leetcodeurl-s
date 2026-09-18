@@ -218,7 +218,7 @@ async def submit_staff_verification(
             existing.document_hash = doc_hash
         existing.verification_status = "PENDING"
         existing.rejection_reason = None
-        existing.updated_at = datetime.datetime.utcnow()
+        existing.updated_at = datetime.datetime.now(datetime.timezone.utc)
         v_record = existing
     else:
         v_record = StaffVerification(
@@ -356,7 +356,7 @@ def mark_under_review(
         raise HTTPException(status_code=404, detail="Staff verification record not found.")
 
     v.verification_status = "UNDER_REVIEW"
-    v.updated_at = datetime.datetime.utcnow()
+    v.updated_at = datetime.datetime.now(datetime.timezone.utc)
     db.commit()
 
     return {"message": "Verification status updated to UNDER_REVIEW.", "status": "UNDER_REVIEW"}
@@ -378,9 +378,9 @@ def verify_staff(
 
     v.verification_status = "VERIFIED"
     v.verified_by = current_user.id
-    v.verified_at = datetime.datetime.utcnow()
+    v.verified_at = datetime.datetime.now(datetime.timezone.utc)
     v.rejection_reason = None
-    v.updated_at = datetime.datetime.utcnow()
+    v.updated_at = datetime.datetime.now(datetime.timezone.utc)
 
     # Synchronize verified attributes to main User profile
     u = v.user
@@ -438,8 +438,8 @@ def reject_staff(
     v.verification_status = "REJECTED"
     v.rejection_reason = reason_clean
     v.verified_by = current_user.id
-    v.verified_at = datetime.datetime.utcnow()
-    v.updated_at = datetime.datetime.utcnow()
+    v.verified_at = datetime.datetime.now(datetime.timezone.utc)
+    v.updated_at = datetime.datetime.now(datetime.timezone.utc)
 
     db.commit()
 

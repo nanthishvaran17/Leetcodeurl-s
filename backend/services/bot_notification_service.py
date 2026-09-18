@@ -100,7 +100,7 @@ class BotNotificationService:
             "recipient": phone_number,
             "text": text,
             "status": "DELIVERED",
-            "sent_at": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            "sent_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
         }
         with cls._lock:
             cls._message_log.append(entry)
@@ -117,7 +117,7 @@ class BotNotificationService:
             "recipient": chat_id,
             "text": text,
             "status": "DELIVERED",
-            "sent_at": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            "sent_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
         }
         with cls._lock:
             cls._message_log.append(entry)
@@ -150,7 +150,7 @@ class BotNotificationService:
             "success": True,
             "campaign": "SUNDAY_CONTEST_STUDENT_BROADCAST",
             "total_dispatched": dispatched,
-            "timestamp": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            "timestamp": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
         }
 
     @classmethod

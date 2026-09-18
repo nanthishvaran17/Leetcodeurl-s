@@ -79,7 +79,7 @@ def create_concurrency_test_staff(num_staff: int) -> List[Dict[str, Any]]:
 
         STUDENTS_PER_STAFF = 5  # Reduced for performance in 650-staff test
         all_test_staff = []
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
 
         print(f"    Seeding {num_staff} staff × {STUDENTS_PER_STAFF} students = {num_staff * STUDENTS_PER_STAFF} total...")
 

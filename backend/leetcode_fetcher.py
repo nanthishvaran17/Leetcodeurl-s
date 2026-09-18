@@ -1070,7 +1070,7 @@ async def fetch_activity_calendar(
     """
     import json as _json
 
-    yr = year or datetime.datetime.utcnow().year
+    yr = year or datetime.datetime.now(datetime.timezone.utc).year
     result = await _gql_post(
         client, USER_CALENDAR_QUERY, {"username": username, "year": yr},
         "userCalendar", username, retries, backoff_base
@@ -1087,7 +1087,7 @@ async def fetch_activity_calendar(
     except Exception:
         cal_map = {}
 
-    today_utc = datetime.datetime.utcnow().date()
+    today_utc = datetime.datetime.now(datetime.timezone.utc).date()
 
     active_dates: set = set()
     for ts_str, count in cal_map.items():

@@ -98,7 +98,7 @@ def classify_student_issue(student: Student) -> dict:
 
     # Check 7: Stale Data (> 7 days since last successful sync)
     elif stats.last_successful_sync:
-        now_dt = datetime.datetime.utcnow()
+        now_dt = datetime.datetime.now(datetime.timezone.utc)
         sync_dt = stats.last_successful_sync
         if isinstance(sync_dt, datetime.datetime):
             age_days = (now_dt - sync_dt).days

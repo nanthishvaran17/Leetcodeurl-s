@@ -178,7 +178,7 @@ def save_report_schedule(db: Session, data: Dict[str, Any], admin_email: str = "
     config.recipients = recipients
     config.is_enabled = is_enabled
     config.updated_by = admin_email
-    config.updated_at = datetime.datetime.utcnow()
+    config.updated_at = datetime.datetime.now(datetime.timezone.utc)
 
     db.commit()
     db.refresh(config)
@@ -227,7 +227,7 @@ def toggle_report_schedule(db: Session, enable: bool, admin_email: str = "Admin"
     config = get_or_create_default_schedule(db)
     config.is_enabled = enable
     config.updated_by = admin_email
-    config.updated_at = datetime.datetime.utcnow()
+    config.updated_at = datetime.datetime.now(datetime.timezone.utc)
     db.commit()
 
     next_run_str = register_apscheduler_job(config)
@@ -278,7 +278,7 @@ async def execute_scheduled_report_pipeline(
         report_type=config.report_type,
         scheduled_time=f"{config.hour:02d}:{config.minute:02d} IST",
         scheduled_date=today_iso,
-        actual_start=datetime.datetime.utcnow(),
+        actual_start=datetime.datetime.now(datetime.timezone.utc),
         contest_name="Weekly Contest",
         students_processed=0,
         status="STARTED",
@@ -302,7 +302,7 @@ async def execute_scheduled_report_pipeline(
             logger.warning(f"IDEMPOTENCY_GUARD: Execution key '{idempotency_key}' already succeeded at {existing_success.actual_end}. Blocking duplicate dispatch.")
             hist.status = "EMAIL_BLOCKED"
             hist.error_message = f"Duplicate execution blocked by Idempotency Key ({idempotency_key})"
-            hist.actual_end = datetime.datetime.utcnow()
+            hist.actual_end = datetime.datetime.now(datetime.timezone.utc)
             db.commit()
             return {
                 "success": False,
@@ -428,9 +428,9 @@ async def execute_scheduled_report_pipeline(
             # 6. State: COMPLETED
             hist.status = "COMPLETED"
             hist.email_sent = True
-            hist.actual_end = datetime.datetime.utcnow()
+            hist.actual_end = datetime.datetime.now(datetime.timezone.utc)
             
-            config.last_run = datetime.datetime.utcnow()
+            config.last_run = datetime.datetime.now(datetime.timezone.utc)
             config.last_status = "SUCCESS"
             config.last_report_filename = excel_filename
             config.last_email_status = "DISPATCHED"
@@ -448,7 +448,7 @@ async def execute_scheduled_report_pipeline(
         else:
             hist.status = "FAILED"
             hist.error_message = email_error or "Email dispatch failed."
-            hist.actual_end = datetime.datetime.utcnow()
+            hist.actual_end = datetime.datetime.now(datetime.timezone.utc)
             config.last_status = "FAILED"
             config.last_email_status = "FAILED"
             db.commit()
@@ -463,7 +463,7 @@ async def execute_scheduled_report_pipeline(
         logger.error(f"Pipeline failure in execute_scheduled_report_pipeline: {exc}")
         hist.status = "FAILED"
         hist.error_message = str(exc)
-        hist.actual_end = datetime.datetime.utcnow()
+        hist.actual_end = datetime.datetime.now(datetime.timezone.utc)
         config.last_status = "FAILED"
         config.last_email_status = "FAILED"
         db.commit()

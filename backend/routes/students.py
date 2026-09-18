@@ -63,7 +63,7 @@ async def get_leaderboard_fast(
                     pass
                 return datetime.date.min
 
-            today = datetime.datetime.utcnow().date()
+            today = datetime.datetime.now(datetime.timezone.utc).date()
             sessions = db.query(WeeklySession).all()
             eligible = []
             for s in sessions:
@@ -411,7 +411,7 @@ async def get_students(
                     pass
                 return datetime.date.min
 
-            today = datetime.datetime.utcnow().date()
+            today = datetime.datetime.now(datetime.timezone.utc).date()
             sessions = db.query(WeeklySession).all()
             eligible = []
             for s in sessions:
@@ -572,7 +572,7 @@ async def get_students(
                     contest_rating=round(h_res.rating_after, 1) if h_res.rating_after else None,
                     top_percentage=None,
                     status="PUBLIC_ATTENDED",
-                    fetched_at=datetime.datetime.utcnow().isoformat()
+                    fetched_at=datetime.datetime.now(datetime.timezone.utc).isoformat()
                 )
             elif h_res and not h_res.attended and (h_res.problems_solved or 0) > 0:
                 tot_solved = h_res.problems_solved or 0
@@ -589,7 +589,7 @@ async def get_students(
                     contest_rating=None,
                     top_percentage=None,
                     status="VIRTUAL_ATTENDED",
-                    fetched_at=datetime.datetime.utcnow().isoformat()
+                    fetched_at=datetime.datetime.now(datetime.timezone.utc).isoformat()
                 )
             elif pub_res:
                 tot_solved = pub_res.total_contest_solved or (pub_res.q1 + pub_res.q2 + pub_res.q3 + pub_res.q4)
@@ -1277,7 +1277,7 @@ def update_student(
         "leetcode_url": student.leetcode_url,
         "year_level": student.year_level,
         "is_active": student.is_active,
-        "updated_at": datetime.datetime.utcnow().isoformat() + "Z"
+        "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat() + "Z"
     }
 
     def _bg_post_update_processing():
@@ -1434,7 +1434,7 @@ def delete_student(
             from backend.services.firestore_service import update_firestore_doc
             update_firestore_doc("students", reg_no, {
                 "is_active": False,
-                "deactivated_at": datetime.datetime.utcnow().isoformat() + "Z"
+                "deactivated_at": datetime.datetime.now(datetime.timezone.utc).isoformat() + "Z"
             })
         except Exception as fs_err:
             logger.warning(f"[FIRESTORE DELETE NOTE] {fs_err}")

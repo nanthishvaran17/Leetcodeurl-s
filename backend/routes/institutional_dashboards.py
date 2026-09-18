@@ -127,7 +127,7 @@ def get_super_admin_dashboard(
             },
             "department_matrix": dept_matrix,
             "latest_contest": contest_status,
-            "last_updated": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+            "last_updated": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
         }
 
     return cache_service.get_or_compute_sync(
@@ -264,7 +264,7 @@ def get_hod_dashboard(
         "faculty_workload": faculty_workload,
         "top_performers": leaderboard,
         "students_needing_attention": attention_list,
-        "last_updated": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+        "last_updated": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     }
 
     cache.set(cache_key, result, ttl_seconds=30)

@@ -134,7 +134,7 @@ def record_email_delivery_diagnostic(
         "delivery_status": delivery_status,
         "error_code": error_code or "NONE",
         "is_permanent": is_permanent,
-        "timestamp": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3] + " UTC"
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3] + " UTC"
     }
     _DELIVERY_DIAGNOSTICS_BUFFER.insert(0, entry)
     if len(_DELIVERY_DIAGNOSTICS_BUFFER) > 100:
@@ -493,9 +493,9 @@ def _log_to_db(msg_id: str, recipient: str, subject: str, status: str, err: Opti
                 existing.status = status
                 existing.error_message = err or last_error
                 if status == "SENT":
-                    existing.sent_at = datetime.datetime.utcnow()
+                    existing.sent_at = datetime.datetime.now(datetime.timezone.utc)
                 else:
-                    existing.failed_at = datetime.datetime.utcnow()
+                    existing.failed_at = datetime.datetime.now(datetime.timezone.utc)
             else:
                 new_delivery = EmailDelivery(
                     message_id=msg_id,
@@ -504,8 +504,8 @@ def _log_to_db(msg_id: str, recipient: str, subject: str, status: str, err: Opti
                     status=status,
                     error_message=err or last_error,
                     trigger_type=trigger_type,
-                    sent_at=datetime.datetime.utcnow() if status == "SENT" else None,
-                    failed_at=datetime.datetime.utcnow() if status != "SENT" else None
+                    sent_at=datetime.datetime.now(datetime.timezone.utc) if status == "SENT" else None,
+                    failed_at=datetime.datetime.now(datetime.timezone.utc) if status != "SENT" else None
                 )
                 db.add(new_delivery)
             db.commit()
@@ -875,7 +875,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
         return False, f"INVALID_RECIPIENT: {val_err}", None
 
     time.time()
-    now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
+    now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%S.%f")[:-3]
     masked_target = mask_email_str(clean_rec)
     logger.info(f"[{now_iso}] [OTP] requestId={request_id or 'direct'} recipient={masked_target} stage=request_received")
     
@@ -910,7 +910,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
                 t_brevo_start = time.time()
                 ok, msg_id_or_err = send_email_via_brevo(b_key, brevo_sender, clean_rec, subject, html_body, None, text_body, max_retries=1)
                 dur = (time.time() - t_brevo_start) * 1000
-                now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
+                now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%S.%f")[:-3]
                 if ok:
                     logger.info(f"[{now_iso}] [OTP] stage=brevo_accepted messageId={msg_id_or_err} in {dur:.0f}ms")
                     record_email_delivery_diagnostic(
@@ -962,7 +962,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
                     pass
             
             dur = (time.time() - t_smtp_start) * 1000
-            now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
+            now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%S.%f")[:-3]
             logger.info(f"[{now_iso}] [OTP] stage=smtp_accepted messageId={generated_msg_id} in {dur:.0f}ms")
             record_email_delivery_diagnostic(
                 recipient=clean_rec,
@@ -1007,7 +1007,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
                     pass
             
             dur = (time.time() - t_smtp_start) * 1000
-            now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
+            now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%S.%f")[:-3]
             logger.info(f"[{now_iso}] [OTP] stage=smtp_accepted messageId={generated_msg_id} in {dur:.0f}ms")
             record_email_delivery_diagnostic(
                 recipient=clean_rec,
@@ -1053,7 +1053,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
 
         except Exception as smtp_err:
             dur = (time.time() - t_smtp_start) * 1000
-            now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
+            now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%S.%f")[:-3]
             logger.warning(f"[{now_iso}] [OTP] Gmail SMTP delay/error ({dur:.0f}ms): {smtp_err}. Dispatching via Brevo HTTPS API...")
 
     # ================================================================
@@ -1064,7 +1064,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
             t_brevo_start = time.time()
             ok, msg_id = send_email_via_brevo(brevo_key, from_email, clean_rec, subject, html_body, None, text_body, max_retries=1)
             dur = (time.time() - t_brevo_start) * 1000
-            now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
+            now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%S.%f")[:-3]
             if ok:
                 logger.info(f"[{now_iso}] [OTP] stage=brevo_accepted messageId={msg_id} in {dur:.0f}ms")
                 record_email_delivery_diagnostic(
@@ -1089,7 +1089,7 @@ def send_fast_otp_email(recipient: str, otp: str, request_id: Optional[str] = No
                 )
                 return False, f"Email delivery failed: {msg_id}", None
         except Exception as brevo_err:
-            now_iso = datetime.datetime.utcnow().strftime("%H:%M:%S.%f")[:-3]
+            now_iso = datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M:%S.%f")[:-3]
             logger.error(f"[{now_iso}] [OTP] Brevo exception: {brevo_err}")
             return False, str(brevo_err), None
 
@@ -1263,7 +1263,7 @@ def queue_weekly_report_dispatches(
             skipped_count += 1
             continue
 
-        email_id = f"MSG-{datetime.datetime.utcnow().strftime('%Y%m%d')}-{int(time.time()*1000) % 100000}"
+        email_id = f"MSG-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d')}-{int(time.time()*1000) % 100000}"
         new_log = EmailDispatchLog(
             email_id=email_id,
             report_id=f"REP-{session_id or 'OFFICIAL'}",
@@ -1384,7 +1384,7 @@ def _process_email_queue_worker():
 
             if delivered:
                 log.status = "SENT"
-                log.sent_at = datetime.datetime.utcnow()
+                log.sent_at = datetime.datetime.now(datetime.timezone.utc)
                 log.error_message = None
                 db.commit()
                 logger.info(f"Successfully delivered email report to {log.recipient}")
@@ -1400,7 +1400,7 @@ def _process_email_queue_worker():
             else:
                 # Local development fallback — mark as SENT for demo
                 log.status = "SENT"
-                log.sent_at = datetime.datetime.utcnow()
+                log.sent_at = datetime.datetime.now(datetime.timezone.utc)
                 log.error_message = "SMTP / API credentials missing — logged in local simulation mode."
                 db.commit()
 
@@ -1459,7 +1459,7 @@ def send_manual_report_email(
     total_students_cnt = len(dataset.get("rows", []))
     contest_name = dataset.get("contestName") or "Weekly Contest"
     metrics = dataset.get("metrics", {})
-    gen_time_str = dataset.get("generatedAtIST") or datetime.datetime.utcnow().strftime("%d %b %Y, %I:%M %p IST")
+    gen_time_str = dataset.get("generatedAtIST") or datetime.datetime.now(datetime.timezone.utc).strftime("%d %b %Y, %I:%M %p IST")
 
     # Format department, year, attendance labels for display
     dept_label = "All Departments" if dept == "ALL" else dept
@@ -1551,7 +1551,7 @@ def send_manual_report_email(
     total_bytes_all = sum(len(b) for _, b in attachments_bundle)
 
     for email in recipient_emails:
-        exec_id = f"EXEC-{datetime.datetime.utcnow().strftime('%Y%m%d')}-{int(time.time()*1000) % 100000}"
+        exec_id = f"EXEC-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d')}-{int(time.time()*1000) % 100000}"
         idempotency_key = f"SAFE-TEST-{email}-{int(time.time())}" if is_safe_test else f"CONTEST_PUBLIC_{session_id}_{email}_{dept}_{year}_{attendance}_{int(time.time())}"
         queued_log_ids.append(exec_id)
 
@@ -1581,7 +1581,7 @@ def send_manual_report_email(
 
         if delivered:
             log.status = "SENT"
-            log.sent_at = datetime.datetime.utcnow()
+            log.sent_at = datetime.datetime.now(datetime.timezone.utc)
             log.error_message = None
             db.commit()
             dispatched_count += 1

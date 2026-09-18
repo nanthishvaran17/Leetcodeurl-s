@@ -215,7 +215,7 @@ def mark_notification_read_endpoint(
     record = db.query(NotificationRecord).filter_by(notification_id=notification_id).first()
     if record:
         record.is_read = True
-        record.read_at = datetime.datetime.utcnow()
+        record.read_at = datetime.datetime.now(datetime.timezone.utc)
         db.commit()
 
     return {"success": True, "notification_id": notification_id, "is_read": True}
@@ -253,7 +253,7 @@ def mark_all_notifications_read_endpoint(
         user_id_variants.add(f"STAFF_{current_user.id}")
     user_id_variants.add("ALL")
 
-    now_utc = datetime.datetime.utcnow()
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
     records = db.query(NotificationRecord).filter(
         and_(NotificationRecord.recipient_user_id.in_(list(user_id_variants)), NotificationRecord.is_read == False)
     ).all()

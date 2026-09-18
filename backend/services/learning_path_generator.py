@@ -139,7 +139,7 @@ def update_or_create_learning_path(db: Session, student: Student) -> StudentLear
     path.status = res["status"]
     path.current_week = res["current_week"]
     path.weeks_plan_json = res["weeks"]
-    path.updated_at = datetime.datetime.utcnow()
+    path.updated_at = datetime.datetime.now(datetime.timezone.utc)
 
     db.commit()
     db.refresh(path)

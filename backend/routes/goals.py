@@ -36,7 +36,7 @@ def get_student_goal(student_id: int, db: Session = Depends(get_db)):
     # Auto-complete check
     if current_solved >= goal.target_solved and goal.status == "IN_PROGRESS":
         goal.status = "COMPLETED"
-        goal.completed_at = datetime.datetime.utcnow()
+        goal.completed_at = datetime.datetime.now(datetime.timezone.utc)
         db.commit()
 
     return {
@@ -74,7 +74,7 @@ def set_student_goal(
         target_solved=goal_in.target_solved,
         target_date=goal_in.target_date,
         status="IN_PROGRESS",
-        created_at=datetime.datetime.utcnow()
+        created_at=datetime.datetime.now(datetime.timezone.utc)
     )
     db.add(new_goal)
 

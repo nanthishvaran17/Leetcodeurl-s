@@ -399,7 +399,7 @@ def generate_forensic_audit_pdf(
     qr.make(fit=True)
     qr_img = qr.make_image(fill_color="#0F172A", back_color="white")
     qr_buf = io.BytesIO()
-    qr_img.save(qr_buf, format="PNG")
+    qr_img.save(qr_buf)
     qr_buf.seek(0)
     rl_qr = RLImage(qr_buf, width=50, height=50)
 

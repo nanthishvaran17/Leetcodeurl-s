@@ -141,7 +141,7 @@ class TestDisabledStaffAccess:
         db = SessionLocal()
         try:
             import datetime
-            datetime.datetime.utcnow()
+            datetime.datetime.now(datetime.timezone.utc)
 
             faculty_assignment_service.disable_staff_account(db=db, staff_id=staff_c_id, disabled_by_id=None)
 

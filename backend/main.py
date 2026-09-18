@@ -421,7 +421,7 @@ async def _deferred_startup_tasks():
                                 )
 
                             recovery_record.status = "COMPLETED"
-                            recovery_record.completed_at = _dt.datetime.utcnow()
+                            recovery_record.completed_at = _dt.datetime.now(datetime.timezone.utc)
                             _recovery_db.commit()
                             logger.info("[STARTUP] Missed job recovery completed.")
                         else:

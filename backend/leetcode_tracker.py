@@ -389,7 +389,7 @@ async def get_or_force_sync_single_student(identifier: str, db: Session = Depend
         pub_result.q3 = classification["q3"]
         pub_result.q4 = classification["q4"]
         pub_result.contest_rating = classification["contest_rating"]
-        pub_result.last_fetched_at = datetime.datetime.utcnow()
+        pub_result.last_fetched_at = datetime.datetime.now(datetime.timezone.utc)
         db.commit()
 
     return {

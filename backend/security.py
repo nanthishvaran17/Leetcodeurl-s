@@ -64,7 +64,7 @@ def evaluate_security_alert_threshold(
     If >= 5 blocked attempts occur, triggers a single security alert notification email
     and logs an AdminAuditLog SECURITY_ALERT entry.
     """
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
     cutoff = now - datetime.timedelta(minutes=WINDOW_MINUTES)
     
     if source_id not in BLOCKED_ATTEMPTS:
@@ -283,7 +283,7 @@ def log_security_access_event(
 
     # 2. Database safety-net debounce check (within last debounce_seconds)
     try:
-        cutoff = datetime.datetime.utcnow() - datetime.timedelta(seconds=debounce_seconds)
+        cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(seconds=debounce_seconds)
         existing = db.query(AdminAuditLog.audit_id).filter(
             AdminAuditLog.admin_name == username,
             AdminAuditLog.action == action,
@@ -302,7 +302,7 @@ def log_security_access_event(
     hashed_ip = get_hashed_ip(request)
     client_ip_addr, ip_ver = get_real_client_ip(request)
     ua_info = parse_user_agent_details(request.headers.get("User-Agent"))
-    req_time = datetime.datetime.utcnow()
+    req_time = datetime.datetime.now(datetime.timezone.utc)
     sec_audit_id = f"SEC-{uuid.uuid4().hex[:8].upper()}"
     req_id = f"req_{uuid.uuid4().hex[:12]}"
     corr_id = f"corr_{uuid.uuid4().hex[:12]}"
@@ -363,7 +363,7 @@ def log_security_access_event(
             risk_level="HIGH" if result in ("BLOCKED", "DENIED") else "LOW",
             denial_reason=denial_reason,
             request_timestamp=req_time,
-            response_timestamp=datetime.datetime.utcnow(),
+            response_timestamp=datetime.datetime.now(datetime.timezone.utc),
             response_status=200 if result in ("SUCCESS", "ALLOWED") else (401 if denial_reason == "NOT_AUTHENTICATED" else 403),
             response_time_ms=0.0,
             trace_id=f"trace_{sec_audit_id.lower()}",

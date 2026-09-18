@@ -65,7 +65,7 @@ class LiveSyncTracker:
         return self.progress_percentage
 
     def start(self, job_id: str, total: int, triggered_by: Optional[str] = "admin"):
-        now_iso = datetime.datetime.utcnow().isoformat()
+        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
         self.current_job_id = job_id
         self.is_running = True
         self.status = "RUNNING"
@@ -93,7 +93,7 @@ class LiveSyncTracker:
     def set_current(self, student_name: str, username: Optional[str] = None):
         self.current_student = student_name
         self.current_username = username or ""
-        self.last_progress_at = datetime.datetime.utcnow().isoformat()
+        self.last_progress_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
     def record_student_completion(
         self,
@@ -110,7 +110,7 @@ class LiveSyncTracker:
         Monotonically advances processed count and updates classification metrics.
         """
         self.students_processed += 1
-        now_iso = datetime.datetime.utcnow().isoformat()
+        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
         self.last_progress_at = now_iso
         self.current_student = student_name
         self.current_username = username or ""
@@ -158,7 +158,7 @@ class LiveSyncTracker:
         self.partial += partial_inc
         self.failed += failed_inc
         self.pending_usernames += pending_inc
-        self.last_progress_at = datetime.datetime.utcnow().isoformat()
+        self.last_progress_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
         self.progress_percentage = round((self.students_processed / max(1, self.total_students)) * 100.0, 2)
         if log_msg:
             self.recent_logs.append(log_msg)
@@ -168,7 +168,7 @@ class LiveSyncTracker:
     def finish(self, status: str = "COMPLETED", error_summary: Optional[str] = None):
         self.is_running = False
         self.status = status
-        self.completed_at = datetime.datetime.utcnow().isoformat()
+        self.completed_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
         if status in ("COMPLETED", "PARTIAL"):
             self.last_successful_sync = self.completed_at
             self.progress_percentage = 100.0
@@ -272,7 +272,7 @@ settings = Settings()
 
 def _acquire_global_lock(db: Session, job_id: str, timeout_minutes: int = 120) -> bool:
     """Atomic acquisition of the global sync lock using a single transaction."""
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
     
     try:
         # Ensure a lock row exists (id=1)
@@ -332,7 +332,7 @@ def start_full_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, A
     Enforces DB-level single-job lock and starts an asynchronous full sync background worker.
     Returns existing job if one is already RUNNING.
     """
-    job_id = f"SYNC-{datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')}"
+    job_id = f"SYNC-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d-%H%M%S')}"
 
     # 1. DB-Level Single Job Lock Check
     if not _acquire_global_lock(db, job_id):
@@ -356,7 +356,7 @@ def start_full_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, A
     new_job = SyncJob(
         job_id=job_id,
         job_type="FULL_SYNC",
-        started_at=datetime.datetime.utcnow(),
+        started_at=datetime.datetime.now(datetime.timezone.utc),
         status="RUNNING",
         total_records=total_count,
         success_count=0,
@@ -394,7 +394,7 @@ def start_stale_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, 
     """
     Synchronizes only stale student profiles (older than SYNC_FRESHNESS_HOURS) or never synced.
     """
-    job_id = f"SYNC-STALE-{datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')}"
+    job_id = f"SYNC-STALE-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d-%H%M%S')}"
     
     if not _acquire_global_lock(db, job_id):
         active_lock = db.query(GlobalSyncLock).filter(GlobalSyncLock.id == 1).first()
@@ -406,7 +406,7 @@ def start_stale_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, 
             "message": "A synchronization job is already in progress."
         }
 
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
     freshness_seconds = settings.SYNC_FRESHNESS_HOURS * 3600
     threshold = now - datetime.timedelta(seconds=freshness_seconds)
 
@@ -434,7 +434,7 @@ def start_stale_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, 
     new_job = SyncJob(
         job_id=job_id,
         job_type="STALE_SYNC",
-        started_at=datetime.datetime.utcnow(),
+        started_at=datetime.datetime.now(datetime.timezone.utc),
         status="RUNNING",
         total_records=total_count,
         success_count=0,
@@ -461,7 +461,7 @@ def start_targeted_sync_job(db: Session, student_ids: List[int], triggered_by: s
     """
     Synchronizes only a specific allowlisted subset of student IDs (e.g. after username mapping update).
     """
-    job_id = f"SYNC-TARGET-{datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')}"
+    job_id = f"SYNC-TARGET-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d-%H%M%S')}"
     if not _acquire_global_lock(db, job_id):
         active_lock = db.query(GlobalSyncLock).filter(GlobalSyncLock.id == 1).first()
         active_job_id = active_lock.locked_by_job_id if active_lock else "UNKNOWN"
@@ -482,7 +482,7 @@ def start_targeted_sync_job(db: Session, student_ids: List[int], triggered_by: s
     new_job = SyncJob(
         job_id=job_id,
         job_type="TARGETED_SYNC",
-        started_at=datetime.datetime.utcnow(),
+        started_at=datetime.datetime.now(datetime.timezone.utc),
         status="RUNNING",
         total_records=total_count,
         success_count=0,
@@ -533,7 +533,7 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
                 try:
                     job_record = _db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
                     if job_record:
-                        now_t = datetime.datetime.utcnow()
+                        now_t = datetime.datetime.now(datetime.timezone.utc)
                         job_record.completed_at = now_t
                         job_record.last_synced_at = now_t
                         job_record.success_count = summary.get("full_dataset_synced", 0)
@@ -576,7 +576,7 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
             try:
                 job_record = _db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
                 if job_record:
-                    job_record.completed_at = datetime.datetime.utcnow()
+                    job_record.completed_at = datetime.datetime.now(datetime.timezone.utc)
                     job_record.status = "FAILED"
                     job_record.error_message = str(exc)
                     _db.commit()
@@ -627,7 +627,7 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
         db.add(st)
 
     old_total = st.total_solved
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
 
     # Case A: Exception, Network Error, or explicit error-status dict - PRESERVE PREVIOUS VALID SNAPSHOT
     if isinstance(res, Exception) or not isinstance(res, dict) or res.get("status") == "error":
@@ -983,7 +983,7 @@ def sync_single_student(student_id: int, db: Session, force_refresh: bool = True
 
         old_url = student.leetcode_url
         old_username = student.username
-        start_time_iso = datetime.datetime.utcnow().isoformat() + "Z"
+        start_time_iso = datetime.datetime.now(datetime.timezone.utc).isoformat() + "Z"
 
         # Validate URL from DB
         parsed_username, canonical_url, url_status = extract_leetcode_username(student.leetcode_url)
@@ -998,16 +998,16 @@ def sync_single_student(student_id: int, db: Session, force_refresh: bool = True
             st.validation_status = "url_invalid"
             st.error_message = f"Invalid LeetCode URL format: '{student.leetcode_url}'"
             st.error_code = "URL_INVALID"
-            st.last_attempt_at = datetime.datetime.utcnow()
+            st.last_attempt_at = datetime.datetime.now(datetime.timezone.utc)
             db.commit()
 
             logger.info(
                 f"[URL_CHANGE_FETCH] Student ID: {student.id} | Reg No: {student.reg_no} | "
                 f"Old URL: '{old_url}' | New URL: '{student.leetcode_url}' | "
                 f"Old Username: '{old_username}' | New Username: None | "
-                f"Fetch Started: {start_time_iso} | Fetch Completed: {datetime.datetime.utcnow().isoformat()}Z | "
+                f"Fetch Started: {start_time_iso} | Fetch Completed: {datetime.datetime.now(datetime.timezone.utc).isoformat()}Z | "
                 f"Fetched Username: None | Result Status: URL_INVALID | "
-                f"Error: '{st.error_message}' | Timestamp: {datetime.datetime.utcnow().isoformat()}Z"
+                f"Error: '{st.error_message}' | Timestamp: {datetime.datetime.now(datetime.timezone.utc).isoformat()}Z"
             )
 
             return {
@@ -1042,7 +1042,7 @@ def sync_single_student(student_id: int, db: Session, force_refresh: bool = True
 
         res = loop.run_until_complete(fetch_leetcode_profile(student.username, force_refresh=force_refresh))
 
-        job_id = f"SINGLE-{student_id}-{int(datetime.datetime.utcnow().timestamp())}"
+        job_id = f"SINGLE-{student_id}-{int(datetime.datetime.now(datetime.timezone.utc).timestamp())}"
         job = db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
         if not job:
             job = SyncJob(
@@ -1054,7 +1054,7 @@ def sync_single_student(student_id: int, db: Session, force_refresh: bool = True
                 processed_count=0,
                 success_count=0,
                 error_count=0,
-                started_at=datetime.datetime.utcnow()
+                started_at=datetime.datetime.now(datetime.timezone.utc)
             )
             db.add(job)
             db.commit()
@@ -1072,7 +1072,7 @@ def sync_single_student(student_id: int, db: Session, force_refresh: bool = True
         except Exception:
             pass
 
-        end_time_iso = datetime.datetime.utcnow().isoformat() + "Z"
+        end_time_iso = datetime.datetime.now(datetime.timezone.utc).isoformat() + "Z"
         result_status = "SUCCESS" if is_success else ("PARTIAL" if is_partial else (student.stats.sync_status.upper() if student.stats else "FAILED"))
         fetched_uname = res.get("fetched_username") or res.get("username") or student.username
 

@@ -1431,7 +1431,7 @@ async def forgot_password_request(req: ForgotPasswordRequest, request: Request, 
     from backend.models import PasswordResetOTP
     recent_otps = db.query(PasswordResetOTP).filter(
         PasswordResetOTP.user_id == user.id,
-        PasswordResetOTP.created_at > datetime.datetime.utcnow() - datetime.timedelta(minutes=15)
+        PasswordResetOTP.created_at > datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(minutes=15)
     ).count()
 
     if recent_otps >= 5:
@@ -1446,7 +1446,7 @@ async def forgot_password_request(req: ForgotPasswordRequest, request: Request, 
         institutional_id=user.institutional_id or user.username,
         email=user.email,
         otp_hash=otp_hash,
-        expires_at=datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+        expires_at=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=10)
     )
     db.add(otp_rec)
     db.commit()
@@ -1488,7 +1488,7 @@ def forgot_password_verify(req: ForgotPasswordVerifyRequest, db: Session = Depen
     if not otp_rec:
         raise HTTPException(status_code=400, detail="Invalid request or OTP expired.")
 
-    if otp_rec.expires_at < datetime.datetime.utcnow():
+    if otp_rec.expires_at < datetime.datetime.now(datetime.timezone.utc):
         raise HTTPException(status_code=400, detail="OTP has expired. Please request a new one.")
 
     if not verify_password(raw_otp, str(otp_rec.otp_hash)):
@@ -1520,7 +1520,7 @@ def forgot_password_verify(req: ForgotPasswordVerifyRequest, db: Session = Depen
         "sub": str(otp_rec.user_id),
         "email": email_clean,
         "purpose": "password_reset",
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
+        "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15)
     }
     reset_token = jwt.encode(reset_payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
@@ -1560,7 +1560,7 @@ def forgot_password_reset(req: ResetPasswordSubmitRequest, background_tasks: Bac
         
         # Invalidate all existing sessions
         db.query(AdminSession).filter(AdminSession.user_id == user.id).update(
-            {"revoked_at": datetime.datetime.utcnow()}, synchronize_session=False
+            {"revoked_at": datetime.datetime.now(datetime.timezone.utc)}, synchronize_session=False
         )
         db.commit()
         

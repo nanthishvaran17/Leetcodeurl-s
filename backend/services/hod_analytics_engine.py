@@ -422,7 +422,7 @@ def get_hod_what_is_happening_summary(
     health = calculate_department_health_score(db, current_user, dept_id=dept_id)
     return {
         "executive_title": f"Institutional Coding Health Index: {health.get('health_score', 0)}/100",
-        "timestamp": datetime.datetime.utcnow().strftime("%d %b %Y, %H:%M UTC"),
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).strftime("%d %b %Y, %H:%M UTC"),
         "what_improved": brief["improved"],
         "what_declined": brief["attention"],
         "students_needing_attention": f"{health.get('inactive_count', 0)} Inactive Solvers",

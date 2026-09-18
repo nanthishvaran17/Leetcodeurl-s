@@ -156,7 +156,7 @@ class ContestIntegrityService:
                         audit_history=[{
                             "event": "CASE_CREATED",
                             "reason": why_explanation,
-                            "timestamp": datetime.datetime.utcnow().isoformat()
+                            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
                         }]
                     )
                     self.db.add(new_case)
@@ -217,7 +217,7 @@ class ContestIntegrityService:
                 audit_history=[{
                     "event": "IDENTITY_REVIEW_REQUIRED",
                     "reason": "Missing People ID for multiple contest accounts",
-                    "timestamp": datetime.datetime.utcnow().isoformat()
+                    "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
                 }]
             )
             self.db.add(case)

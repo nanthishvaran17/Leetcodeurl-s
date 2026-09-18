@@ -101,13 +101,13 @@ class AutomaticNotificationEngine:
                 student_ids = [s.id for s in assigned_students]
 
                 # 3. Calculate dynamic performance metrics from actual LeetCode DB data
-                cutoff_24h = datetime.datetime.utcnow() - datetime.timedelta(hours=24)
+                cutoff_24h = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=24)
                 active_count = db.query(LeetCodeProfileStats).filter(
                     LeetCodeProfileStats.student_id.in_(student_ids),
                     LeetCodeProfileStats.last_updated >= cutoff_24h
                 ).count()
 
-                cutoff_3d = datetime.datetime.utcnow() - datetime.timedelta(days=3)
+                cutoff_3d = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=3)
                 attention_count = db.query(LeetCodeProfileStats).filter(
                     LeetCodeProfileStats.student_id.in_(student_ids),
                     or_(
@@ -201,7 +201,7 @@ class AutomaticNotificationEngine:
                 dept_student_ids = [s.id for s in dept_students]
 
                 # Active count (last 24h)
-                cutoff_24h = datetime.datetime.utcnow() - datetime.timedelta(hours=24)
+                cutoff_24h = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=24)
                 active_count = db.query(LeetCodeProfileStats).filter(
                     LeetCodeProfileStats.student_id.in_(dept_student_ids),
                     LeetCodeProfileStats.last_updated >= cutoff_24h
@@ -210,7 +210,7 @@ class AutomaticNotificationEngine:
                 active_pct = round((active_count / total_students) * 100, 1)
 
                 # Inactive / attention count
-                cutoff_3d = datetime.datetime.utcnow() - datetime.timedelta(days=3)
+                cutoff_3d = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=3)
                 attention_count = db.query(LeetCodeProfileStats).filter(
                     LeetCodeProfileStats.student_id.in_(dept_student_ids),
                     or_(LeetCodeProfileStats.last_updated < cutoff_3d, LeetCodeProfileStats.total_solved == 0)
@@ -264,7 +264,7 @@ class AutomaticNotificationEngine:
                 if total_students == 0:
                     continue
 
-                cutoff_24h = datetime.datetime.utcnow() - datetime.timedelta(hours=24)
+                cutoff_24h = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=24)
                 active_count = db.query(LeetCodeProfileStats).filter(
                     LeetCodeProfileStats.last_updated >= cutoff_24h
                 ).count()

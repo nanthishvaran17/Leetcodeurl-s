@@ -230,7 +230,7 @@ def generate_student_report(
             existing_record.storage_path = storage_path
             existing_record.file_size_bytes = file_size
             existing_record.status = "READY"
-            existing_record.generated_at = datetime.datetime.utcnow()
+            existing_record.generated_at = datetime.datetime.now(datetime.timezone.utc)
             db.flush()
             cache_id = existing_record.id
         else:

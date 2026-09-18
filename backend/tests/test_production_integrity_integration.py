@@ -191,8 +191,8 @@ def test_administrative_correction_audit_event(db):
     
     snapshot = AttendanceSnapshot(
         contest_id="wc-500", people_id="P_CORR", student_id=student.id, leetcode_username=accounts[0].leetcode_username,
-        official_attendance_state="NOT_ATTENDED", source="official_sync", calculated_at=datetime.datetime.utcnow(),
-        frozen_at=datetime.datetime.utcnow(), algorithm_version="2.0.0"
+        official_attendance_state="NOT_ATTENDED", source="official_sync", calculated_at=datetime.datetime.now(datetime.timezone.utc),
+        frozen_at=datetime.datetime.now(datetime.timezone.utc), algorithm_version="2.0.0"
     )
     db.add(snapshot)
     db.commit()
@@ -200,7 +200,7 @@ def test_administrative_correction_audit_event(db):
     correction = CorrectionEvent(
         audit_id="CORR-12345", snapshot_id=snapshot.id, contest_id="wc-500", people_id="P_CORR",
         old_value="NOT_ATTENDED", new_value="ATTENDED", reason="Approved medical leave exception",
-        staff_id="STAFF_007", timestamp=datetime.datetime.utcnow()
+        staff_id="STAFF_007", timestamp=datetime.datetime.now(datetime.timezone.utc)
     )
     db.add(correction)
     db.commit()

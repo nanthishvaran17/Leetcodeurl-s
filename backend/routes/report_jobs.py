@@ -25,7 +25,7 @@ def generate_report_background_task(job_id: str, payload: dict, institution_id: 
         job = db.query(ReportJob).filter(ReportJob.job_id == job_id).first()
         if job:
             job.status = "PROCESSING"
-            job.started_at = datetime.datetime.utcnow()
+            job.started_at = datetime.datetime.now(datetime.timezone.utc)
             db.commit()
             
         report_type = payload.get("report_type")
@@ -86,7 +86,7 @@ def generate_report_background_task(job_id: str, payload: dict, institution_id: 
                 raise ValueError("No student record found for forensic report generation.")
 
             sess_id_int = int(session_id) if session_id and str(session_id).isdigit() else None
-            student_id_val = student.id if student else None
+            student_id_val = int(student.id) if student else None
             pdf_bytes = generate_forensic_audit_pdf(db, student_id=student_id_val, session_id=sess_id_int, trace_id=trace_id or (str(search) if search else None))
 
             cache_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "reports_cache")
@@ -102,7 +102,7 @@ def generate_report_background_task(job_id: str, payload: dict, institution_id: 
                 job.status = "COMPLETED"
                 job.progress = 100
                 job.file_path = file_path
-                job.completed_at = datetime.datetime.utcnow()
+                job.completed_at = datetime.datetime.now(datetime.timezone.utc)
                 db.commit()
             return
 
@@ -128,7 +128,7 @@ def generate_report_background_task(job_id: str, payload: dict, institution_id: 
                 job.status = "COMPLETED"
                 job.progress = 100
                 job.file_path = file_path
-                job.completed_at = datetime.datetime.utcnow()
+                job.completed_at = datetime.datetime.now(datetime.timezone.utc)
                 db.commit()
             return
             
@@ -154,7 +154,7 @@ def generate_report_background_task(job_id: str, payload: dict, institution_id: 
                 job.status = "COMPLETED"
                 job.progress = 100
                 job.file_path = file_path
-                job.completed_at = datetime.datetime.utcnow()
+                job.completed_at = datetime.datetime.now(datetime.timezone.utc)
                 db.commit()
             return
             
@@ -183,7 +183,7 @@ def generate_report_background_task(job_id: str, payload: dict, institution_id: 
             job.status = "COMPLETED"
             job.progress = 100
             job.file_path = cache_record.storage_path
-            job.completed_at = datetime.datetime.utcnow()
+            job.completed_at = datetime.datetime.now(datetime.timezone.utc)
             db.commit()
             
     except Exception as e:
@@ -192,7 +192,7 @@ def generate_report_background_task(job_id: str, payload: dict, institution_id: 
         if job:
             job.status = "FAILED"
             job.error_message = str(e)
-            job.completed_at = datetime.datetime.utcnow()
+            job.completed_at = datetime.datetime.now(datetime.timezone.utc)
             db.commit()
     finally:
         db.close()
@@ -244,7 +244,7 @@ def create_report_job(
         role=role,
         status="QUEUED",
         progress=0,
-        created_at=datetime.datetime.utcnow()
+        created_at=datetime.datetime.now(datetime.timezone.utc)
     )
     
     db.add(new_job)

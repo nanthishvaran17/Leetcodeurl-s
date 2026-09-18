@@ -211,7 +211,7 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
     if config.year != "ALL":
         title = f"{title} ({config.year} Year)"
 
-    report_id = f"RPT-{datetime.datetime.utcnow().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+    report_id = f"RPT-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
 
     from backend.services.weekly_session_resolver import resolve_weekly_sessions
     resolved_info = resolve_weekly_sessions(db)
@@ -225,8 +225,8 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         "title": title,
         "contestName": resolved_cname,
         "sessionDate": resolved_cdate,
-        "generatedAt": datetime.datetime.utcnow().isoformat(),
-        "verifiedAt": datetime.datetime.utcnow().isoformat(),
+        "generatedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "verifiedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "dataStatus": "READY" if total_students > 0 else "PARTIAL",
         "message": None,
         "config": config.model_dump(),

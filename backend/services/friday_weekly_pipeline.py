@@ -150,7 +150,7 @@ def _create_or_update_student_snapshots(db: Session, session: WeeklySession) -> 
     }
 
     created = updated = 0
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
 
     for student in students:
         people_id = student.reg_no or str(student.id)
@@ -372,7 +372,7 @@ def _persist_to_cache(
     with open(storage_path, "wb") as f:
         f.write(file_bytes)
 
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
     entry = db.query(ReportCache).filter(ReportCache.filter_hash == filter_hash).first()
     if entry:
         entry.storage_path = storage_path
@@ -439,7 +439,7 @@ def _update_pipeline_status(
     error_message: Optional[str] = None,
 ) -> WeeklyPipelineStatus:
     """Upserts WeeklyPipelineStatus record."""
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
     rec = db.query(WeeklyPipelineStatus).filter(WeeklyPipelineStatus.period_id == period_id).first()
     if not rec:
         rec = WeeklyPipelineStatus(
@@ -498,7 +498,7 @@ def _write_audit(
     """Writes or updates a WeeklyReportAudit row for this pipeline run."""
     c_num = extract_contest_number(session)
     today_str = datetime.date.today().strftime("%d-%m-%Y")
-    report_id = f"INTEL_{period_id}_{datetime.datetime.utcnow().strftime('%Y%m%d')}".replace("/", "_").replace(":", "_")
+    report_id = f"INTEL_{period_id}_{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d')}".replace("/", "_").replace(":", "_")
     ok = qa_excel.get("ok", False) and qa_pdf.get("ok", False)
     details = json.dumps({
         "excel": qa_excel,

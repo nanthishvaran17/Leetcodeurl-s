@@ -9,7 +9,7 @@ class Department(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), unique=True, nullable=False)
     code = Column(String(20), unique=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     students = relationship("Student", back_populates="department")
     users = relationship("User", back_populates="department")
@@ -30,7 +30,7 @@ class HODDepartmentAllocation(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     department_id = Column(Integer, ForeignKey("departments.id", ondelete="CASCADE"), nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     created_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # admin who made the allocation
 
     user = relationship("User", foreign_keys=[user_id], back_populates="hod_department_allocations")
@@ -42,7 +42,7 @@ class AcademicYear(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(20), unique=True, nullable=False) # e.g., 2025-26
     is_current = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 class Section(Base):
     __tablename__ = "sections"
@@ -93,8 +93,8 @@ class Student(Base):
     
     is_active = Column(Boolean, default=True, index=True)
     version = Column(Integer, default=1, nullable=False)
-    joining_date = Column(DateTime, default=datetime.datetime.utcnow)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    joining_date = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     department = relationship("Department", back_populates="students")
     section = relationship("Section", back_populates="students")
@@ -145,7 +145,7 @@ class LeetCodeProfileStats(Base):
     last_attempt_at = Column(DateTime(timezone=True), nullable=True)  # Tracks every sync attempt, success or fail
     retry_count = Column(Integer, default=0, nullable=False)  # Number of failed fetch attempts
     fetch_duration = Column(Float, nullable=True)
-    last_updated = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    last_updated = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student", back_populates="stats")
 
@@ -171,7 +171,7 @@ class ContestParticipation(Base):
     contest_rating_after = Column(Float, nullable=True)
     submission_times = Column(JSON, nullable=True)
     
-    verified_at = Column(DateTime, default=datetime.datetime.utcnow)
+    verified_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     source = Column(String(100), default="leetcode_api")
     # Audit trail: which LeetCode username was used to fetch this record.
     # Remains stable even if student.username changes — enables forensic diff.
@@ -205,7 +205,7 @@ class WeeklySession(Base):
     sync_status = Column(String(50), default=" Verified") # Verified, Syncing, Sync Error
     last_synced = Column(DateTime, nullable=True)
 
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     completed_at = Column(DateTime, nullable=True)
     finalized_at = Column(DateTime, nullable=True)
 
@@ -214,7 +214,7 @@ class WeeklySession(Base):
     
     # 100/10 Production Hardening: Pipeline State Machine & Finalization Retry Boundary (§29)
     pipeline_state = Column(String(50), default="DISCOVERED", index=True)
-    pipeline_last_updated = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    pipeline_last_updated = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
     pipeline_error = Column(Text, nullable=True)
 
     manual_review_required_at = Column(DateTime(timezone=True), nullable=True)
@@ -267,7 +267,7 @@ class WeeklySessionSnapshot(Base):
     
     status = Column(String(30), default="NOT STARTED") # STARTED, NOT STARTED, DATA UNAVAILABLE
     is_sequence_broken = Column(Boolean, default=False)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    timestamp = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     session = relationship("WeeklySession", back_populates="snapshots")
     student = relationship("Student", back_populates="snapshots")
@@ -291,7 +291,7 @@ class WeeklyPublicResult(Base):
     participation_status = Column(String(30), default="PENDING", index=True) # PUBLIC_ATTENDED, PUBLIC_NOT_ATTENDED, DATA_ERROR, PENDING
     state = Column(String(30), default="PENDING", index=True) # PENDING, FETCHING, SOURCE_FOUND, VALIDATING, VALIDATED, CLASSIFIED, FINALIZED, INVALID_USERNAME, FETCH_ERROR, SOURCE_TIMEOUT, RATE_LIMITED, DATA_ERROR, UNVERIFIED
     previous_state = Column(String(30), nullable=True)
-    state_changed_at = Column(DateTime, default=datetime.datetime.utcnow)
+    state_changed_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     last_error_code = Column(String(50), nullable=True)
     evidence_json = Column(Text, nullable=True)
     record_hash = Column(String(128), nullable=True)
@@ -340,7 +340,7 @@ class WeeklyVirtualResult(Base):
     q4 = Column(Integer, default=0)
     total_contest_solved = Column(Integer, default=0)
     contest_score = Column(Integer, default=0)
-    completed_at = Column(DateTime, default=datetime.datetime.utcnow)
+    completed_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     session = relationship("WeeklySession", back_populates="virtual_results")
     student = relationship("Student")
@@ -385,7 +385,7 @@ class VirtualContestAttempt(Base):
     status = Column(String(30), default="ACTIVE", nullable=False, index=True)
     # ACTIVE | COMPLETED | EXPIRED | ABANDONED
 
-    started_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    started_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), nullable=False)
     expires_at = Column(DateTime, nullable=True)   # started_at + contest duration (90 min typical)
     last_activity_at = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)
@@ -395,8 +395,8 @@ class VirtualContestAttempt(Base):
     source = Column(String(50), default="RECONCILIATION_SCAN")
     # RECONCILIATION_SCAN | STUDENT_INITIATED | ADMIN_CREATED
 
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student")
     session = relationship("WeeklySession")
@@ -418,7 +418,7 @@ class WeeklyContestLiveEvent(Base):
     question_id = Column(Integer, nullable=True) # e.g., 1, 2, 3, 4 for Q1, Q2, Q3, Q4
     title_slug = Column(String(150), nullable=False)
     submission_id = Column(String(50), nullable=True)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    timestamp = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
     
     # Provenance tracking
     event_type = Column(String(50), default="SOLVE") # SOLVE, ATTEMPT, RANK_CHANGE
@@ -442,7 +442,7 @@ class WeeklyContestErrorLog(Base):
     error_message = Column(Text, nullable=True)
     attempt_count = Column(Integer, default=1)
     status = Column(String(20), default="UNRESOLVED") # UNRESOLVED, RESOLVED
-    last_attempt_at = Column(DateTime, default=datetime.datetime.utcnow)
+    last_attempt_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     session = relationship("WeeklySession", back_populates="error_logs")
     student = relationship("Student")
@@ -455,7 +455,7 @@ class OfficialWeeklySnapshot(Base):
     contest_id = Column(String(100), nullable=False)
     contest_name = Column(String(150), nullable=False)
     contest_date = Column(String(20), nullable=False)
-    finalized_at = Column(DateTime, default=datetime.datetime.utcnow)
+    finalized_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     dataset = Column(JSON, nullable=False)
     dataset_hash = Column(String(100), nullable=False)
     session_data_hash = Column(String(128), nullable=True)
@@ -496,7 +496,7 @@ class WeeklyStudentProgress(Base):
     badge_list = Column(JSON, default=list) # e.g. ["Top Performer", "10 Week Streak"]
     composite_score = Column(Float, default=0.0)
     
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student", back_populates="progress_records")
 
@@ -526,7 +526,7 @@ class User(Base):
     last_activity = Column(DateTime, nullable=True)
     totp_secret = Column(String(100), nullable=True)
     is_2fa_enabled = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     department = relationship("Department", back_populates="users")
     reporting_manager_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
@@ -556,7 +556,7 @@ class PasswordResetOTP(Base):
     otp_hash = Column(String(128), nullable=False)
     attempts = Column(Integer, default=0)
     max_attempts = Column(Integer, default=3)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     expires_at = Column(DateTime, nullable=False)
     is_used = Column(Boolean, default=False)
     is_locked = Column(Boolean, default=False)
@@ -575,7 +575,7 @@ class FacultyStudentAssignment(Base):
     student_id = Column(Integer, ForeignKey("students.id"), unique=True, nullable=False, index=True)
     assigned_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     is_active = Column(Boolean, default=True, index=True)
-    assigned_at = Column(DateTime, default=datetime.datetime.utcnow)
+    assigned_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     faculty = relationship("User", foreign_keys=[faculty_id], back_populates="assigned_students")
     student = relationship("Student", back_populates="faculty_assignment")
@@ -589,7 +589,7 @@ class MentorNote(Base):
     faculty_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     note = Column(Text, nullable=False)
     escalation_level = Column(String(30), default="NORMAL") # NORMAL, WARNING, CRITICAL
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student", back_populates="mentor_notes")
     faculty = relationship("User")
@@ -603,7 +603,7 @@ class StudentAssignmentHistory(Base):
     new_faculty_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     assigned_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     reason = Column(String(255), nullable=True, default="Initial Allocation")
-    assigned_at = Column(DateTime, default=datetime.datetime.utcnow)
+    assigned_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student")
     previous_faculty = relationship("User", foreign_keys=[previous_faculty_id])
@@ -620,7 +620,7 @@ class StaffFollowUp(Base):
     due_date = Column(String(20), nullable=False) # YYYY-MM-DD
     status = Column(String(30), default="PENDING", index=True) # PENDING, COMPLETED, CANCELLED
     notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     completed_at = Column(DateTime, nullable=True)
 
     student = relationship("Student")
@@ -637,7 +637,7 @@ class StaffAlert(Base):
     title = Column(String(255), nullable=False)
     message = Column(Text, nullable=False)
     is_read = Column(Boolean, default=False, index=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student")
     staff = relationship("User")
@@ -654,7 +654,7 @@ class StudentWeeklyTarget(Base):
     completed_problems = Column(Integer, default=0)
     completed_contests = Column(Integer, default=0)
     status = Column(String(30), default="IN_PROGRESS") # IN_PROGRESS, ACHIEVED, MISSED
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student")
 
@@ -667,7 +667,7 @@ class AuditLog(Base):
     action = Column(String(100), nullable=False)
     details = Column(Text, nullable=True)
     ip_address = Column(String(50), nullable=True)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    timestamp = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 class EmailLog(Base):
     __tablename__ = "email_logs"
@@ -678,7 +678,7 @@ class EmailLog(Base):
     subject = Column(String(255), nullable=False)
     status = Column(String(30), default="SENT") # SENT, FAILED, RETRYING
     error_message = Column(Text, nullable=True)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    timestamp = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 class CertificateRecord(Base):
     __tablename__ = "certificate_records"
@@ -724,7 +724,7 @@ class CertificateRecord(Base):
     qr_code_path = Column(String(512), nullable=True)
     
     created_by = Column(String(128), default="Admin")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     revoked_at = Column(DateTime, nullable=True)
     revocation_reason = Column(String(255), nullable=True)
 
@@ -756,7 +756,7 @@ class StudentStatSnapshot(Base):
     delta_hard = Column(Integer, nullable=True, default=0)
     delta_rating = Column(Float, nullable=True, default=0.0)
     
-    captured_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
+    captured_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), nullable=False, index=True)
     sync_run_id = Column(String(100), nullable=True)
     source = Column(String(50), default="leetcode_public_profile")
     
@@ -779,7 +779,7 @@ class StudentContestSnapshot(Base):
     attended = Column(Boolean, default=True)
     status = Column(String(30), default="VERIFIED")
     error_message = Column(Text, nullable=True)
-    captured_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
+    captured_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), nullable=False, index=True)
 
     student = relationship("Student", back_populates="contest_snapshots")
 
@@ -793,7 +793,7 @@ class StudentGoal(Base):
     target_date = Column(String(20), nullable=False) # YYYY-MM-DD
     status = Column(String(30), default="IN_PROGRESS") # IN_PROGRESS, COMPLETED, OVERDUE
     
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     completed_at = Column(DateTime, nullable=True)
 
     student = relationship("Student")
@@ -808,8 +808,8 @@ class HODSnapshot(Base):
     metrics = Column(JSON, nullable=False)
     status = Column(String(30), default="READY") # DRAFT, READY, PUBLISHED, ARCHIVED, INVALID
     created_by = Column(String(100), default="HOD / System")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    verified_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    verified_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 
 class ReportHistory(Base):
@@ -825,7 +825,7 @@ class ReportHistory(Base):
     status = Column(String(30), default="GENERATED") # GENERATED, ERROR
     
     created_by = Column(String(100), default="System")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 
 class SyncJob(Base):
@@ -834,7 +834,7 @@ class SyncJob(Base):
     id = Column(Integer, primary_key=True, index=True)
     job_id = Column(String(100), unique=True, index=True, nullable=False)
     job_type = Column(String(50), default="FULL_SYNC") # FULL_SYNC, SINGLE_STUDENT, CONTEST_SYNC
-    started_at = Column(DateTime, default=datetime.datetime.utcnow)
+    started_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     completed_at = Column(DateTime, nullable=True)
     last_synced_at = Column(DateTime, nullable=True)
     status = Column(String(30), default="RUNNING") # RUNNING, COMPLETED, COMPLETED_WITH_WARNINGS, FAILED
@@ -860,7 +860,7 @@ class SyncJobItem(Base):
     new_value = Column(String(255), nullable=True)
     error_code = Column(String(100), nullable=True)
     attempt_count = Column(Integer, default=1)
-    completed_at = Column(DateTime, default=datetime.datetime.utcnow)
+    completed_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 
 class ReportEmailRecipient(Base):
@@ -875,7 +875,7 @@ class ReportEmailRecipient(Base):
     receive_weekly_reports = Column(Boolean, default=True)
     receive_hod_reports = Column(Boolean, default=True)
     receive_error_reports = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 class WeeklyVerificationRecord(Base):
     __tablename__ = "weekly_verification_records"
@@ -893,7 +893,7 @@ class WeeklyVerificationRecord(Base):
     
     status = Column(String(30), default="VALID") # VALID, INVALID, COULD_NOT_VERIFY
     email_dispatched = Column(Boolean, default=False)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    timestamp = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student")
 
@@ -920,7 +920,7 @@ class EmailDispatchLog(Base):
     error_message = Column(Text, nullable=True)
     retry_count = Column(Integer, default=0)
     sent_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 
 class StudentContestParticipation(Base):
@@ -966,11 +966,11 @@ class StudentContestParticipation(Base):
 
     started_at = Column(DateTime, nullable=True)
     submitted_at = Column(DateTime, nullable=True)
-    fetched_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    fetched_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), nullable=False)
     error_message = Column(Text, nullable=True)
 
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student", back_populates="contest_participation_records")
 
@@ -980,7 +980,7 @@ class AdminAuditLog(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     audit_id = Column(String(100), unique=True, index=True, nullable=False) # SEC-XXXXX / AUD-XXXXX
-    event_timestamp = Column(DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
+    event_timestamp = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), nullable=False, index=True)
     
     admin_user_id = Column(Integer, nullable=True, index=True)
     admin_name = Column(String(150), nullable=True)
@@ -1021,8 +1021,8 @@ class AdminAuditLog(Base):
     risk_level = Column(String(30), default="LOW")
     denial_reason = Column(Text, nullable=True)
     
-    request_timestamp = Column(DateTime, default=datetime.datetime.utcnow)
-    response_timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    request_timestamp = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    response_timestamp = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     response_status = Column(Integer, default=200)
     response_time_ms = Column(Float, default=0.0)
     
@@ -1038,8 +1038,8 @@ class AdminAuditLog(Base):
     description = Column(Text, nullable=True)
     metadata_json = Column(JSON, nullable=True)
     
-    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), nullable=False, index=True)
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 
 class EmailDelivery(Base):
@@ -1075,8 +1075,8 @@ class EmailDelivery(Base):
     triggered_by_user_id = Column(Integer, nullable=True)
     triggered_by_email = Column(String(150), nullable=True)
     
-    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     attachments = relationship("EmailAttachment", back_populates="delivery", cascade="all, delete-orphan")
 
@@ -1093,7 +1093,7 @@ class EmailAttachment(Base):
     storage_path = Column(String(255), nullable=True)
     checksum = Column(String(100), nullable=True)
     
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     delivery = relationship("EmailDelivery", back_populates="attachments")
 
@@ -1108,7 +1108,7 @@ class EmailOTPRecord(Base):
     request_id = Column(String(100), unique=True, index=True, nullable=False)
     attempt_count = Column(Integer, default=0)
     used = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
     expires_at = Column(DateTime, nullable=False, index=True)
     used_at = Column(DateTime, nullable=True)
     ip_address = Column(String(50), nullable=True)
@@ -1123,7 +1123,7 @@ class PasswordResetAuthorization(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(255), index=True, nullable=False)
     reset_token_hash = Column(String(128), index=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     expires_at = Column(DateTime, nullable=False)
     used = Column(Boolean, default=False)
 
@@ -1135,9 +1135,9 @@ class AdminSession(Base):
     session_id = Column(String(100), unique=True, index=True, nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     token_hash = Column(String(128), unique=True, index=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
     expires_at = Column(DateTime, nullable=False, index=True)
-    last_used_at = Column(DateTime, default=datetime.datetime.utcnow)
+    last_used_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     revoked_at = Column(DateTime, nullable=True)
     ip_hash = Column(String(128), nullable=True)
     user_agent_hash = Column(String(128), nullable=True)
@@ -1167,8 +1167,8 @@ class ScheduledReportConfig(Base):
     last_email_status = Column(String(50), default="PENDING") # DISPATCHED, FAILED, SKIPPED, PENDING
     
     updated_by = Column(String(150), nullable=True)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 
 class ReportExecutionHistory(Base):
@@ -1182,7 +1182,7 @@ class ReportExecutionHistory(Base):
     scheduled_time = Column(String(50), default="09:45 IST")
     scheduled_date = Column(String(20), nullable=True, index=True) # YYYY-MM-DD
     
-    actual_start = Column(DateTime, default=datetime.datetime.utcnow)
+    actual_start = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     actual_end = Column(DateTime, nullable=True)
     
     contest_name = Column(String(150), default="Weekly Contest")
@@ -1199,7 +1199,7 @@ class ReportExecutionHistory(Base):
     idempotency_key = Column(String(255), index=True, nullable=False)
     
     is_test_run = Column(Boolean, default=False, index=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 
 
@@ -1221,7 +1221,7 @@ class AuthorizedSignature(Base):
     mime_type = Column(String(64), default="image/png")
     
     is_active = Column(Boolean, default=True, index=True)
-    uploaded_at = Column(DateTime, default=datetime.datetime.utcnow)
+    uploaded_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     uploaded_by = Column(String(128), default="Admin")
 
 
@@ -1274,8 +1274,8 @@ class LeetCodeProfile(Base):
     last_attempted_at = Column(DateTime(timezone=True), nullable=True)
     retry_count       = Column(Integer, default=0, nullable=False)
 
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student", backref=backref("lc_profile", uselist=False))
 
@@ -1306,8 +1306,8 @@ class LeetCodeProblemStats(Base):
     profile_global_ranking = Column(Integer, nullable=True)  # matchedUser.profile.ranking
 
     fetched_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student", backref=backref("lc_problem_stats", uselist=False))
 
@@ -1332,8 +1332,8 @@ class LeetCodeContest(Base):
     most_recent_contest_type = Column(String(20), nullable=True)   # weekly | biweekly
 
     fetched_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student", backref=backref("lc_contest_standing", uselist=False))
 
@@ -1365,7 +1365,7 @@ class LeetCodeContestRatingHistory(Base):
     contest_rank        = Column(Integer, nullable=True)       # ranking field (official only)
     rating_after        = Column(Float, nullable=True)         # rating field at end of this contest
 
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student", backref="lc_contest_history")
 
@@ -1389,7 +1389,7 @@ class LeetCodeBadge(Base):
     icon_url     = Column(String(500), nullable=True)
     awarded_at   = Column(DateTime, nullable=True)   # badges[].creationDate
 
-    created_at   = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at   = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student", backref="lc_badges")
 
@@ -1413,7 +1413,7 @@ class LeetCodeLanguageStats(Base):
     problems_solved = Column(Integer, default=0)
 
     fetched_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student", backref="lc_language_stats")
 
@@ -1439,7 +1439,7 @@ class LeetCodeTopicStats(Base):
     problems_solved = Column(Integer, default=0)
 
     fetched_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student", backref="lc_topic_stats")
 
@@ -1464,8 +1464,8 @@ class LeetCodeActivity(Base):
     longest_streak    = Column(Integer, nullable=True)   # max consecutive-day run (Python-derived)
 
     fetched_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student", backref=backref("lc_activity", uselist=False))
 
@@ -1493,7 +1493,7 @@ class LeetCodeSubmission(Base):
     memory_display       = Column(String(50), nullable=True)   # e.g. "16.2 MB"
     submission_timestamp = Column(DateTime, nullable=True)     # from Unix timestamp in API
 
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student", backref="lc_submissions")
 
@@ -1550,7 +1550,7 @@ class ForensicAuditJob(Base):
     total_contests       = Column(Integer, default=0)
 
     # Timestamps
-    started_at           = Column(DateTime, default=datetime.datetime.utcnow)
+    started_at           = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     phase1_completed_at  = Column(DateTime, nullable=True)
     phase2_completed_at  = Column(DateTime, nullable=True)
     completed_at         = Column(DateTime, nullable=True)
@@ -1654,8 +1654,8 @@ class ForensicAuditRecord(Base):
 
     # Timestamps
     source_timestamp = Column(DateTime, nullable=True)  # LeetCode contest.startTime
-    resolved_at      = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
-    updated_at       = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    resolved_at      = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), nullable=False)
+    updated_at       = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student", backref="forensic_audit_records")
 
@@ -1687,8 +1687,8 @@ class Contest(Base):
     status = Column(String(50), default="upcoming", index=True)   # upcoming, live, finalized, completed
     problem_list = Column(JSON, nullable=True)
     metadata_json = Column("metadata", JSON, nullable=True)
-    discovered_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    discovered_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 
 class LeetCodeAccount(Base):
@@ -1705,7 +1705,7 @@ class LeetCodeAccount(Base):
     profile_url = Column(String(500), nullable=True)
     is_verified = Column(Boolean, default=False)
     profile_data = Column(JSON, nullable=True)
-    updated_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student", backref=backref("leetcode_accounts"))
 
@@ -1724,7 +1724,7 @@ class IntegrityCase(Base):
     account_ids = Column(JSON, nullable=False) # Array of account usernames
     participation_statuses = Column(JSON, nullable=False) # Array of objects
     status = Column(String(50), default="PENDING", index=True) # PENDING, CONFIRMED, DISMISSED
-    created_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc))
     reviewed_by = Column(String(100), nullable=True)
     reviewed_at = Column(DateTime(timezone=True), nullable=True)
 
@@ -1755,7 +1755,7 @@ class AuditLogRecord(Base):
     people_id = Column(String(50), nullable=True, index=True)
     details = Column(JSON, nullable=True)
     created_by = Column(String(100), default="SYSTEM")
-    created_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, index=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
 
 
 
@@ -1798,8 +1798,8 @@ class ContestParticipationRecord(Base):
     confidence = Column(String(20), default="NONE")  # HIGH, MEDIUM, UNKNOWN, NONE
 
     # Timelines
-    first_fetched_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow)
-    last_fetched_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+    first_fetched_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    last_fetched_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc))
     verified_at = Column(DateTime(timezone=True), nullable=True)
 
     # Rating (Separate Lifecycle)
@@ -1831,7 +1831,7 @@ class SnapshotRecord(Base):
     rank = Column(Integer, nullable=True)
     score = Column(Integer, nullable=True)
     solved_count = Column(Integer, nullable=True)
-    captured_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, index=True)
+    captured_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
 
     contest = relationship("Contest", backref="live_snapshots")
     student = relationship("Student", backref="contest_snapshots_history")
@@ -1856,7 +1856,7 @@ class RawDataRecord(Base):
     graphql_errors = Column(JSON, nullable=True)
     payload = Column(JSON, nullable=True)  # Full raw response
     is_critical = Column(Boolean, default=False)
-    captured_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, index=True)
+    captured_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
 
 
 class AIChatHistory(Base):
@@ -1872,7 +1872,7 @@ class AIChatHistory(Base):
     ai_response = Column(Text, nullable=False)
     mode = Column(String(50), default="operations")
     data_status = Column(String(50), default="VERIFIED")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 
 # ============================================================================
@@ -1905,7 +1905,7 @@ class StudentRiskProfile(Base):
     recommended_action = Column(Text, nullable=True) # Actionable mentor guidance
     confidence_pct = Column(Float, default=85.0) # AI Confidence score 0-100%
     
-    last_calculated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    last_calculated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student", backref=backref("risk_profile", uselist=False))
 
@@ -1937,8 +1937,8 @@ class FacultyIntervention(Base):
     weekly_solved_after = Column(Integer, default=0)
     improvement_notes = Column(Text, nullable=True)
     
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
     resolved_at = Column(DateTime, nullable=True)
 
     student = relationship("Student", backref="interventions")
@@ -1968,7 +1968,7 @@ class StudentSkillProfile(Base):
     strong_areas = Column(JSON, nullable=True) # Array of top strong topic strings
     weak_areas = Column(JSON, nullable=True) # Array of top weak topic strings
     
-    last_calculated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    last_calculated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student", backref=backref("skill_profile", uselist=False))
 
@@ -1987,8 +1987,8 @@ class StudentLearningPath(Base):
     current_week = Column(Integer, default=1)
     weeks_plan_json = Column(JSON, nullable=False) # 4 week plan array with tasks and targets
     
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student", backref="learning_paths")
 
@@ -2015,7 +2015,7 @@ class SystemAlert(Base):
     is_read = Column(Boolean, default=False, index=True)
     is_resolved = Column(Boolean, default=False, index=True)
     
-    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
 
     student = relationship("Student")
     department = relationship("Department")
@@ -2060,8 +2060,8 @@ class FacultyActionQueueItem(Base):
     escalated_at = Column(DateTime, nullable=True)
     resolved_at = Column(DateTime, nullable=True)
     
-    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student", backref="faculty_actions", foreign_keys=[student_id])
     faculty = relationship("User", foreign_keys=[faculty_id])
@@ -2086,7 +2086,7 @@ class FacultyActionAuditLog(Base):
     new_value = Column(String(200), nullable=True)
     reason = Column(Text, nullable=True)
     
-    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
 
     action_item = relationship("FacultyActionQueueItem", back_populates="audit_logs")
     user = relationship("User")
@@ -2117,7 +2117,7 @@ class EmailCampaign(Base):
     bounced_count = Column(Integer, default=0)
     skipped_duplicates = Column(Integer, default=0)
     
-    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
     started_at = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)
 
@@ -2167,7 +2167,7 @@ class ContestVirtualEvidence(Base):
     evidence_level = Column(String(50), default="LEVEL_5_AUTHORITATIVE_VIRTUAL")
     evidence_source = Column(String(100), default="LeetCode Authoritative Virtual Contest API")
     evidence_reference = Column(Text, nullable=True)
-    verified_at = Column(DateTime, default=datetime.datetime.utcnow)
+    verified_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     verification_method = Column(String(50), default="AUTHORITATIVE_GRAPHQL")
 
     session = relationship("WeeklySession")
@@ -2196,7 +2196,7 @@ class ContestPostPracticeEvidence(Base):
     accepted_timestamp_utc = Column(DateTime, nullable=True)
     accepted_timestamp_ist = Column(String(50), nullable=True)
     evidence_source = Column(String(100), default="LeetCode Recent Submissions API")
-    detected_at = Column(DateTime, default=datetime.datetime.utcnow)
+    detected_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     session = relationship("WeeklySession")
     student = relationship("Student")
@@ -2212,7 +2212,7 @@ class VirtualScanAudit(Base):
     id = Column(Integer, primary_key=True, index=True)
     scan_id = Column(String(100), unique=True, nullable=False, index=True)
     contest_id = Column(String(100), nullable=False, index=True)
-    started_at = Column(DateTime, default=datetime.datetime.utcnow)
+    started_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     completed_at = Column(DateTime, nullable=True)
     
     students_scanned = Column(Integer, default=0)
@@ -2243,7 +2243,7 @@ class ContestVirtualScreenshotEvidence(Base):
     leetcode_username = Column(String(100), nullable=False, index=True)
     contest_id = Column(String(100), nullable=False, index=True)
     image_hash = Column(String(64), nullable=False, index=True)
-    captured_at = Column(DateTime, default=datetime.datetime.utcnow)
+    captured_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     source = Column(String(100), default="USER_UPLOADED_SCREENSHOT")
     ocr_result = Column(JSON, nullable=True)
     detected_contest_name = Column(String(150), nullable=True)
@@ -2282,7 +2282,7 @@ class OfficialPublicParticipant(Base):
     verification_status = Column(String(50), default="VERIFIED")
     dataset_version = Column(Integer, default=1, index=True)
     is_active_version = Column(Boolean, default=True, index=True)
-    sync_timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    sync_timestamp = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     session = relationship("WeeklySession")
     student = relationship("Student")
@@ -2301,7 +2301,7 @@ class PublicContestSyncAudit(Base):
     contest_id = Column(String(100), nullable=True, index=True)
     contest_slug = Column(String(100), nullable=False, index=True)
     contest_title = Column(String(150), nullable=True)
-    started_at = Column(DateTime, default=datetime.datetime.utcnow)
+    started_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     completed_at = Column(DateTime, nullable=True)
     source = Column(String(100), default="official_leetcode_leaderboard")
     pages_requested = Column(Integer, default=0)
@@ -2356,7 +2356,7 @@ class PreviousWeekParticipationRecord(Base):
     
     source = Column(String(100), default="official_leetcode_leaderboard")
     verification_status = Column(String(50), default="VERIFIED")  # VERIFIED, UNVERIFIED, VERIFICATION_REQUIRED
-    verified_at = Column(DateTime, default=datetime.datetime.utcnow)
+    verified_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     sync_id = Column(String(100), nullable=True, index=True)
     dataset_version = Column(Integer, default=1, index=True)
     is_active_version = Column(Boolean, default=True, index=True)
@@ -2414,7 +2414,7 @@ class ContestConfig(Base):
     is_frozen = Column(Boolean, default=False, index=True)
     attendance_frozen_at = Column(DateTime(timezone=True), nullable=True)
     algorithm_version = Column(String(30), default="2.0.0")
-    created_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 
 class AttendanceSnapshot(Base):
@@ -2435,7 +2435,7 @@ class AttendanceSnapshot(Base):
     leetcode_username = Column(String(100), nullable=False, index=True)
     official_attendance_state = Column(String(30), nullable=False, index=True) # ATTENDED, NOT_ATTENDED, UNKNOWN
     source = Column(String(100), default="official_contest_sync")
-    calculated_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+    calculated_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc))
     frozen_at = Column(DateTime(timezone=True), nullable=False)
     algorithm_version = Column(String(30), default="2.0.0")
     snapshot_version = Column(Integer, default=1)
@@ -2457,7 +2457,7 @@ class CorrectionEvent(Base):
     new_value = Column(String(30), nullable=False)
     reason = Column(Text, nullable=False)
     staff_id = Column(String(100), nullable=False)
-    timestamp = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, index=True)
+    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
 
 
 class PostContestActivityRecord(Base):
@@ -2479,7 +2479,7 @@ class PostContestActivityRecord(Base):
     problem_slug = Column(String(150), nullable=True)
     result = Column(String(50), nullable=True)
     source = Column(String(100), default="leetcode_post_sync")
-    server_received_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow)
+    server_received_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 
 class NotificationEvent(Base):
@@ -2507,7 +2507,7 @@ class NotificationEvent(Base):
     idempotency_key = Column(String(120), unique=True, index=True, nullable=False)
     provider_message_id = Column(String(100), nullable=True)
     error_message = Column(Text, nullable=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, index=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
     sent_at = Column(DateTime(timezone=True), nullable=True)
 
 
@@ -2528,11 +2528,11 @@ class LiveContestEvent(Base):
     account_id = Column(String(100), nullable=False)
     event_type = Column(String(50), nullable=False, default="STUDENT_ACTIVITY_UPDATED")
     payload = Column(JSON, nullable=False)
-    created_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, index=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
 
     next_run = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 
 class LiveQuestionStatus(Base):
@@ -2554,7 +2554,7 @@ class LiveQuestionStatus(Base):
 
     solved = Column(Integer, default=0, nullable=False)
     solved_at = Column(DateTime(timezone=True), nullable=True)
-    detected_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, nullable=False)
+    detected_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc), nullable=False)
 
     time_taken_seconds = Column(Integer, nullable=True)
     time_taken_is_estimated = Column(Boolean, default=False, nullable=False)
@@ -2563,7 +2563,7 @@ class LiveQuestionStatus(Base):
     source = Column(String(50), default="AUTHORITATIVE_LEETCODE", nullable=False)
     event_version = Column(Integer, default=1, nullable=False)
 
-    updated_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student")
 
@@ -2587,14 +2587,14 @@ class LiveQuestionAuditLog(Base):
     old_value = Column(Integer, default=0, nullable=False)
     new_value = Column(Integer, default=1, nullable=False)
 
-    detected_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, nullable=False)
+    detected_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc), nullable=False)
     solved_at = Column(DateTime(timezone=True), nullable=True)
     time_taken_seconds = Column(Integer, nullable=True)
     time_taken_is_estimated = Column(Boolean, default=False, nullable=False)
 
     source = Column(String(50), default="AUTHORITATIVE_LEETCODE", nullable=False)
     sequence = Column(Integer, nullable=False, index=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc), nullable=False)
 
     student = relationship("Student")
 
@@ -2620,9 +2620,9 @@ class WeeklyStudentSnapshot(Base):
     contest_rating = Column(Float, nullable=True)
     contest_ranking = Column(Integer, nullable=True)
     verification_status = Column(String(50), default="VERIFIED")
-    captured_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False, index=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    captured_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), nullable=False, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student", backref="weekly_snapshots")
 
@@ -2646,7 +2646,7 @@ class WeeklyReportAudit(Base):
     validation_status = Column(String(50), nullable=False, default="VALID")
     validation_details = Column(Text, nullable=True)
     file_hash = Column(String(128), nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
 
 
 class NotificationRecord(Base):
@@ -2685,7 +2685,7 @@ class NotificationRecord(Base):
     delivery_status = Column(String(30), default="SENT") # PENDING, SENT, DELIVERED, FAILED
     
     metadata_json = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
 
 
 class FCMDeviceToken(Base):
@@ -2706,9 +2706,9 @@ class FCMDeviceToken(Base):
     device_model = Column(String(100), nullable=True)
     
     is_active = Column(Boolean, default=True, index=True)
-    last_seen = Column(DateTime, default=datetime.datetime.utcnow)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    last_seen = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 
 class NotificationPreference(Base):
@@ -2723,7 +2723,7 @@ class NotificationPreference(Base):
     push_enabled = Column(Boolean, default=True, nullable=False)
     email_enabled = Column(Boolean, default=True, nullable=False)
     categories_json = Column(Text, nullable=True)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 
 class NotificationFile(Base):
@@ -2749,7 +2749,7 @@ class NotificationFile(Base):
     
     is_deleted = Column(Boolean, default=False)
     expires_at = Column(DateTime, nullable=True)
-    uploaded_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    uploaded_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
 
 
 class Conversation(Base):
@@ -2770,8 +2770,8 @@ class Conversation(Base):
     participant_2_id = Column(String(150), index=True, nullable=False)
     
     last_message_preview = Column(String(255), nullable=True)
-    last_message_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    last_message_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     
     unread_count_1 = Column(Integer, default=0)
     unread_count_2 = Column(Integer, default=0)
@@ -2795,7 +2795,7 @@ class BlockedUser(Base):
     id = Column(Integer, primary_key=True, index=True)
     blocker_id = Column(String(150), index=True, nullable=False)
     blocked_id = Column(String(150), index=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 
 class Message(Base):
@@ -2828,7 +2828,7 @@ class Message(Base):
     deleted_by_users = Column(Text, default="[]") # JSON string of user_ids who executed delete-for-me
     reply_to_message_id = Column(String(100), nullable=True, index=True)
     reactions = Column(Text, default="{}") # JSON string mapping user_id -> emoji
-    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
     
     attachment_file_id = Column(String(100), nullable=True) # Optional reference to NotificationFile
 
@@ -2868,7 +2868,7 @@ class ReportCache(Base):
     download_url = Column(String(500), nullable=True)
     data_version = Column(String(100), index=True, nullable=False)
     status = Column(String(30), default="READY", index=True, nullable=False) # READY, GENERATING, FAILED, EXPIRED, STALE
-    generated_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    generated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
     expires_at = Column(DateTime, nullable=True)
     generation_time_ms = Column(Float, nullable=True)
     file_size_bytes = Column(Integer, nullable=True)
@@ -2885,7 +2885,7 @@ class SystemSetting(Base):
     id = Column(Integer, primary_key=True, index=True)
     key = Column(String(100), unique=True, index=True, nullable=False)
     value = Column(Text, nullable=True)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 
 class SmartGroup(Base):
@@ -2905,8 +2905,8 @@ class SmartGroup(Base):
     rule_criteria = Column(Text, default="{}") # JSON string of filter rules
     created_by = Column(String(150), index=True, nullable=False)
     institution_id = Column(String(50), default="NEC", index=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     members = relationship("SmartGroupMember", back_populates="group", cascade="all, delete-orphan")
 
@@ -2925,7 +2925,7 @@ class SmartGroupMember(Base):
     group_id = Column(String(100), ForeignKey("smart_groups.group_id"), index=True, nullable=False)
     user_id = Column(String(150), index=True, nullable=False)
     role = Column(String(50), default="STUDENT", index=True) # OWNER, ADMIN, MODERATOR, FACULTY, MENTOR, STUDENT, VIEWER
-    joined_at = Column(DateTime, default=datetime.datetime.utcnow)
+    joined_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     group = relationship("SmartGroup", back_populates="members")
 
@@ -2945,7 +2945,7 @@ class InstitutionalAuditLog(Base):
     target_id = Column(String(150), nullable=True)
     details = Column(Text, default="{}") # JSON details (no sensitive tokens/passwords)
     institution_id = Column(String(50), default="NEC", index=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
 
 
 class LearningSignal(Base):
@@ -2963,7 +2963,7 @@ class LearningSignal(Base):
     difficulty_level = Column(String(50), default="NEEDS_SUPPORT") # NEEDS_SUPPORT, MODERATE, ADVANCED
     supporting_evidence = Column(Text, default="{}") # JSON evidence
     suggested_action = Column(Text, default="{}") # JSON actions
-    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
 
 
 
@@ -3007,7 +3007,7 @@ class ReportJob(Base):
     error_message = Column(Text, nullable=True)
     file_path = Column(String(1024), nullable=True)
     download_url = Column(String(1024), nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
     started_at = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)
     expires_at = Column(DateTime, nullable=True, index=True)
@@ -3026,8 +3026,8 @@ class FCMDevice(Base):
     app_version = Column(String(50), nullable=True)
     device_model = Column(String(255), nullable=True)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    last_seen = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    last_seen = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 # ==========================================
 # NLCI v3.1 DATA MODEL
@@ -3177,7 +3177,7 @@ class WeeklyPipelineStatus(Base):
     status = Column(String(50), default="WAITING_FOR_OFFICIAL_RESULT", nullable=False, index=True)
     stage = Column(String(50), nullable=True)
     retry_count = Column(Integer, default=0)
-    last_checked_at = Column(DateTime, default=datetime.datetime.utcnow)
+    last_checked_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     finalized_at = Column(DateTime, nullable=True)
     student_count = Column(Integer, nullable=True)
     participant_count = Column(Integer, nullable=True)
@@ -3189,8 +3189,8 @@ class WeeklyPipelineStatus(Base):
     validation_errors = Column(JSON, nullable=True)
     audit_trail = Column(JSON, nullable=True)
     error_message = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
 class StaffVerification(Base):
     """
@@ -3224,8 +3224,8 @@ class StaffVerification(Base):
     verified_at = Column(DateTime, nullable=True)
     rejection_reason = Column(Text, nullable=True)
 
-    created_at = Column(DateTime, default=datetime.datetime.utcnow, index=True)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     user = relationship("User", foreign_keys=[user_id], backref="staff_verifications")
     department = relationship("Department")

@@ -26,7 +26,7 @@ class ExcelImportTracker:
         self.new_departments: List[str] = []
 
     def start(self, job_id: str, total_rows: int, triggered_by: str = "admin"):
-        now_iso = datetime.datetime.utcnow().isoformat()
+        now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
         self.current_job_id = job_id
         self.is_running = True
         self.status = "RUNNING"
@@ -84,7 +84,7 @@ class ExcelImportTracker:
     def finish(self, status: str = "COMPLETED", error_summary: Optional[str] = None):
         self.is_running = False
         self.status = status
-        self.completed_at = datetime.datetime.utcnow().isoformat()
+        self.completed_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
         if status == "COMPLETED":
             self.progress_percentage = 100.0
             self.processed_rows = self.total_rows

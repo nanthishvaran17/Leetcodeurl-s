@@ -190,7 +190,7 @@ class MetaWhatsAppClient:
                 "correlation_id": corr_id,
                 "wamid": wamid,
                 "latency_ms": latency_ms,
-                "timestamp": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+                "timestamp": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
             })
             if len(self._outbound_log) > 500:
                 self._outbound_log.pop(0)
@@ -206,7 +206,7 @@ class MetaWhatsAppClient:
             for item in self._outbound_log:
                 if item.get("wamid") == wamid:
                     item["status"] = delivery_status.upper()
-                    item["confirmed_at"] = timestamp or datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+                    item["confirmed_at"] = timestamp or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
                     logger.info(f"[WHATSAPP_DELIVERY_CONFIRMED] WAMID: {wamid} | Status: {delivery_status.upper()}")
                     return True
             # If not in existing log, record delivery receipt
@@ -217,7 +217,7 @@ class MetaWhatsAppClient:
                 "correlation_id": "RECEIPT",
                 "wamid": wamid,
                 "latency_ms": 0.0,
-                "timestamp": timestamp or datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+                "timestamp": timestamp or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
             })
             return True
 

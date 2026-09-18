@@ -15,8 +15,8 @@ from backend.models import (
 
 def log_sync(db: Session, status: str, attempted: int, succeeded: int, failed: int, error_summary: str = "", triggered_by: str = "system") -> int:
     log_entry = NLCISyncLog(
-        started_at=datetime.utcnow().isoformat(),
-        finished_at=datetime.utcnow().isoformat(),
+        started_at=datetime.now(datetime.timezone.utc).isoformat(),
+        finished_at=datetime.now(datetime.timezone.utc).isoformat(),
         status=status,
         students_attempted=attempted,
         students_succeeded=succeeded,
@@ -48,14 +48,14 @@ def upsert_nlci_profile(db: Session, student_id: int, data: Dict[str, Any]):
     profile.contest_rating = data.get("contest_rating")
     profile.contest_global_rank = data.get("contest_global_rank")
     profile.contests_attended = data.get("contests_attended")
-    profile.fetched_at = datetime.utcnow().isoformat()
+    profile.fetched_at = datetime.now(datetime.timezone.utc).isoformat()
     profile.is_valid = 1
     
     db.commit()
 
 def upsert_nlci_daily_snapshot(db: Session, student_id: int, data: Dict[str, Any]):
     """Idempotent daily snapshot."""
-    today_str = datetime.utcnow().strftime("%Y-%m-%d")
+    today_str = datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
     
     snapshot = db.query(NLCIDailySnapshot).filter(
         NLCIDailySnapshot.student_id == student_id,

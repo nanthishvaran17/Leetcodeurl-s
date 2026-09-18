@@ -538,7 +538,7 @@ def get_student_intelligence(
 
                 if res.get("status") == "ok":
                     subs_raw = res.get("data", {}).get("submissions", [])
-                    now_dt = datetime.datetime.utcnow()
+                    now_dt = datetime.datetime.now(datetime.timezone.utc)
                     for sub in subs_raw:
                         tslug = sub.get("title_slug")
                         if not tslug:
@@ -720,7 +720,7 @@ def get_student_intelligence(
             "year_rank": year_rank,
             "section_rank": section_rank,
             "last_synced": last_synced_str,
-            "data_freshness": "Fresh" if (last_synced_dt and (datetime.datetime.utcnow() - last_synced_dt.replace(tzinfo=None)).total_seconds() < 172800) else "Stale",
+            "data_freshness": "Fresh" if (last_synced_dt and (datetime.datetime.now(datetime.timezone.utc) - last_synced_dt.replace(tzinfo=None)).total_seconds() < 172800) else "Stale",
             "fetch_status": sync_state_str
         },
         "cohort_context": {
@@ -869,7 +869,7 @@ async def refresh_student_intelligence(
 
     sem = asyncio.Semaphore(1)
     lock = asyncio.Lock()
-    job_id = f"MANUAL_REFRESH_{student.id}_{int(datetime.datetime.utcnow().timestamp())}"
+    job_id = f"MANUAL_REFRESH_{student.id}_{int(datetime.datetime.now(datetime.timezone.utc).timestamp())}"
 
     timeout_cfg = httpx.Timeout(
         connect=settings.LEETCODE_CONNECT_TIMEOUT,

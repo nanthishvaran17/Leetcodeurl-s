@@ -23,7 +23,7 @@ def reseed_all_student_stats(sync_firestore: bool = True):
         print(f"Loaded {len(students)} active student records.")
 
         updated_count = 0
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
 
         for idx, s in enumerate(students, start=1):
             s.reg_no

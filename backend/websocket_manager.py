@@ -38,9 +38,9 @@ class ConnectionManager:
     async def _init_redis(self):
         if self.redis_url and redis and not self.redis_client:
             try:
-                self.redis_client = redis.from_url(self.redis_url)
-                self.redis_pubsub = self.redis_client.pubsub()
-                await self.redis_pubsub.subscribe("live_events")
+                self.redis_client = redis.from_url(self.redis_url)  # type: ignore
+                self.redis_pubsub = self.redis_client.pubsub()  # type: ignore
+                await self.redis_pubsub.subscribe("live_events")  # type: ignore
                 self._redis_task = asyncio.create_task(self._redis_listener())
                 logger.info("Connected to Redis Pub/Sub for WebSockets")
             except Exception as e:
@@ -49,7 +49,7 @@ class ConnectionManager:
 
     async def _redis_listener(self):
         try:
-            async for message in self.redis_pubsub.listen():
+            async for message in self.redis_pubsub.listen():  # type: ignore
                 if message["type"] == "message":
                     data = message["data"]
                     payload = data.decode("utf-8") if isinstance(data, bytes) else data

@@ -49,7 +49,7 @@ def merge_contest_fetch_results(existing: WeeklyPublicResult, new_data: Dict[str
         existing.fetch_status = "FETCH_ERROR"
         existing.error_reason = new_data.get("error_reason", "FETCH_ERROR")
 
-    existing.last_fetched_at = datetime.datetime.utcnow()
+    existing.last_fetched_at = datetime.datetime.now(datetime.timezone.utc)
     return existing, updated
 
 async def retry_failed_student_fetches(db: Session, session_id: int) -> Dict[str, Any]:

@@ -85,7 +85,7 @@ def record_contest_participation(
         StudentContestParticipation.participation_mode == mode_clean
     ).first()
 
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
 
     if not rec:
         rec = StudentContestParticipation(

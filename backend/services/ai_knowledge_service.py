@@ -258,7 +258,7 @@ class AIKnowledgeEngine:
             try:
                 config = ReportConfig(report_type="EXECUTIVE_SUMMARY")
                 dataset = build_universal_report(db, config)
-                snapshot_id = dataset.get("snapshotId") or f"snap_{sess_id or 'live'}_{int(datetime.datetime.utcnow().timestamp())}"
+                snapshot_id = dataset.get("snapshotId") or f"snap_{sess_id or 'live'}_{int(datetime.datetime.now(datetime.timezone.utc).timestamp())}"
                 dataset["snapshotId"] = snapshot_id
                 
                 excel_bytes = export_excel_from_dataset(dataset)
@@ -518,7 +518,7 @@ class AIKnowledgeEngine:
             latest_sess = db.query(WeeklySession).filter(
                 WeeklySession.status.in_(['COMPLETED', 'FINALIZED'])
             ).order_by(WeeklySession.id.desc()).first()
-            snapshot_id = f"snap_hod_{latest_sess.id if latest_sess else 'live'}_{int(datetime.datetime.utcnow().timestamp())}"
+            snapshot_id = f"snap_hod_{latest_sess.id if latest_sess else 'live'}_{int(datetime.datetime.now(datetime.timezone.utc).timestamp())}"
             sess_name = latest_sess.contest_name if latest_sess else "Weekly Contest"
 
             dept_data = []
@@ -707,7 +707,7 @@ class AIKnowledgeEngine:
                 ist_dt = dt + datetime.timedelta(hours=5, minutes=30)
                 last_str = ist_dt.strftime("%d %b %Y, %I:%M %p IST")
                 
-                now_utc = datetime.datetime.utcnow()
+                now_utc = datetime.datetime.now(datetime.timezone.utc)
                 diff_sec = (now_utc - dt).total_seconds()
                 if diff_sec < 3600:
                     ago_str = f"{max(1, int(diff_sec // 60))}m ago"

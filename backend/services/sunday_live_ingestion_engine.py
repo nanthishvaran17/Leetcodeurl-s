@@ -180,7 +180,7 @@ class SundayLiveIngestionEngine:
                     finish_time=finish_time or datetime.datetime.now(IST_TZ).strftime("%H:%M:%S IST"),
                     source=evidence_source,
                     verification_status="VERIFIED",
-                    verified_at=datetime.datetime.utcnow(),
+                    verified_at=datetime.datetime.now(datetime.timezone.utc),
                     dataset_version=1,
                     is_active_version=True
                 )
@@ -201,7 +201,7 @@ class SundayLiveIngestionEngine:
                     if new_solved_count > 0 or official_rank:
                         record.participation_type = "PUBLIC"
                         record.verification_status = "VERIFIED"
-                    record.verified_at = datetime.datetime.utcnow()
+                    record.verified_at = datetime.datetime.now(datetime.timezone.utc)
 
             # Also mirror update to WeeklyPublicResult if present
             pub_res = db.query(WeeklyPublicResult).filter(

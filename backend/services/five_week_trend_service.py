@@ -165,7 +165,7 @@ def build_five_week_trend_report(
 
     top_students = sorted(student_rows, key=lambda x: -x["total_solved"])[:10]
 
-    report_id = f"RPT-TREND-{datetime.datetime.utcnow().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+    report_id = f"RPT-TREND-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
 
     title = "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)\nFIVE-WEEK PERFORMANCE TREND REPORT"
     if raw_dept != "ALL":
@@ -179,8 +179,8 @@ def build_five_week_trend_report(
         "title": title,
         "contestName": session_names[-1] if session_names else "Weekly Contest",
         "sessionDate": datetime.date.today().strftime("%d.%m.%Y"),
-        "generatedAt": datetime.datetime.utcnow().isoformat(),
-        "verifiedAt": datetime.datetime.utcnow().isoformat(),
+        "generatedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "verifiedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "dataStatus": "READY" if len(filtered_students) > 0 else "PARTIAL",
         "config": config.model_dump(),
         "metrics": {

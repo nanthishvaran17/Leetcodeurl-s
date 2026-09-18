@@ -99,7 +99,7 @@ def update_student_analytics(db: Session, student_id: int):
     analytic.interview_readiness = min(score * 1.05, 100)
     analytic.risk_level = risk
     analytic.profile_class = profile_class
-    analytic.computed_at = datetime.utcnow().isoformat()
+    analytic.computed_at = datetime.now(datetime.timezone.utc).isoformat()
     analytic.score_version = score_version
     analytic.trend = "Stable" # TODO: compare with history
     

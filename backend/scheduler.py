@@ -96,7 +96,7 @@ def apscheduler_listener(event):
             job_id=event.job_id,
             job_type=str(type(event)),
             scheduled_at=event.scheduled_run_time if hasattr(event, 'scheduled_run_time') else None,
-            completed_at=datetime.datetime.utcnow(),
+            completed_at=datetime.datetime.now(datetime.timezone.utc),
             status=status,
             error_message=str(event.exception) if hasattr(event, 'exception') and event.exception else None,
             last_error=str(event.exception) if hasattr(event, 'exception') and event.exception else None,

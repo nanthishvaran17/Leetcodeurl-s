@@ -144,7 +144,7 @@ def test_missed_event_recovery_via_version(db):
             event_id=f"EVT-RECOVER-{v}", version=v, contest_id="wc-500", people_id="P_RECOVER",
             student_id=student.id, account_id="recover_lc", event_type="STUDENT_ACTIVITY_UPDATED",
             payload={"version": v, "event_id": f"EVT-RECOVER-{v}", "count": v},
-            created_at=datetime.datetime.utcnow()
+            created_at=datetime.datetime.now(datetime.timezone.utc)
         )
         db.add(evt)
     db.commit()

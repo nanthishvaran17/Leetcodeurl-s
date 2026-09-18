@@ -179,7 +179,7 @@ async def execute_phase1_ingest(job_id: str, db: Session) -> Dict[str, Any]:
                             local_db.add(ingest_st)
                         ingest_st.ingest_status = "PENDING_USERNAME"
                         ingest_st.error_message = "No valid LeetCode username configured"
-                        ingest_st.ingest_completed_at = datetime.datetime.utcnow()
+                        ingest_st.ingest_completed_at = datetime.datetime.now(datetime.timezone.utc)
                         local_db.commit()
                         return "PENDING_USERNAME"
                     finally:
@@ -223,12 +223,12 @@ async def execute_phase1_ingest(job_id: str, db: Session) -> Dict[str, Any]:
                         )
                         local_db.add(ingest_st)
 
-                    ingest_st.ingest_started_at = datetime.datetime.utcnow()
+                    ingest_st.ingest_started_at = datetime.datetime.now(datetime.timezone.utc)
 
                     if not fetch_success or not response_json:
                         ingest_st.ingest_status = "SOURCE_UNAVAILABLE"
                         ingest_st.error_message = error_reason or "GraphQL network fetch failed after 3 retries"
-                        ingest_st.ingest_completed_at = datetime.datetime.utcnow()
+                        ingest_st.ingest_completed_at = datetime.datetime.now(datetime.timezone.utc)
                         local_db.commit()
                         return "SOURCE_UNAVAILABLE"
 
@@ -237,7 +237,7 @@ async def execute_phase1_ingest(job_id: str, db: Session) -> Dict[str, Any]:
                     if matched is None:
                         ingest_st.ingest_status = "NOT_FOUND"
                         ingest_st.error_message = "LeetCode profile not found (404 / matchedUser null)"
-                        ingest_st.ingest_completed_at = datetime.datetime.utcnow()
+                        ingest_st.ingest_completed_at = datetime.datetime.now(datetime.timezone.utc)
                         local_db.commit()
                         return "NOT_FOUND"
 
@@ -297,7 +297,7 @@ async def execute_phase1_ingest(job_id: str, db: Session) -> Dict[str, Any]:
 
                     ingest_st.ingest_status = "SUCCESS"
                     ingest_st.error_message = None
-                    ingest_st.ingest_completed_at = datetime.datetime.utcnow()
+                    ingest_st.ingest_completed_at = datetime.datetime.now(datetime.timezone.utc)
                     local_db.commit()
                     return "SUCCESS"
 
@@ -323,7 +323,7 @@ async def execute_phase1_ingest(job_id: str, db: Session) -> Dict[str, Any]:
         job.students_succeeded = succeeded
         job.students_failed = not_found + unavailable
         job.students_no_username = no_user
-        job.phase1_completed_at = datetime.datetime.utcnow()
+        job.phase1_completed_at = datetime.datetime.now(datetime.timezone.utc)
         db.commit()
 
         ingest_results.update({
@@ -511,7 +511,7 @@ def execute_phase2_matrix(job_id: str, db: Session) -> Dict[str, Any]:
                 rec.source_evidence = source_evidence
                 rec.evidence_hash = ev_hash
                 rec.source_timestamp = source_ts
-                rec.resolved_at = datetime.datetime.utcnow()
+                rec.resolved_at = datetime.datetime.now(datetime.timezone.utc)
 
             processed_cells += 1
 
@@ -525,7 +525,7 @@ def execute_phase2_matrix(job_id: str, db: Session) -> Dict[str, Any]:
     job.pending_username_count = cell_counters["PENDING_USERNAME"]
     job.duplicate_records = 0
     job.fabricated_records = 0
-    job.phase2_completed_at = datetime.datetime.utcnow()
+    job.phase2_completed_at = datetime.datetime.now(datetime.timezone.utc)
 
     # Integrity pass check: 0 duplicate, 0 fabricated, cells match expected total
     reconciled_total = sum(cell_counters.values())
@@ -533,7 +533,7 @@ def execute_phase2_matrix(job_id: str, db: Session) -> Dict[str, Any]:
 
     job.phase = "DONE"
     job.status = "COMPLETED" if job.integrity_pass else "PARTIAL"
-    job.completed_at = datetime.datetime.utcnow()
+    job.completed_at = datetime.datetime.now(datetime.timezone.utc)
 
     # Generate Report Text
     job.report_text = generate_audit_report_text(job)

@@ -80,7 +80,7 @@ class AccreditationReportService:
         return {
             "institution": "Nandha Engineering College (Autonomous)",
             "report_type": "NAAC & NBA Continuous Quality Improvement (CQI) Audit Record",
-            "generated_at": datetime.datetime.utcnow().strftime("%d-%m-%Y %H:%M UTC"),
+            "generated_at": datetime.datetime.now(datetime.timezone.utc).strftime("%d-%m-%Y %H:%M UTC"),
             "academic_year": "2025–2026",
             "naac_criteria_2_3": {
                 "metric_title": "Experiential & Problem-Solving Methodologies (Coding Platforms)",

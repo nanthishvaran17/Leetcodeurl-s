@@ -309,7 +309,7 @@ async def backfill_historical(
                 rec.contest_rating = float(rating) if rating else None
                 rec.contest_rank = rank
                 rec.fetch_status = "SUCCESS" if entry else "SUCCESS"
-                rec.last_fetched_at = datetime.datetime.utcnow()
+                rec.last_fetched_at = datetime.datetime.now(datetime.timezone.utc)
 
                 if status == "OFFICIAL_ATTENDED":
                     counters[cn]["official"] += 1
@@ -324,7 +324,7 @@ async def backfill_historical(
             session.not_participated = counters[cn]["absent"]
             session.total_students = counters[cn]["official"] + counters[cn]["absent"]
             session.status = "FINALIZED"
-            session.last_synced = datetime.datetime.utcnow()
+            session.last_synced = datetime.datetime.now(datetime.timezone.utc)
 
         db.commit()
 

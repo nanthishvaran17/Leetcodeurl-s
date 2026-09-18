@@ -99,7 +99,7 @@ def get_admin_settings(db: Session = Depends(get_db)):
 
     # Calculate real last configuration update timestamp from AuditLog or system clock
     last_audit = db.query(AuditLog).filter(AuditLog.action.in_(["UPDATE_SETTINGS", "ADVANCED_CLEAR_CACHE", "CREATE_SNAPSHOT"])).order_by(AuditLog.timestamp.desc()).first()
-    merged["LAST_UPDATED_AT"] = last_audit.timestamp.isoformat() if last_audit and last_audit.timestamp else datetime.datetime.utcnow().isoformat()
+    merged["LAST_UPDATED_AT"] = last_audit.timestamp.isoformat() if last_audit and last_audit.timestamp else datetime.datetime.now(datetime.timezone.utc).isoformat()
         
     return merged
 
@@ -264,7 +264,7 @@ def get_system_health(db: Session = Depends(get_db)):
 
     job_id = "SYSTEM_INIT"
     job_status = "COMPLETED"
-    job_ts = datetime.datetime.utcnow().isoformat()
+    job_ts = datetime.datetime.now(datetime.timezone.utc).isoformat()
     if last_job:
         job_id = getattr(last_job, "job_id", "SYSTEM_INIT") or "SYSTEM_INIT"
         job_status = getattr(last_job, "status", "COMPLETED") or "COMPLETED"
@@ -312,7 +312,7 @@ def run_live_data_integrity_audit(
     6. DB -> API -> UI Parity Check
     """
     from backend.models import WeeklyPublicResult, WeeklySession, Student
-    now_ist = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
+    now_ist = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=5, minutes=30)
     now_str = now_ist.strftime("%d %b %Y, %I:%M:%S %p IST")
 
     total_students = db.query(Student).filter(Student.is_active == True).count()
@@ -399,7 +399,7 @@ def run_live_data_integrity_audit(
 
     # Write durable AdminAuditLog row
     audit = AdminAuditLog(
-        audit_id=f"AUDIT-INTEGRITY-{datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
+        audit_id=f"AUDIT-INTEGRITY-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S')}",
         admin_name=getattr(current_user, 'username', 'Admin'),
         admin_email=getattr(current_user, 'email', 'nanthishvaran17@gmail.com'),
         admin_role=getattr(current_user, 'role', 'admin'),
@@ -409,7 +409,7 @@ def run_live_data_integrity_audit(
         target_id="ALL_STUDENT_RECORDS",
         description=f"Live data integrity audit executed: {'ALL RULES PASSED' if all_passed else 'VIOLATIONS DETECTED'} across {len(all_results)} results.",
         status="SUCCESS" if all_passed else "WARNING",
-        created_at=datetime.datetime.utcnow()
+        created_at=datetime.datetime.now(datetime.timezone.utc)
     )
     db.add(audit)
     db.commit()
@@ -441,7 +441,7 @@ def get_audit_logs(
             "user_name": l.admin_name or "System Administrator",
             "action": l.action,
             "details": l.description or f"Action {l.action_type} on {l.target_type or 'System'} (Status: {l.status})",
-            "timestamp": l.created_at.isoformat() if l.created_at else datetime.datetime.utcnow().isoformat()
+            "timestamp": l.created_at.isoformat() if l.created_at else datetime.datetime.now(datetime.timezone.utc).isoformat()
         } for l in logs
     ]
 
@@ -477,7 +477,7 @@ def get_security_activity(
         results.append({
             "id": l.id,
             "audit_id": l.audit_id,
-            "timestamp": l.created_at.isoformat() if l.created_at else datetime.datetime.utcnow().isoformat(),
+            "timestamp": l.created_at.isoformat() if l.created_at else datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "user": l.admin_name or "UNKNOWN",
             "role": l.admin_role or "UNKNOWN",
             "action": l.action,
@@ -620,7 +620,7 @@ def trigger_advanced_operation(
 
     # 3. Write durable AdminAuditLog
     audit = AdminAuditLog(
-        audit_id=f"AUDIT-ADV-{datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
+        audit_id=f"AUDIT-ADV-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S')}",
         admin_name=getattr(current_user, 'username', 'Admin'),
         admin_email=getattr(current_user, 'email', 'nanthishvaran17@gmail.com'),
         admin_role=getattr(current_user, 'role', 'admin'),
@@ -631,7 +631,7 @@ def trigger_advanced_operation(
         description=msg,
         status="SUCCESS",
         metadata_json={"pre_op_snapshot": pre_snapshot_name, "sha256": checksum},
-        created_at=datetime.datetime.utcnow()
+        created_at=datetime.datetime.now(datetime.timezone.utc)
     )
     db.add(audit)
     db.commit()
@@ -792,7 +792,7 @@ def get_operations_center_overview(db: Session = Depends(get_db)):
     ]
 
     # Dynamic Next Automation Date Calculation
-    now_ist = datetime.utcnow() + timedelta(hours=5, minutes=30)
+    now_ist = datetime.now(datetime.timezone.utc) + timedelta(hours=5, minutes=30)
     days_until_sun = (6 - now_ist.weekday()) % 7
     if days_until_sun == 0 and now_ist.hour >= 9:
         days_until_sun = 7
@@ -953,7 +953,7 @@ async def probe_all_services_live(
     import time
     import asyncio
     
-    now_ist = (datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)).strftime("%d %b %Y, %I:%M:%S %p IST")
+    now_ist = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=5, minutes=30)).strftime("%d %b %Y, %I:%M:%S %p IST")
     probes = {}
     
     probe_start_t = time.time()
@@ -1012,7 +1012,7 @@ async def probe_all_services_live(
 
     # Write durable AdminAuditLog
     audit = AdminAuditLog(
-        audit_id=f"AUDIT-PROBE-{datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
+        audit_id=f"AUDIT-PROBE-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S')}",
         admin_name=getattr(current_user, 'username', 'Admin'),
         admin_email=getattr(current_user, 'email', 'nanthishvaran17@gmail.com'),
         admin_role=getattr(current_user, 'role', 'admin'),
@@ -1022,7 +1022,7 @@ async def probe_all_services_live(
         target_id="ALL_SERVICES",
         description=f"Live health probe executed across all 11 subsystems in parallel: Status {overall_status}.",
         status="SUCCESS",
-        created_at=datetime.datetime.utcnow()
+        created_at=datetime.datetime.now(datetime.timezone.utc)
     )
     db.add(audit)
     db.commit()
@@ -1050,7 +1050,7 @@ def execute_recommended_action(
     Enforces non-destructive safety, durable audit logging, and post-op verification.
     """
     action_id = payload.get("action_id", "").upper().strip()
-    now_ist = (datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)).strftime("%d %b %Y, %I:%M:%S %p IST")
+    now_ist = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=5, minutes=30)).strftime("%d %b %Y, %I:%M:%S %p IST")
 
     if action_id == "RUN_INTEGRITY_AUDIT":
         res = run_live_data_integrity_audit(db=db, current_user=current_user)
@@ -1081,7 +1081,7 @@ def execute_recommended_action(
 
     # Record durable AdminAuditLog
     audit = AdminAuditLog(
-        audit_id=f"AUDIT-ACTION-{datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
+        audit_id=f"AUDIT-ACTION-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S')}",
         admin_name=getattr(current_user, 'username', 'Admin'),
         admin_email=getattr(current_user, 'email', 'nanthishvaran17@gmail.com'),
         admin_role=getattr(current_user, 'role', 'admin'),
@@ -1091,7 +1091,7 @@ def execute_recommended_action(
         target_id=target,
         description=msg,
         status="SUCCESS",
-        created_at=datetime.datetime.utcnow()
+        created_at=datetime.datetime.now(datetime.timezone.utc)
     )
     db.add(audit)
     db.commit()

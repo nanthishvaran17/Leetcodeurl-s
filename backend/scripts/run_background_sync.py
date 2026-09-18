@@ -22,7 +22,7 @@ async def sync_all_students_continuous():
     while True:
         db = SessionLocal()
         try:
-            print(f"[{datetime.datetime.utcnow().isoformat()}] Triggering ultra-fast concurrent sync for 1,395 students...")
+            print(f"[{datetime.datetime.now(datetime.timezone.utc).isoformat()}] Triggering ultra-fast concurrent sync for 1,395 students...")
             await run_full_pipeline(run_optional_phases=False)
             update_all_rankings_and_badges(db)
             generate_canonical_roster(db)

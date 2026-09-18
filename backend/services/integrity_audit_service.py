@@ -22,7 +22,7 @@ class IntegrityAuditService:
             people_id=people_id,
             details=details or {},
             created_by=created_by,
-            created_at=datetime.datetime.utcnow()
+            created_at=datetime.datetime.now(datetime.timezone.utc)
         )
         self.db.add(entry)
         self.db.commit()

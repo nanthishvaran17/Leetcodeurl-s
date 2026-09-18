@@ -105,7 +105,7 @@ def get_current_sync_status(db: Session = Depends(get_db)):
         logger.warning(f"Reconciling zombie lock for job {running_job.job_id}")
         running_job.status = "INTERRUPTED"
         if not running_job.completed_at:
-            running_job.completed_at = datetime.datetime.utcnow()
+            running_job.completed_at = datetime.datetime.now(datetime.timezone.utc)
         db.commit()
         running_job = None
 
@@ -116,7 +116,7 @@ def get_current_sync_status(db: Session = Depends(get_db)):
     last_any_job = recent_jobs[0] if recent_jobs else None
 
     is_running = bool(sync_tracker.is_running or (running_job is not None))
-    now_utc = datetime.datetime.utcnow()
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
 
     elapsed_sec = None
     started_iso = None

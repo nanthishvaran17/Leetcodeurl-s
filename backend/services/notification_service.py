@@ -249,7 +249,7 @@ class NotificationService:
             logger.info(f"[NOTIF-DEBUG] EVENT_CREATED type={event_type} scope={recipient_scope} target={recipient_target} actor={actor_user_id}")
 
             # 1. Idempotency Check (Duplicate Prevention)
-            eff_event_id = event_id or f"{event_type}_{entity_id or 'GEN'}_{int(datetime.datetime.utcnow().timestamp())}"
+            eff_event_id = event_id or f"{event_type}_{entity_id or 'GEN'}_{int(datetime.datetime.now(datetime.timezone.utc).timestamp())}"
             
             # In-flight concurrent event deduplication
             if event_id:
@@ -283,7 +283,7 @@ class NotificationService:
             notif_records = []
             firestore_batch_items = []
             
-            now_utc = datetime.datetime.utcnow()
+            now_utc = datetime.datetime.now(datetime.timezone.utc)
 
             for r in recipients:
                 uid = r["user_id"]
@@ -613,7 +613,7 @@ class NotificationService:
                     app_version=app_version,
                     device_model=device_model,
                     is_active=True,
-                    last_seen=datetime.datetime.utcnow()
+                    last_seen=datetime.datetime.now(datetime.timezone.utc)
                 )
                 db.add(tok)
             else:
@@ -622,7 +622,7 @@ class NotificationService:
                 if app_version: tok.app_version = app_version
                 if device_model: tok.device_model = device_model
                 tok.is_active = True
-                tok.last_seen = datetime.datetime.utcnow()
+                tok.last_seen = datetime.datetime.now(datetime.timezone.utc)
 
             db.commit()
 

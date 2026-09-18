@@ -80,7 +80,7 @@ class PlagiarismDetectionService:
                     "similarity_score": 94.5,
                     "severity": "CRITICAL",
                     "status": "FLAGGED",
-                    "detected_at": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+                    "detected_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
                     "details": "Identical solve sequence submitted within 42 seconds from matching network segment."
                 })
             
@@ -140,7 +140,7 @@ class PlagiarismDetectionService:
                         "similarity_score": round(similarity, 1),
                         "severity": severity,
                         "status": "FLAGGED",
-                        "detected_at": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+                        "detected_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
                         "details": f"Simultaneous contest submission pattern detected across {len(problems)} problems."
                     })
                     inc_id += 1
@@ -199,7 +199,7 @@ class PlagiarismDetectionService:
                     inc["status"] = action
                     inc["reviewer"] = reviewer_name
                     inc["reviewer_notes"] = notes
-                    inc["reviewed_at"] = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+                    inc["reviewed_at"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
                     logger.info(f"[ANTI_CHEAT_REVIEW] Incident {incident_id} marked as {action} by {reviewer_name}.")
                     return {"success": True, "incident": inc}
 

@@ -735,7 +735,7 @@ def revoke_certificate_endpoint(
         raise HTTPException(status_code=404, detail="Certificate not found.")
 
     cert.status = "REVOKED"
-    cert.revoked_at = datetime.datetime.utcnow()
+    cert.revoked_at = datetime.datetime.now(datetime.timezone.utc)
     cert.revocation_reason = req.reason or "Administrative Revocation"
     db.commit()
 

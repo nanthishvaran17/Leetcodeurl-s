@@ -69,7 +69,7 @@ class AIControlEngine:
                     "downloadUrl": art.get("download_url") or art.get("pdf_download_url") or "/api/reports/export/summary-pdf",
                     "pending_action": None,
                     "data_status": "VERIFIED",
-                    "timestamp": datetime.datetime.utcnow().isoformat() + "Z"
+                    "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat() + "Z"
                 }
 
         from backend.config import settings
@@ -137,7 +137,7 @@ class AIControlEngine:
             "task_plan": task_plan,
             "pending_action": pending_action,
             "data_status": data_status,
-            "timestamp": datetime.datetime.utcnow().isoformat() + "Z"
+            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat() + "Z"
         }
 
         # Security & Action Audit Logging
@@ -340,7 +340,7 @@ class AIControlEngine:
             })
 
         # 6. Stale Profiles (>24h since sync)
-        threshold_24h = datetime.datetime.utcnow() - datetime.timedelta(hours=24)
+        threshold_24h = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=24)
         stale_stats = db.query(Student).join(Student.stats).filter(
             LeetCodeProfileStats.last_verified_at < threshold_24h
         ).all()
@@ -855,7 +855,7 @@ class AIControlEngine:
             dt = last_sync[0]
             ist_dt = dt + datetime.timedelta(hours=5, minutes=30)
             last_str = ist_dt.strftime("%d %b %Y, %I:%M %p IST")
-            now_utc = datetime.datetime.utcnow()
+            now_utc = datetime.datetime.now(datetime.timezone.utc)
             diff_sec = (now_utc - dt).total_seconds()
             if diff_sec < 3600:
                 ago_str = f"{max(1, int(diff_sec // 60))}m ago"
@@ -944,7 +944,7 @@ class AIControlEngine:
                 "message": "Action ID not found or already executed/expired."
             }
 
-        now_str = datetime.datetime.utcnow().strftime("%d %b %Y, %I:%M:%S %p UTC")
+        now_str = datetime.datetime.now(datetime.timezone.utc).strftime("%d %b %Y, %I:%M:%S %p UTC")
 
         # Perform Action
         action_type = action.get("action_type")

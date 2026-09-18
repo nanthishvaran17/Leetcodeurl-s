@@ -88,7 +88,7 @@ async def _sync_single_student_canonical_impl(
     defer_commit: bool = False
 ):
     async with sem:
-        now_dt = datetime.datetime.utcnow()
+        now_dt = datetime.datetime.now(datetime.timezone.utc)
         streak_count = 0
         total_active_days = 0
 
@@ -479,7 +479,7 @@ async def _sync_single_student_canonical_impl(
                         "status": status_code,
                         "sync_status": sync_status_str
                     },
-                    "timestamp": datetime.datetime.utcnow().isoformat()
+                    "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
                 }
                 if not defer_commit:
                     await broadcast_sync_event(payload)
@@ -532,7 +532,7 @@ async def _sync_single_student_canonical_impl(
                         "status": "FETCH_FAILED",
                         "sync_status": "failed"
                     },
-                    "timestamp": datetime.datetime.utcnow().isoformat()
+                    "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
                 }
                 if not defer_commit:
                     await broadcast_sync_event(payload)
@@ -553,7 +553,7 @@ async def run_full_pipeline(
     """
     Executes the full canonical sync pipeline for all active students with true real-time streaming progress.
     """
-    start_time = datetime.datetime.utcnow()
+    start_time = datetime.datetime.now(datetime.timezone.utc)
     try:
         db = SessionLocal()
         try:
@@ -680,7 +680,7 @@ async def run_full_pipeline(
                             batch_payload = {
                                 "type": "STUDENT_BATCH_UPDATED",
                                 "updates": student_updates,
-                                "timestamp": datetime.datetime.utcnow().isoformat() + "Z"
+                                "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat() + "Z"
                             }
                             await broadcast_sync_event(batch_payload)
                             
@@ -710,7 +710,7 @@ async def run_full_pipeline(
         # Clear global caches to ensure instant UI freshness
         cache.clear()
 
-        end_time = datetime.datetime.utcnow()
+        end_time = datetime.datetime.now(datetime.timezone.utc)
         duration_sec = round((end_time - start_time).total_seconds(), 2)
 
         from backend.services.live_sync_service import sync_tracker, broadcast_sync_event

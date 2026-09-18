@@ -137,7 +137,7 @@ class FacultyAssignmentService:
             # Apply assignments (handling reassignment if student had a previous faculty)
             assigned_count = 0
             reassigned_count = 0
-            now = datetime.datetime.utcnow()
+            now = datetime.datetime.now(datetime.timezone.utc)
             students_allocated_data = []
 
             for sid in new_ids:
@@ -289,7 +289,7 @@ class FacultyAssignmentService:
         background_tasks: Optional[BackgroundTasks] = None
     ) -> Dict[str, Any]:
         """Removes students from a faculty member's allocation."""
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
         students_unallocated_data = []
 
         students = db.query(Student).filter(Student.id.in_(student_ids)).all()
@@ -401,7 +401,7 @@ class FacultyAssignmentService:
             }
 
         total_allocated = 0
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
 
         # Round robin allocation respecting max limit of 30 per staff
         fac_idx = 0
@@ -483,7 +483,7 @@ class FacultyAssignmentService:
             raise HTTPException(status_code=404, detail="Staff account not found.")
 
         staff.is_active = False
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
 
         assigned_students = db.query(FacultyStudentAssignment).filter(
             FacultyStudentAssignment.faculty_id == staff_id,

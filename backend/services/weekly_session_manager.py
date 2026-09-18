@@ -53,7 +53,7 @@ def get_or_create_current_weekly_session(db: Session) -> WeeklySession:
             if existing_count == 0:
                 students = db.query(Student).options(joinedload(Student.department)).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
                 latest_session.total_students = len(students)
-                now_dt = datetime.datetime.utcnow()
+                now_dt = datetime.datetime.now(datetime.timezone.utc)
                 new_results = [
                     WeeklyPublicResult(
                         session_id=latest_session.id,
@@ -130,7 +130,7 @@ async def trigger_start_snapshot_0800(db: Session, session_id: int):
     session.total_students = len(students)
     db.commit()
 
-    now_dt = datetime.datetime.utcnow()
+    now_dt = datetime.datetime.now(datetime.timezone.utc)
     existing_student_ids = {
         r[0] for r in db.query(WeeklyPublicResult.student_id).filter(
             WeeklyPublicResult.session_id == session_id
@@ -225,7 +225,7 @@ async def trigger_final_snapshot_0930(db: Session, session_id: int) -> OfficialW
     data_errors = 0
     invalid_usernames = 0
 
-    now_dt = datetime.datetime.utcnow()
+    now_dt = datetime.datetime.now(datetime.timezone.utc)
 
     for r in public_results:
         prev_st = r.state
@@ -418,7 +418,7 @@ def snapshot_supersedes(old_snapshot_id: int, new_snapshot_data: Dict[str, Any],
         contest_id=new_snapshot_data.get("contestId") or old_snap.contest_id,
         contest_name=new_snapshot_data.get("contestName") or old_snap.contest_name,
         contest_date=new_snapshot_data.get("sessionDate") or old_snap.contest_date,
-        finalized_at=datetime.datetime.utcnow(),
+        finalized_at=datetime.datetime.now(datetime.timezone.utc),
         dataset=new_snapshot_data,
         dataset_hash=new_hash,
         student_count=new_snapshot_data.get("metrics", {}).get("totalStudents", old_snap.student_count),
@@ -1062,7 +1062,7 @@ def sync_single_historical_session(db: Session, session_id: int):
     except RuntimeError:
         results = asyncio.run(_fetch_all_evidence())
 
-    now_dt = datetime.datetime.utcnow()
+    now_dt = datetime.datetime.now(datetime.timezone.utc)
     now_iso = now_dt.isoformat()
 
     # Clear existing session results and write verified records

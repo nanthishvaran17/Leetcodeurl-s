@@ -69,7 +69,7 @@ class ClassificationResult:
     raw_evidence_chain: Dict[str, Any] = field(default_factory=dict)
     
     # System metadata
-    reconciled_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    reconciled_at: str = field(default_factory=lambda: datetime.now(datetime.timezone.utc).isoformat())
 
     @property
     def verified(self) -> bool:

@@ -71,7 +71,7 @@ def _real_dept_ids(db: Session) -> List[int]:
 def _log_admin_action(db: Session, action: str, target_id: str, description: str, status: str = "SUCCESS"):
     try:
         audit = AdminAuditLog(
-            audit_id=f"CC-{datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')}-{target_id[:6]}",
+            audit_id=f"CC-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S')}-{target_id[:6]}",
             admin_name="Operations Staff",
             admin_email="nanthishvaran17@gmail.com",
             admin_role="admin",
@@ -81,7 +81,7 @@ def _log_admin_action(db: Session, action: str, target_id: str, description: str
             target_id=str(target_id),
             description=description,
             status=status,
-            created_at=datetime.datetime.utcnow()
+            created_at=datetime.datetime.now(datetime.timezone.utc)
         )
         db.add(audit)
         db.commit()
@@ -255,7 +255,7 @@ def get_command_center_summary(
                 "department_code": dept_code,
                 "academic_year": "2025–26",
                 "health_status": kpi_summary.get("progress_status", "GOOD"),
-                "last_sync": datetime.datetime.utcnow().strftime("%H:%M IST")
+                "last_sync": datetime.datetime.now(datetime.timezone.utc).strftime("%H:%M IST")
             },
             "kpi_summary": kpi_summary,
             "action_items": action_items,
@@ -266,7 +266,7 @@ def get_command_center_summary(
             "benchmarks": benchmarks,
             "staff_list": staff_list,
             "unassigned_student_count": unassigned_count,
-            "refreshed_at": datetime.datetime.utcnow().strftime("%d %b %Y, %H:%M:%S IST"),
+            "refreshed_at": datetime.datetime.now(datetime.timezone.utc).strftime("%d %b %Y, %H:%M:%S IST"),
         }
 
     return cache_service.get_or_compute_sync(
@@ -466,7 +466,7 @@ def assign_students_batch(
         "type": "STAFF_ALLOCATION_UPDATED",
         "faculty_id": req.faculty_id,
         "assigned_count": len(req.student_ids),
-        "timestamp": datetime.datetime.utcnow().isoformat()
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
     })
     return res
 
@@ -493,7 +493,7 @@ def unassign_students_batch(
     connection_manager.broadcast_sync({
         "type": "STAFF_ALLOCATION_UPDATED",
         "faculty_id": req.faculty_id,
-        "timestamp": datetime.datetime.utcnow().isoformat()
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
     })
     return res
 
@@ -513,7 +513,7 @@ def auto_distribute_department(
     connection_manager.broadcast_sync({
         "type": "STAFF_ALLOCATION_UPDATED",
         "department_id": req.department_id,
-        "timestamp": datetime.datetime.utcnow().isoformat()
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
     })
     return res
 
@@ -645,7 +645,7 @@ def get_report_data(
     )
     benchmarks = get_institutional_benchmarks(db, current_user)
 
-    now_str = datetime.datetime.utcnow().strftime("%d %B %Y, %I:%M %p IST")
+    now_str = datetime.datetime.now(datetime.timezone.utc).strftime("%d %B %Y, %I:%M %p IST")
 
     # Scope Summary Pills
     scope_details = [f"Dept: {dept_label}"]
@@ -777,7 +777,7 @@ async def add_student(req: StudentAddRequest, background_tasks: BackgroundTasks,
     if existing_user:
         raise HTTPException(status_code=409, detail=f"LeetCode username '{req.leetcode_username}' is already tracked.")
 
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
     student = Student(
         reg_no=req.reg_no.strip().upper(),
         name=req.name.strip().title(),

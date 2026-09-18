@@ -564,9 +564,9 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
     if year_filter != "ALL":
         title = f"{title} ({year_filter} Year)"
 
-    report_id = f"RPT-FRIDAY-{datetime.datetime.utcnow().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+    report_id = f"RPT-FRIDAY-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
 
-    version_str = f"v1.0.0 | Template Rev 3.0 | Contest {contest_id} | Generated {datetime.datetime.utcnow().strftime('%d-%m-%Y')}"
+    version_str = f"v1.0.0 | Template Rev 3.0 | Contest {contest_id} | Generated {datetime.datetime.now(datetime.timezone.utc).strftime('%d-%m-%Y')}"
 
     dataset: Dict[str, Any] = {
         "reportId": report_id,
@@ -589,8 +589,8 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         "versionString": version_str,
         "isValidated": is_valid_data,
         "validationError": validation_error,
-        "generatedAt": datetime.datetime.utcnow().strftime("%d-%m-%Y %I:%M %p IST"),
-        "verifiedAt": datetime.datetime.utcnow().isoformat(),
+        "generatedAt": datetime.datetime.now(datetime.timezone.utc).strftime("%d-%m-%Y %I:%M %p IST"),
+        "verifiedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "dataStatus": "READY" if (total_students > 0 and is_valid_data) else ("BLOCKED" if not is_valid_data else "PARTIAL"),
         "data_status": "READY" if (total_students > 0 and is_valid_data) else ("BLOCKED" if not is_valid_data else "PARTIAL"),
         "config": config.model_dump(),

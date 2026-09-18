@@ -98,7 +98,7 @@ def run_sqlite_to_firestore_migration(sqlite_path: str = None):
             "leetcode_url": st.leetcode_url or "",
             "username": st.username or "",
             "is_active": st.is_active if st.is_active is not None else True,
-            "created_at": st.created_at.isoformat() if st.created_at else datetime.datetime.utcnow().isoformat()
+            "created_at": st.created_at.isoformat() if st.created_at else datetime.datetime.now(datetime.timezone.utc).isoformat()
         }
         batch.set(students_coll.document(reg_no), st_doc, merge=True)
         op_count += 1
@@ -133,7 +133,7 @@ def run_sqlite_to_firestore_migration(sqlite_path: str = None):
                 "source": s_stat.source or None,
                 "error_message": s_stat.error_message or None,
                 "last_verified_at": s_stat.last_verified_at.isoformat() if s_stat.last_verified_at else None,
-                "last_updated": s_stat.last_updated.isoformat() if s_stat.last_updated else datetime.datetime.utcnow().isoformat()
+                "last_updated": s_stat.last_updated.isoformat() if s_stat.last_updated else datetime.datetime.now(datetime.timezone.utc).isoformat()
             }
         else:
             pending_cnt += 1
@@ -144,7 +144,7 @@ def run_sqlite_to_firestore_migration(sqlite_path: str = None):
                 "total_solved": None,
                 "sync_status": "pending",
                 "status": "pending",
-                "last_updated": datetime.datetime.utcnow().isoformat()
+                "last_updated": datetime.datetime.now(datetime.timezone.utc).isoformat()
             }
         batch.set(stats_coll.document(reg_no), stat_doc, merge=True)
         op_count += 1

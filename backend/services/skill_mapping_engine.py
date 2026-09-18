@@ -133,7 +133,7 @@ def update_or_create_skill_profile(db: Session, student: Student) -> StudentSkil
     profile.dsa_topic_scores = res["dsa_topic_scores"]
     profile.strong_areas = res["strong_areas"]
     profile.weak_areas = res["weak_areas"]
-    profile.last_calculated_at = datetime.datetime.utcnow()
+    profile.last_calculated_at = datetime.datetime.now(datetime.timezone.utc)
 
     db.commit()
     db.refresh(profile)

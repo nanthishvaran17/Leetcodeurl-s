@@ -913,7 +913,7 @@ def create_staff_user(
             "sub": str(staff_user.id),
             "email": staff_user.email,
             "purpose": "account_setup",
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(days=7)
+            "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7)
         }
         setup_token = jwt.encode(setup_payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 

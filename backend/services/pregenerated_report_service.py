@@ -384,7 +384,7 @@ def _build_and_store_report_sync(
             storage_path=storage_path,
             data_version=data_version,
             status="READY",
-            generated_at=datetime.datetime.utcnow(),
+            generated_at=datetime.datetime.now(datetime.timezone.utc),
             generation_time_ms=gen_time_ms,
             file_size_bytes=file_size
         )
@@ -395,7 +395,7 @@ def _build_and_store_report_sync(
         cache_entry.filename = filename
         cache_entry.mime_type = mime_type
         cache_entry.data_version = data_version
-        cache_entry.generated_at = datetime.datetime.utcnow()
+        cache_entry.generated_at = datetime.datetime.now(datetime.timezone.utc)
         cache_entry.generation_time_ms = gen_time_ms
         cache_entry.file_size_bytes = file_size
         cache_entry.error_message = None

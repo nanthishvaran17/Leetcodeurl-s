@@ -207,7 +207,7 @@ def build_normalized_forensic_report(
         {"q_num": 4, "name": "Q4", "status": "Accepted" if q4_val else "Not Solved", "points": q4_pts, "max_points": 6, "solved": bool(q4_val)},
     ]
 
-    retrieved_at = datetime.datetime.utcnow().strftime("%d %b %Y, %I:%M %p IST")
+    retrieved_at = datetime.datetime.now(datetime.timezone.utc).strftime("%d %b %Y, %I:%M %p IST")
 
     # Sync / Provision CertificateRecord in Database for public resolver consistency
     try:
@@ -281,7 +281,7 @@ def build_normalized_forensic_report(
         "is_valid": True,
         "traceId": final_trace_id,
         "verification_id": final_trace_id,
-        "timestamp": datetime.datetime.utcnow().isoformat(),
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "student": {
             "id": student.id,
             "reg_no": student.reg_no,

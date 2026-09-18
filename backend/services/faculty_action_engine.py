@@ -167,7 +167,7 @@ class FacultyActionIngestion:
             "threshold": threshold,
             "calculation_version": context.get("version"),
             "contributing_factors": context.get("factors"),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(datetime.timezone.utc).isoformat()
         }
         
         return FacultyActionEngine.create_action_item(
@@ -286,7 +286,7 @@ def get_faculty_actions_list(
         is_overdue_val = False
         days_overdue_val = 0
         if item.follow_up_date and item.status not in ["Completed", "Resolved"]:
-            today = datetime.utcnow().date()
+            today = datetime.now(datetime.timezone.utc).date()
             f_date = item.follow_up_date.date() if isinstance(item.follow_up_date, datetime) else item.follow_up_date
             if f_date < today:
                 is_overdue_val = True
@@ -390,7 +390,7 @@ def detect_and_sync_faculty_signals(db: Session, force: bool = False) -> dict:
                 recommended_action=rec_action,
                 status="Pending",
                 category="PERFORMANCE_DROP",
-                created_at=datetime.utcnow()
+                created_at=datetime.now(datetime.timezone.utc)
             )
             db.add(item)
             created_count += 1
@@ -399,7 +399,7 @@ def detect_and_sync_faculty_signals(db: Session, force: bool = False) -> dict:
             existing.priority_score = score
             existing.reason = reason
             existing.recommended_action = rec_action
-            existing.updated_at = datetime.utcnow()
+            existing.updated_at = datetime.now(datetime.timezone.utc)
             updated_count += 1
 
     try:

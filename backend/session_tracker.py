@@ -172,7 +172,7 @@ async def trigger_end_snapshot(db: Session, session_id: int):
     session.not_participated = not_participated
     session.failed_verification = failed_count
     session.status = "COMPLETED"
-    session.completed_at = datetime.datetime.utcnow()
+    session.completed_at = datetime.datetime.now(datetime.timezone.utc)
     db.commit()
 
     logger.info("9:30 AM Final Snapshot completed!")

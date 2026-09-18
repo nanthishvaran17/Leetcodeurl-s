@@ -42,7 +42,7 @@ class NotificationOutboxWorker:
             status="PENDING",
             attempt_count=0,
             idempotency_key=idempotency_key,
-            created_at=datetime.datetime.utcnow()
+            created_at=datetime.datetime.now(datetime.timezone.utc)
         )
         db.add(event)
         db.commit()
@@ -78,7 +78,7 @@ class NotificationOutboxWorker:
                     )
                     if success:
                         evt.status = "SENT"
-                        evt.sent_at = datetime.datetime.utcnow()
+                        evt.sent_at = datetime.datetime.now(datetime.timezone.utc)
                         evt.provider_message_id = msg_id_or_err
                         success_count += 1
                     else:
@@ -99,8 +99,8 @@ class NotificationOutboxWorker:
                         action_route=evt.payload.get("action_route")
                     )
                     evt.status = "SENT"
-                    evt.sent_at = datetime.datetime.utcnow()
-                    evt.provider_message_id = f"FIRESTORE-{int(datetime.datetime.utcnow().timestamp())}"
+                    evt.sent_at = datetime.datetime.now(datetime.timezone.utc)
+                    evt.provider_message_id = f"FIRESTORE-{int(datetime.datetime.now(datetime.timezone.utc).timestamp())}"
                     success_count += 1
 
                 # Record Audit Log

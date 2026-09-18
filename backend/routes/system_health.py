@@ -32,9 +32,9 @@ def get_database_health_endpoint(db: Session = Depends(get_db)):
     Never hardcodes student or statistics counts.
     """
     try:
-        t0 = datetime.datetime.utcnow()
+        t0 = datetime.datetime.now(datetime.timezone.utc)
         db.execute(__import__('sqlalchemy').text("SELECT 1")).first()
-        latency_ms = round((datetime.datetime.utcnow() - t0).total_seconds() * 1000, 1)
+        latency_ms = round((datetime.datetime.now(datetime.timezone.utc) - t0).total_seconds() * 1000, 1)
 
         from sqlalchemy import or_
         student_count = db.query(Student).count()
@@ -78,7 +78,7 @@ def get_database_health_endpoint(db: Session = Depends(get_db)):
             "pending_count": pending_count,
             "failed_count": failed_count,
             "latency_ms": latency_ms,
-            "last_updated": datetime.datetime.utcnow().isoformat() + "Z"
+            "last_updated": datetime.datetime.now(datetime.timezone.utc).isoformat() + "Z"
         }
 
 
@@ -89,7 +89,7 @@ def get_database_health_endpoint(db: Session = Depends(get_db)):
             "database_type": "unknown",
             "connection_status": "disconnected",
             "error_message": sanitize_error_message(str(exc)),
-            "last_updated": datetime.datetime.utcnow().isoformat() + "Z"
+            "last_updated": datetime.datetime.now(datetime.timezone.utc).isoformat() + "Z"
         }
 
 
@@ -950,7 +950,7 @@ def trigger_sync_now(db: Session = Depends(get_db)):
     """
     Triggers an immediate background synchronization job and updates DB statistics.
     """
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
     total_students = db.query(Student).count()
     
     job_id = f"sync_{now.strftime('%Y%m%d_%H%M%S')}"

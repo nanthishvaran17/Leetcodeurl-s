@@ -458,7 +458,7 @@ def execute_find_students_by_conditions(
         q = q.filter(LeetCodeProfileStats.contest_rating >= min_contest_rating)
 
     if activity_window_days is not None and activity_window_days > 0:
-        cutoff = datetime.datetime.utcnow() - datetime.timedelta(days=activity_window_days)
+        cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=activity_window_days)
         q = q.filter(
             or_(
                 LeetCodeProfileStats.last_successful_sync >= cutoff,

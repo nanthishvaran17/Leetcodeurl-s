@@ -959,7 +959,7 @@ def get_contest_filename_base(contest_name: str, session_date: str = None, dept:
             date_seg = str(session_date).replace(".", "")
     else:
         import datetime
-        now = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
+        now = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=5, minutes=30)
         date_seg = f"{now.day:02d}{MONTHS[now.month-1]}{now.year}"
 
     # --- Department short slug ---

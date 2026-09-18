@@ -36,7 +36,7 @@ class InstitutionalIntelligenceService:
                 target_id=target_id,
                 details=json.dumps(details or {}),
                 institution_id=institution_id,
-                created_at=datetime.datetime.utcnow()
+                created_at=datetime.datetime.now(datetime.timezone.utc)
             )
             db.add(audit)
             db.commit()
@@ -79,7 +79,7 @@ class InstitutionalIntelligenceService:
             rule_criteria=json.dumps(criteria),
             created_by=user_id,
             institution_id="NEC",
-            created_at=datetime.datetime.utcnow()
+            created_at=datetime.datetime.now(datetime.timezone.utc)
         )
         db.add(group)
         db.flush()
@@ -89,7 +89,7 @@ class InstitutionalIntelligenceService:
             group_id=group_id,
             user_id=user_id,
             role="OWNER",
-            joined_at=datetime.datetime.utcnow()
+            joined_at=datetime.datetime.now(datetime.timezone.utc)
         )
         db.add(owner_member)
 
@@ -108,7 +108,7 @@ class InstitutionalIntelligenceService:
                 group_id=group_id,
                 user_id=mem_id,
                 role="STUDENT" if ("STUDENT" in mem_id or "@" in mem_id or mem_id.isalnum()) else "FACULTY",
-                joined_at=datetime.datetime.utcnow()
+                joined_at=datetime.datetime.now(datetime.timezone.utc)
             ))
             added_count += 1
 
@@ -138,7 +138,7 @@ class InstitutionalIntelligenceService:
 
         if rule_type == "INACTIVE_STUDENTS":
             days = criteria.get("days", 7)
-            cutoff = datetime.datetime.utcnow() - datetime.timedelta(days=days)
+            cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=days)
             
             # Query active students whose last activity or profile sync is older than cutoff
             students = db.query(Student).filter(Student.is_active == True)
@@ -270,7 +270,7 @@ class InstitutionalIntelligenceService:
                     group_id=group_id,
                     user_id=mem_id,
                     role="STUDENT" if ("STUDENT" in mem_id or "@" in mem_id or mem_id.isalnum()) else "FACULTY",
-                    joined_at=datetime.datetime.utcnow()
+                    joined_at=datetime.datetime.now(datetime.timezone.utc)
                 ))
                 existing_ids.add(mem_id)
                 added_count += 1
@@ -746,7 +746,7 @@ I can show specific student progress assigned to any faculty member."""
 
         # D. INACTIVE / PENDING STUDENTS
         if any(w in q_clean for w in ["inactive", "idle", "pending students", "pending", "zero", "kudu"]):
-            cutoff = datetime.datetime.utcnow() - datetime.timedelta(days=7)
+            cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
             inactive_students = []
             for s in all_students:
                 stats = db.query(LeetCodeProfileStats).filter_by(student_id=s.id).first()
@@ -1028,7 +1028,7 @@ I am equipped with comprehensive AI assistant capabilities for **Nandha Engineer
                 "title": f"Assignment: Solve {problem_count} {topic} Problems",
                 "topic": topic,
                 "problemCount": problem_count,
-                "deadline": (datetime.datetime.utcnow() + datetime.timedelta(days=3)).strftime("%Y-%m-%d 23:59"),
+                "deadline": (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=3)).strftime("%Y-%m-%d 23:59"),
                 "targetReceiverId": receiver_id,
                 "proposalText": f"Detected assignment directive in message. Would you like to publish this as an official tracked assignment?"
             }
@@ -1061,7 +1061,7 @@ I am equipped with comprehensive AI assistant capabilities for **Nandha Engineer
                 difficulty_level="NEEDS_SUPPORT",
                 supporting_evidence=json.dumps({"message_excerpt": content[:150]}),
                 suggested_action=json.dumps({"action": "RECOMMEND_PRACTICE", "topic": topic}),
-                created_at=datetime.datetime.utcnow()
+                created_at=datetime.datetime.now(datetime.timezone.utc)
             )
             db.add(signal)
             db.commit()
@@ -1104,7 +1104,7 @@ I am equipped with comprehensive AI assistant capabilities for **Nandha Engineer
             last_sync = stats.last_successful_sync.strftime("%Y-%m-%d %H:%M") if stats and stats.last_successful_sync else "Recently Synchronized"
 
             reasons = []
-            cutoff = datetime.datetime.utcnow() - datetime.timedelta(days=7)
+            cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
             if not stats or not stats.last_successful_sync or stats.last_successful_sync < cutoff:
                 reasons.append("Zero verified submissions in the past 7 days")
 
@@ -1158,7 +1158,7 @@ I am equipped with comprehensive AI assistant capabilities for **Nandha Engineer
             "hardSolved": "N/A",
             "contestRating": "N/A",
             "globalRank": "N/A",
-            "lastSync": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M"),
+            "lastSync": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M"),
             "objectiveReasons": [
                 "Full RBAC Administrator visibility active across enrolled departments.",
                 "Institutional Audit Logging active for all data lookups and action dispatches.",

@@ -102,7 +102,7 @@ class TestLiveReassignment:
         db = SessionLocal()
         try:
             import datetime
-            datetime.datetime.utcnow()
+            datetime.datetime.now(datetime.timezone.utc)
 
             # Perform a reassignment
             faculty_assignment_service.assign_students_to_faculty(

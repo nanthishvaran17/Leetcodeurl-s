@@ -102,13 +102,13 @@ def review_case(case_id: str, req: CaseReviewRequest, request: Request, db: Sess
     reviewer_name = req.reviewed_by or (user.full_name if user else "Staff Admin")
     case.status = req.status
     case.reviewed_by = reviewer_name
-    case.reviewed_at = datetime.datetime.utcnow()
+    case.reviewed_at = datetime.datetime.now(datetime.timezone.utc)
 
     history = case.audit_history or []
     history.append({
         "event": f"STATUS_CHANGED_TO_{req.status}",
         "reviewed_by": reviewer_name,
-        "timestamp": datetime.datetime.utcnow().isoformat()
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
     })
     case.audit_history = history
 
@@ -151,7 +151,7 @@ def administrative_correction(case_id: str, req: AdminCorrectionRequest, request
         new_value=req.new_value,
         reason=req.reason,
         staff_id=req.staff_id,
-        timestamp=datetime.datetime.utcnow()
+        timestamp=datetime.datetime.now(datetime.timezone.utc)
     )
     db.add(correction)
 

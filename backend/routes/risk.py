@@ -124,7 +124,7 @@ def add_mentor_note(
         faculty_id=current_user.id,
         note=note_in.note,
         escalation_level=note_in.escalation_level,
-        created_at=datetime.datetime.utcnow()
+        created_at=datetime.datetime.now(datetime.timezone.utc)
     )
     db.add(note)
 

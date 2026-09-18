@@ -35,7 +35,7 @@ def send_weekly_report_email(
         return False
 
     success_flag = True
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
     report_date = datetime.date.today().strftime("%Y-%m-%d")
 
     getattr(settings, "SMTP_HOST", "smtp.gmail.com")
@@ -92,7 +92,7 @@ def send_weekly_report_email(
 
         if not smtp_user or not smtp_pass:
             delivery.status = "FAILED"
-            delivery.failed_at = datetime.datetime.utcnow()
+            delivery.failed_at = datetime.datetime.now(datetime.timezone.utc)
             delivery.error_message = "SMTP credentials missing in server configuration."
             db.commit()
 
@@ -119,8 +119,8 @@ def send_weekly_report_email(
 
         if delivered:
             delivery.status = "SENT"
-            delivery.sent_at = datetime.datetime.utcnow()
-            delivery.delivered_at = datetime.datetime.utcnow()
+            delivery.sent_at = datetime.datetime.now(datetime.timezone.utc)
+            delivery.delivered_at = datetime.datetime.now(datetime.timezone.utc)
             db.commit()
 
             log_admin_action(
@@ -131,7 +131,7 @@ def send_weekly_report_email(
         else:
             success_flag = False
             delivery.status = "FAILED"
-            delivery.failed_at = datetime.datetime.utcnow()
+            delivery.failed_at = datetime.datetime.now(datetime.timezone.utc)
             delivery.error_message = err_msg or "Failed to deliver email"
             db.commit()
 

@@ -123,7 +123,7 @@ def create_test_students(db, label: str, dept_id: int, count: int) -> list:
 
 
 def assign_students_to_staff(db, staff: User, students: list, admin_id: int = None):
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
     for student in students:
         assignment = FacultyStudentAssignment(
             faculty_id=staff.id,

@@ -51,7 +51,7 @@ class AuthoritativeSnapshotEngine:
                 return {
                     "data_version": ver,
                     "snapshot_id": f"SNAPSHOT-{snap.contest_id}-{ver}",
-                    "synced_at": snap.finalized_at.isoformat() if snap.finalized_at else datetime.datetime.utcnow().isoformat(),
+                    "synced_at": snap.finalized_at.isoformat() if snap.finalized_at else datetime.datetime.now(datetime.timezone.utc).isoformat(),
                     "status": "SUCCESS",
                     "contest_name": snap.contest_name,
                     "student_count": snap.student_count or 1450,
@@ -62,7 +62,7 @@ class AuthoritativeSnapshotEngine:
                 return {
                     "data_version": cls._in_memory_latest_version,
                     "snapshot_id": f"SNAPSHOT-INIT-{cls._in_memory_latest_version}",
-                    "synced_at": datetime.datetime.utcnow().isoformat(),
+                    "synced_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
                     "status": "SUCCESS",
                     "contest_name": "Weekly Contest 516",
                     "student_count": 1450,
@@ -93,7 +93,7 @@ class AuthoritativeSnapshotEngine:
                 data["data_version"] = ver
                 data["snapshot_id"] = f"SNAPSHOT-{snap.contest_id}-{ver}"
                 data["status"] = "SUCCESS"
-                data["synced_at"] = snap.finalized_at.isoformat() if snap.finalized_at else datetime.datetime.utcnow().isoformat()
+                data["synced_at"] = snap.finalized_at.isoformat() if snap.finalized_at else datetime.datetime.now(datetime.timezone.utc).isoformat()
                 return data
 
             # If no snapshot in table, build canonical dataset for latest session
@@ -103,7 +103,7 @@ class AuthoritativeSnapshotEngine:
             dataset["data_version"] = cls._in_memory_latest_version
             dataset["snapshot_id"] = f"SNAPSHOT-{sess_id}-{cls._in_memory_latest_version}"
             dataset["status"] = "SUCCESS"
-            dataset["synced_at"] = datetime.datetime.utcnow().isoformat()
+            dataset["synced_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
             return dataset
         finally:
             if close_on_exit:
@@ -146,7 +146,7 @@ class AuthoritativeSnapshotEngine:
                 contest_id=contest_id,
                 contest_name=contest_name,
                 contest_date=contest_date,
-                finalized_at=datetime.datetime.utcnow(),
+                finalized_at=datetime.datetime.now(datetime.timezone.utc),
                 dataset=dataset,
                 dataset_hash=dataset_hash,
                 snapshot_version=1,

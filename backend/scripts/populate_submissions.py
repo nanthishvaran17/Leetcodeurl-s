@@ -27,7 +27,7 @@ async def populate_all_student_submissions():
                         if not tslug:
                             continue
                         raw_ts = sub.get("submission_timestamp")
-                        dt_val = datetime.datetime.fromtimestamp(raw_ts) if (raw_ts and isinstance(raw_ts, int) and raw_ts > 0) else datetime.datetime.utcnow()
+                        dt_val = datetime.datetime.fromtimestamp(raw_ts) if (raw_ts and isinstance(raw_ts, int) and raw_ts > 0) else datetime.datetime.now(datetime.timezone.utc)
                         
                         existing = db.query(LeetCodeSubmission).filter(
                             LeetCodeSubmission.student_id == s.id,

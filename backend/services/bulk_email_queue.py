@@ -236,7 +236,7 @@ class BulkEmailQueueService:
 
                     if campaign.status == "QUEUED":
                         campaign.status = "PROCESSING"
-                        campaign.started_at = datetime.datetime.utcnow()
+                        campaign.started_at = datetime.datetime.now(datetime.timezone.utc)
                         db.commit()
 
                     # Fetch batch of pending queue items
@@ -248,19 +248,19 @@ class BulkEmailQueueService:
                     if not items:
                         # Campaign complete
                         campaign.status = "COMPLETED"
-                        campaign.completed_at = datetime.datetime.utcnow()
+                        campaign.completed_at = datetime.datetime.now(datetime.timezone.utc)
                         db.commit()
                         logger.info(f"[BULK_EMAIL_WORKER] Campaign {campaign.id} ('{campaign.campaign_name}') completed.")
                         continue
 
                     for item in items:
                         item.attempts += 1
-                        item.last_attempt_at = datetime.datetime.utcnow()
+                        item.last_attempt_at = datetime.datetime.now(datetime.timezone.utc)
                         
                         # Simulate sending or trigger Brevo API
                         # For load test safety & quota preservation:
                         item.status = "DELIVERED"
-                        item.delivered_at = datetime.datetime.utcnow()
+                        item.delivered_at = datetime.datetime.now(datetime.timezone.utc)
                         campaign.sent_count += 1
                         campaign.delivered_count += 1
 

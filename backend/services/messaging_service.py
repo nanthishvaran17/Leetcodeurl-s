@@ -311,7 +311,7 @@ class MessagingService:
         is_recipient_connected = MessagingService._is_user_online(db, receiver_id)
         if is_recipient_connected:
             initial_status = "DELIVERED"
-            delivered_at_val = datetime.datetime.utcnow()
+            delivered_at_val = datetime.datetime.now(datetime.timezone.utc)
 
         # 3. Create Message
         msg = Message(
@@ -333,7 +333,7 @@ class MessagingService:
         # 4. Update Conversation state
         preview_text = content[:100] if content else "Sent an attachment"
         conv.last_message_preview = preview_text
-        conv.last_message_at = datetime.datetime.utcnow()
+        conv.last_message_at = datetime.datetime.now(datetime.timezone.utc)
         if conv.participant_1_id == receiver_id:
             conv.unread_count_1 = (conv.unread_count_1 or 0) + 1
         else:
@@ -416,7 +416,7 @@ class MessagingService:
 
         msg.content = new_content
         msg.is_edited = True
-        msg.edited_at = datetime.datetime.utcnow()
+        msg.edited_at = datetime.datetime.now(datetime.timezone.utc)
         db.commit()
 
         updated_payload = MessagingService._format_message_dict(db, msg, user_id)
@@ -699,7 +699,7 @@ class MessagingService:
         # Automatically mark pending received SENT messages as DELIVERED upon retrieval
         pending_sent = db.query(Message).filter_by(conversation_id=conversation_id, status="SENT").all()
         if pending_sent:
-            now = datetime.datetime.utcnow()
+            now = datetime.datetime.now(datetime.timezone.utc)
             for m in pending_sent:
                 if str(m.receiver_id).strip().lower() in user_ids:
                     m.status = "DELIVERED"
@@ -734,7 +734,7 @@ class MessagingService:
             Message.status.in_(["SENT", "DELIVERED"])
         ).all()
         
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
         updated_ids = []
         for m in messages:
             if str(m.receiver_id).strip().lower() in user_ids:

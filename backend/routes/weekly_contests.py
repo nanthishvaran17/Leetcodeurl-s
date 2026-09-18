@@ -2012,7 +2012,7 @@ def start_or_resume_virtual_attempt(
 
     if existing:
         # RESUME — never modify started_at / expires_at
-        existing.last_activity_at = dt.datetime.utcnow()
+        existing.last_activity_at = dt.datetime.now(datetime.timezone.utc)
         existing.resume_count = (existing.resume_count or 0) + 1
         try:
             db.commit()
@@ -2034,7 +2034,7 @@ def start_or_resume_virtual_attempt(
         }
 
     # CREATE new attempt — only happens on very first call for this student+session
-    started = dt.datetime.utcnow()
+    started = dt.datetime.now(datetime.timezone.utc)
     # Virtual contest window = 90 minutes (standard LeetCode virtual duration)
     expires = started + dt.timedelta(minutes=90)
 

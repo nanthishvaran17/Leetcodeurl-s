@@ -16,7 +16,7 @@ def calculate_student_risk_engine(db: Session, student: Student, override_weight
     Also detects Early Disengagement / Silent Student drops over a 4-week window.
     """
     stats = student.stats
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
 
     # Default fallback for unconfigured or missing stats
     if not stats or stats.sync_status != "success":
@@ -218,7 +218,7 @@ def update_or_create_risk_profile(db: Session, student: Student, override_weight
         profile.last_override_weights = override_weights
     profile.effective_weights = res.get("used_weights", {})
     
-    profile.last_calculated_at = datetime.datetime.utcnow()
+    profile.last_calculated_at = datetime.datetime.now(datetime.timezone.utc)
 
     db.commit()
     db.refresh(profile)

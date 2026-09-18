@@ -433,7 +433,7 @@ class LiveContestMonitorEngine:
                 account_id=username,
                 event_type="STUDENT_ACTIVITY_UPDATED",
                 payload=activity_payload,
-                created_at=datetime.datetime.utcnow()
+                created_at=datetime.datetime.now(datetime.timezone.utc)
             )
             db.add(db_event)
             db.commit()

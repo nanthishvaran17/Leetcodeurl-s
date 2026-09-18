@@ -91,8 +91,8 @@ def build_batch_report(db: Session, last_session_id: int, current_session_id: in
     last_session = db.query(WeeklySession).filter(WeeklySession.id == last_session_id).first()
     curr_session = db.query(WeeklySession).filter(WeeklySession.id == current_session_id).first()
     
-    last_date = datetime.datetime.fromisoformat(last_session.session_date) if last_session else datetime.datetime.utcnow()
-    curr_date = datetime.datetime.fromisoformat(curr_session.session_date) if curr_session else datetime.datetime.utcnow()
+    last_date = datetime.datetime.fromisoformat(last_session.session_date) if last_session else datetime.datetime.now(datetime.timezone.utc)
+    curr_date = datetime.datetime.fromisoformat(curr_session.session_date) if curr_session else datetime.datetime.now(datetime.timezone.utc)
     
     students = db.query(Student).filter(
         Student.is_active == True,
