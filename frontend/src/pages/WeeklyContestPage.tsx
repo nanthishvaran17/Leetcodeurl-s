@@ -2797,7 +2797,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 // 2. Check matrixRows or cachedStudents (if available) for dynamic calculation of attended count
                 if (attended === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0)) {
                   const studentPool = matrixRows.length > 0 ? matrixRows : cachedStudents;
-                  const deptStudents = studentPool.filter((s: any) => normalizeDepartment(s.dept || s.department || s.department_code) === deptNorm);
+                  const deptStudents = studentPool.filter((s: any) => normalizeDepartment(s.department_id || s.dept || s.department || s.department_code) === deptNorm);
                   if (deptStudents.length > 0) {
                     if (total === 0) total = deptStudents.length;
                     attended = deptStudents.filter((s: any) => {
@@ -2809,7 +2809,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
                 // 3. Fallback for total student count from master roster
                 if (total === 0 && globalStudents.length > 0) {
-                  const deptGlobalStudents = globalStudents.filter((s: any) => normalizeDepartment(s.dept || s.department || s.department_code) === deptNorm);
+                  const deptGlobalStudents = globalStudents.filter((s: any) => normalizeDepartment(s.department_id || s.dept || s.department || s.department_code) === deptNorm);
                   total = deptGlobalStudents.length;
                 }
 
@@ -3634,7 +3634,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
                       if (dStats.public === 0 && dStats.virtual === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0)) {
                         const studentPool = matrixRows.length > 0 ? matrixRows : cachedStudents;
-                        const deptStudents = studentPool.filter((s: any) => normalizeDepartment(s.dept || s.department || s.department_code) === deptNorm);
+                        const deptStudents = studentPool.filter((s: any) => normalizeDepartment(s.department_id || s.dept || s.department || s.department_code) === deptNorm);
                         if (deptStudents.length > 0) {
                           const tot = deptStudents.length;
                           const pub = deptStudents.filter((s: any) => {
@@ -3658,7 +3658,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       }
 
                       if (dStats.total === 0 && globalStudents.length > 0) {
-                        const deptGlobal = globalStudents.filter((s: any) => normalizeDepartment(s.dept || s.department || s.department_code) === deptNorm);
+                        const deptGlobal = globalStudents.filter((s: any) => normalizeDepartment(s.department_id || s.dept || s.department || s.department_code) === deptNorm);
                         dStats.total = deptGlobal.length;
                       }
 
