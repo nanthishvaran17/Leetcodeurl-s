@@ -2,14 +2,12 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 import million from 'million/compiler'
 import path from 'path'
-import { compression } from 'vite-plugin-compression2'
+
 
 export default defineConfig({
   plugins: [
     million.vite({ auto: { rsc: true, skip: ['usePortal', 'createPortal', 'GlobalFilter', 'StudentProfilePage', 'StudentEditOverlay', 'StudentAuditModal', 'StatusNotificationModal', 'ConfirmDeleteModal'] } }),
-    react(),
-    compression({ algorithms: ['brotliCompress'], exclude: [/\.(br)$/, /\.(gz)$/] }),
-    compression({ algorithms: ['gzip'], exclude: [/\.(br)$/, /\.(gz)$/] })
+    react()
   ],
   resolve: {
     alias: {
