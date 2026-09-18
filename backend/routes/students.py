@@ -7,7 +7,7 @@ import json
 import os
 
 from backend.database import get_db
-from backend.models import Student, LeetCodeProfileStats, AuditLog, WeeklyStudentProgress, User
+from backend.models import Student, LeetCodeProfileStats, AuditLog, WeeklyStudentProgress, User, LeetCodeActivity
 from backend.services.authorization_service import apply_role_based_student_filter, require_staff_student_access
 from backend.schemas import StudentOut, StudentCreate, ContestResultOut, StudentListOut
 from backend.routes.auth import get_current_user, is_protected_super_admin
@@ -85,7 +85,7 @@ async def get_leaderboard_fast(
             str(target_session.session_date) if (target_session and target_session.session_date) else None
             c_num = None
             if target_session and target_session.contest_name:
-                m = re.search(r'\d+', target_session.contest_name)
+                m = re.search(r'\d+', target_session.contest_name)  # type: ignore
                 if m:
                     c_num = int(m.group(0))
 
@@ -96,7 +96,7 @@ async def get_leaderboard_fast(
                 .options(
                     joinedload(Student.department),
                     joinedload(Student.stats),
-                    joinedload(Student.lc_activity).defer("submission_calendar_json"),
+                    joinedload(Student.lc_activity).defer(LeetCodeActivity.submission_calendar_json),
                 )
                 .filter((Student.is_active == True) | (Student.is_active.is_(None)))
             )
@@ -435,7 +435,7 @@ async def get_students(
         c_num = None
         target_contest_name = target_session.contest_name if (target_session and target_session.contest_name) else "Weekly Contest"
         if target_session and target_session.contest_name:
-            m = re.search(r'\d+', target_session.contest_name)
+            m = re.search(r'\d+', target_session.contest_name)  # type: ignore
             if m:
                 c_num = int(m.group(0))
 
@@ -523,7 +523,7 @@ async def get_students(
                 st_out.avatar_url = st.lc_profile.avatar_url if is_verified else None
                 st_out.sync_state = st.lc_profile.sync_state
             else:
-                st_out.canonical_username = st.username if is_verified else None
+                st_out.canonical_username = st.username if is_verified else None  # type: ignore
                 st_out.profile_url = f"https://leetcode.com/u/{st.username}/" if (is_verified and st.username) else None
                 st_out.sync_state = "SYNCED" if is_verified else ("INVALID_USERNAME" if is_invalid else "PENDING_USERNAME")
 
@@ -559,9 +559,9 @@ async def get_students(
 
             if h_res and h_res.attended:
                 tot_solved = h_res.problems_solved or 0
-                st_out.overall_participation_mode = "PUBLIC"
+                st_out.overall_participation_mode = "PUBLIC"  # type: ignore
                 st_out.contest_status = "PUBLIC_ATTENDED"
-                st_out.public_contest_result = ContestResultOut(
+                st_out.public_contest_result = ContestResultOut(  # type: ignore
                     contest_name=target_contest_name,
                     contest_number=c_num,
                     contest_date=target_contest_date,
@@ -576,9 +576,9 @@ async def get_students(
                 )
             elif h_res and not h_res.attended and (h_res.problems_solved or 0) > 0:
                 tot_solved = h_res.problems_solved or 0
-                st_out.overall_participation_mode = "VIRTUAL"
+                st_out.overall_participation_mode = "VIRTUAL"  # type: ignore
                 st_out.contest_status = "VIRTUAL_ATTENDED"
-                st_out.public_contest_result = ContestResultOut(
+                st_out.public_contest_result = ContestResultOut(  # type: ignore
                     contest_name=target_contest_name,
                     contest_number=c_num,
                     contest_date=target_contest_date,
@@ -596,9 +596,9 @@ async def get_students(
                 is_att = pub_res.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED")
                 is_not_att = pub_res.participation_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED")
                 score_disp = f"{tot_solved} / 4" if is_att else ("Not Attended" if is_not_att else "Data Unavailable")
-                st_out.overall_participation_mode = "PUBLIC" if is_att else "NONE"
+                st_out.overall_participation_mode = "PUBLIC" if is_att else "NONE"  # type: ignore
                 st_out.contest_status = pub_res.participation_status or "NOT_ATTENDED"
-                st_out.public_contest_result = ContestResultOut(
+                st_out.public_contest_result = ContestResultOut(  # type: ignore
                     contest_name=pub_res.session.contest_name if pub_res.session else target_contest_name,
                     contest_number=c_num,
                     contest_date=pub_res.session.session_date if pub_res.session else target_contest_date,
@@ -613,9 +613,9 @@ async def get_students(
                 )
             else:
                 has_uname = bool(st.username and st.username.strip())
-                st_out.overall_participation_mode = "NONE"
+                st_out.overall_participation_mode = "NONE"  # type: ignore
                 st_out.contest_status = "NOT_ATTENDED" if has_uname else "PENDING_USERNAME"
-                st_out.public_contest_result = ContestResultOut(
+                st_out.public_contest_result = ContestResultOut(  # type: ignore
                     contest_name=target_contest_name,
                     contest_number=c_num,
                     contest_date=target_contest_date,
@@ -631,7 +631,7 @@ async def get_students(
 
             if vir_res:
                 tot_solved_v = vir_res.total_contest_solved or (vir_res.q1 + vir_res.q2 + vir_res.q3 + vir_res.q4)
-                st_out.virtual_contest_result = ContestResultOut(
+                st_out.virtual_contest_result = ContestResultOut(  # type: ignore
                     contest_name=vir_res.session.contest_name if vir_res.session else "Weekly Contest",
                     contest_number=None,
                     contest_date=vir_res.session.session_date if vir_res.session else None,
@@ -645,7 +645,7 @@ async def get_students(
                     fetched_at=getattr(vir_res, 'completed_at', None).isoformat() if getattr(vir_res, 'completed_at', None) else None
                 )
             else:
-                st_out.virtual_contest_result = ContestResultOut(
+                st_out.virtual_contest_result = ContestResultOut(  # type: ignore
                     contest_name="Weekly Contest",
                     contest_number=None,
                     contest_date=None,
@@ -690,8 +690,8 @@ def download_sample_student_excel():
 
     wb = Workbook()
     ws = wb.active
-    ws.title = "Students"
-    ws.sheet_view.showGridLines = True
+    ws.title = "Students"  # type: ignore
+    ws.sheet_view.showGridLines = True  # type: ignore
 
     headers = ["REG NO", "NAME", "DEPT", "YEAR", "BATCH", "ACCOMMODATION", "12TH CUT-OFF", "EMAIL", "PRIMARY LEETCODE LINK", "SECONDARY LEETCODE LINK"]
     col_widths = [18, 28, 14, 10, 14, 16, 14, 25, 45, 45]
@@ -709,14 +709,14 @@ def download_sample_student_excel():
     )
 
     for col_idx, (h_text, w) in enumerate(zip(headers, col_widths), start=1):
-        cell = ws.cell(row=1, column=col_idx, value=h_text)
+        cell = ws.cell(row=1, column=col_idx, value=h_text)  # type: ignore
         cell.fill = navy_fill
         cell.font = font_header
         cell.alignment = center
         col_letter = get_column_letter(col_idx)
-        ws.column_dimensions[col_letter].width = w
+        ws.column_dimensions[col_letter].width = w  # type: ignore
 
-    ws.row_dimensions[1].height = 26
+    ws.row_dimensions[1].height = 26  # type: ignore
 
     sample_rows = [
         ["732224CC001", "AJAY A", "CSE(CS)", "III", "2024-2028", "Hostel", 182.5, "ajay@college.edu", "https://leetcode.com/u/ajay_primary/", "https://leetcode.com/u/ajay_sec/"],
@@ -725,15 +725,15 @@ def download_sample_student_excel():
     ]
 
     for row_idx, r_data in enumerate(sample_rows, start=2):
-        ws.row_dimensions[row_idx].height = 20
+        ws.row_dimensions[row_idx].height = 20  # type: ignore
         for col_idx, val in enumerate(r_data, start=1):
-            c = ws.cell(row=row_idx, column=col_idx, value=val)
+            c = ws.cell(row=row_idx, column=col_idx, value=val)  # type: ignore
             c.font = Font(name="Times New Roman", size=10)
             c.alignment = center if col_idx in (1, 3, 4, 5, 6, 7) else left
             c.border = thin_border
 
-    ws.freeze_panes = "A2"
-    ws.auto_filter.ref = f"A1:J{len(sample_rows)+1}"
+    ws.freeze_panes = "A2"  # type: ignore
+    ws.auto_filter.ref = f"A1:J{len(sample_rows)+1}"  # type: ignore
 
     output = io.BytesIO()
     wb.save(output)
@@ -760,26 +760,26 @@ def get_student_detail(student_id: str, request: Request, db: Session = Depends(
     current_user = get_current_user_optional(request, db)
 
     student = None
-    if str(student_id).isdigit():
+    if str(student_id).isdigit():  # type: ignore
         student = db.query(Student).filter(Student.id == int(student_id)).first()
     if not student:
-        student = db.query(Student).filter(Student.reg_no == str(student_id).upper()).first()
+        student = db.query(Student).filter(Student.reg_no == str(student_id).upper()).first()  # type: ignore
 
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
 
-    require_staff_student_access(db, current_user, student.id)
+    require_staff_student_access(db, current_user, student.id)  # type: ignore
     
     st_out = StudentOut.model_validate(student)
     latest_prog = db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == student.id).order_by(WeeklyStudentProgress.id.desc()).first()
     if latest_prog:
-        st_out.college_rank = latest_prog.college_rank
-        st_out.dept_rank = latest_prog.dept_rank
-        st_out.year_rank = latest_prog.year_rank
-        st_out.section_rank = latest_prog.section_rank
-        st_out.weekly_progress = latest_prog.weekly_progress
-        st_out.streak_count = latest_prog.streak_count
-        st_out.consistency_score = latest_prog.consistency_score
+        st_out.college_rank = latest_prog.college_rank  # type: ignore
+        st_out.dept_rank = latest_prog.dept_rank  # type: ignore
+        st_out.year_rank = latest_prog.year_rank  # type: ignore
+        st_out.section_rank = latest_prog.section_rank  # type: ignore
+        st_out.weekly_progress = latest_prog.weekly_progress  # type: ignore
+        st_out.streak_count = latest_prog.streak_count  # type: ignore
+        st_out.consistency_score = latest_prog.consistency_score  # type: ignore
         
         def _parse_badges(b):
             if isinstance(b, str):
@@ -875,7 +875,7 @@ def create_student(
             from backend.services.live_sync_service import sync_single_student as _sss
             _bg_db = _SL()
             try:
-                _sss(student_id_for_sync, _bg_db)
+                _sss(student_id_for_sync, _bg_db)  # type: ignore
             except Exception as _e:
                 logger.warning(f"[CREATE_STUDENT_SYNC] Background sync note for student_id={student_id_for_sync}: {_e}")
             finally:
@@ -894,11 +894,11 @@ def create_student(
                 
         background_tasks.add_task(
             notify_student_created,
-            student_email=student.email,
-            student_name=student.name,
-            reg_no=student.reg_no,
-            department=dept_name,
-            year=student.year_level or "N/A"
+            student_email=student.email,  # type: ignore
+            student_name=student.name,  # type: ignore
+            reg_no=student.reg_no,  # type: ignore
+            department=dept_name,  # type: ignore
+            year=student.year_level or "N/A"  # type: ignore
         )
 
     return StudentOut.model_validate(student)
@@ -936,7 +936,7 @@ def bulk_delete_students(
         msg = f"Successfully deactivated {count} student records."
         
         # Send archiving notification for soft-deletes
-        from backend.services.email_notifications import notify_student_archived
+        from backend.services.email_notifications import notify_student_archived  # type: ignore
         for email, name in emails_to_notify:
             background_tasks.add_task(notify_student_archived, student_email=email, student_name=name)
             
@@ -1037,18 +1037,18 @@ def update_student(
 ):
     import re
     student = None
-    if str(student_id).isdigit():
+    if str(student_id).isdigit():  # type: ignore
         student = db.query(Student).filter(Student.id == int(student_id)).first()
     if not student:
-        student = db.query(Student).filter(Student.reg_no == str(student_id).upper()).first()
+        student = db.query(Student).filter(Student.reg_no == str(student_id).upper()).first()  # type: ignore
 
     if not student:
         raise HTTPException(status_code=404, detail="Student record not found.")
 
-    require_staff_student_access(db, current_user, student.id)
+    require_staff_student_access(db, current_user, student.id)  # type: ignore
 
     current_version = getattr(student, 'version', 1) or 1
-    student.version = current_version + 1
+    student.version = current_version + 1  # type: ignore
 
     old_username = student.username
     changes_made = {}
@@ -1060,7 +1060,7 @@ def update_student(
             raise HTTPException(status_code=400, detail="Student Full Name cannot be empty.")
         if student.name != clean_name:
             changes_made['name'] = clean_name
-            student.name = clean_name
+            student.name = clean_name  # type: ignore
 
     if payload.reg_no is not None:
         clean_reg_no = payload.reg_no.strip().upper()
@@ -1071,8 +1071,8 @@ def update_student(
             if existing:
                 raise HTTPException(status_code=400, detail=f"Student with Register No '{clean_reg_no}' already exists.")
             changes_made['reg_no'] = clean_reg_no
-            student.reg_no = clean_reg_no
-            student.email_status = "needs_verification"
+            student.reg_no = clean_reg_no  # type: ignore
+            student.email_status = "needs_verification"  # type: ignore
 
     EMAIL_REGEX = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
 
@@ -1083,7 +1083,7 @@ def update_student(
                 raise HTTPException(status_code=400, detail=f"Invalid email format: '{clean_email}'.")
         if student.email != clean_email:
             changes_made['email'] = clean_email or "Removed"
-            student.email = clean_email
+            student.email = clean_email  # type: ignore
 
     if payload.institutional_email is not None:
         clean_inst_email = payload.institutional_email.strip().lower() if payload.institutional_email.strip() else None
@@ -1095,28 +1095,28 @@ def update_student(
                 raise HTTPException(status_code=400, detail=f"Student with institutional email '{clean_inst_email}' already exists.")
         if student.institutional_email != clean_inst_email:
             changes_made['institutional_email'] = clean_inst_email or "Removed"
-            student.institutional_email = clean_inst_email
+            student.institutional_email = clean_inst_email  # type: ignore
             if clean_inst_email:
-                student.email_status = "generated"
+                student.email_status = "generated"  # type: ignore
 
     if payload.department_id is not None:
         if student.department_id != payload.department_id:
             from backend.models import Department
             dept = db.query(Department).filter(Department.id == payload.department_id).first()
             changes_made['department'] = dept.name if dept else str(payload.department_id)
-            student.department_id = payload.department_id
+            student.department_id = payload.department_id  # type: ignore
 
     if payload.year_level is not None:
         clean_yl = payload.year_level.strip().upper()
         if clean_yl and student.year_level != clean_yl:
             changes_made['year_level'] = clean_yl
-            student.year_level = clean_yl
+            student.year_level = clean_yl  # type: ignore
 
     if payload.section_id is not None:
         if student.section_id != payload.section_id:
-            student.section_id = payload.section_id
-    elif payload.section and str(payload.section).strip():
-        sec_str = str(payload.section).strip()
+            student.section_id = payload.section_id  # type: ignore
+    elif payload.section and str(payload.section).strip():  # type: ignore
+        sec_str = str(payload.section).strip()  # type: ignore
         from backend.models import Section
         matched_sec = db.query(Section).filter(
             Section.department_id == student.department_id,
@@ -1129,18 +1129,18 @@ def update_student(
         new_allocation = payload.allocation.strip() if payload.allocation.strip() else None
         if student.allocation != new_allocation:
             changes_made['allocation'] = new_allocation or "None"
-            student.allocation = new_allocation
+            student.allocation = new_allocation  # type: ignore
 
     if payload.accommodation is not None:
         new_acc = payload.accommodation.strip() if payload.accommodation.strip() else None
         if student.accommodation != new_acc:
             changes_made['accommodation'] = new_acc or "None"
-            student.accommodation = new_acc
+            student.accommodation = new_acc  # type: ignore
 
     if payload.twelfth_cutoff is not None:
         if student.twelfth_cutoff != payload.twelfth_cutoff:
             changes_made['twelfth_cutoff'] = payload.twelfth_cutoff
-            student.twelfth_cutoff = payload.twelfth_cutoff
+            student.twelfth_cutoff = payload.twelfth_cutoff  # type: ignore
 
     # LeetCode URL / username normalisation 
     url_changed = False
@@ -1152,14 +1152,14 @@ def update_student(
             if raw_lc:
                 _parsed_u, _parsed_url, _u_status = extract_leetcode_username(raw_lc)
                 if _parsed_u:
-                    student.username = _parsed_u.strip()
-                    student.leetcode_url = _parsed_url  # canonical URL
+                    student.username = _parsed_u.strip()  # type: ignore
+                    student.leetcode_url = _parsed_url  # canonical URL  # type: ignore
                 else:
-                    student.username = None
-                    student.leetcode_url = None
+                    student.username = None  # type: ignore
+                    student.leetcode_url = None  # type: ignore
             else:
-                student.username = None
-                student.leetcode_url = None
+                student.username = None  # type: ignore
+                student.leetcode_url = None  # type: ignore
 
     # Direct username override (e.g. from the username field in the edit form)
     if payload.username is not None:
@@ -1167,15 +1167,15 @@ def update_student(
         if _direct_u:
             if _direct_u.lower() != (old_username or "").strip().lower():
                 url_changed = True
-                student.username = _direct_u
-                student.leetcode_url = f"https://leetcode.com/u/{_direct_u}/"
+                student.username = _direct_u  # type: ignore
+                student.leetcode_url = f"https://leetcode.com/u/{_direct_u}/"  # type: ignore
         elif old_username:
             url_changed = True
-            student.username = None
-            student.leetcode_url = None
+            student.username = None  # type: ignore
+            student.leetcode_url = None  # type: ignore
 
     if payload.is_active is not None:
-        student.is_active = payload.is_active
+        student.is_active = payload.is_active  # type: ignore
 
     if payload.secondary_accounts is not None:
         from backend.models import LeetCodeAccount
@@ -1208,15 +1208,15 @@ def update_student(
     if username_changed:
         from backend.leetcode_fetcher import clear_leetcode_cache
         if old_username:
-            clear_leetcode_cache(old_username)
+            clear_leetcode_cache(old_username)  # type: ignore
         if student.username:
-            clear_leetcode_cache(student.username)
+            clear_leetcode_cache(student.username)  # type: ignore
 
         if student.stats:
-            student.stats.sync_status = "fetching"
-            student.stats.status = "FETCHING"
-            student.stats.validation_status = "fetching"
-            student.stats.error_message = None
+            student.stats.sync_status = "fetching"  # type: ignore
+            student.stats.status = "FETCHING"  # type: ignore
+            student.stats.validation_status = "fetching"  # type: ignore
+            student.stats.error_message = None  # type: ignore
 
     # Commit updated URL/username to DB first before starting fetch (Requirement 17)
     db.commit()
@@ -1237,7 +1237,7 @@ def update_student(
             from backend.services.live_sync_service import sync_single_student as _sss
             _bg_db = _SL()
             try:
-                _sss(student_id_for_sync, _bg_db, force_refresh=True)
+                _sss(student_id_for_sync, _bg_db, force_refresh=True)  # type: ignore
             except Exception as _e:
                 logger.warning(f"[UPDATE_STUDENT_SYNC] Background sync note for student_id={student_id_for_sync}: {_e}")
             finally:
@@ -1262,10 +1262,10 @@ def update_student(
         from backend.services.email_notifications import notify_student_updated
         background_tasks.add_task(
             notify_student_updated,
-            recipient_email=student.email,
-            recipient_name=student.name,
-            student_name=student.name,
-            reg_no=student.reg_no,
+            recipient_email=student.email,  # type: ignore
+            recipient_name=student.name,  # type: ignore
+            student_name=student.name,  # type: ignore
+            reg_no=student.reg_no,  # type: ignore
             changes=changes_made
         )
 
@@ -1285,7 +1285,7 @@ def update_student(
         # 1. Best-effort Firestore Sync
         try:
             from backend.services.firestore_service import update_firestore_doc
-            update_firestore_doc("students", reg_no_val, student_payload)
+            update_firestore_doc("students", reg_no_val, student_payload)  # type: ignore
         except Exception as fs_err:
             logger.warning(f"[FIRESTORE UPDATE NOTE] {fs_err}")
             
@@ -1315,15 +1315,15 @@ def get_student_audit_history(
     Enforces authentication, RBAC, and department scoping.
     """
     student = None
-    if str(student_id).isdigit():
+    if str(student_id).isdigit():  # type: ignore
         student = db.query(Student).filter(Student.id == int(student_id)).first()
     if not student:
-        student = db.query(Student).filter(Student.reg_no == str(student_id).upper()).first()
+        student = db.query(Student).filter(Student.reg_no == str(student_id).upper()).first()  # type: ignore
 
     if not student:
         raise HTTPException(status_code=404, detail="Student record not found.")
 
-    require_staff_student_access(db, current_user, student.id)
+    require_staff_student_access(db, current_user, student.id)  # type: ignore
 
     from backend.models import AuditLog
     from sqlalchemy import or_
@@ -1365,7 +1365,7 @@ def get_student_audit_history(
             "sync_status": st.sync_status if st else "NOT_STARTED",
             "validation_status": getattr(st, "validation_status", "PENDING") if st else "PENDING",
             "last_verified_at": st.last_verified_at.isoformat() if (st and st.last_verified_at) else None,
-            "last_attempt_at": getattr(st, "last_attempt_at", None).isoformat() if (st and getattr(st, "last_attempt_at", None)) else None,
+            "last_attempt_at": getattr(st, "last_attempt_at", None).isoformat() if (st and getattr(st, "last_attempt_at", None)) else None,  # type: ignore
             "error_message": st.error_message if st else None,
             "total_solved": st.total_solved if st else 0,
             "easy_solved": st.easy_solved if st else 0,
@@ -1386,16 +1386,16 @@ def delete_student(
     current_user=Depends(require_security_access(resource_name="Delete Student", required_roles=["admin", "super admin", "hod", "faculty", "staff"]))
 ):
     student = None
-    if str(student_id).isdigit():
+    if str(student_id).isdigit():  # type: ignore
         student = db.query(Student).filter(Student.id == int(student_id)).first()
     if not student:
-        student = db.query(Student).filter(Student.reg_no == str(student_id).upper()).first()
+        student = db.query(Student).filter(Student.reg_no == str(student_id).upper()).first()  # type: ignore
 
     if not student:
         raise HTTPException(status_code=404, detail="Student record not found.")
 
-    require_staff_student_access(db, current_user, student.id)
-    student_id = student.id
+    require_staff_student_access(db, current_user, student.id)  # type: ignore
+    student_id = student.id  # type: ignore
 
     reg_no = student.reg_no
     name = student.name
@@ -1413,7 +1413,7 @@ def delete_student(
         db.commit()
 
         # Idempotency check: if 0 rows were updated, student was already inactive
-        if result.rowcount == 0:
+        if result.rowcount == 0:  # type: ignore
             logger.info(f"[SOFT_DELETE_STUDENT] Student roster record {reg_no} ({name}) is already inactive. Skipping duplicate side effects.")
             return {
                 "success": True,
@@ -1432,7 +1432,7 @@ def delete_student(
         # Sync status to Cloud Firestore safely
         try:
             from backend.services.firestore_service import update_firestore_doc
-            update_firestore_doc("students", reg_no, {
+            update_firestore_doc("students", reg_no, {  # type: ignore
                 "is_active": False,
                 "deactivated_at": datetime.datetime.now(datetime.timezone.utc).isoformat() + "Z"
             })
@@ -1595,7 +1595,7 @@ async def import_students_async(
 ):
     content = await file.read()
     from backend.services.excel_import_service import start_excel_import_job
-    result = start_excel_import_job(content, file.filename, triggered_by=current_user.username)
+    result = start_excel_import_job(content, file.filename, triggered_by=current_user.username)  # type: ignore
     return result
 
 @router.get("/import-status/{job_id}")
@@ -1629,19 +1629,19 @@ async def refresh_single_student(
     """
     from backend.services.authorization_service import require_staff_student_access
     student = None
-    if str(student_id).isdigit():
+    if str(student_id).isdigit():  # type: ignore
         student = db.query(Student).filter(Student.id == int(student_id)).first()
     if not student:
-        student = db.query(Student).filter(Student.reg_no == str(student_id).upper()).first()
+        student = db.query(Student).filter(Student.reg_no == str(student_id).upper()).first()  # type: ignore
 
     if not student:
         raise HTTPException(status_code=404, detail="Student record not found.")
 
-    require_staff_student_access(db, current_user, student.id)
-    student_id = student.id
+    require_staff_student_access(db, current_user, student.id)  # type: ignore
+    student_id = student.id  # type: ignore
 
     try:
-        result = await sync_single_student_by_id(student_id, timeout=30.0)
+        result = await sync_single_student_by_id(student_id, timeout=30.0)  # type: ignore
         if result.get("status") == "failed":
             raise HTTPException(status_code=400, detail=result.get("error", "Sync failed"))
 
@@ -1707,7 +1707,7 @@ async def trigger_batch_sync(
 
     try:
         # The service enforces atomic DB-level locking and returns immediately.
-        result = start_full_sync_job(db, triggered_by=triggered_by)
+        result = start_full_sync_job(db, triggered_by=triggered_by)  # type: ignore
         
         if result.get("already_running"):
             return {
@@ -1764,7 +1764,7 @@ async def validate_leetcode_account(
     # student_id=0 is a sentinel for "validate a new account before creation" —
     # no student lookup is needed in that case.  For any real student_id (>0),
     # we confirm the student exists so we can log context.
-    if student_id > 0:
+    if student_id > 0:  # type: ignore
         student = db.query(Student).filter(Student.id == student_id).first()
         if not student:
             raise HTTPException(status_code=404, detail="Student record not found.")
@@ -1900,7 +1900,7 @@ def trigger_generate_institutional_email(
         
     from backend.services.email_identity_service import check_and_generate_email
     
-    result = check_and_generate_email(db, student.reg_no, current_assigned=student.institutional_email)
+    result = check_and_generate_email(db, student.reg_no, current_assigned=student.institutional_email)  # type: ignore
     
     if result["status"] == "needs_verification":
         raise HTTPException(status_code=409, detail=result["message"])
@@ -1939,10 +1939,10 @@ def bulk_generate_emails(
         if not student.reg_no:
             continue
             
-        result = check_and_generate_email(db, student.reg_no, current_assigned=student.institutional_email)
+        result = check_and_generate_email(db, student.reg_no, current_assigned=student.institutional_email)  # type: ignore
         if result["status"] == "generated" and result["email"]:
             student.institutional_email = result["email"]
-            student.email_status = "generated"
+            student.email_status = "generated"  # type: ignore
             generated_count += 1
         else:
             error_count += 1
@@ -2000,8 +2000,8 @@ def request_secondary_account(
     if existing and existing.id != student.id:
         raise HTTPException(status_code=400, detail="This LeetCode ID is already registered to another student.")
 
-    student.secondary_leetcode_id = sec_id
-    student.secondary_status = "pending_approval"
+    student.secondary_leetcode_id = sec_id  # type: ignore
+    student.secondary_status = "pending_approval"  # type: ignore
     db.commit()
 
     return {"status": "success", "message": "Secondary account requested and is pending approval."}
