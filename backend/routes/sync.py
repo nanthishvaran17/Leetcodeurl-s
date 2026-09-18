@@ -117,12 +117,13 @@ def get_current_sync_status(db: Session = Depends(get_db)):
 
     is_running = bool(sync_tracker.is_running or (running_job is not None))
     now_utc = datetime.datetime.now(datetime.timezone.utc)
+    from backend.time_utils import ensure_utc
 
     elapsed_sec = None
     started_iso = None
     if is_running and running_job and running_job.started_at:
-        elapsed_sec = round((now_utc - running_job.started_at).total_seconds(), 1)
-        started_iso = running_job.started_at.isoformat()
+        elapsed_sec = round((now_utc - ensure_utc(running_job.started_at)).total_seconds(), 1)
+        started_iso = ensure_utc(running_job.started_at).isoformat()
     elif is_running and sync_tracker.started_at:
         started_iso = sync_tracker.started_at
 
@@ -185,7 +186,7 @@ def get_current_sync_status(db: Session = Depends(get_db)):
     last_sync_full_details = f"{last_sync_time} • Initiated by: {triggered_by}"
 
     freshness_seconds = cfg.SYNC_FRESHNESS_HOURS * 3600
-    is_fresh = bool(last_completed_job and last_completed_job.completed_at and (now_utc - last_completed_job.completed_at).total_seconds() <= freshness_seconds) or (verified_cnt > 0)
+    is_fresh = bool(last_completed_job and last_completed_job.completed_at and (now_utc - ensure_utc(last_completed_job.completed_at)).total_seconds() <= freshness_seconds) or (verified_cnt > 0)
     data_freshness_status = "FRESH" if is_fresh else "STALE"
 
     return {
@@ -196,15 +197,15 @@ def get_current_sync_status(db: Session = Depends(get_db)):
         "system_status": "Operational",
         "last_sync_timestamp": last_sync_time,
         "last_successful_sync": last_successful_sync_iso,
-        "last_failed_sync": last_failed_job.completed_at.isoformat() if (last_failed_job and last_failed_job.completed_at) else None,
+        "last_failed_sync": ensure_utc(last_failed_job.completed_at).isoformat() if (last_failed_job and last_failed_job.completed_at) else None,
         "triggered_by": triggered_by,
         "last_triggered_by": triggered_by,
         "last_sync_full_details": last_sync_full_details,
         "data_freshness_status": data_freshness_status,
         "freshness_hours_threshold": cfg.SYNC_FRESHNESS_HOURS,
         "started_at": started_iso,
-        "last_progress_at": sync_tracker.last_progress_at if is_running else (last_completed_job.completed_at.isoformat() if last_completed_job and last_completed_job.completed_at else None),
-        "completed_at": last_completed_job.completed_at.isoformat() if (last_completed_job and last_completed_job.completed_at) else None,
+        "last_progress_at": sync_tracker.last_progress_at if is_running else (ensure_utc(last_completed_job.completed_at).isoformat() if last_completed_job and last_completed_job.completed_at else None),
+        "completed_at": ensure_utc(last_completed_job.completed_at).isoformat() if (last_completed_job and last_completed_job.completed_at) else None,
         "elapsed_seconds": elapsed_sec,
         "job_id": running_job.job_id if running_job else (last_any_job.job_id if last_any_job else "OFFICIAL-SYNC-001"),
         "total": total_students,
