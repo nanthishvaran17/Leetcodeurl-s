@@ -720,7 +720,7 @@ def get_student_intelligence(
             "year_rank": year_rank,
             "section_rank": section_rank,
             "last_synced": last_synced_str,
-            "data_freshness": "Fresh" if (last_synced_dt and (datetime.datetime.now(datetime.timezone.utc) - last_synced_dt.replace(tzinfo=None)).total_seconds() < 172800) else "Stale",
+            "data_freshness": "Fresh" if (last_synced_dt and (datetime.datetime.now(datetime.timezone.utc) - last_synced_dt.replace(tzinfo=datetime.timezone.utc)).total_seconds() < 172800) else "Stale",
             "fetch_status": sync_state_str
         },
         "cohort_context": {
