@@ -57,7 +57,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     let active = true;
     api.get('/health', { timeout: 15000 }).catch(() => {
       if (active && isCapacitorNative()) {
-        api.get('/system-health', { timeout: 10000 }).catch(() => {});
+        api.get('/system-health', { timeout: 10000 }).catch(() => { });
       }
     });
     return () => { active = false; };
@@ -518,8 +518,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
               src="/nec_25_logo.png"
               alt="25 NEC Silver Jubilee"
               className="mobile-jubilee-img"
-              loading="eager"
-              fetchPriority="high"
+              loading="lazy"
               decoding="async"
               width={70}
               height={70}
@@ -680,20 +679,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                   <div className="flex-1 min-w-0 space-y-1 text-left">
                     <p className="text-xs font-bold leading-normal">{error || authError}</p>
                     {((error || authError || '').toLowerCase().includes('cannot reach server') ||
-                     (error || authError || '').toLowerCase().includes('network error')) && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          setError('');
-                          clearAuthError();
-                          if (username && password) handlePasswordLogin(e);
-                        }}
-                        className="inline-flex items-center space-x-1 text-[11px] font-black underline hover:text-white transition-colors cursor-pointer"
-                      >
-                        <RefreshCw className="w-3 h-3 animate-spin-hover" />
-                        <span>Tap here to retry login now</span>
-                      </button>
-                    )}
+                      (error || authError || '').toLowerCase().includes('network error')) && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            setError('');
+                            clearAuthError();
+                            if (username && password) handlePasswordLogin(e);
+                          }}
+                          className="inline-flex items-center space-x-1 text-[11px] font-black underline hover:text-white transition-colors cursor-pointer"
+                        >
+                          <RefreshCw className="w-3 h-3 animate-spin-hover" />
+                          <span>Tap here to retry login now</span>
+                        </button>
+                      )}
                   </div>
                   <button
                     type="button"
@@ -766,7 +765,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                   {authMode === 'password' ? (
                     <form onSubmit={handlePasswordLogin} noValidate>
                       <motion.div className="field" variants={shouldAnimateMobileEntrance ? mobileFormStagger : undefined}>
-                        <label htmlFor="userId">Institutional Email / User ID</label>
+                        <label htmlFor="userId">Institutional Email or User ID</label>
                         <div className="input-wrap">
                           <Mail className="input-icon" size={19} aria-hidden="true" />
                           <input
