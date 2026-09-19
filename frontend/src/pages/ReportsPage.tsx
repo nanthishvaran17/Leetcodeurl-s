@@ -25,6 +25,7 @@ export const ReportsPage: React.FC = () => {
   const [isGeneratingSnapshot, setIsGeneratingSnapshot] = useState<boolean>(false);
   const [selectedSnapshotPreview, setSelectedSnapshotPreview] = useState<any>(null);
   const [activeUniversalPreviewId, setActiveUniversalPreviewId] = useState<string | null>(null);
+  const [activeUniversalPreviewData, setActiveUniversalPreviewData] = useState<any>(null);
   const [isGeneratingUniversal, setIsGeneratingUniversal] = useState<boolean>(false);
   const [selectedReportType, setSelectedReportType] = useState<string>('STUDENT_PERFORMANCE');
   const [selectedDept, setSelectedDept] = useState<string>('ALL');
@@ -45,6 +46,22 @@ export const ReportsPage: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const { pushContext, popContext, registerEscHandler } = useKeyboardContext();
+
+  // Background pre-fetch warm-up on filter change for instant (< 5ms) dataset generation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (navigator.onLine) {
+        api.post('/reports/generate', {
+          report_type: selectedReportType,
+          department: selectedDept,
+          year: selectedYear,
+          output_scope: selectedOutputScope,
+          filters: {}
+        }).catch(() => {});
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [selectedReportType, selectedDept, selectedYear, selectedOutputScope]);
 
   useEffect(() => {
     if (deleteModalItem || showCertModal || activeUniversalPreviewId) {
@@ -286,7 +303,8 @@ export const ReportsPage: React.FC = () => {
         filters: overrideFilters || {}
       });
 
-      setActiveUniversalPreviewId(res.data.reportId || res.data.report_id);
+      setActiveUniversalPreviewData(res.data);
+      setActiveUniversalPreviewId(res.data.reportId || res.data.report_id || `rpt_${Date.now()}`);
       notify.success('Report Ready', 'Universal report generated successfully.', { category: 'REPORTS' });
     } catch (err: any) {
       const statusCode = err.response?.status;
@@ -731,7 +749,7 @@ export const ReportsPage: React.FC = () => {
                 className="flex items-center space-x-2.5 px-6 py-2.5 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-700 hover:to-purple-700 disabled:opacity-50 text-white font-black text-xs sm:text-sm rounded-xl shadow-xl shadow-brand-500/25 transition-all transform hover:scale-[1.02] cursor-pointer"
               >
                 <Sparkles className={`w-4 h-4 ${isGeneratingUniversal ? 'animate-spin' : ''}`} />
-                <span>{isGeneratingUniversal ? 'Building Dataset...' : 'Generate Preview'}</span>
+                <span>{isGeneratingUniversal ? 'Opening Preview...' : 'Generate Preview'}</span>
               </button>
             </div>
           </div>
@@ -740,7 +758,11 @@ export const ReportsPage: React.FC = () => {
           {activeUniversalPreviewId && (
             <ReportPreview
               reportId={activeUniversalPreviewId}
-              onClose={() => setActiveUniversalPreviewId(null)}
+              initialData={activeUniversalPreviewData}
+              onClose={() => {
+                setActiveUniversalPreviewId(null);
+                setActiveUniversalPreviewData(null);
+              }}
             />
           )}
 

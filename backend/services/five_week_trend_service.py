@@ -16,6 +16,7 @@ from backend.models import Student, WeeklySession, WeeklyPublicResult
 from backend.services.report_models import ReportConfig
 from backend.services.authorization_service import apply_role_based_student_filter
 from backend.services.contest_performance_service import matches_dept, matches_year, normalize_dept_val, normalize_year_val
+from backend.logger import logger
 
 
 def build_five_week_trend_report(
@@ -156,6 +157,8 @@ def build_five_week_trend_report(
             "c4_solved": c_solves[3],
             "c5_solved": c_solves[4],
             "total_solved": tot_sol,
+            "solved_5w": tot_sol,
+            "w5_solved": tot_sol,
             "contests_attended": tot_att,
             "attendance_rate": att_pct,
             "trajectory": trajectory,
@@ -213,6 +216,20 @@ def build_five_week_trend_report(
         db.add(history_entry)
         db.commit()
     except Exception as e:
-        logger.warning(f"Failed to persist ReportHistory for Five-Week Trend: {e}")
+        db.rollback()
+        try:
+            from backend.models import ReportHistory
+            history_entry = ReportHistory(
+                report_id=report_id,
+                report_type="FIVE_WEEK_PERFORMANCE_TREND",
+                title=title,
+                filters=config.model_dump(),
+                dataset=dataset,
+                status="GENERATED"
+            )
+            db.add(history_entry)
+            db.commit()
+        except Exception as retry_err:
+            logger.warning(f"Failed to persist ReportHistory for Five-Week Trend: {retry_err}")
 
     return dataset

@@ -189,6 +189,10 @@ def fetch_normalized_students(
         st = s.stats
         category = get_problem_category(total_solved, is_verified)
 
+        sec_id = str(getattr(s, "secondary_leetcode_id", "") or "").strip()
+        sec_url = f"https://leetcode.com/u/{sec_id}/" if sec_id else ""
+        prim_id = str(getattr(s, "primary_leetcode_id", "") or s.username or "").strip()
+
         rows.append(StudentRow(
             s_no=idx,
             reg_no=s.reg_no,
@@ -201,6 +205,9 @@ def fetch_normalized_students(
             institutional_email=s.institutional_email if hasattr(s, 'institutional_email') and s.institutional_email else "",
             leetcode_url=s.leetcode_url or "",
             username=s.username or "",
+            primary_leetcode_id=prim_id,
+            secondary_leetcode_id=sec_id,
+            secondary_leetcode_url=sec_url,
             easy=easy,
             medium=medium,
             hard=hard,

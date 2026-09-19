@@ -616,8 +616,8 @@ export const SettingsPage: React.FC = () => {
               Live Subsystem Health Probes
             </span>
             {lastProbed && !isProbing && (
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-bold">
-                — Last probed {lastProbed.toLocaleTimeString()}
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-bold ml-2">
+                —&nbsp;&nbsp;Last probed {lastProbed.toLocaleTimeString()}
               </span>
             )}
           </div>
@@ -733,8 +733,8 @@ export const SettingsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Responsive Section Buttons (Horizontally scrollable on mobile, flex wrap on desktop) */}
-        <div className="flex overflow-x-auto sm:flex-wrap gap-2 pb-2 sm:pb-0 hide-scrollbar" style={{ WebkitOverflowScrolling: 'touch' }}>
+        {/* Responsive Section Buttons */}
+        <div className="flex flex-wrap gap-2 pb-2 sm:pb-0">
           {[
             { id: 'staff', label: 'Staff Management', icon: Shield },
             { id: 'staff_verification', label: 'Staff Verification', icon: UserCheck },

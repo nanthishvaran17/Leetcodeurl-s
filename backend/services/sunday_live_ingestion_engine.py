@@ -170,10 +170,10 @@ class SundayLiveIngestionEngine:
                     student_id=student.id,
                     leetcode_username=student.username,
                     participation_type="PUBLIC" if (new_solved_count > 0 or official_rank) else "NOT_VERIFIED",
-                    q1=1 if q1 else 0,
-                    q2=1 if q2 else 0,
-                    q3=1 if q3 else 0,
-                    q4=1 if q4 else 0,
+                    q1=q1_flag,
+                    q2=q2_flag,
+                    q3=q3_flag,
+                    q4=q4_flag,
                     problems_solved=new_solved_count,
                     official_rank=official_rank,
                     official_score=official_score or (new_solved_count * 4),
@@ -187,10 +187,10 @@ class SundayLiveIngestionEngine:
                 db.add(record)
             else:
                 if has_changed:
-                    record.q1 = 1 if q1 else 0
-                    record.q2 = 1 if q2 else 0
-                    record.q3 = 1 if q3 else 0
-                    record.q4 = 1 if q4 else 0
+                    record.q1 = q1_flag
+                    record.q2 = q2_flag
+                    record.q3 = q3_flag
+                    record.q4 = q4_flag
                     record.problems_solved = new_solved_count
                     if official_rank is not None:
                         record.official_rank = official_rank
@@ -210,10 +210,10 @@ class SundayLiveIngestionEngine:
             ).first()
 
             if pub_res:
-                pub_res.q1 = 1 if q1 else 0
-                pub_res.q2 = 1 if q2 else 0
-                pub_res.q3 = 1 if q3 else 0
-                pub_res.q4 = 1 if q4 else 0
+                pub_res.q1 = q1_flag
+                pub_res.q2 = q2_flag
+                pub_res.q3 = q3_flag
+                pub_res.q4 = q4_flag
                 pub_res.total_contest_solved = new_solved_count
                 if official_rank is not None:
                     pub_res.contest_rank = official_rank

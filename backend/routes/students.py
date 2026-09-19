@@ -219,11 +219,18 @@ async def get_leaderboard_fast(
                     contest_status = "PENDING_USERNAME"
                     contest_score_display = "Data Unavailable"
 
+                sec_id = getattr(st, "secondary_leetcode_id", None)
+                sec_url = f"https://leetcode.com/u/{sec_id}/" if sec_id else None
+
                 results.append({
                     "id": st.id,
                     "name": st.name,
                     "reg_no": st.reg_no,
                     "username": st.username,
+                    "primary_leetcode_id": st.primary_leetcode_id or st.username,
+                    "secondary_leetcode_id": sec_id,
+                    "secondary_leetcode_url": sec_url,
+                    "secondary_status": getattr(st, "secondary_status", "none"),
                     "year_level": st.year_level,
                     "department_id": st.department_id,
                     "department": {"id": st.department.id, "name": st.department.name, "code": st.department.code} if st.department else None,

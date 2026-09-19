@@ -24,13 +24,29 @@ def merge_contest_fetch_results(existing: WeeklyPublicResult, new_data: Dict[str
         key = f"q{q_num}"
         if key in new_data and new_data[key] is not None:
             new_val = int(new_data[key])
-            old_val = getattr(existing, key, 0)
+            old_val = getattr(existing, key, 0) or 0
             if new_val > old_val or getattr(existing, key, None) is None:
                 setattr(existing, key, new_val)
                 updated = True
 
-    # Recalculate total contest solved
-    existing.total_contest_solved = (existing.q1 or 0) + (existing.q2 or 0) + (existing.q3 or 0) + (existing.q4 or 0)
+    # Recalculate total contest solved taking into account explicit solved count in new_data
+    sum_q = (existing.q1 or 0) + (existing.q2 or 0) + (existing.q3 or 0) + (existing.q4 or 0)
+    explicit_new_solved = new_data.get("total_contest_solved") or new_data.get("solved_count") or new_data.get("problems_solved") or 0
+    effective_solved = max(sum_q, explicit_new_solved, existing.total_contest_solved or 0)
+
+    # If effective_solved > sum_q, backfill individual q flags so q1..q4 align with total_contest_solved
+    if effective_solved > sum_q:
+        if effective_solved >= 4:
+            existing.q1 = existing.q2 = existing.q3 = existing.q4 = 1
+        elif effective_solved == 3:
+            existing.q1 = existing.q2 = existing.q3 = 1
+        elif effective_solved == 2:
+            existing.q1 = existing.q2 = 1
+        elif effective_solved == 1:
+            existing.q1 = 1
+        updated = True
+
+    existing.total_contest_solved = effective_solved
 
     # Merge score, rank, rating if available
     if new_data.get("contest_rank") is not None and (existing.contest_rank is None or new_data["contest_rank"] < existing.contest_rank):

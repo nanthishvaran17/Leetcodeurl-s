@@ -186,12 +186,28 @@ export const FastStudentRow = memo(({
         <span className="text-slate-800 dark:text-slate-200 shrink-0 font-extrabold">{String(student.year_level || '').replace(/\s*Yr\s*/gi, '').replace(/\s*Year\s*/gi, '').trim()} Yr</span>
       </div>
 
-      <div className="hidden md:flex flex-1 min-w-[160px] px-3 items-center justify-start self-center my-auto overflow-hidden min-h-[44px]">
+      <div className="hidden md:flex flex-1 min-w-[160px] px-3 flex-col justify-center self-center my-auto overflow-hidden min-h-[44px]">
         {student.username ? (
-          <a href={`https://leetcode.com/u/${student.username}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center my-auto leading-normal truncate" onClick={(e) => e.stopPropagation()}>
+          <a href={`https://leetcode.com/u/${student.username}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center leading-normal truncate" onClick={(e) => e.stopPropagation()}>
             @{student.username}
           </a>
-        ) : <span className="text-slate-400 text-[11px] inline-flex items-center my-auto leading-normal truncate">Not Linked</span>}
+        ) : <span className="text-slate-400 text-[11px] inline-flex items-center leading-normal truncate">Not Linked</span>}
+        {(() => {
+          const secUser = student.secondary_leetcode_id || student.secondary_accounts?.[0]?.username || student.leetcode_accounts?.[0]?.username;
+          if (!secUser) return null;
+          return (
+            <a
+              href={`https://leetcode.com/u/${secUser}/`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.5 rounded border border-indigo-200 dark:border-indigo-800 shrink-0 mt-0.5 w-fit"
+              onClick={(e) => e.stopPropagation()}
+              title="Secondary LeetCode Account"
+            >
+              <span>Sec: @{secUser}</span>
+            </a>
+          );
+        })()}
       </div>
 
       <div className={`hidden md:flex flex-none w-24 px-3 py-1 rounded-lg items-center justify-center text-center transition-colors ${flashSolved ? 'bg-emerald-200 dark:bg-emerald-800/50 duration-75' : 'bg-transparent duration-1000'}`}>

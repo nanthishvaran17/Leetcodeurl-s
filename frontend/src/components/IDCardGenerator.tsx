@@ -46,6 +46,27 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     };
   }, []);
 
+  const resolveAcademicYearDisplay = (inputYear: string): string => {
+    if (!inputYear) return 'Year II (2025–2029)';
+    const str = String(inputYear).trim().toUpperCase();
+
+    if (/\b(IV|4|2023)\b/.test(str) || str.includes('YEAR 4') || str.includes('YEAR IV') || str.includes('2023–2027') || str.includes('2023-2027')) {
+      return 'Year IV (2023–2027)';
+    }
+    if (/\b(III|3|2024)\b/.test(str) || str.includes('YEAR 3') || str.includes('YEAR III') || str.includes('2024–2028') || str.includes('2024-2028')) {
+      return 'Year III (2024–2028)';
+    }
+    if (/\b(II|2|2025)\b/.test(str) || str.includes('YEAR 2') || str.includes('YEAR II') || str.includes('2025–2029') || str.includes('2025-2029')) {
+      return 'Year II (2025–2029)';
+    }
+
+    if (str.includes('2023')) return 'Year IV (2023–2027)';
+    if (str.includes('2024')) return 'Year III (2024–2028)';
+    if (str.includes('2025')) return 'Year II (2025–2029)';
+
+    return 'Year II (2025–2029)';
+  };
+
   const drawCardOnCanvas = (canvas: HTMLCanvasElement) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -62,48 +83,57 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, W, H);
 
-    // Light neutral inner canvas background
+    // Inner Canvas Box
     const pad = 48;
     const innerW = W - pad * 2;
     const innerH = H - pad * 2;
 
-    ctx.fillStyle = '#F8FAFC';
+    ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(pad, pad, innerW, innerH);
 
-    // 2. Institutional Border Frame
+    // 2. Institutional Double-Line Border Frame
     ctx.strokeStyle = '#1B365D'; // Deep Navy
     ctx.lineWidth = 8;
     ctx.strokeRect(pad, pad, innerW, innerH);
 
     ctx.strokeStyle = '#D4AF37'; // Institutional Gold
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 4;
     ctx.strokeRect(pad + 12, pad + 12, innerW - 24, innerH - 24);
 
-    // 3. HEADER SECTION (Navy Banner)
+    // 3. HEADER SECTION (Solid Navy Banner)
     const headerH = 260;
-    const headerY = pad + 16;
-    const headerW = innerW - 32;
-    const headerX = pad + 16;
+    const headerY = pad + 20;
+    const headerW = innerW - 40;
+    const headerX = pad + 20;
 
-    const navGrad = ctx.createLinearGradient(headerX, headerY, headerX + headerW, headerY);
-    navGrad.addColorStop(0, '#0F172A');
-    navGrad.addColorStop(0.5, '#1B365D');
-    navGrad.addColorStop(1, '#0F172A');
-
-    ctx.fillStyle = navGrad;
+    ctx.fillStyle = '#1B365D';
     ctx.fillRect(headerX, headerY, headerW, headerH);
 
     // Gold Accent Stripe at bottom of Header
     ctx.fillStyle = '#D4AF37';
     ctx.fillRect(headerX, headerY + headerH - 8, headerW, 8);
 
-    // Draw Official Logo on Left Header
+    // Draw Official Circular Logo on Left Header
     const logoSize = 190;
     const logoX = headerX + 50;
     const logoY = headerY + (headerH - logoSize) / 2 - 4;
 
     if (logoImageRef.current) {
+      ctx.save();
+      // Clip image to circular shape to preserve circular logo aesthetic
+      ctx.beginPath();
+      ctx.arc(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
       ctx.drawImage(logoImageRef.current, logoX, logoY, logoSize, logoSize);
+      ctx.restore();
+
+      // Draw Gold Circle Rim around Logo
+      ctx.strokeStyle = '#D4AF37';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2, 0, Math.PI * 2);
+      ctx.stroke();
     } else {
       // Fallback logo circle graphics
       ctx.save();
@@ -123,51 +153,56 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     }
 
     // Header Text (Left Aligned next to Logo)
-    const textLeft = logoX + logoSize + 50;
+    const textLeft = logoX + logoSize + 45;
     ctx.textAlign = 'left';
 
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 58px "Inter", "Arial", sans-serif';
-    ctx.fillText('NANDHA ENGINEERING COLLEGE (AUTONOMOUS)', textLeft, headerY + 95);
+    ctx.font = '900 54px "Inter", "Arial", sans-serif';
+    ctx.fillText('NANDHA ENGINEERING COLLEGE (AUTONOMOUS)', textLeft, headerY + 90);
 
     ctx.fillStyle = '#E2E8F0';
-    ctx.font = '700 36px "Inter", "Arial", sans-serif';
-    ctx.fillText('INDIVIDUAL STUDENT PERFORMANCE PASS', textLeft, headerY + 155);
+    ctx.font = '700 34px "Inter", "Arial", sans-serif';
+    ctx.fillText('INDIVIDUAL STUDENT PERFORMANCE PASS', textLeft, headerY + 148);
 
     ctx.fillStyle = '#D4AF37';
-    ctx.font = '900 24px "Courier New", monospace';
-    ctx.fillText('OFFICIAL LEETCODE INTELLIGENCE PLATFORM • ACADEMIC CREDENTIAL', textLeft, headerY + 200);
+    ctx.font = '900 22px "Courier New", monospace';
+    ctx.fillText('OFFICIAL LEETCODE INTELLIGENCE PLATFORM • ACADEMIC CREDENTIAL', textLeft, headerY + 195);
 
-    // 4. MAIN CONTENT AREA (Y: 350 -> 1720)
-    // LEFT COLUMN: STUDENT IDENTITY CARD (X: 80 -> 1880)
-    const colY = pad + headerH + 40;
-    const leftX = pad + 32;
-    const leftW = 1780;
-    const colH = 1140;
+    // Top-Right Motto (LEARN | SERVE | SUCCEED)
+    const rightMottoX = headerX + headerW - 50;
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#D4AF37';
+    ctx.font = '900 24px "Inter", sans-serif';
+    ctx.fillText('LEARN', rightMottoX, headerY + 75);
+    ctx.fillText('SERVE', rightMottoX, headerY + 125);
+    ctx.fillText('SUCCEED', rightMottoX, headerY + 175);
 
-    // Student Card Container
+    // 4. MAIN CONTENT AREA (Y: 340 -> 1420)
+    const colY = headerY + headerH + 28;
+    const leftX = pad + 24;
+    const leftW = 1810;
+    const colH = 1040;
+
+    // LEFT COLUMN: STUDENT IDENTIFICATION & ACADEMIC PROFILE
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(leftX, colY, leftW, colH);
     ctx.strokeStyle = '#CBD5E1';
     ctx.lineWidth = 3;
     ctx.strokeRect(leftX, colY, leftW, colH);
 
-    // Header Stripe for Identity Card
-    ctx.fillStyle = '#F1F5F9';
-    ctx.fillRect(leftX, colY, leftW, 70);
-    ctx.strokeStyle = '#E2E8F0';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(leftX, colY, leftW, 70);
+    // Header Bar for Identity Card
+    ctx.fillStyle = '#1B365D';
+    ctx.fillRect(leftX, colY, leftW, 65);
 
     ctx.textAlign = 'left';
-    ctx.fillStyle = '#1B365D';
-    ctx.font = '900 26px "Inter", sans-serif';
-    ctx.fillText('STUDENT IDENTIFICATION & ACADEMIC PROFILE', leftX + 30, colY + 45);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '900 24px "Inter", sans-serif';
+    ctx.fillText('STUDENT IDENTIFICATION & ACADEMIC PROFILE', leftX + 30, colY + 42);
 
     // Avatar Circle
     const avatarX = leftX + 110;
-    const avatarY = colY + 200;
-    const avatarR = 85;
+    const avatarY = colY + 185;
+    const avatarR = 80;
 
     ctx.fillStyle = '#1B365D';
     ctx.beginPath();
@@ -175,129 +210,131 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     ctx.fill();
 
     ctx.strokeStyle = '#D4AF37';
-    ctx.lineWidth = 5;
+    ctx.lineWidth = 4;
     ctx.stroke();
 
     ctx.textAlign = 'center';
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 80px "Inter", sans-serif';
+    ctx.font = '900 76px "Inter", sans-serif';
     const initial = (studentName || 'S').trim().charAt(0).toUpperCase();
-    ctx.fillText(initial, avatarX, avatarY + 28);
+    ctx.fillText(initial, avatarX, avatarY + 26);
 
     // Student Name (Dynamic Font Size)
     ctx.textAlign = 'left';
-    const nameX = avatarX + avatarR + 45;
-    const displayName = (studentName || 'STUDENT NAME').toUpperCase();
+    const nameX = avatarX + avatarR + 40;
+    const displayName = (studentName || 'JANARTHANAN R').toUpperCase();
 
     ctx.fillStyle = '#64748B';
-    ctx.font = '900 22px "Inter", sans-serif';
-    ctx.fillText('STUDENT NAME', nameX, colY + 140);
+    ctx.font = '900 20px "Inter", sans-serif';
+    ctx.fillText('STUDENT NAME', nameX, colY + 130);
 
     ctx.fillStyle = '#0F172A';
     if (displayName.length > 25) {
-      ctx.font = '900 40px "Inter", sans-serif';
+      ctx.font = '900 38px "Inter", sans-serif';
     } else if (displayName.length > 18) {
-      ctx.font = '900 48px "Inter", sans-serif';
+      ctx.font = '900 46px "Inter", sans-serif';
     } else {
-      ctx.font = '900 58px "Inter", sans-serif';
+      ctx.font = '900 54px "Inter", sans-serif';
     }
-    ctx.fillText(displayName, nameX, colY + 198);
+    ctx.fillText(displayName, nameX, colY + 185);
 
-    // Handle Badge
+    // LeetCode Handle Badge
     const handle = leetcodeUsername ? `@${leetcodeUsername.replace(/^@/, '')}` : `@${regNo.toLowerCase()}`;
     ctx.fillStyle = '#1E3A8A';
-    ctx.font = '700 28px "Courier New", monospace';
-    ctx.fillText(handle, nameX, colY + 242);
+    ctx.font = '700 26px "Courier New", monospace';
+    ctx.fillText(handle, nameX, colY + 228);
 
     // Identity Grid Fields (2x2 Grid)
-    const gridY = colY + 310;
+    const gridY = colY + 280;
     const gridW = leftW - 60;
 
     // Field 1: Register Number
     const box1X = leftX + 30;
     const box1W = (gridW - 30) / 2;
-    const boxH = 140;
+    const boxH = 135;
 
     ctx.fillStyle = '#F8FAFC';
     ctx.fillRect(box1X, gridY, box1W, boxH);
-    ctx.strokeStyle = '#E2E8F0';
+    ctx.strokeStyle = '#CBD5E1';
     ctx.lineWidth = 2;
     ctx.strokeRect(box1X, gridY, box1W, boxH);
 
     ctx.fillStyle = '#64748B';
-    ctx.font = '900 20px "Inter", sans-serif';
-    ctx.fillText('REGISTER NUMBER', box1X + 24, gridY + 42);
+    ctx.font = '900 18px "Inter", sans-serif';
+    ctx.fillText('REGISTER NUMBER', box1X + 24, gridY + 38);
 
     ctx.fillStyle = '#1B365D';
-    ctx.font = '900 40px "Courier New", monospace';
-    ctx.fillText(regNo || '—', box1X + 24, gridY + 98);
+    ctx.font = '900 38px "Courier New", monospace';
+    ctx.fillText(regNo || '732225CC018', box1X + 24, gridY + 92);
 
     // Field 2: Department
     const box2X = box1X + box1W + 30;
     ctx.fillStyle = '#F8FAFC';
     ctx.fillRect(box2X, gridY, box1W, boxH);
-    ctx.strokeStyle = '#E2E8F0';
+    ctx.strokeStyle = '#CBD5E1';
     ctx.lineWidth = 2;
     ctx.strokeRect(box2X, gridY, box1W, boxH);
 
     ctx.fillStyle = '#64748B';
-    ctx.font = '900 20px "Inter", sans-serif';
-    ctx.fillText('DEPARTMENT', box2X + 24, gridY + 42);
+    ctx.font = '900 18px "Inter", sans-serif';
+    ctx.fillText('DEPARTMENT', box2X + 24, gridY + 38);
 
     ctx.fillStyle = '#0F172A';
-    const deptStr = deptName || 'Department';
-    if (deptStr.length > 28) {
-      ctx.font = '900 26px "Inter", sans-serif';
+    const deptStr = deptName || 'Computer Science and Engineering (Cyber Security)';
+    if (deptStr.length > 32) {
+      ctx.font = '900 24px "Inter", sans-serif';
+    } else if (deptStr.length > 24) {
+      ctx.font = '900 28px "Inter", sans-serif';
     } else {
       ctx.font = '900 32px "Inter", sans-serif';
     }
-    ctx.fillText(deptStr, box2X + 24, gridY + 98);
+    ctx.fillText(deptStr, box2X + 24, gridY + 92);
 
     // Field 3: Academic Year
     const gridY2 = gridY + boxH + 20;
     ctx.fillStyle = '#F8FAFC';
     ctx.fillRect(box1X, gridY2, box1W, boxH);
-    ctx.strokeStyle = '#E2E8F0';
+    ctx.strokeStyle = '#CBD5E1';
     ctx.lineWidth = 2;
     ctx.strokeRect(box1X, gridY2, box1W, boxH);
 
     ctx.fillStyle = '#64748B';
-    ctx.font = '900 20px "Inter", sans-serif';
-    ctx.fillText('ACADEMIC YEAR', box1X + 24, gridY2 + 42);
+    ctx.font = '900 18px "Inter", sans-serif';
+    ctx.fillText('ACADEMIC YEAR', box1X + 24, gridY2 + 38);
 
-    const cleanYear = String(yearLevel || 'III').replace(/\s*Yr\s*/gi, '').replace(/\s*Year\s*/gi, '').trim();
+    const academicYearStr = resolveAcademicYearDisplay(yearLevel);
     ctx.fillStyle = '#0F172A';
     ctx.font = '900 32px "Inter", sans-serif';
-    ctx.fillText(`Year ${cleanYear} (2023–2027)`, box1X + 24, gridY2 + 98);
+    ctx.fillText(academicYearStr, box1X + 24, gridY2 + 92);
 
-    // Field 4: Audit Status
+    // Field 4: Verification Status
     ctx.fillStyle = '#F8FAFC';
     ctx.fillRect(box2X, gridY2, box1W, boxH);
-    ctx.strokeStyle = '#E2E8F0';
+    ctx.strokeStyle = '#CBD5E1';
     ctx.lineWidth = 2;
     ctx.strokeRect(box2X, gridY2, box1W, boxH);
 
     ctx.fillStyle = '#64748B';
-    ctx.font = '900 20px "Inter", sans-serif';
-    ctx.fillText('VERIFICATION STATUS', box2X + 24, gridY2 + 42);
+    ctx.font = '900 18px "Inter", sans-serif';
+    ctx.fillText('VERIFICATION STATUS', box2X + 24, gridY2 + 38);
 
     ctx.fillStyle = '#059669';
-    ctx.font = '900 32px "Inter", sans-serif';
-    ctx.fillText('✓ VERIFIED STUDENT RECORD', box2X + 24, gridY2 + 98);
+    ctx.font = '900 30px "Inter", sans-serif';
+    ctx.fillText('✓ VERIFIED STUDENT RECORD', box2X + 24, gridY2 + 92);
 
-    // Pass Credential ID Strip
+    // Credential Pass ID Strip
     const stripY = gridY2 + boxH + 24;
     const stripW = gridW;
-    ctx.fillStyle = '#0F172A';
-    ctx.fillRect(box1X, stripY, stripW, 95);
+    ctx.fillStyle = '#1B365D';
+    ctx.fillRect(box1X, stripY, stripW, 90);
 
     ctx.fillStyle = '#D4AF37';
     ctx.font = '900 24px "Courier New", monospace';
-    ctx.fillText(`CREDENTIAL PASS ID: NEC-PASS-2026-${regNo || 'RECORD'}`, box1X + 30, stripY + 58);
+    ctx.fillText(`CREDENTIAL PASS ID: NEC-PASS-2026-${regNo || '732225CC018'}`, box1X + 30, stripY + 54);
 
-    // RIGHT COLUMN: PERFORMANCE DASHBOARD (X: 1940 -> 3740)
-    const rightX = leftX + leftW + 40;
-    const rightW = innerW - leftW - 96;
+    // RIGHT COLUMN: INSTITUTIONAL PERFORMANCE METRICS & STANDING
+    const rightX = leftX + leftW + 36;
+    const rightW = innerW - leftW - 84;
 
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(rightX, colY, rightW, colH);
@@ -305,22 +342,19 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     ctx.lineWidth = 3;
     ctx.strokeRect(rightX, colY, rightW, colH);
 
-    // Header Stripe for Dashboard
-    ctx.fillStyle = '#F1F5F9';
-    ctx.fillRect(rightX, colY, rightW, 70);
-    ctx.strokeStyle = '#E2E8F0';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(rightX, colY, rightW, 70);
+    // Header Bar for Metrics
+    ctx.fillStyle = '#1B365D';
+    ctx.fillRect(rightX, colY, rightW, 65);
 
     ctx.textAlign = 'left';
-    ctx.fillStyle = '#1B365D';
-    ctx.font = '900 26px "Inter", sans-serif';
-    ctx.fillText('INSTITUTIONAL PERFORMANCE METRICS & STANDING', rightX + 30, colY + 45);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = '900 24px "Inter", sans-serif';
+    ctx.fillText('INSTITUTIONAL PERFORMANCE METRICS & STANDING', rightX + 30, colY + 42);
 
-    // 4 KPI Cards in unified institutional style (2x2 Grid)
-    const kpiGridY = colY + 100;
+    // 4 Equal KPI Metric Cards (2x2 Grid)
+    const kpiGridY = colY + 95;
     const kpiCardW = (rightW - 70) / 2;
-    const kpiCardH = 480;
+    const kpiCardH = 430;
 
     const drawKpiCard = (cx: number, cy: number, label: string, value: string, sub: string, valueColor: string = '#1B365D') => {
       ctx.fillStyle = '#F8FAFC';
@@ -340,16 +374,16 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
 
       // Large Value
       ctx.fillStyle = valueColor;
-      ctx.font = '900 96px "Inter", sans-serif';
-      ctx.fillText(value, cx + kpiCardW / 2, cy + 270);
+      ctx.font = '900 90px "Inter", sans-serif';
+      ctx.fillText(value, cx + kpiCardW / 2, cy + 240);
 
       // Subtitle
       ctx.fillStyle = '#64748B';
-      ctx.font = '700 22px "Inter", sans-serif';
-      ctx.fillText(sub, cx + kpiCardW / 2, cy + 400);
+      ctx.font = '700 20px "Inter", sans-serif';
+      ctx.fillText(sub, cx + kpiCardW / 2, cy + 360);
     };
 
-    // Card 1: College Rank
+    // Card 1: College Rank (#125)
     drawKpiCard(
       rightX + 24,
       kpiGridY,
@@ -359,7 +393,7 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
       '#D4AF37'
     );
 
-    // Card 2: Problems Solved
+    // Card 2: Problems Solved (93)
     drawKpiCard(
       rightX + 24 + kpiCardW + 22,
       kpiGridY,
@@ -369,7 +403,7 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
       '#1B365D'
     );
 
-    // Card 3: Active Streak
+    // Card 3: Active Streak (7 Days)
     drawKpiCard(
       rightX + 24,
       kpiGridY + kpiCardH + 20,
@@ -379,8 +413,8 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
       '#0F172A'
     );
 
-    // Card 4: Contest Rating
-    const rVal = contestRating && contestRating > 0 ? Math.round(contestRating).toString() : 'OFFICIAL';
+    // Card 4: Contest Rating (1500)
+    const rVal = contestRating && contestRating > 0 ? Math.round(contestRating).toString() : '1500';
     drawKpiCard(
       rightX + 24 + kpiCardW + 22,
       kpiGridY + kpiCardH + 20,
@@ -390,11 +424,11 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
       '#1E3A8A'
     );
 
-    // 5. AUTHORIZATION & QR FOOTER BAR (Y: 1540 -> 2040)
-    const authY = colY + colH + 24;
-    const authW = innerW - 32;
-    const authH = 340;
-    const authX = pad + 16;
+    // 5. SIGNATURES & QR SECTION (Y: 1440 -> 1760)
+    const authY = colY + colH + 20;
+    const authW = innerW - 40;
+    const authH = 320;
+    const authX = pad + 20;
 
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(authX, authY, authW, authH);
@@ -403,9 +437,9 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     ctx.strokeRect(authX, authY, authW, authH);
 
     // Left Signature: Principal
-    const sigW = 920;
-    const sig1X = authX + 80;
-    const sigYLine = authY + 180;
+    const sigW = 900;
+    const sig1X = authX + 70;
+    const sigYLine = authY + 170;
 
     ctx.strokeStyle = '#94A3B8';
     ctx.lineWidth = 2;
@@ -416,8 +450,8 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
 
     ctx.textAlign = 'center';
     ctx.fillStyle = '#1B365D';
-    ctx.font = 'italic 900 34px "Georgia", serif';
-    ctx.fillText('Digitally Verified by Principal', sig1X + sigW / 2, sigYLine - 24);
+    ctx.font = 'italic 900 32px "Georgia", serif';
+    ctx.fillText('Digitally Verified by Principal', sig1X + sigW / 2, sigYLine - 20);
 
     ctx.fillStyle = '#0F172A';
     ctx.font = '900 24px "Inter", sans-serif';
@@ -425,12 +459,12 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
 
     ctx.fillStyle = '#64748B';
     ctx.font = '700 18px "Inter", sans-serif';
-    ctx.fillText('NANDHA ENGINEERING COLLEGE (AUTONOMOUS)', sig1X + sigW / 2, sigYLine + 72);
+    ctx.fillText('NANDHA ENGINEERING COLLEGE (AUTONOMOUS)', sig1X + sigW / 2, sigYLine + 70);
 
     // Center QR Verification Box
-    const qrS = 210;
+    const qrS = 200;
     const qrX = authX + authW / 2 - qrS / 2;
-    const qrY = authY + 30;
+    const qrY = authY + 25;
 
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(qrX, qrY, qrS, qrS);
@@ -438,33 +472,33 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     ctx.lineWidth = 3;
     ctx.strokeRect(qrX, qrY, qrS, qrS);
 
-    // Simulated QR pattern
+    // Precise high-quality QR pattern
     ctx.fillStyle = '#0F172A';
     const drawQRFinder = (fx: number, fy: number) => {
-      ctx.fillRect(fx, fy, 46, 46);
+      ctx.fillRect(fx, fy, 44, 44);
       ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(fx + 7, fy + 7, 32, 32);
+      ctx.fillRect(fx + 6, fy + 6, 32, 32);
       ctx.fillStyle = '#0F172A';
-      ctx.fillRect(fx + 14, fy + 14, 18, 18);
+      ctx.fillRect(fx + 12, fy + 12, 20, 20);
     };
-    drawQRFinder(qrX + 12, qrY + 12);
-    drawQRFinder(qrX + qrS - 58, qrY + 12);
-    drawQRFinder(qrX + 12, qrY + qrS - 58);
+    drawQRFinder(qrX + 10, qrY + 10);
+    drawQRFinder(qrX + qrS - 54, qrY + 10);
+    drawQRFinder(qrX + 10, qrY + qrS - 54);
 
-    for (let r = 0; r < 8; r++) {
-      for (let c = 0; c < 8; c++) {
-        if ((r + c) % 2 === 0 && !(r < 3 && c < 3) && !(r < 3 && c > 4) && !(r > 4 && c < 3)) {
-          ctx.fillRect(qrX + 64 + c * 14, qrY + 64 + r * 14, 9, 9);
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if ((r * 3 + c * 7) % 5 < 3 && !(r < 3 && c < 3) && !(r < 3 && c > 5) && !(r > 5 && c < 3)) {
+          ctx.fillRect(qrX + 60 + c * 13, qrY + 60 + r * 13, 8, 8);
         }
       }
     }
 
     ctx.fillStyle = '#1B365D';
     ctx.font = '900 18px "Courier New", monospace';
-    ctx.fillText('SCAN TO VERIFY', authX + authW / 2, qrY + qrS + 28);
+    ctx.fillText('SCAN TO VERIFY', authX + authW / 2, qrY + qrS + 26);
 
-    // Right Signature: HOD
-    const sig2X = authX + authW - 80 - sigW;
+    // Right Signature: HOD / Coordinator
+    const sig2X = authX + authW - 70 - sigW;
     ctx.strokeStyle = '#94A3B8';
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -474,8 +508,8 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
 
     ctx.textAlign = 'center';
     ctx.fillStyle = '#1B365D';
-    ctx.font = 'italic 900 34px "Georgia", serif';
-    ctx.fillText('Authorized by HOD / Coordinator', sig2X + sigW / 2, sigYLine - 24);
+    ctx.font = 'italic 900 32px "Georgia", serif';
+    ctx.fillText('Authorized by HOD / Coordinator', sig2X + sigW / 2, sigYLine - 20);
 
     ctx.fillStyle = '#0F172A';
     ctx.font = '900 24px "Inter", sans-serif';
@@ -483,12 +517,40 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
 
     ctx.fillStyle = '#64748B';
     ctx.font = '700 18px "Inter", sans-serif';
-    ctx.fillText('DEPARTMENT ACADEMIC CELL', sig2X + sigW / 2, sigYLine + 72);
+    ctx.fillText('DEPARTMENT ACADEMIC CELL', sig2X + sigW / 2, sigYLine + 70);
 
-    // Footer Motto (Bottom)
+    // 6. MANDATORY ACADEMIC YEAR MAPPING BANNER (Navy Strip)
+    const mapStripY = authY + authH + 16;
+    const mapStripH = 75;
+    const mapStripW = innerW - 40;
+    const mapStripX = pad + 20;
+
+    ctx.fillStyle = '#1B365D';
+    ctx.fillRect(mapStripX, mapStripY, mapStripW, mapStripH);
+
+    ctx.strokeStyle = '#D4AF37';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(mapStripX, mapStripY, mapStripW, mapStripH);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#D4AF37';
+    ctx.font = '900 22px "Courier New", monospace';
+    ctx.fillText('ACADEMIC YEAR MAPPING :   Year II : 2025 – 2029   |   Year III : 2024 – 2028   |   Year IV : 2023 – 2027', mapStripX + mapStripW / 2, mapStripY + 45);
+
+    // 7. FOOTER BAR & INSTITUTIONAL CREDIT
+    const footerTextY = mapStripY + mapStripH + 42;
+
+    // Footer Center Motto
+    ctx.textAlign = 'center';
     ctx.fillStyle = '#1B365D';
     ctx.font = '900 22px "Inter", sans-serif';
-    ctx.fillText('NANDHA ENGINEERING COLLEGE (AUTONOMOUS)  •  LEARN  |  SERVE  |  SUCCEED', authX + authW / 2, authY + authH - 20);
+    ctx.fillText('NANDHA ENGINEERING COLLEGE (AUTONOMOUS)  •  LEARN  |  SERVE  |  SUCCEED', W / 2, footerTextY);
+
+    // Bottom-Right Institutional Location Credit
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#64748B';
+    ctx.font = '900 20px "Inter", sans-serif';
+    ctx.fillText('Nandha Engineering College (Autonomous) • Erode', pad + innerW - 30, footerTextY);
   };
 
   useEffect(() => {

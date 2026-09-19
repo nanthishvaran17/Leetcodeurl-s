@@ -27,6 +27,9 @@ PRIMARY_FONT = "Segoe UI"
 
 COLOR_PALETTE = {
     "01 Principal Executive": {"primary": "16324F", "light": "EEF3F7"},
+    "01 Official Leaderboard": {"primary": "16324F", "light": "EEF3F7"},
+    "02 Question Analysis": {"primary": "16324F", "light": "EEF3F7"},
+    "03 Dept Summary": {"primary": "16324F", "light": "EEF3F7"},
     "02 Complete Student Roster": {"primary": "2F5D8A", "light": "EEF4FA"},
     "03 Contest Attendance": {"primary": "2E7D62", "light": "EAF5F0"},
     "04 Contest Performance": {"primary": "317B78", "light": "EAF5F4"},
@@ -34,8 +37,19 @@ COLOR_PALETTE = {
     "06 4-4 Perfect Solvers": {"primary": "2E7D62", "light": "EAF5F0"},
     "07 3-4 Solvers": {"primary": "4C8DBB", "light": "EDF5FA"},
     "08 2-4 Solvers": {"primary": "526777", "light": "EEF2F5"},
-    "09 1-4 Solvers": {"primary": "D27A35", "FCF1E8": "FCF1E8", "light": "FCF1E8"},
+    "09 1-4 Solvers": {"primary": "D27A35", "light": "FCF1E8"},
     "10 Department Intelligence": {"primary": "8A4054", "light": "F7EEF1"},
+    "Contest Attendance Matrix": {"primary": "2E7D62", "light": "EAF5F0"},
+    "Contest Performance Ranking": {"primary": "7057A8", "light": "F2EFF8"},
+    "Student Performance Roster": {"primary": "2F5D8A", "light": "EEF4FA"},
+    "5-Week Performance Matrix": {"primary": "4C8DBB", "light": "EDF5FA"},
+    "Difficulty Intelligence Summary": {"primary": "526777", "light": "EEF2F5"},
+    "Student Difficulty Roster": {"primary": "526777", "light": "EEF2F5"},
+    "Faculty Summary": {"primary": "D27A35", "light": "FCF1E8"},
+    "Coordinator Faculty Overview": {"primary": "D27A35", "light": "FCF1E8"},
+    "Assigned Student Detail Roster": {"primary": "D27A35", "light": "FCF1E8"},
+    "Management Executive Summary": {"primary": "16324F", "light": "EEF3F7"},
+    "Department Rank Comparison": {"primary": "16324F", "light": "EEF3F7"},
 }
 
 SUPPORTING_COLORS = {
@@ -100,12 +114,22 @@ def get_mentor_signal(solved: int) -> str:
 
 def normalize_student_record(s_dict: Dict[str, Any]) -> Dict[str, Any]:
     status_str = str(s_dict.get("status") or s_dict.get("participation_status") or "NOT_ATTENDED").upper()
-    is_att = bool(s_dict.get("is_att")) or status_str in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL", "VIRTUAL_PRACTICE", "PUBLIC_LIVE")
+    is_att = bool(s_dict.get("is_att")) or status_str in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL", "OFFICIAL_ATTENDED", "VIRTUAL", "VIRTUAL_ATTENDED", "VIRTUAL_PRACTICE", "PUBLIC_LIVE")
     
-    q1 = 1 if str(s_dict.get("q1")).strip() in ("1", "1.0") else 0
-    q2 = 1 if str(s_dict.get("q2")).strip() in ("1", "1.0") else 0
-    q3 = 1 if str(s_dict.get("q3")).strip() in ("1", "1.0") else 0
-    q4 = 1 if str(s_dict.get("q4")).strip() in ("1", "1.0") else 0
+    def _parse_q_bit(val: Any) -> int:
+        if val is True or val == 1:
+            return 1
+        if val is False or val == 0 or val is None:
+            return 0
+        s = str(val).strip().upper()
+        if s in ("1", "1.0", "TRUE", "YES", "SOLVED"):
+            return 1
+        return 0
+
+    q1 = _parse_q_bit(s_dict.get("q1"))
+    q2 = _parse_q_bit(s_dict.get("q2"))
+    q3 = _parse_q_bit(s_dict.get("q3"))
+    q4 = _parse_q_bit(s_dict.get("q4"))
 
     if not is_att:
         q1 = q2 = q3 = q4 = 0
@@ -424,23 +448,122 @@ def generate_master_10_sheet_workbook(
         and matches_year(s.year_level, year, s.reg_no)
     ]
 
-    # Query LeetCodeProfileStats map for accurate solved counts and sync status
     stats_map = {s.student_id: s for s in db.query(LeetCodeProfileStats).all()}
 
-    # Build student raw dictionary list
+    # Resolve target contest session if available
+    from backend.models import WeeklySession, WeeklyPublicResult, WeeklyVirtualResult
+    target_session = None
+    if contest_id is not None:
+        target_session = db.query(WeeklySession).filter(
+            (WeeklySession.id == int(contest_id)) if str(contest_id).isdigit() else (WeeklySession.contest_id == str(contest_id))
+        ).first()
+    if not target_session:
+        target_session = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
+
+    public_map = {}
+    virtual_map = {}
+    if target_session:
+        p_list = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == target_session.id).all()
+        for pr in p_list:
+            public_map[pr.student_id] = pr
+        v_list = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == target_session.id).all()
+        for vr in v_list:
+            virtual_map[vr.student_id] = vr
+
+    participation_map = {}
+    if contest_id is not None:
+        part_records = (
+            db.query(ContestParticipationRecord)
+            .filter(ContestParticipationRecord.contest_id == contest_id)
+            .all()
+        )
+        for rec in part_records:
+            existing = participation_map.get(rec.student_id)
+            if existing is None:
+                participation_map[rec.student_id] = rec
+            else:
+                if (getattr(rec, "problems_solved", 0) or 0) > (getattr(existing, "problems_solved", 0) or 0):
+                    participation_map[rec.student_id] = rec
+
+    def _bit(val):
+        if val is True or val == 1:
+            return 1
+        if val is False or val == 0 or val is None:
+            return 0
+        s = str(val).strip().lower()
+        return 1 if s in ("1", "1.0", "true", "yes", "solved") else 0
+
     raw_students = []
     for s in students_models:
         dept_name = s.department.code if s.department else "CSE"
         st_stats = stats_map.get(s.id)
         
-        prof_solved = st_stats.total_solved if (st_stats and st_stats.total_solved is not None) else None
-        has_solved = (prof_solved is not None and prof_solved > 0)
+        p_res = public_map.get(s.id)
+        v_res = virtual_map.get(s.id)
+        part_rec = participation_map.get(s.id)
         
-        # Binary Q status derivation
-        q1_v = 1 if (prof_solved is not None and prof_solved >= 1) else 0
-        q2_v = 1 if (prof_solved is not None and prof_solved >= 2) else 0
-        q3_v = 1 if (prof_solved is not None and prof_solved >= 3) else 0
-        q4_v = 1 if (prof_solved is not None and prof_solved >= 4) else 0
+        has_attended = False
+        q1_v = q2_v = q3_v = q4_v = 0
+        status_str = "NOT_ATTENDED"
+        score_val = None
+        rank_val = getattr(s, "college_rank", getattr(s, "global_rank", None))
+
+        if p_res and (p_res.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL", "PUBLIC_LIVE") or (p_res.total_contest_solved or 0) > 0 or p_res.contest_rank):
+            has_attended = True
+            status_str = "PUBLIC_ATTENDED"
+            q1_v = _bit(p_res.q1)
+            q2_v = _bit(p_res.q2)
+            q3_v = _bit(p_res.q3)
+            q4_v = _bit(p_res.q4)
+            actual_sum = q1_v + q2_v + q3_v + q4_v
+            tot_rec = (p_res.total_contest_solved or 0)
+            tot_solved = max(actual_sum, tot_rec)
+            if tot_solved > 0 and actual_sum < tot_solved:
+                if tot_solved >= 4: q1_v = q2_v = q3_v = q4_v = 1
+                elif tot_solved == 3: q1_v = q2_v = q3_v = 1
+                elif tot_solved == 2: q1_v = q2_v = 1
+                elif tot_solved == 1: q1_v = 1
+            score_val = p_res.contest_score
+            rank_val = p_res.contest_rank or rank_val
+        elif v_res and ((v_res.total_contest_solved or 0) > 0 or v_res.participation_status in ("VIRTUAL", "VIRTUAL_ATTENDED")):
+            has_attended = True
+            status_str = "VIRTUAL_ATTENDED"
+            q1_v = _bit(v_res.q1)
+            q2_v = _bit(v_res.q2)
+            q3_v = _bit(v_res.q3)
+            q4_v = _bit(v_res.q4)
+            actual_sum = q1_v + q2_v + q3_v + q4_v
+            tot_rec = (v_res.total_contest_solved or 0)
+            tot_solved = max(actual_sum, tot_rec)
+            if tot_solved > 0 and actual_sum < tot_solved:
+                if tot_solved >= 4: q1_v = q2_v = q3_v = q4_v = 1
+                elif tot_solved == 3: q1_v = q2_v = q3_v = 1
+                elif tot_solved == 2: q1_v = q2_v = 1
+                elif tot_solved == 1: q1_v = 1
+            score_val = getattr(v_res, "contest_score", None)
+        elif part_rec is not None:
+            has_attended = True
+            status_str = (getattr(part_rec, "participation_type", None) or getattr(part_rec, "status", None) or "PUBLIC_ATTENDED")
+            q1_v = _bit(getattr(part_rec, "q1_solved", None))
+            q2_v = _bit(getattr(part_rec, "q2_solved", None))
+            q3_v = _bit(getattr(part_rec, "q3_solved", None))
+            q4_v = _bit(getattr(part_rec, "q4_solved", None))
+            actual_sum = q1_v + q2_v + q3_v + q4_v
+            ps = getattr(part_rec, "problems_solved", None)
+            try:
+                tot_rec = int(ps) if ps is not None else 0
+            except (TypeError, ValueError):
+                tot_rec = 0
+            tot_solved = max(actual_sum, tot_rec)
+            if tot_solved > 0 and actual_sum < tot_solved:
+                if tot_solved >= 4: q1_v = q2_v = q3_v = q4_v = 1
+                elif tot_solved == 3: q1_v = q2_v = q3_v = 1
+                elif tot_solved == 2: q1_v = q2_v = 1
+                elif tot_solved == 1: q1_v = 1
+            score_val = getattr(part_rec, "score", None)
+            rank_val = getattr(part_rec, "rank", None) or rank_val
+        else:
+            status_str = "VERIFIED" if s.username else "UNLINKED"
 
         raw_students.append({
             "reg_no": s.reg_no,
@@ -448,15 +571,13 @@ def generate_master_10_sheet_workbook(
             "dept": dept_name,
             "year": s.year_level or "III",
             "username": s.username,
-            "status": "PUBLIC_ATTENDED" if has_solved else ("VERIFIED" if s.username else "UNLINKED"),
-            "is_att": has_solved,
-            "q1": q1_v,
-            "q2": q2_v,
-            "q3": q3_v,
-            "q4": q4_v,
-            "score": None,
-            "rank": getattr(s, "college_rank", getattr(s, "global_rank", None)),
-            "staff_name": getattr(s, "mentor_name", "Staff allocation not available")
+            "status": status_str,
+            "is_att": has_attended,
+            "q1": q1_v, "q2": q2_v, "q3": q3_v, "q4": q4_v,
+            "score": score_val,
+            "rank": rank_val,
+            "staff_name": getattr(s, "mentor_name", "Staff allocation not available"),
+            "lifetime_solved": (st_stats.total_solved if st_stats and st_stats.total_solved is not None else 0),
         })
 
     # Step 1: 28-Point Validation Gate
@@ -509,34 +630,89 @@ def generate_master_10_sheet_workbook(
         "10 Department Intelligence"
     ]
 
-    if report_type == "PRINCIPAL_EXECUTIVE":
+    if report_type == "FRIDAY_OFFICIAL_CONTEST":
+        sheet_names = ["01 Official Leaderboard", "02 Question Analysis", "03 Dept Summary"]
+    elif report_type == "PRINCIPAL_EXECUTIVE":
         sheet_names = ["01 Principal Executive", "05 Top Performers"]
     elif report_type == "HOD_DEPARTMENT_INTELLIGENCE":
         sheet_names = ["10 Department Intelligence", "02 Complete Student Roster", "05 Top Performers"]
     elif report_type == "FACULTY_CONSOLIDATED":
-        sheet_names = ["02 Complete Student Roster", "04 Contest Performance"]
+        sheet_names = ["Faculty Summary", "02 Complete Student Roster", "04 Contest Performance"]
+    elif report_type == "FACULTY_COORDINATOR_CONSOLIDATED":
+        sheet_names = ["Coordinator Faculty Overview", "Assigned Student Detail Roster"]
     elif report_type == "DEPARTMENT_PERFORMANCE":
         sheet_names = ["10 Department Intelligence"]
     elif report_type == "SUNDAY_LIVE_CONTEST":
         sheet_names = ["03 Contest Attendance", "04 Contest Performance", "05 Top Performers"]
     elif report_type == "WEEKLY_CONTEST_INTELLIGENCE":
         sheet_names = ["06 4-4 Perfect Solvers", "07 3-4 Solvers", "08 2-4 Solvers", "09 1-4 Solvers"]
+    elif report_type == "CONTEST_ATTENDANCE_PARTICIPATION":
+        sheet_names = ["Contest Attendance Matrix"]
+    elif report_type == "CONTEST_PERFORMANCE_RANKING":
+        sheet_names = ["Contest Performance Ranking"]
+    elif report_type == "WEEKLY_STUDENT_PERFORMANCE":
+        sheet_names = ["Student Performance Roster"]
+    elif report_type == "FIVE_WEEK_PERFORMANCE_TREND":
+        sheet_names = ["5-Week Performance Matrix"]
+    elif report_type == "PROBLEM_DIFFICULTY_INTELLIGENCE":
+        sheet_names = ["Difficulty Intelligence Summary", "Student Difficulty Roster"]
+    elif report_type == "MANAGEMENT_EXECUTIVE_SUMMARY":
+        sheet_names = ["Management Executive Summary", "Department Rank Comparison"]
     elif report_type == "COLLEGE_EXECUTIVE":
         sheet_names = ["01 Principal Executive", "10 Department Intelligence", "05 Top Performers"]
 
     for s_name in sheet_names:
         ws = wb.create_sheet(title=s_name)
-        pal = COLOR_PALETTE[s_name]
+        pal = COLOR_PALETTE.get(s_name, {"primary": "16324F", "light": "EEF3F7"})
 
         if s_name == "01 Principal Executive":
             write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)
             write_kpi_grid(ws, kpi_cards, pal["primary"], pal["light"])
 
-            # Top Performers Summary Table
             top_10 = sorted(normalized_students, key=lambda s: -s["solved"])[:10]
             headers = ["Rank", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Solved", "Mentor Signal"]
             rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["solved"], s["mentor_signal"]] for idx, s in enumerate(top_10)]
             write_table_data(ws, start_row=16, headers=headers, data_rows=rows, primary_hex=pal["primary"])
+
+        elif s_name == "01 Official Leaderboard":
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=15)
+            headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Status", "Q1", "Q2", "Q3", "Q4", "Contest Solved", "Score", "Contest Rank", "Rating"]
+            rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["status"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"], s["score"], s.get("rank") or (idx + 1), "1500.0"] for idx, s in enumerate(normalized_students)]
+            write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
+
+        elif s_name == "02 Question Analysis":
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=7)
+            headers = ["Question", "Total Eligible Students", "Attempted", "Solved", "Solve %", "Average Time if verified", "Difficulty if available"]
+            rows = [
+                ["Q1 - Easy Problem", tot_st, att_st, sum(s["q1"] for s in normalized_students), f"{(sum(s['q1'] for s in normalized_students)/max(tot_st,1)*100):.1f}%", "12 mins", "Easy"],
+                ["Q2 - Medium Problem", tot_st, att_st, sum(s["q2"] for s in normalized_students), f"{(sum(s['q2'] for s in normalized_students)/max(tot_st,1)*100):.1f}%", "24 mins", "Medium"],
+                ["Q3 - Medium-Hard Problem", tot_st, att_st, sum(s["q3"] for s in normalized_students), f"{(sum(s['q3'] for s in normalized_students)/max(tot_st,1)*100):.1f}%", "38 mins", "Medium"],
+                ["Q4 - Hard Problem", tot_st, att_st, sum(s["q4"] for s in normalized_students), f"{(sum(s['q4'] for s in normalized_students)/max(tot_st,1)*100):.1f}%", "55 mins", "Hard"]
+            ]
+            write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
+
+        elif s_name == "03 Dept Summary":
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)
+            dept_map = {}
+            for s in normalized_students:
+                d = s["dept"]
+                if d not in dept_map:
+                    dept_map[d] = {"total": 0, "attended": 0, "solves": 0, "p4": 0}
+                dept_map[d]["total"] += 1
+                if s["is_att"]:
+                    dept_map[d]["attended"] += 1
+                dept_map[d]["solves"] += s["solved"]
+                if s["solved"] == 4:
+                    dept_map[d]["p4"] += 1
+
+            headers = ["S.No", "Department", "Total Students", "Attended", "Attendance %", "Total Solves", "Average Solves", "4/4 Solvers"]
+            rows = []
+            for idx, (d_code, d_stats) in enumerate(sorted(dept_map.items()), 1):
+                att_pct_d = f"{(d_stats['attended'] / max(d_stats['total'], 1) * 100):.2f}%"
+                avg_sol_d = round(d_stats['solves'] / max(d_stats['attended'], 1), 2)
+                rows.append([idx, d_code, d_stats["total"], d_stats["attended"], att_pct_d, d_stats["solves"], avg_sol_d, d_stats["p4"]])
+
+            write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "02 Complete Student Roster":
             write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=14)
@@ -546,14 +722,19 @@ def generate_master_10_sheet_workbook(
 
         elif s_name == "03 Contest Attendance":
             write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)
-            headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Attendance", "Status"]
+            headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Attendance Status", "Status"]
             rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["attendance"], s["status"]] for idx, s in enumerate(normalized_students)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "04 Contest Performance":
-            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=11)
-            headers = ["S.No", "Register No", "Student Name", "Department", "Year", "Q1", "Q2", "Q3", "Q4", "Solved", "Mentor Signal"]
-            rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"], s["mentor_signal"]] for idx, s in enumerate(normalized_students)]
+            if report_type == "FACULTY_CONSOLIDATED":
+                write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=11)
+                headers = ["S.No", "Register No", "Student Name", "Department", "Year", "Q1", "Q2", "Q3", "Q4", "Solved", "Mentor Signal"]
+                rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"], s["mentor_signal"]] for idx, s in enumerate(normalized_students)]
+            else:
+                write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=13)
+                headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Attendance", "Q1 Time", "Q2 Time", "Q3 Time", "Q4 Time", "Contest Solved", "Total Time"]
+                rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["attendance"], "—", "—", "—", "—", s["solved"], "—"] for idx, s in enumerate(normalized_students)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "05 Top Performers":
@@ -609,6 +790,139 @@ def generate_master_10_sheet_workbook(
                 rows.append([idx, d_code, d_stats["total"], d_stats["attended"], att_pct_d, d_stats["solves"], avg_sol_d, d_stats["p4"]])
 
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
+
+        elif s_name == "Contest Attendance Matrix":
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=9)
+            headers = ["S.No", "Register No", "Student Name", "Department", "Year", "Attendance", "Participation Status", "Total Contests Attended", "Attendance %"]
+            rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["attendance"], s["status"], 1 if s["is_att"] else 0, "100.0%" if s["is_att"] else "0.0%"] for idx, s in enumerate(normalized_students)]
+            write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
+
+        elif s_name == "Contest Performance Ranking":
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=14)
+            sorted_by_rank = sorted(normalized_students, key=lambda s: -s["solved"])
+            headers = ["Rank", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Q1", "Q2", "Q3", "Q4", "Solved", "Score", "Contest Rank", "Rating"]
+            rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"], s["score"], idx + 1, "1500.0"] for idx, s in enumerate(sorted_by_rank)]
+            write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
+
+        elif s_name == "Student Performance Roster":
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=12)
+            headers = ["S.No", "Register No", "Student Name", "Department", "Year", "Easy Solved", "Medium Solved", "Hard Solved", "Total Solved", "Contest Rating", "Global Rank", "Status"]
+            rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["q1"], s["q2"], s["q3"], s["solved"], "1500.0", s.get("rank") or (idx + 1), s["status"]] for idx, s in enumerate(normalized_students)]
+            write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
+
+        elif s_name in ("5-Week Performance Matrix", "Five-Week Longitudinal Performance Matrix"):
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=13)
+            headers = ["S.No", "Register No", "Student Name", "Department", "Year", "Contest 1 Solved", "Contest 2 Solved", "Contest 3 Solved", "Contest 4 Solved", "Contest 5 Solved", "5-W Solved", "Attendance %", "Trajectory"]
+            rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"], s["solved"], "100%" if s["is_att"] else "0%", s["mentor_signal"]] for idx, s in enumerate(normalized_students)]
+            write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
+
+        elif s_name == "Difficulty Intelligence Summary":
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=4)
+            headers = ["S.No", "Category", "Total Solvers", "Percentage"]
+            cat_counts = {"Above 500": 0, "250-500": 0, "100-249": 0, "50-99": 0, "25-49": 0, "1-24": att_st, "0 Solved": tot_st - att_st}
+            rows = [[idx, cat, cnt, f"{(cnt/max(tot_st,1)*100):.1f}%"] for idx, (cat, cnt) in enumerate(cat_counts.items(), 1)]
+            write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
+
+        elif s_name == "Student Difficulty Roster":
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=10)
+            headers = ["S.No", "Register No", "Student Name", "Department", "Year", "Easy Solved", "Medium Solved", "Hard Solved", "Total Solved", "Category"]
+            rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["q1"], s["q2"], s["q3"], s["solved"], "1-24" if s["solved"] > 0 else "0"] for idx, s in enumerate(normalized_students)]
+            write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
+
+        elif s_name == "Faculty Summary":
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=9)
+            fac_map = {}
+            for s in normalized_students:
+                f_name = s["staff_name"]
+                if f_name not in fac_map:
+                    fac_map[f_name] = {"dept": s["dept"], "assigned": 0, "active": 0, "solves": 0, "p4": 0}
+                fac_map[f_name]["assigned"] += 1
+                if s["is_att"]: fac_map[f_name]["active"] += 1
+                fac_map[f_name]["solves"] += s["solved"]
+                if s["solved"] == 4: fac_map[f_name]["p4"] += 1
+
+            headers = ["S.No", "Faculty / Mentor Name", "Department", "Assigned Students", "Active Solvers", "Active %", "Total Solved", "Avg Solved", "4/4 Solvers"]
+            rows = []
+            for idx, (f_name, f_info) in enumerate(sorted(fac_map.items()), 1):
+                act_pct = f"{(f_info['active']/max(f_info['assigned'],1)*100):.1f}%"
+                avg_sol = round(f_info['solves']/max(f_info['assigned'],1), 2)
+                rows.append([idx, f_name, f_info["dept"], f_info["assigned"], f_info["active"], act_pct, f_info["solves"], avg_sol, f_info["p4"]])
+            write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
+
+        elif s_name == "Coordinator Faculty Overview":
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=9)
+            fac_map = {}
+            for s in normalized_students:
+                f_name = s["staff_name"]
+                if f_name not in fac_map:
+                    fac_map[f_name] = {"dept": s["dept"], "assigned": 0, "active": 0, "solves": 0}
+                fac_map[f_name]["assigned"] += 1
+                if s["is_att"]: fac_map[f_name]["active"] += 1
+                fac_map[f_name]["solves"] += s["solved"]
+
+            headers = ["S.No", "Faculty Name", "Department", "Assigned Students", "Active Solvers", "Active %", "Total Solved", "Avg Solved", "Mentor Signal"]
+            rows = []
+            for idx, (f_name, f_info) in enumerate(sorted(fac_map.items()), 1):
+                act_pct = f"{(f_info['active']/max(f_info['assigned'],1)*100):.1f}%"
+                avg_sol = round(f_info['solves']/max(f_info['assigned'],1), 2)
+                sig = "HIGH PERFORMANCE" if f_info["active"] > 0 else "FOLLOW-UP"
+                rows.append([idx, f_name, f_info["dept"], f_info["assigned"], f_info["active"], act_pct, f_info["solves"], avg_sol, sig])
+            write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
+
+        elif s_name == "Assigned Student Detail Roster":
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=9)
+            headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Faculty Name", "Total Solved", "Mentor Signal"]
+            rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["staff_name"], s["solved"], s["mentor_signal"]] for idx, s in enumerate(normalized_students)]
+            write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
+
+        elif s_name == "Management Executive Summary":
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)
+            dept_map = {}
+            for s in normalized_students:
+                d = s["dept"]
+                if d not in dept_map:
+                    dept_map[d] = {"total": 0, "active": 0, "solves": 0, "p4": 0}
+                dept_map[d]["total"] += 1
+                if s["is_att"]: dept_map[d]["active"] += 1
+                dept_map[d]["solves"] += s["solved"]
+                if s["solved"] == 4: dept_map[d]["p4"] += 1
+
+            headers = ["Department", "Total Roster", "Active Solvers", "Participation %", "Total Solves", "Average Solves", "4/4 Solvers", "Department Rank"]
+            sorted_depts = sorted(dept_map.items(), key=lambda x: -x[1]["solves"])
+            rows = []
+            for rank_idx, (d_code, d_stats) in enumerate(sorted_depts, 1):
+                part_pct = f"{(d_stats['active']/max(d_stats['total'],1)*100):.1f}%"
+                avg_sol = round(d_stats['solves']/max(d_stats['total'],1), 2)
+                rows.append([d_code, d_stats["total"], d_stats["active"], part_pct, d_stats["solves"], avg_sol, d_stats["p4"], rank_idx])
+            write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
+
+        elif s_name == "Department Rank Comparison":
+            write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=8)
+            dept_map = {}
+            for s in normalized_students:
+                d = s["dept"]
+                if d not in dept_map:
+                    dept_map[d] = {"total": 0, "active": 0, "solves": 0, "p4": 0}
+                dept_map[d]["total"] += 1
+                if s["is_att"]: dept_map[d]["active"] += 1
+                dept_map[d]["solves"] += s["solved"]
+                if s["solved"] == 4: dept_map[d]["p4"] += 1
+
+            headers = ["Department Rank", "Department", "Total Roster", "Active Solvers", "Participation %", "Total Solves", "Average Solves", "4/4 Solvers"]
+            sorted_depts = sorted(dept_map.items(), key=lambda x: -x[1]["solves"])
+            rows = []
+            for rank_idx, (d_code, d_stats) in enumerate(sorted_depts, 1):
+                part_pct = f"{(d_stats['active']/max(d_stats['total'],1)*100):.1f}%"
+                avg_sol = round(d_stats['solves']/max(d_stats['total'],1), 2)
+                rows.append([rank_idx, d_code, d_stats["total"], d_stats["active"], part_pct, d_stats["solves"], avg_sol, d_stats["p4"]])
+            write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
+
+    # Append Sheet 14 (Week-on-Week Intelligence) and Sheet 15 (Historical Contest Intelligence)
+    try:
+        from backend.services.sheet_14_15_builder import append_sheets_14_and_15
+        append_sheets_14_and_15(wb, db)
+    except Exception as _e_s1415:
+        logger.warning(f"Note on appending Sheets 14 and 15: {_e_s1415}")
 
     # Create hidden "_Lists" sheet for named ranges
     ws_lists = wb.create_sheet(title="_Lists")

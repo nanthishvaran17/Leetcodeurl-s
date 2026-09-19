@@ -344,7 +344,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
                 className="w-10 h-10 sm:w-auto sm:min-h-[40px] sm:px-3 sm:py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-[11px] flex items-center justify-center space-x-1.5 shadow-md shadow-brand-600/30 transition-all hover:scale-105 shrink-0 whitespace-nowrap cursor-pointer"
               >
                 <ExternalLink className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                <span className="hidden sm:inline">LeetCode</span>
+                <span className="hidden sm:inline">Primary LeetCode</span>
               </a>
             ) : (
               <button
@@ -356,6 +356,19 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
                 <ExternalLink className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                 <span className="hidden sm:inline">LeetCode</span>
               </button>
+            )}
+
+            {(detail?.secondary_leetcode_id || student?.secondary_leetcode_id) && (
+              <a
+                href={`https://leetcode.com/u/${detail?.secondary_leetcode_id || student?.secondary_leetcode_id}/`}
+                target="_blank"
+                rel="noreferrer"
+                className="w-10 h-10 sm:w-auto sm:min-h-[40px] sm:px-3 sm:py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] flex items-center justify-center space-x-1.5 shadow-md shadow-indigo-600/30 transition-all hover:scale-105 shrink-0 whitespace-nowrap cursor-pointer"
+                title="Secondary LeetCode Profile"
+              >
+                <ExternalLink className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                <span className="hidden sm:inline">Secondary: @{detail?.secondary_leetcode_id || student?.secondary_leetcode_id}</span>
+              </a>
             )}
 
             {/* 2. EDIT */}

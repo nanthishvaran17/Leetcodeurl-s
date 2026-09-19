@@ -602,6 +602,9 @@ def commit_smart_excel_import(
             existing_st = existing_students_reg.get(reg_no)
 
             if not existing_st:
+                # Parse secondary LC handle if present
+                sec_lc_url, sec_username = normalize_leetcode_url(raw_sec_lc) if raw_sec_lc else (None, None)
+
                 # CREATE
                 email_val = raw_email or f"{reg_no.lower()}@nandha.edu.in"
                 new_st = Student(
@@ -611,6 +614,9 @@ def commit_smart_excel_import(
                     year_level=norm_year,
                     email=email_val,
                     username=lc_username,
+                    primary_leetcode_id=lc_username,
+                    secondary_leetcode_id=sec_username,
+                    secondary_status="approved" if sec_username else "none",
                     leetcode_url=lc_url,
                     batch=norm_batch,
                     is_active=True
@@ -621,6 +627,7 @@ def commit_smart_excel_import(
                 affected_student_ids.append(new_st.id)
             else:
                 # UPDATE check
+                sec_lc_url, sec_username = normalize_leetcode_url(raw_sec_lc) if raw_sec_lc else (None, None)
                 has_changes = False
                 if name and existing_st.name != name:
                     existing_st.name = name
@@ -636,7 +643,12 @@ def commit_smart_excel_import(
                     has_changes = True
                 if lc_username and existing_st.username != lc_username:
                     existing_st.username = lc_username
+                    existing_st.primary_leetcode_id = lc_username
                     existing_st.leetcode_url = lc_url
+                    has_changes = True
+                if sec_username and existing_st.secondary_leetcode_id != sec_username:
+                    existing_st.secondary_leetcode_id = sec_username
+                    existing_st.secondary_status = "approved"
                     has_changes = True
                 if norm_batch and existing_st.batch != norm_batch:
                     existing_st.batch = norm_batch

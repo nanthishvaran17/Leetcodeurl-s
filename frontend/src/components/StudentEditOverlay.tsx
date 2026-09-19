@@ -213,11 +213,18 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         : Array.isArray(student.secondary_accounts)
         ? student.secondary_accounts
         : [];
-      const initSecAccounts: SecondaryAccountItem[] = rawAccounts.map((acc: any) => ({
+      let initSecAccounts: SecondaryAccountItem[] = rawAccounts.map((acc: any) => ({
         id: acc?.id,
         username: acc?.leetcode_username || acc?.username || '',
         url: acc?.profile_url || (acc?.leetcode_username || acc?.username ? `https://leetcode.com/u/${acc?.leetcode_username || acc?.username}/` : '')
       }));
+
+      if (initSecAccounts.length === 0 && student.secondary_leetcode_id) {
+        initSecAccounts = [{
+          username: student.secondary_leetcode_id,
+          url: `https://leetcode.com/u/${student.secondary_leetcode_id}/`
+        }];
+      }
 
       setName(initName);
       setRegNo(initRegNo);
@@ -447,6 +454,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         allocation: allocation !== 'none' ? allocation : null,
         accommodation: accommodation,
         twelfth_cutoff: twelfthCutoff ? parseFloat(twelfthCutoff) : null,
+        secondary_leetcode_id: formattedSecondary[0]?.leetcode_username || null,
         secondary_accounts: formattedSecondary,
         version: student.version
       };

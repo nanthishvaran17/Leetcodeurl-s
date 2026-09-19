@@ -4,6 +4,12 @@ export interface StudentEntity {
   name: string;
   leetcode_url?: string;
   username?: string;
+  primary_leetcode_id?: string;
+  secondary_leetcode_id?: string;
+  secondary_leetcode_url?: string;
+  secondary_status?: string;
+  secondary_accounts?: any[];
+  leetcode_accounts?: any[];
   department_id?: number;
   department?: { id?: number; name: string; code: string };
   year_level: string;

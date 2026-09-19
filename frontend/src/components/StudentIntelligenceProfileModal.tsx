@@ -760,24 +760,31 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                       </a>
                     )}
 
-                    {(st.secondary_accounts || st.leetcode_accounts || initialStudent?.secondary_accounts || initialStudent?.leetcode_accounts || []).map((acc: any, idx: number) => {
-                      const secUser = acc.leetcode_username || acc.username;
-                      if (!secUser) return null;
-                      const secUrl = acc.profile_url || `https://leetcode.com/u/${secUser}/`;
-                      return (
-                        <a
-                          key={acc.id || idx}
-                          href={secUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 text-xs font-bold transition-all cursor-pointer"
-                          title="Secondary LeetCode Account"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          <span>Secondary: @{secUser}</span>
-                        </a>
-                      );
-                    })}
+                    {(() => {
+                      const list = [...(st.secondary_accounts || st.leetcode_accounts || initialStudent?.secondary_accounts || initialStudent?.leetcode_accounts || [])];
+                      const directSecId = st.secondary_leetcode_id || initialStudent?.secondary_leetcode_id;
+                      if (directSecId && !list.some(a => (a.username === directSecId || a.leetcode_username === directSecId))) {
+                        list.unshift({ username: directSecId, profile_url: `https://leetcode.com/u/${directSecId}/` });
+                      }
+                      return list.map((acc: any, idx: number) => {
+                        const secUser = acc.leetcode_username || acc.username;
+                        if (!secUser) return null;
+                        const secUrl = acc.profile_url || `https://leetcode.com/u/${secUser}/`;
+                        return (
+                          <a
+                            key={acc.id || idx}
+                            href={secUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 text-xs font-bold transition-all cursor-pointer"
+                            title="Secondary LeetCode Account"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            <span>Secondary: @{secUser}</span>
+                          </a>
+                        );
+                      });
+                    })()}
 
                     <button
                       onClick={handleRefreshStudent}

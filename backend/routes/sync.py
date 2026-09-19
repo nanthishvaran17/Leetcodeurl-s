@@ -74,11 +74,12 @@ def get_current_sync_status(db: Session = Depends(get_db)):
     import datetime
     from backend.config import Settings
     from backend.cache import cache as _cache
-    # Fast-path: if sync is not running, serve cached result for up to 10 seconds
-    if not sync_tracker.is_running:
-        _cached = _cache.get("sync:status")
-        if _cached is not None:
-            return _cached
+    
+    # Fast-path: serve cached result if available to prevent DB connection pool exhaustion
+    _cached = _cache.get("sync:status")
+    if _cached is not None:
+        return _cached
+        
     cfg = Settings()
 
     # Single-query aggregation: COUNT students + profile status buckets in one round-trip
@@ -189,7 +190,7 @@ def get_current_sync_status(db: Session = Depends(get_db)):
     is_fresh = bool(last_completed_job and last_completed_job.completed_at and (now_utc - ensure_utc(last_completed_job.completed_at)).total_seconds() <= freshness_seconds) or (verified_cnt > 0)
     data_freshness_status = "FRESH" if is_fresh else "STALE"
 
-    return {
+    result = {
         "is_running": is_running,
         "operation": operation,
         "status": operation,
@@ -234,10 +235,13 @@ def get_current_sync_status(db: Session = Depends(get_db)):
         "retrying": 0,
         "recent_logs": sync_tracker.recent_logs[-10:] if sync_tracker.recent_logs else [f"[{last_sync_time}] Synchronization worker ready. {successful} student profiles verified."]
     }
-    # Cache result only when idle/completed (not while actively syncing)
-    if not is_running:
-        _cache.set("sync:status", result, ttl_seconds=10)
-    return result  # type: ignore
+    
+    # Cache result: 10 seconds if idle, 2 seconds if running
+    # This severely limits DB load from frequent polling
+    ttl = 2 if is_running else 10
+    _cache.set("sync:status", result, ttl_seconds=ttl)
+    
+    return result
 
 
 @router.get("/jobs/{job_id}")

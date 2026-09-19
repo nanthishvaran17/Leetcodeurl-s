@@ -53,14 +53,14 @@ YEAR_ROMAN_MAP = {
 def normalize_year_roman(year_level: Optional[str]) -> str:
     if not year_level:
         return "III"
-    cleaned = str(year_level).upper().strip()
+    cleaned = year_level.upper().replace("YEAR", "").strip()
     return YEAR_ROMAN_MAP.get(cleaned, "III")
 
 def derive_student_batch(year_level: Optional[str]) -> str:
     """Derives standard academic batch from year level for AY 2026-27."""
     if not year_level:
         return "2025 - 2029"
-    cleaned = str(year_level).upper().strip()
+    cleaned = year_level.upper().replace("YEAR", "").strip()
     return BATCH_YEAR_MAP.get(cleaned, "2025 - 2029")
 
 
@@ -69,7 +69,7 @@ def get_coordinator_for_department(dept_code_or_name: Optional[str]) -> str:
     if not dept_code_or_name:
         return DEPARTMENT_COORDINATORS["DEFAULT"]
     
-    code = str(dept_code_or_name).strip()
+    code = dept_code_or_name.strip()
     if "CS" in code.upper() and "IOT" not in code.upper():
         return DEPARTMENT_COORDINATORS.get("CSE(CS)", DEPARTMENT_COORDINATORS["DEFAULT"])
     elif "IOT" in code.upper():

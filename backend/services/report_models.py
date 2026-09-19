@@ -21,6 +21,9 @@ class StudentRow(BaseModel):
     institutional_email: str = ""
     leetcode_url: str = ""
     username: str = ""
+    primary_leetcode_id: str = ""
+    secondary_leetcode_id: str = ""
+    secondary_leetcode_url: str = ""
     easy: Optional[int] = 0
     medium: Optional[int] = 0
     hard: Optional[int] = 0

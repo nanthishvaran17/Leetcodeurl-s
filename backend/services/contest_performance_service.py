@@ -223,22 +223,44 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             fetch_st = str(p_res.fetch_status or p_res.data_fetch_status or "").upper()
             part_st = str(p_res.participation_status or "").upper()
 
-            if part_st in ("PUBLIC", "PUBLIC_ATTENDED", "OFFICIAL", "ATTENDED", "PUBLIC_LIVE"):
+            if part_st in ("PUBLIC", "PUBLIC_ATTENDED", "OFFICIAL", "ATTENDED", "PUBLIC_LIVE", "PUBLIC_LIVE_VERIFIED"):
                 status = ContestStatus.PUBLIC_LIVE.value
                 q1_val = 1 if (p_res.q1 and p_res.q1 >= 1) else 0
                 q2_val = 1 if (p_res.q2 and p_res.q2 >= 1) else 0
                 q3_val = 1 if (p_res.q3 and p_res.q3 >= 1) else 0
                 q4_val = 1 if (p_res.q4 and p_res.q4 >= 1) else 0
-                solved_val = q1_val + q2_val + q3_val + q4_val
+                actual_sum = q1_val + q2_val + q3_val + q4_val
+                tot_rec = p_res.total_contest_solved if (p_res.total_contest_solved is not None and p_res.total_contest_solved > 0) else 0
+                solved_val = max(actual_sum, tot_rec)
+                if solved_val > 0 and actual_sum < solved_val:
+                    if solved_val >= 4:
+                        q1_val = q2_val = q3_val = q4_val = 1
+                    elif solved_val == 3:
+                        q1_val = q2_val = q3_val = 1
+                    elif solved_val == 2:
+                        q1_val = q2_val = 1
+                    elif solved_val == 1:
+                        q1_val = 1
                 rank_val = p_res.contest_rank
                 rating_val = p_res.contest_rating
-            elif part_st in ("VIRTUAL", "VIRTUAL_ATTENDED", "VIRTUAL_PRACTICE"):
+            elif part_st in ("VIRTUAL", "VIRTUAL_ATTENDED", "VIRTUAL_PRACTICE", "VIRTUAL_PRACTICE_VERIFIED"):
                 status = ContestStatus.VIRTUAL_PRACTICE.value
                 q1_val = 1 if (p_res.q1 and p_res.q1 >= 1) else 0
                 q2_val = 1 if (p_res.q2 and p_res.q2 >= 1) else 0
                 q3_val = 1 if (p_res.q3 and p_res.q3 >= 1) else 0
                 q4_val = 1 if (p_res.q4 and p_res.q4 >= 1) else 0
-                solved_val = q1_val + q2_val + q3_val + q4_val
+                actual_sum = q1_val + q2_val + q3_val + q4_val
+                tot_rec = p_res.total_contest_solved if (p_res.total_contest_solved is not None and p_res.total_contest_solved > 0) else 0
+                solved_val = max(actual_sum, tot_rec)
+                if solved_val > 0 and actual_sum < solved_val:
+                    if solved_val >= 4:
+                        q1_val = q2_val = q3_val = q4_val = 1
+                    elif solved_val == 3:
+                        q1_val = q2_val = q3_val = 1
+                    elif solved_val == 2:
+                        q1_val = q2_val = 1
+                    elif solved_val == 1:
+                        q1_val = 1
                 rank_val = p_res.contest_rank
                 rating_val = p_res.contest_rating
             elif part_st in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT", "NO_PARTICIPATION"):
@@ -257,7 +279,18 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             q2_val = 1 if (v_res.q2 and v_res.q2 >= 1) else 0
             q3_val = 1 if (v_res.q3 and v_res.q3 >= 1) else 0
             q4_val = 1 if (v_res.q4 and v_res.q4 >= 1) else 0
-            solved_val = q1_val + q2_val + q3_val + q4_val
+            actual_sum = q1_val + q2_val + q3_val + q4_val
+            tot_rec = v_res.total_contest_solved if (v_res.total_contest_solved is not None and v_res.total_contest_solved > 0) else 0
+            solved_val = max(actual_sum, tot_rec)
+            if solved_val > 0 and actual_sum < solved_val:
+                if solved_val >= 4:
+                    q1_val = q2_val = q3_val = q4_val = 1
+                elif solved_val == 3:
+                    q1_val = q2_val = q3_val = 1
+                elif solved_val == 2:
+                    q1_val = q2_val = 1
+                elif solved_val == 1:
+                    q1_val = 1
         elif part_res is not None:
             p_type = str(part_res.participation_type or "").upper()
             if p_type in ("OFFICIAL", "PUBLIC"):
@@ -564,7 +597,8 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
     if year_filter != "ALL":
         title = f"{title} ({year_filter} Year)"
 
-    report_id = f"RPT-FRIDAY-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+    report_prefix = "RPT-SUNDAY" if rpt_key == "SUNDAY_LIVE_CONTEST" else "RPT-FRIDAY"
+    report_id = f"{report_prefix}-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
 
     version_str = f"v1.0.0 | Template Rev 3.0 | Contest {contest_id} | Generated {datetime.datetime.now(datetime.timezone.utc).strftime('%d-%m-%Y')}"
 
@@ -574,7 +608,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         "reportType": rpt_key,
         "report_type": rpt_key,
         "collegeName": "NANDHA ENGINEERING COLLEGE",
-        "reportTitle": "Friday Official Contest Result",
+        "reportTitle": base_title,
         "title": f"NANDHA ENGINEERING COLLEGE (AUTONOMOUS)\n{title.upper()}",
         "contestName": contest_name,
         "contest_name": contest_name,

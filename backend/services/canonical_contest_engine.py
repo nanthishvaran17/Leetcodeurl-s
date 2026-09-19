@@ -339,8 +339,19 @@ def _build_canonical_contest_dataset_internal(
                     q1_val = 1
 
             actual_sum = q1_val + q2_val + q3_val + q4_val
-            solved_val = actual_sum
-            
+            tot_from_record = p_res.total_contest_solved if (p_res.total_contest_solved is not None and p_res.total_contest_solved > 0) else 0
+            solved_val = max(actual_sum, tot_from_record)
+
+            if solved_val > 0 and (q1_val + q2_val + q3_val + q4_val) < solved_val:
+                if solved_val >= 4:
+                    q1_val = q2_val = q3_val = q4_val = 1
+                elif solved_val == 3:
+                    q1_val = q2_val = q3_val = 1
+                elif solved_val == 2:
+                    q1_val = q2_val = 1
+                elif solved_val == 1:
+                    q1_val = 1
+
             if not score_val:
                 score_val = (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
 
@@ -367,11 +378,22 @@ def _build_canonical_contest_dataset_internal(
                     q1_val = 1
 
             actual_sum = q1_val + q2_val + q3_val + q4_val
-            solved_val = source_res.total_contest_solved if (source_res.total_contest_solved is not None and source_res.total_contest_solved > 0) else actual_sum
-            
+            tot_from_record = source_res.total_contest_solved if (source_res.total_contest_solved is not None and source_res.total_contest_solved > 0) else 0
+            solved_val = max(actual_sum, tot_from_record)
+
+            if solved_val > 0 and (q1_val + q2_val + q3_val + q4_val) < solved_val:
+                if solved_val >= 4:
+                    q1_val = q2_val = q3_val = q4_val = 1
+                elif solved_val == 3:
+                    q1_val = q2_val = q3_val = 1
+                elif solved_val == 2:
+                    q1_val = q2_val = 1
+                elif solved_val == 1:
+                    q1_val = 1
+
             if not score_val:
                 score_val = (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
-            
+
             rank_val = None
             rating_val = None
         else:

@@ -482,7 +482,18 @@ class UniversalContestReconciliationEngine:
                 q2_val = 1 if (p_res.q2 and p_res.q2 >= 1) else 0
                 q3_val = 1 if (p_res.q3 and p_res.q3 >= 1) else 0
                 q4_val = 1 if (p_res.q4 and p_res.q4 >= 1) else 0
-                solved_val = q1_val + q2_val + q3_val + q4_val
+                actual_sum = q1_val + q2_val + q3_val + q4_val
+                tot_rec = (p_res.total_contest_solved or 0)
+                solved_val = max(actual_sum, tot_rec)
+                if solved_val > 0 and actual_sum < solved_val:
+                    if solved_val >= 4:
+                        q1_val = q2_val = q3_val = q4_val = 1
+                    elif solved_val == 3:
+                        q1_val = q2_val = q3_val = 1
+                    elif solved_val == 2:
+                        q1_val = q2_val = 1
+                    elif solved_val == 1:
+                        q1_val = 1
                 score_val = p_res.contest_score or (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
                 rank_val = p_res.contest_rank
                 rating_val = p_res.contest_rating
@@ -522,7 +533,18 @@ class UniversalContestReconciliationEngine:
                 q2_val = 1 if (v_res.q2 and v_res.q2 >= 1) else 0
                 q3_val = 1 if (v_res.q3 and v_res.q3 >= 1) else 0
                 q4_val = 1 if (v_res.q4 and v_res.q4 >= 1) else 0
-                solved_val = q1_val + q2_val + q3_val + q4_val
+                actual_sum = q1_val + q2_val + q3_val + q4_val
+                tot_rec = (v_res.total_contest_solved or 0)
+                solved_val = max(actual_sum, tot_rec)
+                if solved_val > 0 and actual_sum < solved_val:
+                    if solved_val >= 4:
+                        q1_val = q2_val = q3_val = q4_val = 1
+                    elif solved_val == 3:
+                        q1_val = q2_val = q3_val = 1
+                    elif solved_val == 2:
+                        q1_val = q2_val = 1
+                    elif solved_val == 1:
+                        q1_val = 1
                 score_val = v_res.contest_score or (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
 
                 records.append({

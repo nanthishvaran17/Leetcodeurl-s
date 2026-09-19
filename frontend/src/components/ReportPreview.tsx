@@ -6,6 +6,7 @@ import { FullScreenLoadingOverlay } from './ui/FullScreenLoadingOverlay';
 
 interface ReportPreviewProps {
   reportId: string;
+  initialData?: any;
   onClose: () => void;
 }
 
@@ -13,14 +14,19 @@ import { useNotification } from '../context/NotificationContext';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
 
-export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose }) => {
+export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialData, onClose }) => {
   const { notify } = useNotification();
-  const [report, setReport] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [report, setReport] = useState<any>(initialData || null);
+  const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
-  const fetchReport = async () => {
+  const fetchReport = async (forceRefresh: boolean = false) => {
+    if (initialData && !forceRefresh) {
+      setReport(initialData);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -35,8 +41,13 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
   };
 
   useEffect(() => {
-    fetchReport();
-  }, [reportId]);
+    if (initialData) {
+      setReport(initialData);
+      setLoading(false);
+    } else {
+      fetchReport();
+    }
+  }, [reportId, initialData]);
 
   const rType = ((report?.reportType || report?.report_type || '') as string).toUpperCase();
 
@@ -70,6 +81,47 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
       rType === 'WEEKLY_CONTEST_INTELLIGENCE'
     );
   }, [report, rType]);
+
+  const isFiveWeekTrend = useMemo(() => {
+    if (!report) return false;
+    return (
+      rType === 'FIVE_WEEK_PERFORMANCE_TREND' ||
+      rType === 'FIVE_WEEK_TREND' ||
+      rType === 'BATCH_PERFORMANCE' ||
+      (report.sessionHeaders && Array.isArray(report.sessionHeaders) && report.sessionHeaders.length > 0)
+    );
+  }, [report, rType]);
+
+  const formatMetricTitle = (key: string) => {
+    const map: Record<string, string> = {
+      totalStudents: "Total Students",
+      fiveContestConsistentSolvers: "5-Contest Consistent Solvers (≥4/5)",
+      improvingStudents: "Improving Trajectory (↑)",
+      stableStudents: "Stable Trajectory (→)",
+      decliningStudents: "Declining Trajectory (↓)",
+      followUpStudents: "Follow-Up Trajectory",
+      total5WeekSolves: "Total 5-Week Solves",
+      average5WeekSolves: "Average 5-Week Solves",
+      contestWindow: "Contest Window",
+      verifiedStudents: "Verified Solvers",
+      unverifiedStudents: "Unverified Profiles",
+      activeSolvers: "Active Solvers",
+      totalSolved: "Total Solved",
+      averageSolved: "Average Solved",
+      easySolved: "Easy Solved",
+      mediumSolved: "Medium Solved",
+      hardSolved: "Hard Solved",
+      highestSolved: "Highest Solved",
+      averageRating: "Average Rating",
+      highestRating: "Highest Rating",
+      totalParticipations: "Total Participations",
+    };
+    if (map[key]) return map[key];
+    return key
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase())
+      .trim();
+  };
 
   const contestSummary = report?.contestSummary || report?.metrics || {};
   const solveDist = report?.solveDistribution || {};
@@ -820,7 +872,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                     {Object.entries(report.metrics).map(([key, value]) => (
                       <div key={key} className="p-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-navy-950 text-center shadow-sm">
                         <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-black tracking-wider mb-1">
-                          {key.replace(/([A-Z])/g, ' $1').trim()}
+                          {formatMetricTitle(key)}
                         </p>
                         <p className="text-xl font-black text-slate-900 dark:text-white">
                           {value !== null && value !== undefined ? (typeof value === 'number' && value > 999 ? value.toLocaleString() : String(value)) : "—"}
@@ -986,8 +1038,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                 </div>
               )}
 
-              {/* Top Performers Table */}
-              {report.topStudents && report.topStudents.length > 0 && (
+              {/* Top Performers Table (Only shown for general cumulative reports) */}
+              {!isFiveWeekTrend && report.topStudents && report.topStudents.length > 0 && (
                 <div className="space-y-3">
                   <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center space-x-1.5">
                     <Trophy className="w-4 h-4 text-amber-500" />
@@ -1037,8 +1089,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, onClose 
                 </div>
               )}
 
-              {/* Full Student Roster Table */}
-              {allRows.length > 0 && (
+              {/* Full Student Roster Table (Only shown for general cumulative reports) */}
+              {!isFiveWeekTrend && allRows.length > 0 && (
                 <div className="space-y-3">
                   <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider">
                     Full Student Performance Roster ({allRows.length} Students)

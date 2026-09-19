@@ -33,13 +33,15 @@ def run_db_migrations():
     from backend.database import db_url as _db_url
 
     if "postgresql" in _db_url or "postgres" in _db_url:
-        from sqlalchemy import inspect
+        table_cols_map = {}
         try:
-            inspector = inspect(engine)
-            existing_tables = set(inspector.get_table_names())
-            table_cols_map = {}
-            for t_name in existing_tables:
-                table_cols_map[t_name] = {c["name"] for c in inspector.get_columns(t_name)}
+            with engine.connect() as _conn:
+                _res = _conn.execute(sql_text("SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = 'public';"))
+                for _row in _res:
+                    _tn, _cn = _row[0], _row[1]
+                    if _tn not in table_cols_map:
+                        table_cols_map[_tn] = set()
+                    table_cols_map[_tn].add(_cn)
         except Exception as _insp_err:
             table_cols_map = {}
 
@@ -245,8 +247,6 @@ def run_db_migrations():
                 continue
             try:
                 with engine.begin() as pg_conn:
-                    # 10-second cap per ALTER TABLE so a lock never stalls the server boot
-                    pg_conn.execute(sql_text("SET LOCAL statement_timeout = '10s'"))
                     pg_conn.execute(sql_text(migration_sql))
                     print(f"[PG Migration] Added column {c_name} to {t_name}")
             except Exception as _col_err:

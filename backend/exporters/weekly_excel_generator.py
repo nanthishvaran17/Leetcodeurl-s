@@ -7,6 +7,8 @@ Does NOT query the database.
 import os
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.drawing.image import Image
+from openpyxl.utils import coordinate_to_tuple
 from typing import Dict, Any
 
 from backend.config.report_config import BATCH_CONFIG, get_coordinator_for_department
@@ -22,20 +24,20 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
     report_date = data.get("report_date", "04-09-2026")
     
     # Palette: Professional Institutional Restrained Navy/Slate
-    navy_fill = PatternFill(start_color="1E3A8A", end_color="1E3A8A", fill_type="solid")
-    brand_fill = PatternFill(start_color="2563EB", end_color="2563EB", fill_type="solid")
-    sub_header_fill = PatternFill(start_color="E2E8F0", end_color="E2E8F0", fill_type="solid")
-    section_fill = PatternFill(start_color="F1F5F9", end_color="F1F5F9", fill_type="solid")
+    navy_fill = PatternFill(start_color="002060", end_color="002060", fill_type="solid")
+    brand_fill = PatternFill(start_color="0070C0", end_color="0070C0", fill_type="solid")
+    sub_header_fill = PatternFill(start_color="D9D9D9", end_color="D9D9D9", fill_type="solid")
+    section_fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
 
-    font_title = Font(name="Times New Roman", size=13, bold=True, color="FFFFFF")
-    font_subtitle = Font(name="Times New Roman", size=10, italic=True, color="FFFFFF")
-    font_tbl_head = Font(name="Times New Roman", size=10, bold=True, color="0F172A")
-    font_bold = Font(name="Times New Roman", size=10, bold=True)
-    font_regular = Font(name="Times New Roman", size=10)
+    font_title = Font(name="Times New Roman", size=14, bold=True, color="FFFFFF")
+    font_subtitle = Font(name="Times New Roman", size=11, italic=True, color="FFFFFF")
+    font_tbl_head = Font(name="Times New Roman", size=11, bold=True, color="000000")
+    font_bold = Font(name="Times New Roman", size=11, bold=True)
+    font_regular = Font(name="Times New Roman", size=11)
 
-    thin_border_side = Side(style='thin', color='94A3B8')
+    thin_border_side = Side(style='thin', color='000000')
     grid_border = Border(left=thin_border_side, right=thin_border_side, top=thin_border_side, bottom=thin_border_side)
-    thick_border_side = Side(style='medium', color='1E3A8A')
+    thick_border_side = Side(style='medium', color='000000')
     outer_border = Border(left=thick_border_side, right=thick_border_side, top=thick_border_side, bottom=thick_border_side)
 
     align_center = Alignment(horizontal='center', vertical='center', wrap_text=True)
@@ -88,37 +90,62 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
         coord = get_coordinator_for_department(dept_spec["code"])
         
         # Header Rows
-        ws.merge_cells('A1:M1')
+        ws.merge_cells('A1:M2')
         c1 = ws['A1']
         c1.value = "NANDHA ENGINEERING COLLEGE, ERODE - 638 052\n(An Autonomous Institution, Affiliated to Anna University, Chennai)"
         c1.font = font_title
         c1.fill = navy_fill
         c1.alignment = align_center
-        ws.row_dimensions[1].height = 40
+        ws.row_dimensions[1].height = 10  # Top margin for logos
+        ws.row_dimensions[2].height = 50  # Main header height
         
-        ws.merge_cells('A2:M2')
-        c2 = ws['A2']
-        c2.value = f"{dept_spec['full_name']}"
-        c2.font = font_title
-        c2.fill = brand_fill
-        c2.alignment = align_center
-        ws.row_dimensions[2].height = 25
+        for col in range(1, 14):
+            ws.cell(row=1, column=col).fill = navy_fill
+            ws.cell(row=2, column=col).fill = navy_fill
         
+        # Add College Logo (Left - New Black and White Logo)
+        logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "black_white_logo.png")
+        if os.path.exists(logo_path):
+            img = Image(logo_path)
+            img.width = 135
+            img.height = 42
+            ws.add_image(img, 'A2')
+            
+        # Add Right Side Logo (Right - 25 Years Logo)
+        right_logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "round_logo.png")
+        if os.path.exists(right_logo_path):
+            img_right = Image(right_logo_path)
+            img_right.width = 45
+            img_right.height = 45
+            ws.add_image(img_right, 'M2')
+            
         ws.merge_cells('A3:M3')
         c3 = ws['A3']
-        c3.value = f"LeetCode Performance — Weekly Report | Date: {report_date} | Academic Coordinator: {coord}"
-        c3.font = font_subtitle
-        c3.fill = navy_fill
+        c3.value = f"{dept_spec['full_name']}"
+        c3.font = font_title
+        c3.fill = brand_fill
         c3.alignment = align_center
-        ws.row_dimensions[3].height = 20
+        ws.row_dimensions[3].height = 30
+        for col in range(1, 14):
+            ws.cell(row=3, column=col).fill = brand_fill
+        
+        ws.merge_cells('A4:M4')
+        c4 = ws['A4']
+        c4.value = f"LeetCode Performance - Weekly Report | Date: {report_date} | Academic Coordinator: {coord}"
+        c4.font = font_subtitle
+        c4.fill = navy_fill
+        c4.alignment = align_center
+        ws.row_dimensions[4].height = 25
+        for col in range(1, 14):
+            ws.cell(row=4, column=col).fill = navy_fill
 
         # Table Header
         headers = [
-            ("A4", "A5", "Batch"),
-            ("B4", "B5", "No. of Students\n(Total Count)"),
-            ("C4", "G4", "Number of Problems Solved"),
-            ("H4", "K4", "Weekly Contest Attended"),
-            ("L4", "M4", "LeetCode Contest")
+            ("A5", "A6", "Batch"),
+            ("B5", "B6", "No. of Students\n(Total Count)"),
+            ("C5", "G5", "Number of Problems Solved"),
+            ("H5", "K5", "Weekly Contest Attended"),
+            ("L5", "M5", "LeetCode Contest")
         ]
         
         for start, end, val in headers:
@@ -128,12 +155,18 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
             cell.font = font_tbl_head
             cell.fill = sub_header_fill
             cell.alignment = align_center
-            cell.border = outer_border
+            
+            # Apply border to all merged cells
+            start_col, start_row = coordinate_to_tuple(start)
+            end_col, end_row = coordinate_to_tuple(end)
+            for r in range(start_row, end_row + 1):
+                for c in range(start_col, end_col + 1):
+                    ws.cell(row=r, column=c).border = grid_border
             
         sub_headers = [
-            ("C5", "Above 500"), ("D5", "250–500"), ("E5", "Less than 250"), ("F5", "Less than 100"), ("G5", "Not Yet Started"),
-            ("H5", "4 Q Solved"), ("I5", "3 Q Solved"), ("J5", "2 Q Solved"), ("K5", "1 Q Solved"),
-            ("L5", "Rating Above 1500"), ("M5", "Ranking Below 20000")
+            ("C6", "Above 500"), ("D6", "250-500"), ("E6", "Less than 250"), ("F6", "Less than 100"), ("G6", "Not Yet Started"),
+            ("H6", "4 Q Solved"), ("I6", "3 Q Solved"), ("J6", "2 Q Solved"), ("K6", "1 Q Solved"),
+            ("L6", "Rating Above 1500"), ("M6", "Ranking Below 20000")
         ]
         
         for pos, val in sub_headers:
@@ -144,14 +177,14 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
             cell.alignment = align_center
             cell.border = grid_border
             
-        ws.row_dimensions[4].height = 25
         ws.row_dimensions[5].height = 30
+        ws.row_dimensions[6].height = 35
         
         # Data Rows
         # Batches required: 2025-2029, 2024-2028, 2023-2027 (NO 2026-2030)
         required_batches = [b for b in BATCH_CONFIG if b["key"] != "2026_2030"]
         
-        current_row = 6
+        current_row = 7
         for b in required_batches:
             batch_key = b["key"]
             batch_label = b["label"]
@@ -162,12 +195,12 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
             curr_w = b_data.get("current_week", {})
             
             rows_to_add = [
-                (f"{batch_label} — Last Week", last_w),
-                (f"{batch_label} — Current Week", curr_w)
+                (f"{batch_label} - Last Week", last_w),
+                (f"{batch_label} - Current Week", curr_w)
             ]
             
             for row_label, row_metrics in rows_to_add:
-                ws.row_dimensions[current_row].height = 20
+                ws.row_dimensions[current_row].height = 25
                 
                 # Fetch explicit values without generating fakes
                 tot_students = row_metrics.get("total_students", 0)
@@ -191,18 +224,31 @@ def build_weekly_performance_excel(data: Dict[str, Any], filepath: str) -> str:
                     cell = ws.cell(row=current_row, column=c_idx, value=val)
                     cell.font = font_bold if c_idx <= 2 else font_regular
                     cell.alignment = align_left if c_idx == 1 else align_center
-                    cell.border = grid_border
                     
                 current_row += 1
 
         # Column widths
-        widths = {'A': 30, 'B': 18, 'C': 12, 'D': 12, 'E': 12, 'F': 12, 'G': 12, 'H': 10, 'I': 10, 'J': 10, 'K': 10, 'L': 15, 'M': 15}
+        widths = {'A': 32, 'B': 20, 'C': 13, 'D': 13, 'E': 14, 'F': 14, 'G': 15, 'H': 12, 'I': 12, 'J': 12, 'K': 12, 'L': 18, 'M': 18}
         for col, width in widths.items():
             ws.column_dimensions[col].width = width
 
         # 15. Determine the actual last used row dynamically and set print area
         actual_last_row = current_row - 1
         ws.print_area = f"A1:M{actual_last_row}"
+        
+        # Apply standard 'All Borders' to every single cell in the table exactly as requested
+        for r in range(5, actual_last_row + 1):
+            for c in range(1, 14):
+                ws.cell(row=r, column=c).border = grid_border
+
+        # Force clear any stray borders or fills outside the table to prevent unwanted empty cell borders
+        no_border = Border()
+        for r in range(1, actual_last_row + 20):
+            for c in range(14, 20):  # Columns N onwards
+                ws.cell(row=r, column=c).border = no_border
+        for r in range(actual_last_row + 1, actual_last_row + 20): # Rows below the table
+            for c in range(1, 20):
+                ws.cell(row=r, column=c).border = no_border
 
     # Cleanup default sheet
     if "Sheet" in wb.sheetnames:
