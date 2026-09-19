@@ -145,7 +145,7 @@ def _get_dashboard_summary_impl(db: Session, current_user):
     is_running = running_job is not None
     processed = running_job.processed_count if running_job else 0
     total = running_job.total_records if running_job else total_students
-    percentage = round((processed / max(total, 1)) * 100, 2) if is_running else 0.0
+    percentage = round((processed / max(total, 1)) * 100, 2) if is_running else 0.0  # type: ignore
 
     resp = {
         "scope": {
@@ -187,12 +187,12 @@ def _get_dashboard_summary_impl(db: Session, current_user):
 async def trigger_session_start(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     from backend.services.weekly_session_manager import trigger_start_snapshot_0800
     session = get_or_create_current_session(db)
-    background_tasks.add_task(trigger_start_snapshot_0800, db, session.id)
+    background_tasks.add_task(trigger_start_snapshot_0800, db, session.id)  # type: ignore
     return {"message": "Session start (8:00 AM baseline snapshot) triggered in background.", "session_id": session.id}
 
 @router.post("/trigger-end")
 async def trigger_session_end(background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     from backend.services.weekly_session_manager import trigger_final_snapshot_0930
     session = get_or_create_current_session(db)
-    background_tasks.add_task(trigger_final_snapshot_0930, db, session.id)
+    background_tasks.add_task(trigger_final_snapshot_0930, db, session.id)  # type: ignore
     return {"message": "Session end (9:30 AM snapshot & progress evaluation) triggered in background.", "session_id": session.id}

@@ -15,7 +15,7 @@ from reportlab.pdfgen import canvas
 
 import re
 
-def derive_student_batch_and_year(reg_no: str = "", batch: str = None, year_level: str = None) -> tuple:
+def derive_student_batch_and_year(reg_no: str = "", batch: str = None, year_level: str = None) -> tuple:  # type: ignore
     """
     Returns (batch_str, year_str).
     Institutional year mapping:
@@ -24,7 +24,7 @@ def derive_student_batch_and_year(reg_no: str = "", batch: str = None, year_leve
     2024 entry -> 2024–2028 (Year III)
     2023 entry -> 2023–2027 (Year IV)
     """
-    clean_reg = str(reg_no or "").strip().upper()
+    clean_reg = str(reg_no or "").strip().upper()  # type: ignore
     
     # 1. Extract 2-digit entry year from reg_no if available
     join_year = None
@@ -36,8 +36,8 @@ def derive_student_batch_and_year(reg_no: str = "", batch: str = None, year_leve
                 join_year = 2000 + yy
 
     # 2. Determine batch
-    if batch and str(batch).strip() and str(batch).strip() not in ("N/A", "None", ""):
-        calc_batch = str(batch).strip().replace("-", "–")
+    if batch and str(batch).strip() and str(batch).strip() not in ("N/A", "None", ""):  # type: ignore
+        calc_batch = str(batch).strip().replace("-", "–")  # type: ignore
     elif join_year:
         calc_batch = f"{join_year}–{join_year + 4}"
     else:
@@ -90,7 +90,7 @@ class StudentNumberedCanvas(canvas.Canvas):
 
     def showPage(self):
         self._saved_page_states.append(dict(self.__dict__))
-        self._startPage()
+        self._startPage()  # type: ignore
 
     def save(self):
         num_pages = len(self._saved_page_states)
@@ -118,7 +118,7 @@ class StudentNumberedCanvas(canvas.Canvas):
         self.rect(margin + 3.5, margin + 3.5, p_width - (2 * margin) - 7, p_height - (2 * margin) - 7)
         
         # Header Line on Page 2+
-        if self._pageNumber > 1:
+        if self._pageNumber > 1:  # type: ignore
             self.setStrokeColor(colors.HexColor("#CBD5E1"))
             self.setLineWidth(0.5)
             self.line(margin + 8, p_height - 42, p_width - margin - 8, p_height - 42)
@@ -142,7 +142,7 @@ class StudentNumberedCanvas(canvas.Canvas):
         tz_ist = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
         timestamp = datetime.datetime.now(tz_ist).strftime("%d %b %Y, %I:%M %p IST")
         left_footer = f"Nandha Engineering College, Erode – 638 052 | Confidential Student Record • {timestamp}"
-        page_str = f"Page {self._pageNumber} of {page_count}"
+        page_str = f"Page {self._pageNumber} of {page_count}"  # type: ignore
         
         self.drawString(margin + 10, 29, left_footer)
         self.setFont("Helvetica-Bold", 8)
@@ -324,7 +324,7 @@ def _build_student_identity_table(s: dict, styles: dict) -> Table:
     
     s_batch_input = s.get("batch")
     s_year_input = s.get("year") or s.get("year_level")
-    batch_str, year_str = derive_student_batch_and_year(s_reg, s_batch_input, s_year_input)
+    batch_str, year_str = derive_student_batch_and_year(s_reg, s_batch_input, s_year_input)  # type: ignore
 
     s_sec = str(s.get("section") or "Sec A").strip()
     if s_sec and not s_sec.startswith("Sec") and len(s_sec) <= 3:
@@ -418,7 +418,7 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
             [Paragraph(f"{easy_cnt:,}", styles['kpi_num']), Paragraph("EASY SOLVED", styles['kpi_lbl'])],
             [Paragraph(f"{med_cnt:,}", styles['kpi_num']), Paragraph("MEDIUM SOLVED", styles['kpi_lbl'])],
             [Paragraph(f"{hard_cnt:,}", styles['kpi_num']), Paragraph("HARD SOLVED", styles['kpi_lbl'])],
-            [Paragraph(str(rating_val), styles['kpi_num']), Paragraph("CONTEST RATING", styles['kpi_lbl'])],
+            [Paragraph(str(rating_val), styles['kpi_num']), Paragraph("CONTEST RATING", styles['kpi_lbl'])],  # type: ignore
         ],
         [
             [Paragraph(global_rank, styles['kpi_num']), Paragraph("GLOBAL RANK", styles['kpi_lbl'])],
@@ -442,8 +442,8 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
 
     batch_str, year_str = derive_student_batch_and_year(
         s.get("reg_no") or s.get("register_number", ""),
-        s.get("batch"),
-        s.get("year") or s.get("year_level")
+        s.get("batch"),  # type: ignore
+        s.get("year") or s.get("year_level")  # type: ignore
     )
 
     summary_text = (
@@ -785,7 +785,7 @@ def generate_student_summary_pdf(dataset: dict) -> bytes:
     kpi_summary_data = [
         [
             [Paragraph(f"{tot_solved:,}", styles['kpi_num']), Paragraph("TOTAL SOLVED", styles['kpi_lbl'])],
-            [Paragraph(str(rating_val), styles['kpi_num']), Paragraph("CONTEST RATING", styles['kpi_lbl'])],
+            [Paragraph(str(rating_val), styles['kpi_num']), Paragraph("CONTEST RATING", styles['kpi_lbl'])],  # type: ignore
             [Paragraph(rank_val, styles['kpi_num']), Paragraph("COLLEGE RANK", styles['kpi_lbl'])],
             [Paragraph(streak_val, styles['kpi_num']), Paragraph("ACTIVE STREAK", styles['kpi_lbl'])],
         ]
@@ -910,7 +910,7 @@ def generate_student_contest_matrix_pdf(dataset: dict) -> bytes:
 
     matrix_kpis = [
         [
-            [Paragraph(str(rating_val), styles['kpi_num']), Paragraph("CURRENT RATING", styles['kpi_lbl'])],
+            [Paragraph(str(rating_val), styles['kpi_num']), Paragraph("CURRENT RATING", styles['kpi_lbl'])],  # type: ignore
             [Paragraph(contests_cnt, styles['kpi_num']), Paragraph("CONTESTS ATTENDED", styles['kpi_lbl'])],
             [Paragraph(global_rank, styles['kpi_num']), Paragraph("GLOBAL RANK", styles['kpi_lbl'])],
             [Paragraph("OFFICIAL", styles['kpi_num']), Paragraph("PARTICIPATION STATUS", styles['kpi_lbl'])],

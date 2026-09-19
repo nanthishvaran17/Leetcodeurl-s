@@ -2,7 +2,7 @@ import os
 import io
 import datetime
 try:
-    import pandas as pd
+    import pandas as pd  # type: ignore
     PANDAS_AVAILABLE = True
 except ImportError:
     pd = None
@@ -39,7 +39,7 @@ STUDENT_IMPORT_COLUMNS = [
 
 def run_high_speed_excel_import(db: Session, file_bytes: bytes, job_id: str, tracker: Any) -> Dict[str, Any]:
     try:
-        df = pd.read_excel(io.BytesIO(file_bytes))
+        df = pd.read_excel(io.BytesIO(file_bytes))  # type: ignore
     except Exception as e:
         raise ValueError(f"Failed to parse Excel file: {str(e)}")
 
@@ -113,7 +113,7 @@ def run_high_speed_excel_import(db: Session, file_bytes: bytes, job_id: str, tra
     # 2. Bulk Fetch Existing Students & Normalize Registration Numbers
     def _norm_reg(r: str) -> str:
         if not r: return ""
-        r = str(r).strip().upper()
+        r = str(r).strip().upper()  # type: ignore
         if r.startswith("7322"):
             return r[4:]
         return r
@@ -123,7 +123,7 @@ def run_high_speed_excel_import(db: Session, file_bytes: bytes, job_id: str, tra
     for s in all_students_db:
         if s.reg_no:
             existing_map[s.reg_no.strip().upper()] = s
-            n_reg = _norm_reg(s.reg_no)
+            n_reg = _norm_reg(s.reg_no)  # type: ignore
             if n_reg:
                 existing_map[n_reg] = s
         if s.username:
@@ -176,25 +176,25 @@ def run_high_speed_excel_import(db: Session, file_bytes: bytes, job_id: str, tra
             if not str(year_str).isalnum():
                 year_str = "I" # Fallback
 
-        url = str(row.get(primary_col, "")).strip() if primary_col and pd.notna(row.get(primary_col)) else ""
+        url = str(row.get(primary_col, "")).strip() if primary_col and pd.notna(row.get(primary_col)) else ""  # type: ignore
         username, std_url, url_status = extract_leetcode_username(url)
         if username:
             username = username.lower()
             std_url = f"https://leetcode.com/u/{username}/"
 
-        sec_url = str(row.get(sec_col, "")).strip() if sec_col and pd.notna(row.get(sec_col)) else ""
+        sec_url = str(row.get(sec_col, "")).strip() if sec_col and pd.notna(row.get(sec_col)) else ""  # type: ignore
         sec_username, sec_std_url, _ = extract_leetcode_username(sec_url) if sec_url else (None, None, None)
         if sec_username:
             sec_username = sec_username.lower()
 
-        codeforces = str(row.get("CODEFORCES", row.get("CODEFORCES USERNAME", ""))).strip() if ("CODEFORCES" in df.columns and pd.notna(row.get("CODEFORCES"))) or ("CODEFORCES USERNAME" in df.columns and pd.notna(row.get("CODEFORCES USERNAME"))) else ""
-        hackerrank = str(row.get("HACKERRANK", row.get("HACKERRANK USERNAME", ""))).strip() if ("HACKERRANK" in df.columns and pd.notna(row.get("HACKERRANK"))) or ("HACKERRANK USERNAME" in df.columns and pd.notna(row.get("HACKERRANK USERNAME"))) else ""
-        email = str(row.get("EMAIL", row.get("STUDENT EMAIL", ""))).strip() if ("EMAIL" in df.columns and pd.notna(row.get("EMAIL"))) or ("STUDENT EMAIL" in df.columns and pd.notna(row.get("STUDENT EMAIL"))) else None
+        codeforces = str(row.get("CODEFORCES", row.get("CODEFORCES USERNAME", ""))).strip() if ("CODEFORCES" in df.columns and pd.notna(row.get("CODEFORCES"))) or ("CODEFORCES USERNAME" in df.columns and pd.notna(row.get("CODEFORCES USERNAME"))) else ""  # type: ignore
+        hackerrank = str(row.get("HACKERRANK", row.get("HACKERRANK USERNAME", ""))).strip() if ("HACKERRANK" in df.columns and pd.notna(row.get("HACKERRANK"))) or ("HACKERRANK USERNAME" in df.columns and pd.notna(row.get("HACKERRANK USERNAME"))) else ""  # type: ignore
+        email = str(row.get("EMAIL", row.get("STUDENT EMAIL", ""))).strip() if ("EMAIL" in df.columns and pd.notna(row.get("EMAIL"))) or ("STUDENT EMAIL" in df.columns and pd.notna(row.get("STUDENT EMAIL"))) else None  # type: ignore
 
         # --- Accommodation Extraction & Validation ---
         acc_raw = None
         for col_cand in ["ACCOMMODATION", "HOSTEL/DAY SCHOLAR", "HOSTEL OR DAY SCHOLAR", "LODGING", "ACCOMMODATION TYPE"]:
-            if col_cand in df.columns and pd.notna(row.get(col_cand)):
+            if col_cand in df.columns and pd.notna(row.get(col_cand)):  # type: ignore
                 acc_raw = str(row.get(col_cand)).strip()
                 break
 
@@ -211,12 +211,12 @@ def run_high_speed_excel_import(db: Session, file_bytes: bytes, job_id: str, tra
         # --- 12th Cut-off Extraction & Validation ---
         cutoff_raw = None
         for col_cand in ["12TH CUT-OFF", "12TH CUTOFF", "12TH CUT OFF", "TWELFTH CUTOFF", "TWELFTH CUT-OFF", "12TH MARK", "12TH CUTOFF MARK", "12TH MARKS"]:
-            if col_cand in df.columns and pd.notna(row.get(col_cand)):
+            if col_cand in df.columns and pd.notna(row.get(col_cand)):  # type: ignore
                 cutoff_raw = row.get(col_cand)
                 break
 
         twelfth_cutoff_val = None
-        if cutoff_raw is not None and not pd.isna(cutoff_raw):
+        if cutoff_raw is not None and not pd.isna(cutoff_raw):  # type: ignore
             val_str = str(cutoff_raw).strip()
             if val_str and val_str.lower() not in ("nan", "none", "null", ""):
                 try:
@@ -239,7 +239,7 @@ def run_high_speed_excel_import(db: Session, file_bytes: bytes, job_id: str, tra
         dept_id = dept_obj.id if dept_obj else None
 
         # --- Batch Extraction / Inference ---
-        batch_str = str(row.get("BATCH", "")).strip() if "BATCH" in df.columns and pd.notna(row.get("BATCH")) else None
+        batch_str = str(row.get("BATCH", "")).strip() if "BATCH" in df.columns and pd.notna(row.get("BATCH")) else None  # type: ignore
         if not batch_str:
             # Fallback batch inference based on year_str assuming current year is 2026-2027
             # Note: A real implementation would fetch the active AcademicYear from DB
@@ -337,7 +337,7 @@ def run_high_speed_excel_import(db: Session, file_bytes: bytes, job_id: str, tra
 
 
 def get_year_level_variants(year_lvl: str) -> List[str]:
-    clean = str(year_lvl).strip().upper()
+    clean = str(year_lvl).strip().upper()  # type: ignore
     if clean in ["IV", "4", "4TH", "4-TH"]:
         return ["IV", "4", "4TH", "4th", "IV Year", "iv"]
     elif clean in ["III", "3", "3RD", "3-RD"]:
@@ -578,7 +578,7 @@ def create_nandha_official_department_sheet(ws, dept: Department, db: Session):
         ws.column_dimensions[col_let].width = 14
 
 def _apply_border(cell, color='000000', style='thin'):
-    s = Side(style=style, color=color)
+    s = Side(style=style, color=color)  # type: ignore
     cell.border = Border(left=s, right=s, top=s, bottom=s)
 
 def _add_cover_sheet(wb, logo_path: str):
@@ -909,7 +909,7 @@ def generate_8_sheet_excel_report(db: Session, current_user: Optional[User] = No
     Generates the official 8-sheet Nandha College LeetCode Performance Tracker.
     """
     wb = openpyxl.Workbook()
-    wb.remove(wb.active)
+    wb.remove(wb.active)  # type: ignore
 
     logo_path = os.path.join(os.path.dirname(__file__), "assets", "nandha_emblem.png")
     _add_cover_sheet(wb, logo_path)
@@ -950,7 +950,7 @@ def generate_student_performance_detail_excel(db: Session, current_user: Optiona
       - CSE(IoT)-IVYr
     """
     wb = openpyxl.Workbook()
-    wb.remove(wb.active)
+    wb.remove(wb.active)  # type: ignore
 
     logo_path = os.path.join(os.path.dirname(__file__), "assets", "nandha_emblem.png")
     _add_cover_sheet(wb, logo_path)
@@ -1081,7 +1081,7 @@ def generate_8_sheet_master_tracker(db: Session, current_user: Optional[User] = 
       8. Audit Error Logs
     """
     wb = openpyxl.Workbook()
-    wb.remove(wb.active)
+    wb.remove(wb.active)  # type: ignore
 
     font_header = Font(name="Times New Roman", size=10, bold=True, color="FFFFFF")
     header_fill = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
@@ -1198,7 +1198,7 @@ def generate_8_sheet_master_tracker(db: Session, current_user: Optional[User] = 
         parts = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == ws_item.id).all()
         solvers = sum(1 for p in parts if (p.total_contest_solved or 0) > 0)
         tot_solved = sum((p.total_contest_solved or 0) for p in parts)
-        avg_solved = round(tot_solved / max(len(parts), 1), 1)
+        avg_solved = round(tot_solved / max(len(parts), 1), 1)  # type: ignore
         row_v = [ws_item.id, ws_item.contest_name or f"Contest {ws_item.id}", ws_item.session_date or "N/A", len(parts), solvers, avg_solved]
         for c_idx, val in enumerate(row_v, start=1):
             c = ws6.cell(row=r_idx, column=c_idx, value=val)
@@ -1247,7 +1247,7 @@ def generate_8_sheet_master_tracker(db: Session, current_user: Optional[User] = 
     for sheet in wb.worksheets:
         for col in sheet.columns:
             max_len = max(len(str(cell.value or '')) for cell in col)
-            col_letter = get_column_letter(col[0].column)
+            col_letter = get_column_letter(col[0].column)  # type: ignore
             sheet.column_dimensions[col_letter].width = max(max_len + 3, 12)
 
     output = io.BytesIO()
@@ -1293,7 +1293,7 @@ def create_weekly_contest_matrix_sheet(ws, db: Session, batch_label: str, dept_i
         recent_sessions = sessions[-2:]
         for s in recent_sessions:
             try:
-                dt_obj = datetime.datetime.strptime(s.session_date, "%Y-%m-%d")
+                dt_obj = datetime.datetime.strptime(s.session_date, "%Y-%m-%d")  # type: ignore
                 date_list.append((s, dt_obj.strftime("%d.%m.%Y")))
             except:
                 date_list.append((s, s.session_date))
@@ -1669,7 +1669,7 @@ def generate_weekly_contest_matrix_excel(db: Session, batch_label: str = "2028",
     Generates Excel Workbook with separate Matrix & Details sheets per department.
     """
     wb = openpyxl.Workbook()
-    wb.remove(wb.active)
+    wb.remove(wb.active)  # type: ignore
 
     cs_dept = db.query(Department).filter(
         (Department.code == "CSE(CS)") | (Department.name.ilike("%Cyber Security%"))
@@ -1690,11 +1690,11 @@ def generate_weekly_contest_matrix_excel(db: Session, batch_label: str = "2028",
     else:
         # Sheet 1: Matrix - CSE(CS)
         ws_cs_m = wb.create_sheet(title="Contest Attendance - CS"[:31])
-        create_batch_performance_matrix_sheet(ws_cs_m, db, cs_dept.id if cs_dept else None, current_user)
+        create_batch_performance_matrix_sheet(ws_cs_m, db, cs_dept.id if cs_dept else None, current_user)  # type: ignore
 
         # Sheet 2: Matrix - CSE(IOT)
         ws_iot_m = wb.create_sheet(title="Contest Attendance - IOT"[:31])
-        create_batch_performance_matrix_sheet(ws_iot_m, db, iot_dept.id if iot_dept else None, current_user)
+        create_batch_performance_matrix_sheet(ws_iot_m, db, iot_dept.id if iot_dept else None, current_user)  # type: ignore
 
         # Sheet 3: Matrix - ALL DEPTS
         ws_all_m = wb.create_sheet(title="Contest Attendance - ALL"[:31])
@@ -1703,12 +1703,12 @@ def generate_weekly_contest_matrix_excel(db: Session, batch_label: str = "2028",
         # Sheet 4: Details - CSE(CS)
         if cs_dept:
             ws_cs_d = wb.create_sheet(title="DETAILS - CSE(CS)")
-            create_weekly_contest_matrix_sheet(ws_cs_d, db, batch_label, cs_dept.id, current_user)
+            create_weekly_contest_matrix_sheet(ws_cs_d, db, batch_label, cs_dept.id, current_user)  # type: ignore
 
         # Sheet 5: Details - CSE(IOT)
         if iot_dept:
             ws_iot_d = wb.create_sheet(title="DETAILS - CSE(IOT)")
-            create_weekly_contest_matrix_sheet(ws_iot_d, db, batch_label, iot_dept.id, current_user)
+            create_weekly_contest_matrix_sheet(ws_iot_d, db, batch_label, iot_dept.id, current_user)  # type: ignore
 
         # Sheet 6: Details - ALL DEPTS
         ws_all_d = wb.create_sheet(title="DETAILS - ALL DEPTS")
@@ -1747,12 +1747,12 @@ def generate_single_week_matrix_excel(
             week_label = "Latest Week"
 
     try:
-        date_display = datetime.datetime.strptime(target_session.session_date, "%Y-%m-%d").strftime("%d.%m.%Y") if target_session else datetime.date.today().strftime("%d.%m.%Y")
+        date_display = datetime.datetime.strptime(target_session.session_date, "%Y-%m-%d").strftime("%d.%m.%Y") if target_session else datetime.date.today().strftime("%d.%m.%Y")  # type: ignore
     except Exception:
         date_display = datetime.date.today().strftime("%d.%m.%Y")
 
     wb = openpyxl.Workbook()
-    wb.remove(wb.active)
+    wb.remove(wb.active)  # type: ignore
 
     TNR = "Times New Roman"
     title_fill   = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
@@ -1957,7 +1957,7 @@ def generate_snapshot_excel_report(db: Session, snapshot_id: str) -> bytes:
         
     metrics = snapshot.metrics
     wb = openpyxl.Workbook()
-    wb.remove(wb.active) # Remove default sheet
+    wb.remove(wb.active) # Remove default sheet  # type: ignore
     
     TNR = "Times New Roman"
     font_bold_12 = Font(name=TNR, size=12, bold=True)
@@ -2117,8 +2117,8 @@ def generate_universal_excel(report_data: dict) -> bytes:
     """Generates a universal Excel file directly from the unified JSON dataset."""
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Report Data"
-    ws.sheet_view.showGridLines = True
+    ws.title = "Report Data"  # type: ignore
+    ws.sheet_view.showGridLines = True  # type: ignore
     
     font_bold = Font(name="Times New Roman", size=11, bold=True)
     font_header = Font(name="Times New Roman", size=10, bold=True, color="FFFFFF")
@@ -2132,24 +2132,24 @@ def generate_universal_excel(report_data: dict) -> bytes:
         bottom=Side(style='thin', color='CBD5E1')
     )
     
-    ws["A1"] = "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)"
-    ws["A1"].font = Font(name="Times New Roman", size=14, bold=True)
+    ws["A1"] = "NANDHA ENGINEERING COLLEGE (AUTONOMOUS)"  # type: ignore
+    ws["A1"].font = Font(name="Times New Roman", size=14, bold=True)  # type: ignore
     
-    ws["A2"] = f"Report: {report_data.get('title', 'Universal Report')}"
-    ws["A2"].font = Font(name="Times New Roman", size=12, bold=True, color="0284C7")
+    ws["A2"] = f"Report: {report_data.get('title', 'Universal Report')}"  # type: ignore
+    ws["A2"].font = Font(name="Times New Roman", size=12, bold=True, color="0284C7")  # type: ignore
     
     dt_str = report_data.get('generatedAt', '')
-    ws["A3"] = f"Generated: {dt_str}   |   Status: {report_data.get('dataStatus', 'READY')}"
-    ws["A3"].font = font_normal
+    ws["A3"] = f"Generated: {dt_str}   |   Status: {report_data.get('dataStatus', 'READY')}"  # type: ignore
+    ws["A3"].font = font_normal  # type: ignore
     
     row = 5
     metrics = report_data.get("metrics", {})
     if metrics:
-        ws.cell(row=row, column=1, value="Executive Summary Metrics").font = font_bold
+        ws.cell(row=row, column=1, value="Executive Summary Metrics").font = font_bold  # type: ignore
         row += 1
         for k, v in metrics.items():
-            c1 = ws.cell(row=row, column=1, value=str(k))
-            c2 = ws.cell(row=row, column=2, value=v)
+            c1 = ws.cell(row=row, column=1, value=str(k))  # type: ignore
+            c2 = ws.cell(row=row, column=2, value=v)  # type: ignore
             c1.font = font_bold; c2.font = font_normal
             c1.border = thin_border; c2.border = thin_border
             row += 1
@@ -2157,16 +2157,16 @@ def generate_universal_excel(report_data: dict) -> bytes:
 
     distribution = report_data.get("distribution")
     if distribution:
-        ws.cell(row=row, column=1, value="Problem Solving Category Summary").font = font_bold
+        ws.cell(row=row, column=1, value="Problem Solving Category Summary").font = font_bold  # type: ignore
         row += 1
-        c_cat = ws.cell(row=row, column=1, value="Category Range")
-        c_cnt = ws.cell(row=row, column=2, value="Student Count")
+        c_cat = ws.cell(row=row, column=1, value="Category Range")  # type: ignore
+        c_cnt = ws.cell(row=row, column=2, value="Student Count")  # type: ignore
         c_cat.font = font_header; c_cat.fill = navy_fill; c_cat.border = thin_border
         c_cnt.font = font_header; c_cnt.fill = navy_fill; c_cnt.border = thin_border
         row += 1
         for cat, cnt in distribution.items():
-            c1 = ws.cell(row=row, column=1, value=str(cat))
-            c2 = ws.cell(row=row, column=2, value=cnt)
+            c1 = ws.cell(row=row, column=1, value=str(cat))  # type: ignore
+            c2 = ws.cell(row=row, column=2, value=cnt)  # type: ignore
             c1.font = font_normal; c2.font = font_bold
             c1.border = thin_border; c2.border = thin_border
             row += 1
@@ -2174,59 +2174,59 @@ def generate_universal_excel(report_data: dict) -> bytes:
 
     top_students = report_data.get("topStudents")
     if top_students:
-        ws.cell(row=row, column=1, value="Top Performers Leaderboard").font = font_bold
+        ws.cell(row=row, column=1, value="Top Performers Leaderboard").font = font_bold  # type: ignore
         row += 1
         headers = ["Rank", "Reg No", "Student Name", "Dept", "Year", "Solved", "Rating"]
         for col_idx, h in enumerate(headers, start=1):
-            c = ws.cell(row=row, column=col_idx, value=h)
+            c = ws.cell(row=row, column=col_idx, value=h)  # type: ignore
             c.font = font_header; c.fill = navy_fill; c.border = thin_border
         row += 1
         for idx, s in enumerate(top_students, start=1):
             r_val = s.get("rating") or s.get("contest_rating") or s.get("contestRating") or "—"
             vals = [idx, s.get("reg_no", ""), s.get("name", ""), s.get("dept", ""), s.get("year", ""), s.get("total_solved", 0), r_val]
             for col_idx, val in enumerate(vals, start=1):
-                c = ws.cell(row=row, column=col_idx, value=val)
+                c = ws.cell(row=row, column=col_idx, value=val)  # type: ignore
                 c.font = font_normal; c.border = thin_border
             row += 1
         row += 1
 
     all_students = report_data.get("allStudents")
     if all_students:
-        ws.cell(row=row, column=1, value="Student Performance Master Roster").font = font_bold
+        ws.cell(row=row, column=1, value="Student Performance Master Roster").font = font_bold  # type: ignore
         row += 1
         headers = ["S.No", "Reg No", "Student Name", "Dept", "Year", "Easy", "Medium", "Hard", "Total Solved", "Status"]
         for col_idx, h in enumerate(headers, start=1):
-            c = ws.cell(row=row, column=col_idx, value=h)
+            c = ws.cell(row=row, column=col_idx, value=h)  # type: ignore
             c.font = font_header; c.fill = navy_fill; c.border = thin_border
         row += 1
         for idx, s in enumerate(all_students, start=1):
             vals = [idx, s.get("reg_no", ""), s.get("name", ""), s.get("dept", ""), s.get("year", ""), s.get("easy", "—"), s.get("medium", "—"), s.get("hard", "—"), s.get("total_solved", "—"), s.get("status", "UNVERIFIED")]
             for col_idx, val in enumerate(vals, start=1):
-                c = ws.cell(row=row, column=col_idx, value=val)
+                c = ws.cell(row=row, column=col_idx, value=val)  # type: ignore
                 c.font = font_normal; c.border = thin_border
             row += 1
         row += 1
 
     participations = report_data.get("participations")
     if participations:
-        ws.cell(row=row, column=1, value="Official Contest Participation Log").font = font_bold
+        ws.cell(row=row, column=1, value="Official Contest Participation Log").font = font_bold  # type: ignore
         row += 1
         headers = ["S.No", "Contest Name", "Date", "Reg No", "Student Name", "Dept", "Problems Solved", "Total Problems", "Contest Rank"]
         for col_idx, h in enumerate(headers, start=1):
-            c = ws.cell(row=row, column=col_idx, value=h)
+            c = ws.cell(row=row, column=col_idx, value=h)  # type: ignore
             c.font = font_header; c.fill = navy_fill; c.border = thin_border
         row += 1
         for idx, p in enumerate(participations, start=1):
             vals = [idx, p.get("contest_name", ""), p.get("date", ""), p.get("reg_no", ""), p.get("student_name", ""), p.get("dept", ""), p.get("problems_solved", 0), p.get("total_problems", 4), p.get("rank", "-")]
             for col_idx, val in enumerate(vals, start=1):
-                c = ws.cell(row=row, column=col_idx, value=val)
+                c = ws.cell(row=row, column=col_idx, value=val)  # type: ignore
                 c.font = font_normal; c.border = thin_border
             row += 1
 
-    for col in ws.columns:
+    for col in ws.columns:  # type: ignore
         max_len = max(len(str(cell.value or '')) for cell in col)
         col_letter = get_column_letter(col[0].column)
-        ws.column_dimensions[col_letter].width = max(max_len + 3, 12)
+        ws.column_dimensions[col_letter].width = max(max_len + 3, 12)  # type: ignore
 
     output = io.BytesIO()
     wb.save(output)

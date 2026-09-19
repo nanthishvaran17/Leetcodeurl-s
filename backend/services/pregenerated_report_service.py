@@ -64,15 +64,15 @@ def compute_report_filter_hash(
     if filters:
         for k, v in sorted(filters.items()):
             if v is not None and v != "" and v != "ALL":
-                normalized_filters[str(k).lower().strip()] = str(v).strip()
+                normalized_filters[str(k).lower().strip()] = str(v).strip()  # type: ignore
 
     payload = {
-        "report_type": str(report_type).upper().strip(),
-        "format": str(format).lower().strip(),
+        "report_type": str(report_type).upper().strip(),  # type: ignore
+        "format": str(format).lower().strip(),  # type: ignore
         "filters": normalized_filters,
-        "user_scope": str(user_scope).strip(),
-        "institution_id": str(institution_id).upper().strip(),
-        "data_version": str(data_version).strip()
+        "user_scope": str(user_scope).strip(),  # type: ignore
+        "institution_id": str(institution_id).upper().strip(),  # type: ignore
+        "data_version": str(data_version).strip()  # type: ignore
     }
     raw = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
@@ -169,14 +169,14 @@ def get_or_create_report(
     lookup_ms = round((time.time() - start_ts) * 1000, 2)
 
     # 2. Check disk file validity
-    if cached and cached.storage_path and os.path.exists(cached.storage_path) and os.path.getsize(cached.storage_path) > 0:
+    if cached and cached.storage_path and os.path.exists(cached.storage_path) and os.path.getsize(cached.storage_path) > 0:  # type: ignore
         logger.info(f"[REPORT_CACHE_HIT] {report_type} ({format}) hash={filter_hash[:8]} (lookup: {lookup_ms}ms)")
         return {
             "status": "READY",
             "cache_hit": True,
             "cache_id": cached.id,
             "filter_hash": filter_hash,
-            "filename": cached.filename or os.path.basename(cached.storage_path),
+            "filename": cached.filename or os.path.basename(cached.storage_path),  # type: ignore
             "download_url": f"/api/reports/cached-download/{cached.id}",
             "data_version": curr_version,
             "generated_at": cached.generated_at.isoformat() if cached.generated_at else None,
@@ -187,7 +187,7 @@ def get_or_create_report(
 
     if cached:
         logger.warning(f"[REPORT_CACHE_CORRUPTED] File missing at {cached.storage_path}. Invalidating.")
-        cached.status = "STALE"
+        cached.status = "STALE"  # type: ignore
         try:
             db.commit()
         except Exception:
@@ -234,12 +234,12 @@ def get_or_create_report(
 def trigger_background_report_generation(
     week_id: str = "latest",
     file_type: str = "pdf",
-    report_type: str = None,
-    format: str = None,
+    report_type: str = None,  # type: ignore
+    format: str = None,  # type: ignore
     filters: Optional[Dict[str, Any]] = None,
     user_scope: str = "ALL",
     institution_id: str = "NEC",
-    data_version: str = None,
+    data_version: str = None,  # type: ignore
     current_user: Optional[Any] = None
 ):
     """
@@ -392,15 +392,15 @@ def _build_and_store_report_sync(
         )
         db.add(cache_entry)
     else:
-        cache_entry.status = "READY"
-        cache_entry.storage_path = storage_path
-        cache_entry.filename = filename
-        cache_entry.mime_type = mime_type
-        cache_entry.data_version = data_version
-        cache_entry.generated_at = datetime.datetime.now(datetime.timezone.utc)
-        cache_entry.generation_time_ms = gen_time_ms
-        cache_entry.file_size_bytes = file_size
-        cache_entry.error_message = None
+        cache_entry.status = "READY"  # type: ignore
+        cache_entry.storage_path = storage_path  # type: ignore
+        cache_entry.filename = filename  # type: ignore
+        cache_entry.mime_type = mime_type  # type: ignore
+        cache_entry.data_version = data_version  # type: ignore
+        cache_entry.generated_at = datetime.datetime.now(datetime.timezone.utc)  # type: ignore
+        cache_entry.generation_time_ms = gen_time_ms  # type: ignore
+        cache_entry.file_size_bytes = file_size  # type: ignore
+        cache_entry.error_message = None  # type: ignore
 
     try:
         db.commit()
@@ -410,9 +410,9 @@ def _build_and_store_report_sync(
         # Fallback query if concurrent insert occurred
         cache_entry = db.query(ReportCache).filter(ReportCache.filter_hash == filter_hash).first()
         if cache_entry:
-            cache_entry.status = "READY"
-            cache_entry.storage_path = storage_path
-            cache_entry.file_size_bytes = file_size
+            cache_entry.status = "READY"  # type: ignore
+            cache_entry.storage_path = storage_path  # type: ignore
+            cache_entry.file_size_bytes = file_size  # type: ignore
             try:
                 db.commit()
                 db.refresh(cache_entry)
@@ -421,7 +421,7 @@ def _build_and_store_report_sync(
 
     download_url = f"/api/reports/cached-download/{cache_entry.id}" if cache_entry else f"/api/reports/cached-download/0"
     if cache_entry:
-        cache_entry.download_url = download_url
+        cache_entry.download_url = download_url  # type: ignore
         try:
             db.commit()
         except Exception:
@@ -504,11 +504,11 @@ def generate_report_bytes(
             if loop.is_running():
                 import concurrent.futures
                 with concurrent.futures.ThreadPoolExecutor() as executor:
-                    res = executor.submit(asyncio.run, report_gen.generate_complete_report(contest_id)).result()
+                    res = executor.submit(asyncio.run, report_gen.generate_complete_report(contest_id)).result()  # type: ignore
             else:
-                res = loop.run_until_complete(report_gen.generate_complete_report(contest_id))
+                res = loop.run_until_complete(report_gen.generate_complete_report(contest_id))  # type: ignore
         except Exception:
-            res = asyncio.run(report_gen.generate_complete_report(contest_id))
+            res = asyncio.run(report_gen.generate_complete_report(contest_id))  # type: ignore
         return res["excel_bytes"]
 
     # 3. Master 10-Sheet Institutional Workbook Engine

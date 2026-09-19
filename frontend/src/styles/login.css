@@ -768,8 +768,7 @@
   border-color: var(--text-muted);
 }
 
-.secondary-btn:active:not(:disabled) {
-}
+
 
 /* Divider */
 .divider {

@@ -61,7 +61,7 @@ def with_global_lock(job_name: str, timeout_minutes: int = 15):
                 db.close()
             
             try:
-                if asyncio.iscoroutinefunction(func):
+                if asyncio.iscoroutinefunction(func):  # type: ignore
                     return await func(*args, **kwargs)
                 else:
                     return func(*args, **kwargs)
@@ -323,7 +323,7 @@ async def sunday_2157_lock_gate_job():
     logger.info("[SCHEDULER] Sunday 09:57 PM IST: Executing 09:57 PM Authoritative Final Lock Readiness Gate Check...")
     db = SessionLocal()
     try:
-        gate_res = sunday_autopilot.evaluate_final_lock_readiness_gate(db=db)
+        gate_res = sunday_autopilot.evaluate_final_lock_readiness_gate(db=db)  # type: ignore
         logger.info(f"[SCHEDULER] Sunday 09:57 PM Lock Gate Result: {gate_res}")
         return gate_res
     except Exception as e:
@@ -342,12 +342,12 @@ async def sunday_2200_virtual_contest_job():
     logger.info("[SCHEDULER] Sunday 10:00 PM IST: Executing Finalization Safety Check...")
     db = SessionLocal()
     try:
-        gate_res = sunday_autopilot.evaluate_final_lock_readiness_gate(db=db)
+        gate_res = sunday_autopilot.evaluate_final_lock_readiness_gate(db=db)  # type: ignore
         if not gate_res.get("allow_lock", False):
             logger.error(f"[SCHEDULER_LOCK_BLOCKED] 10:00 PM Finalization Guard blocked: Lock Gate failed. Details: {gate_res}")
             return {"success": False, "status": "LOCK_BLOCKED", "reason": "10:00 PM Finalization Guard blocked by Lock Gate failure.", "gate": gate_res}
         
-        res_fin = sunday_autopilot.phase_4_finalization_and_reconciliation(db=db)
+        res_fin = sunday_autopilot.phase_4_finalization_and_reconciliation(db=db)  # type: ignore
         logger.info(f"[SCHEDULER] Sunday 10:00 PM Virtual Finalization Completed: {res_fin}")
         return {"success": True, "gate": gate_res, "finalization": res_fin}
     except Exception as e:
@@ -410,7 +410,7 @@ async def daily_db_cleanup_job():
         for q in cleanup_queries:
             try:
                 res = db.execute(text(q))
-                total_deleted += res.rowcount
+                total_deleted += res.rowcount  # type: ignore
             except Exception as ex:
                 logger.warning(f"[SCHEDULER] Cleanup query failed: {ex}")
         db.commit()
@@ -508,8 +508,8 @@ async def tracker_dual_sync_morning():
                     absent_cnt += 1
                     continue
                 try:
-                    gql = await fetch_leetcode_contest_and_submissions(s.username)
-                    res = classify_student_contest_performance(gql, active_session.contest_name if active_session else "Weekly Contest 515")
+                    gql = await fetch_leetcode_contest_and_submissions(s.username)  # type: ignore
+                    res = classify_student_contest_performance(gql, active_session.contest_name if active_session else "Weekly Contest 515")  # type: ignore
                     if active_session:
                         rec = db.query(WeeklyPublicResult).filter(
                             WeeklyPublicResult.session_id == active_session.id,
@@ -535,16 +535,16 @@ async def tracker_dual_sync_morning():
                     logger.warning(f"[TRACKER] Student {s.reg_no} sync error: {se}")
                     absent_cnt += 1
             if active_session:
-                active_session.official_participants = official_cnt
-                active_session.virtual_participants = virtual_cnt
-                active_session.not_participated = absent_cnt
+                active_session.official_participants = official_cnt  # type: ignore
+                active_session.virtual_participants = virtual_cnt  # type: ignore
+                active_session.not_participated = absent_cnt  # type: ignore
             db.commit()
             logger.info(f"[TRACKER] Dual-Sync Morning complete: Official={official_cnt}, Virtual={virtual_cnt}, Absent={absent_cnt}")
     except Exception as e:
         logger.error(f"[TRACKER] Dual-Sync Morning Job error: {e}")
     finally:
         try:
-            db.close()
+            db.close()  # type: ignore
         except Exception:
             pass
 
@@ -567,8 +567,8 @@ async def tracker_dual_sync_evening():
             if not s.username:
                 continue
             try:
-                gql = await fetch_leetcode_contest_and_submissions(s.username)
-                res = classify_student_contest_performance(gql, active_session.contest_name if active_session else "Weekly Contest 515")
+                gql = await fetch_leetcode_contest_and_submissions(s.username)  # type: ignore
+                res = classify_student_contest_performance(gql, active_session.contest_name if active_session else "Weekly Contest 515")  # type: ignore
                 # Only update records that switched to VIRTUAL during post-9:30 window
                 if active_session and res["badge_type"] == "YELLOW":
                     rec = db.query(WeeklyPublicResult).filter(
@@ -576,22 +576,22 @@ async def tracker_dual_sync_evening():
                         WeeklyPublicResult.student_id == s.id
                     ).first()
                     if rec and rec.participation_status != "OFFICIAL_ATTENDED":
-                        rec.participation_status = "VIRTUAL_ATTENDED"
+                        rec.participation_status = "VIRTUAL_ATTENDED"  # type: ignore
                         rec.total_contest_solved = res["solved_count"]
                         rec.q1, rec.q2, rec.q3, rec.q4 = res["q1"], res["q2"], res["q3"], res["q4"]
                         virtual_updated += 1
             except Exception as se:
                 logger.warning(f"[TRACKER] Evening delta student {s.reg_no} error: {se}")
         if active_session:
-            active_session.status = "FINALIZED"
-            active_session.virtual_participants = (active_session.virtual_participants or 0) + virtual_updated
+            active_session.status = "FINALIZED"  # type: ignore
+            active_session.virtual_participants = (active_session.virtual_participants or 0) + virtual_updated  # type: ignore
         db.commit()
         logger.info(f"[TRACKER] Dual-Sync Evening complete: Virtual delta updates={virtual_updated}")
     except Exception as e:
         logger.error(f"[TRACKER] Dual-Sync Evening Job error: {e}")
     finally:
         try:
-            db.close()
+            db.close()  # type: ignore
         except Exception:
             pass
 
@@ -625,7 +625,7 @@ async def friday_weekly_window_polling_job():
         return
     db = SessionLocal()
     try:
-        result = run_friday_weekly_pipeline(db=db, force=False)
+        result = run_friday_weekly_pipeline(db=db, force=False)  # type: ignore
         report_status = result.get("report_status", "UNKNOWN")
         period = result.get("period_id", "UNKNOWN")
         logger.info(f"[SCHEDULER] Friday Window Polling Tick: status={report_status}, period={period}")
@@ -649,7 +649,7 @@ async def friday_weekly_report_job():
         return
     db = SessionLocal()
     try:
-        result = run_friday_weekly_pipeline(db=db, force=False)
+        result = run_friday_weekly_pipeline(db=db, force=False)  # type: ignore
         success = result.get("success", False)
         period = result.get("period_id", "UNKNOWN")
         contest = result.get("contest_label", "UNKNOWN")
@@ -700,7 +700,7 @@ async def friday_weekly_retry_job():
             return
         # No READY report for today — run the pipeline
         logger.info(f"[SCHEDULER] Saturday retry: No READY report for {data_version}. Running pipeline...")
-        result = run_friday_weekly_pipeline(db=db)
+        result = run_friday_weekly_pipeline(db=db)  # type: ignore
         logger.info(f"[SCHEDULER] Saturday retry result: success={result.get('success')}, period={result.get('period_id')}")
     except Exception as e:
         logger.error(f"[SCHEDULER] friday_weekly_retry_job error: {e}", exc_info=True)

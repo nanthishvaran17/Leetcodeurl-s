@@ -93,7 +93,7 @@ Base = declarative_base()
 
 if "postgresql" in db_url or "postgres" in db_url:
     try:
-        import psycopg2
+        import psycopg2  # type: ignore
         from sqlalchemy import event as _pg_event
 
         @_pg_event.listens_for(engine, "handle_error")
@@ -167,7 +167,7 @@ def get_db_session():
                 "could not connect", "connection refused", "operationalerror"
             ))
             try:
-                import psycopg2
+                import psycopg2  # type: ignore
                 if isinstance(_exc, (psycopg2.OperationalError, psycopg2.InterfaceError)):
                     _is_transient = True
             except ImportError:

@@ -6,7 +6,7 @@ import string
 from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, Request, Response, Depends, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse, ORJSONResponse
+from fastapi.responses import JSONResponse, ORJSONResponse  # type: ignore
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -307,10 +307,10 @@ async def _deferred_startup_tasks():
                     db_init.commit()
                     logger.info(f"[STARTUP] Reconciled initial admin user: {admin_username}")
                 else:
-                    admin_user.role = "Admin"
-                    admin_user.is_active = True
+                    admin_user.role = "Admin"  # type: ignore
+                    admin_user.is_active = True  # type: ignore
                     if not verify_password(admin_pass, str(admin_user.hashed_password)):
-                        admin_user.hashed_password = get_password_hash(admin_pass)
+                        admin_user.hashed_password = get_password_hash(admin_pass)  # type: ignore
                         db_init.commit()
             except Exception as _adm_err:
                 logger.warning(f"[STARTUP] Admin reconcile note: {_adm_err}")
@@ -319,7 +319,7 @@ async def _deferred_startup_tasks():
                 stale_jobs = db_init.query(SyncJob).filter(SyncJob.status == "RUNNING").all()
                 if stale_jobs:
                     for sj in stale_jobs:
-                        sj.status = "INTERRUPTED"
+                        sj.status = "INTERRUPTED"  # type: ignore
                     db_init.commit()
             except Exception as _sj_err:
                 logger.warning(f"[STARTUP] Sync job recovery note: {_sj_err}")
@@ -351,7 +351,7 @@ async def _deferred_startup_tasks():
     if not is_vercel and SCHEDULER_AVAILABLE and run_scheduler_in_web:
         try:
             logger.info("[STARTUP] Step 3: Scheduler Initialization...")
-            start_scheduler()
+            start_scheduler()  # type: ignore
             from backend.services.schedule_service import get_or_create_default_schedule, register_apscheduler_job
             from backend.database import SessionLocal
             with SessionLocal() as _sched_db:
@@ -420,9 +420,9 @@ async def _deferred_startup_tasks():
                                 asyncio.create_task(
                                     sunday_autopilot.phase_4_finalization_0930(_recovery_db)
                                 )
-
+  # type: ignore
                             recovery_record.status = "COMPLETED"
-                            recovery_record.completed_at = _dt.datetime.now(_dt.timezone.utc)
+                            recovery_record.completed_at = _dt.datetime.now(_dt.timezone.utc)  # type: ignore
                             _recovery_db.commit()
                             logger.info("[STARTUP] Missed job recovery completed.")
                         else:

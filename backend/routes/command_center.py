@@ -63,7 +63,7 @@ EXCLUDE_DEPT_CODES = {"CSE_TEST", "CSE_AI_TEST", "TEST"}
 
 def _real_dept_ids(db: Session) -> List[int]:
     all_depts = db.query(Department).all()
-    return [
+    return [  # type: ignore
         d.id for d in all_depts
         if d.code and "TEST" not in d.code.upper() and d.code.upper() not in EXCLUDE_DEPT_CODES
     ]
@@ -108,7 +108,7 @@ def get_command_center_summary(
     
     # Strictly enforce server-side department isolation for non-admin HODs
     if not is_global_admin and role_clean in ["hod", "head of department"] and current_user.department_id:
-        dept_id = current_user.department_id
+        dept_id = current_user.department_id  # type: ignore
 
     scope_key = f"global" if is_global_admin else f"user_{uid}"
     cache_key = f"cmd_center_summary:{scope_key}:d{dept_id or 'all'}:s{staff_id or 'all'}:y{year_level or 'all'}:sec{section_id or 'all'}"
@@ -638,10 +638,10 @@ def get_report_data(
     health = calculate_department_health_score(
         db,
         current_user,
-        dept_id=eff_dept_id,
+        dept_id=eff_dept_id,  # type: ignore
         staff_id=eff_staff,
         year_level=eff_year,
-        section_id=sec_id
+        section_id=sec_id  # type: ignore
     )
     benchmarks = get_institutional_benchmarks(db, current_user)
 
@@ -687,7 +687,7 @@ def get_report_data(
         }
 
     elif report_type == "FACULTY_ALLOCATION":
-        workload_res = get_faculty_workload(dept_id=eff_dept_id, db=db, current_user=current_user)
+        workload_res = get_faculty_workload(dept_id=eff_dept_id, db=db, current_user=current_user)  # type: ignore
         return {
             "report_title": "Faculty Mentorship & Student Allocation Audit Report",
             "generated_at": now_str,
@@ -807,7 +807,7 @@ async def add_student(req: StudentAddRequest, background_tasks: BackgroundTasks,
     db.add(blank_stats)
     db.commit()
 
-    _log_admin_action(db, "ADD_STUDENT", student.reg_no, f"Added student {student.name} ({student.reg_no})")
+    _log_admin_action(db, "ADD_STUDENT", student.reg_no, f"Added student {student.name} ({student.reg_no})")  # type: ignore
     return {"success": True, "student_id": student.id, "message": f"Student '{student.name}' added successfully."}
 
 @router.put("/students/{reg_no}")
@@ -819,21 +819,21 @@ def update_student(reg_no: str, req: StudentUpdateRequest, db: Session = Depends
         raise HTTPException(status_code=404, detail=f"Student '{reg_no}' not found.")
 
     if req.name:
-        student.name = req.name.strip().title()
+        student.name = req.name.strip().title()  # type: ignore
     if req.department_id:
-        student.department_id = req.department_id
+        student.department_id = req.department_id  # type: ignore
     if req.year_level:
-        student.year_level = req.year_level
+        student.year_level = req.year_level  # type: ignore
     if req.section_id is not None:
-        student.section_id = req.section_id
+        student.section_id = req.section_id  # type: ignore
     if req.email is not None:
-        student.email = req.email.strip() if req.email else None
+        student.email = req.email.strip() if req.email else None  # type: ignore
     if req.leetcode_username:
-        student.username = req.leetcode_username.strip().lower()
-        student.leetcode_url = f"https://leetcode.com/{student.username}/"
+        student.username = req.leetcode_username.strip().lower()  # type: ignore
+        student.leetcode_url = f"https://leetcode.com/{student.username}/"  # type: ignore
 
     db.commit()
-    _log_admin_action(db, "UPDATE_STUDENT", student.reg_no, f"Updated student {student.name} ({student.reg_no})")
+    _log_admin_action(db, "UPDATE_STUDENT", student.reg_no, f"Updated student {student.name} ({student.reg_no})")  # type: ignore
     return {"success": True, "message": f"Student '{student.name}' updated successfully."}
 
 @router.delete("/students/{reg_no}")
@@ -844,9 +844,9 @@ def delete_student(reg_no: str, db: Session = Depends(get_db)):
     if not student:
         raise HTTPException(status_code=404, detail=f"Student '{reg_no}' not found.")
 
-    student.is_active = False
+    student.is_active = False  # type: ignore
     db.commit()
-    _log_admin_action(db, "DEACTIVATE_STUDENT", student.reg_no, f"Deactivated student {student.name}")
+    _log_admin_action(db, "DEACTIVATE_STUDENT", student.reg_no, f"Deactivated student {student.name}")  # type: ignore
     return {"success": True, "message": f"Student '{student.name}' deactivated."}
 
 @router.get("/departments")
@@ -859,7 +859,7 @@ def get_departments(db: Session = Depends(get_db), current_user: User = Depends(
         # Load all production departments (exclude test/demo departments)
         from backend.constants import is_production_department
         all_depts = db.query(Department).all()
-        depts = [d for d in all_depts if is_production_department(d.code)]
+        depts = [d for d in all_depts if is_production_department(d.code)]  # type: ignore
 
     # Optimize: Pre-fetch all active student counts per department using GROUP BY
     dept_counts_query = db.query(

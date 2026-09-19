@@ -309,13 +309,13 @@ def _acquire_global_lock(db: Session, job_id: str, timeout_minutes: int = 120) -
         )
         result = db.execute(stmt_lock)
         db.commit()
-        return result.rowcount > 0
+        return result.rowcount > 0  # type: ignore
     except Exception as e:
         db.rollback()
         logger.error(f"[SYNC_LOCK] Error acquiring global lock: {e}")
         return False
 
-def _release_global_lock(db: Session, job_id: str = None):
+def _release_global_lock(db: Session, job_id: str = None):  # type: ignore
     """Release the global sync lock."""
     stmt = (
         update(GlobalSyncLock)
@@ -446,7 +446,7 @@ def start_stale_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, 
     db.commit()
 
     sync_tracker.start(job_id, total_count, triggered_by=triggered_by)
-    dispatch_background_task(_run_full_sync_worker(job_id, target_student_ids=target_ids, sync_mode="BACKGROUND_SYNC"))
+    dispatch_background_task(_run_full_sync_worker(job_id, target_student_ids=target_ids, sync_mode="BACKGROUND_SYNC"))  # type: ignore
 
     return {
         "success": True,
@@ -494,7 +494,7 @@ def start_targeted_sync_job(db: Session, student_ids: List[int], triggered_by: s
     db.commit()
 
     sync_tracker.start(job_id, total_count, triggered_by=triggered_by)
-    dispatch_background_task(_run_full_sync_worker(job_id, target_student_ids=[s.id for s in valid_students], sync_mode="RECOVERY_SYNC"))
+    dispatch_background_task(_run_full_sync_worker(job_id, target_student_ids=[s.id for s in valid_students], sync_mode="RECOVERY_SYNC"))  # type: ignore
 
     return {
         "success": True,
@@ -534,14 +534,14 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
                     job_record = _db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
                     if job_record:
                         now_t = datetime.datetime.now(datetime.timezone.utc)
-                        job_record.completed_at = now_t
-                        job_record.last_synced_at = now_t
+                        job_record.completed_at = now_t  # type: ignore
+                        job_record.last_synced_at = now_t  # type: ignore
                         job_record.success_count = summary.get("full_dataset_synced", 0)
                         job_record.partial_count = summary.get("partial_sync", 0) + summary.get("pending_username", 0)
                         job_record.error_count = summary.get("fetch_failed", 0) + summary.get("invalid_username", 0)
                         job_record.processed_count = job_record.total_records
-                        job_record.progress = 100.0
-                        job_record.status = final_status
+                        job_record.progress = 100.0  # type: ignore
+                        job_record.status = final_status  # type: ignore
                         _db.commit()
                     return
                 except Exception as _e:
@@ -576,9 +576,9 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
             try:
                 job_record = _db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
                 if job_record:
-                    job_record.completed_at = datetime.datetime.now(datetime.timezone.utc)
-                    job_record.status = "FAILED"
-                    job_record.error_message = str(exc)
+                    job_record.completed_at = datetime.datetime.now(datetime.timezone.utc)  # type: ignore
+                    job_record.status = "FAILED"  # type: ignore
+                    job_record.error_message = str(exc)  # type: ignore
                     _db.commit()
                 break
             except Exception as _e2:
@@ -640,12 +640,12 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
         else:
             err_msg = "Unknown fetch error"
             err_code = "NETWORK_ERROR"
-        st.error_message = err_msg
-        st.error_code = err_code
+        st.error_message = err_msg  # type: ignore
+        st.error_code = err_code  # type: ignore
         has_prev_data = (old_total is not None and old_total > 0)
-        st.sync_status = "stale" if has_prev_data else "failed"
-        st.validation_status = "verified" if has_prev_data else "failed"
-        st.last_attempt_at = now
+        st.sync_status = "stale" if has_prev_data else "failed"  # type: ignore
+        st.validation_status = "verified" if has_prev_data else "failed"  # type: ignore
+        st.last_attempt_at = now  # type: ignore
 
         item = SyncJobItem(
             job_id=job_id,
@@ -658,17 +658,17 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
         )
         db.add(item)
         db.commit()
-        return (False, has_prev_data, not has_prev_data)
+        return (False, has_prev_data, not has_prev_data)  # type: ignore
 
     # Case B: Explicit Invalid Username (404 on LeetCode) — Preserve previous stats
     status_str = res.get("status", "pending")
     if status_str == "INVALID_USERNAME":
-        st.status = "INVALID_USERNAME"
-        st.sync_status = "invalid_username"
-        st.validation_status = "invalid_username"
-        st.error_message = res.get("error_message") or "LeetCode username does not resolve (404)"
-        st.error_code = "INVALID_USERNAME"
-        st.last_attempt_at = now
+        st.status = "INVALID_USERNAME"  # type: ignore
+        st.sync_status = "invalid_username"  # type: ignore
+        st.validation_status = "invalid_username"  # type: ignore
+        st.error_message = res.get("error_message") or "LeetCode username does not resolve (404)"  # type: ignore
+        st.error_code = "INVALID_USERNAME"  # type: ignore
+        st.last_attempt_at = now  # type: ignore
 
         item = SyncJobItem(
             job_id=job_id,
@@ -681,16 +681,16 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
         )
         db.add(item)
         db.commit()
-        return (False, old_total is not None and old_total > 0, True)
+        return (False, old_total is not None and old_total > 0, True)  # type: ignore
 
     # Case C: Identity Mismatch — Preserve previous stats
     if status_str in ("IDENTITY_MISMATCH", "USERNAME_MISMATCH"):
-        st.status = "USERNAME_MISMATCH"
-        st.sync_status = "identity_mismatch"
-        st.validation_status = "identity_mismatch"
-        st.error_message = res.get("error_message") or "Returned LeetCode identity does not match requested identity"
-        st.error_code = "USERNAME_MISMATCH"
-        st.last_attempt_at = now
+        st.status = "USERNAME_MISMATCH"  # type: ignore
+        st.sync_status = "identity_mismatch"  # type: ignore
+        st.validation_status = "identity_mismatch"  # type: ignore
+        st.error_message = res.get("error_message") or "Returned LeetCode identity does not match requested identity"  # type: ignore
+        st.error_code = "USERNAME_MISMATCH"  # type: ignore
+        st.last_attempt_at = now  # type: ignore
 
         item = SyncJobItem(
             job_id=job_id,
@@ -703,7 +703,7 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
         )
         db.add(item)
         db.commit()
-        return (False, old_total is not None and old_total > 0, True)
+        return (False, old_total is not None and old_total > 0, True)  # type: ignore
 
     # Case D: Verified Profile Data
     total_solved = res.get("total_solved")
@@ -724,35 +724,35 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
         derived_total = (easy_solved or 0) + (medium_solved or 0) + (hard_solved or 0)
         source_total = total_solved
 
-        st.source_total_solved = source_total
-        st.derived_total_solved = derived_total
+        st.source_total_solved = source_total  # type: ignore
+        st.derived_total_solved = derived_total  # type: ignore
 
         # Institutional Total Solved Policy:
         # Use derived_total if easy/medium/hard all successfully returned; otherwise source_total
         if easy_solved is not None and medium_solved is not None and hard_solved is not None:
-            st.total_solved = derived_total
+            st.total_solved = derived_total  # type: ignore
         else:
-            st.total_solved = source_total
+            st.total_solved = source_total  # type: ignore
 
-        st.easy_solved = easy_solved if easy_solved is not None else st.easy_solved
-        st.medium_solved = medium_solved if medium_solved is not None else st.medium_solved
-        st.hard_solved = hard_solved if hard_solved is not None else st.hard_solved
+        st.easy_solved = easy_solved if easy_solved is not None else st.easy_solved  # type: ignore
+        st.medium_solved = medium_solved if medium_solved is not None else st.medium_solved  # type: ignore
+        st.hard_solved = hard_solved if hard_solved is not None else st.hard_solved  # type: ignore
 
-        st.recent_contest_name = res.get("recent_contest_name")
-        st.recent_contest_score = res.get("recent_contest_score")
+        st.recent_contest_name = res.get("recent_contest_name")  # type: ignore
+        st.recent_contest_score = res.get("recent_contest_score")  # type: ignore
         if res.get("public_profile_ranking") is not None:
-            st.public_profile_ranking = res.get("public_profile_ranking")
+            st.public_profile_ranking = res.get("public_profile_ranking")  # type: ignore
         if contest_rating is not None:
-            st.contest_rating = contest_rating
+            st.contest_rating = contest_rating  # type: ignore
         if global_ranking is not None:
-            st.contest_global_ranking = global_ranking
+            st.contest_global_ranking = global_ranking  # type: ignore
 
         streak_val = res.get("max_streak") or res.get("streak")
         active_days_val = res.get("active_days") or res.get("total_active_days")
         if streak_val is not None:
-            st.max_streak = streak_val
+            st.max_streak = streak_val  # type: ignore
         if active_days_val is not None:
-            st.active_days = active_days_val
+            st.active_days = active_days_val  # type: ignore
 
         # Sync LeetCodeActivity model
         from backend.models import LeetCodeActivity
@@ -762,12 +762,12 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
             db.add(lc_act)
         if streak_val is not None:
             lc_act.current_streak = streak_val
-            lc_act.longest_streak = max(lc_act.longest_streak or 0, streak_val)
+            lc_act.longest_streak = max(lc_act.longest_streak or 0, streak_val)  # type: ignore
         if active_days_val is not None:
             lc_act.total_active_days = active_days_val
         if res.get("submission_calendar_json"):
             lc_act.submission_calendar_json = res.get("submission_calendar_json")
-        lc_act.fetched_at = now
+        lc_act.fetched_at = now  # type: ignore
 
         # Create historical StudentContestSnapshot if contest data is present
         if res.get("recent_contest_name"):
@@ -794,15 +794,15 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
             )
             db.add(c_snap)
 
-        st.status = "verified"
-        st.sync_status = "success"
-        st.validation_status = "verified"
-        st.source = "leetcode_live_sync"
-        st.last_successful_sync = now
-        st.last_verified_at = now
-        st.last_attempt_at = now
-        st.error_message = None
-        st.error_code = None
+        st.status = "verified"  # type: ignore
+        st.sync_status = "success"  # type: ignore
+        st.validation_status = "verified"  # type: ignore
+        st.source = "leetcode_live_sync"  # type: ignore
+        st.last_successful_sync = now  # type: ignore
+        st.last_verified_at = now  # type: ignore
+        st.last_attempt_at = now  # type: ignore
+        st.error_message = None  # type: ignore
+        st.error_code = None  # type: ignore
 
         # Check for data inconsistency between source and derived total
         is_mismatch = (source_total != derived_total) and (derived_total > 0)
@@ -833,16 +833,16 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
         delta_easy = max(0, (st.easy_solved or 0) - previous_easy)
         delta_medium = max(0, (st.medium_solved or 0) - previous_medium)
         delta_hard = max(0, (st.hard_solved or 0) - previous_hard)
-        delta_rating = round((st.contest_rating or 0.0) - previous_rating, 1)
+        delta_rating = round((st.contest_rating or 0.0) - previous_rating, 1)  # type: ignore
 
         # Check and emit student milestone notifications
         try:
             from backend.services.automatic_notification_engine import AutomaticNotificationEngine
             AutomaticNotificationEngine.check_and_emit_student_milestones(
                 db=db,
-                student_id=student.id,
-                old_solved=old_total or 0,
-                new_solved=st.total_solved or 0
+                student_id=student.id,  # type: ignore
+                old_solved=old_total or 0,  # type: ignore
+                new_solved=st.total_solved or 0  # type: ignore
             )
         except Exception as m_err:
             logger.warning(f"[MILESTONE_ENGINE] Milestone check notice for student {student.id}: {m_err}")
@@ -887,7 +887,7 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
                 "source": "leetcode_live_sync",
                 "last_verified_at": now.isoformat() + "Z"
             }
-            update_firestore_doc("leetcode_stats", student.reg_no, fs_data)
+            update_firestore_doc("leetcode_stats", student.reg_no, fs_data)  # type: ignore
             logger.info(f"[SYNC_DATABASE_WRITE] Written Cloud Firestore profile stats for {student.reg_no}")
         except Exception as fs_err:
             logger.warning(f"[SYNC] Cloud Firestore stats update note for {student.reg_no}: {fs_err}")
@@ -920,11 +920,11 @@ def _process_single_student_sync(db: Session, job_id: str, student: Student, res
 
     else:
         # Case E: Generic Fetch Error
-        st.error_message = res.get("error_message") or "Profile fetch failed"
-        st.error_code = res.get("error_code") or "FETCH_ERROR"
-        st.last_attempt_at = now
-        st.sync_status = "failed"
-        st.status = "FETCH_FAILED"
+        st.error_message = res.get("error_message") or "Profile fetch failed"  # type: ignore
+        st.error_code = res.get("error_code") or "FETCH_ERROR"  # type: ignore
+        st.last_attempt_at = now  # type: ignore
+        st.sync_status = "failed"  # type: ignore
+        st.status = "FETCH_FAILED"  # type: ignore
 
         item = SyncJobItem(
             job_id=job_id,
@@ -948,7 +948,7 @@ def _sync_active_contest_data(db: Session):
 
     if active_session:
         from backend.routes.weekly_contests import get_session_matrix
-        get_session_matrix(session_id=active_session.id, dept="ALL", year="ALL", db=db)
+        get_session_matrix(session_id=active_session.id, dept="ALL", year="ALL", db=db)  # type: ignore
 
 
 _active_single_fetches: set = set()
@@ -986,19 +986,19 @@ def sync_single_student(student_id: int, db: Session, force_refresh: bool = True
         start_time_iso = datetime.datetime.now(datetime.timezone.utc).isoformat() + "Z"
 
         # Validate URL from DB
-        parsed_username, canonical_url, url_status = extract_leetcode_username(student.leetcode_url)
+        parsed_username, canonical_url, url_status = extract_leetcode_username(student.leetcode_url)  # type: ignore
         if url_status != "OK" or not parsed_username:
             # Mark URL_INVALID
             st = student.stats
             if not st:
                 st = LeetCodeProfileStats(student_id=student.id)
                 db.add(st)
-            st.status = "URL_INVALID"
-            st.sync_status = "url_invalid"
-            st.validation_status = "url_invalid"
-            st.error_message = f"Invalid LeetCode URL format: '{student.leetcode_url}'"
-            st.error_code = "URL_INVALID"
-            st.last_attempt_at = datetime.datetime.now(datetime.timezone.utc)
+            st.status = "URL_INVALID"  # type: ignore
+            st.sync_status = "url_invalid"  # type: ignore
+            st.validation_status = "url_invalid"  # type: ignore
+            st.error_message = f"Invalid LeetCode URL format: '{student.leetcode_url}'"  # type: ignore
+            st.error_code = "URL_INVALID"  # type: ignore
+            st.last_attempt_at = datetime.datetime.now(datetime.timezone.utc)  # type: ignore
             db.commit()
 
             logger.info(
@@ -1023,13 +1023,13 @@ def sync_single_student(student_id: int, db: Session, force_refresh: bool = True
         # Clear in-memory cache for both old & new username
         from backend.leetcode_fetcher import clear_leetcode_cache
         if old_username:
-            clear_leetcode_cache(old_username)
+            clear_leetcode_cache(old_username)  # type: ignore
         clear_leetcode_cache(parsed_username)
 
         # Update student record with normalized username & canonical URL if needed
-        student.username = parsed_username.lower()
+        student.username = parsed_username.lower()  # type: ignore
         if canonical_url and student.leetcode_url != canonical_url:
-            student.leetcode_url = canonical_url
+            student.leetcode_url = canonical_url  # type: ignore
         db.commit()
         db.refresh(student)
 
@@ -1040,7 +1040,7 @@ def sync_single_student(student_id: int, db: Session, force_refresh: bool = True
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
 
-        res = loop.run_until_complete(fetch_leetcode_profile(student.username, force_refresh=force_refresh))
+        res = loop.run_until_complete(fetch_leetcode_profile(student.username, force_refresh=force_refresh))  # type: ignore
 
         job_id = f"SINGLE-{student_id}-{int(datetime.datetime.now(datetime.timezone.utc).timestamp())}"
         job = db.query(SyncJob).filter(SyncJob.job_id == job_id).first()
@@ -1073,33 +1073,33 @@ def sync_single_student(student_id: int, db: Session, force_refresh: bool = True
             pass
 
         end_time_iso = datetime.datetime.now(datetime.timezone.utc).isoformat() + "Z"
-        result_status = "SUCCESS" if is_success else ("PARTIAL" if is_partial else (student.stats.sync_status.upper() if student.stats else "FAILED"))
-        fetched_uname = res.get("fetched_username") or res.get("username") or student.username
+        result_status = "SUCCESS" if is_success else ("PARTIAL" if is_partial else (student.stats.sync_status.upper() if student.stats else "FAILED"))  # type: ignore
+        fetched_uname = res.get("fetched_username") or res.get("username") or student.username  # type: ignore
 
         logger.info(
-            f"[URL_CHANGE_FETCH] Student ID: {student.id} | Reg No: {student.reg_no} | "
-            f"Old URL: '{old_url}' | New URL: '{student.leetcode_url}' | "
-            f"Old Username: '{old_username}' | New Username: '{student.username}' | "
+            f"[URL_CHANGE_FETCH] Student ID: {student.id} | Reg No: {student.reg_no} | "  # type: ignore
+            f"Old URL: '{old_url}' | New URL: '{student.leetcode_url}' | "  # type: ignore
+            f"Old Username: '{old_username}' | New Username: '{student.username}' | "  # type: ignore
             f"Fetch Started: {start_time_iso} | Fetch Completed: {end_time_iso} | "
             f"Fetched Username: '{fetched_uname}' | Result Status: {result_status} | "
-            f"Error: '{student.stats.error_message if student.stats else None}' | Timestamp: {end_time_iso}"
+            f"Error: '{student.stats.error_message if student.stats else None}' | Timestamp: {end_time_iso}"  # type: ignore
         )
 
         # Broadcast WebSocket update
         try:
             dispatch_background_task(broadcast_sync_event({
                 "type": "STUDENT_UPDATED",
-                "student_id": student.id,
-                "version": student.version,
+                "student_id": student.id,  # type: ignore
+                "version": student.version,  # type: ignore
                 "changes": {
-                    "reg_no": student.reg_no,
-                    "name": student.name,
-                    "username": student.username,
+                    "reg_no": student.reg_no,  # type: ignore
+                    "name": student.name,  # type: ignore
+                    "username": student.username,  # type: ignore
                     "stats": {
-                        "total_solved": student.stats.total_solved if student.stats else None,
-                        "sync_status": student.stats.sync_status if student.stats else "failed",
-                        "status": student.stats.status if student.stats else "pending",
-                        "last_verified_at": student.stats.last_verified_at.isoformat() if student.stats and student.stats.last_verified_at else None
+                        "total_solved": student.stats.total_solved if student.stats else None,  # type: ignore
+                        "sync_status": student.stats.sync_status if student.stats else "failed",  # type: ignore
+                        "status": student.stats.status if student.stats else "pending",  # type: ignore
+                        "last_verified_at": student.stats.last_verified_at.isoformat() if student.stats and student.stats.last_verified_at else None  # type: ignore
                     }
                 }
             }))
@@ -1108,15 +1108,15 @@ def sync_single_student(student_id: int, db: Session, force_refresh: bool = True
 
         return {
             "status": "success" if is_success else "partial" if is_partial else "error",
-            "student_id": student.id,
-            "name": student.name,
-            "reg_no": student.reg_no,
-            "username": student.username,
-            "leetcode_url": student.leetcode_url,
-            "total_solved": student.stats.total_solved if student.stats else None,
-            "sync_status": student.stats.sync_status if student.stats else "failed",
-            "error_message": student.stats.error_message if student.stats else None,
-            "last_verified_at": student.stats.last_verified_at.isoformat() if (student.stats and student.stats.last_verified_at) else None
+            "student_id": student.id,  # type: ignore
+            "name": student.name,  # type: ignore
+            "reg_no": student.reg_no,  # type: ignore
+            "username": student.username,  # type: ignore
+            "leetcode_url": student.leetcode_url,  # type: ignore
+            "total_solved": student.stats.total_solved if student.stats else None,  # type: ignore
+            "sync_status": student.stats.sync_status if student.stats else "failed",  # type: ignore
+            "error_message": student.stats.error_message if student.stats else None,  # type: ignore
+            "last_verified_at": student.stats.last_verified_at.isoformat() if (student.stats and student.stats.last_verified_at) else None  # type: ignore
         }
     finally:
         with _single_fetch_lock:

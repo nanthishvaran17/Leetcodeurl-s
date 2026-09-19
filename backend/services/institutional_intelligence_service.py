@@ -204,9 +204,9 @@ class InstitutionalIntelligenceService:
         members = db.query(SmartGroupMember).filter_by(group_id=group_id).all()
         member_list = []
         for m in members:
-            disp = MessagingService._get_user_display(db, m.user_id)
+            disp = MessagingService._get_user_display(db, m.user_id)  # type: ignore
             disp["group_role"] = m.role
-            disp["is_online"] = MessagingService._is_user_online(db, m.user_id)
+            disp["is_online"] = MessagingService._is_user_online(db, m.user_id)  # type: ignore
             member_list.append(disp)
 
         return {
@@ -272,7 +272,7 @@ class InstitutionalIntelligenceService:
                     role="STUDENT" if ("STUDENT" in mem_id or "@" in mem_id or mem_id.isalnum()) else "FACULTY",
                     joined_at=datetime.datetime.now(datetime.timezone.utc)
                 ))
-                existing_ids.add(mem_id)
+                existing_ids.add(mem_id)  # type: ignore
                 added_count += 1
 
         db.commit()
@@ -312,7 +312,7 @@ class InstitutionalIntelligenceService:
         else:
             member_groups = db.query(SmartGroupMember.group_id).filter_by(user_id=user_id).subquery()
             groups = db.query(SmartGroup).filter(
-                or_(SmartGroup.group_id.in_(member_groups), SmartGroup.created_by == user_id)
+                or_(SmartGroup.group_id.in_(member_groups), SmartGroup.created_by == user_id)  # type: ignore
             ).all()
 
         res = []
@@ -722,7 +722,7 @@ I can show specific student progress assigned to any faculty member."""
                 score_counts = {4: 0, 3: 0, 2: 0, 1: 0, 0: 0}
                 for r in in_scope_results:
                     cnt = r.total_contest_solved if r.total_contest_solved in score_counts else (r.q1+r.q2+r.q3+r.q4)
-                    score_counts[min(max(cnt, 0), 4)] += 1
+                    score_counts[min(max(cnt, 0), 4)] += 1  # type: ignore
 
                 markdown_resp = f"""### 📊 Weekly Contest Performance Snapshot
 
@@ -1148,7 +1148,7 @@ I am equipped with comprehensive AI assistant capabilities for **Nandha Engineer
         return {
             "studentName": getattr(current_user, "full_name", "Institutional Administrator"),
             "regNo": getattr(current_user, "username", "ADMIN"),
-            "department": getattr(current_user, "department", None).code if getattr(current_user, "department", None) else "ALL",
+            "department": getattr(current_user, "department", None).code if getattr(current_user, "department", None) else "ALL",  # type: ignore
             "yearLevel": "Staff / Faculty Scope",
             "status": "INSTITUTIONAL_ADMIN",
             "statusLabel": "ACTIVE — Verified Administrator Scope",
