@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CollegeLogo } from '../components/CollegeLogo';
 import { Shield, ArrowRight, Trophy, Users, Layers, Activity, Flame, Star, LayoutGrid, List, RefreshCw, CheckCircle2, Clock, AlertCircle, ChevronDown, Building2, GraduationCap, RotateCcw, Filter, Search, X, Sparkles, Zap, ArrowUpDown } from 'lucide-react';
@@ -341,7 +341,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   };
 
 
-  const fetchFilteredStudents = async () => {
+  async function fetchFilteredStudents() {
     try {
       const res = await api.get('/students/leaderboard-fast');
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
