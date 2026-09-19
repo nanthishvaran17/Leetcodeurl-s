@@ -54,15 +54,20 @@ def get_hod_authorized_department_ids(db: Session, user: Optional[User]) -> List
     """
     if not user:
         return []
+    u_id = getattr(user, "id", None)
+    u_dept_id = getattr(user, "department_id", None)
+    if not u_id:
+        return [u_dept_id] if u_dept_id else []
+
     allocations = (
         db.query(HODDepartmentAllocation.department_id)
-        .filter(HODDepartmentAllocation.user_id == user.id)
+        .filter(HODDepartmentAllocation.user_id == u_id)
         .all()
     )
     ids = [row[0] for row in allocations]
     # Fallback for legacy HOD users not yet in HODDepartmentAllocation
-    if not ids and user.department_id:
-        ids = [user.department_id]
+    if not ids and u_dept_id:
+        ids = [u_dept_id]
     return ids
 
 
@@ -190,11 +195,13 @@ def apply_role_based_student_filter(query, user: Optional[User], db: Session):
 
     # 3. Staff / Faculty / Mentors → assigned students only (with department fallback)
     if role in _STAFF_ROLES:
-        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, user.id)
+        u_id = getattr(user, "id", None)
+        u_dept_id = getattr(user, "department_id", None)
+        assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, u_id) if u_id else []
         if assigned_ids:
             return query.filter(Student.id.in_(assigned_ids))
-        elif user and user.department_id:
-            return query.filter(Student.department_id == user.department_id)
+        elif u_dept_id:
+            return query.filter(Student.department_id == u_dept_id)
         else:
             # Fallback to all real production department students if unassigned and no dept set
             real_dept_ids = [d.id for d in db.query(Department).all() if d.code and "TEST" not in d.code.upper()]

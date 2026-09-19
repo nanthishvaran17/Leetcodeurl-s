@@ -489,7 +489,7 @@ class DownloadManager {
       await downloadNotification.notifyFailure(filename, errorMessage);
     } else if (httpStatus >= 500) {
       status = 'FAILED';
-      errorMessage = 'Unable to generate report. Please try again.';
+      errorMessage = detail && !isRawTechnicalError(detail) ? detail : 'Unable to generate report. Please try again.';
       await downloadNotification.notifyFailure(filename, errorMessage);
     } else if (err?.code === 'ERR_NETWORK' || (typeof window !== 'undefined' && !window.navigator.onLine)) {
       status = 'FAILED';

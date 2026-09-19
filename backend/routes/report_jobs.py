@@ -32,19 +32,27 @@ def generate_report_background_task(job_id: str, payload: dict, institution_id: 
         format_ext = payload.get("format")
         filters = payload.get("filters", {})
         
-        # We reconstruct the original requester context instead of escalating to admin
+        from backend.models import User
+        user_req = job.requested_by if job else None
+        real_user = None
+        if user_req:
+            real_user = db.query(User).filter((User.email == user_req) | (User.username == user_req)).first()
+
         class AuthorizedJobContext:
-            def __init__(self, inst_id, dept_id, role, email):
+            def __init__(self, inst_id, dept_id, role, email, user_id=None):
                 self.institution_id = inst_id
                 self.department_id = dept_id
                 self.role = role
                 self.email = email
-                
-        current_user_context = AuthorizedJobContext(
+                self.id = user_id
+                self.override_role = None
+
+        current_user_context = real_user or AuthorizedJobContext(
             job.institution_id if job else institution_id,
             job.department_id if job else None,
             job.role if job else "faculty",
-            job.requested_by if job else "unknown"
+            job.requested_by if job else "unknown",
+            user_id=real_user.id if real_user else None
         )
         
         # This is where the long synchronous task happens
