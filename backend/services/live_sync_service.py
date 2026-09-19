@@ -293,7 +293,7 @@ def _acquire_global_lock(db: Session, job_id: str, timeout_minutes: int = 120) -
                 .where(GlobalSyncLock.expires_at < now)
                 .values(is_locked=False, locked_by_job_id=None, locked_at=None, expires_at=None)
             )
-            db.execute(stmt_clear)
+            db.execute(stmt_clear.execution_options(synchronize_session=False))
 
             # Attempt to acquire lock atomically
             stmt_lock = (
@@ -307,7 +307,7 @@ def _acquire_global_lock(db: Session, job_id: str, timeout_minutes: int = 120) -
                     expires_at=now + datetime.timedelta(minutes=timeout_minutes)
                 )
             )
-            result = db.execute(stmt_lock)
+            result = db.execute(stmt_lock.execution_options(synchronize_session=False))
             db.commit()
             return result.rowcount > 0  # type: ignore
         except Exception as e:
