@@ -94,8 +94,12 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     prev_sess = next((s for n, s in contest_sessions if n == prev_c_num), None)
     curr_sess = next((s for n, s in contest_sessions if n == curr_c_num), None)
 
-    # Fetch all results
-    pub_results = db_session.query(WeeklyPublicResult).all()
+    # Fetch results for active candidate sessions
+    target_session_ids = [s.id for _, s in contest_sessions if s and getattr(s, "id", None)]
+    if target_session_ids:
+        pub_results = db_session.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id.in_(target_session_ids)).all()
+    else:
+        pub_results = db_session.query(WeeklyPublicResult).all()
     pub_map = {(pr.student_id, pr.session_id): pr for pr in pub_results}
 
     def _get_student_contest_data(s, sess):

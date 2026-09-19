@@ -921,12 +921,13 @@ def generate_master_10_sheet_workbook(
                 rows.append([rank_idx, d_code, d_stats["total"], d_stats["active"], part_pct, d_stats["solves"], avg_sol, d_stats["p4"]])
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
-    # Append Sheet 14 (Week-on-Week Intelligence) and Sheet 15 (Historical Contest Intelligence)
-    try:
-        from backend.services.sheet_14_15_builder import append_sheets_14_and_15
-        append_sheets_14_and_15(wb, db)
-    except Exception as _e_s1415:
-        logger.warning(f"Note on appending Sheets 14 and 15: {_e_s1415}")
+    # Append Sheet 14 (Week-on-Week Intelligence) and Sheet 15 (Historical Contest Intelligence) when required
+    if report_type in ("MASTER_10_SHEET", "10_SHEET", "MASTER_WORKBOOK", "WEEK_ON_WEEK_INTELLIGENCE", "WEEK_ON_WEEK", "HISTORICAL_CONTEST_INTELLIGENCE", "HISTORICAL_CONTEST_INTEL"):
+        try:
+            from backend.services.sheet_14_15_builder import append_sheets_14_and_15
+            append_sheets_14_and_15(wb, db)
+        except Exception as _e_s1415:
+            logger.warning(f"Note on appending Sheets 14 and 15: {_e_s1415}")
 
     # Post-filter sheets if standalone Sheet 14 or Sheet 15 report type requested
     if report_type in ("WEEK_ON_WEEK_INTELLIGENCE", "WEEK_ON_WEEK"):
