@@ -1,1 +1,0 @@
-Error: DATABASE_URL environment variable is required.
