@@ -26,6 +26,8 @@ REPORT_COLORS = {
     "FACULTY_CONSOLIDATED": {"primary": "D27A35", "light": "FCF1E8"},
     "FACULTY_COORDINATOR_CONSOLIDATED": {"primary": "D27A35", "light": "FCF1E8"},
     "HOD_DEPARTMENT_INTELLIGENCE": {"primary": "8A4054", "light": "F7EEF1"},
+    "WEEK_ON_WEEK_INTELLIGENCE": {"primary": "317B78", "light": "EAF5F4"},
+    "HISTORICAL_CONTEST_INTELLIGENCE": {"primary": "4C8DBB", "light": "EDF5FA"},
 }
 
 # ==========================================
@@ -91,6 +93,30 @@ REPORT_REGISTRY: Dict[str, Dict[str, Any]] = {
         "resolver": "build_contest_performance_report",
         "has_historical_requirement": False,
         "empty_state_msg": "No ranking data available for this contest."
+    },
+    "WEEK_ON_WEEK_INTELLIGENCE": {
+        "code": "WEEK_ON_WEEK_INTELLIGENCE",
+        "category": "A. Contest Reports",
+        "name": "Week-on-Week Intelligence Report",
+        "description": "Week-on-Week comparison of student contest performance across consecutive contests tracking delta, solver progress, and trajectory.",
+        "allowed_roles": ["PRINCIPAL", "HOD", "STAFF", "FACULTY_COORDINATOR", "MANAGEMENT", "ADMINISTRATOR"],
+        "primary_color": "317B78",
+        "light_color": "EAF5F4",
+        "resolver": "build_contest_performance_report",
+        "has_historical_requirement": True,
+        "empty_state_msg": "No week-on-week contest data available."
+    },
+    "HISTORICAL_CONTEST_INTELLIGENCE": {
+        "code": "HISTORICAL_CONTEST_INTELLIGENCE",
+        "category": "A. Contest Reports",
+        "name": "Historical Contest Intelligence Report",
+        "description": "Historical multi-contest solve matrix tracking longitudinal solve trends, participation consistency, and historical score evolution.",
+        "allowed_roles": ["PRINCIPAL", "HOD", "STAFF", "FACULTY_COORDINATOR", "MANAGEMENT", "ADMINISTRATOR"],
+        "primary_color": "4C8DBB",
+        "light_color": "EDF5FA",
+        "resolver": "build_contest_performance_report",
+        "has_historical_requirement": True,
+        "empty_state_msg": "No historical contest intelligence available."
     },
     "WEEKLY_STUDENT_PERFORMANCE": {
         "code": "WEEKLY_STUDENT_PERFORMANCE",
@@ -221,6 +247,12 @@ def get_report_definition(report_code: str) -> Dict[str, Any]:
         "CSV": "WEEKLY_STUDENT_PERFORMANCE",
         "MASTER_TRACKER": "FRIDAY_OFFICIAL_CONTEST",
         "COLLEGE_FORMAT": "FRIDAY_OFFICIAL_CONTEST",
+        "WEEK_ON_WEEK": "WEEK_ON_WEEK_INTELLIGENCE",
+        "WOW_INTELLIGENCE": "WEEK_ON_WEEK_INTELLIGENCE",
+        "WEEK_ON_WEEK_COMPARISON": "WEEK_ON_WEEK_INTELLIGENCE",
+        "HISTORICAL_INTELLIGENCE": "HISTORICAL_CONTEST_INTELLIGENCE",
+        "HISTORICAL_CONTEST": "HISTORICAL_CONTEST_INTELLIGENCE",
+        "HISTORICAL_CONTEST_INTEL": "HISTORICAL_CONTEST_INTELLIGENCE",
     }
     
     target_code = ALIASES.get(code_upper, code_upper)
@@ -236,4 +268,5 @@ def get_report_definition(report_code: str) -> Dict[str, Any]:
 def validate_report_uniqueness() -> bool:
     """Programmatically verifies that all report codes in registry are unique."""
     codes = list(REPORT_REGISTRY.keys())
-    return len(codes) >= 12 and len(set(codes)) == len(codes)
+    return len(codes) >= 15 and len(set(codes)) == len(codes)
+
