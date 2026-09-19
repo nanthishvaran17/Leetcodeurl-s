@@ -1,0 +1,29 @@
+✅  .lighthouseci/ directory writable
+⚠️   Configuration file not found
+✅  Chrome installation found
+Healthcheck passed!
+
+Started a web server on port 34185...
+Running Lighthouse 3 time(s) on http://localhost:34185/google10b77c5af992ec46.html
+Run #1...done.
+Run #2...done.
+Run #3...done.
+Running Lighthouse 3 time(s) on http://localhost:34185/index.html
+Run #1...done.
+Run #2...done.
+Run #3...done.
+Running Lighthouse 3 time(s) on http://localhost:34185/mobile-auth.html
+Run #1...done.
+Run #2...done.
+Run #3...done.
+Done running Lighthouse!
+
+Uploading median LHR of http://localhost:34185/google10b77c5af992ec46.html...success!
+Open the report at https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1789744369846-3132.report.html
+Uploading median LHR of http://localhost:34185/index.html...success!
+Open the report at https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1789744370162-64554.report.html
+Uploading median LHR of http://localhost:34185/mobile-auth.html...success!
+Open the report at https://storage.googleapis.com/lighthouse-infrastructure.appspot.com/reports/1789744370504-48904.report.html
+No GitHub token set, skipping GitHub status check.
+
+Done running autorun.

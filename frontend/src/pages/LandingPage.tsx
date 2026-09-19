@@ -315,7 +315,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     }
   };
 
-  const handleRefreshStudent = async (studentId: number) => {
+  const handleRefreshStudent = useCallback(async (studentId: number) => {
     setRefreshingId(studentId);
     try {
       await api.post(`/students/${studentId}/refresh`);
@@ -325,7 +325,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     } finally {
       setRefreshingId(null);
     }
-  };
+  }, [fetchFilteredStudents]);
 
   const fetchDepartments = async () => {
     try {
@@ -376,13 +376,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   // --- Combined Canonical Filter Pipeline: Dept + Academic Year + Name Search + Performance Range + Sort ---
   const { filteredAndSorted: sortedList, counts: performanceCounts } = useMemo(() => {
-    return filterAndSortStudents(students, {
+    const { filteredAndSorted, counts } = filterAndSortStudents(students, {
       department: selectedDept,
       academicYear: yearLevel,
       nameSearch,
       performanceRange: solvedFilter,
       sortBy
     });
+
+    // Pre-calculate stable objects for React.memo to prevent DOM thrashing
+    const stableList = filteredAndSorted.map((st, idx) => {
+      const isSolver = (st.stats?.total_solved || st.total_solved || 0) > 0;
+      const computedRank = (isSolver && (sortBy === 'top_solved' || sortBy === 'rating' || sortBy === 'streak') && selectedDept === 'all' && (yearLevel === 'ALL' || yearLevel === 'all') && (solvedFilter === 'ALL' || solvedFilter === 'all')) ? idx + 1 : st.college_rank;
+      return {
+        ...st,
+        college_rank: isSolver ? (computedRank ?? (idx + 1)) : undefined
+      };
+    });
+
+    return { filteredAndSorted: stableList, counts };
   }, [students, selectedDept, yearLevel, nameSearch, solvedFilter, sortBy]);
 
   const handleResetFilters = () => {
@@ -1018,10 +1030,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               }}
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
             >
-              {sortedList.slice(0, displayCount).map((st, idx) => {
-                const isSolver = (st.stats?.total_solved || st.total_solved || 0) > 0;
-                const computedRank = (isSolver && (sortBy === 'top_solved' || sortBy === 'rating' || sortBy === 'streak') && selectedDept === 'all' && (yearLevel === 'ALL' || yearLevel === 'all') && (solvedFilter === 'ALL' || solvedFilter === 'all')) ? idx + 1 : st.college_rank;
-                return (
+              <AnimatePresence mode="popLayout">
+                {sortedList.slice(0, displayCount).map((st, idx) => (
                   <motion.div
                     key={st.id}
                     variants={{
@@ -1030,12 +1040,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     }}
                   >
                     <StudentFlipCard
-                      student={{ ...st, college_rank: isSolver ? (computedRank ?? (idx + 1)) : undefined }}
+                      student={st}
                       onSelectStudent={onSelectStudent}
                     />
                   </motion.div>
-                );
-              })}
+                ))}
+              </AnimatePresence>
             </motion.div>
 
             {displayCount < sortedList.length && (

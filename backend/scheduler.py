@@ -205,7 +205,8 @@ async def sunday_0935_report_job():
     logger.info("[SCHEDULER] Sunday 09:35 AM IST: Autopilot Phase 5 Report Generation...")
     db = SessionLocal()
     try:
-        res = sunday_autopilot.phase_5_report_generation_0935(db)
+        import asyncio
+        res = await asyncio.to_thread(sunday_autopilot.phase_5_report_generation_0935, db)
         logger.info(f"[SCHEDULER] Sunday 09:35 AM Report Generation Completed: {res}")
     except Exception as e:
         logger.error(f"[SCHEDULER] Error in sunday_0935_report_job: {e}", exc_info=True)
@@ -220,11 +221,12 @@ async def sunday_0940_email_job():
     logger.info("[SCHEDULER] Sunday 09:40 AM IST: Autopilot Phase 6 Email & Notification Dispatch...")
     db = SessionLocal()
     try:
-        res = sunday_autopilot.phase_6_email_dispatch_0940(db)
+        import asyncio
+        res = await asyncio.to_thread(sunday_autopilot.phase_6_email_dispatch_0940, db)
         logger.info(f"[SCHEDULER] Sunday 09:40 AM Email Dispatch Completed: {res}")
         
         from backend.services.automatic_notification_engine import AutomaticNotificationEngine
-        n_res = AutomaticNotificationEngine.emit_sunday_contest_role_summaries(db)
+        n_res = await asyncio.to_thread(AutomaticNotificationEngine.emit_sunday_contest_role_summaries, db)
         logger.info(f"[SCHEDULER] Sunday 09:40 AM Role Notification Summaries Dispatched: {n_res}")
     except Exception as e:
         logger.error(f"[SCHEDULER] Error in sunday_0940_email_job: {e}", exc_info=True)

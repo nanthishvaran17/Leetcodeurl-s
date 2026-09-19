@@ -1,0 +1,30 @@
+Login failed: 403
+Benchmarking http://127.0.0.1:8000/api/health (Concurrency: 10, Total: 100)
+  P50: 44.88 ms
+  P75: 45.65 ms
+  P95: 60.49 ms
+  P99: 61.05 ms
+  Avg: 45.82 ms
+  Req/sec: 213.05
+  Error Rate: 0.0%
+
+Benchmarking http://127.0.0.1:8000/api/sessions/dashboard-summary (Concurrency: 10, Total: 100)
+  P50: 20.59 ms
+  P75: 21.16 ms
+  P95: 23.01 ms
+  P99: 23.12 ms
+  Avg: 20.70 ms
+  Req/sec: 462.44
+  Error Rate: 0.0%
+
+Benchmarking http://127.0.0.1:8000/api/students/leaderboard (Concurrency: 10, Total: 100)
+All requests failed for /api/students/leaderboard.
+Benchmarking http://127.0.0.1:8000/api/hr-candidate-finder/candidates (Concurrency: 10, Total: 100)
+  P50: 127.38 ms
+  P75: 136.65 ms
+  P95: 329.87 ms
+  P99: 330.41 ms
+  Avg: 136.38 ms
+  Req/sec: 62.94
+  Error Rate: 0.0%
+

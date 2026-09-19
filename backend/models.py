@@ -96,9 +96,9 @@ class Student(Base):
     joining_date = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
-    department = relationship("Department", back_populates="students")
+    department = relationship("Department", back_populates="students", lazy="selectin")
     section = relationship("Section", back_populates="students")
-    stats = relationship("LeetCodeProfileStats", back_populates="student", uselist=False, cascade="all, delete-orphan")
+    stats = relationship("LeetCodeProfileStats", back_populates="student", uselist=False, cascade="all, delete-orphan", lazy="selectin")
     progress_records = relationship("WeeklyStudentProgress", back_populates="student", cascade="all, delete-orphan")
     snapshots = relationship("WeeklySessionSnapshot", back_populates="student", cascade="all, delete-orphan")
     mentor_notes = relationship("MentorNote", back_populates="student", cascade="all, delete-orphan")
