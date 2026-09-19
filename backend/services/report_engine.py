@@ -57,7 +57,8 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         "CONTEST_PERFORMANCE", "OFFICIAL_CONTEST", "WEEKLY_CONTEST",
         "SUNDAY_LIVE_CONTEST", "WEEKLY_CONTEST_INTELLIGENCE",
         "CONTEST_ATTENDANCE_PARTICIPATION", "CONTEST_PERFORMANCE_RANKING",
-        "SUNDAY_CONTEST"
+        "SUNDAY_CONTEST", "WEEK_ON_WEEK_INTELLIGENCE", "WEEK_ON_WEEK",
+        "HISTORICAL_CONTEST_INTELLIGENCE", "HISTORICAL_CONTEST_INTEL"
     )
     if config.report_type and config.report_type.upper() in CONTEST_REPORT_TYPES:
         res = build_contest_performance_report(db, config, current_user=current_user)

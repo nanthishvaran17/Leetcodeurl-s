@@ -660,6 +660,10 @@ def generate_master_10_sheet_workbook(
         sheet_names = ["Management Executive Summary", "Department Rank Comparison"]
     elif report_type == "COLLEGE_EXECUTIVE":
         sheet_names = ["01 Principal Executive", "10 Department Intelligence", "05 Top Performers"]
+    elif report_type in ("WEEK_ON_WEEK_INTELLIGENCE", "WEEK_ON_WEEK"):
+        sheet_names = []
+    elif report_type in ("HISTORICAL_CONTEST_INTELLIGENCE", "HISTORICAL_CONTEST_INTEL"):
+        sheet_names = []
 
     for s_name in sheet_names:
         ws = wb.create_sheet(title=s_name)
@@ -923,6 +927,22 @@ def generate_master_10_sheet_workbook(
         append_sheets_14_and_15(wb, db)
     except Exception as _e_s1415:
         logger.warning(f"Note on appending Sheets 14 and 15: {_e_s1415}")
+
+    # Post-filter sheets if standalone Sheet 14 or Sheet 15 report type requested
+    if report_type in ("WEEK_ON_WEEK_INTELLIGENCE", "WEEK_ON_WEEK"):
+        for sn in list(wb.sheetnames):
+            if not sn.startswith("14 "):
+                try:
+                    wb.remove(wb[sn])
+                except Exception:
+                    pass
+    elif report_type in ("HISTORICAL_CONTEST_INTELLIGENCE", "HISTORICAL_CONTEST_INTEL"):
+        for sn in list(wb.sheetnames):
+            if not sn.startswith("15 "):
+                try:
+                    wb.remove(wb[sn])
+                except Exception:
+                    pass
 
     # Create hidden "_Lists" sheet for named ranges
     ws_lists = wb.create_sheet(title="_Lists")

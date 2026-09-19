@@ -511,7 +511,7 @@ def generate_report_bytes(
             res = asyncio.run(report_gen.generate_complete_report(contest_id))  # type: ignore
         return res["excel_bytes"]
 
-    # 3. Master Institutional Workbook Engine (All 13 Purpose-Specific Reports)
+    # 3. Master Institutional Workbook Engine (All 15 Purpose-Specific Reports)
     if fmt in ("excel", "xlsx") and rpt in (
         "MASTER_10_SHEET", "FRIDAY_OFFICIAL_CONTEST", "SUNDAY_LIVE_CONTEST",
         "WEEKLY_CONTEST_INTELLIGENCE", "CONTEST_ATTENDANCE_PARTICIPATION",
@@ -519,7 +519,8 @@ def generate_report_bytes(
         "FIVE_WEEK_PERFORMANCE_TREND", "PROBLEM_DIFFICULTY_INTELLIGENCE",
         "FACULTY_CONSOLIDATED", "FACULTY_COORDINATOR_CONSOLIDATED",
         "HOD_DEPARTMENT_INTELLIGENCE", "PRINCIPAL_EXECUTIVE",
-        "MANAGEMENT_EXECUTIVE_SUMMARY", "COLLEGE_EXECUTIVE", "DEPARTMENT_PERFORMANCE"
+        "MANAGEMENT_EXECUTIVE_SUMMARY", "COLLEGE_EXECUTIVE", "DEPARTMENT_PERFORMANCE",
+        "WEEK_ON_WEEK_INTELLIGENCE", "WEEK_ON_WEEK", "HISTORICAL_CONTEST_INTELLIGENCE", "HISTORICAL_CONTEST_INTEL"
     ):
         from backend.services.master_institutional_report_service import generate_master_10_sheet_workbook
         return generate_master_10_sheet_workbook(db, current_user=current_user, department=dept, year=year, report_type=rpt)
