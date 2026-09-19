@@ -20,10 +20,10 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Set up Node.js 20.x
+      - name: Set up Node.js 22.x
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install Frontend Dependencies & Build Web Assets
         run: |
