@@ -179,7 +179,6 @@ export const DataQualityPage: React.FC<{ onNavigateTab?: (tab: string) => void }
               { value: "3", label: "III Year", pillText: "3RD" },
               { value: "4", label: "IV Year", pillText: "4TH" }
             ]}
-            icon={<GraduationCap className="w-4 h-4 text-amber-500" />}
           />
         </div>
 
