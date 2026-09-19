@@ -272,48 +272,52 @@ settings = Settings()
 
 def _acquire_global_lock(db: Session, job_id: str, timeout_minutes: int = 120) -> bool:
     """Atomic acquisition of the global sync lock using a single transaction."""
-    now = datetime.datetime.now(datetime.timezone.utc)
-    
-    try:
-        # Ensure a lock row exists (id=1)
-        lock_row = db.query(GlobalSyncLock).filter(GlobalSyncLock.id == 1).first()
-        if not lock_row:
-            try:
-                lock_row = GlobalSyncLock(id=1, is_locked=False)
-                db.add(lock_row)
-                db.commit()
-            except Exception:
-                db.rollback()
+    now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+    for attempt in range(3):
+        try:
+            # Ensure a lock row exists (id=1)
+            lock_row = db.query(GlobalSyncLock).filter(GlobalSyncLock.id == 1).first()
+            if not lock_row:
+                try:
+                    lock_row = GlobalSyncLock(id=1, is_locked=False)
+                    db.add(lock_row)
+                    db.commit()
+                except Exception:
+                    db.rollback()
 
-        # Clear expired locks automatically
-        stmt_clear = (
-            update(GlobalSyncLock)
-            .where(GlobalSyncLock.id == 1)
-            .where(GlobalSyncLock.is_locked == True)
-            .where(GlobalSyncLock.expires_at < now)
-            .values(is_locked=False, locked_by_job_id=None, locked_at=None, expires_at=None)
-        )
-        db.execute(stmt_clear)
-
-        # Attempt to acquire lock atomically
-        stmt_lock = (
-            update(GlobalSyncLock)
-            .where(GlobalSyncLock.id == 1)
-            .where(GlobalSyncLock.is_locked == False)
-            .values(
-                is_locked=True,
-                locked_by_job_id=job_id,
-                locked_at=now,
-                expires_at=now + datetime.timedelta(minutes=timeout_minutes)
+            # Clear expired locks automatically
+            stmt_clear = (
+                update(GlobalSyncLock)
+                .where(GlobalSyncLock.id == 1)
+                .where(GlobalSyncLock.is_locked == True)
+                .where(GlobalSyncLock.expires_at < now)
+                .values(is_locked=False, locked_by_job_id=None, locked_at=None, expires_at=None)
             )
-        )
-        result = db.execute(stmt_lock)
-        db.commit()
-        return result.rowcount > 0  # type: ignore
-    except Exception as e:
-        db.rollback()
-        logger.error(f"[SYNC_LOCK] Error acquiring global lock: {e}")
-        return False
+            db.execute(stmt_clear)
+
+            # Attempt to acquire lock atomically
+            stmt_lock = (
+                update(GlobalSyncLock)
+                .where(GlobalSyncLock.id == 1)
+                .where(GlobalSyncLock.is_locked == False)
+                .values(
+                    is_locked=True,
+                    locked_by_job_id=job_id,
+                    locked_at=now,
+                    expires_at=now + datetime.timedelta(minutes=timeout_minutes)
+                )
+            )
+            result = db.execute(stmt_lock)
+            db.commit()
+            return result.rowcount > 0  # type: ignore
+        except Exception as e:
+            db.rollback()
+            if attempt < 2 and ('SSL' in str(e) or 'OperationalError' in str(e) or 'connection' in str(e).lower()):
+                import time; time.sleep(0.5 * (attempt + 1))
+                continue
+            logger.error(f"[SYNC_LOCK] Error acquiring global lock: {e}")
+            return False
+    return False
 
 def _release_global_lock(db: Session, job_id: str = None):  # type: ignore
     """Release the global sync lock."""

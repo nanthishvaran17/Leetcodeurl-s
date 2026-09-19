@@ -60,7 +60,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [students, setStudents] = useState<StudentData[]>(() => {
     const cached = getCachedStudents();
     const source = (cached && cached.length > 0) ? cached : (CANONICAL_ROSTER || []);
-    return source.filter((s: any) => s.department_id === 1 || s.department_id === 2);
+    return source;
   });
   const [displayCount, setDisplayCount] = useState<number>(32);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -276,7 +276,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     setRefreshing(true);
 
     const targetList = isFiltered ? sortedList : students;
-    const initialTotal = targetList.length > 0 ? targetList.length : (isFiltered ? sortedList.length : 1450);
+    const initialTotal = targetList.length > 0 ? targetList.length : (isFiltered ? sortedList.length : (summaryData?.total_students ?? students.length));
     const devicePlatform = typeof window !== 'undefined' ? (window.navigator.platform || 'Browser') : 'Device';
     const requesterTag = isFiltered ? `Filtered (${targetList.length} Students)` : `Admin (${devicePlatform})`;
 
@@ -345,14 +345,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     try {
       const res = await api.get('/students/leaderboard-fast');
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-        const filtered = res.data.filter((s: any) => s.department_id === 1 || s.department_id === 2);
+        const filtered = res.data;
         setStudents(filtered);
         saveCachedStudents(filtered);
         return;
       }
       const res2 = await api.get('/students');
       if (res2.data && Array.isArray(res2.data) && res2.data.length > 0) {
-        const filtered2 = res2.data.filter((s: any) => s.department_id === 1 || s.department_id === 2);
+        const filtered2 = res2.data;
         setStudents(filtered2);
         saveCachedStudents(filtered2);
         return;
@@ -361,7 +361,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         if (prev && prev.length > 0) return prev;
         const cached = getCachedStudents();
         const source = (cached && cached.length > 0) ? cached : (CANONICAL_ROSTER || []);
-        return source.filter((s: any) => s.department_id === 1 || s.department_id === 2);
+        return source;
       });
     } catch (err) {
       console.warn("fetchFilteredStudents error, preserving cached students:", err);
@@ -369,7 +369,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         if (prev && prev.length > 0) return prev;
         const cached = getCachedStudents();
         const source = (cached && cached.length > 0) ? cached : (CANONICAL_ROSTER || []);
-        return source.filter((s: any) => s.department_id === 1 || s.department_id === 2);
+        return source;
       });
     }
   };
@@ -578,7 +578,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </motion.button>
 
             {(() => {
-              const totalStudents = summaryData?.scope?.total_students ?? 308;
+              const totalStudents = summaryData?.total_students ?? summaryData?.scope?.total_students ?? students.length;
               const processedCount = syncProgress?.processed ?? 0;
               const totalProgress = syncProgress?.total ?? totalStudents;
 
@@ -604,7 +604,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               const calculatedVerified = students.filter(s =>
                 s.stats?.sync_status === 'success' || s.stats?.sync_status === 'OK' || s.stats?.sync_status === 'verified' || s.stats?.sync_status === 'stale' || (s.stats?.total_solved !== null && (s.stats?.total_solved ?? 0) > 0)
               ).length;
-              const totalStudents = 308;
+              const totalStudents = summaryData?.total_students ?? summaryData?.scope?.total_students ?? students.length;
               const verifiedCount = calculatedVerified;
               const lastVerifiedTs = students
                 .map(s => s.stats?.last_verified_at)
@@ -663,7 +663,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           const calculatedProblems = students.reduce((acc, s) => acc + (s.stats?.total_solved || 0), 0);
           const calculatedActiveSolvers = students.filter(s => (s.stats?.total_solved || 0) > 0).length;
 
-          const totalStudents = 308;
+          const totalStudents = summaryData?.total_students ?? summaryData?.scope?.total_students ?? students.length;
           const verified = calculatedVerified;
           const pending = calculatedPending;
           const failed = calculatedFailed;
@@ -878,7 +878,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h3 className="font-black text-lg text-slate-900 dark:text-white">
             <div className="flex flex-col">
-              <span>Showing {isFiltered ? sortedList.length : 308} of {isFiltered ? sortedList.length : 308} Students</span>
+              <span>Showing {isFiltered ? sortedList.length : (summaryData?.total_students ?? students.length)} of {isFiltered ? sortedList.length : (summaryData?.total_students ?? students.length)} Students</span>
               {(selectedDept !== 'all' || yearLevel !== 'all' || solvedFilter !== 'all') && (
                 <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1">
                   Filtered by: {[
@@ -1041,7 +1041,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             {displayCount < sortedList.length && (
               <div className="flex flex-col items-center justify-center pt-4 space-y-2">
                 <p className="text-xs text-slate-500 font-semibold">
-                  Showing <span className="font-extrabold text-brand-600 dark:text-brand-400">{Math.min(displayCount, sortedList.length)}</span> of <span className="font-extrabold text-slate-900 dark:text-white">{isFiltered ? sortedList.length : 308}</span> Students
+                  Showing <span className="font-extrabold text-brand-600 dark:text-brand-400">{Math.min(displayCount, sortedList.length)}</span> of <span className="font-extrabold text-slate-900 dark:text-white">{isFiltered ? sortedList.length : (summaryData?.total_students ?? students.length)}</span> Students
                 </p>
                 <div className="flex items-center space-x-3">
                   <motion.button

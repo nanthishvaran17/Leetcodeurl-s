@@ -11,7 +11,7 @@ Guarantees:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from backend.services.leetcode_adapter import (
@@ -69,7 +69,7 @@ class ClassificationResult:
     raw_evidence_chain: Dict[str, Any] = field(default_factory=dict)
     
     # System metadata
-    reconciled_at: str = field(default_factory=lambda: datetime.now(datetime.timezone.utc).isoformat())
+    reconciled_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     @property
     def verified(self) -> bool:
@@ -262,7 +262,7 @@ class ParticipationClassifier:
                 )
 
         # 2. TIER A: OFFICIAL LEADERBOARD (LIVE)
-        if c_is_live and getattr(c_ev, "source", None) in ["contest_ranking", "final_contest"]:
+        if c_is_live and c_ev and getattr(c_ev, "source", None) in ["contest_ranking", "final_contest"]:
             evidence_trace.append(" Strong LIVE evidence: Official contest leaderboard match.")
             if h_is_live:
                 evidence_trace.append(" Supporting LIVE evidence: Profile attended=true.")
@@ -285,7 +285,7 @@ class ParticipationClassifier:
             )
 
         # 3. TIER B: PROFILE ATTENDED (LIVE)
-        if h_is_live:
+        if h_is_live and h_ev:
             evidence_trace.append(" Strong LIVE evidence: Profile explicitly marks attended=true, virtual=false.")
             return ClassificationResult(
                 participation_type=ParticipationType.LIVE,

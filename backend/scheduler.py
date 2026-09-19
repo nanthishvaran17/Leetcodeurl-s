@@ -78,36 +78,43 @@ def with_global_lock(job_name: str, timeout_minutes: int = 15):
 scheduler = AsyncIOScheduler(timezone=IST)
 
 def apscheduler_listener(event):
-    db = SessionLocal()
-    try:
-        if event.code == EVENT_JOB_EXECUTED:
-            status = 'COMPLETED'
-        elif event.code == EVENT_JOB_ERROR:
-            status = 'ERROR'
-        elif event.code == EVENT_JOB_MISSED:
-            status = 'MISSED'
-        else:
-            status = 'UNKNOWN'
-        
-        job = scheduler.get_job(event.job_id)
-        next_run = job.next_run_time if job else None
+    for attempt in range(3):
+        db = SessionLocal()
+        try:
+            if event.code == EVENT_JOB_EXECUTED:
+                status = 'COMPLETED'
+            elif event.code == EVENT_JOB_ERROR:
+                status = 'ERROR'
+            elif event.code == EVENT_JOB_MISSED:
+                status = 'MISSED'
+            else:
+                status = 'UNKNOWN'
+            
+            job = scheduler.get_job(event.job_id)
+            next_run = job.next_run_time if job else None
 
-        record = ScheduledJobExecution(
-            job_id=event.job_id,
-            job_type=str(type(event)),
-            scheduled_at=event.scheduled_run_time if hasattr(event, 'scheduled_run_time') else None,
-            completed_at=datetime.datetime.now(datetime.timezone.utc),
-            status=status,
-            error_message=str(event.exception) if hasattr(event, 'exception') and event.exception else None,
-            last_error=str(event.exception) if hasattr(event, 'exception') and event.exception else None,
-            next_run=next_run
-        )
-        db.add(record)
-        db.commit()
-    except Exception as e:
-        logger.error(f'[SCHEDULER LISTENER ERROR] {e}')
-    finally:
-        db.close()
+            record = ScheduledJobExecution(
+                job_id=event.job_id,
+                job_type=str(type(event)),
+                scheduled_at=event.scheduled_run_time if hasattr(event, 'scheduled_run_time') else None,
+                completed_at=datetime.datetime.now(datetime.timezone.utc),
+                status=status,
+                error_message=str(event.exception) if hasattr(event, 'exception') and event.exception else None,
+                last_error=str(event.exception) if hasattr(event, 'exception') and event.exception else None,
+                next_run=next_run
+            )
+            db.add(record)
+            db.commit()
+            break
+        except Exception as e:
+            db.rollback()
+            if attempt < 2 and ('SSL' in str(e) or 'OperationalError' in str(e) or 'connection' in str(e).lower()):
+                import time; time.sleep(0.5 * (attempt + 1))
+                continue
+            logger.error(f'[SCHEDULER LISTENER ERROR] {e}')
+            break
+        finally:
+            db.close()
 
 scheduler.add_listener(apscheduler_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR | EVENT_JOB_MISSED)
 
