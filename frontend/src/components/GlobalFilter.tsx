@@ -91,16 +91,16 @@ export const getDepartmentTheme = (opt: GlobalFilterOption | undefined, isSelect
     };
   }
 
-  // 2. CSE(CS) / Cyber Security → Purple / Violet
+  // 2. CSE(CS) / Cyber Security → Purple / Violet (Darker, more attractive)
   if (pill === 'CSE(CS)' || pill === 'CS' || label.includes('CYBER') || label.includes('SECURITY') || pill.includes('(CS)')) {
     return {
-      iconBg: isSelected ? 'bg-white/20' : 'bg-purple-100 dark:bg-purple-950/80',
-      iconColor: isSelected ? 'text-white' : 'text-purple-600 dark:text-purple-400',
-      badgeBg: isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-purple-100 dark:bg-purple-950/90',
-      badgeText: isSelected ? 'text-white font-black' : 'text-purple-800 dark:text-purple-300',
-      badgeBorder: isSelected ? 'border-white/30' : 'border-purple-300 dark:border-purple-800',
-      hoverBg: 'hover:bg-purple-50/80 dark:hover:bg-purple-950/30',
-      selectedBg: 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black',
+      iconBg: isSelected ? 'bg-white/20' : 'bg-purple-200 dark:bg-purple-900/60',
+      iconColor: isSelected ? 'text-white' : 'text-purple-700 dark:text-purple-300',
+      badgeBg: isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-purple-200 dark:bg-purple-900/60',
+      badgeText: isSelected ? 'text-white font-black' : 'text-purple-900 dark:text-purple-200',
+      badgeBorder: isSelected ? 'border-white/30' : 'border-purple-400 dark:border-purple-700',
+      hoverBg: 'hover:bg-purple-100/90 dark:hover:bg-purple-900/40',
+      selectedBg: 'bg-purple-700 text-white shadow-md shadow-purple-700/20 font-black',
       selectedText: 'text-white font-black',
       selectedCheck: 'text-white'
     };
