@@ -16,8 +16,8 @@
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f8fafc" />
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f172a" />
 
-  <!-- Viewport — viewport-fit=cover is required for notch/cutout & safe-area-inset-* on Android/iOS -->
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover" />
+  <!-- Viewport — Standard accessible viewport allowing zoom for 100/100 accessibility -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
   <!-- Apple / iOS PWA / Safari -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -34,20 +34,17 @@
   <meta name="msapplication-TileImage" content="/pwa-192x192.png" />
   <meta name="msapplication-navbutton-color" content="#0f172a" />
 
-  <!-- Network Optimization for Backend & Google APIs -->
+  <!-- Network Optimization for Backend API -->
   <link rel="dns-prefetch" href="https://leetcodeurl-s-3fzh.onrender.com" />
   <link rel="preconnect" href="https://leetcodeurl-s-3fzh.onrender.com" />
-  <link rel="dns-prefetch" href="https://apis.google.com" />
-  <link rel="preconnect" href="https://apis.google.com" crossorigin />
 
   <!-- Google Fonts — Single high-performance connection with font-display swap -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" href="/fonts/Inter-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
 
-  <!-- LCP Asset Preloading -->
+  <!-- LCP Asset Preloading (WebP Only) -->
   <link rel="preload" as="image" href="/nec_25_logo.webp" type="image/webp">
-  <link rel="preload" as="image" href="/nec_25_logo.png" type="image/png">
+  <link rel="preload" as="image" href="/nandha_aerial_bg_mobile.webp" type="image/webp" media="(max-width: 768px)">
 
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" media="print" onload="this.media='all'">

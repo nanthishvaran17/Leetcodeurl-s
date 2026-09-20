@@ -496,7 +496,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         src="/nandha_aerial_bg_mobile.webp"
         alt="Nandha Campus Aerial View"
         className="mobile-lcp-hero hide-on-desktop"
-        loading="lazy"
+        loading="eager"
+        fetchPriority="high"
         decoding="async"
         width={828}
         height={600}
@@ -512,7 +513,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
           <picture>
             <source srcSet="/nec_25_logo.webp" type="image/webp" />
             <img
-              src="/nec_25_logo.png"
+              src="/nec_25_logo.webp"
               alt="25 NEC Silver Jubilee"
               className="mobile-jubilee-img"
               loading="eager"

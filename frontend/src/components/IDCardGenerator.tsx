@@ -38,7 +38,7 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
     };
     img.onerror = () => {
       const fallbackImg = new Image();
-      fallbackImg.src = '/nec_25_logo.png';
+      fallbackImg.src = '/nec_25_logo.webp';
       fallbackImg.onload = () => {
         logoImageRef.current = fallbackImg;
         setLogoLoaded(true);

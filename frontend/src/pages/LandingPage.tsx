@@ -11,7 +11,6 @@ import api, { triggerFullSync, triggerTargetedSync, getSyncStatus } from '../ser
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import { filterAndSortStudents, formatDepartmentName, normalizeDepartment } from '../utils/filterUtils';
 import { getCachedStudents, saveCachedStudents } from '../utils/rosterCache';
-import { CANONICAL_ROSTER } from '../data/canonicalRosterData';
 import { CustomDropdown, DropdownOption } from '../components/CustomDropdown';
 import { useAuth } from '../context/AuthContext';
 
@@ -59,9 +58,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [students, setStudents] = useState<StudentData[]>(() => {
     const cached = getCachedStudents();
-    const source = (cached && cached.length > 0) ? cached : (CANONICAL_ROSTER || []);
-    return source;
+    return (cached && cached.length > 0) ? cached : [];
   });
+
+  useEffect(() => {
+    if (!students || students.length === 0) {
+      import('../data/canonicalRosterData').then(m => {
+        if (m.CANONICAL_ROSTER && m.CANONICAL_ROSTER.length > 0) {
+          setStudents(m.CANONICAL_ROSTER);
+        }
+      }).catch(() => {});
+    }
+  }, []);
   const [displayCount, setDisplayCount] = useState<number>(32);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [refreshingId, setRefreshingId] = useState<number | null>(null);
@@ -360,16 +368,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       setStudents(prev => {
         if (prev && prev.length > 0) return prev;
         const cached = getCachedStudents();
-        const source = (cached && cached.length > 0) ? cached : (CANONICAL_ROSTER || []);
-        return source;
+        return (cached && cached.length > 0) ? cached : [];
       });
     } catch (err) {
       console.warn("fetchFilteredStudents error, preserving cached students:", err);
       setStudents(prev => {
         if (prev && prev.length > 0) return prev;
         const cached = getCachedStudents();
-        const source = (cached && cached.length > 0) ? cached : (CANONICAL_ROSTER || []);
-        return source;
+        return (cached && cached.length > 0) ? cached : [];
       });
     }
   };
