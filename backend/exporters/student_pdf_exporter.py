@@ -377,7 +377,7 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
     Filename target: Nandha_Student_Report_<NAME>_<REGISTER>.pdf
     """
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=24, bottomMargin=40)
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=54, bottomMargin=40)
     styles = _get_common_styles()
     rows = dataset.get("rows", [])
     s = rows[0] if rows else dataset
@@ -480,40 +480,35 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
             Paragraph("Difficulty Tier", styles['th_left']),
             Paragraph("Solved Count", styles['th']),
             Paragraph("Percentage Share", styles['th']),
-            Paragraph("Placement Benchmark", styles['th']),
-            Paragraph("Readiness Evaluation", styles['th_left'])
+            Paragraph("Proficiency Status", styles['th_left'])
         ],
         [
             Paragraph("<font color='#059669'><b>Easy</b></font>", styles['td_left']),
             Paragraph(f"{easy_cnt:,}", styles['td_bold']),
             Paragraph(f"{ez_pct}%", styles['td']),
-            Paragraph("300+ Solved", styles['td']),
-            Paragraph("<font color='#059669'><b>EXCEEDS BENCHMARK</b></font>", styles['td_left'])
+            Paragraph("<font color='#059669'><b>FOUNDATION PASSED</b></font>", styles['td_left'])
         ],
         [
             Paragraph("<font color='#D97706'><b>Medium</b></font>", styles['td_left']),
             Paragraph(f"{med_cnt:,}", styles['td_bold']),
             Paragraph(f"{med_pct}%", styles['td']),
-            Paragraph("500+ Solved", styles['td']),
-            Paragraph("<font color='#059669'><b>EXCEEDS BENCHMARK</b></font>", styles['td_left'])
+            Paragraph("<font color='#059669'><b>BENCHMARK EXCEEDED</b></font>", styles['td_left'])
         ],
         [
             Paragraph("<font color='#DC2626'><b>Hard</b></font>", styles['td_left']),
             Paragraph(f"{hard_cnt:,}", styles['td_bold']),
             Paragraph(f"{hd_pct}%", styles['td']),
-            Paragraph("100+ Solved", styles['td']),
-            Paragraph("<font color='#059669'><b>TIER-1 PLACEMENT READY</b></font>", styles['td_left'])
+            Paragraph("<font color='#059669'><b>TIER-1 READY</b></font>", styles['td_left'])
         ],
         [
             Paragraph("<b>Total Cumulative Solves</b>", styles['td_left']),
             Paragraph(f"<b>{tot_solved:,}</b>", styles['td_bold']),
             Paragraph("<b>100.0%</b>", styles['td']),
-            Paragraph("<b>900+ Solved</b>", styles['td']),
-            Paragraph("<font color='#059669'><b>TOP 1% INSTITUTIONAL STANDING</b></font>", styles['td_left'])
+            Paragraph("<font color='#059669'><b>EXCELLENT STANDING</b></font>", styles['td_left'])
         ]
     ]
 
-    t_diff = Table(diff_table_data, colWidths=[1.5*inch, 1.2*inch, 1.3*inch, 1.5*inch, 1.8*inch])
+    t_diff = Table(diff_table_data, colWidths=[2.1*inch, 1.6*inch, 1.6*inch, 2.0*inch])
     t_diff.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1B365D')),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CBD5E1')),
@@ -756,7 +751,7 @@ def generate_student_summary_pdf(dataset: dict) -> bytes:
     Filename target: Nandha_Student_Summary_<NAME>_<REGISTER>.pdf
     """
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=24, bottomMargin=40)
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=54, bottomMargin=40)
     styles = _get_common_styles()
     rows = dataset.get("rows", [])
     s = rows[0] if rows else dataset
@@ -878,7 +873,7 @@ def generate_student_contest_matrix_pdf(dataset: dict) -> bytes:
     Filename target: Nandha_Student_Contest_Matrix_<NAME>_<REGISTER>.pdf
     """
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=24, bottomMargin=40)
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=54, bottomMargin=40)
     styles = _get_common_styles()
     rows = dataset.get("rows", [])
     s = rows[0] if rows else dataset

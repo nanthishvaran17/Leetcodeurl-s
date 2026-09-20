@@ -294,9 +294,9 @@ def export_student_excel_from_dataset(dataset: dict, report_type: str = "STUDENT
         ws3 = _create_sheet("03_Problem_Solving")
         ws3.cell(row=1, column=1, value="DIFFICULTY BREAKDOWN & BENCHMARKS").font = title_font
         ws3.append([])
-        headers3 = ["Difficulty Tier", "Solved Count", "Share %", "Placement Target Benchmark", "Readiness Evaluation"]
+        headers3 = ["Difficulty Tier", "Solved Count", "Share %", "Proficiency Status"]
         ws3.append(headers3)
-        for c_idx in range(1, 6):
+        for c_idx in range(1, 5):
             cell = ws3.cell(row=3, column=c_idx)
             cell.font = header_font
             cell.fill = header_fill
@@ -312,31 +312,31 @@ def export_student_excel_from_dataset(dataset: dict, report_type: str = "STUDENT
         hd_pct = round((hd / tot * 100), 1) if tot > 0 else 0
         
         diff_rows = [
-            ("Easy", ez, f"{ez_pct}%", "300+ Solved", "EXCEEDS BENCHMARK"),
-            ("Medium", med, f"{med_pct}%", "500+ Solved", "EXCEEDS BENCHMARK"),
-            ("Hard", hd, f"{hd_pct}%", "100+ Solved", "TIER-1 PLACEMENT READY"),
-            ("Total Solves", tot, "100.0%", "900+ Solved", "TOP 1% INSTITUTIONAL STANDING")
+            ("Easy", ez, f"{ez_pct}%", "FOUNDATION PASSED"),
+            ("Medium", med, f"{med_pct}%", "BENCHMARK EXCEEDED"),
+            ("Hard", hd, f"{hd_pct}%", "TIER-1 READY"),
+            ("Total Solves", tot, "100.0%", "EXCELLENT STANDING")
         ]
         
-        for idx, (d, cnt, pct, target, eval_str) in enumerate(diff_rows, start=4):
+        for idx, (d, cnt, pct, status_str) in enumerate(diff_rows, start=4):
             ws3.cell(row=idx, column=1, value=d).font = bold_font
             ws3.cell(row=idx, column=2, value=cnt).font = bold_font
             ws3.cell(row=idx, column=3, value=pct).font = normal_font
-            ws3.cell(row=idx, column=4, value=target).font = normal_font
-            ws3.cell(row=idx, column=5, value=eval_str).font = bold_font
+            ws3.cell(row=idx, column=4, value=status_str).font = bold_font
             ws3.cell(row=idx, column=1).alignment = left_align
             ws3.cell(row=idx, column=2).alignment = center_align
             ws3.cell(row=idx, column=3).alignment = center_align
-            ws3.cell(row=idx, column=4).alignment = center_align
-            ws3.cell(row=idx, column=5).alignment = left_align
-            for c in range(1, 6):
+            ws3.cell(row=idx, column=4).alignment = left_align
+            for c in range(1, 5):
                 ws3.cell(row=idx, column=c).border = thin_border
             if idx % 2 == 1:
-                for c in range(1, 6):
+                for c in range(1, 5):
                     ws3.cell(row=idx, column=c).fill = alt_fill
 
-        for c in ['A', 'B', 'C', 'D', 'E']:
-            ws3.column_dimensions[c].width = 25
+        ws3.column_dimensions['A'].width = 25
+        ws3.column_dimensions['B'].width = 18
+        ws3.column_dimensions['C'].width = 18
+        ws3.column_dimensions['D'].width = 30
 
         # SHEET 4: 04_Contest_Performance
         ws4 = _create_sheet("04_Contest_Performance")

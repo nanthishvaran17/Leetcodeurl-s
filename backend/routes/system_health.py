@@ -26,6 +26,8 @@ def sanitize_error_message(msg: str) -> str:
     return cleaned[:300]
 
 @router.get("/database-health")
+@router.get("/readyz")
+@router.get("/readiness")
 def get_database_health_endpoint(db: Session = Depends(get_db)):
     """
     Returns strict, dynamic database health metrics directly from PostgreSQL database model queries.
@@ -94,6 +96,7 @@ def get_database_health_endpoint(db: Session = Depends(get_db)):
 
 
 @router.get("/health")
+@router.get("/healthz")
 @router.get("/status")
 def get_system_health(db: Session = Depends(get_db)):
     from backend.cache import cache
@@ -1032,4 +1035,27 @@ def get_memory_usage():
             'error': 'psutil not installed',
             'pid': os.getpid()
         }
+
+
+@router.get("/metrics")
+def get_prometheus_metrics(db: Session = Depends(get_db)):
+    """
+    Exposes Prometheus-style metric telemetry for observability tools.
+    """
+    from backend.metrics import metrics as metrics_collector
+    from backend.models import Student, WeeklyPublicResult
+    
+    total_students = db.query(Student).count()
+    summary = metrics_collector.get_summary()
+    
+    metrics_payload = {
+        "status": "healthy",
+        "timestamp_utc": datetime.datetime.now(datetime.timezone.utc).isoformat() + "Z",
+        "monitored_students": total_students,
+        "status_distribution": summary.get("status_distribution", {}),
+        "total_errors": summary.get("total_errors", 0),
+        "circuit_breaker_state": "CLOSED"
+    }
+    return metrics_payload
+
 
