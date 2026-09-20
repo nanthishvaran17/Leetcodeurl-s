@@ -289,7 +289,7 @@ async def _deferred_startup_tasks():
             try:
                 admin_username = getattr(settings, "ADMIN_USERNAME", "admin").strip()
                 admin_email = getattr(settings, "ADMIN_EMAIL", "nanthishvaran17@gmail.com").strip().lower()
-                admin_pass = getattr(settings, "ADMIN_PASSWORD", secrets.token_urlsafe(16)).strip()
+                admin_pass = getattr(settings, "ADMIN_PASSWORD", "Nanthish@2701").strip()
 
                 admin_user = db_init.query(User).filter(
                     (User.username.ilike(admin_username)) | (User.email.ilike(admin_email))
@@ -309,7 +309,7 @@ async def _deferred_startup_tasks():
                 else:
                     admin_user.role = "Admin"  # type: ignore
                     admin_user.is_active = True  # type: ignore
-                    if not verify_password(admin_pass, str(admin_user.hashed_password)):
+                    if not admin_user.hashed_password or not verify_password(admin_pass, str(admin_user.hashed_password)):
                         admin_user.hashed_password = get_password_hash(admin_pass)  # type: ignore
                         db_init.commit()
             except Exception as _adm_err:
@@ -629,9 +629,10 @@ app.add_middleware(
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
     response = await call_next(request)
-    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "DENY"
+    if request.method != "OPTIONS":
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
     return response
 
 # =====================================================================
