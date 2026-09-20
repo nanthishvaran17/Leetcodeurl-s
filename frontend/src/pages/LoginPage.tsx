@@ -265,16 +265,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
       }
     } catch (err: any) {
       const status = err?.response?.status;
-      const detail = err?.response?.data?.detail;
+      const rawDetail = err?.response?.data?.detail;
+      const detail = typeof rawDetail === 'string' ? rawDetail : (rawDetail ? JSON.stringify(rawDetail) : null);
       const errMsg = err?.message || 'unknown';
       console.error(`[LOGIN_ERROR] status=${status} detail=${detail} message=${errMsg}`);
 
       if (detail) {
         setError(detail);
       } else if (status === 401 || status === 403) {
-        setError('Invalid username or password.');
+        setError('Invalid institutional email/username or password.');
+      } else if (err?.code === 'ECONNABORTED' || errMsg.toLowerCase().includes('timeout')) {
+        setError('Server response timed out. Please tap to retry.');
       } else if (!err.response || errMsg.toLowerCase().includes('network error')) {
-        setError('Cannot reach server. Please check your connection and tap to retry.');
+        setError('Cannot reach server. Please check your internet connection and tap to retry.');
       } else {
         setError(`Login failed (${errMsg || status || 'network issue'}). Please try again.`);
       }
