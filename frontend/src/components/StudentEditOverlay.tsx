@@ -249,13 +249,13 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
         .filter((acc: any) => acc.username || acc.url);
 
       const secHandle = student.secondary_leetcode_id || student.secondary_id || student.secondary_leetcode_url;
-      if (initSecAccounts.length === 0 && secHandle && String(secHandle).trim() !== '') {
+      if (secHandle && String(secHandle).trim() !== '') {
         const cleanSec = String(secHandle).replace('https://leetcode.com/u/', '').replace('leetcode.com/u/', '').trim().replace(/\/$/, '');
-        if (cleanSec) {
-          initSecAccounts = [{
+        if (cleanSec && !initSecAccounts.some(a => a.username?.toLowerCase() === cleanSec.toLowerCase())) {
+          initSecAccounts.unshift({
             username: cleanSec,
             url: `https://leetcode.com/u/${cleanSec}/`
-          }];
+          });
         }
       }
 

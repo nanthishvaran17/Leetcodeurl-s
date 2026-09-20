@@ -778,6 +778,19 @@ def get_student_detail(student_id: str, request: Request, db: Session = Depends(
     require_staff_student_access(db, current_user, student.id)  # type: ignore
     
     st_out = StudentOut.model_validate(student)
+    from backend.schemas import SecondaryAccountOut
+    sec_accs = [
+        SecondaryAccountOut(
+            id=a.id,
+            leetcode_username=a.leetcode_username,
+            username=a.leetcode_username,
+            profile_url=a.profile_url,
+            is_verified=a.is_verified
+        ) for a in (student.leetcode_accounts or [])
+    ]
+    st_out.leetcode_accounts = sec_accs
+    st_out.secondary_accounts = sec_accs
+
     latest_prog = db.query(WeeklyStudentProgress).filter(WeeklyStudentProgress.student_id == student.id).order_by(WeeklyStudentProgress.id.desc()).first()
     if latest_prog:
         st_out.college_rank = latest_prog.college_rank  # type: ignore
@@ -1191,6 +1204,26 @@ def update_student(
         for sec in payload.secondary_accounts:
             u_clean = (sec.leetcode_username or "").strip()
             if u_clean:
+                # Check duplicate username as primary for another student
+                existing_primary = db.query(Student).filter(
+                    func.lower(Student.username) == u_clean.lower(),
+                    Student.id != student.id
+                ).first()
+                if existing_primary:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Secondary username '{u_clean}' is already registered as a primary username for student {existing_primary.reg_no}."
+                    )
+                # Check duplicate username as secondary for another student
+                existing_sec = db.query(LeetCodeAccount).filter(
+                    func.lower(LeetCodeAccount.leetcode_username) == u_clean.lower(),
+                    LeetCodeAccount.student_id != student.id
+                ).first()
+                if existing_sec:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Secondary username '{u_clean}' is already linked to another student."
+                    )
                 sec_usernames.append(u_clean)
                 url_clean = (sec.profile_url or "").strip() or f"https://leetcode.com/u/{u_clean}/"
                 sec_account = LeetCodeAccount(
@@ -1316,7 +1349,20 @@ def update_student(
     background_tasks.add_task(_bg_post_update_processing)
     cache.invalidate_tag("students")
 
-    return StudentOut.model_validate(student)
+    st_out = StudentOut.model_validate(student)
+    from backend.schemas import SecondaryAccountOut
+    sec_accs = [
+        SecondaryAccountOut(
+            id=a.id,
+            leetcode_username=a.leetcode_username,
+            username=a.leetcode_username,
+            profile_url=a.profile_url,
+            is_verified=a.is_verified
+        ) for a in (student.leetcode_accounts or [])
+    ]
+    st_out.leetcode_accounts = sec_accs
+    st_out.secondary_accounts = sec_accs
+    return st_out
 
 
 @router.get("/{student_id}/audit-history")

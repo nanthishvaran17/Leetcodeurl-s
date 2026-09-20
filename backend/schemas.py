@@ -144,6 +144,14 @@ class CanonicalActivityOut(BaseModel):
     longest_streak: Optional[int] = None
     model_config = ConfigDict(from_attributes=True)
 
+class SecondaryAccountOut(BaseModel):
+    id: Optional[int] = None
+    leetcode_username: str
+    username: Optional[str] = None
+    profile_url: Optional[str] = None
+    is_verified: bool = True
+    model_config = ConfigDict(from_attributes=True)
+
 class StudentOut(StudentBase):
     id: int
     username: Optional[str] = None
@@ -157,6 +165,8 @@ class StudentOut(StudentBase):
     department: Optional[DepartmentOut] = None
     section: Optional[SectionOut] = None
     stats: Optional[LeetCodeStatsOut] = None
+    leetcode_accounts: List[SecondaryAccountOut] = []
+    secondary_accounts: List[SecondaryAccountOut] = []
 
     lc_profile: Optional[CanonicalProfileOut] = None
     lc_problem_stats: Optional[CanonicalProblemStatsOut] = None
