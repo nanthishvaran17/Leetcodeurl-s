@@ -220,7 +220,24 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   }, [wsLatestUpdate]);
 
   const fetchPreviousWeekData = async (forceSync: boolean = false, silent: boolean = false) => {
-    if (!sessionId) return;
+    let latestSessionId = sessionId;
+    
+    // Auto-resolve current active session if not provided via props
+    if (!latestSessionId) {
+      try {
+        const currentRes = await api.get('/sessions/current');
+        if (currentRes?.data?.id) {
+          latestSessionId = currentRes.data.id;
+        }
+      } catch (e) {
+        // Fallback
+      }
+    }
+
+    if (!latestSessionId) {
+      setLoading(false);
+      return;
+    }
     
     try {
       if (forceSync) {
@@ -230,15 +247,13 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       }
       setError(null);
 
-      const latestSessionId = sessionId;
-
       // 1. Instant Cache Hydration from memory/local storage (0ms load time!)
       try {
         const localKey = `cache_prev_panel_${latestSessionId}`;
         const stored = localStorage.getItem(localKey);
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (parsed.summary && !summary) {
+          if (parsed.summary) {
             setSummary(parsed.summary);
             setLoading(false);
           }
@@ -295,7 +310,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       if (rows.length > 0) {
         const mappedRecords: ParticipationRecord[] = rows.map((row: any) => ({
           id: row.s_no,
-          session_id: latestSessionId,
+          session_id: latestSessionId!,
           contest_slug: row.contest_id,
           contest_title: row.contest_name,
           student_id: row.student_id,
@@ -367,12 +382,13 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     }
   };
 
-  // Initial load when sessionId prop changes
+  // Initial load when sessionId prop changes or mounts
   useEffect(() => {
-    if (sessionId) {
-      // Hydrate from instant local storage first for 0ms render
-      try {
-        const stored = localStorage.getItem(`cache_prev_panel_${sessionId}`);
+    // 1. Try instant hydration from any existing cache in local storage
+    try {
+      const activeId = sessionId;
+      if (activeId) {
+        const stored = localStorage.getItem(`cache_prev_panel_${activeId}`);
         if (stored) {
           const parsed = JSON.parse(stored);
           if (parsed.summary) {
@@ -383,20 +399,39 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
             setRecords(parsed.records);
           }
         }
-      } catch (e) {}
+      } else {
+        // Find any cached session panel data for instant 0ms preview
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('cache_prev_panel_')) {
+            const stored = localStorage.getItem(key);
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              if (parsed.summary) {
+                setSummary(parsed.summary);
+                if (parsed.records) setRecords(parsed.records);
+                setLoading(false);
+                break;
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {}
 
-      fetchPreviousWeekData();
-    } else {
-      setRecords([]);
-      setSummary(null);
-    }
+    fetchPreviousWeekData();
+
+    // Safety timeout: Never keep loading spinner stuck for more than 1.2s under any network condition
+    const safetyTimer = setTimeout(() => {
+      setLoading(false);
+    }, 1200);
+
+    return () => clearTimeout(safetyTimer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
   // Silent automatic background polling every 12 seconds so UI updates without manual reloads
   useEffect(() => {
-    if (!sessionId) return;
-    
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') {
         fetchPreviousWeekData(false, true);
