@@ -5,7 +5,7 @@ Consumes ONLY the canonical dataset dictionary.
 """
 import io
 import datetime
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Union
 from sqlalchemy.orm import Session
 
 try:

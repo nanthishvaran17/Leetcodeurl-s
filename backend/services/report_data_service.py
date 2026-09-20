@@ -1,4 +1,4 @@
-from typing import List, Any, Optional
+from typing import List, Any, Optional, Dict
 from sqlalchemy.orm import Session, joinedload
 from backend.models import Student, Department, Section, ContestParticipation
 from backend.services.report_models import StudentRow, ContestRow

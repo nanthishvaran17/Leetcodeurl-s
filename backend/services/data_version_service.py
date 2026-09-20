@@ -58,9 +58,10 @@ def bump_data_version(db: Session) -> str:
             setting = SystemSetting(key=_GLOBAL_DATA_VERSION_KEY, value=val)
             db.add(setting)
         else:
-            current_val = int(setting.value) if setting.value and setting.value.isdigit() else 1000
+            s_val = str(getattr(setting, "value", ""))
+            current_val = int(s_val) if s_val and s_val.isdigit() else 1000
             val = str(current_val + 1)
-            setting.value = val
+            setattr(setting, "value", val)
         db.commit()
         version_str = f"v{val}"
         _CACHED_VERSION = version_str

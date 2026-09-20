@@ -166,7 +166,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             s.department.name if s.department else "",
             dept_filter,
             getattr(s, "department_id", None)
-        ) and matches_year(s.year_level, year_filter, s.reg_no)
+        ) and matches_year(str(s.year_level) if s.year_level else None, year_filter, str(s.reg_no) if s.reg_no else None)
     ]
 
     # 4. Fetch contest participation results for this session
@@ -177,11 +177,13 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
     if session_id is not None:
         p_list = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id).all()
         for p in p_list:
-            public_map[getattr(p, "student_id")] = p
+            if getattr(p, "student_id", None) is not None:
+                public_map[int(getattr(p, "student_id"))] = p
 
         v_list = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == session_id).all()
         for v in v_list:
-            virtual_map[getattr(v, "student_id")] = v
+            if getattr(v, "student_id", None) is not None:
+                virtual_map[int(getattr(v, "student_id"))] = v
 
     if contest_name:
         parts = db.query(ContestParticipation).filter(
@@ -189,19 +191,20 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             (ContestParticipation.contest_name.ilike(f"%{contest_name}%"))
         ).all()
         for pt in parts:
-            part_map[getattr(pt, "student_id")] = pt
+            if getattr(pt, "student_id", None) is not None:
+                part_map[int(getattr(pt, "student_id"))] = pt
 
     # 5. Build authoritative student-level contest rows
     student_rows: List[Dict[str, Any]] = []
 
     for s in filtered_students:
-        s_id = s.id
+        s_id = int(s.id)
         reg_no = s.reg_no
         name = s.name
         dept_code = s.department.code if s.department else "CSE"
         dept_norm = normalize_dept_val(dept_code, s.department.name if s.department else "")
         year_level = s.year_level or "III"
-        yr_norm = normalize_year_val(year_level)
+        yr_norm = normalize_year_val(str(year_level) if year_level else None)
         username = (s.username or "").strip()
 
         p_res = public_map.get(s_id)
