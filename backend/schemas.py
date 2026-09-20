@@ -38,6 +38,9 @@ class StudentBase(BaseModel):
     section_id: Optional[int] = None
     email: Optional[str] = None
     leetcode_url: Optional[str] = None
+    primary_leetcode_id: Optional[str] = None
+    secondary_leetcode_id: Optional[str] = None
+    secondary_status: Optional[str] = None
     codeforces_username: Optional[str] = None
     hackerrank_username: Optional[str] = None
     allocation: Optional[str] = None

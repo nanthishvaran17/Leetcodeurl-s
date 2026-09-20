@@ -208,22 +208,28 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       const initCutoff = student.twelfth_cutoff ?? student.twelfthCutoff ?? student.cutoff ?? '';
       const formattedCutoff = (initCutoff !== '' && initCutoff !== null && initCutoff !== undefined) ? String(initCutoff) : '';
 
-      const rawAccounts = Array.isArray(student.leetcode_accounts)
+      const rawAccounts = Array.isArray(student.leetcode_accounts) && student.leetcode_accounts.length > 0
         ? student.leetcode_accounts
-        : Array.isArray(student.secondary_accounts)
+        : Array.isArray(student.secondary_accounts) && student.secondary_accounts.length > 0
         ? student.secondary_accounts
         : [];
-      let initSecAccounts: SecondaryAccountItem[] = rawAccounts.map((acc: any) => ({
-        id: acc?.id,
-        username: acc?.leetcode_username || acc?.username || '',
-        url: acc?.profile_url || (acc?.leetcode_username || acc?.username ? `https://leetcode.com/u/${acc?.leetcode_username || acc?.username}/` : '')
-      }));
+      let initSecAccounts: SecondaryAccountItem[] = rawAccounts
+        .map((acc: any) => ({
+          id: acc?.id,
+          username: acc?.leetcode_username || acc?.username || '',
+          url: acc?.profile_url || (acc?.leetcode_username || acc?.username ? `https://leetcode.com/u/${acc?.leetcode_username || acc?.username}/` : '')
+        }))
+        .filter((acc: any) => acc.username || acc.url);
 
-      if (initSecAccounts.length === 0 && student.secondary_leetcode_id) {
-        initSecAccounts = [{
-          username: student.secondary_leetcode_id,
-          url: `https://leetcode.com/u/${student.secondary_leetcode_id}/`
-        }];
+      const secHandle = student.secondary_leetcode_id || student.secondary_id || student.secondary_leetcode_url;
+      if (initSecAccounts.length === 0 && secHandle && String(secHandle).trim() !== '') {
+        const cleanSec = String(secHandle).replace('https://leetcode.com/u/', '').replace('leetcode.com/u/', '').trim().replace(/\/$/, '');
+        if (cleanSec) {
+          initSecAccounts = [{
+            username: cleanSec,
+            url: `https://leetcode.com/u/${cleanSec}/`
+          }];
+        }
       }
 
       setName(initName);
