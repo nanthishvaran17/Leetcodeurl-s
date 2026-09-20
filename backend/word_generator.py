@@ -49,7 +49,7 @@ def set_table_borders(table, color="94A3B8", sz="4", val="single"):
             tcPr.append(tcBorders)
 
 
-def build_weekly_performance_docx(data: Dict[str, Any], dept_id: Optional[int] = None) -> bytes:
+def build_weekly_performance_docx(data: Dict[str, Any], dept_id: Optional[Union[int, str]] = None) -> bytes:
     """
     Builds official landscape Word performance report directly from the canonical dataset.
     Does NOT query database.
@@ -77,11 +77,12 @@ def build_weekly_performance_docx(data: Dict[str, Any], dept_id: Optional[int] =
         section.right_margin = Inches(0.5)
 
     report_date_str = data.get("report_date", datetime.date.today().strftime("%d.%m.%Y"))
-    # Support both key names: weekly_report_service uses 'department_summaries', legacy uses 'dept_summaries'
-    dept_summaries = data.get("department_summaries") or data.get("dept_summaries") or []
+    raw_summaries = data.get("department_summaries") or data.get("dept_summaries") or []
+    dept_summaries: list[dict[str, Any]] = [d for d in raw_summaries if isinstance(d, dict)]
 
     if dept_id is not None:
-        dept_summaries = [d for d in dept_summaries if d.get("department_id") == dept_id]
+        target_id_str = str(dept_id)
+        dept_summaries = [d for d in dept_summaries if str(d.get("department_id")) == target_id_str]
 
     if not dept_summaries:
         dept_summaries = [{
@@ -96,11 +97,13 @@ def build_weekly_performance_docx(data: Dict[str, Any], dept_id: Optional[int] =
         if dept_index > 0:
             doc.add_page_break()
 
-        dept_code = dept.get("department", "CSE")
-        dept_title = dept.get("department_name") or f"Department of {dept_code}"
+        dept_code: str = str(dept.get("department") or "CSE")
+        dept_title_raw = dept.get("department_name") or f"Department of {dept_code}"
+        dept_title: str = str(dept_title_raw)
         if not dept_title.startswith("Department of"):
             dept_title = f"Department of {dept_title}"
-        coordinator = dept.get("coordinator") or get_coordinator_for_department(dept_code)
+        coord_val = dept.get("coordinator") or get_coordinator_for_department(dept_code)
+        coordinator: str = str(coord_val or "")
 
         # 1. OFFICIAL INSTITUTIONAL HEADER 
         p_inst = doc.add_paragraph()
@@ -156,8 +159,9 @@ def build_weekly_performance_docx(data: Dict[str, Any], dept_id: Optional[int] =
         r_coord.font.bold = True
 
         # 2. OFFICIAL MULTI-LEVEL TABLE 
-        batches_dict = dept.get("batches", {})
-        active_batch_cfgs = [b for b in BATCH_CONFIG if batches_dict.get(b["key"], {}).get("total_students", 0) > 0]
+        batches_raw = dept.get("batches")
+        batches_dict: dict[str, Any] = batches_raw if isinstance(batches_raw, dict) else {}
+        active_batch_cfgs = [b for b in BATCH_CONFIG if isinstance(batches_dict.get(b["key"]), dict) and batches_dict.get(b["key"], {}).get("total_students", 0) > 0]
         if not active_batch_cfgs:
             active_batch_cfgs = BATCH_CONFIG  # Fallback
 
@@ -230,9 +234,12 @@ def build_weekly_performance_docx(data: Dict[str, Any], dept_id: Optional[int] =
         for b_cfg in active_batch_cfgs:
             b_key = b_cfg["key"]
             b_label = b_cfg["label"]
-            b_metrics = batches_dict.get(b_key, {})
-            lw = b_metrics.get("last_week", {})
-            cw = b_metrics.get("current_week", {})
+            b_metrics_raw = batches_dict.get(b_key, {})
+            b_metrics: dict[str, Any] = b_metrics_raw if isinstance(b_metrics_raw, dict) else {}
+            lw_raw = b_metrics.get("last_week", {})
+            lw: dict[str, Any] = lw_raw if isinstance(lw_raw, dict) else {}
+            cw_raw = b_metrics.get("current_week", {})
+            cw: dict[str, Any] = cw_raw if isinstance(cw_raw, dict) else {}
             tot_st = b_metrics.get("total_students", 0)
 
             # Last Week Row

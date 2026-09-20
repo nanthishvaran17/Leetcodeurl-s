@@ -198,7 +198,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
     student_rows: List[Dict[str, Any]] = []
 
     for s in filtered_students:
-        s_id = int(s.id)
+        s_id = int(getattr(s, "id"))
         reg_no = s.reg_no
         name = s.name
         dept_code = s.department.code if s.department else "CSE"

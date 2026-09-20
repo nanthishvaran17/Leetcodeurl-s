@@ -916,7 +916,7 @@ def generate_universal_report(
             rpt_def = get_report_definition(payload.report_type)
             canon_code = rpt_def["code"]
         except Exception:
-            canon_code = str(payload.report_type or "").upper()
+            canon_code = (payload.report_type or "").upper()
 
         etag = f'W/"{data_ver}-{canon_code}-{dept}-{yr}-{scope}"'
 
@@ -975,7 +975,7 @@ def get_contest_filename_base(contest_name: str, session_date: Optional[str] = N
     # --- Date: compact 23Aug2026 ---
     MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
     if session_date:
-        s_date_str = str(session_date)
+        s_date_str = session_date
         parts = re.split(r'[.\-/]', s_date_str)
         try:
             if len(parts) == 3:
@@ -1113,7 +1113,7 @@ def _get_dataset_for_id(
 
             from backend.services.canonical_contest_engine import build_canonical_contest_dataset
             canonical_data = build_canonical_contest_dataset(
-                session_id=int(session_id),
+                session_id=session_id,
                 db=db,
                 dept="ALL",
                 year="ALL",

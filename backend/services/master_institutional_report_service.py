@@ -481,9 +481,11 @@ def generate_master_10_sheet_workbook(
     from backend.models import WeeklySession, WeeklyPublicResult, WeeklyVirtualResult
     target_session = None
     if contest_id is not None:
-        target_session = db.query(WeeklySession).filter(
-            (WeeklySession.id == int(contest_id)) if (isinstance(contest_id, str) and contest_id.isdigit()) or isinstance(contest_id, int) else (WeeklySession.contest_id == str(contest_id))
-        ).first()
+        c_id_int = int(contest_id) if (isinstance(contest_id, (int, str)) and str(contest_id).isdigit()) else None
+        if c_id_int is not None:
+            target_session = db.query(WeeklySession).filter(WeeklySession.id == c_id_int).first()
+        else:
+            target_session = db.query(WeeklySession).filter(WeeklySession.contest_id == str(contest_id)).first()
     if not target_session:
         target_session = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
 

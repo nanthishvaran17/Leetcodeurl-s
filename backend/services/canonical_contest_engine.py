@@ -26,7 +26,7 @@ def normalize_participation_status(raw_status: Optional[str], fetch_status: Opti
     if fetch_status in ("SOURCE_UNAVAILABLE", "NETWORK_ERROR", "TIMEOUT"):
         return "SOURCE_UNAVAILABLE"
 
-    st = str(raw_status).strip().upper() if raw_status else ""
+    st = raw_status.strip().upper() if raw_status else ""
     if st in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL"):
         return "PUBLIC"
     if st in ("VIRTUAL", "VIRTUAL_ATTENDED"):
@@ -338,8 +338,8 @@ def _build_canonical_contest_dataset_internal(
                     q1_val = 1
 
             actual_sum = q1_val + q2_val + q3_val + q4_val
-            tot_from_record = int(p_res.total_contest_solved) if (p_res.total_contest_solved is not None and p_res.total_contest_solved > 0) else 0
-            solved_val: Optional[int] = max(int(actual_sum), int(tot_from_record))
+            tot_from_record = int(getattr(p_res, "total_contest_solved", 0) or 0) if p_res is not None else 0
+            solved_val: Optional[int] = max(actual_sum, tot_from_record)
 
             if solved_val and solved_val > 0 and actual_sum < solved_val:
                 if solved_val >= 4:
@@ -386,7 +386,7 @@ def _build_canonical_contest_dataset_internal(
 
             actual_sum = q1_val + q2_val + q3_val + q4_val
             tot_from_record = int(getattr(source_res, "total_contest_solved", 0) or 0) if source_res is not None else 0
-            solved_val = max(int(actual_sum), int(tot_from_record))
+            solved_val = max(actual_sum, tot_from_record)
 
             if solved_val and solved_val > 0 and actual_sum < solved_val:
                 if solved_val >= 4:
@@ -456,11 +456,10 @@ def _build_canonical_contest_dataset_internal(
             else: dept_stats_map[dept_norm]["errors"] += 1
 
             if is_participant and solved_val:
-                s_val_int = int(solved_val)
-                if s_val_int >= 4: dept_stats_map[dept_norm]["q4"] += 1
-                elif s_val_int == 3: dept_stats_map[dept_norm]["q3"] += 1
-                elif s_val_int == 2: dept_stats_map[dept_norm]["q2"] += 1
-                elif s_val_int == 1: dept_stats_map[dept_norm]["q1"] += 1
+                if solved_val >= 4: dept_stats_map[dept_norm]["q4"] += 1
+                elif solved_val == 3: dept_stats_map[dept_norm]["q3"] += 1
+                elif solved_val == 2: dept_stats_map[dept_norm]["q2"] += 1
+                elif solved_val == 1: dept_stats_map[dept_norm]["q1"] += 1
 
         # Year aggregator
         y_str = str(year_level).strip().upper()
@@ -475,18 +474,16 @@ def _build_canonical_contest_dataset_internal(
             else: year_stats_map[yr_norm]["errors"] += 1
 
             if is_participant and solved_val:
-                s_val_int = int(solved_val)
-                if s_val_int >= 4: year_stats_map[yr_norm]["q4"] += 1
-                elif s_val_int == 3: year_stats_map[yr_norm]["q3"] += 1
-                elif s_val_int == 2: year_stats_map[yr_norm]["q2"] += 1
-                elif s_val_int == 1: year_stats_map[yr_norm]["q1"] += 1
+                if solved_val >= 4: year_stats_map[yr_norm]["q4"] += 1
+                elif solved_val == 3: year_stats_map[yr_norm]["q3"] += 1
+                elif solved_val == 2: year_stats_map[yr_norm]["q2"] += 1
+                elif solved_val == 1: year_stats_map[yr_norm]["q1"] += 1
 
         if is_participant and solved_val:
-            s_val_int = int(solved_val)
-            if s_val_int >= 4: q4_all += 1
-            elif s_val_int == 3: q3_all += 1
-            elif s_val_int == 2: q2_all += 1
-            elif s_val_int == 1: q1_all += 1
+            if solved_val >= 4: q4_all += 1
+            elif solved_val == 3: q3_all += 1
+            elif solved_val == 2: q2_all += 1
+            elif solved_val == 1: q1_all += 1
 
         row_item = {
             "s_no": idx,
