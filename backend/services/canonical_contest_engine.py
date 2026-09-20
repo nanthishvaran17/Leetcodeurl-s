@@ -286,13 +286,12 @@ def _build_canonical_contest_dataset_internal(
         profile_url = student.leetcode_url or (f"https://leetcode.com/u/{username}" if username else "")
 
         # Determine authoritative participation status
-        # Priority:
-        # 1. LIVE Ranking / Public Attendance -> PUBLIC
-        # 2. Virtual Result / Virtual Flag -> VIRTUAL
-        # 3. Explicit Non-Attendance -> NOT_ATTENDED
-        # 4. Error / Unmapped
-        p_status = normalize_participation_status(p_res.participation_status if p_res else None, p_res.fetch_status if p_res else None)
-        v_status = normalize_participation_status(v_res.participation_status if v_res else None) if v_res else None
+        p_raw_st = str(p_res.participation_status) if (p_res and p_res.participation_status) else None
+        p_fetch_st = str(p_res.fetch_status) if (p_res and p_res.fetch_status) else None
+        p_status = normalize_participation_status(p_raw_st, p_fetch_st)
+
+        v_raw_st = str(v_res.participation_status) if (v_res and v_res.participation_status) else None
+        v_status = normalize_participation_status(v_raw_st) if v_res else None
 
         if p_status == "PUBLIC":
             canon_status = "PUBLIC"
@@ -305,11 +304,11 @@ def _build_canonical_contest_dataset_internal(
         elif v_status == "NOT_ATTENDED":
             canon_status = "NOT_ATTENDED"
         else:
-            raw_status = p_res.participation_status if p_res else (v_res.participation_status if v_res else "PENDING")
-            fetch_status = p_res.fetch_status if p_res else "PENDING"
+            raw_status = p_raw_st if p_raw_st else (v_raw_st if v_raw_st else "PENDING")
+            fetch_status = p_fetch_st if p_fetch_st else "PENDING"
             canon_status = normalize_participation_status(raw_status, fetch_status)
 
-        error_reason = p_res.error_reason if p_res else (getattr(v_res, "error_reason", None) if v_res else None)
+        error_reason = str(p_res.error_reason) if (p_res and p_res.error_reason) else (str(getattr(v_res, "error_reason", "")) if (v_res and getattr(v_res, "error_reason", None)) else None)
 
         # Check if student username was missing in master
         if not username or len(username.strip()) < 2:
@@ -327,8 +326,8 @@ def _build_canonical_contest_dataset_internal(
             score_val = p_res.contest_score
 
             # If Qs are 0 but score is populated, infer based on 3/4/5/6 distribution
-            if (q1_val + q2_val + q3_val + q4_val) == 0 and score_val:
-                sv = int(float(score_val))
+            if (q1_val + q2_val + q3_val + q4_val) == 0 and score_val is not None:
+                sv = int(float(str(score_val)))
                 if sv >= 18:
                     q1_val = 1; q2_val = 1; q3_val = 1; q4_val = 1
                 elif sv == 12:
@@ -339,10 +338,10 @@ def _build_canonical_contest_dataset_internal(
                     q1_val = 1
 
             actual_sum = q1_val + q2_val + q3_val + q4_val
-            tot_from_record = p_res.total_contest_solved if (p_res.total_contest_solved is not None and p_res.total_contest_solved > 0) else 0
-            solved_val = max(actual_sum, tot_from_record)
+            tot_from_record = int(p_res.total_contest_solved) if (p_res.total_contest_solved is not None and p_res.total_contest_solved > 0) else 0
+            solved_val: Optional[int] = max(int(actual_sum), int(tot_from_record))
 
-            if solved_val > 0 and (q1_val + q2_val + q3_val + q4_val) < solved_val:
+            if solved_val and solved_val > 0 and actual_sum < solved_val:
                 if solved_val >= 4:
                     q1_val = q2_val = q3_val = q4_val = 1
                 elif solved_val == 3:
@@ -358,16 +357,24 @@ def _build_canonical_contest_dataset_internal(
             rank_val = p_res.contest_rank
             rating_val = p_res.contest_rating
         elif canon_status == "VIRTUAL":
-            source_res = v_res if v_res else p_res
-            q1_val = 1 if (source_res.q1 and source_res.q1 >= 1) else 0
-            q2_val = 1 if (source_res.q2 and source_res.q2 >= 1) else 0
-            q3_val = 1 if (source_res.q3 and source_res.q3 >= 1) else 0
-            q4_val = 1 if (source_res.q4 and source_res.q4 >= 1) else 0
-            score_val = getattr(source_res, "contest_score", None)
+            source_res = v_res if v_res is not None else p_res
+            if source_res is not None:
+                q1_v_raw = getattr(source_res, "q1", 0) or 0
+                q2_v_raw = getattr(source_res, "q2", 0) or 0
+                q3_v_raw = getattr(source_res, "q3", 0) or 0
+                q4_v_raw = getattr(source_res, "q4", 0) or 0
+                q1_val = 1 if q1_v_raw >= 1 else 0
+                q2_val = 1 if q2_v_raw >= 1 else 0
+                q3_val = 1 if q3_v_raw >= 1 else 0
+                q4_val = 1 if q4_v_raw >= 1 else 0
+                score_val = getattr(source_res, "contest_score", None)
+            else:
+                q1_val = q2_val = q3_val = q4_val = 0
+                score_val = None
 
             # If Qs are 0 but score is populated, infer based on 3/4/5/6 distribution
-            if (q1_val + q2_val + q3_val + q4_val) == 0 and score_val:
-                sv = int(float(score_val))
+            if (q1_val + q2_val + q3_val + q4_val) == 0 and score_val is not None:
+                sv = int(float(str(score_val)))
                 if sv >= 18:
                     q1_val = 1; q2_val = 1; q3_val = 1; q4_val = 1
                 elif sv == 12:
@@ -378,10 +385,10 @@ def _build_canonical_contest_dataset_internal(
                     q1_val = 1
 
             actual_sum = q1_val + q2_val + q3_val + q4_val
-            tot_from_record = source_res.total_contest_solved if (source_res.total_contest_solved is not None and source_res.total_contest_solved > 0) else 0
-            solved_val = max(actual_sum, tot_from_record)
+            tot_from_record = int(getattr(source_res, "total_contest_solved", 0) or 0) if source_res is not None else 0
+            solved_val = max(int(actual_sum), int(tot_from_record))
 
-            if solved_val > 0 and (q1_val + q2_val + q3_val + q4_val) < solved_val:
+            if solved_val and solved_val > 0 and actual_sum < solved_val:
                 if solved_val >= 4:
                     q1_val = q2_val = q3_val = q4_val = 1
                 elif solved_val == 3:
@@ -436,7 +443,7 @@ def _build_canonical_contest_dataset_internal(
         status_counts[canon_status] = status_counts.get(canon_status, 0) + 1
 
         # Department aggregator
-        dept_norm = dept_code
+        dept_norm = str(dept_code)
         if dept_norm not in dept_stats_map:
             dept_stats_map[dept_norm] = {"name": dept_norm, "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0}
 
@@ -449,10 +456,11 @@ def _build_canonical_contest_dataset_internal(
             else: dept_stats_map[dept_norm]["errors"] += 1
 
             if is_participant and solved_val:
-                if solved_val >= 4: dept_stats_map[dept_norm]["q4"] += 1
-                elif solved_val == 3: dept_stats_map[dept_norm]["q3"] += 1
-                elif solved_val == 2: dept_stats_map[dept_norm]["q2"] += 1
-                elif solved_val == 1: dept_stats_map[dept_norm]["q1"] += 1
+                s_val_int = int(solved_val)
+                if s_val_int >= 4: dept_stats_map[dept_norm]["q4"] += 1
+                elif s_val_int == 3: dept_stats_map[dept_norm]["q3"] += 1
+                elif s_val_int == 2: dept_stats_map[dept_norm]["q2"] += 1
+                elif s_val_int == 1: dept_stats_map[dept_norm]["q1"] += 1
 
         # Year aggregator
         y_str = str(year_level).strip().upper()
@@ -467,16 +475,18 @@ def _build_canonical_contest_dataset_internal(
             else: year_stats_map[yr_norm]["errors"] += 1
 
             if is_participant and solved_val:
-                if solved_val >= 4: year_stats_map[yr_norm]["q4"] += 1
-                elif solved_val == 3: year_stats_map[yr_norm]["q3"] += 1
-                elif solved_val == 2: year_stats_map[yr_norm]["q2"] += 1
-                elif solved_val == 1: year_stats_map[yr_norm]["q1"] += 1
+                s_val_int = int(solved_val)
+                if s_val_int >= 4: year_stats_map[yr_norm]["q4"] += 1
+                elif s_val_int == 3: year_stats_map[yr_norm]["q3"] += 1
+                elif s_val_int == 2: year_stats_map[yr_norm]["q2"] += 1
+                elif s_val_int == 1: year_stats_map[yr_norm]["q1"] += 1
 
         if is_participant and solved_val:
-            if solved_val >= 4: q4_all += 1
-            elif solved_val == 3: q3_all += 1
-            elif solved_val == 2: q2_all += 1
-            elif solved_val == 1: q1_all += 1
+            s_val_int = int(solved_val)
+            if s_val_int >= 4: q4_all += 1
+            elif s_val_int == 3: q3_all += 1
+            elif s_val_int == 2: q2_all += 1
+            elif s_val_int == 1: q1_all += 1
 
         row_item = {
             "s_no": idx,
