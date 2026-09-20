@@ -15,6 +15,7 @@ import { useGlobalKeyboardShortcuts } from './hooks/useGlobalKeyboardShortcuts';
 import { InstallAppPrompt } from './components/InstallAppPrompt';
 import { AppUpdateNotifier } from './components/AppUpdateNotifier';
 import { useScrollLock } from './hooks/useScrollLock';
+import { StudentProfileSkeleton } from './components/StudentProfileSkeleton';
 
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
@@ -45,6 +46,10 @@ function safeLazy<T extends React.ComponentType<any>>(factory: () => Promise<{ d
     })
   );
 }
+
+export const preloadStudentProfilePage = () => {
+  import('./pages/StudentProfilePage');
+};
 
 const StudentMasterPage = safeLazy(() => import('./pages/StudentMasterPage').then(m => ({ default: m.StudentMasterPage })));
 const StudentProfilePage = safeLazy(() => import('./pages/StudentProfilePage').then(m => ({ default: m.StudentProfilePage })));
@@ -207,6 +212,10 @@ export const App: React.FC = () => {
         triggerCloudSync();
       }, 4000);
     }
+
+    const preloadTimer = setTimeout(() => {
+      preloadStudentProfilePage();
+    }, 1500);
 
     const handleHashChange = () => {
       const hash = window.location.hash;
@@ -891,7 +900,7 @@ export const App: React.FC = () => {
             aria-label={`Student profile for ${selectedStudent.name}`}
             className="w-full max-w-5xl bg-white dark:bg-navy-950 rounded-3xl shadow-2xl border border-slate-200 dark:border-navy-800 flex flex-col overflow-hidden my-auto max-h-[calc(100vh-3.5rem)] text-slate-900 dark:text-slate-100 animate-modal-content"
           >
-            <Suspense fallback={null}>
+            <Suspense fallback={<StudentProfileSkeleton studentName={selectedStudent.name} />}>
               <StudentProfilePage
                 student={selectedStudent}
                 onBack={handleCloseProfile}

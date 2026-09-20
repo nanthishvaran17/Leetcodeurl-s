@@ -48,9 +48,7 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       // Backend returns scoped list for HOD, full list for others
       const res = await api.get('/departments');
       if (res.data && Array.isArray(res.data)) {
-        // Apply institutional restriction: Only show Cyber Security (id: 1) and IoT (id: 2)
-        const filteredData = res.data.filter((d: any) => d.id === 1 || d.id === 2);
-        const sourceData = filteredData.length > 0 ? filteredData : res.data;
+        const sourceData = res.data;
         
         const mappedDepts = sourceData.map((d: any) => {
           const code = d.code || d.name || '';

@@ -225,7 +225,7 @@ def get_report_definition(report_code: str) -> Dict[str, Any]:
     if not report_code:
         raise ValueError("REPORT_CONFIGURATION_ERROR: Report code is required and cannot be empty.")
     
-    code_upper = str(report_code).strip().upper()
+    code_upper = report_code.strip().upper()
     
     # Aliases for backwards compatibility mapping
     ALIASES = {

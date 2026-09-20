@@ -321,7 +321,7 @@ def build_weekly_performance_docx(data: Dict[str, Any], dept_id: Optional[int] =
     return buffer.getvalue()
 
 
-def generate_word_report(db: Session, dept_id: Optional[int] = None, *args, **kwargs) -> bytes:
+def generate_word_report(db: Session, dept_id: Optional[Union[int, str]] = None, *args, **kwargs) -> bytes:
     """
     Compatibility wrapper: produces Word document from canonical dataset.
     """

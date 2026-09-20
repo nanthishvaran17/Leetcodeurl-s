@@ -1,5 +1,5 @@
 from typing import List, Any, Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from backend.models import Student, Department, Section, ContestParticipation
 from backend.services.report_models import StudentRow, ContestRow
 
@@ -28,9 +28,9 @@ def get_problem_category(total_solved: Optional[int], is_verified: bool = True) 
     return "Data Unavailable"
 
 def resolve_dept_canonical(dept_str: Optional[str]) -> str:
-    if not dept_str or str(dept_str).upper().strip() in ("ALL", ""):
+    if not dept_str or dept_str.upper().strip() in ("ALL", ""):
         return "ALL"
-    su = str(dept_str).upper().strip()
+    su = dept_str.upper().strip()
     if su.isdigit():
         id_code_map = {
             "1": "CSE(CS)", "2": "CSE(IOT)", "7": "IT", "8": "CSE",
@@ -58,6 +58,21 @@ def resolve_dept_canonical(dept_str: Optional[str]) -> str:
             if su == alias or su.startswith(alias):
                 return canonical
     return su
+
+import threading
+from backend.services.data_version_service import get_current_data_version
+
+_ROSTER_CACHE: Dict[str, List[Any]] = {}
+_ROSTER_CACHE_LOCK = threading.Lock()
+
+_STUDENT_ROWS_CACHE: Dict[str, List[StudentRow]] = {}
+_ROWS_CACHE_LOCK = threading.Lock()
+
+def clear_roster_cache():
+    with _ROSTER_CACHE_LOCK:
+        _ROSTER_CACHE.clear()
+    with _ROWS_CACHE_LOCK:
+        _STUDENT_ROWS_CACHE.clear()
 
 def fetch_normalized_students(
     db: Session,
@@ -94,43 +109,71 @@ def fetch_normalized_students(
     if "section" in kwargs and (section_filter == "ALL" or not section_filter):
         section_filter = kwargs.get("section")
 
-    from sqlalchemy.orm import joinedload
-    query = db.query(Student).options(
-        joinedload(Student.stats),
-        joinedload(Student.department),
-        joinedload(Student.section)
-    ).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    canon_dept = resolve_dept_canonical(dept_filter)
+    canon_year = (year_filter or "ALL").upper().strip()
+    canon_sec = (section_filter or "ALL").upper().strip()
+    canon_batch = (batch_filter or "ALL").upper().strip()
+    canon_status = (status_filter or "ALL").upper().strip()
+    canon_search = (search_query or "").strip().lower()
+    canon_range = (performance_range or "ALL").lower().strip()
 
-    if current_user:
-        query = apply_role_based_student_filter(query, current_user, db)
+    data_ver = get_current_data_version(db)
+    u_role = (getattr(current_user, "role", "") or "").lower()
+    u_dept = str(getattr(current_user, "department_id", "") or "")
+    rows_key = f"st_rows:{data_ver}:{u_role}:{u_dept}:{canon_dept}:{canon_year}:{canon_sec}:{canon_batch}:{canon_status}:{canon_search}:{canon_range}"
 
-    students = query.distinct().all()
+    with _ROWS_CACHE_LOCK:
+        if rows_key in _STUDENT_ROWS_CACHE:
+            return _STUDENT_ROWS_CACHE[rows_key]
+
+    cache_key = f"roster:{data_ver}:{u_role}:{u_dept}"
+
+    with _ROSTER_CACHE_LOCK:
+        raw_students = _ROSTER_CACHE.get(cache_key)
+
+    if raw_students is None:
+        from sqlalchemy.orm import joinedload
+        query = db.query(Student).options(
+            joinedload(Student.stats),
+            joinedload(Student.department),
+            joinedload(Student.section)
+        ).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+
+        if current_user:
+            query = apply_role_based_student_filter(query, current_user, db)
+
+        raw_students = query.all()
+        with _ROSTER_CACHE_LOCK:
+            _ROSTER_CACHE[cache_key] = raw_students
     
     canon_dept = resolve_dept_canonical(dept_filter)
-    canon_year = str(year_filter or "ALL").upper().strip()
-    canon_sec = str(section_filter or "ALL").upper().strip()
-    canon_batch = str(batch_filter or "ALL").upper().strip()
-    canon_status = str(status_filter or "ALL").upper().strip()
-    canon_search = str(search_query or "").strip().lower()
-    canon_range = str(performance_range or "ALL").lower().strip()
+    canon_year = (year_filter or "ALL").upper().strip()
+    canon_sec = (section_filter or "ALL").upper().strip()
+    canon_batch = (batch_filter or "ALL").upper().strip()
+    canon_status = (status_filter or "ALL").upper().strip()
+    canon_search = (search_query or "").strip().lower()
+    canon_range = (performance_range or "ALL").lower().strip()
 
     filtered_students = []
-    for s in students:
+    for s in raw_students:
+        dept_obj = s.department
+        sec_obj = s.section
+        st = s.stats
         # 1. Department Filter
         if canon_dept != "ALL":
-            s_code = s.department.code if s.department else ""
-            s_name = s.department.name if s.department else ""
+            s_code = dept_obj.code if dept_obj else ""
+            s_name = dept_obj.name if dept_obj else ""
             if not matches_dept(s_code, s_name, dept_filter, getattr(s, "department_id", None)):
                 continue
 
         # 2. Year Filter
         if canon_year != "ALL":
-            if not matches_year(s.year_level, year_filter, s.reg_no):
+            if not matches_year(getattr(s, "year_level", None), year_filter, getattr(s, "reg_no", None)):
                 continue
 
         # 3. Section Filter
         if canon_sec != "ALL":
-            s_sec = str(s.section.name if s.section else "").upper().strip()
+            s_sec = str(sec_obj.name if sec_obj else "").upper().strip()
             if s_sec != canon_sec:
                 continue
 
@@ -152,7 +195,6 @@ def fetch_normalized_students(
                 canon_search not in email_str):
                 continue
 
-        st = s.stats
         is_verified = bool(st and (st.sync_status in ("success", "OK", "verified", "stale") or st.status == "verified" or st.total_solved is not None))
         
         # Calculate solved
@@ -187,11 +229,10 @@ def fetch_normalized_students(
             elif canon_range == "1_100" and not (1 <= tot <= 100): continue
             elif canon_range == "not_started" and tot != 0: continue
 
-        filtered_students.append((s, is_verified, easy, medium, hard, total_solved))
+        filtered_students.append((s, st, dept_obj, sec_obj, is_verified, easy, medium, hard, total_solved))
 
     rows: List[StudentRow] = []
-    for idx, (s, is_verified, easy, medium, hard, total_solved) in enumerate(filtered_students, start=1):
-        st = s.stats
+    for idx, (s, st, dept_obj, sec_obj, is_verified, easy, medium, hard, total_solved) in enumerate(filtered_students, start=1):
         category = get_problem_category(total_solved, is_verified)
 
         sec_id = str(getattr(s, "secondary_leetcode_id", "") or "").strip()
@@ -202,11 +243,11 @@ def fetch_normalized_students(
             s_no=idx,
             reg_no=s.reg_no,
             name=s.name,
-            dept=s.department.code if s.department else "",
-            department_name=s.department.name if s.department else "",
+            dept=dept_obj.code if dept_obj else "",
+            department_name=dept_obj.name if dept_obj else "",
             year=s.year_level,
             batch=s.batch if hasattr(s, 'batch') and s.batch else "",
-            section=s.section.name if s.section else "",
+            section=sec_obj.name if sec_obj else "",
             institutional_email=s.institutional_email if hasattr(s, 'institutional_email') and s.institutional_email else "",
             leetcode_url=s.leetcode_url or "",
             username=s.username or "",
@@ -239,13 +280,18 @@ def fetch_normalized_students(
     for i, r in enumerate(sorted_rows, start=1):
         r.s_no = i
 
+    with _ROWS_CACHE_LOCK:
+        _STUDENT_ROWS_CACHE[rows_key] = sorted_rows
+
     return sorted_rows
 
 def fetch_normalized_contests(db: Session, dept_filter: Optional[str] = "ALL", year_filter: Optional[str] = "ALL") -> List[ContestRow]:
     """
     Fetches raw contest participation logs and normalizes into ContestRow objects.
     """
-    query = db.query(ContestParticipation).filter(ContestParticipation.participation_type == "OFFICIAL")
+    query = db.query(ContestParticipation).options(
+        joinedload(ContestParticipation.student).joinedload(Student.department)
+    ).filter(ContestParticipation.participation_type == "OFFICIAL")
     if dept_filter and dept_filter.upper() != "ALL":
         query = query.join(Student).join(Department).filter(
             (Department.code == dept_filter) | (Department.name == dept_filter)
@@ -258,21 +304,24 @@ def fetch_normalized_contests(db: Session, dept_filter: Optional[str] = "ALL", y
         s = p.student
         rows.append(ContestRow(
             s_no=idx,
-            contest_name=p.contest_name,
-            date=p.contest_date,
+            contest_name=getattr(p, "contest_name", ""),
+            date=getattr(p, "contest_date", ""),
             reg_no=s.reg_no if s else "",
             student_name=s.name if s else "Unknown",
             dept=s.department.code if (s and s.department) else "",
             year=s.year_level if s else "",
-            problems_solved=p.problems_solved,
-            total_problems=p.total_problems,
+            problems_solved=getattr(p, "problems_solved", 0),
+            total_problems=getattr(p, "total_problems", 4),
             rank=str(p.contest_rank) if p.contest_rank else "-",
             verified_at=p.verified_at.isoformat() if hasattr(p.verified_at, 'isoformat') else (str(p.verified_at) if p.verified_at else None)
         ))
 
     # Fallback to profile stats recent contest info if no ContestParticipation table entries exist
     if not rows:
-        students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+        students = db.query(Student).options(
+            joinedload(Student.stats),
+            joinedload(Student.department)
+        ).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
         for idx, s in enumerate(students, start=1):
             st = s.stats
             if st and st.recent_contest_name:
@@ -283,10 +332,10 @@ def fetch_normalized_contests(db: Session, dept_filter: Optional[str] = "ALL", y
                     s_no=idx,
                     contest_name=st.recent_contest_name,
                     date=date_str,
-                    reg_no=s.reg_no,
-                    student_name=s.name,
+                    reg_no=getattr(s, "reg_no", ""),
+                    student_name=getattr(s, "name", ""),
                     dept=s.department.code if s.department else "",
-                    year=s.year_level,
+                    year=getattr(s, "year_level", ""),
                     problems_solved=int(st.recent_contest_score) if (st.recent_contest_score and str(st.recent_contest_score).isdigit()) else 1,
                     total_problems=4,
                     rank=str(st.contest_global_ranking) if st.contest_global_ranking else "-",

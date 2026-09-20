@@ -345,6 +345,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
           <div className="flex items-center space-x-2 pt-4 mt-auto shrink-0">
             <button
               type="button"
+              onMouseEnter={() => { import('../pages/StudentProfilePage'); }}
               onClick={(e) => {
                 e.stopPropagation();
                 if (onSelectStudent) onSelectStudent(student);

@@ -33,11 +33,11 @@ from backend.logger import logger
 import re
 
 def _extract_contest_num(s: WeeklySession) -> int:
-    name = s.contest_name or ""
+    name = str(s.contest_name or "")
     m = re.search(r'\d+', name)
     if m:
         return int(m.group(0))
-    return s.id or 0
+    return getattr(s, "id", 0) or 0
 
 def _get_week_label(contest_name: Optional[str], default_id: int) -> str:
     """Extracts clean WXXX label from contest name (e.g. 'Weekly Contest 519' -> 'W519')"""
@@ -50,8 +50,8 @@ def _get_week_label(contest_name: Optional[str], default_id: int) -> str:
 
 
 def normalize_dept_code(d_code: Optional[str], d_name: Optional[str] = "") -> str:
-    c = str(d_code or "").upper().strip()
-    n = str(d_name or "").upper().strip()
+    c = (d_code or "").upper().strip()
+    n = (d_name or "").upper().strip()
     if "IOT" in c or "IOT" in n or "CI" in c:
         return "CSE(IoT)"
     if "CYBER" in c or "CYBER" in n or "CC" in c or "CSE(CS)" in c or "CSE (CS)" in c or "(CS)" in c or c == "CS":
@@ -72,7 +72,7 @@ def normalize_dept_code(d_code: Optional[str], d_name: Optional[str] = "") -> st
         return "CIVIL"
     if "AGRI" in c or "AGRICULTURAL" in n:
         return "AGRI"
-    return str(d_code or "CSE").strip()
+    return (d_code or "CSE").strip()
 
 
 def generate_live_weekly_intelligence_data(
@@ -193,21 +193,21 @@ def generate_live_weekly_intelligence_data(
                 WeeklyPublicResult.session_id == curr_session_id,
                 WeeklyPublicResult.student_id.in_(student_ids)
             ).all():
-                curr_pub_results[r.student_id] = r
+                curr_pub_results[getattr(r, "student_id")] = r
 
         if prev_session_id is not None:
             for r in db.query(WeeklyPublicResult).filter(
                 WeeklyPublicResult.session_id == prev_session_id,
                 WeeklyPublicResult.student_id.in_(student_ids)
             ).all():
-                prev_pub_results[r.student_id] = r
+                prev_pub_results[getattr(r, "student_id")] = r
 
         if prev_prev_session_id is not None:
             for r in db.query(WeeklyPublicResult).filter(
                 WeeklyPublicResult.session_id == prev_prev_session_id,
                 WeeklyPublicResult.student_id.in_(student_ids)
             ).all():
-                prev_prev_pub_results[r.student_id] = r
+                prev_prev_pub_results[getattr(r, "student_id")] = r
 
     # ─────────────────────────────────────────────────────────────────────────────
     # STEP 4: LOAD TOPIC & LANGUAGE STATS FOR AUTHORIZED STUDENTS
@@ -220,24 +220,24 @@ def generate_live_weekly_intelligence_data(
     if student_ids:
         topic_rows = db.query(LeetCodeTopicStats).filter(LeetCodeTopicStats.student_id.in_(student_ids)).all()
         for tr in topic_rows:
-            solved = tr.problems_solved or 0
+            solved = getattr(tr, "problems_solved", 0) or 0
             if solved > 0:
-                topics_by_student[tr.student_id].append({
+                topics_by_student[getattr(tr, "student_id")].append({
                     "topic_name": tr.topic_name,
                     "topic_slug": tr.topic_slug,
                     "problems_solved": solved,
-                    "topic_tier": tr.topic_tier or "Fundamental"
+                    "topic_tier": str(tr.topic_tier or "Fundamental")
                 })
                 global_topic_counts[tr.topic_name]["problems_solved"] += solved
                 global_topic_counts[tr.topic_name]["student_count"] += 1
                 if tr.topic_tier:
-                    global_topic_counts[tr.topic_name]["tier"] = tr.topic_tier
+                    global_topic_counts[tr.topic_name]["tier"] = str(tr.topic_tier)
 
         lang_rows = db.query(LeetCodeLanguageStats).filter(LeetCodeLanguageStats.student_id.in_(student_ids)).all()
         for lr in lang_rows:
-            solved = lr.problems_solved or 0
+            solved = getattr(lr, "problems_solved", 0) or 0
             if solved > 0:
-                languages_by_student[lr.student_id].append({
+                languages_by_student[getattr(lr, "student_id")].append({
                     "language_name": lr.language_name,
                     "problems_solved": solved
                 })
@@ -323,21 +323,21 @@ def generate_live_weekly_intelligence_data(
                 WeeklyStudentSnapshot.student_id.in_(student_ids),
                 WeeklyStudentSnapshot.reporting_period_id.in_([prev_label, f"2026-{prev_label}", f"W_{prev_session_id}"])
             ).all():
-                prev_snaps[snap.student_id] = snap
+                prev_snaps[getattr(snap, "student_id")] = snap
 
         if prev_prev_label:
             for snap in db.query(WeeklyStudentSnapshot).filter(
                 WeeklyStudentSnapshot.student_id.in_(student_ids),
                 WeeklyStudentSnapshot.reporting_period_id.in_([prev_prev_label, f"2026-{prev_prev_label}", f"W_{prev_prev_session_id}"])
             ).all():
-                prev_prev_snaps[snap.student_id] = snap
+                prev_prev_snaps[getattr(snap, "student_id")] = snap
 
     for idx, s in enumerate(students, start=1):
         st = s.stats
         dept_code = normalize_dept_code(s.department.code if s.department else "", s.department.name if s.department else "")
         dept_name = s.department.name if s.department else "Computer Science and Engineering"
-        year_roman = normalize_year_roman(s.year_level)
-        batch_label = derive_student_batch(s.year_level)
+        year_roman = normalize_year_roman(str(s.year_level or ""))
+        batch_label = derive_student_batch(str(s.year_level or ""))
 
         # Total Solved Calculation
         tot_solved = st.total_solved if st and st.total_solved is not None else 0
@@ -349,9 +349,9 @@ def generate_live_weekly_intelligence_data(
             tot_solved = easy_cnt + med_cnt + hard_cnt
 
         # Contest Results for 3 weeks
-        curr_res = curr_pub_results.get(s.id)
-        prev_res = prev_pub_results.get(s.id)
-        prev_prev_res = prev_prev_pub_results.get(s.id)
+        curr_res = curr_pub_results.get(getattr(s, "id"))
+        prev_res = prev_pub_results.get(getattr(s, "id"))
+        prev_prev_res = prev_prev_pub_results.get(getattr(s, "id"))
 
         # Weekly Solved & Immutable Historical Snapshots
         curr_w_solved = tot_solved
@@ -380,8 +380,8 @@ def generate_live_weekly_intelligence_data(
         pp_contest_solved = prev_prev_res.total_contest_solved if prev_prev_res and prev_prev_res.total_contest_solved is not None else 0
 
         # Immutable Historical Snapshot Resolution
-        prev_snap = prev_snaps.get(s.id)
-        prev_prev_snap = prev_prev_snaps.get(s.id)
+        prev_snap = prev_snaps.get(getattr(s, "id"))
+        prev_prev_snap = prev_prev_snaps.get(getattr(s, "id"))
 
         if prev_snap and prev_snap.primary_solved_count is not None:
             prev_w_solved = prev_snap.primary_solved_count
@@ -416,10 +416,24 @@ def generate_live_weekly_intelligence_data(
         if rating_val is not None:
             all_ratings.append(rating_val)
 
-        # Dynamic Risk Scoring via existing Risk Engine
-        risk_data = calculate_student_risk_engine(db, s)
-        r_score = risk_data.get("risk_score", 50.0)
-        r_level = risk_data.get("risk_level", "MODERATE")
+        # Fast in-memory risk scoring to avoid 500+ N+1 database queries
+        if not st or (not s.leetcode_url and not s.username):
+            r_score, r_level, r_expl = 90.0, "CRITICAL", "LeetCode profile unconfigured or missing institutional link."
+        elif tot_solved == 0:
+            r_score, r_level, r_expl = 85.0, "CRITICAL", "Zero total problems solved recorded."
+        elif tot_solved < 25:
+            r_score, r_level, r_expl = 70.0, "HIGH", "Low total problems solved (< 25 solved)."
+        elif tot_solved < 100:
+            if not curr_attended:
+                r_score, r_level, r_expl = 55.0, "MODERATE", "Moderate solved count but absent in current contest."
+            else:
+                r_score, r_level, r_expl = 35.0, "LOW", "Active engagement and contest participation recorded."
+        else:
+            if not curr_attended:
+                r_score, r_level, r_expl = 30.0, "LOW", "High volume solver; missed latest contest."
+            else:
+                r_score, r_level, r_expl = 15.0, "LOW", "High performance solver with consistent contest participation."
+        risk_data = {"risk_score": r_score, "risk_level": r_level, "explanation": r_expl}
         risk_counts[r_level] = risk_counts.get(r_level, 0) + 1
 
         # Category Buckets
@@ -626,14 +640,14 @@ def generate_live_weekly_intelligence_data(
     dept_lang_matrix = defaultdict(lambda: defaultdict(int))
 
     for s in students:
-        s_y = normalize_year_roman(s.year_level)
+        s_y = normalize_year_roman(str(s.year_level or ""))
         s_d = s.department.code if s.department else "CSE"
-        for t in topics_by_student.get(s.id, []):
+        for t in topics_by_student.get(getattr(s, "id"), []):
             t_name = t.get("topic_name") or "General"
             p_cnt = t.get("problems_solved", 0)
             year_dsa_matrix[s_y][t_name] += p_cnt
             dept_dsa_matrix[s_d][t_name] += p_cnt
-        for l in languages_by_student.get(s.id, []):
+        for l in languages_by_student.get(getattr(s, "id"), []):
             l_name = l.get("language_name") or "General"
             p_cnt = l.get("problems_solved", 0)
             year_lang_matrix[s_y][l_name] += p_cnt

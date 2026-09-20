@@ -3,7 +3,7 @@ Master PDF Report Generator
 Routes all PDF export calls directly to the high-fidelity Intelligence PDF Engine (pdf_v2).
 """
 import io
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
 from sqlalchemy.orm import Session
 
 from backend.pdf_v2.engine import build_intelligence_pdf
@@ -12,7 +12,7 @@ from backend.services.intelligence_report_service import build_intelligence_data
 
 def generate_pdf_report(
     db: Any, 
-    dept_id: Optional[int] = None, 
+    dept_id: Optional[Union[int, str]] = None, 
     department: Optional[str] = None,
     year: Optional[str] = None,
     current_user: Optional[Any] = None,

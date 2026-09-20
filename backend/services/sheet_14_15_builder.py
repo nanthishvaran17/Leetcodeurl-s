@@ -29,13 +29,22 @@ ALIGN_CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
 ALIGN_LEFT = Alignment(horizontal="left", vertical="center", wrap_text=True)
 ALIGN_RIGHT = Alignment(horizontal="right", vertical="center")
 
+# Pre-allocated Reusable Fonts
+FONT_HEADER_TITLE = Font(name=PRIMARY_FONT, size=14, bold=True, color="FFFFFF")
+FONT_HEADER_SUBTITLE = Font(name=PRIMARY_FONT, size=11, bold=True, color="FFFFFF")
+FONT_META = Font(name=PRIMARY_FONT, size=9, bold=True)
+FONT_SUBHEADER = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF")
+FONT_CELL_NORMAL = Font(name=PRIMARY_FONT, size=9)
+FONT_CELL_BOLD = Font(name=PRIMARY_FONT, size=9, bold=True)
+FONT_SECTION_HEADER = Font(name=PRIMARY_FONT, size=11, bold=True, color="FFFFFF")
+
 
 def _write_section_header(ws, row_idx: int, title: str, max_cols: int = 10):
     ws.row_dimensions[row_idx].height = 24
     end_let = get_column_letter(max(1, max_cols))
     ws.merge_cells(f"A{row_idx}:{end_let}{row_idx}")
     cell = ws.cell(row=row_idx, column=1, value=title.upper())
-    cell.font = Font(name=PRIMARY_FONT, size=11, bold=True, color="FFFFFF")
+    cell.font = FONT_SECTION_HEADER
     cell.fill = SUBHEADER_FILL
     cell.alignment = Alignment(horizontal="left", vertical="center", indent=1)
     for c in range(1, max_cols + 1):
@@ -58,8 +67,8 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
             except Exception:
                 pass
 
-    # Fetch active students
-    all_stus = db_session.query(Student).all()
+    from sqlalchemy.orm import joinedload
+    all_stus = db_session.query(Student).options(joinedload(Student.department)).all()
     master_students = [
         s for s in all_stus
         if (s.is_active is True or s.is_active is None)
@@ -153,7 +162,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     for r in [4, 5]:
         for c in range(1, 12):
             cell = ws14.cell(row=r, column=c)
-            cell.font = Font(name=PRIMARY_FONT, size=9, bold=True)
+            cell.font = FONT_CELL_BOLD
 
     row_idx = 7
 
@@ -164,7 +173,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws14.row_dimensions[row_idx].height = 22
     for c, h in enumerate(sec1_headers, 1):
         cell = ws14.cell(row=row_idx, column=c, value=h)
-        cell.font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF"); cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
+        cell.font = FONT_SUBHEADER; cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
     row_idx += 1
 
     # Calculate last vs this week exec metrics
@@ -214,7 +223,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
         vals = [label, v_last, v_this, chg, chg_pct]
         for c, v in enumerate(vals, 1):
             cell = ws14.cell(row=row_idx, column=c, value=v)
-            cell.font = Font(name=PRIMARY_FONT, size=9)
+            cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
             cell.alignment = ALIGN_CENTER if c > 1 else ALIGN_LEFT
         row_idx += 1
@@ -233,7 +242,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws14.row_dimensions[row_idx].height = 22
     for c, h in enumerate(sec2_headers, 1):
         cell = ws14.cell(row=row_idx, column=c, value=h)
-        cell.font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF"); cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
+        cell.font = FONT_SUBHEADER; cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
     row_idx += 1
 
     for idx, s in enumerate(master_students, 1):
@@ -290,7 +299,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
         ws14.row_dimensions[row_idx].height = 18
         for c, v in enumerate(row_vals, 1):
             cell = ws14.cell(row=row_idx, column=c, value=v)
-            cell.font = Font(name=PRIMARY_FONT, size=9)
+            cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
             cell.alignment = ALIGN_CENTER if c not in (2, 3, 6) else ALIGN_LEFT
         row_idx += 1
@@ -308,7 +317,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws14.row_dimensions[row_idx].height = 22
     for c, h in enumerate(sec3_headers, 1):
         cell = ws14.cell(row=row_idx, column=c, value=h)
-        cell.font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF"); cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
+        cell.font = FONT_SUBHEADER; cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
     row_idx += 1
 
     for idx, s in enumerate(master_students, 1):
@@ -326,7 +335,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
         ws14.row_dimensions[row_idx].height = 18
         for c, v in enumerate(row_vals, 1):
             cell = ws14.cell(row=row_idx, column=c, value=v)
-            cell.font = Font(name=PRIMARY_FONT, size=9)
+            cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
             cell.alignment = ALIGN_CENTER if c not in (2, 3) else ALIGN_LEFT
         row_idx += 1
@@ -340,7 +349,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws14.row_dimensions[row_idx].height = 22
     for c, h in enumerate(sec4_headers, 1):
         cell = ws14.cell(row=row_idx, column=c, value=h)
-        cell.font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF"); cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
+        cell.font = FONT_SUBHEADER; cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
     row_idx += 1
 
     band_transitions = defaultdict(int)
@@ -356,7 +365,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
         vals = [b_prev, b_curr, cnt]
         for c, v in enumerate(vals, 1):
             cell = ws14.cell(row=row_idx, column=c, value=v)
-            cell.font = Font(name=PRIMARY_FONT, size=9)
+            cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
             cell.alignment = ALIGN_CENTER
         row_idx += 1
@@ -375,7 +384,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws14.row_dimensions[row_idx].height = 22
     for c, h in enumerate(sec5_headers, 1):
         cell = ws14.cell(row=row_idx, column=c, value=h)
-        cell.font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF"); cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
+        cell.font = FONT_SUBHEADER; cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
     row_idx += 1
 
     dept_stats = defaultdict(lambda: {"prev_total": 0, "curr_total": 0, "prev_att": 0, "curr_att": 0, "prev_sol": 0, "curr_sol": 0})
@@ -406,7 +415,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
         ws14.row_dimensions[row_idx].height = 18
         for c, v in enumerate(vals, 1):
             cell = ws14.cell(row=row_idx, column=c, value=v)
-            cell.font = Font(name=PRIMARY_FONT, size=9)
+            cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
             cell.alignment = ALIGN_CENTER if c > 1 else ALIGN_LEFT
         row_idx += 1
@@ -424,7 +433,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws14.row_dimensions[row_idx].height = 22
     for c, h in enumerate(sec6_headers, 1):
         cell = ws14.cell(row=row_idx, column=c, value=h)
-        cell.font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF"); cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
+        cell.font = FONT_SUBHEADER; cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
     row_idx += 1
 
     fac_stats = defaultdict(lambda: {"prev_total": 0, "curr_total": 0, "prev_att": 0, "curr_att": 0, "prev_sol": 0, "curr_sol": 0})
@@ -454,7 +463,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
         ws14.row_dimensions[row_idx].height = 18
         for c, v in enumerate(vals, 1):
             cell = ws14.cell(row=row_idx, column=c, value=v)
-            cell.font = Font(name=PRIMARY_FONT, size=9)
+            cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
             cell.alignment = ALIGN_CENTER if c > 1 else ALIGN_LEFT
         row_idx += 1
@@ -468,7 +477,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws14.row_dimensions[row_idx].height = 22
     for c, h in enumerate(sec7_headers, 1):
         cell = ws14.cell(row=row_idx, column=c, value=h)
-        cell.font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF"); cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
+        cell.font = FONT_SUBHEADER; cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
     row_idx += 1
 
     att_transitions = defaultdict(int)
@@ -483,7 +492,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
         vals = [trans, cnt]
         for c, v in enumerate(vals, 1):
             cell = ws14.cell(row=row_idx, column=c, value=v)
-            cell.font = Font(name=PRIMARY_FONT, size=9)
+            cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
             cell.alignment = ALIGN_CENTER if c > 1 else ALIGN_LEFT
         row_idx += 1
@@ -497,7 +506,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws14.row_dimensions[row_idx].height = 22
     for c, h in enumerate(sec8_headers, 1):
         cell = ws14.cell(row=row_idx, column=c, value=h)
-        cell.font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF"); cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
+        cell.font = FONT_SUBHEADER; cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
     row_idx += 1
 
     dq_rows = [
@@ -513,7 +522,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
         vals = [metric, l_val, t_val, f"{chg:+d}", st]
         for c, v in enumerate(vals, 1):
             cell = ws14.cell(row=row_idx, column=c, value=v)
-            cell.font = Font(name=PRIMARY_FONT, size=9)
+            cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
             cell.alignment = ALIGN_CENTER if c > 1 else ALIGN_LEFT
         row_idx += 1
@@ -545,7 +554,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     for r in [4]:
         for c in range(1, 16):
             cell = ws15.cell(row=r, column=c)
-            cell.font = Font(name=PRIMARY_FONT, size=9, bold=True)
+            cell.font = FONT_CELL_BOLD
 
     row_idx = 6
 
@@ -560,7 +569,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws15.row_dimensions[row_idx].height = 22
     for c, h in enumerate(sec1_h15, 1):
         cell = ws15.cell(row=row_idx, column=c, value=h)
-        cell.font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF"); cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
+        cell.font = FONT_SUBHEADER; cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
     row_idx += 1
 
     for idx, c_num in enumerate(contest_nums, 1):
@@ -586,7 +595,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
         ws15.row_dimensions[row_idx].height = 18
         for c, v in enumerate(vals, 1):
             cell = ws15.cell(row=row_idx, column=c, value=v)
-            cell.font = Font(name=PRIMARY_FONT, size=9)
+            cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
             cell.alignment = ALIGN_CENTER if c not in (2, 4) else ALIGN_LEFT
         row_idx += 1
@@ -600,7 +609,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws15.row_dimensions[row_idx].height = 22
     for c, h in enumerate(matrix_headers, 1):
         cell = ws15.cell(row=row_idx, column=c, value=h)
-        cell.font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF"); cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
+        cell.font = FONT_SUBHEADER; cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
     row_idx += 1
 
     for idx, s in enumerate(master_students, 1):
@@ -617,7 +626,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
         ws15.row_dimensions[row_idx].height = 18
         for c, v in enumerate(row_vals, 1):
             cell = ws15.cell(row=row_idx, column=c, value=v)
-            cell.font = Font(name=PRIMARY_FONT, size=9)
+            cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
             cell.alignment = ALIGN_CENTER if c not in (2, 3) else ALIGN_LEFT
         row_idx += 1
@@ -634,7 +643,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws15.row_dimensions[row_idx].height = 22
     for c, h in enumerate(sec3_h15, 1):
         cell = ws15.cell(row=row_idx, column=c, value=h)
-        cell.font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF"); cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
+        cell.font = FONT_SUBHEADER; cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
     row_idx += 1
 
     # Insert sample timeline rows for active attended students
@@ -651,7 +660,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
                 ws15.row_dimensions[row_idx].height = 18
                 for c, v in enumerate(vals, 1):
                     cell = ws15.cell(row=row_idx, column=c, value=v)
-                    cell.font = Font(name=PRIMARY_FONT, size=9)
+                    cell.font = FONT_CELL_NORMAL
                     cell.border = GRID_BORDER
                     cell.alignment = ALIGN_CENTER if c not in (1, 2) else ALIGN_LEFT
                 row_idx += 1
@@ -667,7 +676,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws15.row_dimensions[row_idx].height = 22
     for c, h in enumerate(sec4_h15, 1):
         cell = ws15.cell(row=row_idx, column=c, value=h)
-        cell.font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF"); cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
+        cell.font = FONT_SUBHEADER; cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
     row_idx += 1
 
     for cn in contest_nums:
@@ -679,7 +688,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
         ws15.row_dimensions[row_idx].height = 18
         for c, v in enumerate(vals, 1):
             cell = ws15.cell(row=row_idx, column=c, value=v)
-            cell.font = Font(name=PRIMARY_FONT, size=9)
+            cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
             cell.alignment = ALIGN_CENTER if c not in (1, 3, 4, 5, 6, 7, 8) else ALIGN_LEFT
         row_idx += 1
@@ -696,7 +705,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws15.row_dimensions[row_idx].height = 22
     for c, h in enumerate(sec5_h15, 1):
         cell = ws15.cell(row=row_idx, column=c, value=h)
-        cell.font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF"); cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
+        cell.font = FONT_SUBHEADER; cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
     row_idx += 1
 
     for s in master_students:
@@ -720,7 +729,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
         ws15.row_dimensions[row_idx].height = 18
         for c, v in enumerate(vals, 1):
             cell = ws15.cell(row=row_idx, column=c, value=v)
-            cell.font = Font(name=PRIMARY_FONT, size=9)
+            cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
             cell.alignment = ALIGN_CENTER if c not in (1, 2) else ALIGN_LEFT
         row_idx += 1
@@ -734,7 +743,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws15.row_dimensions[row_idx].height = 22
     for c, h in enumerate(sec6_h15, 1):
         cell = ws15.cell(row=row_idx, column=c, value=h)
-        cell.font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF"); cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
+        cell.font = FONT_SUBHEADER; cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
     row_idx += 1
 
     for idx, s in enumerate(master_students, 1):
@@ -748,7 +757,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
         ws15.row_dimensions[row_idx].height = 18
         for c, v in enumerate(vals, 1):
             cell = ws15.cell(row=row_idx, column=c, value=v)
-            cell.font = Font(name=PRIMARY_FONT, size=9)
+            cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
             cell.alignment = ALIGN_CENTER if c not in (2, 3) else ALIGN_LEFT
         row_idx += 1
@@ -762,7 +771,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws15.row_dimensions[row_idx].height = 22
     for c, h in enumerate(sec7_h15, 1):
         cell = ws15.cell(row=row_idx, column=c, value=h)
-        cell.font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF"); cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
+        cell.font = FONT_SUBHEADER; cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
     row_idx += 1
 
     for cn in contest_nums:
@@ -782,7 +791,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
         ws15.row_dimensions[row_idx].height = 18
         for c, v in enumerate(vals, 1):
             cell = ws15.cell(row=row_idx, column=c, value=v)
-            cell.font = Font(name=PRIMARY_FONT, size=9)
+            cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
             cell.alignment = ALIGN_CENTER if c > 1 else ALIGN_LEFT
         row_idx += 1
@@ -796,7 +805,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws15.row_dimensions[row_idx].height = 22
     for c, h in enumerate(sec8_h15, 1):
         cell = ws15.cell(row=row_idx, column=c, value=h)
-        cell.font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF"); cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
+        cell.font = FONT_SUBHEADER; cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
     row_idx += 1
 
     dept_h_map = defaultdict(lambda: {cn: {"solves": 0, "att": 0, "total": 0} for cn in contest_nums})
@@ -822,7 +831,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
         ws15.row_dimensions[row_idx].height = 18
         for c, v in enumerate(vals, 1):
             cell = ws15.cell(row=row_idx, column=c, value=v)
-            cell.font = Font(name=PRIMARY_FONT, size=9)
+            cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
             cell.alignment = ALIGN_CENTER if c > 1 else ALIGN_LEFT
         row_idx += 1
@@ -836,7 +845,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws15.row_dimensions[row_idx].height = 22
     for c, h in enumerate(sec9_h15, 1):
         cell = ws15.cell(row=row_idx, column=c, value=h)
-        cell.font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF"); cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
+        cell.font = FONT_SUBHEADER; cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
     row_idx += 1
 
     fac_h_map = defaultdict(lambda: {cn: {"solves": 0, "att": 0, "total": 0} for cn in contest_nums})
@@ -862,7 +871,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
         ws15.row_dimensions[row_idx].height = 18
         for c, v in enumerate(vals, 1):
             cell = ws15.cell(row=row_idx, column=c, value=v)
-            cell.font = Font(name=PRIMARY_FONT, size=9)
+            cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
             cell.alignment = ALIGN_CENTER if c > 1 else ALIGN_LEFT
         row_idx += 1
@@ -876,7 +885,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws15.row_dimensions[row_idx].height = 22
     for c, h in enumerate(sec10_h15, 1):
         cell = ws15.cell(row=row_idx, column=c, value=h)
-        cell.font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF"); cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
+        cell.font = FONT_SUBHEADER; cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
     row_idx += 1
 
     st_rank_idx = 1
@@ -889,7 +898,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
                 ws15.row_dimensions[row_idx].height = 18
                 for c, v in enumerate(vals, 1):
                     cell = ws15.cell(row=row_idx, column=c, value=v)
-                    cell.font = Font(name=PRIMARY_FONT, size=9)
+                    cell.font = FONT_CELL_NORMAL
                     cell.border = GRID_BORDER
                     cell.alignment = ALIGN_CENTER if c not in (2, 3) else ALIGN_LEFT
                 row_idx += 1
@@ -904,7 +913,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws15.row_dimensions[row_idx].height = 22
     for c, h in enumerate(sec11_h15, 1):
         cell = ws15.cell(row=row_idx, column=c, value=h)
-        cell.font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF"); cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
+        cell.font = FONT_SUBHEADER; cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
     row_idx += 1
 
     for cn in contest_nums:
@@ -915,7 +924,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
         ws15.row_dimensions[row_idx].height = 18
         for c, v in enumerate(vals, 1):
             cell = ws15.cell(row=row_idx, column=c, value=v)
-            cell.font = Font(name=PRIMARY_FONT, size=9)
+            cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
             cell.alignment = ALIGN_CENTER if c > 1 else ALIGN_LEFT
         row_idx += 1
@@ -929,7 +938,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws15.row_dimensions[row_idx].height = 22
     for c, h in enumerate(sec12_h15, 1):
         cell = ws15.cell(row=row_idx, column=c, value=h)
-        cell.font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF"); cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
+        cell.font = FONT_SUBHEADER; cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
     row_idx += 1
 
     for idx, cn in enumerate(contest_nums, 1):
@@ -939,7 +948,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
         ws15.row_dimensions[row_idx].height = 18
         for c, v in enumerate(vals, 1):
             cell = ws15.cell(row=row_idx, column=c, value=v)
-            cell.font = Font(name=PRIMARY_FONT, size=9)
+            cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
             cell.alignment = ALIGN_CENTER
         row_idx += 1
@@ -953,7 +962,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
     ws15.row_dimensions[row_idx].height = 22
     for c, h in enumerate(sec13_h15, 1):
         cell = ws15.cell(row=row_idx, column=c, value=h)
-        cell.font = Font(name=PRIMARY_FONT, size=9, bold=True, color="FFFFFF"); cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
+        cell.font = FONT_SUBHEADER; cell.fill = SUBHEADER_FILL; cell.alignment = ALIGN_CENTER; cell.border = GRID_BORDER
     row_idx += 1
 
     all_att_records = []
@@ -988,7 +997,7 @@ def append_sheets_14_and_15(wb: openpyxl.Workbook, db_session) -> openpyxl.Workb
         vals = [metric, val]
         for c, v in enumerate(vals, 1):
             cell = ws15.cell(row=row_idx, column=c, value=v)
-            cell.font = Font(name=PRIMARY_FONT, size=9)
+            cell.font = FONT_CELL_NORMAL
             cell.border = GRID_BORDER
             cell.alignment = ALIGN_CENTER if c > 1 else ALIGN_LEFT
         row_idx += 1

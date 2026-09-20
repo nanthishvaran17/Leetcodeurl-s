@@ -23,7 +23,7 @@ from backend.logger import logger
 def normalize_department_filter(target_dept: Optional[str]) -> Optional[str]:
     if not target_dept:
         return None
-    t = str(target_dept).strip().upper()
+    t = target_dept.strip().upper()
     if t in ("ALL", "ALL DEPARTMENTS", "ALL DEPT", "ALL DEPTS", "COLLEGE", "COLLEGE-WIDE", "COLLEGE_WIDE", ""):
         return None
     return t
@@ -32,22 +32,22 @@ def normalize_department_filter(target_dept: Optional[str]) -> Optional[str]:
 def normalize_year_filter(target_year: Optional[str]) -> Optional[str]:
     if not target_year:
         return None
-    t = str(target_year).strip().upper()
+    t = target_year.strip().upper()
     if t in ("ALL", "ALL YEARS", "ALL BATCHES", "ALL BATCH", "ALL ACADEMIC YEARS", "ALL ACADEMIC YEAR", ""):
         return None
     return t
 
 
 def normalize_dept_val(code_raw: Optional[str], name_raw: Optional[str] = "") -> str:
-    c = str(code_raw or "").upper().strip()
-    n = str(name_raw or "").upper().strip()
+    c = (code_raw or "").upper().strip()
+    n = (name_raw or "").upper().strip()
     if "IOT" in c or "IOT" in n or "CI" in c:
         return "CSE(IoT)"
     if "CYBER" in c or "CYBER" in n or "CC" in c or "CSE(CS)" in c or "CSE (CS)" in c or "(CS)" in c or c == "CS":
         return "CSE(CS)"
     if c in ("CSE", "COMPUTER SCIENCE") or "COMPUTER SCIENCE &" in n or "COMPUTER SCIENCE AND" in n:
         return "CSE"
-    return str(code_raw or "CSE")
+    return code_raw or "CSE"
 
 
 def matches_dept(r_dept_code: str, r_dept_name: str, target_dept: Optional[str], dept_id: Optional[int] = None) -> bool:
@@ -55,9 +55,9 @@ def matches_dept(r_dept_code: str, r_dept_name: str, target_dept: Optional[str],
     if norm_target is None:
         return True
 
-    if str(norm_target).isdigit():
+    if norm_target.isdigit():
         target_id = int(norm_target)
-        if dept_id is not None and int(dept_id) == target_id:
+        if dept_id is not None and dept_id == target_id:
             return True
         id_code_map = {
             1: "CSE(CS)", 2: "CSE(IOT)", 7: "IT", 8: "CSE", 
@@ -77,7 +77,7 @@ def matches_dept(r_dept_code: str, r_dept_name: str, target_dept: Optional[str],
 def normalize_year_val(year_raw: Optional[str]) -> str:
     if not year_raw:
         return ""
-    y = str(year_raw).upper().strip()
+    y = year_raw.upper().strip()
     if "ALL" in y:
         return "ALL"
     if "IV" in y or "4" in y or "2023" in y:
@@ -96,7 +96,7 @@ def matches_year(r_year: Optional[str], target_year: Optional[str], reg_no: Opti
     if norm_target is None:
         return True
     
-    r_str = str(reg_no or "").strip().upper()
+    r_str = (reg_no or "").strip().upper()
     if r_str.startswith("732225"):
         student_year = "II"
     elif r_str.startswith("732224"):
@@ -147,15 +147,16 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
     dept_filter = raw_dept
     year_filter = raw_year
 
-    # 3. Query all active Master Students
-    student_query = db.query(Student).filter(
+    from sqlalchemy.orm import joinedload
+    student_query = db.query(Student).options(joinedload(Student.department)).filter(
         (Student.is_active == True) | (Student.is_active.is_(None))
     )
     
     from backend.services.authorization_service import apply_role_based_student_filter
-    student_query = apply_role_based_student_filter(student_query, current_user, db)
+    if current_user:
+        student_query = apply_role_based_student_filter(student_query, current_user, db)
     
-    all_master_students = student_query.distinct().order_by(Student.id.asc()).all()
+    all_master_students = student_query.order_by(Student.id.asc()).all()
 
     # Filter students by Department and Year
     filtered_students = [
@@ -176,11 +177,11 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
     if session_id is not None:
         p_list = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id).all()
         for p in p_list:
-            public_map[p.student_id] = p
+            public_map[getattr(p, "student_id")] = p
 
         v_list = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == session_id).all()
         for v in v_list:
-            virtual_map[v.student_id] = v
+            virtual_map[getattr(v, "student_id")] = v
 
     if contest_name:
         parts = db.query(ContestParticipation).filter(
@@ -188,7 +189,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             (ContestParticipation.contest_name.ilike(f"%{contest_name}%"))
         ).all()
         for pt in parts:
-            part_map[pt.student_id] = pt
+            part_map[getattr(pt, "student_id")] = pt
 
     # 5. Build authoritative student-level contest rows
     student_rows: List[Dict[str, Any]] = []
@@ -230,7 +231,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                 q3_val = 1 if (p_res.q3 and p_res.q3 >= 1) else 0
                 q4_val = 1 if (p_res.q4 and p_res.q4 >= 1) else 0
                 actual_sum = q1_val + q2_val + q3_val + q4_val
-                tot_rec = p_res.total_contest_solved if (p_res.total_contest_solved is not None and p_res.total_contest_solved > 0) else 0
+                tot_rec = getattr(p_res, "total_contest_solved", 0) or 0
                 solved_val = max(actual_sum, tot_rec)
                 if solved_val > 0 and actual_sum < solved_val:
                     if solved_val >= 4:
@@ -242,7 +243,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                     elif solved_val == 1:
                         q1_val = 1
                 rank_val = p_res.contest_rank
-                rating_val = p_res.contest_rating
+                rating_val = getattr(p_res, "contest_rating", None)
             elif part_st in ("VIRTUAL", "VIRTUAL_ATTENDED", "VIRTUAL_PRACTICE", "VIRTUAL_PRACTICE_VERIFIED"):
                 status = ContestStatus.VIRTUAL_PRACTICE.value
                 q1_val = 1 if (p_res.q1 and p_res.q1 >= 1) else 0
@@ -250,7 +251,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                 q3_val = 1 if (p_res.q3 and p_res.q3 >= 1) else 0
                 q4_val = 1 if (p_res.q4 and p_res.q4 >= 1) else 0
                 actual_sum = q1_val + q2_val + q3_val + q4_val
-                tot_rec = p_res.total_contest_solved if (p_res.total_contest_solved is not None and p_res.total_contest_solved > 0) else 0
+                tot_rec = getattr(p_res, "total_contest_solved", 0) or 0
                 solved_val = max(actual_sum, tot_rec)
                 if solved_val > 0 and actual_sum < solved_val:
                     if solved_val >= 4:
@@ -262,7 +263,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                     elif solved_val == 1:
                         q1_val = 1
                 rank_val = p_res.contest_rank
-                rating_val = p_res.contest_rating
+                rating_val = getattr(p_res, "contest_rating", None)
             elif part_st in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT", "NO_PARTICIPATION"):
                 status = ContestStatus.NOT_ATTENDED.value
             elif fetch_st in ("USERNAME_NOT_FOUND", "INVALID_USERNAME", "INVALID_PROFILE", "INVALID_LINK"):
@@ -280,7 +281,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             q3_val = 1 if (v_res.q3 and v_res.q3 >= 1) else 0
             q4_val = 1 if (v_res.q4 and v_res.q4 >= 1) else 0
             actual_sum = q1_val + q2_val + q3_val + q4_val
-            tot_rec = v_res.total_contest_solved if (v_res.total_contest_solved is not None and v_res.total_contest_solved > 0) else 0
+            tot_rec = getattr(v_res, "total_contest_solved", 0) or 0
             solved_val = max(actual_sum, tot_rec)
             if solved_val > 0 and actual_sum < solved_val:
                 if solved_val >= 4:
@@ -296,7 +297,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             if p_type in ("OFFICIAL", "PUBLIC"):
                 status = ContestStatus.PUBLIC_LIVE.value
                 rank_val = part_res.contest_rank
-                rating_val = part_res.contest_rating_after
+                rating_val = getattr(part_res, "contest_rating_after", None)
                 q1_val = getattr(part_res, "q1", None)
                 q2_val = getattr(part_res, "q2", None)
                 q3_val = getattr(part_res, "q3", None)
@@ -304,11 +305,11 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                 if q1_val is not None and q2_val is not None:
                     solved_val = int(q1_val) + int(q2_val) + int(q3_val or 0) + int(q4_val or 0)
                 else:
-                    solved_val = part_res.problems_solved or 0
+                    solved_val = getattr(part_res, "problems_solved", 0) or 0
             elif p_type in ("VIRTUAL",):
                 status = ContestStatus.VIRTUAL_PRACTICE.value
                 rank_val = part_res.contest_rank
-                rating_val = part_res.contest_rating_after
+                rating_val = getattr(part_res, "contest_rating_after", None)
                 q1_val = getattr(part_res, "q1", None)
                 q2_val = getattr(part_res, "q2", None)
                 q3_val = getattr(part_res, "q3", None)
@@ -316,7 +317,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                 if q1_val is not None and q2_val is not None:
                     solved_val = int(q1_val) + int(q2_val) + int(q3_val or 0) + int(q4_val or 0)
                 else:
-                    solved_val = part_res.problems_solved or 0
+                    solved_val = getattr(part_res, "problems_solved", 0) or 0
             else:
                 status = ContestStatus.NOT_ATTENDED.value
         else:

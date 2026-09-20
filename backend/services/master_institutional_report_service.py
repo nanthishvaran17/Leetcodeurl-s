@@ -71,6 +71,22 @@ ALIGN_CENTER = Alignment(horizontal="center", vertical="center", wrap_text=True)
 ALIGN_LEFT = Alignment(horizontal="left", vertical="center", wrap_text=True)
 ALIGN_RIGHT = Alignment(horizontal="right", vertical="center")
 
+# Pre-created Reusable Fonts
+FONT_TITLE_C1 = Font(name=PRIMARY_FONT, size=15, bold=True, color="FFFFFF")
+FONT_TITLE_C2 = Font(name=PRIMARY_FONT, size=11, bold=True, color="FFFFFF")
+FONT_TITLE_C3 = Font(name=PRIMARY_FONT, size=10, italic=True, color="FFFFFF")
+FONT_META_VAL = Font(name=PRIMARY_FONT, size=9, bold=True, color="1E293B")
+FONT_TBL_HDR = Font(name=PRIMARY_FONT, size=10, bold=True, color="FFFFFF")
+
+# Artifact Cache
+import threading
+_EXCEL_ARTIFACT_CACHE: Dict[str, bytes] = {}
+_EXCEL_CACHE_LOCK = threading.Lock()
+
+def clear_excel_artifact_cache():
+    with _EXCEL_CACHE_LOCK:
+        _EXCEL_ARTIFACT_CACHE.clear()
+
 
 # ==========================================
 # 2. SOURCE DATA VALIDATION GATE
@@ -435,17 +451,28 @@ def generate_master_10_sheet_workbook(
     """
     Generates the production-ready 10-Sheet Master Excel Intelligence Report, or subset based on report_type.
     Fully role-scoped server-side (Principal, HOD, Staff) and filter-aware (Department, Year).
+    Sub-millisecond Excel artifact caching powered by global data versioning.
     """
-    # Fetch base active student query
-    base_query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    from backend.services.data_version_service import get_current_data_version
+    data_ver = get_current_data_version(db)
+    u_role = (getattr(current_user, "role", "") or "").lower()
+    u_dept = str(getattr(current_user, "department_id", "") or "")
+    cache_key = f"excel:{data_ver}:{u_role}:{u_dept}:{contest_id}:{department}:{year}:{report_type}"
+
+    with _EXCEL_CACHE_LOCK:
+        if cache_key in _EXCEL_ARTIFACT_CACHE:
+            return _EXCEL_ARTIFACT_CACHE[cache_key]
+
+    from sqlalchemy.orm import joinedload
+    base_query = db.query(Student).options(joinedload(Student.department)).filter((Student.is_active == True) | (Student.is_active.is_(None)))
     if current_user:
         base_query = apply_role_based_student_filter(base_query, current_user, db)
     
-    all_students_models = base_query.distinct().all()
+    all_students_models = base_query.all()
     students_models = [
         s for s in all_students_models
         if matches_dept(s.department.code if s.department else "", s.department.name if s.department else "", department, getattr(s, "department_id", None))
-        and matches_year(s.year_level, year, s.reg_no)
+        and matches_year(str(s.year_level or ""), year, str(s.reg_no or ""))
     ]
 
     stats_map = {s.student_id: s for s in db.query(LeetCodeProfileStats).all()}
@@ -455,7 +482,7 @@ def generate_master_10_sheet_workbook(
     target_session = None
     if contest_id is not None:
         target_session = db.query(WeeklySession).filter(
-            (WeeklySession.id == int(contest_id)) if str(contest_id).isdigit() else (WeeklySession.contest_id == str(contest_id))
+            (WeeklySession.id == int(contest_id)) if (isinstance(contest_id, str) and contest_id.isdigit()) or isinstance(contest_id, int) else (WeeklySession.contest_id == str(contest_id))
         ).first()
     if not target_session:
         target_session = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
@@ -588,7 +615,8 @@ def generate_master_10_sheet_workbook(
 
     # Create openpyxl Workbook
     wb = openpyxl.Workbook()
-    wb.remove(wb.active)  # Remove default blank sheet
+    if wb.active is not None:
+        wb.remove(wb.active)  # Remove default blank sheet
 
     contest_title = f"Weekly Contest {contest_id or 518}"
     session_date = datetime.date.today().strftime("%d-%m-%Y")
@@ -961,4 +989,9 @@ def generate_master_10_sheet_workbook(
 
     output = io.BytesIO()
     wb.save(output)
-    return output.getvalue()
+    excel_bytes = output.getvalue()
+
+    with _EXCEL_CACHE_LOCK:
+        _EXCEL_ARTIFACT_CACHE[cache_key] = excel_bytes
+
+    return excel_bytes

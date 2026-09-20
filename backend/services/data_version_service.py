@@ -66,6 +66,21 @@ def bump_data_version(db: Session) -> str:
         _CACHED_VERSION = version_str
         _CACHED_VERSION_TIME = time.time()
         logger.info(f"[DATA_VERSION_SERVICE] Data version bumped to {version_str}")
+        try:
+            from backend.services.report_engine import clear_universal_dataset_cache
+            clear_universal_dataset_cache()
+        except Exception:
+            pass
+        try:
+            from backend.services.report_data_service import clear_roster_cache
+            clear_roster_cache()
+        except Exception:
+            pass
+        try:
+            from backend.services.master_institutional_report_service import clear_excel_artifact_cache
+            clear_excel_artifact_cache()
+        except Exception:
+            pass
         return version_str
     except Exception as e:
         db.rollback()

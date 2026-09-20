@@ -31,6 +31,7 @@ class StudentRow(BaseModel):
     contest_rating: Optional[float] = None
     rating: Optional[float] = None
     global_rank: Optional[int] = None
+    college_rank: Optional[int] = None
     category: str = "0 Solved"
     status: str = "UNVERIFIED"
 

@@ -156,7 +156,11 @@ class SundayLiveIngestionEngine:
         # Change detection: Check if any question state changed
         has_changed = (q1 != prev_q1) or (q2 != prev_q2) or (q3 != prev_q3) or (q4 != prev_q4) or (official_rank != (record.official_rank if record else None))
 
-        new_solved_count = (1 if q1 else 0) + (1 if q2 else 0) + (1 if q3 else 0) + (1 if q4 else 0)
+        q1_flag = 1 if q1 else 0
+        q2_flag = 1 if q2 else 0
+        q3_flag = 1 if q3 else 0
+        q4_flag = 1 if q4 else 0
+        new_solved_count = q1_flag + q2_flag + q3_flag + q4_flag
 
         # Database Transaction BEGIN
         try:
@@ -187,21 +191,21 @@ class SundayLiveIngestionEngine:
                 db.add(record)
             else:
                 if has_changed:
-                    record.q1 = q1_flag
-                    record.q2 = q2_flag
-                    record.q3 = q3_flag
-                    record.q4 = q4_flag
-                    record.problems_solved = new_solved_count
+                    setattr(record, "q1", q1_flag)
+                    setattr(record, "q2", q2_flag)
+                    setattr(record, "q3", q3_flag)
+                    setattr(record, "q4", q4_flag)
+                    setattr(record, "problems_solved", new_solved_count)
                     if official_rank is not None:
-                        record.official_rank = official_rank
+                        setattr(record, "official_rank", official_rank)
                     if official_score is not None:
-                        record.official_score = official_score
+                        setattr(record, "official_score", official_score)
                     if finish_time is not None:
-                        record.finish_time = finish_time
+                        setattr(record, "finish_time", finish_time)
                     if new_solved_count > 0 or official_rank:
-                        record.participation_type = "PUBLIC"
-                        record.verification_status = "VERIFIED"
-                    record.verified_at = datetime.datetime.now(datetime.timezone.utc)
+                        setattr(record, "participation_type", "PUBLIC")
+                        setattr(record, "verification_status", "VERIFIED")
+                    setattr(record, "verified_at", datetime.datetime.now(datetime.timezone.utc))
 
             # Also mirror update to WeeklyPublicResult if present
             pub_res = db.query(WeeklyPublicResult).filter(
@@ -210,19 +214,19 @@ class SundayLiveIngestionEngine:
             ).first()
 
             if pub_res:
-                pub_res.q1 = q1_flag
-                pub_res.q2 = q2_flag
-                pub_res.q3 = q3_flag
-                pub_res.q4 = q4_flag
-                pub_res.total_contest_solved = new_solved_count
+                setattr(pub_res, "q1", q1_flag)
+                setattr(pub_res, "q2", q2_flag)
+                setattr(pub_res, "q3", q3_flag)
+                setattr(pub_res, "q4", q4_flag)
+                setattr(pub_res, "total_contest_solved", new_solved_count)
                 if official_rank is not None:
-                    pub_res.contest_rank = official_rank
+                    setattr(pub_res, "contest_rank", official_rank)
                 if official_score is not None:
-                    pub_res.contest_score = official_score
+                    setattr(pub_res, "contest_score", official_score)
                 if new_solved_count > 0 or official_rank:
-                    pub_res.participation_status = "PUBLIC_ATTENDED"
-                    pub_res.state = "VALIDATED"
-                    pub_res.confidence = "VERIFIED"
+                    setattr(pub_res, "participation_status", "PUBLIC_ATTENDED")
+                    setattr(pub_res, "state", "VALIDATED")
+                    setattr(pub_res, "confidence", "VERIFIED")
 
             db.commit()
             db.refresh(record)
@@ -233,37 +237,37 @@ class SundayLiveIngestionEngine:
             return False, None, f"Database transaction failed: {str(err)}"
 
         # Recalculate summary metrics after commit
-        metrics = cls.recalculate_live_summary_metrics(db, session.id)
+        metrics = cls.recalculate_live_summary_metrics(db, getattr(session, "id"))
 
         # Broadcast Targeted WebSocket Events
         if has_changed:
             dept_name = student.department.name if student.department else ""
             await manager.broadcast_contest_result(
-                student_id=student.id,
-                student_name=student.name,
-                reg_no=student.reg_no,
-                username=student.username or "",
-                contest_id=session.contest_id or "",
-                session_id=session.id,
-                q1=record.q1,
-                q2=record.q2,
-                q3=record.q3,
-                q4=record.q4,
+                student_id=getattr(student, "id"),
+                student_name=str(getattr(student, "name", "") or ""),
+                reg_no=str(getattr(student, "reg_no", "") or ""),
+                username=str(getattr(student, "username", "") or ""),
+                contest_id=str(getattr(session, "contest_id", "") or ""),
+                session_id=getattr(session, "id"),
+                q1=getattr(record, "q1", 0) or 0,
+                q2=getattr(record, "q2", 0) or 0,
+                q3=getattr(record, "q3", 0) or 0,
+                q4=getattr(record, "q4", 0) or 0,
                 solved_count=new_solved_count,
-                official_rank=record.official_rank,
-                finish_time=record.finish_time,
-                participation_status=record.participation_type,
+                official_rank=getattr(record, "official_rank", None),
+                finish_time=getattr(record, "finish_time", None),
+                participation_status=str(getattr(record, "participation_type", "PUBLIC") or "PUBLIC"),
                 evidence_state="VERIFIED_LIVE",
                 department_name=dept_name,
-                year_level=student.year_level,
-                dataset_version=record.dataset_version
+                year_level=getattr(student, "year_level", None),
+                dataset_version=getattr(record, "dataset_version", 1) or 1
             )
 
             await manager.broadcast_contest_summary(
-                session_id=session.id,
-                contest_id=session.contest_id or "",
+                session_id=getattr(session, "id"),
+                contest_id=str(getattr(session, "contest_id", "") or ""),
                 metrics=metrics,
-                dataset_version=record.dataset_version
+                dataset_version=getattr(record, "dataset_version", 1) or 1
             )
 
         result_payload = {

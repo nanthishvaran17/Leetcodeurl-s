@@ -2,7 +2,7 @@ import os
 import csv
 import io
 import datetime
-from fastapi import APIRouter, Depends, Response, HTTPException, Query
+from fastapi import APIRouter, Depends, Response, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import Optional, Dict, Any
@@ -116,13 +116,15 @@ def download_cached_report_file(
     if not cache_record:
         raise HTTPException(status_code=404, detail="Requested report file not found.")
 
+    storage_path = getattr(cache_record, "storage_path", None)
+    c_inst_id = getattr(cache_record, "institution_id", None)
     user_inst = getattr(current_user, "institution_id", None) or "NEC"
     user_role = (getattr(current_user, "role", "") or "").lower()
-    if user_role not in ["admin", "super admin", "super_admin"] and cache_record.institution_id != user_inst:
+    if user_role not in ["admin", "super admin", "super_admin"] and c_inst_id != user_inst:
         raise HTTPException(status_code=403, detail="Unauthorized: Access denied to requested report.")
 
-    if not cache_record.storage_path or not os.path.exists(cache_record.storage_path) or os.path.getsize(cache_record.storage_path) == 0:
-        cache_record.status = "STALE"
+    if not storage_path or not os.path.exists(storage_path) or os.path.getsize(storage_path) == 0:
+        setattr(cache_record, "status", "STALE")
         try:
             db.commit()
         except Exception:
@@ -136,14 +138,14 @@ def download_cached_report_file(
         "csv": "text/csv",
         "zip": "application/zip"
     }
-    ext = cache_record.storage_path.split(".")[-1].lower()
-    media_type = cache_record.mime_type or ext_media_types.get(ext, "application/octet-stream")
-    filename = cache_record.filename or os.path.basename(cache_record.storage_path)
+    ext = storage_path.split(".")[-1].lower()
+    media_type = getattr(cache_record, "mime_type", None) or ext_media_types.get(ext, "application/octet-stream")
+    filename = getattr(cache_record, "filename", None) or os.path.basename(storage_path)
 
     return FileResponse(
-        path=cache_record.storage_path,
-        media_type=media_type,
-        filename=filename,
+        path=storage_path,
+        media_type=str(media_type),
+        filename=str(filename),
         headers={
             "Content-Disposition": f'attachment; filename="{filename}"',
             "Cache-Control": "private, no-cache, no-store, must-revalidate",
@@ -181,15 +183,19 @@ def _serve_cached_report(res: dict, db: Session, fallback_filename: str, default
     if cache_id:
         cache_record = db.query(ReportCache).filter(ReportCache.id == cache_id).first()
 
-    if not cache_record or not cache_record.storage_path or not os.path.exists(cache_record.storage_path) or os.path.getsize(cache_record.storage_path) == 0:
+    storage_path = getattr(cache_record, "storage_path", None) if cache_record else None
+
+    if not cache_record or not storage_path or not os.path.exists(storage_path) or os.path.getsize(storage_path) == 0:
         logger.error(f"[REPORT FILE ERROR] Cache ID {cache_id} missing or invalid file path: res={res}")
         raise HTTPException(status_code=500, detail="Unable to generate report. Please try again.")
 
-    filename = res.get("filename") or cache_record.filename or fallback_filename
-    mime_type = res.get("mime_type") or cache_record.mime_type or default_mime
+    c_filename = getattr(cache_record, "filename", None)
+    c_mime = getattr(cache_record, "mime_type", None)
+    filename = str(res.get("filename") or c_filename or fallback_filename)
+    mime_type = str(res.get("mime_type") or c_mime or default_mime)
 
     return FileResponse(
-        path=cache_record.storage_path,
+        path=storage_path,
         media_type=mime_type,
         filename=filename,
         headers={
@@ -564,7 +570,7 @@ def download_pdf_report(
         if dept_id:
             d_obj = db.query(Department).filter(Department.id == dept_id).first()
             if d_obj:
-                eff_dept = d_obj.code or d_obj.name
+                eff_dept = getattr(d_obj, "code", None) or getattr(d_obj, "name", None)
 
         pdf_bytes = generate_pdf_report(
             db=db,
@@ -713,8 +719,8 @@ def get_sunday_live_report(
 
     config = ReportConfig(
         report_type="SUNDAY_LIVE_CONTEST",
-        department=effective_dept,
-        year=effective_year,
+        department=effective_dept or "ALL",
+        year=effective_year or "ALL",
         output_scope="COLLEGE",
         filters={"session_id": session_id} if session_id else {}
     )
@@ -748,8 +754,8 @@ def get_friday_official_report(
 
     config = ReportConfig(
         report_type="FRIDAY_OFFICIAL_CONTEST",
-        department=effective_dept,
-        year=effective_year,
+        department=effective_dept or "ALL",
+        year=effective_year or "ALL",
         output_scope="COLLEGE",
         filters={"session_id": session_id} if session_id else {}
     )
@@ -874,15 +880,19 @@ class GenerateReportPayload(BaseModel):
     output_scope: str = "COLLEGE"
     filters: Optional[Dict[str, Any]] = {}
 
+ReportGenerateRequest = GenerateReportPayload
+
 @router.post("/generate")
-def generate_report(
-    payload: GenerateReportPayload, 
+def generate_universal_report(
+    payload: ReportGenerateRequest,
+    request: Request,
     db: Session = Depends(get_db),
     current_user = Depends(require_security_access(required_roles=["admin", "super admin", "hod", "faculty", "staff", "student"], resource_name="Generate Universal Report", dept_scoped=True))
 ):
     """
     UNIVERSAL CENTRAL REPORT GENERATION ENDPOINT
     Consumes ReportConfig, generates snapshot via report_engine, and returns normalized dataset.
+    Supported by HTTP ETag conditional responses (304 Not Modified) and ORJSON serialization.
     """
     try:
         filters = payload.filters or {}
@@ -898,8 +908,29 @@ def generate_report(
             filters=filters
         )
 
+        from backend.services.data_version_service import get_current_data_version
+        data_ver = get_current_data_version(db)
+
+        from backend.services.report_registry import get_report_definition
+        try:
+            rpt_def = get_report_definition(payload.report_type)
+            canon_code = rpt_def["code"]
+        except Exception:
+            canon_code = str(payload.report_type or "").upper()
+
+        etag = f'W/"{data_ver}-{canon_code}-{dept}-{yr}-{scope}"'
+
+        if_none_match = request.headers.get("if-none-match")
+        if if_none_match and if_none_match.strip() == etag:
+            from starlette.responses import Response
+            return Response(status_code=304, headers={"ETag": etag, "Cache-Control": "private, no-cache"})
+
         dataset = build_universal_report(db, config, current_user=current_user)
-        return dataset
+
+        import orjson
+        json_bytes = orjson.dumps(dataset)
+        from starlette.responses import Response
+        return Response(content=json_bytes, media_type="application/json", headers={"ETag": etag, "Cache-Control": "private, no-cache"})
     except HTTPException:
         raise
     except Exception as e:
@@ -928,7 +959,7 @@ def get_report_history(
 from backend.models import WeeklySession
 import re
 
-def get_contest_filename_base(contest_name: str, session_date: str = None, dept: str = "ALL", year: str = "ALL", attendance: str = "ALL") -> str:
+def get_contest_filename_base(contest_name: str, session_date: Optional[str] = None, dept: str = "ALL", year: str = "ALL", attendance: str = "ALL") -> str:
     """
     NEC-branded compact filename:
     NEC_WC516_CSE-IOT_IV-Yr_23Aug2026
@@ -938,13 +969,14 @@ def get_contest_filename_base(contest_name: str, session_date: str = None, dept:
     import re
 
     # --- Contest number ---
-    m = re.search(r'\d+', str(contest_name or ""))
+    m = re.search(r'\d+', contest_name or "")
     contest_seg = f"WC{m.group(0)}" if m else "WC"
 
     # --- Date: compact 23Aug2026 ---
     MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
     if session_date:
-        parts = re.split(r'[.\-/]', str(session_date))
+        s_date_str = str(session_date)
+        parts = re.split(r'[.\-/]', s_date_str)
         try:
             if len(parts) == 3:
                 # could be DD.MM.YYYY or YYYY-MM-DD
@@ -954,9 +986,9 @@ def get_contest_filename_base(contest_name: str, session_date: str = None, dept:
                     dd, mm, yyyy = int(parts[0]), int(parts[1]), parts[2]
                 date_seg = f"{dd:02d}{MONTHS[mm-1]}{yyyy}"
             else:
-                date_seg = str(session_date).replace(".", "")
+                date_seg = s_date_str.replace(".", "")
         except Exception:
-            date_seg = str(session_date).replace(".", "")
+            date_seg = s_date_str.replace(".", "")
     else:
         import datetime
         now = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=5, minutes=30)
@@ -976,11 +1008,11 @@ def get_contest_filename_base(contest_name: str, session_date: str = None, dept:
         "AGRI":     "AGRI",
         "BME":      "BME",
     }
-    d = str(dept or "ALL").upper().strip()
+    d = (dept or "ALL").upper().strip()
     dept_seg = "All-Depts" if d in ("ALL", "", "ALL DEPARTMENTS") else DEPT_SLUG.get(d, d)
 
     # --- Year short slug ---
-    y = str(year or "ALL").upper().strip()
+    y = (year or "ALL").upper().strip()
     YEAR_SLUG = {
         "II": "II-Yr", "2": "II-Yr",
         "III": "III-Yr", "3": "III-Yr",
@@ -1018,9 +1050,10 @@ def _get_dataset_for_id(
     r_filename = None
 
     # First check ReportHistory
+    # First check ReportHistory
     report = db.query(ReportHistory).filter(ReportHistory.report_id == report_id).first()
     if report:
-        dataset = dict(report.dataset)
+        dataset = dict(getattr(report, "dataset", {}) or {})
         contest_name = dataset.get("contestName") or dataset.get("title") or "Weekly Contest"
         session_date = dataset.get("sessionDate") or dataset.get("session_date")
         r_filename = get_contest_filename_base(contest_name, session_date=session_date, dept=dept, year=year, attendance=effective_att)
@@ -1048,7 +1081,7 @@ def _get_dataset_for_id(
         elif report_id.lower() == "latest":
             ws_match = db.query(WeeklySession).order_by(WeeklySession.session_date.desc()).first()
             if ws_match:
-                session_id = ws_match.id
+                session_id = int(getattr(ws_match, "id"))
         elif report_id.startswith("Session_"):
             try:
                 session_id = int(report_id.replace("Session_", ""))
@@ -1064,7 +1097,7 @@ def _get_dataset_for_id(
                 if not ws_match:
                     ws_match = db.query(WeeklySession).filter(WeeklySession.contest_name.ilike(f"%{val}%")).first()
                 if ws_match:
-                    session_id = ws_match.id
+                    session_id = int(getattr(ws_match, "id"))
 
         if session_id is not None:
             ws = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
@@ -1074,13 +1107,13 @@ def _get_dataset_for_id(
                     detail="Contest data is unavailable for the selected Weekly Contest."
                 )
 
-            contest_name = str(ws.contest_name or f"Weekly Contest {session_id}")
-            session_date = str(ws.session_date or "")
+            contest_name = str(getattr(ws, "contest_name", None) or f"Weekly Contest {session_id}")
+            session_date = str(getattr(ws, "session_date", None) or "")
             r_filename = get_contest_filename_base(contest_name, dept=dept, year=year, attendance=effective_att)
 
             from backend.services.canonical_contest_engine import build_canonical_contest_dataset
             canonical_data = build_canonical_contest_dataset(
-                session_id=session_id,
+                session_id=int(session_id),
                 db=db,
                 dept="ALL",
                 year="ALL",
@@ -1089,26 +1122,25 @@ def _get_dataset_for_id(
 
             all_raw_rows = canonical_data.get("rows", [])
 
-            # Apply caller's active filters 
-            DEPT_CANONICAL_MAP = {
-                "CSE(CS)":  ["CSE(CS)", "CYBER SECURITY", "CYBER", "CSE(CYBER", "CSE (CYBER", "(CS)"],
-                "CSE(IOT)": ["CSE(IOT)", "IOT", "CSE(IOT", "CSE (IOT", "(IOT)"],
-                "AIDS":     ["AIDS", "AI&DS", "AI DS", "ARTIFICIAL INTELLIGENCE"],
-                "CSE":      ["CSE"],
-                "IT":       ["IT", "INFORMATION TECHNOLOGY"],
-                "ECE":      ["ECE", "ELECTRONICS", "ELECTRICAL AND COMMUNICATION"],
-                "EEE":      ["EEE", "ELECTRICAL AND ELECTRONICS"],
-                "MECH":     ["MECH", "MECHANICAL"],
-                "CIVIL":    ["CIVIL"],
-                "AGRI":     ["AGRI", "AGRICULTURE"],
-                "BME":      ["BME", "BIOMEDICAL"],
-            }
-
-            def _resolve_canonical(s: str) -> str:
-                su = s.upper().strip()
-                for canonical, aliases in DEPT_CANONICAL_MAP.items():
-                    if su == canonical:
-                        return canonical
+            # Apply caller's active filters
+            def _resolve_canonical(dept_name: str) -> str:
+                if not dept_name:
+                    return ""
+                su = dept_name.upper().strip()
+                DEPT_ALIASES = {
+                    "CSE": ["CSE", "COMPUTER SCIENCE AND ENGINEERING", "COMPUTER SCIENCE & ENGINEERING"],
+                    "IT": ["IT", "INFORMATION TECHNOLOGY"],
+                    "AIDS": ["AIDS", "ARTIFICIAL INTELLIGENCE AND DATA SCIENCE", "AI & DS", "AI-DS"],
+                    "CSE(CS)": ["CSE(CS)", "CSE-CS", "CYBER SECURITY", "COMPUTER SCIENCE AND ENGINEERING (CYBER SECURITY)"],
+                    "CSE(IOT)": ["CSE(IOT)", "CSE-IOT", "IOT", "INTERNET OF THINGS", "COMPUTER SCIENCE AND ENGINEERING (IOT)"],
+                    "ECE": ["ECE", "ELECTRONICS AND COMMUNICATION ENGINEERING", "ELECTRONICS & COMMUNICATION ENGINEERING"],
+                    "EEE": ["EEE", "ELECTRICAL AND ELECTRONICS ENGINEERING", "ELECTRICAL & ELECTRONICS ENGINEERING"],
+                    "MECH": ["MECH", "MECHANICAL ENGINEERING"],
+                    "CIVIL": ["CIVIL", "CIVIL ENGINEERING"],
+                    "AGRI": ["AGRI", "AGRICULTURAL ENGINEERING"],
+                    "BME": ["BME", "BIOMEDICAL ENGINEERING"],
+                }
+                for canonical, aliases in DEPT_ALIASES.items():
                     for alias in aliases:
                         if su == alias or su.startswith(alias):
                             return canonical
@@ -1122,8 +1154,8 @@ def _get_dataset_for_id(
             def _year_match(row_year: str, filter_year: str) -> bool:
                 if not filter_year or filter_year.upper().strip() in ("ALL", ""):
                     return True
-                ry = str(row_year).upper().strip()
-                fy = str(filter_year).upper().strip()
+                ry = (row_year or "").upper().strip()
+                fy = (filter_year or "").upper().strip()
                 if fy in ("II", "2", "2ND", "II YEAR"):   return ry in ("II", "2")
                 if fy in ("III", "3", "3RD", "III YEAR"): return ry in ("III", "3")
                 if fy in ("IV", "4", "4TH", "IV YEAR"):   return ry in ("IV", "4")
@@ -1133,8 +1165,8 @@ def _get_dataset_for_id(
             def _att_match(row_status: str, filter_att: str) -> bool:
                 if not filter_att or filter_att.upper().strip() in ("ALL", ""):
                     return True
-                rs = str(row_status).upper().strip()
-                fa = str(filter_att).upper().strip()
+                rs = (row_status or "").upper().strip()
+                fa = (filter_att or "").upper().strip()
                 
                 if fa == "DATA_ERROR":
                     return rs in ("USERNAME_NOT_FOUND", "INVALID_USERNAME", "PENDING_USERNAME", "UNLINKED", "ERROR", "DATA_ERROR")
@@ -1165,7 +1197,7 @@ def _get_dataset_for_id(
             def _batch_match(row_batch: str, filter_batch: str) -> bool:
                 if not filter_batch or filter_batch.upper().strip() in ("ALL", ""):
                     return True
-                return str(row_batch).upper().strip() == str(filter_batch).upper().strip()
+                return (row_batch or "").upper().strip() == (filter_batch or "").upper().strip()
 
             raw_rows = [
                 r for r in all_raw_rows
@@ -1649,7 +1681,7 @@ def generate_certificate_for_student(
         raise HTTPException(status_code=404, detail="Student not found")
 
     try:
-        res = generate_student_certificate(student, cert_type=cert_type)
+        res = generate_student_certificate(db, student, cert_type=cert_type)
 
         record = CertificateRecord(
             student_id=student.id,
@@ -1689,9 +1721,10 @@ def download_student_certificate_pdf(cert_code: str, db: Session = Depends(get_d
         raise HTTPException(status_code=404, detail="Certificate PDF file not found")
 
     pdf_bytes = None
-    if cert.pdf_path and os.path.exists(cert.pdf_path) and os.path.getsize(cert.pdf_path) > 0:
+    cert_pdf_path = getattr(cert, "pdf_path", None)
+    if cert_pdf_path and os.path.exists(cert_pdf_path) and os.path.getsize(cert_pdf_path) > 0:
         try:
-            with open(cert.pdf_path, "rb") as f:
+            with open(cert_pdf_path, "rb") as f:
                 data = f.read()
                 if data.startswith(b"%PDF-"):
                     pdf_bytes = data
@@ -1832,8 +1865,12 @@ def download_weekly_performance_19_sheet_excel(
     )
 
     cache_record = db.query(ReportCache).filter(ReportCache.id == res["cache_id"]).first()
+    storage_path = getattr(cache_record, "storage_path", None) if cache_record else None
+    if not cache_record or not storage_path or not os.path.exists(storage_path):
+        raise HTTPException(status_code=500, detail="Generated report file not found.")
+
     return FileResponse(
-        path=cache_record.storage_path,
+        path=storage_path,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         filename=res.get("filename") or f"LeetCode_Weekly_Report_{date_str}.xlsx",
         headers={
@@ -1857,20 +1894,26 @@ def download_college_weekly_format_excel(
     from backend.services.pregenerated_report_service import get_or_create_report
     from backend.models import ReportCache, Contest
 
+    eff_contest_id: int = contest_id if contest_id is not None else 1
     if not contest_id:
         latest_c = db.query(Contest).order_by(Contest.id.desc()).first()
-        contest_id = latest_c.id if latest_c else 1
+        if latest_c and getattr(latest_c, "id", None) is not None:
+            eff_contest_id = int(getattr(latest_c, "id"))
 
     res = get_or_create_report(
         db=db,
         report_type="COLLEGE_FORMAT",
         format="xlsx",
-        filters={"contest_id": contest_id}
+        filters={"contest_id": eff_contest_id}
     )
 
     cache_record = db.query(ReportCache).filter(ReportCache.id == res["cache_id"]).first()
+    storage_path = getattr(cache_record, "storage_path", None) if cache_record else None
+    if not cache_record or not storage_path or not os.path.exists(storage_path):
+        raise HTTPException(status_code=500, detail="College report file not found.")
+
     return FileResponse(
-        path=cache_record.storage_path,
+        path=storage_path,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         filename=res.get("filename") or "Nandha_College_Official_Weekly_Report.xlsx",
         headers={
@@ -1897,12 +1940,14 @@ async def dispatch_college_report_email(
     from backend.report_generator import CollegeReportGenerator
     from backend.email_service import send_weekly_report_email
 
+    eff_contest_id: int = contest_id if contest_id is not None else 1
     if not contest_id:
         latest_c = db.query(Contest).order_by(Contest.id.desc()).first()
-        contest_id = latest_c.id if latest_c else 1
+        if latest_c and getattr(latest_c, "id", None) is not None:
+            eff_contest_id = int(getattr(latest_c, "id"))
 
     report_gen = CollegeReportGenerator(SessionLocal)
-    res = await report_gen.generate_complete_report(contest_id)
+    res = await report_gen.generate_complete_report(eff_contest_id)
 
     target_recipients = [e.strip() for e in recipients.split(",") if e.strip()] if recipients else ["nanthishvaran17@gmail.com"]
 

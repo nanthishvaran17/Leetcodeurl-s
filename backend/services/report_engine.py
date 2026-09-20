@@ -4,6 +4,7 @@ import json
 import hashlib
 import threading
 import copy
+import logging
 from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
 from backend.models import Student, ReportHistory
@@ -13,6 +14,8 @@ from backend.services.report_validators import validate_data_quality
 from backend.services.contest_performance_service import build_contest_performance_report
 from backend.services.report_registry import get_report_definition
 from backend.services.data_version_service import get_current_data_version
+
+logger = logging.getLogger(__name__)
 
 _UNIVERSAL_DATASET_CACHE: Dict[str, Dict[str, Any]] = {}
 _UNIVERSAL_CACHE_LOCK = threading.Lock()
@@ -39,9 +42,9 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
 
     raw_key = json.dumps({
         "type": canon_report_code,
-        "dept": str(config.department or "").upper(),
-        "year": str(config.year or "").upper(),
-        "scope": str(config.output_scope or "").upper(),
+        "dept": (config.department or "").upper(),
+        "year": (config.year or "").upper(),
+        "scope": (config.output_scope or "").upper(),
         "filters": config.filters or {},
         "role": user_role,
         "u_dept": user_dept,

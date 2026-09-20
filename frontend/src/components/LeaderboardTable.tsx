@@ -278,6 +278,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   };
 
   const handleOpenProfile = (student: StudentData, e?: React.MouseEvent) => {
+    import('../pages/StudentProfilePage');
     if (e) {
       e.preventDefault();
       e.stopPropagation();

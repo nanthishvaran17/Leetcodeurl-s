@@ -10,12 +10,12 @@ import { DownloadState } from '../services/download/downloadTypes';
 import { ExportStatus } from '../components/ExportStatus';
 
 import { IDCardGenerator } from '../components/IDCardGenerator';
-import { StudentEditOverlay } from '../components/StudentEditOverlay';
-import { StudentAuditModal } from '../components/StudentAuditModal';
-import { IndividualAnalyticsDashboard } from '../components/analytics/IndividualAnalyticsDashboard';
-import { ContestAnalyticsView } from '../components/analytics/ContestAnalyticsView';
-import { ActivityAnalyticsView } from '../components/analytics/ActivityAnalyticsView';
-import { ReportsAnalyticsView } from '../components/analytics/ReportsAnalyticsView';
+const StudentEditOverlay = React.lazy(() => import('../components/StudentEditOverlay').then(m => ({ default: m.StudentEditOverlay })));
+const StudentAuditModal = React.lazy(() => import('../components/StudentAuditModal').then(m => ({ default: m.StudentAuditModal })));
+const IndividualAnalyticsDashboard = React.lazy(() => import('../components/analytics/IndividualAnalyticsDashboard').then(m => ({ default: m.IndividualAnalyticsDashboard })));
+const ContestAnalyticsView = React.lazy(() => import('../components/analytics/ContestAnalyticsView').then(m => ({ default: m.ContestAnalyticsView })));
+const ActivityAnalyticsView = React.lazy(() => import('../components/analytics/ActivityAnalyticsView').then(m => ({ default: m.ActivityAnalyticsView })));
+const ReportsAnalyticsView = React.lazy(() => import('../components/analytics/ReportsAnalyticsView').then(m => ({ default: m.ReportsAnalyticsView })));
 
 interface StudentProfilePageProps {
   student: any;
@@ -115,6 +115,9 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   };
 
   useEffect(() => {
+    if (student) {
+      setDetail(student);
+    }
     const targetId = resolveTargetId();
     if (targetId) {
       fetchStudentDetail();
@@ -688,47 +691,55 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         </>
       )}
 
-      {activeTab === 'analytics' && (
-        <IndividualAnalyticsDashboard studentId={resolveTargetId()} />
-      )}
+      <React.Suspense fallback={<div className="p-8 text-center text-xs font-bold text-slate-400 animate-pulse">Loading view module...</div>}>
+        {activeTab === 'analytics' && (
+          <IndividualAnalyticsDashboard studentId={resolveTargetId()} />
+        )}
 
-      {activeTab === 'contests' && (
-        <ContestAnalyticsView studentId={resolveTargetId()} />
-      )}
+        {activeTab === 'contests' && (
+          <ContestAnalyticsView studentId={resolveTargetId()} />
+        )}
 
-      {activeTab === 'activity' && (
-        <ActivityAnalyticsView studentId={resolveTargetId()} />
-      )}
+        {activeTab === 'activity' && (
+          <ActivityAnalyticsView studentId={resolveTargetId()} />
+        )}
 
-      {activeTab === 'reports' && (
-        <ReportsAnalyticsView 
-          studentId={resolveTargetId()} 
-          studentName={student.name}
-          regNo={student.reg_no || student.register_number}
-          deptName={student?.department?.name || student?.department?.code || student.dept || 'Department'}
-        />
-      )}
+        {activeTab === 'reports' && (
+          <ReportsAnalyticsView 
+            studentId={resolveTargetId()} 
+            studentName={student.name}
+            regNo={student.reg_no || student.register_number}
+            deptName={student?.department?.name || student?.department?.code || student.dept || 'Department'}
+          />
+        )}
+      </React.Suspense>
       </div>
 
-      <StudentEditOverlay
-        isOpen={showEditOverlay}
-        student={detail || student}
-        onClose={() => setShowEditOverlay(false)}
-        onSaveSuccess={(updated) => {
-          setDetail(updated);
-          fetchStudentDetail();
-          window.dispatchEvent(new Event('refresh_dashboard_summary'));
-        }}
-      />
+      <React.Suspense fallback={null}>
+        {showEditOverlay && (
+          <StudentEditOverlay
+            isOpen={showEditOverlay}
+            student={detail || student}
+            onClose={() => setShowEditOverlay(false)}
+            onSaveSuccess={(updated) => {
+              setDetail(updated);
+              fetchStudentDetail();
+              window.dispatchEvent(new Event('refresh_dashboard_summary'));
+            }}
+          />
+        )}
 
-      <StudentAuditModal
-        isOpen={showAuditModal}
-        studentId={resolveTargetId()}
-        studentName={detail?.name || student?.name}
-        regNo={detail?.reg_no || student?.reg_no}
-        onClose={() => setShowAuditModal(false)}
-        onDownloadForensic={handleDownloadForensicCert}
-      />
+        {showAuditModal && (
+          <StudentAuditModal
+            isOpen={showAuditModal}
+            studentId={resolveTargetId()}
+            studentName={detail?.name || student?.name}
+            regNo={detail?.reg_no || student?.reg_no}
+            onClose={() => setShowAuditModal(false)}
+            onDownloadForensic={handleDownloadForensicCert}
+          />
+        )}
+      </React.Suspense>
     </div>
   );
 };

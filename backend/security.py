@@ -396,9 +396,9 @@ def extract_current_user_optional(request: Request, db: Session) -> Optional[Use
 
 def get_current_user_from_token(token: str, db: Session) -> Optional[User]:
     """Decodes raw JWT or Bearer token string and resolves the authenticated User."""
-    if not token or not str(token).strip():
+    if not token or not token.strip():
         return None
-    raw_token = str(token).strip()
+    raw_token = token.strip()
     if raw_token.lower().startswith("bearer "):
         raw_token = raw_token[7:].strip()
     
@@ -511,7 +511,7 @@ def require_security_access(
                 from backend.services.authorization_service import get_hod_authorized_department_ids, get_hod_authorized_department_codes
                 authorized_dept_ids = get_hod_authorized_department_ids(db, user)
                 authorized_dept_codes = get_hod_authorized_department_codes(db, user)
-                req_dept_str = str(req_dept).strip()
+                req_dept_str = req_dept.strip()
 
                 # Allow ALL or MY_DEPARTMENTS sentinel (means all assigned depts)
                 if req_dept_str.upper() in ("ALL", "MY_DEPARTMENTS", "ALL_MY_DEPARTMENTS"):
@@ -539,7 +539,7 @@ def require_security_access(
                 # Faculty/Staff: original single-dept check
                 user_dept_code = user.department.code if user.department else None
                 user_dept_id = str(user.department_id)
-                req_dept_str = str(req_dept).strip()
+                req_dept_str = req_dept.strip()
 
                 is_match = (
                     req_dept_str.upper() == "ALL" or
@@ -568,7 +568,7 @@ def require_security_access(
                 try:
                     sid = int(student_id_param)
                     from backend.services.faculty_assignment_service import faculty_assignment_service
-                    assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, user.id)
+                    assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, getattr(user, "id"))
                     if assigned_ids and sid not in assigned_ids:
                         log_security_access_event(
                             db, request, user, action="ACCESS_RESOURCE",
@@ -623,7 +623,7 @@ def get_authenticated_user_scope(db: Session, user: User) -> dict:
         
     elif role in ["faculty", "staff", "professor", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"]:
         from backend.services.faculty_assignment_service import FacultyAssignmentService
-        assigned_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, user.id)
+        assigned_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, getattr(user, "id"))
         return {"type": "FACULTY", "student_ids": assigned_ids}
         
     elif role == "student":

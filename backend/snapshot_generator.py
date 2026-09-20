@@ -1,9 +1,9 @@
 import datetime
 import uuid
 from sqlalchemy.orm import Session
-from backend.models import Student, HODSnapshot
+from typing import Optional
 
-def generate_hod_snapshot(db: Session, title: str = None) -> HODSnapshot:
+def generate_hod_snapshot(db: Session, title: Optional[str] = None) -> HODSnapshot:
     """
     Generates a new HOD snapshot freezing the current verified state of all students.
     Never infers official participation from problem counts.

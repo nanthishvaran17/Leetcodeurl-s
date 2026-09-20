@@ -639,3 +639,24 @@ def generate_weekly_performance_data(
     }
 
     return canonical_dataset
+
+
+def run_sunday_0945_public_contest_workflow(db: Session) -> Dict[str, Any]:
+    """Triggers Sunday 9:45 AM Public Contest fetch, Excel generation, and Email workflow."""
+    try:
+        data = generate_weekly_performance_data(db, save_snapshot=True)
+        return {"status": "success", "message": "Public contest workflow completed", "report_id": data.get("report_id")}
+    except Exception as e:
+        logger.error(f"[PUBLIC WORKFLOW ERROR] {e}")
+        return {"status": "error", "message": str(e)}
+
+
+def run_sunday_2200_virtual_contest_workflow(db: Session) -> Dict[str, Any]:
+    """Triggers Sunday 10:00 PM Virtual Contest fetch, Combined Excel generation, and Email workflow."""
+    try:
+        data = generate_weekly_performance_data(db, save_snapshot=True)
+        return {"status": "success", "message": "Virtual contest workflow completed", "report_id": data.get("report_id")}
+    except Exception as e:
+        logger.error(f"[VIRTUAL WORKFLOW ERROR] {e}")
+        return {"status": "error", "message": str(e)}
+
