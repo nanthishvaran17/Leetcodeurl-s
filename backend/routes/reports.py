@@ -1128,11 +1128,11 @@ def _get_dataset_for_id(
                     return ""
                 su = dept_name.upper().strip()
                 DEPT_ALIASES = {
+                    "CSE(CS)": ["CSE(CS)", "CSE-CS", "CYBER SECURITY", "COMPUTER SCIENCE AND ENGINEERING (CYBER SECURITY)", "CYBER", "(CS)"],
+                    "CSE(IOT)": ["CSE(IOT)", "CSE-IOT", "IOT", "INTERNET OF THINGS", "COMPUTER SCIENCE AND ENGINEERING (IOT)"],
                     "CSE": ["CSE", "COMPUTER SCIENCE AND ENGINEERING", "COMPUTER SCIENCE & ENGINEERING"],
                     "IT": ["IT", "INFORMATION TECHNOLOGY"],
                     "AIDS": ["AIDS", "ARTIFICIAL INTELLIGENCE AND DATA SCIENCE", "AI & DS", "AI-DS"],
-                    "CSE(CS)": ["CSE(CS)", "CSE-CS", "CYBER SECURITY", "COMPUTER SCIENCE AND ENGINEERING (CYBER SECURITY)"],
-                    "CSE(IOT)": ["CSE(IOT)", "CSE-IOT", "IOT", "INTERNET OF THINGS", "COMPUTER SCIENCE AND ENGINEERING (IOT)"],
                     "ECE": ["ECE", "ELECTRONICS AND COMMUNICATION ENGINEERING", "ELECTRONICS & COMMUNICATION ENGINEERING"],
                     "EEE": ["EEE", "ELECTRICAL AND ELECTRONICS ENGINEERING", "ELECTRICAL & ELECTRONICS ENGINEERING"],
                     "MECH": ["MECH", "MECHANICAL ENGINEERING"],
@@ -1140,9 +1140,15 @@ def _get_dataset_for_id(
                     "AGRI": ["AGRI", "AGRICULTURAL ENGINEERING"],
                     "BME": ["BME", "BIOMEDICAL ENGINEERING"],
                 }
+                # 1. Exact match pass
                 for canonical, aliases in DEPT_ALIASES.items():
                     for alias in aliases:
-                        if su == alias or su.startswith(alias):
+                        if su == alias:
+                            return canonical
+                # 2. Prefix/substring match pass in specific-to-broad order
+                for canonical, aliases in DEPT_ALIASES.items():
+                    for alias in aliases:
+                        if su.startswith(alias) or alias in su:
                             return canonical
                 return su
 
@@ -1156,10 +1162,10 @@ def _get_dataset_for_id(
                     return True
                 ry = (row_year or "").upper().strip()
                 fy = (filter_year or "").upper().strip()
-                if fy in ("II", "2", "2ND", "II YEAR"):   return ry in ("II", "2")
-                if fy in ("III", "3", "3RD", "III YEAR"): return ry in ("III", "3")
-                if fy in ("IV", "4", "4TH", "IV YEAR"):   return ry in ("IV", "4")
-                if fy in ("I", "1", "1ST", "I YEAR"):     return ry in ("I", "1")
+                if fy in ("II", "2", "2ND", "II YEAR"):   return ry in ("II", "2", "II YEAR")
+                if fy in ("III", "3", "3RD", "III YEAR"): return ry in ("III", "3", "III YEAR")
+                if fy in ("IV", "4", "4TH", "IV YEAR"):   return ry in ("IV", "4", "IV YEAR")
+                if fy in ("I", "1", "1ST", "I YEAR"):     return ry in ("I", "1", "I YEAR")
                 return fy == ry
 
             def _att_match(row_status: str, filter_att: str) -> bool:

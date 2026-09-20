@@ -338,8 +338,12 @@ def get_system_metrics(
     Returns system performance and data sync operational metrics with dynamic student counts.
     """
     from sqlalchemy.orm import joinedload
-    students = db.query(Student).options(joinedload(Student.stats)).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
+    students = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None))).all()
     total_students = len(students)
+    
+    student_ids = [s.id for s in students]
+    stats_records = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id.in_(student_ids)).all() if student_ids else []
+    stats_map = {stat.student_id: stat for stat in stats_records}
     
     verified_count = 0
     partial_count = 0
@@ -347,7 +351,7 @@ def get_system_metrics(
     failed_count = 0
 
     for s in students:
-        st = s.stats
+        st = stats_map.get(s.id)
         if st and st.sync_status == "success" and st.total_solved is not None:
             verified_count += 1
         elif st and st.total_solved is not None:

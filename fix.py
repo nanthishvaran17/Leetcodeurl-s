@@ -1,16 +1,5 @@
-lines = open('backend/services/student_report_service.py').read().split('\n')
-out = []
-in_try = False
-for l in lines: 
-    if l == '    finally:': 
-        in_try = False
-    
-    if in_try and not l.startswith('    finally:'): 
-        out.append('    ' + l if l.strip() else l) 
-    else: 
-        out.append(l) 
-        
-    if l == '    try:': 
-        in_try = True 
-
-open('backend/services/student_report_service.py', 'w').write('\n'.join(out))
+import sqlite3
+conn = sqlite3.connect('data/leetcode_tracker.db')
+conn.execute("UPDATE weekly_sessions SET contest_name = 'Weekly Contest 520', contest_id = 'weekly-contest-520', week_number = 520 WHERE contest_id = 'weekly-contest-18' OR contest_name = 'Weekly Contest 18' OR id = 18;")
+conn.commit()
+print("Updated successfully")

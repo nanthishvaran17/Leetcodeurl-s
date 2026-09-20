@@ -1064,7 +1064,7 @@ def get_real_client_ip(request: Request) -> str:
 _login_attempts = {}
 
 @router.post("/login")
-async def login(login_data: UserLogin, request: Request, response: Response, db: Session = Depends(get_db)):
+def login(login_data: UserLogin, request: Request, response: Response, db: Session = Depends(get_db)):
     client_ip = get_real_client_ip(request)
     clean_user_key = (login_data.username or "").strip().lower()
     rate_key = f"{client_ip}:{clean_user_key}"
@@ -1085,12 +1085,13 @@ async def login(login_data: UserLogin, request: Request, response: Response, db:
     if not clean_username or not clean_password:
         raise HTTPException(status_code=400, detail="Invalid username or password.")
 
-    from sqlalchemy import or_
+    from sqlalchemy import or_, func
+    clean_lower = clean_username.lower()
     user = db.query(User).filter(
         or_(
-            User.username.ilike(clean_username),
-            User.email.ilike(clean_username),
-            User.institutional_id.ilike(clean_username)
+            func.lower(User.username) == clean_lower,
+            func.lower(User.email) == clean_lower,
+            func.lower(User.institutional_id) == clean_lower
         )
     ).first()
 
@@ -1098,23 +1099,25 @@ async def login(login_data: UserLogin, request: Request, response: Response, db:
     if not user:
         student = db.query(Student).filter(
             or_(
-                Student.reg_no.ilike(clean_username),
-                Student.email.ilike(clean_username),
-                Student.institutional_email.ilike(clean_username),
-                Student.username.ilike(clean_username)
+                func.lower(Student.reg_no) == clean_lower,
+                func.lower(Student.email) == clean_lower,
+                func.lower(Student.institutional_email) == clean_lower,
+                func.lower(Student.username) == clean_lower
             )
         ).first()
         if student and student.is_active:
+            st_user = (student.username or student.reg_no or "").lower()
+            st_email = (student.email or student.institutional_email or "").lower()
             user = db.query(User).filter(
                 or_(
-                    User.username.ilike(student.username or student.reg_no),
-                    User.email.ilike(student.email or student.institutional_email or "")
+                    func.lower(User.username) == st_user,
+                    func.lower(User.email) == st_email
                 )
             ).first()
 
     is_pass_valid = False
     if user:
-        is_pass_valid = await asyncio.to_thread(verify_password, clean_password, str(user.hashed_password or ""))
+        is_pass_valid = verify_password(clean_password, str(user.hashed_password or ""))
         
     if not user or not is_pass_valid:
         allow_default_pwd = getattr(settings, "ALLOW_DEFAULT_ADMIN_PASSWORD", False)

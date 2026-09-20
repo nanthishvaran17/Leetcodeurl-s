@@ -108,6 +108,17 @@ export const getRequestKey = (url: string, config?: any): string => {
   return `get:${userScope}:${url}:${params}`;
 };
 
+let firebaseModulePromise: Promise<any> | null = null;
+const getFirebaseModule = () => {
+  if (!firebaseModulePromise) {
+    firebaseModulePromise = import('./firebase').catch(err => {
+      firebaseModulePromise = null;
+      return null;
+    });
+  }
+  return firebaseModulePromise;
+};
+
 // Asynchronous sub-millisecond request header dispatch
 api.interceptors.request.use(async (config) => {
   config.baseURL = getApiBaseUrl();
@@ -132,11 +143,13 @@ api.interceptors.request.use(async (config) => {
       if (jwtToken && !config.headers.Authorization) {
         config.headers.Authorization = `Bearer ${jwtToken}`;
       } else if (!jwtToken && !config.headers.Authorization) {
-        const { getAuthInstance, getOrInitAuth } = await import('./firebase');
-        const auth = getAuthInstance() || getOrInitAuth();
-        if (auth?.currentUser) {
-          const token = await auth.currentUser.getIdToken();
-          if (token) config.headers.Authorization = `Bearer ${token}`;
+        const fbMod = await getFirebaseModule();
+        if (fbMod) {
+          const auth = fbMod.getAuthInstance?.() || fbMod.getOrInitAuth?.();
+          if (auth?.currentUser) {
+            const token = await auth.currentUser.getIdToken();
+            if (token) config.headers.Authorization = `Bearer ${token}`;
+          }
         }
       }
     }
@@ -226,20 +239,20 @@ api.interceptors.response.use(
       return new Promise(async (resolve, reject) => {
         // Attempt silent refresh using Firebase SDK
         try {
-          const { getAuthInstance, getOrInitAuth } = await import('./firebase');
-          const auth = getAuthInstance() || getOrInitAuth();
+          const fbMod = await getFirebaseModule();
+          const auth = fbMod?.getAuthInstance?.() || fbMod?.getOrInitAuth?.();
           if (!auth?.currentUser) {
             processQueue(new Error('No current user'), null);
             globalLogout();
             return reject(new Error('No current user'));
           }
           auth.currentUser.getIdToken(true)
-            .then((newToken) => {
+            .then((newToken: string) => {
               config.headers['Authorization'] = 'Bearer ' + newToken;
               processQueue(null, newToken);
               resolve(api(config));
             })
-            .catch(err => {
+            .catch((err: any) => {
               processQueue(err, null);
               globalLogout();
               reject(err);
@@ -269,7 +282,7 @@ api.interceptors.response.use(
 
     if (!isCanceled && isReadOnly && (isTimeout || isGatewayError || isNetworkError)) {
       config._retryCount = (config._retryCount || 0) + 1;
-      const delayMs = config._retryCount * 2000;
+      const delayMs = Math.min(200, config._retryCount * 150);
       console.warn(`[API_COLD_START_RETRY] Retrying GET to ${config.url} (Attempt ${config._retryCount}/2) in ${delayMs}ms...`);
       await new Promise((resolve) => setTimeout(resolve, delayMs));
       return api(config);

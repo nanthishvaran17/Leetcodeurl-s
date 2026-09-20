@@ -22,12 +22,22 @@ def generate_pdf_report(
     """
     Builds the official landscape Friday Weekly LeetCode Intelligence Report PDF.
     Grounded 100% in real database metrics. Accepts either SQLAlchemy Session or dataset dict.
+    Caches compiled PDF bytes in RAM for 300s to prevent client timeout errors.
     """
     if isinstance(db, dict):
         return build_intelligence_pdf(db)
+
     eff_user = current_user or kwargs.get('current_user')
-    eff_dept = department or kwargs.get('department')
-    eff_year = year or kwargs.get('year')
+    eff_dept = department or kwargs.get('department') or "ALL"
+    eff_year = year or kwargs.get('year') or "ALL"
+
+    user_scope = f"{eff_user.id}:{eff_user.role}" if hasattr(eff_user, "id") else "public"
+    cache_key = f"pdf_report_{eff_dept}_{eff_year}_{user_scope}"
+
+    from backend.cache import cache
+    cached_pdf = cache.get(cache_key)
+    if cached_pdf and isinstance(cached_pdf, bytes):
+        return cached_pdf
 
     if dept_id and not eff_dept:
         from backend.models import Department
@@ -45,6 +55,8 @@ def generate_pdf_report(
     
     # 2. Build the high-density digital PDF
     pdf_bytes = build_intelligence_pdf(dataset)
+    if pdf_bytes and isinstance(pdf_bytes, bytes):
+        cache.set(cache_key, pdf_bytes, ttl_seconds=300, tags=["reports", "pdf"])
     
     return pdf_bytes
 

@@ -46,6 +46,7 @@ import { DownloadState } from '../services/download/downloadTypes';
 import { normalizeAcademicYear } from '../utils/filterUtils';
 import { ExportStatus } from '../components/ExportStatus';
 import { useDepartments } from '../contexts/DepartmentContext';
+import { GlobalFilter } from '../components/GlobalFilter';
 
 interface StudentIssue {
   id: number;
@@ -104,113 +105,9 @@ const DEFAULT_SAVED_VIEWS: SavedView[] = [
   { id: 'stale_records',  name: 'Stale Data (>7 Days)',        dept: 'all',      year: 'all', issue: 'STALE_DATA',      search: '' }
 ];
 
-// Custom Dropdown Select 
-const CustomSelect: React.FC<{
-  value: string;
-  onChange: (v: string) => void;
-  options: { label: string; value: string; icon?: React.ReactNode; badge?: string; badgeColor?: string }[];
-  placeholder: string;
-  icon?: React.ReactNode;
-}> = ({ value, onChange, options, placeholder, icon }) => {
-  const [open, setOpen] = useState(false);
-  const selected = options.find(o => o.value === value);
-  const containerRef = React.useRef<HTMLDivElement>(null);
-
-  // Close on outside click
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    if (open) {
-      document.addEventListener('mousedown', handleClick);
-    }
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [open]);
-
-  return (
-    <div className="relative" ref={containerRef}>
-      <button
-        onClick={() => setOpen(!open)}
-        className={`flex items-center justify-between gap-3 min-w-[200px] w-full px-4 py-2.5 rounded-xl border transition-all cursor-pointer font-bold text-sm ${
-          open 
-            ? 'border-brand-500 bg-white dark:bg-navy-950 ring-4 ring-brand-500/10 shadow-sm' 
-            : (value && value !== 'all')
-              ? 'border-brand-500/30 bg-brand-50 dark:bg-brand-500/10 text-brand-700 dark:text-brand-300' 
-              : 'border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-700 dark:text-slate-200 hover:border-slate-300'
-        }`}
-      >
-        <div className="flex items-center gap-2">
-          <span className={(value && value !== 'all') ? 'text-brand-500' : 'text-slate-400'}>{icon || selected?.icon}</span>
-          <div className="flex items-center gap-2">
-            {selected?.badge && (
-              <span className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase ${selected.badgeColor || 'bg-slate-100 text-slate-500'}`}>
-                {selected.badge}
-              </span>
-            )}
-            <span>{selected ? selected.label : placeholder}</span>
-          </div>
-        </div>
-        <ChevronDown size={14} className={`transition-transform duration-300 ${open ? 'rotate-180 text-brand-500' : 'text-slate-400'}`} />
-      </button>
-
-      {open && (
-        <div className="absolute z-50 top-[110%] left-0 w-full min-w-[280px] p-1.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up">
-          <button
-            onClick={() => { onChange('all'); setOpen(false); }}
-            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
-              !value || value === 'all'
-                ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20' 
-                : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-navy-800'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <span className="opacity-70">{icon}</span>
-              <span>{placeholder}</span>
-            </div>
-            {(!value || value === 'all') && <Check size={16} strokeWidth={3} />}
-          </button>
-          
-          <div className="h-px bg-slate-100 dark:bg-navy-800 my-1.5 mx-2" />
-
-          <div className="max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
-            {options.map((opt) => {
-              const isSelected = value === opt.value;
-              return (
-                <button
-                  key={opt.value}
-                  onClick={() => { onChange(opt.value); setOpen(false); }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer mb-1 last:mb-0 ${
-                    isSelected 
-                      ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20' 
-                      : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-navy-800'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className={isSelected ? 'text-white opacity-90' : 'text-slate-400'}>{opt.icon}</span>
-                    {opt.badge && (
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase ${
-                        isSelected ? 'bg-white/20 text-white' : opt.badgeColor || 'bg-slate-100 text-slate-500'
-                      }`}>
-                        {opt.badge}
-                      </span>
-                    )}
-                    <span>{opt.label}</span>
-                  </div>
-                  {isSelected && <Check size={16} strokeWidth={3} />}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
 export const StudentDataIssuesPage: React.FC = () => {
   const { notify, confirmAction } = useNotification();
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Primary Data State
   const [summary, setSummary] = useState<IssueSummaryCounts | null>(null);
@@ -267,6 +164,57 @@ export const StudentDataIssuesPage: React.FC = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedDept, selectedYear, selectedIssue, searchQuery]);
+
+  // Memoized filter options for GlobalFilter
+  const deptFilterOptions = useMemo(() => [
+    { value: 'all', label: 'All Departments', pillText: 'ALL' },
+    ...departments.map(d => ({
+      value: d.code,
+      label: d.name,
+      pillText: d.code
+    }))
+  ], [departments]);
+
+  const yearFilterOptions = useMemo(() => [
+    { value: 'all', label: 'All Academic Years', pillText: 'ALL' },
+    { value: '1', label: 'I Year (1st Year)', pillText: '1ST' },
+    { value: '2', label: 'II Year (2nd Year)', pillText: '2ND' },
+    { value: '3', label: 'III Year (3rd Year)', pillText: '3RD' },
+    { value: '4', label: 'IV Year (Final Year)', pillText: '4TH' },
+  ], []);
+
+  const issueFilterOptions = useMemo(() => [
+    { value: 'all', label: `All Categories (${summary?.total_students ?? 0})`, pillText: 'ALL' },
+    { value: 'CRITICAL', label: `Critical Issues (${summary?.critical_issues ?? 0})`, pillText: 'ERR', pillColorClass: 'bg-rose-500 text-white' },
+    { value: 'SYNC_FAILED', label: `Sync Failed (${summary?.sync_failed ?? 0})`, pillText: 'FAIL', pillColorClass: 'bg-red-500 text-white' },
+    { value: 'NOT_STARTED', label: `Not Started — 0 Solved (${summary?.not_started ?? 0})`, pillText: 'NEW', pillColorClass: 'bg-orange-500 text-white' },
+    { value: 'NEVER_SYNCED', label: `Never Synced (${summary?.never_synced ?? 0})`, pillText: 'NONE', pillColorClass: 'bg-amber-500 text-white' },
+    { value: 'MISSING_USERNAME', label: `Missing Username (${summary?.missing_username ?? 0})`, pillText: 'MISS', pillColorClass: 'bg-yellow-500 text-slate-950' },
+    { value: 'INVALID_USERNAME', label: `Profile Not Found (${summary?.invalid_username ?? 0})`, pillText: '404', pillColorClass: 'bg-pink-500 text-white' },
+    { value: 'INVALID_URL', label: `Invalid URL (${summary?.invalid_url ?? 0})`, pillText: 'URL', pillColorClass: 'bg-fuchsia-500 text-white' },
+    { value: 'STALE_DATA', label: `Stale Data >7 Days (${summary?.stale_data ?? 0})`, pillText: 'OLD', pillColorClass: 'bg-purple-500 text-white' },
+    { value: 'DATA_MISMATCH', label: `Data Mismatch (${summary?.data_mismatch ?? 0})`, pillText: 'DIFF', pillColorClass: 'bg-indigo-500 text-white' },
+    { value: 'HEALTHY', label: `Healthy Records (${summary?.healthy ?? 0})`, pillText: 'OK', pillColorClass: 'bg-emerald-500 text-white' },
+  ], [summary]);
+
+  // Keyboard Shortcuts (ESC to close modals/reset search, Ctrl+K / '/' to focus search)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (repairStudent) setRepairStudent(null);
+        else if (showSaveViewModal) setShowSaveViewModal(false);
+        else if (searchQuery) setSearchQuery('');
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      } else if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [repairStudent, showSaveViewModal, searchQuery]);
 
   const totalPages = Math.max(1, Math.ceil(students.length / pageSize));
   const paginatedStudents = useMemo(() => {
@@ -727,19 +675,15 @@ export const StudentDataIssuesPage: React.FC = () => {
               <Building2 className="w-3.5 h-3.5 text-indigo-600 dark:text-brand-400" />
               <span>Department Filter</span>
             </label>
-            <CustomSelect
+            <GlobalFilter
+              label=""
               value={selectedDept}
               onChange={setSelectedDept}
-              placeholder="All Departments"
+              options={deptFilterOptions}
               icon={<Building2 size={16} />}
-              options={[
-                ...departments.map(d => ({
-                  label: d.name,
-                  value: d.code,
-                  badge: d.code,
-                  badgeColor: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400'
-                }))
-              ]}
+              showSearch={true}
+              searchPlaceholder="Search department..."
+              dropdownWidth="min-w-[320px]"
             />
           </div>
 
@@ -749,17 +693,14 @@ export const StudentDataIssuesPage: React.FC = () => {
               <GraduationCap className="w-3.5 h-3.5 text-indigo-600 dark:text-brand-400" />
               <span>Academic Year</span>
             </label>
-            <CustomSelect
+            <GlobalFilter
+              label=""
               value={selectedYear}
               onChange={setSelectedYear}
-              placeholder="All Academic Years"
+              options={yearFilterOptions}
               icon={<GraduationCap size={16} />}
-              options={[
-                { label: 'I Year (1st Year)', value: '1', badge: 'I', badgeColor: 'bg-slate-100 text-slate-600' },
-                { label: 'II Year (2nd Year)', value: '2', badge: 'II', badgeColor: 'bg-slate-200 text-slate-700' },
-                { label: 'III Year (3rd Year)', value: '3', badge: 'III', badgeColor: 'bg-slate-300 text-slate-800' },
-                { label: 'IV Year (Final Year)', value: '4', badge: 'IV', badgeColor: 'bg-slate-400 text-slate-900' },
-              ]}
+              showSearch={false}
+              dropdownWidth="min-w-[280px]"
             />
           </div>
 
@@ -769,23 +710,15 @@ export const StudentDataIssuesPage: React.FC = () => {
               <Sliders className="w-3.5 h-3.5 text-amber-500" />
               <span>Issue Category</span>
             </label>
-            <CustomSelect
+            <GlobalFilter
+              label=""
               value={selectedIssue}
               onChange={setSelectedIssue}
-              placeholder={`All Categories (${summary?.total_students ?? 0})`}
+              options={issueFilterOptions}
               icon={<Sliders size={16} />}
-              options={[
-                { label: `Critical Issues (${summary?.critical_issues ?? 0})`, value: 'CRITICAL', badge: 'ERR', badgeColor: 'bg-rose-100 text-rose-600' },
-                { label: `Sync Failed (${summary?.sync_failed ?? 0})`, value: 'SYNC_FAILED', badge: 'FAIL', badgeColor: 'bg-red-100 text-red-600' },
-                { label: `Not Started — 0 Solved (${summary?.not_started ?? 0})`, value: 'NOT_STARTED', badge: 'NEW', badgeColor: 'bg-orange-100 text-orange-600' },
-                { label: `Never Synced (${summary?.never_synced ?? 0})`, value: 'NEVER_SYNCED', badge: 'NONE', badgeColor: 'bg-amber-100 text-amber-600' },
-                { label: `Missing Username (${summary?.missing_username ?? 0})`, value: 'MISSING_USERNAME', badge: 'MISS', badgeColor: 'bg-yellow-100 text-yellow-600' },
-                { label: `Profile Not Found (${summary?.invalid_username ?? 0})`, value: 'INVALID_USERNAME', badge: '404', badgeColor: 'bg-pink-100 text-pink-600' },
-                { label: `Invalid URL (${summary?.invalid_url ?? 0})`, value: 'INVALID_URL', badge: 'URL', badgeColor: 'bg-fuchsia-100 text-fuchsia-600' },
-                { label: `Stale Data >7 Days (${summary?.stale_data ?? 0})`, value: 'STALE_DATA', badge: 'OLD', badgeColor: 'bg-purple-100 text-purple-600' },
-                { label: `Data Mismatch (${summary?.data_mismatch ?? 0})`, value: 'DATA_MISMATCH', badge: 'DIFF', badgeColor: 'bg-indigo-100 text-indigo-600' },
-                { label: `Healthy Records (${summary?.healthy ?? 0})`, value: 'HEALTHY', badge: 'OK', badgeColor: 'bg-emerald-100 text-emerald-600' },
-              ]}
+              showSearch={true}
+              searchPlaceholder="Search issue category..."
+              dropdownWidth="min-w-[340px]"
             />
           </div>
 
@@ -798,12 +731,22 @@ export const StudentDataIssuesPage: React.FC = () => {
             <div className="relative">
               <Search className="w-3.5 h-3.5 absolute left-3.5 top-2.5 text-slate-400" />
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search Name, Reg No (732224CC031)..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3.5 py-2 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-gray-400 font-bold focus:ring-2 focus:ring-brand-500"
+                className="w-full pl-9 pr-8 py-2 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-gray-400 font-bold focus:ring-2 focus:ring-brand-500 transition-all"
               />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                  title="Clear Search"
+                >
+                  <XCircle className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -149,13 +149,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
   const [successMsg, setSuccessMsg] = useState('');
   const [isShaking, setIsShaking] = useState(false);
 
-  // Live Stats State
+  // Live Stats State — Dynamically loaded from API / local cache (zero static hardcoding)
   const [liveStats, setLiveStats] = useState<{
     totalStudents: number;
     verifiedStudents: number;
     integrityStatus: string;
     lastUpdated: string;
-  } | null>(null);
+  } | null>(() => {
+    try {
+      const stored = sessionStorage.getItem('nec_live_stats');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return null;
+  });
 
   const digitRefs = [
     useRef<HTMLInputElement>(null),
@@ -182,30 +188,32 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
     return () => clearTimeout(t);
   }, []);
 
-  // Fetch Live Stats from Public Endpoint
-  // Deferred by 2s to avoid competing with LCP image during critical rendering window
+  // Fetch Live Stats from Public Endpoint dynamically
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const res = await api.get('/public/stats', { timeout: 10000 });
         const data = res.data;
-        const total = data?.active || data?.total || 308;
-        const verified = data?.verified || data?.with_leetcode_handle || 308;
+        const total = data?.active || data?.total || 0;
+        const verified = data?.verified || data?.with_leetcode_handle || 0;
 
-        setLiveStats({
+        const newStats = {
           totalStudents: total,
           verifiedStudents: verified,
           integrityStatus: 'PASS',
           lastUpdated: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-        });
+        };
+        setLiveStats(newStats);
+        try {
+          sessionStorage.setItem('nec_live_stats', JSON.stringify(newStats));
+        } catch (e) {}
       } catch {
         // Keep previous value if fetch fails
       }
     };
-    // Defer initial fetch to after LCP — stats are non-critical for first paint
-    const initialDelay = setTimeout(fetchStats, 2000);
+    fetchStats();
     const interval = setInterval(fetchStats, 5 * 60 * 1000);
-    return () => { clearTimeout(initialDelay); clearInterval(interval); };
+    return () => { clearInterval(interval); };
   }, []);
 
 
@@ -339,7 +347,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
         email: otpEmail.trim().toLowerCase(),
         otp: fullOtp,
         request_id: requestId
-      }, { timeout: 6000 });
+      }, { timeout: 35000 });
 
       if (res.data && res.data.access_token) {
         setAuthStatusText('Authentication verified • Directing to workspace...');
@@ -623,7 +631,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
               <div className="audit-row audit-row--blue">
                 <span className="label">Engineers tracked<span className="desc">Live rating & contest sync</span></span>
                 <span className="value value--blue">
-                  {liveStats ? liveStats.totalStudents.toLocaleString('en-IN') : '308'}
+                  {liveStats ? liveStats.totalStudents.toLocaleString('en-IN') : '...'}
                 </span>
               </div>
               <div className="audit-row audit-row--green">

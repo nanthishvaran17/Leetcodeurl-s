@@ -652,7 +652,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
     { id: 'overview', label: '1. Overview', icon: Activity },
     { id: 'dsa', label: '2. DSA Breakdown', icon: Brain },
     { id: 'contests', label: '3. Contests', icon: Trophy },
-    { id: 'activity', label: '4. Activity Heatmap', icon: Zap },
+    { id: 'activity', label: '4. Heatmap', icon: Zap },
     { id: 'submissions', label: `5. Submissions (${submissions.length})`, icon: FileText },
     { id: 'badges', label: `6. Badges (${badges.length})`, icon: Award },
     { id: 'languages', label: '7. Languages', icon: Sparkles },
@@ -662,13 +662,13 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
   return typeof document !== 'undefined'
     ? createPortal(
         <div
-          className="fixed inset-0 z-[999999] bg-slate-950/60 backdrop-blur-sm flex justify-end animate-fade-in text-slate-900 dark:text-slate-100 font-sans"
+          className="fixed inset-0 z-[999999] bg-slate-950/60 backdrop-blur-sm flex justify-end animate-fade-in text-slate-900 dark:text-slate-100 font-sans p-0 sm:p-3 sm:pr-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) onClose();
           }}
         >
           <div
-            className="w-full sm:w-[620px] md:w-[720px] lg:w-[800px] xl:w-[50vw] max-w-full h-full bg-white dark:bg-navy-950 shadow-2xl border-l border-slate-200 dark:border-navy-800 flex flex-col overflow-hidden animate-in slide-in-from-right duration-300"
+            className="w-full sm:w-[680px] md:w-[780px] lg:w-[880px] xl:w-[60vw] max-w-full h-full sm:h-[calc(100vh-24px)] my-auto bg-white dark:bg-navy-950 shadow-2xl border border-slate-200 dark:border-navy-800/80 rounded-none sm:rounded-[32px] flex flex-col overflow-hidden animate-in slide-in-from-right duration-300"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 1. TOP HERO HEADER & IDENTITY */}
@@ -676,7 +676,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
               {/* Top-Right Fixed Close Button */}
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 transition-all cursor-pointer z-10"
+                className="absolute top-4 right-4 p-2.5 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 transition-all cursor-pointer z-10 shadow-md hover:scale-110"
                 title="Close Drawer"
               >
                 <X className="w-5 h-5" />
@@ -687,14 +687,14 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                 <div className="flex items-start sm:items-center gap-3.5 min-w-0">
                   <button
                     onClick={onClose}
-                    className="p-2 sm:p-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer shrink-0"
+                    className="p-2.5 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-all cursor-pointer shrink-0 shadow-md hover:scale-110"
                     title="Back"
                   >
                     <ArrowLeft className="w-5 h-5" />
                   </button>
 
                   <div className="min-w-0 flex items-center gap-3">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center font-black text-xl sm:text-2xl shadow-lg border-2 border-white/20 shrink-0">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center font-black text-xl sm:text-2xl shadow-xl border-2 border-white/20 shrink-0">
                       {st.name ? st.name.charAt(0).toUpperCase() : 'S'}
                     </div>
 
@@ -703,7 +703,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         <h2 className="text-lg sm:text-2xl font-black text-white tracking-tight truncate">
                           {st.name || 'Student Profile'}
                         </h2>
-                        <span className="px-2.5 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-400/30 text-[10px] sm:text-xs font-black uppercase tracking-wider">
+                        <span className="px-3 py-1 rounded-full bg-brand-500/20 text-brand-300 border border-brand-400/30 text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-2xs">
                           Institutional Intelligence
                         </span>
                       </div>
@@ -715,12 +715,12 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         <span>•</span>
                         <span>{st.batch || st.year_level}</span>
                         {st.accommodation && (
-                          <span className="px-2 py-0.5 rounded-md bg-purple-900/60 text-purple-200 text-[10px] font-bold">
+                          <span className="px-2.5 py-0.5 rounded-full bg-purple-900/60 text-purple-200 text-[10px] font-bold border border-purple-700/40">
                             {st.accommodation}
                           </span>
                         )}
                         {st.twelfth_cutoff != null && (
-                          <span className="px-2 py-0.5 rounded-md bg-emerald-900/60 text-emerald-200 text-[10px] font-bold">
+                          <span className="px-2.5 py-0.5 rounded-full bg-emerald-900/60 text-emerald-200 text-[10px] font-bold border border-emerald-700/40">
                             12th: {st.twelfth_cutoff}
                           </span>
                         )}
@@ -731,17 +731,15 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                 {/* Hero Actions Bar & Freshness / Telemetry Audit Status */}
                 <div className="flex items-center justify-between gap-3 text-xs flex-wrap pt-2.5 border-t border-slate-800/80">
-                  <div className="flex items-center gap-3 flex-wrap text-[11px] text-slate-300">
-                    <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
+                  <div className="flex items-center gap-2.5 flex-wrap text-[11px]">
+                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold shadow-2xs">
                       <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                       Data Quality: 100% Verified Ground Truth
                     </span>
-                    <span className="flex items-center gap-1 text-slate-300 font-mono">
-                      <span>Fetch Latency:</span>
-                      <strong className="text-amber-300">{fetchLatency ? `${fetchLatency} ms` : '< 100 ms'}</strong>
+                    <span className="px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700/60 font-mono text-slate-300">
+                      Fetch Latency: <strong className="text-amber-300">{fetchLatency ? `${fetchLatency} ms` : '< 100 ms'}</strong>
                     </span>
-                    <span className="text-slate-500">•</span>
-                    <span className="text-slate-300 font-mono">
+                    <span className="px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700/60 font-mono text-slate-300">
                       Synced: <strong className="text-slate-100">{st.last_synced || lastFetchTime || 'Real-Time'}</strong>
                     </span>
                   </div>
@@ -752,7 +750,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         href={st.leetcode_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all cursor-pointer"
+                        className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all cursor-pointer shadow-sm hover:scale-[1.04]"
                         title="Primary LeetCode Account"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
@@ -776,7 +774,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                             href={secUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 text-xs font-bold transition-all cursor-pointer"
+                            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/30 text-xs font-bold transition-all cursor-pointer shadow-sm hover:scale-[1.04]"
                             title="Secondary LeetCode Account"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
@@ -789,7 +787,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                     <button
                       onClick={handleRefreshStudent}
                       disabled={refreshing}
-                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white text-xs font-black shadow-md shadow-brand-600/30 transition-all cursor-pointer"
+                      className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white text-xs font-black shadow-md shadow-brand-600/30 transition-all cursor-pointer hover:scale-[1.04]"
                     >
                       <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
                       <span>{refreshing ? 'Syncing...' : 'Live Refresh'}</span>
@@ -797,7 +795,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                     <button
                       onClick={handlePrintDossier}
-                      className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-all cursor-pointer flex items-center gap-1 border border-slate-700"
+                      className="px-3.5 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-all cursor-pointer flex items-center gap-1.5 border border-slate-700 shadow-sm hover:scale-[1.04]"
                     >
                       <FileText className="w-3.5 h-3.5" /> Print
                     </button>
@@ -806,17 +804,17 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
               </div>
             </div>
 
-            {/* TAB SELECTOR NAVIGATION BAR */}
-            <div className="bg-slate-900 px-4 py-2.5 border-b border-slate-800 flex items-center gap-2 overflow-x-auto shrink-0 scrollbar-none sticky top-0 z-20">
+            {/* TAB SELECTOR NAVIGATION BAR - WRAPS CLEANLY WITHOUT HORIZONTAL SCROLLING */}
+            <div className="bg-slate-900 px-4 py-2.5 border-b border-slate-800 flex items-center flex-wrap gap-1.5 sm:gap-2 shrink-0 sticky top-0 z-20">
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
                       isActive
-                        ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/30 border border-brand-400/40'
+                        ? 'bg-brand-600 text-white shadow-md shadow-brand-600/40 border border-brand-400/40 scale-[1.03]'
                         : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60'
                     }`}
                   >
@@ -852,7 +850,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
                         {/* KPI 1: Total Solved */}
-                        <div className="col-span-2 bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm space-y-1">
+                        <div className="col-span-2 bg-white dark:bg-navy-900 p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-1 hover:shadow-md transition-all">
                           <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Total Solved</span>
                           <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono">
                             {totalSolved}
@@ -867,7 +865,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         </div>
 
                         {/* KPI 2: Acceptance Rate */}
-                        <div className="col-span-2 bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm space-y-1">
+                        <div className="col-span-2 bg-white dark:bg-navy-900 p-4 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-navy-800 shadow-sm space-y-1 hover:shadow-md transition-all">
                           <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Acceptance Rate</span>
                           <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono">
                             {coding.acceptance_rate || 'N/A'}
@@ -878,7 +876,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         </div>
 
                         {/* KPI 3: Contest Rating */}
-                        <div className="col-span-2 bg-purple-50/70 dark:bg-purple-950/30 p-4 rounded-2xl border border-purple-200 dark:border-purple-900/40 shadow-sm space-y-1">
+                        <div className="col-span-2 bg-purple-50/70 dark:bg-purple-950/30 p-4 sm:p-5 rounded-3xl border border-purple-200 dark:border-purple-900/40 shadow-sm space-y-1 hover:shadow-md transition-all">
                           <span className="text-[10px] font-extrabold text-purple-600 dark:text-purple-400 uppercase tracking-wider block">Contest Rating</span>
                           <div className="text-2xl sm:text-3xl font-black text-purple-700 dark:text-purple-300 font-mono">
                             {contestRatingVal || '1746.3'}
@@ -889,7 +887,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         </div>
 
                         {/* KPI 4: Global Rank */}
-                        <div className="col-span-2 bg-blue-50/70 dark:bg-blue-950/30 p-4 rounded-2xl border border-blue-200 dark:border-blue-900/40 shadow-sm space-y-1">
+                        <div className="col-span-2 bg-blue-50/70 dark:bg-blue-950/30 p-4 sm:p-5 rounded-3xl border border-blue-200 dark:border-blue-900/40 shadow-sm space-y-1 hover:shadow-md transition-all">
                           <span className="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider block">Global Rank</span>
                           <div className="text-xl sm:text-2xl font-black text-blue-700 dark:text-blue-300 font-mono truncate">
                             {globalRankVal || '#94,251'}
@@ -902,14 +900,14 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                       {/* Secondary Student Activity Row */}
                       <div className="grid grid-cols-3 gap-3">
-                        <div className="bg-white dark:bg-navy-900 p-3.5 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm">
+                        <div className="bg-white dark:bg-navy-900 p-4 rounded-3xl border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-all">
                           <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Active Coding Days</span>
                           <div className="text-xl font-black text-slate-900 dark:text-white font-mono mt-0.5">
                             {activity.active_days ?? coding.active_days ?? 0} Days
                           </div>
                         </div>
 
-                        <div className="bg-white dark:bg-navy-900 p-3.5 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm">
+                        <div className="bg-white dark:bg-navy-900 p-4 rounded-3xl border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-all">
                           <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Activity Streak</span>
                           <div className="text-xl font-black text-amber-600 dark:text-amber-400 font-mono mt-0.5 flex items-center gap-1">
                             <Flame className="w-4 h-4 text-amber-500" />
@@ -917,7 +915,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                           </div>
                         </div>
 
-                        <div className="bg-white dark:bg-navy-900 p-3.5 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm">
+                        <div className="bg-white dark:bg-navy-900 p-4 rounded-3xl border border-slate-200/90 dark:border-navy-800 shadow-sm hover:shadow-md transition-all">
                           <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Primary Language</span>
                           <div className="text-base font-black text-brand-600 dark:text-brand-400 font-mono mt-1 truncate">
                             {intelData?.primary_language || 'Auto-Detected'}
@@ -940,22 +938,22 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                       {/* Primary KPI Summary Row */}
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                        <div className="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/40">
+                        <div className="p-4 rounded-3xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/40 hover:shadow-md transition-all">
                           <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block">Total Solved</span>
                           <div className="text-2xl font-black text-indigo-900 dark:text-indigo-200 font-mono mt-0.5">{totalSolved}</div>
                         </div>
 
-                        <div className="p-3.5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/40">
+                        <div className="p-4 rounded-3xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/40 hover:shadow-md transition-all">
                           <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider block">Total Submissions</span>
                           <div className="text-2xl font-black text-blue-900 dark:text-blue-200 font-mono mt-0.5">{totalSubmissions > 0 ? totalSubmissions : 'Synced'}</div>
                         </div>
 
-                        <div className="p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40">
+                        <div className="p-4 rounded-3xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40 hover:shadow-md transition-all">
                           <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">Active Coding Days</span>
                           <div className="text-2xl font-black text-emerald-900 dark:text-emerald-200 font-mono mt-0.5">{activeDaysCount} Days</div>
                         </div>
 
-                        <div className="p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40">
+                        <div className="p-4 rounded-3xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 hover:shadow-md transition-all">
                           <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider block">Acceptance Rate</span>
                           <div className="text-2xl font-black text-amber-900 dark:text-amber-200 font-mono mt-0.5">{acceptanceRateVal}</div>
                         </div>
@@ -966,24 +964,24 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         <div className="md:col-span-2 space-y-4">
                           <div className="flex items-center justify-between flex-wrap gap-2">
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Difficulty Volume Breakdown</span>
-                            <span className="text-[11px] font-extrabold font-mono text-indigo-600 dark:text-brand-400 bg-indigo-50 dark:bg-indigo-950/40 px-2.5 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-900/40">
+                            <span className="text-[11px] font-extrabold font-mono text-indigo-600 dark:text-brand-400 bg-indigo-50 dark:bg-indigo-950/40 px-3 py-1 rounded-full border border-indigo-200 dark:border-indigo-900/40">
                               Sum: {easySolved} Easy + {mediumSolved} Medium + {hardSolved} Hard = {totalSolved} Total
                             </span>
                           </div>
                           <div className="grid grid-cols-3 gap-3 text-center">
-                            <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40">
+                            <div className="p-4 rounded-3xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40 hover:shadow-md transition-all">
                               <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-300 uppercase">Easy</span>
                               <div className="text-3xl font-black text-emerald-800 dark:text-emerald-200 font-mono mt-1">{easySolved}</div>
                               <span className="text-[11px] font-bold text-emerald-600">{easyPct}% of total</span>
                             </div>
 
-                            <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40">
+                            <div className="p-4 rounded-3xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 hover:shadow-md transition-all">
                               <span className="text-[10px] font-black text-amber-700 dark:text-amber-300 uppercase">Medium</span>
                               <div className="text-3xl font-black text-amber-800 dark:text-amber-200 font-mono mt-1">{mediumSolved}</div>
                               <span className="text-[11px] font-bold text-amber-600">{mediumPct}% of total</span>
                             </div>
 
-                            <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40">
+                            <div className="p-4 rounded-3xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 hover:shadow-md transition-all">
                               <span className="text-[10px] font-black text-rose-700 dark:text-rose-300 uppercase">Hard</span>
                               <div className="text-3xl font-black text-rose-800 dark:text-rose-200 font-mono mt-1">{hardSolved}</div>
                               <span className="text-[11px] font-bold text-rose-600">{hardPct}% of total</span>
@@ -1024,12 +1022,24 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                                 <RechartsTooltip
                                   contentStyle={{
                                     backgroundColor: '#0f172a',
-                                    border: 'none',
+                                    border: '1px solid #334155',
                                     borderRadius: '12px',
-                                    color: '#fff',
+                                    color: '#ffffff',
+                                    fontSize: '11px',
+                                    fontWeight: 'bold',
+                                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+                                  }}
+                                  itemStyle={{
+                                    color: '#ffffff',
+                                    fontSize: '12px',
+                                    fontWeight: 'bold'
+                                  }}
+                                  labelStyle={{
+                                    color: '#38bdf8',
                                     fontSize: '11px',
                                     fontWeight: 'bold'
                                   }}
+                                  formatter={(value: any, name: any) => [`${value} Solved`, `${name}`]}
                                 />
                               </PieChart>
                             </ResponsiveContainer>
@@ -1105,12 +1115,24 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                                 <RechartsTooltip
                                   contentStyle={{
                                     backgroundColor: '#0f172a',
-                                    border: 'none',
+                                    border: '1px solid #334155',
                                     borderRadius: '12px',
-                                    color: '#fff',
+                                    color: '#ffffff',
+                                    fontSize: '11px',
+                                    fontWeight: 'bold',
+                                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+                                  }}
+                                  itemStyle={{
+                                    color: '#a855f7',
+                                    fontSize: '12px',
+                                    fontWeight: 'bold'
+                                  }}
+                                  labelStyle={{
+                                    color: '#94a3b8',
                                     fontSize: '11px',
                                     fontWeight: 'bold'
                                   }}
+                                  formatter={(value: any) => [`Rating: ${value}`, 'Contest Rating']}
                                 />
                                 <Area type="monotone" dataKey="rating" stroke="#8b5cf6" strokeWidth={2.5} fillOpacity={1} fill="url(#ratingGrad)" />
                               </AreaChart>
@@ -1173,7 +1195,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
 
                       {/* 7d, 30d, 90d, 365d Submission Counters */}
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-1 hover:border-amber-400/40 transition-all">
+                        <div className="p-4 rounded-3xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-1 hover:border-amber-400/40 hover:shadow-md transition-all">
                           <span className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block">7-Day Submissions</span>
                           <div className="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-400 font-mono">
                             {sub7d}
@@ -1181,7 +1203,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                           <span className="text-[10px] font-extrabold text-slate-400 block font-mono uppercase">Past 7 Days Activity</span>
                         </div>
 
-                        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-1 hover:border-brand-400/40 transition-all">
+                        <div className="p-4 rounded-3xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-1 hover:border-brand-400/40 hover:shadow-md transition-all">
                           <span className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block">30-Day Submissions</span>
                           <div className="text-2xl sm:text-3xl font-black text-brand-600 dark:text-brand-400 font-mono">
                             {sub30d}
@@ -1189,7 +1211,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                           <span className="text-[10px] font-extrabold text-slate-400 block font-mono uppercase">Past 30 Days Activity</span>
                         </div>
 
-                        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-1 hover:border-blue-400/40 transition-all">
+                        <div className="p-4 rounded-3xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-1 hover:border-blue-400/40 hover:shadow-md transition-all">
                           <span className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block">90-Day Submissions</span>
                           <div className="text-2xl sm:text-3xl font-black text-blue-600 dark:text-blue-400 font-mono">
                             {sub90d}
@@ -1197,7 +1219,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                           <span className="text-[10px] font-extrabold text-slate-400 block font-mono uppercase">Past 90 Days Activity</span>
                         </div>
 
-                        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-1 hover:border-purple-400/40 transition-all">
+                        <div className="p-4 rounded-3xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-1 hover:border-purple-400/40 hover:shadow-md transition-all">
                           <span className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block">365-Day Submissions</span>
                           <div className="text-2xl sm:text-3xl font-black text-purple-600 dark:text-purple-400 font-mono">
                             {sub365d}
@@ -1207,7 +1229,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                       </div>
 
                       {/* Submission Heatmap Grid */}
-                      <div className="p-5 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-3">
+                      <div className="p-5 rounded-3xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-3">
                         <div className="flex items-center justify-between flex-wrap gap-2">
                           <span className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
                             LeetCode Contribution Activity Calendar (Past 365 Days)
@@ -1235,7 +1257,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                             return (
                               <div
                                 key={idx}
-                                className={`h-7 rounded-md ${bg} flex items-center justify-center text-[10px] font-black text-white shadow-2xs transition-transform hover:scale-110 cursor-pointer`}
+                                className={`h-7 rounded-xl ${bg} flex items-center justify-center text-[10px] font-black text-white shadow-2xs transition-all hover:scale-115 hover:shadow-md hover:z-10 cursor-pointer`}
                                 title={`${h.date}: ${cnt} submissions`}
                               >
                                 {cnt > 0 ? cnt : ''}
@@ -1523,24 +1545,18 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
               )}
             </div>
 
-            {/* 3. MODAL FOOTER WITH DATA QUALITY & LATENCY METRICS */}
-            <div className="px-6 py-3.5 bg-slate-100 dark:bg-navy-950 border-t border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0 text-xs flex-wrap gap-2">
-              <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400 font-semibold text-[11px]">
-                <span>
-                  Student ID: <strong className="font-mono text-slate-800 dark:text-slate-200">{st.id || studentId}</strong>
+            {/* 3. ELEGANT MODAL FOOTER */}
+            <div className="px-6 py-3 bg-slate-100 dark:bg-navy-950 border-t border-slate-200 dark:border-navy-800/80 flex items-center justify-between shrink-0 text-xs flex-wrap gap-2">
+              <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 font-bold text-[11px]">
+                <span className="px-3 py-1 rounded-full bg-slate-200/80 dark:bg-navy-900 border border-slate-300/60 dark:border-navy-800 font-mono">
+                  Student ID: <strong className="text-slate-800 dark:text-slate-200">{st.id || studentId}</strong>
                 </span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  Fetch Speed: <strong className="font-mono text-emerald-600 dark:text-emerald-400">{fetchLatency ? `${fetchLatency} ms` : '< 100 ms'}</strong>
-                </span>
-                <span>•</span>
-                <span>
-                  Data Quality: <strong className="text-brand-600 dark:text-brand-400">100% Verified Database Ground Truth</strong>
-                </span>
+                <span className="text-slate-400 dark:text-slate-600">•</span>
+                <span className="font-medium text-slate-500 dark:text-slate-400">Institutional Intelligence Ledger</span>
               </div>
               <button
                 onClick={onClose}
-                className="px-4 py-1.5 rounded-xl bg-slate-200 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 font-bold transition-all cursor-pointer"
+                className="px-5 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-white font-black text-xs transition-all cursor-pointer shadow-sm hover:scale-105"
               >
                 Close Profile
               </button>

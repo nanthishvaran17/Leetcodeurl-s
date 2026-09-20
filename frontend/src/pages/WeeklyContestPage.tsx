@@ -152,22 +152,22 @@ const ContestCountdown = memo(({ initialSec }: { initialSec: number }) => {
     <div className="flex items-center gap-2 sm:gap-3">
       <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
         <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{days}</span>
-        <span className="text-[9px] uppercase font-bold text-slate-400 block">Days</span>
+        <span className="text-[9px] uppercase font-extrabold text-amber-200/90 block">Days</span>
       </div>
       <span className="text-2xl font-mono font-black text-amber-500">:</span>
       <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
         <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{hours}</span>
-        <span className="text-[9px] uppercase font-bold text-slate-400 block">Hours</span>
+        <span className="text-[9px] uppercase font-extrabold text-amber-200/90 block">Hours</span>
       </div>
       <span className="text-2xl font-mono font-black text-amber-500">:</span>
       <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
         <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{minutes}</span>
-        <span className="text-[9px] uppercase font-bold text-slate-400 block">Minutes</span>
+        <span className="text-[9px] uppercase font-extrabold text-amber-200/90 block">Minutes</span>
       </div>
       <span className="text-2xl font-mono font-black text-amber-500">:</span>
       <div className="px-4 py-3 rounded-2xl bg-black/40 border border-amber-500/20 text-center min-w-[70px] shadow-inner">
         <span className="text-2xl sm:text-3xl font-mono font-black text-amber-400">{seconds}</span>
-        <span className="text-[9px] uppercase font-bold text-slate-400 block">Seconds</span>
+        <span className="text-[9px] uppercase font-extrabold text-amber-200/90 block">Seconds</span>
       </div>
     </div>
   );
@@ -719,9 +719,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       if (cachedList && cachedList.length > 0) {
         setSessionsList(cachedList);
         if (cachedCurr) setCurrentSession(cachedCurr);
-        const targetId = cachedCurr?.sessionId || (cachedList.length > 0 ? cachedList[0].sessionId : null);
-        if (targetId && !selectedSessionId) {
-          setSelectedSessionId(targetId);
+        const targetId = cachedCurr?.sessionId || cachedList[0].sessionId;
+        if (targetId) {
+          setSelectedSessionId(prev => prev || targetId);
         }
       }
 
@@ -735,8 +735,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       setSessionsList(list);
 
       const targetId = currRes?.sessionId || (list.length > 0 ? list[0].sessionId : null);
-      if (targetId && !selectedSessionId) {
-        setSelectedSessionId(targetId);
+      if (targetId) {
+        setSelectedSessionId(prev => prev || targetId);
       }
     } catch (err) {
       console.error("Failed to load contest session data", err);
@@ -1943,12 +1943,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             <div className="space-y-5 animate-fade-in">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Worker State</span>
+                  <span className="text-[10px] uppercase font-black text-slate-300 block">Worker State</span>
                   <span className="text-base font-mono font-black text-white">{liveTelemetry?.workerState || 'READY'}</span>
-                  <span className="text-[10px] text-emerald-400 block">Single-Worker DB Lock Active</span>
+                  <span className="text-[10px] text-emerald-400 block font-semibold">Single-Worker DB Lock Active</span>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Students Processed</span>
+                  <span className="text-[10px] uppercase font-black text-slate-300 block">Students Processed</span>
                   <span className="text-base font-mono font-black text-emerald-400">
                     {loading ? <span className="animate-pulse">Loading...</span> : `${liveTelemetry?.processedCount ?? sessionMetrics?.totalStudents ?? 0} / ${sessionMetrics?.totalStudents ?? 0}`}
                   </span>
@@ -1957,16 +1957,16 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   </div>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Successful Syncs</span>
+                  <span className="text-[10px] uppercase font-black text-slate-300 block">Successful Syncs</span>
                   <span className="text-base font-mono font-black text-emerald-400">
                     {loading ? '...' : (liveTelemetry?.successfulCount ?? ((sessionMetrics?.totalStudents ?? 0) - (liveTelemetry?.failedCount ?? 0)))}
                   </span>
-                  <span className="text-[10px] text-slate-400 block">99% Accuracy Rate</span>
+                  <span className="text-[10px] text-slate-300 block font-semibold">99% Accuracy Rate</span>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Data Errors</span>
+                  <span className="text-[10px] uppercase font-black text-slate-300 block">Data Errors</span>
                   <span className="text-base font-mono font-black text-amber-400">{liveTelemetry?.failedCount || 20}</span>
-                  <span className="text-[10px] text-amber-300 block">Auto-Retry Eligible</span>
+                  <span className="text-[10px] text-amber-300 block font-semibold">Auto-Retry Eligible</span>
                 </div>
               </div>
 
@@ -2297,7 +2297,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
       {/* PREVIOUS WEEK CONTEST ANALYZER TAB */}
       {activeTab === 'previous_week' && (
-        <PreviousWeekContestPanel sessionId={selectedSessionId} onStudentClick={onSelectStudent} />
+        <PreviousWeekContestPanel sessionId={selectedSessionId || currentSession?.sessionId || 18} onStudentClick={onSelectStudent} />
       )}
 
       {/* SESSION ANALYTICS & ROSTER MATRIX TAB */}
@@ -2811,6 +2811,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 if (total === 0 && globalStudents.length > 0) {
                   const deptGlobalStudents = globalStudents.filter((s: any) => normalizeDepartment(s.department_id || s.dept || s.department || s.department_code) === deptNorm);
                   total = deptGlobalStudents.length;
+                }
+
+                // Exclude departments with 0 active students (e.g., CSE, AGRI, AIDS, EEE, ECE)
+                if (total === 0) {
+                  return null;
                 }
 
                 return (

@@ -268,11 +268,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                     {section.items.map((item) => {
                       const Icon = item.icon;
                       const isActive = activeTab === item.id;
-                      
+                      const prefetchPage = (id: string) => {
+                        try {
+                          if (id === 'weekly-contest') import('../pages/WeeklyContestPage');
+                          else if (id === 'students') import('../pages/StudentMasterPage');
+                          else if (id === 'departments') import('../pages/DepartmentDashboard');
+                          else if (id === 'compare') import('../pages/ComparePage');
+                          else if (id === 'growth') import('../pages/GrowthIntelligencePage');
+                          else if (id === 'quality') import('../pages/DataQualityPage');
+                          else if (id === 'reports') import('../pages/ReportsPage');
+                        } catch (e) {}
+                      };
+
                       return (
                         <button
                           key={item.id}
                           type="button"
+                          onMouseEnter={() => prefetchPage(item.id)}
+                          onTouchStart={() => prefetchPage(item.id)}
                           onClick={() => {
                             setActiveTab(item.id);
                             if (window.innerWidth < 1024) onClose();

@@ -57,7 +57,7 @@ export const StatCard: React.FC<StatCardProps> = ({
     >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{title}</p>
+          <p className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">{title}</p>
           <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1 tracking-tight">
             {typeof value === 'number' || (typeof value === 'string' && /^\d+/.test(value)) ? (
               <AnimatedNumber value={value} />
@@ -65,7 +65,7 @@ export const StatCard: React.FC<StatCardProps> = ({
               value
             )}
           </h3>
-          {subtitle && <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">{subtitle}</p>}
+          {subtitle && <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-1">{subtitle}</p>}
         </div>
         <div className={`p-3.5 rounded-2xl bg-gradient-to-tr border transition-all duration-300 ${colorStyles[color]}`}>
           <Icon className="w-6 h-6 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6" />

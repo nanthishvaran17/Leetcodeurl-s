@@ -63,7 +63,7 @@ class LiveDashboardTracker:
             from backend.scheduler import scheduler
             from apscheduler.triggers.interval import IntervalTrigger
             
-            poll_interval = int(os.environ.get('CONTEST_POLL_INTERVAL_SECONDS', 600))
+            poll_interval = int(os.environ.get('CONTEST_POLL_INTERVAL_SECONDS', 180))
             scheduler.add_job(
                 self.poll_live_data,
                 IntervalTrigger(seconds=poll_interval, timezone=now_ist.tzinfo),
@@ -129,94 +129,83 @@ class LiveDashboardTracker:
         return None 
 
     async def poll_live_data(self):
-        """
-        Production-grade poll loop using bulk contest ranking pagination
-        and local 590+ student roster join.
-        """
-        if not self.is_tracking or not self.contest_id:
+        """Triggered by APScheduler every 3 minutes."""
+        if not self.is_tracking or not self.title_slugs:
             return
-
-        logger.info(f"[LIVE_TRACKER] Starting bulk contest ranking poll cycle for {self.contest_id}...")
+            
+        logger.info("[LIVE_TRACKER] Starting poll cycle...")
         
         db = SessionLocal()
         try:
             active_students = await self.get_active_students(db)
-            roster_map = {s.username.strip().lower(): s for s in active_students if s.username and s.username.strip()}
-            target_usernames = set(roster_map.keys())
 
-            contest_slug = self.contest_id.lower().replace(" ", "-")
-            
-            # Step 1-4: Fetch bulk contest ranking pages and perform local join
-            from backend.services.leetcode_adapter import ProductionLeetCodeAdapter
-            adapter = ProductionLeetCodeAdapter()
-            matched_map, capability_status = await adapter.fetch_contest_ranking_pages_bulk(
-                contest_slug=contest_slug,
-                max_pages=200,
-                target_usernames=target_usernames
-            )
-
-            if capability_status in ("RATE_LIMITED", "UPSTREAM_ERROR", "FETCH_FAILED") and not matched_map:
-                async with self._lock:
-                    self.consecutive_failures += 1
-                    logger.warning(f"[LIVE_TRACKER] Bulk ranking poll failed ({capability_status}). Consecutive: {self.consecutive_failures}")
-                    freshness = "stale"
-                    if self.consecutive_failures >= 3:
-                        self.phase = "degraded"
-                    await self._broadcast_state(freshness, capability_status)
-                return
-
+            slugs_set = set(self.title_slugs)
             fetched_at = int(get_current_ist_datetime().timestamp())
+        
             all_submissions = []
+            failed_count = 0
+            
+            async with httpx.AsyncClient() as client:
+                results = []
+                batch_size = 50
+                for i in range(0, len(active_students), batch_size):
+                    batch = active_students[i:i + batch_size]
+                    tasks = [self._fetch_student_submissions(client, s, slugs_set) for s in batch]
+                    batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+                    results.extend(batch_results)
+                    await asyncio.sleep(0.1)
+                    
+                for res in results:
+                    if isinstance(res, Exception) or res is None:
+                        failed_count += 1
+                    elif isinstance(res, list):
+                        all_submissions.extend(res)
+                        
+                if len(active_students) > 0 and failed_count > (len(active_students) / 2):
+                    async with self._lock:
+                        self.consecutive_failures += 1
+                        logger.warning(f"[LIVE_TRACKER] Poll cycle failed (high failure rate: {failed_count}/{len(active_students)}). Consecutive: {self.consecutive_failures}")
+                        freshness = "stale"
+                        if self.consecutive_failures >= 3:
+                            self.phase = "degraded"
+                        await self._broadcast_state(freshness)
+                    return
 
-            for u_norm, entry in matched_map.items():
-                student = roster_map.get(u_norm)
-                if not student:
-                    continue
-                for q in entry.questions:
-                    all_submissions.append({
-                        "student_id": student.id,
-                        "title_slug": q.get("question_id") or "q_solved",
-                        "timestamp": q.get("time") or fetched_at
-                    })
+                if all_submissions:
+                    try:
+                        stmt = text("""
+                            INSERT INTO submission_log (student_id, contest_id, title_slug, submitted_at, fetched_at)
+                            VALUES (:student_id, :contest_id, :title_slug, :timestamp, :fetched_at)
+                            ON CONFLICT (student_id, contest_id, title_slug, submitted_at) DO NOTHING
+                        """)
+                        for sub in all_submissions:
+                            db.execute(stmt, {
+                                "student_id": sub["student_id"],
+                                "contest_id": self.contest_id,
+                                "title_slug": sub["title_slug"],
+                                "timestamp": sub["timestamp"],
+                                "fetched_at": fetched_at
+                            })
+                        db.commit()
+                    except Exception as db_err:
+                        logger.error(f"[LIVE_TRACKER] DB insert error: {db_err}")
+                        db.rollback()
 
-            if all_submissions:
-                try:
-                    stmt = text("""
-                        INSERT INTO submission_log (student_id, contest_id, title_slug, submitted_at, fetched_at)
-                        VALUES (:student_id, :contest_id, :title_slug, :timestamp, :fetched_at)
-                        ON CONFLICT (student_id, contest_id, title_slug, submitted_at) DO NOTHING
-                    """)
-                    for sub in all_submissions:
-                        db.execute(stmt, {
-                            "student_id": sub["student_id"],
-                            "contest_id": self.contest_id,
-                            "title_slug": sub["title_slug"],
-                            "timestamp": sub["timestamp"],
-                            "fetched_at": fetched_at
-                        })
-                    db.commit()
-                except Exception as db_err:
-                    logger.error(f"[LIVE_TRACKER] DB insert error: {db_err}")
-                    db.rollback()
-
-            counts = {}
-            for slug in self.title_slugs:
-                cnt = db.execute(text("""
-                    SELECT COUNT(DISTINCT student_id) FROM submission_log
-                    WHERE contest_id = :contest_id AND title_slug = :title_slug
-                """), {"contest_id": self.contest_id, "title_slug": slug}).scalar()
-                counts[slug] = cnt or 0
-
-            # Compute matched participants count
-            matched_count = len(matched_map)
-
-            async with self._lock:
-                self.consecutive_failures = 0
-                self.phase = "active"
-                self.last_successful_counts = counts
-                self.last_successful_update = get_current_ist_datetime().isoformat()
-                await self._broadcast_state("live", "PUBLIC_AVAILABLE", matched_count)
-                
+                counts = {}
+                for slug in self.title_slugs:
+                    cnt = db.execute(text("""
+                        SELECT COUNT(DISTINCT student_id) FROM submission_log
+                        WHERE contest_id = :contest_id AND title_slug = :title_slug
+                    """), {"contest_id": self.contest_id, "title_slug": slug}).scalar()
+                    counts[slug] = cnt or 0
+                    
+                async with self._lock:
+                    self.consecutive_failures = 0
+                    self.phase = "active"
+                    self.last_successful_counts = counts
+                    self.last_successful_update = get_current_ist_datetime().isoformat()
+                    await self._broadcast_state("live")
+                    
         except Exception as e:
             logger.error(f"[LIVE_TRACKER] Unexpected error in poll loop: {e}", exc_info=True)
             async with self._lock:
@@ -224,41 +213,23 @@ class LiveDashboardTracker:
                 freshness = "stale"
                 if self.consecutive_failures >= 3:
                     self.phase = "degraded"
-                await self._broadcast_state(freshness, "FETCH_FAILED")
+                await self._broadcast_state(freshness)
         finally:
             db.close()
 
-    async def _broadcast_state(self, freshness: str, capability_status: str = "PUBLIC_AVAILABLE", matched_count: int = 0):
-        import hashlib
-        now_iso = get_current_ist_datetime().isoformat()
-        seq_num = int(get_current_ist_datetime().timestamp() * 1000)
-
-        data_body = {
-            "phase": self.phase,
-            "counts": self.last_successful_counts,
-            "data_freshness": freshness,
-            "capability_status": capability_status,
-            "last_successful_update": self.last_successful_update,
-            "total_participants": self.total_participants,
-            "matched_participants": matched_count,
-            "contest_id": self.contest_id,
-            "sequence_number": seq_num,
-            "status_badge": "🟢 LIVE" if freshness == "live" else ("🟡 DEGRADED" if freshness == "stale" else "🔴 STALE")
-        }
-
-        payload_hash = hashlib.sha256(str(data_body).encode("utf-8")).hexdigest()[:16]
-
+    async def _broadcast_state(self, freshness: str):
         payload = {
             "type": "contest_update",
-            "timestamp": now_iso,
-            "payload_hash": payload_hash,
-            "data": data_body
+            "timestamp": get_current_ist_datetime().isoformat(),
+            "data": {
+                "phase": self.phase,
+                "counts": self.last_successful_counts,
+                "data_freshness": freshness,
+                "last_successful_update": self.last_successful_update,
+                "total_participants": self.total_participants,
+                "contest_id": self.contest_id
+            }
         }
-
-        # Deduplicate payload broadcast if unchanged
-        if self.last_broadcast_payload and self.last_broadcast_payload.get("payload_hash") == payload_hash:
-            return
-
         self.last_broadcast_payload = payload
         await connection_manager.broadcast(payload)
         

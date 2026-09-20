@@ -153,7 +153,11 @@ def generate_live_weekly_intelligence_data(
     # ─────────────────────────────────────────────────────────────────────────────
     # STEP 2: LOAD AUTHORIZED ACTIVE STUDENTS WITH SERVER-SIDE RBAC
     # ─────────────────────────────────────────────────────────────────────────────
-    student_query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    from sqlalchemy.orm import selectinload
+    student_query = db.query(Student).options(
+        selectinload(Student.stats),
+        selectinload(Student.department)
+    ).filter((Student.is_active == True) | (Student.is_active.is_(None)))
     if current_user:
         student_query = apply_role_based_student_filter(student_query, current_user, db)
 

@@ -24,7 +24,8 @@ const DepartmentContext = createContext<DepartmentContextType | undefined>(undef
 export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [departments, setDepartments] = useState<Department[]>([
     { id: 1, code: 'CSE(CS)', name: 'Computer Science and Engineering (Cyber Security)', pillText: 'CSE(CS)' },
-    { id: 2, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)' }
+    { id: 2, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)' },
+    { id: 7, code: 'IT', name: 'Information Technology', pillText: 'IT' }
   ]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,25 +50,53 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       const res = await api.get('/departments');
       if (res.data && Array.isArray(res.data)) {
         const sourceData = res.data;
-        
-        const mappedDepts = sourceData.map((d: any) => {
-          const code = d.code || d.name || '';
-          const rawName = d.name || d.code || '';
-          const name = (code.toUpperCase() === 'IT' || rawName.toUpperCase() === 'IT')
-            ? 'Information Technology'
-            : rawName;
-          return {
-            id: d.id,
-            code,
-            name,
-            pillText: code
-          };
+        const uniqueMap = new Map<string, Department>();
+
+        sourceData.forEach((d: any) => {
+          const code = (d.code || d.name || '').trim();
+          const rawName = (d.name || d.code || '').trim();
+          const upperCode = code.toUpperCase();
+          const upperName = rawName.toUpperCase();
+          
+          let finalCode = code;
+          let finalName = rawName;
+          
+          if (upperCode.includes('IOT') || upperName.includes('IOT') || upperName.includes('INTERNET')) {
+            finalCode = 'CSE(IOT)';
+            finalName = 'Computer Science and Engineering (IoT)';
+          } else if (upperCode === 'CSE(CS)' || upperCode === 'CSE-CS' || upperCode === 'CS' || upperName.includes('CYBER') || upperName.includes('SECURITY')) {
+            finalCode = 'CSE(CS)';
+            finalName = 'Computer Science and Engineering (Cyber Security)';
+          } else if (upperCode === 'IT' || upperName.includes('INFORMATION TECHNOLOGY') || upperName.includes('INFO TECH')) {
+            finalCode = 'IT';
+            finalName = 'Information Technology';
+          }
+
+          if (!uniqueMap.has(finalCode)) {
+            uniqueMap.set(finalCode, {
+              id: d.id,
+              code: finalCode,
+              name: finalName,
+              pillText: finalCode
+            });
+          }
         });
-        setDepartments(mappedDepts);
+
+        const mappedDepts = Array.from(uniqueMap.values()).filter((d: any) => {
+          const c = (d.code || '').toUpperCase();
+          return c === 'CSE(CS)' || c === 'CSE(IOT)' || c === 'IT';
+        });
+
+        setDepartments(mappedDepts.length > 0 ? mappedDepts : [
+          { id: 1, code: 'CSE(CS)', name: 'Computer Science and Engineering (Cyber Security)', pillText: 'CSE(CS)' },
+          { id: 2, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)' },
+          { id: 7, code: 'IT', name: 'Information Technology', pillText: 'IT' }
+        ]);
       } else {
         setDepartments([
           { id: 1, code: 'CSE(CS)', name: 'Computer Science and Engineering (Cyber Security)', pillText: 'CSE(CS)' },
-          { id: 2, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)' }
+          { id: 2, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)' },
+          { id: 7, code: 'IT', name: 'Information Technology', pillText: 'IT' }
         ]);
       }
 
@@ -81,10 +110,11 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     } catch (err: any) {
       console.error('[DepartmentContext] Failed to fetch departments:', err);
       setError(err.message || 'Failed to fetch departments');
-      // On error, still fallback to the two required departments
+      // On error, fallback to the 3 production departments
       setDepartments([
         { id: 1, code: 'CSE(CS)', name: 'Computer Science and Engineering (Cyber Security)', pillText: 'CSE(CS)' },
-        { id: 2, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)' }
+        { id: 2, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)' },
+        { id: 7, code: 'IT', name: 'Information Technology', pillText: 'IT' }
       ]);
     } finally {
       setIsLoading(false);

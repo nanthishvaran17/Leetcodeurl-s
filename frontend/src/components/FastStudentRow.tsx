@@ -191,7 +191,7 @@ export const FastStudentRow = memo(({
           <a href={`https://leetcode.com/u/${student.username}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center leading-normal truncate" onClick={(e) => e.stopPropagation()}>
             @{student.username}
           </a>
-        ) : <span className="text-slate-400 text-[11px] inline-flex items-center leading-normal truncate">Not Linked</span>}
+        ) : <span className="text-slate-500 dark:text-slate-400 text-[11px] font-medium inline-flex items-center leading-normal truncate">Not Linked</span>}
         {(() => {
           const secUser = student.secondary_leetcode_id || student.secondary_accounts?.[0]?.username || student.leetcode_accounts?.[0]?.username;
           if (!secUser) return null;
@@ -251,7 +251,7 @@ export const FastStudentRow = memo(({
         })()}
       </div>
 
-      <div className="hidden md:flex flex-none w-28 px-3 items-center justify-center text-center text-slate-600 font-bold">
+      <div className="hidden md:flex flex-none w-28 px-3 items-center justify-center text-center text-slate-700 dark:text-slate-300 font-bold">
         {(() => {
           const rawProfileRank = student.stats?.public_profile_ranking ?? (student as any).public_profile_ranking;
           if (!rawProfileRank || rawProfileRank >= 5000000 || rawProfileRank <= 0) return '—';

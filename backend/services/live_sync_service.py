@@ -237,9 +237,9 @@ def get_active_students(db: Session, force_refresh: bool = False) -> List[Studen
         if not force_refresh and _ACTIVE_STUDENTS_CACHE is not None and (now - _ACTIVE_STUDENTS_CACHE_TIME < 15.0):
             return _ACTIVE_STUDENTS_CACHE
 
-    from sqlalchemy.orm import joinedload
+    from sqlalchemy.orm import joinedload, selectinload
     logger.info("[SYNC] Loading active institutional student roster from database...")
-    students = db.query(Student).options(joinedload(Student.stats)).filter(
+    students = db.query(Student).options(selectinload(Student.stats)).filter(
         or_(Student.is_active == True, Student.is_active.is_(None))
     ).all()
     

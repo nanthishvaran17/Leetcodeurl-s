@@ -73,12 +73,17 @@ class LiveContestMonitorEngine:
         """Main lifecycle task managing Initial Sync and Continuous Monitoring Loop."""
         db = SessionLocal()
         try:
-            # 1. Load active roster
             students = db.query(Student).filter(Student.is_active == True).all()
+            student_ids = [s.id for s in students]
+            all_accs = db.query(LeetCodeAccount).filter(LeetCodeAccount.student_id.in_(student_ids)).all() if student_ids else []
+            from collections import defaultdict
+            accs_by_student = defaultdict(list)
+            for a in all_accs:
+                accs_by_student[a.student_id].append(a)
+
             student_accounts = []
             for s in students:
-                accs = db.query(LeetCodeAccount).filter(LeetCodeAccount.student_id == s.id).all()
-                for a in accs:
+                for a in accs_by_student.get(s.id, []):
                     student_accounts.append({
                         "student": s,
                         "account": a,
@@ -458,17 +463,25 @@ class LiveContestMonitorEngine:
 
     def get_live_snapshot(self, db: Session, contest_id: str) -> Dict[str, Any]:
         """Returns the full current snapshot of all 297 students for initial WebSocket connection."""
+        from collections import defaultdict
         students = db.query(Student).filter(Student.is_active == True).all()
-        student_records = []
+        student_ids = [s.id for s in students]
 
+        all_accounts = db.query(LeetCodeAccount).filter(LeetCodeAccount.student_id.in_(student_ids)).all() if student_ids else []
+        accounts_by_student = defaultdict(list)
+        for a in all_accounts:
+            accounts_by_student[a.student_id].append(a.leetcode_username)
+
+        all_parts = db.query(StudentContestParticipation).filter(
+            StudentContestParticipation.contest_id == contest_id,
+            StudentContestParticipation.student_id.in_(student_ids)
+        ).all() if student_ids else []
+        parts_by_student = {p.student_id: p for p in all_parts}
+
+        student_records = []
         for s in students:
-            accs = db.query(LeetCodeAccount).filter(LeetCodeAccount.student_id == s.id).all()
-            acc_names = [a.leetcode_username for a in accs]
-            
-            part = db.query(StudentContestParticipation).filter(
-                StudentContestParticipation.student_id == s.id,
-                StudentContestParticipation.contest_id == contest_id
-            ).first()
+            acc_names = accounts_by_student.get(s.id, [])
+            part = parts_by_student.get(s.id)
 
             solved = part.questions_solved if part else 0
             score = part.score_display if part else "Not Attended"

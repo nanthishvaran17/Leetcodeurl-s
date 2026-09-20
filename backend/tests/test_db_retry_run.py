@@ -74,5 +74,35 @@ class TestDBRetryBehavior(unittest.IsolatedAsyncioTestCase):
                     assert attempt_count == 1, f'Expected 1 attempt, got {attempt_count}'
                     print(f'PASS: ValueError not retried (attempt_count={attempt_count})')
 
+    def test_get_db_session_re_raises_without_generator_error(self):
+        from backend.database import get_db_session
+        try:
+            with get_db_session() as db:
+                raise sqlalchemy.exc.OperationalError('server closed the connection unexpectedly', None, None)
+        except sqlalchemy.exc.OperationalError:
+            pass  # Expected clean exception re-raise
+        except RuntimeError as e:
+            if "generator didn't stop after throw()" in str(e):
+                self.fail("get_db_session raised 'generator didn't stop after throw()'")
+            raise
+
+    def test_execute_with_db_retry_retries_transient_error(self):
+        from backend.database import execute_with_db_retry
+        attempts = 0
+
+        def flaky_db_op(db):
+            nonlocal attempts
+            attempts += 1
+            if attempts == 1:
+                raise sqlalchemy.exc.OperationalError('server closed the connection unexpectedly', None, None)
+            return "SUCCESS"
+
+        with patch('time.sleep', return_value=None):
+            res = execute_with_db_retry(flaky_db_op)
+        self.assertEqual(res, "SUCCESS")
+        self.assertEqual(attempts, 2)
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
+

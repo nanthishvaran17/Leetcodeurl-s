@@ -146,51 +146,66 @@ from contextlib import contextmanager
 def get_db_session():
     """
     Context manager for use in background tasks (non-FastAPI dependency contexts).
-    Automatically retries once on transient SSL / connection-reset errors.
+    Automatically commits on normal exit, rolls back on exception, and closes session cleanly.
     Usage: with get_db_session() as db: ...
     """
-    import time as _time
-    _max_retries = 2
-    last_exc = None
-    for _attempt in range(_max_retries):
-        db = SessionLocal()
+    db = SessionLocal()
+    try:
+        yield db
+        db.commit()
+    except Exception:
         try:
-            yield db
-            db.commit()
-            return
-        except Exception as _exc:
             db.rollback()
-            last_exc = _exc
-            exc_str = str(_exc).lower()
-            _is_transient = any(kw in exc_str for kw in (
+        except Exception:
+            pass
+        raise
+    finally:
+        try:
+            db.close()
+        except Exception:
+            try:
+                db.invalidate()
+            except Exception:
+                pass
+
+
+def execute_with_db_retry(func, max_retries=2, retry_delay=0.3):
+    """
+    Executes func(db) passing a DB session from get_db_session().
+    Retries up to max_retries with a fresh DB session if a transient database connection/OperationalError occurs.
+    """
+    last_exc = None
+    for attempt in range(max_retries):
+        try:
+            with get_db_session() as db:
+                return func(db)
+        except Exception as exc:
+            last_exc = exc
+            exc_str = str(exc).lower()
+            is_transient = any(kw in exc_str for kw in (
                 "ssl connection", "connection reset", "broken pipe",
-                "could not connect", "connection refused", "operationalerror"
+                "could not connect", "connection refused", "operationalerror",
+                "server closed the connection"
             ))
             try:
                 import psycopg2  # type: ignore
-                if isinstance(_exc, (psycopg2.OperationalError, psycopg2.InterfaceError)):
-                    _is_transient = True
+                if isinstance(exc, (psycopg2.OperationalError, psycopg2.InterfaceError)):
+                    is_transient = True
             except ImportError:
                 pass
-            if _is_transient and _attempt < _max_retries - 1:
-                import logging as _logging
-                _logging.warning(
-                    f"[DB_RETRY] Transient DB error on attempt {_attempt + 1}/{_max_retries}, retrying: "
-                    f"{type(_exc).__name__}: {str(_exc)[:120]}"
+            if is_transient and attempt < max_retries - 1:
+                import logging
+                import time
+                logging.warning(
+                    f"[DB_RETRY] Transient DB error on attempt {attempt + 1}/{max_retries}, retrying with fresh session: "
+                    f"{type(exc).__name__}: {str(exc)[:120]}"
                 )
-                _time.sleep(0.3 * (_attempt + 1))
+                time.sleep(retry_delay * (attempt + 1))
             else:
                 raise
-        finally:
-            try:
-                db.close()
-            except Exception:
-                try:
-                    db.invalidate()
-                except Exception:
-                    pass
     if last_exc:
         raise last_exc
+
 
 
 def run_migrations():

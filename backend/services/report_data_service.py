@@ -132,9 +132,9 @@ def fetch_normalized_students(
         raw_students = _ROSTER_CACHE.get(cache_key)
 
     if raw_students is None:
-        from sqlalchemy.orm import joinedload
+        from sqlalchemy.orm import joinedload, selectinload
         query = db.query(Student).options(
-            joinedload(Student.stats),
+            selectinload(Student.stats),
             joinedload(Student.department),
             joinedload(Student.section)
         ).filter((Student.is_active == True) | (Student.is_active.is_(None)))

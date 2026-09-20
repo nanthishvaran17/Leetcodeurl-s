@@ -101,6 +101,8 @@ def classify_student_issue(student: Student) -> dict:
         now_dt = datetime.datetime.now(datetime.timezone.utc)
         sync_dt = stats.last_successful_sync
         if isinstance(sync_dt, datetime.datetime):
+            if sync_dt.tzinfo is None:
+                sync_dt = sync_dt.replace(tzinfo=datetime.timezone.utc)
             age_days = (now_dt - sync_dt).days
             if age_days >= 7:
                 issue_category = "STALE_DATA"

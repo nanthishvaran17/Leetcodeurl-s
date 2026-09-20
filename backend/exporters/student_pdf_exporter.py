@@ -183,7 +183,7 @@ def _get_common_styles():
         leading=12,
         textColor=colors.HexColor('#0369A1'),
         alignment=1,
-        spaceAfter=10
+        spaceAfter=6
     )
 
     section_hdr_style = ParagraphStyle(
@@ -377,7 +377,7 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
     Filename target: Nandha_Student_Report_<NAME>_<REGISTER>.pdf
     """
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=54, bottomMargin=48)
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=24, bottomMargin=40)
     styles = _get_common_styles()
     rows = dataset.get("rows", [])
     s = rows[0] if rows else dataset
@@ -756,7 +756,7 @@ def generate_student_summary_pdf(dataset: dict) -> bytes:
     Filename target: Nandha_Student_Summary_<NAME>_<REGISTER>.pdf
     """
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=36, bottomMargin=50)
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=24, bottomMargin=40)
     styles = _get_common_styles()
     rows = dataset.get("rows", [])
     s = rows[0] if rows else dataset
@@ -878,7 +878,7 @@ def generate_student_contest_matrix_pdf(dataset: dict) -> bytes:
     Filename target: Nandha_Student_Contest_Matrix_<NAME>_<REGISTER>.pdf
     """
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=36, bottomMargin=50)
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=24, bottomMargin=40)
     styles = _get_common_styles()
     rows = dataset.get("rows", [])
     s = rows[0] if rows else dataset

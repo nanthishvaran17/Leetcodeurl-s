@@ -48,7 +48,6 @@ export const useGlobalKeyboardShortcuts = ({
       if (e.key === 'Escape') {
         if (isInput) {
           (activeElement as HTMLElement).blur();
-          return;
         }
         const handled = executeEscHandler();
         if (handled) {

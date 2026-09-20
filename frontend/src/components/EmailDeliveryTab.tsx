@@ -196,6 +196,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
   const [logFilterDispatchType, setLogFilterDispatchType] = useState<string>('ALL');
   const [isLogFilterTypeOpen, setIsLogFilterTypeOpen] = useState(false);
   const [logSearchQuery, setLogSearchQuery] = useState<string>('');
+  const [recipientSearchQuery, setRecipientSearchQuery] = useState<string>('');
 
   // Dropdown States for Modals
   const [isScheduleDayOpen, setIsScheduleDayOpen] = useState(false);
@@ -754,6 +755,17 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
     });
   }, [logs, logFilterStatus, logFilterDispatchType, logSearchQuery]);
 
+  const filteredRecipientsForDispatch = useMemo(() => {
+    if (!recipientSearchQuery.trim()) return recipients;
+    const q = recipientSearchQuery.toLowerCase();
+    return recipients.filter(r =>
+      (r.name || '').toLowerCase().includes(q) ||
+      (r.email || '').toLowerCase().includes(q) ||
+      (r.role || '').toLowerCase().includes(q) ||
+      (r.department || '').toLowerCase().includes(q)
+    );
+  }, [recipients, recipientSearchQuery]);
+
   if (loading && !refreshing) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 space-y-4">
@@ -1070,66 +1082,76 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 
       {/* 5. MANUAL INSTANT DISPATCH PANEL */}
       {activeSection === 'manual' && (
-        <div className="glass-card p-6 sm:p-8 rounded-3xl border border-brand-500/30 shadow-xl space-y-6">
-          <div className="flex items-start justify-between flex-wrap gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
-            <div className="space-y-1">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-600 dark:text-brand-400 text-xs font-black">
-                <Zap className="w-3.5 h-3.5 text-amber-400" />
-                <span>MANUAL DISPATCH WORKFLOW</span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+        <div className="glass-card p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-6">
+          
+          {/* Header Bar */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <Zap className="w-5 h-5 text-amber-500" />
                 Manual Instant Dispatch
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-bold max-w-2xl">
-                Send a report immediately to selected recipients. This action runs once and does not modify the recurring Sunday schedule.
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mt-1">
+                Send an immediate executive performance report bundle to selected institutional recipients. This action executes <span className="text-brand-600 dark:text-brand-400 font-black">once in real-time</span> without altering the canonical Sunday automated schedule.
               </p>
             </div>
 
-            <div className="px-3.5 py-2 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-right">
-              <span className="text-[10px] font-black uppercase text-slate-400 block">Delivery Mode</span>
-              <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Immediate One-Time
-              </span>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-xs font-black shrink-0">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Immediate Dispatch</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column: Report Selection & Attachments */}
-            <div className="space-y-5 lg:col-span-1">
-              <div className="relative z-30">
-                <label className="block text-xs font-black uppercase text-slate-500 dark:text-slate-400 mb-2">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            {/* Left Column (5 Cols): Report Options, Session Target, Attachments & Admin Note */}
+            <div className="lg:col-span-5 space-y-5">
+              
+              {/* Report Selection */}
+              <div className="space-y-2">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Select Institutional Report
                 </label>
+                
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => { setIsReportTypeOpen(!isReportTypeOpen); setIsSessionOpen(false); }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${isReportTypeOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-sm' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                    className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all cursor-pointer ${
+                      isReportTypeOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-sm' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'
+                    }`}
                   >
-                    <FileText className="w-4 h-4 text-brand-500 shrink-0" />
-                    <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
-                      {{
-                        'WEEKLY_CONTEST': 'Weekly Contest Executive Report (Excel + PDF + Word)',
-                        'EXECUTIVE_SUMMARY': 'Executive Performance Summary',
-                        'DEPARTMENT_MATRIX': 'Department Contest Performance Matrix'
-                      }[selectedReportType] || selectedReportType}
-                    </span>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <FileText className="w-4 h-4 text-brand-500 shrink-0" />
+                      <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                        {{
+                          'WEEKLY_CONTEST': 'Weekly Contest Executive Report (Excel + PDF + Word)',
+                          'EXECUTIVE_SUMMARY': 'Executive Performance Summary',
+                          'DEPARTMENT_MATRIX': 'Department Contest Performance Matrix'
+                        }[selectedReportType] || selectedReportType}
+                      </span>
+                    </div>
                     <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ${isReportTypeOpen ? 'rotate-180' : ''}`} />
                   </button>
+
                   {isReportTypeOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-2 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-2 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl max-h-64 overflow-y-auto p-1.5 space-y-1 animate-in fade-in slide-in-from-top-2">
                       {[
                         { value: 'WEEKLY_CONTEST', label: 'Weekly Contest Executive Report (Excel + PDF + Word)', color: 'text-brand-500' },
                         { value: 'EXECUTIVE_SUMMARY', label: 'Executive Performance Summary', color: 'text-indigo-500' },
                         { value: 'DEPARTMENT_MATRIX', label: 'Department Contest Performance Matrix', color: 'text-purple-500' }
                       ].map(opt => (
-                        <button key={opt.value} type="button"
+                        <button
+                          key={opt.value}
+                          type="button"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => { setSelectedReportType(opt.value); setIsReportTypeOpen(false); }}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors ${selectedReportType === opt.value ? 'bg-brand-50 dark:bg-brand-900/40' : 'hover:bg-slate-50 dark:hover:bg-navy-800'}`}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors cursor-pointer ${
+                            selectedReportType === opt.value ? 'bg-brand-50 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 font-black' : 'hover:bg-slate-50 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold'
+                          }`}
                         >
                           <FileText className={`w-4 h-4 shrink-0 ${opt.color}`} />
-                          <span className={`text-xs truncate flex-1 ${selectedReportType === opt.value ? 'font-black text-brand-700 dark:text-brand-300' : 'font-bold text-slate-700 dark:text-slate-300'}`}>{opt.label}</span>
+                          <span className="text-xs truncate flex-1">{opt.label}</span>
                           {selectedReportType === opt.value && <Check className="w-4 h-4 text-brand-500 shrink-0" />}
                         </button>
                       ))}
@@ -1138,33 +1160,44 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                 </div>
               </div>
 
-              <div className="relative z-20">
-                <label className="block text-xs font-black uppercase text-slate-500 dark:text-slate-400 mb-2">
+              {/* Target Session Selector */}
+              <div className="space-y-2">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Target Weekly Contest Session
                 </label>
+
                 <div className="relative">
                   <button
                     type="button"
                     onClick={() => { setIsSessionOpen(!isSessionOpen); setIsReportTypeOpen(false); }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none ${isSessionOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-sm' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'}`}
+                    className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all cursor-pointer ${
+                      isSessionOpen ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-sm' : 'border-slate-200 dark:border-navy-700 hover:border-brand-400 dark:hover:border-brand-500'
+                    }`}
                   >
-                    <Calendar className="w-4 h-4 text-brand-500 shrink-0" />
-                    <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
-                      {sessions.find(s => s.sessionId === selectedSessionId) 
-                        ? `${sessions.find(s => s.sessionId === selectedSessionId)?.sessionDate} — ${sessions.find(s => s.sessionId === selectedSessionId)?.contestName} (FINALIZED)`
-                        : 'Select a session'}
-                    </span>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Calendar className="w-4 h-4 text-brand-500 shrink-0" />
+                      <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                        {sessions.find(s => s.sessionId === selectedSessionId)
+                          ? `${sessions.find(s => s.sessionId === selectedSessionId)?.sessionDate} — ${sessions.find(s => s.sessionId === selectedSessionId)?.contestName} (FINALIZED)`
+                          : 'Select a session'}
+                      </span>
+                    </div>
                     <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ${isSessionOpen ? 'rotate-180' : ''}`} />
                   </button>
+
                   {isSessionOpen && (
-                    <div className="absolute z-[200] top-full left-0 right-0 mt-2 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl max-h-64 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in slide-in-from-top-2">
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-2 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl max-h-64 overflow-y-auto p-1.5 space-y-1 animate-in fade-in slide-in-from-top-2">
                       {sessions.map(s => (
-                        <button key={s.sessionId} type="button"
+                        <button
+                          key={s.sessionId}
+                          type="button"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => { setSelectedSessionId(s.sessionId); setIsSessionOpen(false); }}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors ${selectedSessionId === s.sessionId ? 'bg-brand-500 text-white' : 'hover:bg-slate-50 dark:hover:bg-navy-800'}`}
+                          className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-left transition-colors cursor-pointer ${
+                            selectedSessionId === s.sessionId ? 'bg-brand-500 text-white font-bold' : 'hover:bg-slate-50 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 font-semibold'
+                          }`}
                         >
-                          <span className={`text-xs truncate flex-1 ${selectedSessionId === s.sessionId ? 'font-bold' : 'font-semibold text-slate-700 dark:text-slate-300'}`}>
+                          <span className="text-xs truncate flex-1">
                             {s.sessionDate} — {s.contestName} (FINALIZED)
                           </span>
                         </button>
@@ -1174,7 +1207,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                 </div>
               </div>
 
-              {/* Dynamic Attachment Cards */}
+              {/* Dynamic Attachments Bundle */}
               <div className="p-4 bg-slate-50 dark:bg-navy-950/60 rounded-2xl border border-slate-200 dark:border-navy-800 space-y-2.5">
                 <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block">
                   Generated Attachments (Dynamic Bundle)
@@ -1199,112 +1232,141 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                     <span className="flex items-center gap-2 text-brand-600 dark:text-brand-400">
                       <FileText className="w-4 h-4" /> Institutional_Summary.docx
                     </span>
-                    <span className="text-[10px] text-slate-400">Word DOCX</span>
+                    <span className="text-[10px] text-slate-400">Word Document</span>
                   </div>
                 </div>
               </div>
 
-              {/* Custom Optional Message */}
-              <div>
-                <label className="block text-xs font-black uppercase text-slate-500 dark:text-slate-400 mb-1.5">
+              {/* Custom Administrator Note */}
+              <div className="space-y-2">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Custom Administrator Note (Optional)
                 </label>
                 <textarea
                   value={customMessage}
                   onChange={(e) => setCustomMessage(e.target.value)}
-                  placeholder="Add an optional note to include in the email body..."
+                  placeholder="Add an optional custom note or announcement to include in the email body..."
                   rows={3}
-                  className="w-full p-3 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-2xl text-xs font-medium text-slate-900 dark:text-white"
+                  className="w-full p-3 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all font-medium"
                 />
               </div>
             </div>
 
-            {/* Right Column: Recipient Selection Grid */}
-            <div className="space-y-4 lg:col-span-2">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div>
-                  <label className="text-xs font-black uppercase text-slate-500 dark:text-slate-400 block">
-                    Select Target Recipients
-                  </label>
-                  <span className="text-xs font-bold text-brand-600 dark:text-brand-400">
-                    {selectedRecipientEmails.size} of {recipients.length} recipients selected
-                  </span>
-                </div>
+            {/* Right Column (7 Cols): Target Recipient Selector & Action Bar */}
+            <div className="lg:col-span-7 space-y-4 flex flex-col justify-between">
+              
+              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200 dark:border-navy-800 space-y-4 flex-1 flex flex-col">
+                
+                {/* Recipients Header Toolbar */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
+                  <div>
+                    <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                      <Users className="w-4 h-4 text-brand-500" />
+                      Select Target Recipients
+                    </h3>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold mt-0.5">
+                      <span className="text-brand-600 dark:text-brand-400 font-extrabold">{selectedRecipientEmails.size}</span> of {recipients.length} recipients selected for instant dispatch
+                    </p>
+                  </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={selectAllRecipients}
-                    className="text-[11px] font-extrabold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
-                  >
-                    Select All Active
-                  </button>
-                  <span className="text-slate-300">|</span>
-                  <button
-                    onClick={clearAllRecipients}
-                    className="text-[11px] font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                  >
-                    Clear Selection
-                  </button>
-                </div>
-              </div>
-
-              {/* Recipient Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[360px] overflow-y-auto pr-1">
-                {recipients.map(r => {
-                  const isSelected = selectedRecipientEmails.has(r.email);
-                  return (
-                    <div
-                      key={r.id}
-                      onClick={() => toggleRecipientSelection(r.email)}
-                      className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
-                        isSelected
-                          ? 'bg-brand-500/10 border-brand-500/40 shadow-sm'
-                          : 'bg-white dark:bg-navy-950 border-slate-200 dark:border-navy-700 hover:border-brand-500/30'
-                      }`}
+                  <div className="flex items-center gap-2 self-end sm:self-center">
+                    <button
+                      type="button"
+                      onClick={selectAllRecipients}
+                      className="px-3 py-1.5 rounded-lg bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 hover:bg-brand-100 dark:hover:bg-brand-900/50 border border-brand-200 dark:border-brand-800 text-[11px] font-black transition-all cursor-pointer"
                     >
-                      <div className="flex items-center space-x-3 min-w-0">
-                        <div className="text-brand-600 dark:text-brand-400">
-                          {isSelected ? <CheckSquare className="w-5 h-5 text-brand-500" /> : <Square className="w-5 h-5 text-slate-400" />}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-black text-slate-900 dark:text-white truncate">
-                            {r.name}
-                          </p>
-                          <p className="text-[11px] text-slate-400 truncate">
-                            {r.email}
-                          </p>
-                        </div>
-                      </div>
-
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-black border uppercase ${ROLE_COLORS[r.role] || ROLE_COLORS.MANUAL}`}>
-                        {r.role}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Action Buttons Bar */}
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between flex-wrap gap-4">
-                <div className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
-                  <Info className="w-4 h-4 text-brand-400" />
-                  <span>Immediate dispatch via Brevo v3 API (HTTPS Port 443)</span>
+                      Select All Active
+                    </button>
+                    <button
+                      type="button"
+                      onClick={clearAllRecipients}
+                      className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-navy-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-navy-700 text-[11px] font-bold transition-all cursor-pointer"
+                    >
+                      Clear Selection
+                    </button>
+                  </div>
                 </div>
 
-                <button
-                  onClick={handleInitiateManualDispatch}
-                  disabled={selectedRecipientEmails.size === 0 || isSendingManual}
-                  className="px-8 py-3.5 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white rounded-2xl text-xs font-black shadow-xl shadow-brand-500/25 transition-all transform hover:scale-[1.02] cursor-pointer disabled:opacity-50 flex items-center gap-2"
-                >
-                  {isSendingManual ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                {/* Recipient Search Filter */}
+                <div className="relative">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={recipientSearchQuery}
+                    onChange={(e) => setRecipientSearchQuery(e.target.value)}
+                    placeholder="Filter recipients by name, email, role, or department..."
+                    className="w-full pl-10 pr-4 py-2 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:border-brand-500"
+                  />
+                </div>
+
+                {/* Recipient Cards Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[340px] overflow-y-auto pr-1 flex-1">
+                  {filteredRecipientsForDispatch.length === 0 ? (
+                    <div className="col-span-2 p-8 text-center text-slate-400 text-xs italic">
+                      No matching recipients found.
+                    </div>
                   ) : (
-                    <Zap className="w-4 h-4 text-amber-300" />
+                    filteredRecipientsForDispatch.map(r => {
+                      const isSelected = selectedRecipientEmails.has(r.email);
+                      return (
+                        <div
+                          key={r.id}
+                          onClick={() => toggleRecipientSelection(r.email)}
+                          className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                            isSelected
+                              ? 'bg-brand-500/10 border-brand-500/40 shadow-sm'
+                              : 'bg-white dark:bg-navy-950 border-slate-200 dark:border-navy-700 hover:border-brand-500/30'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-3 min-w-0">
+                            <div className="text-brand-600 dark:text-brand-400 shrink-0">
+                              {isSelected ? <CheckSquare className="w-5 h-5 text-brand-500" /> : <Square className="w-5 h-5 text-slate-400" />}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-black text-slate-900 dark:text-white truncate">
+                                {r.name}
+                              </p>
+                              <p className="text-[11px] text-slate-400 truncate">
+                                {r.email}
+                              </p>
+                            </div>
+                          </div>
+
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-black border uppercase shrink-0 ${ROLE_COLORS[r.role] || ROLE_COLORS.MANUAL}`}>
+                            {r.role}
+                          </span>
+                        </div>
+                      );
+                    })
                   )}
-                  <span>Send Report Now</span>
-                </button>
+                </div>
+
+                {/* Action Bar & Dispatch Trigger */}
+                <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between flex-wrap gap-4">
+                  <div className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
+                    <Info className="w-4 h-4 text-brand-400" />
+                    <span>Brevo Official API • HTTPS Port 443 (TLS 1.3 Verified)</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleInitiateManualDispatch}
+                    disabled={selectedRecipientEmails.size === 0 || isSendingManual}
+                    className="px-8 py-3.5 bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white rounded-2xl text-xs font-black shadow-xl shadow-brand-500/25 transition-all transform hover:scale-[1.02] cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isSendingManual ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Zap className="w-4 h-4 text-amber-300" />
+                    )}
+                    <span>Send Report Now ({selectedRecipientEmails.size})</span>
+                  </button>
+                </div>
+
               </div>
+
             </div>
+
           </div>
         </div>
       )}

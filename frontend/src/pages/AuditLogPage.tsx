@@ -144,7 +144,7 @@ export const AuditLogPage: React.FC = () => {
 
         <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
           <div className="flex items-center space-x-2">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Role:</span>
+            <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Role:</span>
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
@@ -160,7 +160,7 @@ export const AuditLogPage: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-2">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Status:</span>
+            <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Status:</span>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -178,7 +178,7 @@ export const AuditLogPage: React.FC = () => {
       {/* Logs Table */}
       <div className="glass-card rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-lg">
         {loading ? (
-          <div className="p-8 text-center text-slate-400 text-xs flex items-center justify-center space-x-2">
+          <div className="p-8 text-center text-slate-500 dark:text-slate-400 text-xs flex items-center justify-center space-x-2">
             <RefreshCw className="w-4 h-4 animate-spin text-brand-600" />
             <span>Loading audit log entries...</span>
           </div>
@@ -191,7 +191,7 @@ export const AuditLogPage: React.FC = () => {
             {/* Desktop Table View */}
             <table className="hidden md:table w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-slate-100/80 dark:bg-navy-950/80 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider">
+                <tr className="bg-slate-100/80 dark:bg-navy-950/80 text-slate-700 dark:text-slate-300 font-extrabold border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider">
                   <th className="py-3 px-4">Audit ID</th>
                   <th className="py-3 px-4">Admin Name / Email</th>
                   <th className="py-3 px-4">Role</th>

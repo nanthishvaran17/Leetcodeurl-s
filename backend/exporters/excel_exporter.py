@@ -249,6 +249,21 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
 
     raw_rows = dataset.get("rows") or dataset.get("all_rows") or []
     rows = [normalize_row_data(r) for r in raw_rows]
+    # Filter out synthetic / test / hardening student records.
+    # These must never appear in official institutional reports.
+    # Patterns excluded:
+    #   TEST_*          — load-test race students (TEST_RACE_0000, etc.)
+    #   7322STU*        — hardening/RBAC test accounts (7322STUBETA, 7322STU_RBAC_B, etc.)
+    #   hardening_*     — hardening test accounts
+    def _is_real_student(r) -> bool:
+        reg = str(r.get("reg_no") or "").strip().upper()
+        name = str(r.get("name") or "").strip().upper()
+        if reg.startswith("TEST") or reg.startswith("7322STU") or reg.startswith("HARDENING") or reg.startswith("CONCUR"):
+            return False
+        if name.startswith("RACE TEST STUDENT") or name.startswith("STUDENT BETA") or name.startswith("HARDENING") or name.startswith("CONCURRENT"):
+            return False
+        return True
+    rows = [r for r in rows if _is_real_student(r)]
     metrics = dataset.get("metrics", {})
 
     from backend.services.contest_discovery import get_immediately_previous_sunday_date, calculate_contest_number
@@ -533,7 +548,7 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         sum_d_stud = sum_d_att = sum_d_not = sum_d_solves = 0
         sum_q1 = sum_q2 = sum_q3 = sum_q4 = 0
 
-        depts_to_show = depts_present if len(depts_present) > 1 or len(rows) > 100 else OFFICIAL_DEPTS
+        depts_to_show = [d for d in (depts_present if depts_present else OFFICIAL_DEPTS) if len(dept_map.get(d, [])) > 0]
         for idx, d_name in enumerate(depts_to_show, 1):
             d_list = dept_map.get(d_name, [])
             d_tot = len(d_list)
@@ -626,8 +641,121 @@ def export_excel_from_dataset(dataset: dict) -> bytes:
         ws11.freeze_panes = "A8"
 
     # 
-    # GLOBAL COLUMN WIDTH & SCROLLING FINALIZE
+    # SHEETS: CSE(CS) & CSE(IOT) — YEAR-WISE ENUMERATED ROSTERS
+    # Generates one sheet per dept+year combination for Cyber Security and IoT.
+    # Each sheet lists students with S.No, Reg No, Name, Username, Status, Q1-Q4, Solved.
     # 
+    TARGET_DEPTS_YEAR_ENUM = ["CSE(CS)", "CSE(IOT)", "IT"]
+    YEAR_ORDER = ["II", "III", "IV"]
+    YEAR_LABEL_MAP = {"II": "II Year", "III": "III Year", "IV": "IV Year"}
+    DEPT_FULL_NAME = {
+        "CSE(CS)": "Cyber Security",
+        "CSE(IOT)": "Internet of Things",
+        "IT": "Information Technology"
+    }
+
+    def render_year_dept_sheet(dept_name: str, year_key: str, dept_year_rows: list):
+        if not dept_year_rows:
+            return
+        year_label = YEAR_LABEL_MAP.get(year_key, year_key)
+        full_dept = DEPT_FULL_NAME.get(dept_name, dept_name)
+        sheet_title = f"{dept_name} - {year_label}"
+        title_text = f"{contest_name.upper()} — {dept_name} ({full_dept}) • {year_label} STUDENT ROSTER"
+        
+        ws_yr = wb.create_sheet(title=sheet_title)
+        _write_college_header(ws_yr, title_text, f"DEPARTMENT OF {dept_name} ({full_dept}) • {year_label}", 12, metadata_block)
+        
+        yr_hdr_row = 7
+        yr_headers = ["S.No", "Register No", "Student Name", "LeetCode Username", "Status", "Q1", "Q2", "Q3", "Q4", "Solved", "Score", "Rank"]
+        for c_i, h in enumerate(yr_headers, 1):
+            cell = ws_yr.cell(row=yr_hdr_row, column=c_i, value=h)
+            cell.font = FONT_TBL_HDR
+            cell.fill = NAVY_PRIMARY
+            cell.alignment = ALIGN_CENTER
+            _apply_thin_border(cell)
+        ws_yr.row_dimensions[yr_hdr_row].height = 28
+
+        # Sort: attended first (by score desc), then not attended by name
+        sorted_yr = sorted(
+            dept_year_rows,
+            key=lambda x: (0 if x["is_att"] else 1, -x["score"], x["name"].strip().upper())
+        )
+
+        d_att_count = sum(1 for r in sorted_yr if r["is_att"])
+        d_not_count = len(sorted_yr) - d_att_count
+
+        for idx, r in enumerate(sorted_yr, 1):
+            row_num = yr_hdr_row + idx
+            rank_val = r.get("rank") or "—"
+            vals = [
+                idx,
+                r["reg_no"],
+                r["name"],
+                r["username"] or "—",
+                r["status"],
+                r["q1"],
+                r["q2"],
+                r["q3"],
+                r["q4"],
+                r["solved_str"],
+                r["score"] if r["score"] else "—",
+                rank_val
+            ]
+            for c_i, v in enumerate(vals, 1):
+                cell = ws_yr.cell(row=row_num, column=c_i, value=v)
+                cell.font = FONT_BODY
+                cell.alignment = ALIGN_LEFT if c_i == 3 else ALIGN_CENTER
+                if r["is_att"]:
+                    if c_i == 5:
+                        cell.fill = FILL_SUCCESS
+                        cell.font = FONT_SUCCESS
+                    elif c_i in (10, 11):
+                        cell.fill = FILL_SUCCESS
+                        cell.font = FONT_SUCCESS
+                elif c_i == 5:
+                    cell.fill = FILL_RISK
+                    cell.font = FONT_RISK
+                _apply_thin_border(cell)
+            ws_yr.row_dimensions[row_num].height = 22
+
+        # Summary footer row
+        footer_row = yr_hdr_row + len(sorted_yr) + 2
+        ws_yr.merge_cells(f"A{footer_row}:L{footer_row}")
+        summary_cell = ws_yr[f"A{footer_row}"]
+        att_pct_yr = (d_att_count / len(sorted_yr) * 100) if sorted_yr else 0.0
+        summary_cell.value = (
+            f"SUMMARY: {dept_name} • {year_label} — "
+            f"Total: {len(sorted_yr)} | Attended: {d_att_count} ({att_pct_yr:.1f}%) | Not Attended: {d_not_count}"
+        )
+        summary_cell.font = Font(name=FONT_TNR, size=10, bold=True, color="1B365D")
+        summary_cell.fill = SUB_FILL
+        summary_cell.alignment = ALIGN_LEFT
+        _apply_thin_border(summary_cell)
+
+        ws_yr.auto_filter.ref = f"A{yr_hdr_row}:L{yr_hdr_row + len(sorted_yr)}"
+        ws_yr.freeze_panes = "A8"
+
+    for t_dept in TARGET_DEPTS_YEAR_ENUM:
+        dept_all_rows = dept_map.get(t_dept, [])
+        if not dept_all_rows:
+            continue
+        # Build year sub-groups from the dept rows
+        dept_year_buckets: Dict[str, list] = {}
+        for r in dept_all_rows:
+            y_key = r["year"]
+            if y_key not in dept_year_buckets:
+                dept_year_buckets[y_key] = []
+            dept_year_buckets[y_key].append(r)
+        # Render in canonical year order
+        for y_key in YEAR_ORDER:
+            if y_key in dept_year_buckets:
+                render_year_dept_sheet(t_dept, y_key, dept_year_buckets[y_key])
+        # Any remaining years not in YEAR_ORDER
+        for y_key, y_rows in dept_year_buckets.items():
+            if y_key not in YEAR_ORDER:
+                render_year_dept_sheet(t_dept, y_key, y_rows)
+
+
     for ws_item in wb.worksheets:
         s_title = ws_item.title
         for col in ws_item.columns:

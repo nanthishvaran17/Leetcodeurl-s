@@ -26,6 +26,7 @@ from backend.services.contest_discovery import (
     IST_TZ
 )
 
+from backend.services.canonical_contest_engine import build_canonical_contest_dataset
 from backend.security import require_security_access, get_current_user_optional
 
 router = APIRouter(prefix="/contests", tags=["Weekly Contests"])
@@ -239,6 +240,12 @@ def _get_fast_contest_summary(session: WeeklySession, db: Session, current_user:
 
     contest_num = _extract_contest_number(session)
 
+    virtual_count = len([r for r in results if r.participation_status in ("VIRTUAL", "VIRTUAL_ATTENDED")])
+    not_attended_count = len([r for r in results if r.participation_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED")])
+    pending_count = len([r for r in results if r.participation_status == "PENDING"])
+    missing_username_count = len([r for r in results if r.participation_status in ("UNKNOWN", "USERNAME_NOT_FOUND", "DATA_ERROR", "SOURCE_ERROR")])
+    public_count = len([r for r in results if r.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED")])
+
     summary_data = {
         "sessionId": sess_id,
         "contestNumber": contest_num,
@@ -246,6 +253,11 @@ def _get_fast_contest_summary(session: WeeklySession, db: Session, current_user:
         "sessionDate": session.session_date,
         "status": session.status,
         "participantCount": participant_count,
+        "publicParticipants": public_count,
+        "virtualParticipants": virtual_count,
+        "notParticipated": not_attended_count,
+        "pendingVerification": pending_count,
+        "missingUsername": missing_username_count,
         "totalStudents": total_students,
         "attendanceRate": attendance_rate,
         "averageScore": avg_score,
@@ -849,6 +861,9 @@ def get_normalized_contest_data(
     dept: Optional[str] = None,
     year: Optional[str] = None,
     attendance: Optional[str] = None,
+    department: Optional[str] = None,
+    academic_year: Optional[str] = None,
+    attendance_status: Optional[str] = None,
     db: Session = None,
     current_user: Optional[User] = None
 ) -> Dict[str, Any]:
@@ -861,32 +876,27 @@ def get_normalized_contest_data(
         from backend.database import SessionLocal
         db = SessionLocal()
 
-    if not isinstance(dept, str) or not dept.strip():
-        dept = "ALL"
-    if not isinstance(year, str) or not year.strip():
-        year = "ALL"
-    if not isinstance(attendance, str) or not attendance.strip():
-        attendance = "ALL"
+    final_dept = dept or department or "ALL"
+    final_year = year or academic_year or "ALL"
+    final_attendance = attendance or attendance_status or "ALL"
 
     from backend.services.canonical_contest_engine import build_canonical_contest_dataset
     canonical_data = build_canonical_contest_dataset(
         session_id=session_id,
         db=db,
-        dept=dept,
-        year=year,
-        attendance=attendance,
+        dept=final_dept,
+        year=final_year,
+        attendance=final_attendance,
         current_user=current_user
     )
 
     metrics = canonical_data["metrics"]
     rows = canonical_data["rows"]
-    session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
-    if not session:
-        raise HTTPException(status_code=404, detail="Contest data is unavailable for the selected Weekly Contest.")
-
+    
     c_num = None
-    if session and session.contest_name:
-        m = re.search(r'\d+', session.contest_name)
+    contest_name = canonical_data.get("contestName", "")
+    if contest_name:
+        m = re.search(r'\d+', contest_name)
         if m:
             c_num = int(m.group(0))
 
@@ -932,7 +942,7 @@ def get_normalized_contest_data(
         "contestName": canonical_data["contestName"],
         "session_date": canonical_data["sessionDate"],
         "sessionDate": canonical_data["sessionDate"],
-        "status": session.status if session else "FINALIZED",
+        "status": canonical_data.get("status", "FINALIZED"),
         "sync_status": "Verified",
         "last_synced": canonical_data.get("generatedAtIST"),
         "questionDataSource": "AVAILABLE",
@@ -970,7 +980,7 @@ def get_normalized_contest_data(
             "id": session_id,
             "contest_name": canonical_data["contestName"],
             "session_date": canonical_data["sessionDate"],
-            "status": session.status if session else "FINALIZED"
+            "status": canonical_data.get("status", "FINALIZED")
         },
         "rows": matrix_rows,
         "departmentStats": canonical_data["departmentStats"],
@@ -991,55 +1001,86 @@ def get_session_matrix(
     dept: Optional[str] = Query(None), 
     year: Optional[str] = Query(None), 
     attendance: Optional[str] = Query(None),
+    department: Optional[str] = Query(None),
+    academic_year: Optional[str] = Query(None),
+    attendance_status: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    current_user = Depends(require_security_access(resource_name="Weekly Contest Matrix", required_roles=["admin", "super admin", "faculty", "staff", "hod"]))
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    if not isinstance(dept, str):
-        dept = "ALL"
-    if not isinstance(year, str):
-        year = "ALL"
-    if not isinstance(attendance, str):
-        attendance = "ALL"
-    if not isinstance(search, str):
-        search = None
-    if not isinstance(sort_by, str):
-        sort_by = None
+    final_dept = dept or department or "ALL"
+    final_year = year or academic_year or "ALL"
+    final_attendance = attendance or attendance_status or "ALL"
+
     if not hasattr(current_user, "id"):
         current_user = None
-    if not isinstance(page, int):
-        try:
-            page = int(page)
-        except Exception:
-            page = 1
-    if not isinstance(limit, int):
-        try:
-            limit = int(limit)
-        except Exception:
-            limit = 50
+
+    from backend.services.canonical_contest_engine import build_canonical_contest_dataset
+    canonical_data = build_canonical_contest_dataset(
+        session_id=session_id, db=db, current_user=current_user,
+        dept=final_dept, year=final_year, attendance=final_attendance
+    )
+    
+    metrics = canonical_data["metrics"]
 
     if paginated:
-        from backend.services.sql_pagination import get_paginated_matrix_rows
-        from backend.services.canonical_contest_engine import build_canonical_contest_dataset
+        rows = canonical_data.get("rows", [])
         
-        # Get metrics from the canonical dataset (fast cache)
-        canonical_data = build_canonical_contest_dataset(
-            session_id=session_id, db=db, current_user=current_user,
-            dept=dept, year=year, attendance=attendance
-        )
-        metrics = canonical_data["metrics"]
+        # In-memory search filter
+        if search and isinstance(search, str) and search.strip():
+            s_lower = search.strip().lower()
+            rows = [
+                r for r in rows
+                if s_lower in (r.get("name") or "").lower()
+                or s_lower in (r.get("reg_no") or "").lower()
+                or s_lower in (r.get("username") or "").lower()
+            ]
+            
+        # In-memory sorting
+        if sort_by == "score" or sort_by == "solved":
+            rows = sorted(rows, key=lambda r: (r.get("score") or 0, -(r.get("rank") if isinstance(r.get("rank"), int) else 999999)), reverse=True)
+        elif sort_by == "rank":
+            rows = sorted(rows, key=lambda r: (r.get("rank") if isinstance(r.get("rank"), int) else 999999, -(r.get("score") or 0)))
         
-        # Get SQL paginated rows — current_user is forwarded to enforce RBAC scope
-        paginated_data = get_paginated_matrix_rows(
-            session_id=session_id, db=db, page=page, limit=limit,
-            dept=dept, year=year, attendance=attendance, search=search, sort_by=sort_by,
-            current_user=current_user
-        )
+        total_count = len(rows)
+        offset = (page - 1) * limit
+        page_rows = rows[offset : offset + limit]
         
+        matrix_items = []
+        for idx, r in enumerate(page_rows, start=offset + 1):
+            status_val = r.get("status", "NOT_ATTENDED")
+            is_att = status_val in ("PUBLIC", "VIRTUAL")
+            matrix_items.append({
+                "id": r.get("student_id"),
+                "student_id": r.get("student_id"),
+                "reg_no": r.get("reg_no"),
+                "name": r.get("name"),
+                "dept": r.get("dept"),
+                "year": r.get("year"),
+                "username": r.get("username"),
+                "profile_url": r.get("profile_url"),
+                "profile_rank": r.get("profile_rank") if r.get("profile_rank") is not None else "—",
+                "profile_total_solved": r.get("profile_total_solved"),
+                "participation_status": status_val,
+                "status": status_val,
+                "q1": r.get("q1") if is_att and r.get("q1") is not None else "—",
+                "q2": r.get("q2") if is_att and r.get("q2") is not None else "—",
+                "q3": r.get("q3") if is_att and r.get("q3") is not None else "—",
+                "q4": r.get("q4") if is_att and r.get("q4") is not None else "—",
+                "total_solved": r.get("total_solved") if is_att and r.get("total_solved") is not None else "—",
+                "total_contest_solved": r.get("total_solved") if is_att and r.get("total_solved") is not None else "—",
+                "score": r.get("score") if is_att and r.get("score") is not None else 0,
+                "rank": r.get("rank") if is_att and r.get("rank") is not None else "—",
+                "rating": r.get("rating") if is_att and r.get("rating") is not None else "—",
+                "source_status": "AUTHENTIC_VERIFIED" if is_att or status_val == "NOT_ATTENDED" else "UNVERIFIED",
+                "fetch_status": r.get("fetch_status", "LeetCode GraphQL"),
+                "error_reason": r.get("error_reason")
+            })
+
         return {
-            "items": paginated_data["items"],
-            "total": paginated_data["total"],
-            "page": paginated_data["page"],
-            "limit": paginated_data["limit"],
+            "items": matrix_items,
+            "total": total_count,
+            "page": page,
+            "limit": limit,
             "metrics": metrics,
             "departmentStats": canonical_data["departmentStats"],
             "yearStats": canonical_data["yearStats"],
@@ -1047,7 +1088,10 @@ def get_session_matrix(
             "dataQualityIssues": canonical_data["dataQualityIssues"]
         }
     else:
-        return get_normalized_contest_data(session_id, dept=dept, year=year, attendance=attendance, db=db, current_user=current_user)
+        return get_normalized_contest_data(
+            session_id, dept=final_dept, year=final_year, attendance=final_attendance,
+            db=db, current_user=current_user
+        )
 
 
 @router.get("/sessions/{session_id}/data-quality")
@@ -1056,6 +1100,9 @@ def get_session_data_quality_board(
     dept: Optional[str] = Query(None),
     year: Optional[str] = Query(None),
     attendance: Optional[str] = Query(None),
+    department: Optional[str] = Query(None),
+    academic_year: Optional[str] = Query(None),
+    attendance_status: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
@@ -1063,15 +1110,19 @@ def get_session_data_quality_board(
     Fetches Data Quality Error Board table tracking failed fetches.
     Filters by the canonical dataset engine to ensure mathematical consistency.
     """
-    canonical_data = get_normalized_contest_data(
+    final_dept = dept or department or "ALL"
+    final_year = year or academic_year or "ALL"
+    final_attendance = attendance or attendance_status or "ALL"
+
+    canonical_data = build_canonical_contest_dataset(
         session_id=session_id, 
-        dept=dept, 
-        year=year, 
-        attendance=attendance, 
+        dept=final_dept, 
+        year=final_year, 
+        attendance=final_attendance, 
         db=db, 
         current_user=current_user
     )
-    filtered_student_ids = [r["student_id"] for r in canonical_data["rows"]]
+    filtered_student_ids = [r["student_id"] for r in canonical_data.get("rows", [])]
 
     if not filtered_student_ids:
         return []
@@ -1100,14 +1151,21 @@ def get_week_comparison(
     dept: Optional[str] = Query(None),
     year: Optional[str] = Query(None),
     attendance: Optional[str] = Query(None),
+    department: Optional[str] = Query(None),
+    academic_year: Optional[str] = Query(None),
+    attendance_status: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     """
     Calculates dynamic Week-to-Week comparison metrics comparing the selected Weekly Contest
     against the immediately previous Weekly Contest by actual contest date.
-    Strictly derives both datasets from get_normalized_contest_data with identical active filters.
+    Strictly derives both datasets from build_canonical_contest_dataset with identical active filters.
     """
+    final_dept = dept or department or "ALL"
+    final_year = year or academic_year or "ALL"
+    final_attendance = attendance or attendance_status or "ALL"
+
     current_session = db.query(WeeklySession).filter(WeeklySession.id == session_id).first()
     if not current_session:
         raise HTTPException(status_code=404, detail="Weekly session not found")
@@ -1134,47 +1192,47 @@ def get_week_comparison(
             WeeklySession.contest_name.ilike("%Weekly Contest%")
         ).order_by(WeeklySession.id.desc()).first()
 
-    # Read from single canonical normalized dataset engine
-    curr_data = get_normalized_contest_data(current_session.id, dept=dept, year=year, attendance=attendance, db=db, current_user=current_user)
-    prev_data = get_normalized_contest_data(prev_session.id, dept=dept, year=year, attendance=attendance, db=db, current_user=current_user) if prev_session else None
+    # Read from single canonical normalized dataset engine (fast in-memory filter)
+    from backend.services.canonical_contest_engine import build_canonical_contest_dataset
+    curr_data = build_canonical_contest_dataset(current_session.id, dept=final_dept, year=final_year, attendance=final_attendance, db=db, current_user=current_user)
+    prev_data = build_canonical_contest_dataset(prev_session.id, dept=final_dept, year=final_year, attendance=final_attendance, db=db, current_user=current_user) if prev_session else None
 
     curr_metrics = curr_data["metrics"]
     prev_metrics = prev_data["metrics"] if prev_data else {
-        "publicParticipationRate": 0.0,
-        "publicAttended": 0,
-        "publicNotAttended": 0,
+        "participationPercentage": 0.0,
+        "officialAttended": 0,
+        "notAttended": 0,
         "virtualAttended": 0,
-        "dataErrors": 0,
-        "totalStudents": 0,
-        "verifiedEligibleRoster": 0
+        "errors": 0,
+        "totalStudents": 0
     }
 
     curr_payload = {
         "contestId": current_session.contest_id,
-        "contestNumber": curr_data["contest_number"],
+        "contestNumber": curr_data.get("contest_number") or curr_data.get("contestNumber"),
         "contestName": current_session.contest_name,
         "sessionDate": current_session.session_date,
-        "publicParticipationRate": curr_metrics["publicParticipationRate"],
-        "totalStudents": curr_metrics["verifiedEligibleRoster"],
-        "publicAttended": curr_metrics["publicAttended"],
-        "publicNotAttended": curr_metrics["publicNotAttended"],
-        "virtualAttended": curr_metrics["virtualAttended"],
-        "dataErrors": curr_metrics["dataErrors"],
-        "rate": curr_metrics["publicParticipationRate"]
+        "publicParticipationRate": curr_metrics.get("participationPercentage", 0.0),
+        "totalStudents": curr_metrics.get("totalStudents", 0),
+        "publicAttended": curr_metrics.get("officialAttended", 0),
+        "publicNotAttended": curr_metrics.get("notAttended", 0),
+        "virtualAttended": curr_metrics.get("virtualAttended", 0),
+        "dataErrors": curr_metrics.get("errors", 0),
+        "rate": curr_metrics.get("participationPercentage", 0.0)
     }
 
     prev_payload = {
         "contestId": prev_session.contest_id if prev_session else None,
-        "contestNumber": prev_data["contest_number"] if prev_data else None,
+        "contestNumber": prev_data.get("contest_number") if prev_data else None,
         "contestName": prev_session.contest_name if prev_session else "Previous Contest",
         "sessionDate": prev_session.session_date if prev_session else "",
-        "publicParticipationRate": prev_metrics["publicParticipationRate"],
-        "totalStudents": prev_metrics["verifiedEligibleRoster"] if prev_data else 0,
-        "publicAttended": prev_metrics["publicAttended"],
-        "publicNotAttended": prev_metrics["publicNotAttended"],
-        "virtualAttended": prev_metrics["virtualAttended"],
-        "dataErrors": prev_metrics["dataErrors"],
-        "rate": prev_metrics["publicParticipationRate"]
+        "publicParticipationRate": prev_metrics.get("participationPercentage", 0.0),
+        "totalStudents": prev_metrics.get("totalStudents", 0),
+        "publicAttended": prev_metrics.get("officialAttended", 0),
+        "publicNotAttended": prev_metrics.get("notAttended", 0),
+        "virtualAttended": prev_metrics.get("virtualAttended", 0),
+        "dataErrors": prev_metrics.get("errors", 0),
+        "rate": prev_metrics.get("participationPercentage", 0.0)
     }
 
     rate_change = round(curr_payload["publicParticipationRate"] - prev_payload["publicParticipationRate"], 2)

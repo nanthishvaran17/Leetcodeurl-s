@@ -752,7 +752,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
             <div className="space-y-3">
               <div className="flex justify-between items-center p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/30">
-                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Valid Profiles</span>
+                <span className="text-xs font-extrabold text-slate-700 dark:text-slate-200">Valid Profiles</span>
                 <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
                   {loading
                     ? <span className="inline-block w-8 h-4 bg-emerald-100 dark:bg-emerald-900/30 rounded animate-pulse" />
@@ -761,7 +761,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               </div>
 
               <div className="flex justify-between items-center p-3 rounded-xl bg-rose-50/50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-800/30">
-                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Missing Profile URLs</span>
+                <span className="text-xs font-extrabold text-slate-700 dark:text-slate-200">Missing Profile URLs</span>
                 <span className="text-sm font-black text-rose-600 dark:text-rose-400">
                   {loading
                     ? <span className="inline-block w-8 h-4 bg-rose-100 dark:bg-rose-900/30 rounded animate-pulse" />
@@ -770,7 +770,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               </div>
 
               <div className="flex justify-between items-center p-3 rounded-xl bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/30">
-                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Profile Health Score</span>
+                <span className="text-xs font-extrabold text-slate-700 dark:text-slate-200">Profile Health Score</span>
                 <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">
                   {loading
                     ? <span className="inline-block w-10 h-4 bg-indigo-100 dark:bg-indigo-900/30 rounded animate-pulse" />
@@ -910,7 +910,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left text-xs whitespace-nowrap border-collapse table-fixed">
                 <thead>
-                  <tr className="border-b border-slate-200 dark:border-navy-700 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[11px]">
+                  <tr className="border-b border-slate-200 dark:border-navy-700 text-slate-700 dark:text-slate-300 font-extrabold uppercase tracking-wider text-[11px]">
                     <th className="py-1.5 px-3 font-extrabold text-left w-[25%]">Department</th>
                     <th className="py-1.5 px-2 font-extrabold text-center w-[9%]">Students</th>
                     <th className="py-1.5 px-2 font-extrabold text-center w-[9%]">Active</th>

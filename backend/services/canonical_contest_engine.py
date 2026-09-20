@@ -1,3 +1,4 @@
+# Trigger uvicorn reload
 import datetime
 from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
@@ -145,20 +146,121 @@ def build_canonical_contest_dataset(
         raise ValueError(f"Contest Session ID {session_id} not found in database.")
 
     user_scope = f"{current_user.id}:{current_user.role}" if current_user else "public"
-    cache_key = f"canonical_contest_{session_id}_{dept}_{year}_{attendance}_{user_scope}"
+    base_cache_key = f"canonical_contest_{session_obj.id}_ALL_ALL_ALL_{user_scope}"
     
     # Context-aware TTLs: 15s during live, 300s post-finalization
     ttl = 300 if session_obj.status == "FINALIZED" else 15
     
     from backend.cache import cache
-    return cache.get_or_compute(
-        key=cache_key,
+    base_dataset = cache.get_or_compute(
+        key=base_cache_key,
         compute_func=lambda: _build_canonical_contest_dataset_internal(
-            session_id, session_obj, db, dept, year, attendance, current_user
+            session_obj.id, session_obj, db, "ALL", "ALL", "ALL", current_user
         ),
         ttl_seconds=ttl,
         tags=["contests"]
     )
+
+    if dept == "ALL" and year == "ALL" and (attendance == "ALL" or attendance is None):
+        return base_dataset
+
+    return _filter_canonical_dataset_in_memory(base_dataset, dept, year, attendance)
+
+
+def _filter_canonical_dataset_in_memory(
+    base_dataset: Dict[str, Any],
+    dept: str,
+    year: str,
+    attendance: str
+) -> Dict[str, Any]:
+    rows = base_dataset.get("rows") or []
+    
+    if dept != "ALL":
+        rows = [r for r in rows if r.get("dept") == dept]
+        
+    if year != "ALL":
+        rows = [r for r in rows if r.get("year") == year]
+        
+    if attendance and attendance.upper() != "ALL":
+        att_upper = attendance.upper().strip()
+        if att_upper in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL"):
+            rows = [r for r in rows if r.get("status") in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED")]
+        elif att_upper in ("VIRTUAL", "VIRTUAL_ATTENDED"):
+            rows = [r for r in rows if r.get("status") in ("VIRTUAL", "VIRTUAL_ATTENDED")]
+        elif att_upper in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT", "NOT_PARTICIPATED", "UNATTENDED"):
+            rows = [r for r in rows if r.get("status") in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT", "PENDING")]
+        elif att_upper in ("ERRORS", "DATA_ERRORS", "DATA_ERROR", "FAILED"):
+            rows = [r for r in rows if r.get("status") in ("USERNAME_NOT_FOUND", "AUTH_REQUIRED", "SOURCE_UNAVAILABLE", "FETCH_ERROR", "DATA_MISMATCH")]
+        elif att_upper in ("ALL_ATTENDED", "PARTICIPATED"):
+            rows = [r for r in rows if r.get("status") in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL", "VIRTUAL_ATTENDED")]
+
+    indexed_rows = []
+    for idx, r in enumerate(rows, 1):
+        r_copy = dict(r)
+        r_copy["s_no"] = idx
+        indexed_rows.append(r_copy)
+
+    tot = len(indexed_rows)
+    pub = sum(1 for r in indexed_rows if r.get("status") in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"))
+    virt = sum(1 for r in indexed_rows if r.get("status") in ("VIRTUAL", "VIRTUAL_ATTENDED"))
+    not_att = sum(1 for r in indexed_rows if r.get("status") == "NOT_ATTENDED")
+    errors = sum(1 for r in indexed_rows if r.get("status") in ("USERNAME_NOT_FOUND", "AUTH_REQUIRED", "SOURCE_UNAVAILABLE", "FETCH_ERROR", "DATA_MISMATCH"))
+    pending = sum(1 for r in indexed_rows if r.get("status") == "PENDING")
+
+    q4 = sum(1 for r in indexed_rows if r.get("q4") == 1)
+    q3 = sum(1 for r in indexed_rows if r.get("q3") == 1)
+    q2 = sum(1 for r in indexed_rows if r.get("q2") == 1)
+    q1 = sum(1 for r in indexed_rows if r.get("q1") == 1)
+
+    pct = ((pub + virt) / max(1, tot)) * 100.0
+
+    base_metrics = base_dataset.get("metrics", {})
+    metrics = {
+        "contestName": base_metrics.get("contestName"),
+        "totalStudents": tot,
+        "officialAttended": pub,
+        "virtualAttended": virt,
+        "notAttended": not_att,
+        "pending": pending,
+        "errors": errors,
+        "participationPercentage": pct,
+        "q4Count": q4,
+        "q3Count": q3,
+        "q2Count": q2,
+        "q1Count": q1
+    }
+
+    status_counts = {
+        "PUBLIC": pub,
+        "VIRTUAL": virt,
+        "NOT_ATTENDED": not_att,
+        "PENDING": pending,
+        "SOURCE_UNAVAILABLE": sum(1 for r in indexed_rows if r.get("status") == "SOURCE_UNAVAILABLE"),
+        "AUTH_REQUIRED": sum(1 for r in indexed_rows if r.get("status") == "AUTH_REQUIRED"),
+        "USERNAME_NOT_FOUND": sum(1 for r in indexed_rows if r.get("status") == "USERNAME_NOT_FOUND"),
+        "FETCH_ERROR": sum(1 for r in indexed_rows if r.get("status") == "FETCH_ERROR"),
+        "DATA_MISMATCH": sum(1 for r in indexed_rows if r.get("status") == "DATA_MISMATCH")
+    }
+
+    return {
+        "sessionId": base_dataset.get("sessionId"),
+        "contestId": base_dataset.get("contestId"),
+        "contestName": base_dataset.get("contestName"),
+        "sessionDate": base_dataset.get("sessionDate"),
+        "status": base_dataset.get("status"),
+        "isLive": base_dataset.get("isLive"),
+        "isScheduled": base_dataset.get("isScheduled"),
+        "isFinalized": base_dataset.get("isFinalized"),
+        "generatedAtIST": base_dataset.get("generatedAtIST"),
+        "rows": indexed_rows,
+        "all_rows": indexed_rows,
+        "metrics": metrics,
+        "statusCounts": status_counts,
+        "departmentStats": base_dataset.get("departmentStats"),
+        "yearStats": base_dataset.get("yearStats"),
+        "dataQualityIssues": [i for i in base_dataset.get("dataQualityIssues", []) if (dept == "ALL" or i.get("dept") == dept) and (year == "ALL" or i.get("year") == year)],
+        "reconciliation": base_dataset.get("reconciliation")
+    }
 
 def _build_canonical_contest_dataset_internal(
     session_id: int,
@@ -175,17 +277,27 @@ def _build_canonical_contest_dataset_internal(
     from backend.services.authorization_service import apply_role_based_student_filter
     
     student_query = db.query(Student).options(
-        joinedload(Student.department),
-        joinedload(Student.stats)
+        joinedload(Student.department)
     ).filter(
         (Student.is_active == True) | (Student.is_active.is_(None))
     )
     
-    if current_user:
-        student_query = apply_role_based_student_filter(student_query, current_user, db)
-        
-    all_master_students = student_query.order_by(Student.id.asc()).all()
+    def _is_real_student_record(reg_no: Optional[str], name: Optional[str]) -> bool:
+        reg = (reg_no or "").upper().strip()
+        nm = (name or "").upper().strip()
+        if not reg or reg.startswith("TEST") or reg.startswith("CONCUR") or reg.startswith("HARDENING") or reg.startswith("7322STU"):
+            return False
+        if "TEST" in nm or "DUMMY" in nm or "CONCURRENT" in nm:
+            return False
+        return True
+
+    all_master_students = [s for s in student_query.order_by(Student.id.asc()).all() if _is_real_student_record(s.reg_no, s.name)]
     total_master_count = len(all_master_students)
+    
+    student_ids = [s.id for s in all_master_students]
+    from backend.models import LeetCodeProfileStats
+    stats_records = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id.in_(student_ids)).all() if student_ids else []
+    stats_map = {stat.student_id: stat for stat in stats_records}
 
     # 2. Fetch Contest Results for this Session
     public_results = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id).all()
@@ -210,19 +322,11 @@ def _build_canonical_contest_dataset_internal(
         "DATA_MISMATCH": 0
     }
 
-    # Department and Year aggregators for all 11 Institutional Departments
+    # Department and Year aggregators for active production departments
     dept_stats_map: Dict[str, Dict[str, Any]] = {
-        "CSE": {"name": "Computer Science and Engineering", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
-        "IT": {"name": "Information Technology", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
-        "AIDS": {"name": "Artificial Intelligence and Data Science", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
         "CSE(CS)": {"name": "Computer Science and Engineering (Cyber Security)", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
         "CSE(IOT)": {"name": "Computer Science and Engineering (Internet of Things)", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
-        "ECE": {"name": "Electronics and Communication Engineering", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
-        "EEE": {"name": "Electrical and Electronics Engineering", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
-        "MECH": {"name": "Mechanical Engineering", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
-        "CIVIL": {"name": "Civil Engineering", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
-        "AGRI": {"name": "Agriculture Engineering", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
-        "BME": {"name": "Biomedical Engineering", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
+        "IT": {"name": "Information Technology", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
     }
 
     year_stats_map: Dict[str, Dict[str, Any]] = {
@@ -241,7 +345,7 @@ def _build_canonical_contest_dataset_internal(
         p_res = public_res_map.get(s_id)
         v_res = virtual_res_map.get(s_id)
 
-        dept_raw = (student.department.code if student.department else None) or (p_res.dept if p_res else None) or "CSE"
+        dept_raw = (student.department.code if student.department else None) or (p_res.dept if p_res else None) or "CSE(CS)"
         reg_upper = (reg_no or "").upper()
         
         if "CC" in reg_upper:
@@ -250,30 +354,14 @@ def _build_canonical_contest_dataset_internal(
             dept_raw = "CSE(IOT)"
 
         dept_code = str(dept_raw).strip().upper()
-        if dept_code in ("CSE(IOT)", "IOT", "CSE_IOT"):
+        if dept_code in ("CSE(IOT)", "IOT", "CSE_IOT", "CSE (IOT)"):
             dept_code = "CSE(IOT)"
-        elif dept_code in ("CSE(CS)", "CS", "CYBER", "CYBER SECURITY", "CSE_CS"):
+        elif dept_code in ("CSE(CS)", "CS", "CYBER", "CYBER SECURITY", "CSE_CS", "CSE (CS)"):
             dept_code = "CSE(CS)"
-        elif dept_code in ("IT", "INFORMATION TECHNOLOGY"):
+        elif dept_code in ("IT", "INFORMATION TECHNOLOGY", "INFO TECH"):
             dept_code = "IT"
-        elif dept_code in ("AIDS", "AI&DS", "AI-DS", "AI DS"):
-            dept_code = "AIDS"
-        elif dept_code in ("ECE", "ELECTRONICS"):
-            dept_code = "ECE"
-        elif dept_code in ("EEE", "ELECTRICAL"):
-            dept_code = "EEE"
-        elif dept_code in ("MECH", "MECHANICAL"):
-            dept_code = "MECH"
-        elif dept_code in ("CIVIL",):
-            dept_code = "CIVIL"
-        elif dept_code in ("AGRI", "AGRICULTURE"):
-            dept_code = "AGRI"
-        elif dept_code in ("BME", "BIOMEDICAL"):
-            dept_code = "BME"
-        elif dept_code in ("CSE", "COMPUTER SCIENCE"):
-            dept_code = "CSE"
         else:
-            dept_code = dept_raw
+            dept_code = None
 
         year_level = student.year_level or (p_res.year if p_res else None) or "III"
         if reg_upper.startswith("732225") or "25CC" in reg_upper or "25CI" in reg_upper:
@@ -443,10 +531,7 @@ def _build_canonical_contest_dataset_internal(
         status_counts[canon_status] = status_counts.get(canon_status, 0) + 1
 
         # Department aggregator
-        dept_norm = str(dept_code)
-        if dept_norm not in dept_stats_map:
-            dept_stats_map[dept_norm] = {"name": dept_norm, "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0}
-
+        dept_norm = str(dept_code) if dept_code else ""
         if dept_norm in dept_stats_map:
             dept_stats_map[dept_norm]["total"] += 1
             if canon_status == "PUBLIC": dept_stats_map[dept_norm]["public"] += 1
@@ -485,6 +570,7 @@ def _build_canonical_contest_dataset_internal(
             elif solved_val == 2: q2_all += 1
             elif solved_val == 1: q1_all += 1
 
+        stat = stats_map.get(s_id)
         row_item = {
             "s_no": idx,
             "student_id": s_id,
@@ -494,11 +580,11 @@ def _build_canonical_contest_dataset_internal(
             "year": yr_norm,
             "username": username,
             "profile_url": profile_url,
-            "profile_rank": student.stats.contest_global_ranking if student.stats else None,
-            "profile_total_solved": student.stats.total_solved if student.stats else 0,
-            "easy_solved": student.stats.easy_solved if student.stats else None,
-            "medium_solved": student.stats.medium_solved if student.stats else None,
-            "hard_solved": student.stats.hard_solved if student.stats else None,
+            "profile_rank": stat.contest_global_ranking if stat else None,
+            "profile_total_solved": stat.total_solved if stat else 0,
+            "easy_solved": stat.easy_solved if stat else None,
+            "medium_solved": stat.medium_solved if stat else None,
+            "hard_solved": stat.hard_solved if stat else None,
             "status": canon_status,
             "participation_status": canon_status,
             "confidence": confidence_val,

@@ -91,13 +91,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <div className="hidden sm:block"><CollegeLogo size={34} className="transition-transform group-hover:scale-105" /></div>
                 </div>
                 <div className="flex flex-col justify-center min-w-0">
-                  <div className="flex items-center space-x-1.5 min-w-0">
-                    <span className="font-black text-[10.5px] xs:text-[11.5px] leading-tight sm:text-base sm:leading-tight tracking-tight text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors truncate flex items-center">
+                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                    <span className="font-black text-[10.5px] xs:text-[11.5px] leading-tight sm:text-base sm:leading-tight tracking-tight text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors whitespace-nowrap flex-shrink-0">
                       NANDHA INTELLIGENCE
                     </span>
-                    <span className="hidden sm:inline-flex px-1.5 py-0.2 text-[9px] font-black rounded bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 whitespace-nowrap flex-shrink-0">
-                      {freshness?.total_students ? `${freshness.total_students} STUDENTS` : '308 STUDENTS'}
-                    </span>
+                    {freshness?.total_students ? (
+                      <span className="hidden sm:inline-flex px-2 py-0.5 text-[9px] font-black rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 whitespace-nowrap flex-shrink-0 items-center">
+                        {freshness.total_students} STUDENTS
+                      </span>
+                    ) : null}
                   </div>
                   <span className="text-[8.5px] xs:text-[9px] leading-tight sm:text-[11px] sm:leading-snug text-slate-500 dark:text-slate-400 font-semibold tracking-wide truncate">
                     Nandha Engineering College<span className="hidden sm:inline"> • Erode</span>

@@ -95,10 +95,12 @@ class FacultyAssignmentService:
             existing_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, faculty_id)
             new_ids = [sid for sid in unique_student_ids if sid not in existing_ids]
 
-            if current_count + len(new_ids) > MAX_STUDENTS_PER_FACULTY:
+            # DB-LEVEL ATOMIC CAPACITY CHECK
+            # Capacity check: Admins & Super Admins can bypass or override the default capacity cap
+            if not is_assigner_admin and (current_count + len(new_ids) > MAX_STUDENTS_PER_FACULTY):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="This staff member has reached the maximum student capacity."
+                    detail=f"This staff member has reached the default student capacity limit of {MAX_STUDENTS_PER_FACULTY} students."
                 )
 
             # 1. Validate that all students exist and belong to the same department

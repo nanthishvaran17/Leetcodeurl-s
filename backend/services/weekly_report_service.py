@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from backend.models import (
     Student, Department, WeeklyPublicResult, WeeklyVirtualResult,
-    WeeklyStudentSnapshot, WeeklyReportAudit
+    WeeklyStudentSnapshot, WeeklyReportAudit, LeetCodeProfileStats
 )
 from backend.config.report_config import (
     BATCH_CONFIG,
@@ -33,12 +33,13 @@ from backend.services.contest_bucket_classifier import (
 from backend.logger import logger
 
 
-def get_student_status_code(student: Student) -> Tuple[str, Optional[int], Optional[int], Optional[int], Optional[int]]:
+def get_student_status_code(student: Student, st: Optional[Any] = None) -> Tuple[str, Optional[int], Optional[int], Optional[int], Optional[int]]:
     """
     Extracts student stats and distinguishes verified zero solved, missing links, invalid URLs, and network errors.
     Returns (status_code, total_solved, easy, medium, hard)
     """
-    st = student.stats
+    if st is None:
+        st = student.stats
     if not student.leetcode_url and not student.username:
         return "MISSING_LINK", None, None, None, None
 
@@ -257,13 +258,17 @@ def generate_weekly_performance_data(
 
     # Step 3: Load Full Master Roster
     from backend.services.authorization_service import apply_role_based_student_filter
-    student_query = db.query(Student).options(joinedload(Student.stats), joinedload(Student.department)).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    student_query = db.query(Student).options(joinedload(Student.department)).filter((Student.is_active == True) | (Student.is_active.is_(None)))
     
     if current_user:
         student_query = apply_role_based_student_filter(student_query, current_user, db)
         
     students = student_query.order_by(Student.department_id, Student.year_level, Student.reg_no).all()
     total_students_count = len(students)
+
+    student_ids = [s.id for s in students]
+    stats_records = db.query(LeetCodeProfileStats).filter(LeetCodeProfileStats.student_id.in_(student_ids)).all() if student_ids else []
+    stats_map = {stat.student_id: stat for stat in stats_records}
 
     # Step 4: Load Contest Results for Resolved Sessions
     curr_pub_results: Dict[int, Any] = {}
@@ -313,8 +318,8 @@ def generate_weekly_performance_data(
             continue # Deduplicate multiple accounts under same People ID
         processed_pids.add(pid)
 
-        st = s.stats
-        status_code, tot, easy, med, hd = get_student_status_code(s)
+        st = stats_map.get(s.id)
+        status_code, tot, easy, med, hd = get_student_status_code(s, st)
         is_verified = (status_code == "VERIFIED" and tot is not None)
 
         if is_verified:

@@ -146,6 +146,42 @@ export const App: React.FC = () => {
       }).catch(err => console.warn('[PUSH] Lazy load note:', err));
     }
   }, [isAuthenticated, user?.id]);
+
+  // Eager prewarm of all key page modules immediately on boot for instant 0ms 1-click page transitions
+  useEffect(() => {
+    const prewarmAllPages = () => {
+      try {
+        Promise.allSettled([
+          import('./pages/DashboardPage'),
+          import('./pages/WeeklyContestPage'),
+          import('./pages/StudentMasterPage'),
+          import('./pages/DepartmentDashboard'),
+          import('./pages/FacultyActionCenter'),
+          import('./pages/HODCommandCenter'),
+          import('./pages/StudentDashboardView'),
+          import('./pages/StaffDashboardView'),
+          import('./pages/GrowthIntelligencePage'),
+          import('./pages/ComparePage'),
+          import('./pages/DataQualityPage'),
+          import('./pages/ReportsPage'),
+          import('./pages/StudentProfilePage'),
+          import('./pages/AuditLogPage'),
+          import('./pages/MessagesPage'),
+          import('./pages/SystemHealthPage'),
+          import('./pages/AIControlCenterPage'),
+          import('./pages/PublicLeaderboardPage'),
+          import('./pages/LandingPage'),
+          import('./pages/LoginPage'),
+        ]);
+      } catch (_e) {}
+    };
+
+    // Trigger immediately and also on idle for zero UI thread bottleneck
+    prewarmAllPages();
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(prewarmAllPages);
+    }
+  }, []);
   const [activeTab, setActiveTab] = useState('landing');
   const [previousTab, setPreviousTab] = useState<string | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<StudentData | null>(null);

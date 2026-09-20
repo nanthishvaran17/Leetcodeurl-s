@@ -118,27 +118,26 @@ def get_performance_metrics() -> Dict[str, Any]:
     }
 
 
-class PerformanceMonitoringMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        global _REQUEST_COUNTER, _ERROR_COUNTER, _IN_FLIGHT_REQUESTS
+async def performance_monitoring_middleware(request: Request, call_next):
+    global _REQUEST_COUNTER, _ERROR_COUNTER, _IN_FLIGHT_REQUESTS
 
-        _IN_FLIGHT_REQUESTS += 1
-        _REQUEST_COUNTER += 1
-        start_ts = time.perf_counter()
+    _IN_FLIGHT_REQUESTS += 1
+    _REQUEST_COUNTER += 1
+    start_ts = time.perf_counter()
 
-        try:
-            response = await call_next(request)
-            duration_ms = (time.perf_counter() - start_ts) * 1000.0
-            _LATENCY_BUFFER.append(duration_ms)
+    try:
+        response = await call_next(request)
+        duration_ms = (time.perf_counter() - start_ts) * 1000.0
+        _LATENCY_BUFFER.append(duration_ms)
 
-            if response.status_code >= 500:
-                _ERROR_COUNTER += 1
-
-            response.headers["X-Process-Time-Ms"] = f"{duration_ms:.2f}"
-            response.headers["X-Performance-Tier"] = "Ultra-Fast" if duration_ms < 50 else "Standard"
-            return response
-        except Exception:
+        if response.status_code >= 500:
             _ERROR_COUNTER += 1
-            raise
-        finally:
-            _IN_FLIGHT_REQUESTS = max(0, _IN_FLIGHT_REQUESTS - 1)
+
+        response.headers["X-Process-Time-Ms"] = f"{duration_ms:.2f}"
+        response.headers["X-Performance-Tier"] = "Ultra-Fast" if duration_ms < 50 else "Standard"
+        return response
+    except Exception:
+        _ERROR_COUNTER += 1
+        raise
+    finally:
+        _IN_FLIGHT_REQUESTS = max(0, _IN_FLIGHT_REQUESTS - 1)

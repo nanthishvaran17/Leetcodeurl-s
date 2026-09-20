@@ -5,7 +5,8 @@ import {
   AlertTriangle, Save, CheckCircle2, XCircle, ArrowRight, Layers,
   Shield, Server, FileText, CheckCircle, FileSpreadsheet, Archive,
   Send, Fingerprint, Search, Filter, Download, Upload, Eye, 
-  Check, HardDrive, Terminal, Sparkles, SlidersHorizontal, UserCheck
+  Check, HardDrive, Terminal, Sparkles, SlidersHorizontal, UserCheck,
+  Camera, Play
 } from 'lucide-react';
 import api from '../services/api';
 import { SecurityActivitySection } from '../components/SecurityActivitySection';
@@ -16,6 +17,20 @@ import { AdminStaffAllocationPanel } from '../components/AdminStaffAllocationPan
 import { StaffVerificationSection } from '../components/StaffVerificationSection';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
+import { GlobalFilter, GlobalFilterOption } from '../components/GlobalFilter';
+
+const contestPollIntervalOptions: GlobalFilterOption[] = [
+  { value: '2', label: 'Every 2 Minutes (High Frequency)', pillText: '2 MIN' },
+  { value: '5', label: 'Every 5 Minutes (Standard Recommended)', pillText: '5 MIN' },
+  { value: '10', label: 'Every 10 Minutes (Low Bandwidth)', pillText: '10 MIN' },
+  { value: '15', label: 'Every 15 Minutes', pillText: '15 MIN' },
+];
+
+const smtpEncryptionOptions: GlobalFilterOption[] = [
+  { value: 'TLS', label: 'TLS (Port 587)', pillText: 'TLS' },
+  { value: 'SSL', label: 'SSL (Port 465)', pillText: 'SSL' },
+  { value: 'NONE', label: 'None (Plain)', pillText: 'NONE' },
+];
 
 export const SettingsPage: React.FC = () => {
   const { notify, confirmAction } = useNotification();
@@ -679,30 +694,30 @@ export const SettingsPage: React.FC = () => {
                 key={`${item.key}-${probeKey}`}
                 className={`flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all duration-300 ${
                   isChecking
-                    ? 'bg-slate-50/50 border-slate-100'
+                    ? 'bg-slate-50 dark:bg-navy-900/60 border-slate-200 dark:border-navy-700'
                     : isHealthy
-                      ? 'bg-emerald-50/30 border-emerald-100 hover:border-emerald-200 hover:shadow-sm'
+                      ? 'bg-white dark:bg-navy-900 border-slate-200 dark:border-navy-700 hover:border-slate-300 dark:hover:border-navy-600 hover:shadow-sm'
                       : isDegraded
-                        ? 'bg-amber-50/50 border-amber-200'
-                        : 'bg-rose-50/50 border-rose-200'
+                        ? 'bg-white dark:bg-navy-900 border-amber-300 dark:border-amber-700/60'
+                        : 'bg-white dark:bg-navy-900 border-rose-300 dark:border-rose-700/60'
                 }`}
                 style={{
                   animation: probeKey > 0 ? `card-pop 0.35s cubic-bezier(0.4,0,0.2,1) ${idx * 40}ms both` : 'none'
                 }}
               >
-                <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider truncate w-full text-center">{item.label}</span>
-                <span className={`font-black text-[10px] mt-1 px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${
+                <span className="text-[10px] uppercase font-black text-slate-700 dark:text-slate-200 tracking-wider truncate w-full text-center">{item.label}</span>
+                <span className={`font-black text-[10px] mt-1.5 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 ${
                   isChecking
-                    ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20 animate-pulse'
+                    ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 animate-pulse'
                     : isHealthy
-                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                      ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
                       : isDegraded
-                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                        ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30'
                         : isOffline || isUnknown
-                          ? 'bg-slate-500/10 text-slate-400 border border-slate-500/20'
-                          : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+                          ? 'bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30'
+                          : 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30'
                 }`}>
-                  {isChecking && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />}
+                  {isChecking && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />}
                   {isHealthy && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
                   {isChecking ? 'Checking' : isHealthy ? 'Healthy' : isDegraded ? 'Degraded' : isOffline ? 'Offline' : isUnknown ? 'Unknown' : isFailed ? 'Failed' : 'Error'}
                 </span>
@@ -798,96 +813,299 @@ export const SettingsPage: React.FC = () => {
           </div>
         )}
 
-        {/* 4. SECTION I — WEEKLY AUTOMATION */}
+        {/* 4. SECTION I — WEEKLY AUTOMATION & SCHEDULING SUITE */}
         {activeSectionFilter === 'automation' && (
-          <div className="glass-card p-5 rounded-2xl border border-slate-200 dark:border-navy-700 space-y-3.5 animate-fade-in">
-            <div className="flex items-center justify-between border-b pb-2.5 dark:border-navy-700">
-              <h2 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-2 uppercase tracking-wide">
-                <Clock className="w-4 h-4 text-brand-500" />
-                <span>Weekly Automation</span>
-              </h2>
-              <span className="text-[10px] font-mono text-slate-400 uppercase">Section I</span>
+          <div className="space-y-6 animate-fade-in">
+            
+            {/* Live Scheduler Execution & Status Control Header */}
+            <div className="p-6 rounded-3xl bg-gradient-to-r from-brand-900 via-indigo-950 to-navy-950 text-white shadow-2xl border border-brand-500/30 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+              
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 relative z-10">
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-brand-500/20 text-brand-300 border border-brand-500/40">
+                      Cron Daemon Active
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Live Timezone: {settings.TIMEZONE || 'Asia/Kolkata (IST)'}
+                    </span>
+                  </div>
+                  <h2 className="text-xl font-black text-white flex items-center space-x-2 pt-1">
+                    <Clock className="w-6 h-6 text-brand-400" />
+                    <span>Weekly Automation & Contest Engine Suite</span>
+                  </h2>
+                  <p className="text-xs text-slate-300 max-w-2xl">
+                    Automated Sunday contest lifecycle management, start/finalization snapshots, automated email dispatches, and pre-contest data integrity checks.
+                  </p>
+                </div>
+
+                {/* Manual Override Action Controls */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => triggerAdvancedOp('trigger-sunday', 'Force Trigger Sunday Session', 'Manually trigger Sunday contest sync and snapshot sequence right now.', 'Will initiate immediate student leetcode score sync.')}
+                    className="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-lg flex items-center space-x-1.5 transition-all cursor-pointer"
+                  >
+                    <Play className="w-3.5 h-3.5" />
+                    <span>Trigger Session Now</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => triggerAdvancedOp('finalize-now', 'Force Finalize Current Session', 'Lock current session and generate final scores snapshot immediately.', 'Will lock finalized sessions.')}
+                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg flex items-center space-x-1.5 transition-all cursor-pointer"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Force Finalization</span>
+                  </button>
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Timezone [LOCKED]</label>
-                <input
-                  type="text"
-                  disabled
-                  value="Asia/Kolkata (IST)"
-                  className="w-full p-2 rounded-xl border bg-slate-100 dark:bg-navy-950 font-bold text-slate-500 cursor-not-allowed"
-                />
+            {/* Core Schedule Timings Grid */}
+            <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-xl space-y-6">
+              <div className="flex items-center justify-between border-b pb-3 dark:border-navy-800">
+                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-2 uppercase tracking-wide">
+                  <SlidersHorizontal className="w-4 h-4 text-brand-500" />
+                  <span>1. Core Schedule & Window Controls</span>
+                </h3>
+                <span className="text-xs font-mono font-bold text-slate-400">Section I.A</span>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Sunday Start Time (24h)</label>
-                <input
-                  type="text"
-                  value={settings.SESSION_START || '08:00'}
-                  onChange={(e) => setSettings({ ...settings, SESSION_START: e.target.value })}
-                  className="w-full p-2 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 font-mono font-bold"
-                />
-              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Timezone System Lock</label>
+                  <input
+                    type="text"
+                    disabled
+                    value={settings.TIMEZONE || 'Asia/Kolkata (IST)'}
+                    className="w-full p-2.5 rounded-xl border bg-slate-100 dark:bg-navy-900 font-bold text-slate-500 cursor-not-allowed border-slate-200 dark:border-navy-800"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">Locked to institutional standard</p>
+                </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Finalization & Snapshot Time (24h)</label>
-                <input
-                  type="text"
-                  value={settings.SESSION_END || '09:30'}
-                  onChange={(e) => setSettings({ ...settings, SESSION_END: e.target.value })}
-                  className="w-full p-2 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 font-mono font-bold"
-                />
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Sunday Session Start (24h)</label>
+                  <input
+                    type="text"
+                    value={settings.SESSION_START || '08:00'}
+                    onChange={(e) => setSettings({ ...settings, SESSION_START: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 font-mono font-bold text-slate-800 dark:text-slate-200 focus:border-brand-500 outline-none"
+                    placeholder="HH:MM"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">Starting baseline snapshot time</p>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Finalization & Lock Time (24h)</label>
+                  <input
+                    type="text"
+                    value={settings.SESSION_END || '09:30'}
+                    onChange={(e) => setSettings({ ...settings, SESSION_END: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 font-mono font-bold text-slate-800 dark:text-slate-200 focus:border-brand-500 outline-none"
+                    placeholder="HH:MM"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">Final score freeze & lock time</p>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Submission Grace Period (Mins)</label>
+                  <input
+                    type="number"
+                    value={settings.GRACE_PERIOD_MINS || '10'}
+                    onChange={(e) => setSettings({ ...settings, GRACE_PERIOD_MINS: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 font-mono font-bold text-slate-800 dark:text-slate-200 focus:border-brand-500 outline-none"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">Allowed grace window post-lock</p>
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 pt-1 text-xs">
-              <label className="flex items-center space-x-2 p-2.5 rounded-xl border bg-slate-50/50 dark:bg-navy-950/50 border-slate-200 dark:border-navy-700">
-                <input
-                  type="checkbox"
-                  checked={settings.ENABLE_AUTO_SUNDAY_SESSION === 'true'}
-                  onChange={(e) => setSettings({ ...settings, ENABLE_AUTO_SUNDAY_SESSION: e.target.checked ? 'true' : 'false' })}
-                  className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4"
-                />
-                <span className="font-bold text-slate-800 dark:text-slate-200">Automatic Sunday Session</span>
-              </label>
+            {/* Automation Task Pipeline Switches */}
+            <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-xl space-y-6">
+              <div className="flex items-center justify-between border-b pb-3 dark:border-navy-800">
+                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-2 uppercase tracking-wide">
+                  <Sparkles className="w-4 h-4 text-emerald-500" />
+                  <span>2. Automated Session Lifecycle Pipeline</span>
+                </h3>
+                <span className="text-xs font-mono font-bold text-slate-400">Section I.B</span>
+              </div>
 
-              <label className="flex items-center space-x-2 p-2.5 rounded-xl border bg-slate-50/50 dark:bg-navy-950/50 border-slate-200 dark:border-navy-700">
-                <input
-                  type="checkbox"
-                  checked={settings.AUTO_START_SNAPSHOT === 'true'}
-                  onChange={(e) => setSettings({ ...settings, AUTO_START_SNAPSHOT: e.target.checked ? 'true' : 'false' })}
-                  className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4"
-                />
-                <span className="font-bold text-slate-800 dark:text-slate-200">Starting Snapshot (08:00 AM)</span>
-              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+                {/* 1 */}
+                <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-navy-700 bg-slate-50/50 dark:bg-navy-900/40 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-sky-500" />
+                      Automatic Sunday Session
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={settings.ENABLE_AUTO_SUNDAY_SESSION === 'true'}
+                      onChange={(e) => setSettings({ ...settings, ENABLE_AUTO_SUNDAY_SESSION: e.target.checked ? 'true' : 'false' })}
+                      className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Automatically trigger full contest data polling every Sunday at scheduled start time without admin manual intervention.
+                  </p>
+                </div>
 
-              <label className="flex items-center space-x-2 p-2.5 rounded-xl border bg-slate-50/50 dark:bg-navy-950/50 border-slate-200 dark:border-navy-700">
-                <input
-                  type="checkbox"
-                  checked={settings.AUTO_FINALIZATION_SNAPSHOT === 'true'}
-                  onChange={(e) => setSettings({ ...settings, AUTO_FINALIZATION_SNAPSHOT: e.target.checked ? 'true' : 'false' })}
-                  className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4"
-                />
-                <span className="font-bold text-slate-800 dark:text-slate-200">Finalization + Final Snapshot (09:30 AM)</span>
-              </label>
+                {/* 2 */}
+                <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-navy-700 bg-slate-50/50 dark:bg-navy-900/40 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Camera className="w-4 h-4 text-indigo-500" />
+                      Starting Snapshot (08:00 AM)
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={settings.AUTO_START_SNAPSHOT === 'true'}
+                      onChange={(e) => setSettings({ ...settings, AUTO_START_SNAPSHOT: e.target.checked ? 'true' : 'false' })}
+                      className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Capture initial student solved count baseline at session start to track incremental solves cleanly during contest.
+                  </p>
+                </div>
 
-              <label className="flex items-center space-x-2 p-2.5 rounded-xl border bg-slate-50/50 dark:bg-navy-950/50 border-slate-200 dark:border-navy-700">
-                <input
-                  type="checkbox"
-                  checked={settings.LOCK_FINALIZED_SESSIONS === 'true'}
-                  onChange={(e) => setSettings({ ...settings, LOCK_FINALIZED_SESSIONS: e.target.checked ? 'true' : 'false' })}
-                  className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4"
-                />
-                <span className="font-bold text-slate-800 dark:text-slate-200">Lock Finalized Sessions</span>
-              </label>
+                {/* 3 */}
+                <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-navy-700 bg-slate-50/50 dark:bg-navy-900/40 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Lock className="w-4 h-4 text-emerald-500" />
+                      Finalization & Freeze (09:30 AM)
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={settings.AUTO_FINALIZATION_SNAPSHOT === 'true'}
+                      onChange={(e) => setSettings({ ...settings, AUTO_FINALIZATION_SNAPSHOT: e.target.checked ? 'true' : 'false' })}
+                      className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Lock score entries and record official final contest scores immediately upon window close.
+                  </p>
+                </div>
+
+                {/* 4 */}
+                <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-navy-700 bg-slate-50/50 dark:bg-navy-900/40 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-purple-500" />
+                      Lock Finalized Sessions
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={settings.LOCK_FINALIZED_SESSIONS === 'true'}
+                      onChange={(e) => setSettings({ ...settings, LOCK_FINALIZED_SESSIONS: e.target.checked ? 'true' : 'false' })}
+                      className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Prevent accidental modification or retroactive edits to finalized contest sessions by non-superadmins.
+                  </p>
+                </div>
+
+                {/* 5 */}
+                <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-navy-700 bg-slate-50/50 dark:bg-navy-900/40 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Mail className="w-4 h-4 text-amber-500" />
+                      Auto Dispatch Reports (09:35 AM)
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={settings.AUTO_DISPATCH_REPORTS === 'true'}
+                      onChange={(e) => setSettings({ ...settings, AUTO_DISPATCH_REPORTS: e.target.checked ? 'true' : 'false' })}
+                      className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Automatically generate and email weekly contest summary PDF/Excel reports to configured HOD recipient list.
+                  </p>
+                </div>
+
+                {/* 6 */}
+                <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-navy-700 bg-slate-50/50 dark:bg-navy-900/40 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                      <Database className="w-4 h-4 text-cyan-500" />
+                      Auto Post-Contest Backup
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={settings.AUTO_BACKUP_ON_FINALIZE === 'true'}
+                      onChange={(e) => setSettings({ ...settings, AUTO_BACKUP_ON_FINALIZE: e.target.checked ? 'true' : 'false' })}
+                      className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Trigger automated database snapshot immediately following session finalization for disaster recovery.
+                  </p>
+                </div>
+              </div>
             </div>
+
+            {/* Live Monitoring & Portal Controls */}
+            <div className="p-6 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-xl space-y-6">
+              <div className="flex items-center justify-between border-b pb-3 dark:border-navy-800">
+                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-2 uppercase tracking-wide">
+                  <Activity className="w-4 h-4 text-sky-500" />
+                  <span>3. Real-Time Sync & Student Banner Settings</span>
+                </h3>
+                <span className="text-xs font-mono font-bold text-slate-400">Section I.C</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div>
+                  <GlobalFilter
+                    label="Contest Sync Polling Interval"
+                    options={contestPollIntervalOptions}
+                    value={String(settings.CONTEST_POLL_INTERVAL || '5')}
+                    onChange={(val) => setSettings({ ...settings, CONTEST_POLL_INTERVAL: val })}
+                    icon={<Clock className="w-3.5 h-3.5" />}
+                    dropdownWidth="min-w-[340px]"
+                    showSearch={false}
+                  />
+                </div>
+
+                <div className="flex items-center space-x-3 p-3 rounded-2xl border border-slate-200 dark:border-navy-700 bg-slate-50/50 dark:bg-navy-900/40">
+                  <input
+                    type="checkbox"
+                    checked={settings.SHOW_CONTEST_BANNER === 'true'}
+                    onChange={(e) => setSettings({ ...settings, SHOW_CONTEST_BANNER: e.target.checked ? 'true' : 'false' })}
+                    className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+                  />
+                  <div>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 block">Student Live Contest Banner</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">Display active contest notification bar on student dashboard.</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3 p-3 rounded-2xl border border-slate-200 dark:border-navy-700 bg-slate-50/50 dark:bg-navy-900/40">
+                  <input
+                    type="checkbox"
+                    checked={settings.AUTO_FLAG_SUSPICIOUS === 'true'}
+                    onChange={(e) => setSettings({ ...settings, AUTO_FLAG_SUSPICIOUS: e.target.checked ? 'true' : 'false' })}
+                    className="rounded text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
+                  />
+                  <div>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 block">Anomalous Score Surge Guard</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">Auto-flag sudden abnormal problem solve jumps for integrity audit.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
 
         {/* 5. SECTION II — CONTEST DATA ENGINE */}
         {activeSectionFilter === 'contest' && (
-          <div className="glass-card p-5 rounded-2xl border border-slate-200 dark:border-navy-700 space-y-3.5 animate-fade-in">
+          <div className="glass-card p-5 rounded-2xl border border-slate-200 dark:border-navy-700 space-y-4 animate-fade-in">
             <div className="flex items-center justify-between border-b pb-2.5 dark:border-navy-700">
               <h2 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center space-x-2 uppercase tracking-wide">
                 <RefreshCw className="w-4 h-4 text-indigo-500" />
@@ -896,9 +1114,9 @@ export const SettingsPage: React.FC = () => {
               <span className="text-[10px] font-mono text-slate-400 uppercase">Section II</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
               <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Fetch Timeout (Seconds)</label>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Fetch Timeout (Sec)</label>
                 <input
                   type="number"
                   value={settings.FETCH_TIMEOUT || 30}
@@ -917,7 +1135,17 @@ export const SettingsPage: React.FC = () => {
                 />
               </div>
 
-              <div className="md:col-span-2 flex items-center space-x-4 pt-3">
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Parallel Concurrency</label>
+                <input
+                  type="number"
+                  value={settings.PARALLEL_CONCURRENCY || 8}
+                  onChange={(e) => setSettings({ ...settings, PARALLEL_CONCURRENCY: e.target.value })}
+                  className="w-full p-2 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 font-mono font-bold"
+                />
+              </div>
+
+              <div className="md:col-span-3 flex flex-wrap items-center gap-4 pt-3">
                 <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
@@ -937,10 +1165,21 @@ export const SettingsPage: React.FC = () => {
                   />
                   <span className="font-bold text-slate-800 dark:text-slate-200">Archive Reconciliation</span>
                 </label>
+
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={settings.STRICT_ZERO_SCORE_GUARD !== 'false'}
+                    onChange={(e) => setSettings({ ...settings, STRICT_ZERO_SCORE_GUARD: e.target.checked ? 'true' : 'false' })}
+                    className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
+                  />
+                  <span className="font-bold text-slate-800 dark:text-slate-200">Zero-Score Guard</span>
+                </label>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2.5 pt-2 border-t dark:border-navy-700">
+            {/* Action Buttons Toolbar */}
+            <div className="flex flex-wrap gap-2.5 pt-3 border-t dark:border-navy-700">
               <button
                 type="button"
                 onClick={() => triggerAdvancedOp('refetch-selected', 'Sync Selected Contest Only', 'Fetch authentic participant data ONLY for the currently selected weekly contest session.', 'Does NOT touch other contests.')}
@@ -957,6 +1196,24 @@ export const SettingsPage: React.FC = () => {
               >
                 <Database className="w-3.5 h-3.5" />
                 <span>Sync All Historical Contests</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => triggerAdvancedOp('trigger-sunday', 'Force Trigger Sunday Session', 'Manually trigger Sunday contest sync and snapshot sequence right now.', 'Will initiate immediate student leetcode score sync.')}
+                className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm flex items-center space-x-1.5 cursor-pointer"
+              >
+                <Play className="w-3.5 h-3.5" />
+                <span>Force Trigger Live Sync</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => triggerAdvancedOp('rebuild-index', 'Rebuild Leaderboard Index', 'Re-index student roster mappings and historical contest scores.', 'Re-indexes 590 student roster entries.')}
+                className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-sm flex items-center space-x-1.5 cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Rebuild Leaderboard Index</span>
               </button>
             </div>
           </div>
@@ -1067,16 +1324,15 @@ export const SettingsPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Encryption</label>
-                  <select
-                    value={settings.SMTP_ENCRYPTION || 'TLS'}
-                    onChange={(e) => setSettings({ ...settings, SMTP_ENCRYPTION: e.target.value })}
-                    className="w-full p-2 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 font-bold text-slate-900 dark:text-white"
-                  >
-                    <option value="TLS">TLS (Port 587)</option>
-                    <option value="SSL">SSL (Port 465)</option>
-                    <option value="NONE">None</option>
-                  </select>
+                  <GlobalFilter
+                    label="Encryption"
+                    options={smtpEncryptionOptions}
+                    value={String(settings.SMTP_ENCRYPTION || 'TLS')}
+                    onChange={(val) => setSettings({ ...settings, SMTP_ENCRYPTION: val })}
+                    icon={<Shield className="w-3.5 h-3.5" />}
+                    dropdownWidth="min-w-[240px]"
+                    showSearch={false}
+                  />
                 </div>
 
                 <div>

@@ -110,7 +110,7 @@ def resolve_certificate_record(
     if reg:
         student_obj = db.query(Student).filter(Student.reg_no.ilike(f"%{reg.strip()}%")).first()
 
-    if not student_obj and (clean_id.startswith("CERT-") or "EXCELLENCE" in clean_id):
+    if not student_obj:
         candidate_reg = clean_id.replace("CERT-", "").replace("-EXCELLENCE", "").replace("-FORENSIC", "").strip()
         if candidate_reg and len(candidate_reg) >= 6:
             student_obj = db.query(Student).filter(Student.reg_no.ilike(f"%{candidate_reg}%")).first()

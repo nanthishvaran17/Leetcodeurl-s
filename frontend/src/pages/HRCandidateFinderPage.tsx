@@ -393,7 +393,7 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
       <button
         type="button"
         onClick={handleToggle}
-        className={`w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-blue-400 dark:hover:border-navy-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all flex items-center justify-between gap-2 cursor-pointer shadow-2xs ${className}`}
+        className={`w-full h-10 px-3.5 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-blue-400 dark:hover:border-navy-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all flex items-center justify-between gap-2 cursor-pointer shadow-2xs ${className}`}
       >
         <div className="flex items-center gap-2 min-w-0 overflow-hidden">
           {icon && <span className="text-blue-500 flex-shrink-0">{icon}</span>}
@@ -1376,8 +1376,8 @@ export const HRCandidateFinderPage: React.FC = () => {
     window.print();
   };
 
-  const selectClass = "w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-slate-300 dark:hover:border-navy-600 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all cursor-pointer shadow-2xs";
-  const inpClass = "w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-slate-300 dark:hover:border-navy-600 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all shadow-2xs";
+  const selectClass = "w-full h-10 px-3.5 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-slate-300 dark:hover:border-navy-600 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all cursor-pointer shadow-2xs";
+  const inpClass = "w-full h-10 px-3.5 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-slate-300 dark:hover:border-navy-600 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all shadow-2xs";
 
   const renderRelationalFilter = (label: string, key: keyof AdvancedFilters) => {
     const nf = (filters[key] as NumericFilter) || defaultNumeric(0);
@@ -1388,7 +1388,7 @@ export const HRCandidateFinderPage: React.FC = () => {
           <span>{label}</span>
           {isActive && <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" title="Active Filter" />}
         </label>
-        <div className={`flex items-center rounded-xl border ${isActive ? "border-blue-500 dark:border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/20 dark:bg-blue-950/30" : "border-slate-200/90 dark:border-navy-700 bg-white/90 dark:bg-navy-950/90"} overflow-hidden shadow-2xs hover:border-slate-300 dark:hover:border-navy-600 focus-within:ring-2 focus-within:ring-blue-500/25 focus-within:border-blue-500 transition-all`}>
+        <div className={`flex items-center rounded-2xl border ${isActive ? "border-blue-500 dark:border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/20 dark:bg-blue-950/30" : "border-slate-200/90 dark:border-navy-700 bg-white/90 dark:bg-navy-950/90"} overflow-hidden shadow-2xs hover:border-slate-300 dark:hover:border-navy-600 focus-within:ring-2 focus-within:ring-blue-500/25 focus-within:border-blue-500 transition-all`}>
           <select
             value={nf.op}
             onChange={e => updateNumeric(key, "op", e.target.value)}
@@ -2231,7 +2231,7 @@ export const HRCandidateFinderPage: React.FC = () => {
               {/* DESKTOP & TABLET FULL TABLE VIEW (>= 768px) */}
               <div className="hidden md:block overflow-x-auto max-h-[600px] overflow-y-auto">
                 <table className="w-full text-left text-xs whitespace-nowrap table-fixed">
-                  <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-800 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-800 text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                     <tr>
                       <th className="py-3 px-4 text-left w-[20%]">Student</th>
                       <th className="py-3 px-3 text-left w-[13%]">Register No</th>

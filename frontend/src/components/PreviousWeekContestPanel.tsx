@@ -225,9 +225,9 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     // Auto-resolve current active session if not provided via props
     if (!latestSessionId) {
       try {
-        const currentRes = await api.get('/sessions/current');
-        if (currentRes?.data?.id) {
-          latestSessionId = currentRes.data.id;
+        const currentRes = await api.get('/contests/current-session');
+        if (currentRes?.data?.sessionId || currentRes?.data?.id) {
+          latestSessionId = currentRes.data.sessionId || currentRes.data.id;
         }
       } catch (e) {
         // Fallback
@@ -274,7 +274,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         .then(r => r.data)
         .catch(() => null);
 
-      const matrixPromise = api.get(`/contests/sessions/${latestSessionId}/matrix?paginated=true&page=1&limit=100`)
+      const matrixPromise = api.get(`/contests/sessions/${latestSessionId}/matrix?paginated=true&page=1&limit=1000`)
         .then(r => r.data)
         .catch(() => null);
 
@@ -283,8 +283,8 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         const newSummary: PreviousWeekSummary = {
           session_id: summaryData.sessionId,
           contest_slug: summaryData.contestId || `weekly-contest-${summaryData.contestNumber}`,
-          contest_title: summaryData.contestName,
-          target_date_ist: summaryData.sessionDate,
+          contest_title: summaryData.contestName || `Weekly Contest ${summaryData.contestNumber}`,
+          target_date_ist: summaryData.sessionDate || '20.09.2026',
           validation_status: summaryData.status,
           publish_status: summaryData.status,
           cache_state: 'HIT',
@@ -292,11 +292,11 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           sync_id: 'live',
           sync_started_at: '',
           metrics: {
-            PUBLIC: summaryData.participantCount || 0,
-            VIRTUAL: 0,
-            NOT_PARTICIPATED: Math.max(0, (summaryData.totalStudents || 0) - (summaryData.participantCount || 0)),
-            NOT_VERIFIED: 0,
-            MISSING_LEETCODE_USERNAME: 0,
+            PUBLIC: summaryData.publicParticipants ?? summaryData.participantCount ?? 0,
+            VIRTUAL: summaryData.virtualParticipants ?? 0,
+            NOT_PARTICIPATED: summaryData.notParticipated ?? Math.max(0, (summaryData.totalStudents || 0) - (summaryData.participantCount || 0)),
+            NOT_VERIFIED: summaryData.pendingVerification ?? 0,
+            MISSING_LEETCODE_USERNAME: summaryData.missingUsername ?? 0,
             TOTAL_STUDENTS: summaryData.totalStudents || 0,
           }
         };
@@ -354,11 +354,11 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                 sync_id: 'live',
                 sync_started_at: '',
                 metrics: {
-                  PUBLIC: summaryData.participantCount || 0,
-                  VIRTUAL: 0,
-                  NOT_PARTICIPATED: Math.max(0, (summaryData.totalStudents || 0) - (summaryData.participantCount || 0)),
-                  NOT_VERIFIED: 0,
-                  MISSING_LEETCODE_USERNAME: 0,
+                  PUBLIC: summaryData.publicParticipants ?? summaryData.participantCount ?? 0,
+                  VIRTUAL: summaryData.virtualParticipants ?? 0,
+                  NOT_PARTICIPATED: summaryData.notParticipated ?? Math.max(0, (summaryData.totalStudents || 0) - (summaryData.participantCount || 0)),
+                  NOT_VERIFIED: summaryData.pendingVerification ?? 0,
+                  MISSING_LEETCODE_USERNAME: summaryData.missingUsername ?? 0,
                   TOTAL_STUDENTS: summaryData.totalStudents || 0,
                 }
               },
@@ -384,11 +384,10 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
   // Initial load when sessionId prop changes or mounts
   useEffect(() => {
-    // 1. Try instant hydration from any existing cache in local storage
+    // 1. Try instant hydration for the specific target sessionId if available
     try {
-      const activeId = sessionId;
-      if (activeId) {
-        const stored = localStorage.getItem(`cache_prev_panel_${activeId}`);
+      if (sessionId) {
+        const stored = localStorage.getItem(`cache_prev_panel_${sessionId}`);
         if (stored) {
           const parsed = JSON.parse(stored);
           if (parsed.summary) {
@@ -400,22 +399,8 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           }
         }
       } else {
-        // Find any cached session panel data for instant 0ms preview
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.startsWith('cache_prev_panel_')) {
-            const stored = localStorage.getItem(key);
-            if (stored) {
-              const parsed = JSON.parse(stored);
-              if (parsed.summary) {
-                setSummary(parsed.summary);
-                if (parsed.records) setRecords(parsed.records);
-                setLoading(false);
-                break;
-              }
-            }
-          }
-        }
+        setSummary(null);
+        setRecords([]);
       }
     } catch (e) {}
 
@@ -504,7 +489,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       else if (type === 'MISSING_LEETCODE_USERNAME') counts.MISSING_LEETCODE_USERNAME++;
       else counts.NOT_PARTICIPATED++;
     });
-    if (records.length === 0 && summary?.metrics) {
+    if ((records.length === 0 || (selectedDeptFilter === 'ALL' && selectedTypeFilter === 'ALL' && !searchTerm)) && summary?.metrics) {
       return summary.metrics;
     }
     return counts;
@@ -537,7 +522,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
               <span>Virtual Mode Available</span>
             </span>
             <span className="text-xs text-slate-300 font-mono font-bold">
-              Target: {summary?.target_date_ist || '06.09.2026'}
+              Target: {summary?.target_date_ist || '—'}
             </span>
             {wsStatus === 'LIVE' ? (
               <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[11px] font-mono font-bold flex items-center gap-1.5">
@@ -552,9 +537,9 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
             )}
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2.5">
-            <span>{summary?.contest_title || 'Weekly Contest 518'}</span>
+            <span>{summary?.contest_title || (sessionId ? `Weekly Contest ${sessionId}` : 'Weekly Contest')}</span>
             <span className="text-xs font-mono px-2.5 py-0.5 rounded-lg bg-slate-800/90 text-slate-300 border border-slate-700/60 font-normal">
-              {summary?.contest_slug || 'weekly-contest-518'}
+              {summary?.contest_slug || (sessionId ? `weekly-contest-${sessionId}` : 'weekly-contest')}
             </span>
           </h2>
           <p className="text-xs text-slate-400">

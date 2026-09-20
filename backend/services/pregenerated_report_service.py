@@ -155,8 +155,12 @@ def get_or_create_report(
             ReportCache.data_version == curr_version
         ).order_by(ReportCache.id.desc()).first()
 
-        # Fallback to legacy lookup by institution_id + week_id + file_type
-        if not cached:
+        # Fallback to legacy lookup by institution_id + week_id + file_type ONLY if no active filters are requested
+        has_specific_filters = any(
+            str(clean_filters.get(k) or "").upper() not in ("ALL", "", "NONE")
+            for k in ("department", "dept", "year", "year_level", "attendance", "status", "search")
+        )
+        if not cached and not has_specific_filters:
             clean_week_id = str(clean_filters.get("week_id") or clean_filters.get("session_id") or "latest").lower().strip()
             cached = db.query(ReportCache).filter(
                 ReportCache.institution_id == institution_id,
@@ -289,9 +293,9 @@ def _build_and_store_report_worker(
     filter_hash: str,
     current_user: Optional[Any] = None
 ):
-    db = SessionLocal()
+    from backend.database import execute_with_db_retry
     try:
-        _build_and_store_report_sync(
+        execute_with_db_retry(lambda db: _build_and_store_report_sync(
             db=db,
             report_type=report_type,
             format=format,
@@ -301,11 +305,10 @@ def _build_and_store_report_worker(
             data_version=data_version,
             filter_hash=filter_hash,
             current_user=current_user
-        )
+        ))
     except Exception as e:
         logger.exception(f"[REPORT_GEN_ERROR] Failed to build {report_type} ({format}) hash={filter_hash[:8]}: {e}")
     finally:
-        db.close()
         with _GLOBAL_LOCK:
             _GENERATION_LOCKS.pop(filter_hash, None)
 
@@ -543,7 +546,7 @@ def generate_report_bytes(
     from backend.exporters.csv_exporter import export_csv_from_dataset
     from backend.exporters.zip_exporter import export_zip_bundle_from_dataset
 
-    config_type = "WEEKLY_STUDENT_PERFORMANCE" if rpt in ("STUDENT_PERFORMANCE", "STUDENT_DETAIL", "OFFICIAL_SUMMARY", "EXCEL", "PDF", "WORD", "CSV") else rpt
+    config_type = "WEEKLY_STUDENT_PERFORMANCE" if rpt in ("STUDENT", "STUDENT_PERFORMANCE", "STUDENT_DETAIL", "OFFICIAL_SUMMARY", "EXCEL", "PDF", "WORD", "CSV") else rpt
     config = ReportConfig(
         report_type=config_type,
         department=dept,

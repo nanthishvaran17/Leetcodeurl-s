@@ -260,20 +260,22 @@ async def _deferred_startup_tasks():
             logger.error(f"[STARTUP] Safety schema migration failed: {_schema_err}")
 
     def _run_blocking_migrations():
-        # Run safety migration FIRST (idempotent raw SQL - never fails if DB is reachable)
+        # Run safety migration FIRST (idempotent raw SQL - fast < 0.5s)
         _run_safety_schema_migration()
 
-        try:
-            from backend.migrate_db import run_db_migrations
-            run_db_migrations()
-        except Exception as _mig_err1:
-            logger.warning(f"[STARTUP] Database migrate_db note: {_mig_err1}")
-            
-        try:
-            from backend.database import run_migrations
-            run_migrations()
-        except Exception as _mig_err2:
-            logger.warning(f"[STARTUP] Database run_migrations note: {_mig_err2}")
+        # Run heavy legacy migration scripts only if requested via env (prevents 40s DB locks on every startup)
+        if os.environ.get("RUN_FULL_MIGRATIONS") == "true":
+            try:
+                from backend.migrate_db import run_db_migrations
+                run_db_migrations()
+            except Exception as _mig_err1:
+                logger.warning(f"[STARTUP] Database migrate_db note: {_mig_err1}")
+                
+            try:
+                from backend.database import run_migrations
+                run_migrations()
+            except Exception as _mig_err2:
+                logger.warning(f"[STARTUP] Database run_migrations note: {_mig_err2}")
 
     try:
         await asyncio.to_thread(_run_blocking_migrations)
@@ -339,11 +341,15 @@ async def _deferred_startup_tasks():
     except Exception as e:
         logger.warning(f"[STARTUP] Deferred DB init note: {e}")
 
-    try:
-        from backend.assets.sync_firestore import initialize_pending_records
-        await asyncio.to_thread(initialize_pending_records)
-    except Exception as _init_err:
-        logger.warning(f"[STARTUP] Firestore pending init note: {_init_err}")
+    # STEP 2.5: Firestore pending records init
+    # NOTE: Disabled at startup to prevent DB connection pool exhaustion.
+    # This runs during the first sync job instead.
+    # try:
+    #     from backend.assets.sync_firestore import initialize_pending_records
+    #     await asyncio.to_thread(initialize_pending_records)
+    # except Exception as _init_err:
+    #     logger.warning(f"[STARTUP] Firestore pending init note: {_init_err}")
+    logger.info("[STARTUP] Step 2.5: Firestore pending init skipped (deferred to first sync job).")
 
     # STEP 3: SCHEDULER START + MISSED JOB RECOVERY 
     is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")
@@ -358,16 +364,9 @@ async def _deferred_startup_tasks():
                 _cfg = get_or_create_default_schedule(_sched_db)
                 register_apscheduler_job(_cfg)
                 
-            # Pre-generate weekly report cache in background thread for instant user download without blocking startup
-            try:
-                from backend.services.pregenerated_report_service import pregenerate_all_weekly_reports
-                def _run_bg_pregen():
-                    with SessionLocal() as _report_db:
-                        pregenerate_all_weekly_reports(_report_db)
-                asyncio.create_task(asyncio.to_thread(_run_bg_pregen))
-                logger.info("[STARTUP] Weekly report pre-generation worker dispatched in background.")
-            except Exception as _p_err:
-                logger.warning(f"[STARTUP] Weekly report pre-generation note: {_p_err}")
+            # NOTE: Report pre-generation disabled at startup to prevent DB connection pool exhaustion.
+            # Pre-generated reports are built on-demand when first requested.
+            logger.info("[STARTUP] Weekly report pre-generation deferred to first on-demand request.")
 
             logger.info("[STARTUP] Step 3: Scheduler started. Checking for missed jobs...")
 
@@ -489,13 +488,7 @@ async def _deferred_startup_tasks():
             if not existing:
                 logger.info("[PREWARM] Warming leaderboard cache in background...")
                 await asyncio.to_thread(_build_cache)
-                # Trigger the real endpoint logic via internal HTTP to properly warm cache
-                import urllib.request
-                try:
-                    urllib.request.urlopen("http://127.0.0.1:8000/api/students/leaderboard-fast", timeout=60)
-                    logger.info("[PREWARM] Leaderboard cache warmed successfully.")
-                except Exception as _http_err:
-                    logger.warning(f"[PREWARM] Cache pre-warm HTTP note: {_http_err}")
+                logger.info("[PREWARM] Leaderboard cache warmed successfully via internal build.")
             else:
                 logger.info("[PREWARM] Leaderboard cache already warm, skipping.")
         except Exception as _pw_err:
@@ -591,8 +584,11 @@ def performance_metrics_check():
 
 
 # Performance Middleware
-from backend.middleware.performance_profiler import PerformanceMonitoringMiddleware
-app.add_middleware(PerformanceMonitoringMiddleware)
+from backend.middleware.performance_profiler import performance_monitoring_middleware
+
+@app.middleware("http")
+async def add_performance_monitoring_middleware(request, call_next):
+    return await performance_monitoring_middleware(request, call_next)
 
 # CORS Configuration
 origins = [
@@ -991,19 +987,30 @@ async def websocket_contest_endpoint(websocket: WebSocket, contest_id: str, toke
     - Initial snapshot push on connect
     - GET_SNAPSHOT, GET_MISSED_EVENTS version recovery
     """
-    await manager.connect(websocket, token=token)
-    db = SessionLocal()
+    connected = await manager.connect(websocket, token=token)
+    if not connected:
+        return
     try:
         from backend.services.live_contest_monitor_engine import live_contest_monitor_engine
+        from backend.database import execute_with_db_retry
+
         # Push initial snapshot immediately on connect
-        snapshot = live_contest_monitor_engine.get_live_snapshot(db, contest_id)
+        snapshot = await asyncio.to_thread(execute_with_db_retry, lambda db: live_contest_monitor_engine.get_live_snapshot(db, contest_id))
         await websocket.send_text(json.dumps(snapshot))
 
         while True:
-            raw_msg = await websocket.receive_text()
+            try:
+                raw_msg = await websocket.receive_text()
+            except (WebSocketDisconnect, RuntimeError, Exception):
+                break
+
             if raw_msg == "ping":
-                await websocket.send_text("pong")
+                try:
+                    await websocket.send_text("pong")
+                except Exception:
+                    break
                 continue
+
             try:
                 msg = json.loads(raw_msg)
                 msg_type = msg.get("type")
@@ -1020,11 +1027,11 @@ async def websocket_contest_endpoint(websocket: WebSocket, contest_id: str, toke
                     continue
 
                 if msg_type == "GET_SNAPSHOT":
-                    snap = live_contest_monitor_engine.get_live_snapshot(db, contest_id)
+                    snap = await asyncio.to_thread(execute_with_db_retry, lambda db: live_contest_monitor_engine.get_live_snapshot(db, contest_id))
                     await websocket.send_text(json.dumps(snap))
                 elif msg_type == "GET_MISSED_EVENTS":
                     last_ver = msg.get("last_received_version", 0)
-                    missed = live_contest_monitor_engine.get_missed_events(db, contest_id, last_ver)
+                    missed = await asyncio.to_thread(execute_with_db_retry, lambda db: live_contest_monitor_engine.get_missed_events(db, contest_id, last_ver))
                     await websocket.send_text(json.dumps({
                         "event": "MISSED_EVENTS_RESPONSE",
                         "type": "MISSED_EVENTS_RESPONSE",
@@ -1032,11 +1039,207 @@ async def websocket_contest_endpoint(websocket: WebSocket, contest_id: str, toke
                         "events": missed
                     }))
             except Exception as parse_err:
-                logger.warning(f"[WS_CONTEST] Error processing message: {parse_err}")
+                logger.warning(f"[WS_CONTEST] Non-fatal message parse note: {parse_err}")
+    except Exception:
+        pass
+    finally:
+        manager.disconnect(websocket)
+
+
+@app.post("/api/contests/{contest_id}/start-live-monitor")
+async def start_live_contest_monitor_api(contest_id: str):
+    """Triggers backend live monitoring engine for all registered students."""
+    from backend.services.live_contest_monitor_engine import live_contest_monitor_engine
+    return await live_contest_monitor_engine.start_monitoring(contest_id)
+
+@app.get("/api/contests/{contest_id}/live-snapshot")
+def get_live_contest_snapshot_api(contest_id: str, db: Session = Depends(get_db)):
+    """REST fallback endpoint returning live snapshot."""
+    from backend.services.live_contest_monitor_engine import live_contest_monitor_engine
+    return live_contest_monitor_engine.get_live_snapshot(db, contest_id)
+
+from fastapi import HTTPException
+from fastapi.responses import FileResponse
+
+@app.get("/api/download/apk")
+@app.get("/download/apk")
+def download_android_apk_endpoint():
+    """Serves the official Nandha LeetCode Intelligence Android APK package."""
+    apk_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Nandha_LeetCode_Intelligence_v2_latest.apk"))
+    if not os.path.exists(apk_path):
+        raise HTTPException(status_code=404, detail="Android APK package is currently updating on the server. Please try again in a few moments.")
+    return FileResponse(
+        path=apk_path,
+        media_type="application/vnd.android.package-archive",
+        filename="Nandha_LeetCode_Intelligence_v2_latest.apk"
+    )
+
+
+# Production Static Build Mount (Serves Frontend SPA bundle on single port)
+FRONTEND_DIST = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
+# leetcode_tracker — short prefix
+app.include_router(leetcode_tracker.router, prefix="/api")
+app.include_router(leetcode_tracker.router)
+# faculty_assignments — short prefix, keep both + faculty aliases
+app.include_router(faculty_assignments.router, prefix="/api")
+app.include_router(faculty_assignments.router)
+app.include_router(faculty_assignments.router, prefix="/api/faculty", tags=["Faculty"])
+app.include_router(faculty_assignments.router, prefix="/faculty", tags=["Faculty"])
+# institutional_dashboards — short prefix
+app.include_router(institutional_dashboards.router, prefix="/api")
+app.include_router(institutional_dashboards.router)
+# email_campaigns — short prefix
+app.include_router(email_campaigns.router, prefix="/api")
+app.include_router(email_campaigns.router)
+# bot_notifications — short prefix
+app.include_router(bot_notifications.router, prefix="/api")
+app.include_router(bot_notifications.router)
+# anti_cheat — short prefix
+app.include_router(anti_cheat.router, prefix="/api")
+app.include_router(anti_cheat.router)
+# placement_eligibility — short prefix
+app.include_router(placement_eligibility.router, prefix="/api")
+app.include_router(placement_eligibility.router)
+# gamification — short prefix
+app.include_router(gamification.router, prefix="/api")
+app.include_router(gamification.router)
+# accreditation — short prefix
+app.include_router(accreditation.router, prefix="/api")
+# deep_tech_intelligence: prefix="/api/intelligence/deep-tech" (self-prefixed)
+app.include_router(deep_tech_intelligence.router)
+# scheduler — no prefix
+app.include_router(scheduler.router)
+
+
+from backend.routes import stats_snapshot, staff_verification
+app.include_router(stats_snapshot.router, prefix="/api")
+app.include_router(stats_snapshot.router)
+app.include_router(url_import.router, prefix="/api")
+app.include_router(contest_integrity.router, prefix="/api")
+app.include_router(staff_verification.router)
+# Mount Static File Directories
+is_vercel = os.environ.get("VERCEL") == "1" or os.environ.get("VERCEL_ENV")
+if is_vercel:
+
+    REPORTS_DIR = "/tmp/reports"
+else:
+    REPORTS_DIR = os.path.join(os.path.dirname(__file__), "reports")
+
+try:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    os.makedirs(REPORTS_DIR, exist_ok=True)
+    os.makedirs(os.path.join(BASE_DIR, "static"), exist_ok=True)
+    
+    app.mount("/static/reports", StaticFiles(directory=REPORTS_DIR), name="reports")
+    app.mount("/static/assets", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="assets")
+except Exception as e:
+    logger.warning(f"Could not mount static reports directory: {e}")
+
+@app.websocket("/ws/notifications")
+@app.websocket("/ws/leaderboard")
+async def websocket_leaderboard_endpoint(websocket: WebSocket, token: Optional[str] = None):
+    """Authenticated real-time WebSocket endpoint for notifications and leaderboard events."""
+    connected = await manager.connect(websocket, token=token)
+    if not connected:
+        return
+    try:
+        while True:
+            data = await websocket.receive_text()
+            if data == "ping":
+                await websocket.send_text("pong")
+            else:
+                # Handle SUBSCRIBE / UNSUBSCRIBE for contest-scoped events
+                try:
+                    msg = json.loads(data)
+                    if msg.get("action") == "SUBSCRIBE" and msg.get("session_id"):
+                        manager.subscribe_session(websocket, int(msg["session_id"]))
+                        await websocket.send_text(json.dumps({"type": "SUBSCRIBED", "session_id": msg["session_id"]}))
+                    elif msg.get("action") == "UNSUBSCRIBE" and msg.get("session_id"):
+                        manager.unsubscribe_session(websocket, int(msg["session_id"]))
+                        await websocket.send_text(json.dumps({"type": "UNSUBSCRIBED", "session_id": msg["session_id"]}))
+                    
+                    # Messaging: Track active conversation to prevent duplicate FCM pushes
+                    elif msg.get("action") == "VIEW_CONVERSATION" and msg.get("conversation_id"):
+                        manager.set_active_conversation(websocket, msg["conversation_id"])
+                        await websocket.send_text(json.dumps({"type": "VIEWING_CONVERSATION", "conversation_id": msg["conversation_id"]}))
+                    elif msg.get("action") == "LEAVE_CONVERSATION":
+                        manager.set_active_conversation(websocket, None)
+                        await websocket.send_text(json.dumps({"type": "LEFT_CONVERSATION"}))
+                        
+                except (json.JSONDecodeError, ValueError):
+                    pass  # Non-JSON messages (e.g. plain strings) — ignore
     except WebSocketDisconnect:
         manager.disconnect(websocket)
+
+@app.websocket("/ws/contest/{contest_id}")
+async def websocket_contest_endpoint(websocket: WebSocket, contest_id: str, token: Optional[str] = None):
+    """
+    Persistent WebSocket Endpoint for True Live Contest Monitoring.
+    Supports:
+    - Optional JWT token authentication (query param: ?token=<jwt>)
+    - Session subscription: send {"action": "SUBSCRIBE", "session_id": N}
+    - Session unsubscribe: send {"action": "UNSUBSCRIBE", "session_id": N}
+    - Initial snapshot push on connect
+    - GET_SNAPSHOT, GET_MISSED_EVENTS version recovery
+    """
+    connected = await manager.connect(websocket, token=token)
+    if not connected:
+        return
+    try:
+        from backend.services.live_contest_monitor_engine import live_contest_monitor_engine
+        from backend.database import execute_with_db_retry
+
+        # Push initial snapshot immediately on connect
+        snapshot = await asyncio.to_thread(execute_with_db_retry, lambda db: live_contest_monitor_engine.get_live_snapshot(db, contest_id))
+        await websocket.send_text(json.dumps(snapshot))
+
+        while True:
+            try:
+                raw_msg = await websocket.receive_text()
+            except (WebSocketDisconnect, RuntimeError, Exception):
+                break
+
+            if raw_msg == "ping":
+                try:
+                    await websocket.send_text("pong")
+                except Exception:
+                    break
+                continue
+
+            try:
+                msg = json.loads(raw_msg)
+                msg_type = msg.get("type")
+                action = msg.get("action")
+
+                # Session subscription protocol
+                if action == "SUBSCRIBE" and msg.get("session_id"):
+                    manager.subscribe_session(websocket, int(msg["session_id"]))
+                    await websocket.send_text(json.dumps({"type": "SUBSCRIBED", "session_id": msg["session_id"]}))
+                    continue
+                elif action == "UNSUBSCRIBE" and msg.get("session_id"):
+                    manager.unsubscribe_session(websocket, int(msg["session_id"]))
+                    await websocket.send_text(json.dumps({"type": "UNSUBSCRIBED", "session_id": msg["session_id"]}))
+                    continue
+
+                if msg_type == "GET_SNAPSHOT":
+                    snap = await asyncio.to_thread(execute_with_db_retry, lambda db: live_contest_monitor_engine.get_live_snapshot(db, contest_id))
+                    await websocket.send_text(json.dumps(snap))
+                elif msg_type == "GET_MISSED_EVENTS":
+                    last_ver = msg.get("last_received_version", 0)
+                    missed = await asyncio.to_thread(execute_with_db_retry, lambda db: live_contest_monitor_engine.get_missed_events(db, contest_id, last_ver))
+                    await websocket.send_text(json.dumps({
+                        "event": "MISSED_EVENTS_RESPONSE",
+                        "type": "MISSED_EVENTS_RESPONSE",
+                        "contest_id": contest_id,
+                        "events": missed
+                    }))
+            except Exception as parse_err:
+                logger.warning(f"[WS_CONTEST] Non-fatal message parse note: {parse_err}")
+    except Exception:
+        pass
     finally:
-        db.close()
+        manager.disconnect(websocket)
+
 
 @app.post("/api/contests/{contest_id}/start-live-monitor")
 async def start_live_contest_monitor_api(contest_id: str):
@@ -1074,9 +1277,4 @@ if os.path.exists(FRONTEND_DIST):
 
 logger.info("LeetCode Performance Tracker API is fully ready & live sync engine active.")
 
-# reload trigger
-
-# Trigger reload
-
-# reload
-# Reload backend to clear deadlocked DB connection pool
+import datetime

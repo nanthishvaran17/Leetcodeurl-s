@@ -27,6 +27,7 @@ interface CustomDropdownProps {
   labelClassName?: string;
   triggerClassName?: string;
   menuWidthClass?: string;
+  hideTriggerBadge?: boolean;
 }
 
 export const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -41,9 +42,11 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   className = '',
   labelClassName,
   triggerClassName,
-  menuWidthClass
+  menuWidthClass,
+  hideTriggerBadge = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState<number>(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState<{ top: number; left: number; width: number; maxHeight?: number; transformOrigin?: string } | null>(null);
 
@@ -57,6 +60,14 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
     }
     return true;
   });
+
+  // Keep focusedIndex in sync with selected value when opened
+  useEffect(() => {
+    if (isOpen) {
+      const idx = selectableOptions.findIndex((opt) => opt.value === value);
+      setFocusedIndex(idx >= 0 ? idx : 0);
+    }
+  }, [isOpen, value, selectableOptions]);
 
   const updateCoords = useCallback(() => {
     if (dropdownRef.current) {
@@ -91,7 +102,12 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
     }
   }, [selectableOptions.length]);
 
-  // Close dropdown on outside click or scroll
+  const handleSelect = (optionValue: string) => {
+    onChange(optionValue);
+    setIsOpen(false);
+  };
+
+  // Close dropdown on outside click or keyboard navigation (Escape, ArrowUp, ArrowDown, Enter)
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && dropdownRef.current.contains(event.target as Node)) {
@@ -103,8 +119,28 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
       }
       setIsOpen(false);
     };
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsOpen(false);
+      if (!isOpen) return;
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsOpen(false);
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setFocusedIndex((prev) => (prev + 1) % selectableOptions.length);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setFocusedIndex((prev) => (prev - 1 + selectableOptions.length) % selectableOptions.length);
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (selectableOptions[focusedIndex]) {
+          handleSelect(selectableOptions[focusedIndex].value);
+        }
+      } else if (e.key === 'Tab') {
+        setIsOpen(false);
+      }
     };
 
     if (isOpen) {
@@ -120,12 +156,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
       window.removeEventListener('resize', updateCoords);
       window.removeEventListener('scroll', updateCoords, true);
     };
-  }, [isOpen, updateCoords, id, label]);
-
-  const handleSelect = (optionValue: string) => {
-    onChange(optionValue);
-    setIsOpen(false);
-  };
+  }, [isOpen, updateCoords, id, label, focusedIndex, selectableOptions]);
 
   const menuPopover = isOpen && coords && typeof document !== 'undefined' ? (
     createPortal(
@@ -147,8 +178,9 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
           }}
           className="overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] p-1.5 space-y-1 focus:outline-none scrollbar-thin"
         >
-          {selectableOptions.map((opt) => {
+          {selectableOptions.map((opt, idx) => {
             const isSelected = opt.value === value;
+            const isFocused = idx === focusedIndex;
             const OptIcon = opt.icon;
 
             return (
@@ -156,9 +188,12 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
                 key={opt.value}
                 type="button"
                 onClick={() => handleSelect(opt.value)}
+                onMouseEnter={() => setFocusedIndex(idx)}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer group ${
                   isSelected
                     ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30'
+                    : isFocused
+                    ? 'bg-brand-50/90 dark:bg-slate-800 text-brand-900 dark:text-brand-300 ring-2 ring-brand-500/40'
                     : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                 }`}
               >
@@ -226,6 +261,13 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
       {/* Trigger Button */}
       <button
         type="button"
+        onKeyDown={(e) => {
+          if (!isOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            updateCoords();
+            setIsOpen(true);
+          }
+        }}
         onClick={() => {
           if (!isOpen) {
             // Scroll to view logic if near bottom or top
@@ -241,10 +283,12 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
           }
           setIsOpen(!isOpen);
         }}
-        className={triggerClassName || `w-full h-11 min-h-[44px] py-2 flex items-center justify-between px-3.5 rounded-2xl border transition-all duration-200 text-left cursor-pointer group shadow-sm box-border ${
+        className={`flex items-center justify-between flex-nowrap space-x-2 transition-all duration-200 text-left cursor-pointer group shadow-sm box-border ${
+          triggerClassName || 'w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-white dark:bg-slate-800/90 border-slate-200 dark:border-slate-700/80 hover:border-brand-500/40'
+        } ${
           isOpen
-            ? 'bg-white dark:bg-slate-800 border-brand-500 ring-2 ring-brand-500/20 shadow-md shadow-brand-500/10'
-            : 'bg-white dark:bg-slate-800/90 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700/80 hover:border-brand-500/40'
+            ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-md shadow-brand-500/10'
+            : ''
         }`}
       >
         <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden pr-2">
@@ -254,7 +298,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
             }`} />
           )}
           <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden">
-            {selectedOption?.badge && !selectedOption.hidePill && (
+            {selectedOption?.badge && !selectedOption.hidePill && !hideTriggerBadge && (
               <span className={`shrink-0 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
                 selectedOption.badgeColor || 'bg-brand-500/15 text-brand-600 dark:text-brand-400 border border-brand-500/30'
               }`}>
