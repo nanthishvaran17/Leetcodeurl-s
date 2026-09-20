@@ -513,8 +513,8 @@ def require_security_access(
                 authorized_dept_codes = get_hod_authorized_department_codes(db, user)
                 req_dept_str = str(req_dept).strip()
 
-                # Allow MY_DEPARTMENTS sentinel (means all assigned depts)
-                if req_dept_str.upper() in ("MY_DEPARTMENTS", "ALL_MY_DEPARTMENTS"):
+                # Allow ALL or MY_DEPARTMENTS sentinel (means all assigned depts)
+                if req_dept_str.upper() in ("ALL", "MY_DEPARTMENTS", "ALL_MY_DEPARTMENTS"):
                     pass  # Allowed — backend will further filter by authorized_dept_ids
                 else:
                     # Check if requested dept is within authorized set
