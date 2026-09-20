@@ -878,7 +878,7 @@ class GenerateReportPayload(BaseModel):
 def generate_report(
     payload: GenerateReportPayload, 
     db: Session = Depends(get_db),
-    current_user = Depends(require_security_access(resource_name="Generate Universal Report", dept_scoped=True))
+    current_user = Depends(require_security_access(required_roles=["admin", "super admin", "hod", "faculty", "staff", "student"], resource_name="Generate Universal Report", dept_scoped=True))
 ):
     """
     UNIVERSAL CENTRAL REPORT GENERATION ENDPOINT

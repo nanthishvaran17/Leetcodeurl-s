@@ -473,7 +473,7 @@ def require_security_access(
             )
             return user
 
-        allowed_roles_norm = [role_alias_map.get(r.lower(), r.lower()) for r in (required_roles or ["admin", "super admin", "hod", "faculty", "staff"])]
+        allowed_roles_norm = [role_alias_map.get(r.lower(), r.lower()) for r in (required_roles or ["admin", "super admin", "hod", "faculty", "staff", "student"])]
         
         if effective_role == "student" and "student" not in allowed_roles_norm:
             log_security_access_event(

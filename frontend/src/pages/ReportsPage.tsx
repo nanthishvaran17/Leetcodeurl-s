@@ -308,7 +308,8 @@ export const ReportsPage: React.FC = () => {
       notify.success('Report Ready', 'Universal report generated successfully.', { category: 'REPORTS' });
     } catch (err: any) {
       const statusCode = err.response?.status;
-      let userFacingMsg = 'Please try again.';
+      const detailMsg = err.response?.data?.detail || err.message;
+      let userFacingMsg = detailMsg && !detailMsg.includes('500') && !detailMsg.includes('traceback') ? detailMsg : 'Please try again.';
       if (statusCode === 401) {
         userFacingMsg = 'Please sign in again.';
       } else if (statusCode === 403) {

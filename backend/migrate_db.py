@@ -64,6 +64,10 @@ def run_db_migrations():
             ("users", "is_2fa_enabled", "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_2fa_enabled BOOLEAN DEFAULT FALSE"),
             ("users", "created_at", "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP"),
             ("users", "reporting_manager_id", "ALTER TABLE users ADD COLUMN IF NOT EXISTS reporting_manager_id INTEGER"),
+            # report_jobs table
+            ("report_jobs", "institution_id", "ALTER TABLE report_jobs ADD COLUMN IF NOT EXISTS institution_id VARCHAR(100)"),
+            ("report_jobs", "department_id", "ALTER TABLE report_jobs ADD COLUMN IF NOT EXISTS department_id VARCHAR(100)"),
+            ("report_jobs", "role", "ALTER TABLE report_jobs ADD COLUMN IF NOT EXISTS role VARCHAR(50)"),
             # students table 
             ("students", "people_id", "ALTER TABLE students ADD COLUMN IF NOT EXISTS people_id VARCHAR(50)"),
             ("students", "phone_number", "ALTER TABLE students ADD COLUMN IF NOT EXISTS phone_number VARCHAR(30)"),
