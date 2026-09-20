@@ -598,6 +598,27 @@ def pregenerate_all_weekly_reports(db: Session, institution_id: str = "NEC"):
     Pre-generates core institutional reports in background.
     Call on startup, post-sync, or after Sunday contests.
     """
+    from backend.services.report_engine import build_universal_report
+    from backend.services.report_models import ReportConfig
+
+    core_report_types = [
+        "WEEK_ON_WEEK_INTELLIGENCE",
+        "WEEKLY_STUDENT_PERFORMANCE",
+        "FRIDAY_OFFICIAL_CONTEST",
+        "SUNDAY_LIVE_CONTEST",
+        "HOD_DEPARTMENT_INTELLIGENCE",
+        "FACULTY_CONSOLIDATED",
+        "PRINCIPAL_EXECUTIVE",
+        "MANAGEMENT_EXECUTIVE_SUMMARY"
+    ]
+
+    for r_type in core_report_types:
+        try:
+            cfg = ReportConfig(report_type=r_type, department="ALL", year="ALL", output_scope="COLLEGE")
+            build_universal_report(db, cfg)
+        except Exception as _pw_err:
+            logger.warning(f"[PREGEN_PREWARM_NOTE] {r_type}: {_pw_err}")
+
     formats = ["pdf", "excel", "official_summary", "student_detail", "master_tracker", "weekly_performance", "student_performance", "weekly_contest_matrix"]
     curr_version = get_current_data_version(db)
     for ft in formats:

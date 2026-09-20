@@ -28,13 +28,17 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
     Enforces strict report code validation via report_registry.
     Sub-millisecond dataset caching powered by global data versioning.
     """
+    # 1. Validate Report Registry Specification and resolve canonical code
+    rpt_def = get_report_definition(config.report_type)
+    canon_report_code = rpt_def["code"]
+
     # 0. Check in-memory dataset cache for sub-millisecond responses (< 5ms)
     user_role = (getattr(current_user, "role", "") or "").lower()
     user_dept = str(getattr(current_user, "department_id", "") or "")
     data_ver = get_current_data_version(db)
 
     raw_key = json.dumps({
-        "type": str(config.report_type or "").upper(),
+        "type": canon_report_code,
         "dept": str(config.department or "").upper(),
         "year": str(config.year or "").upper(),
         "scope": str(config.output_scope or "").upper(),
@@ -49,15 +53,13 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         if cache_key in _UNIVERSAL_DATASET_CACHE:
             return copy.deepcopy(_UNIVERSAL_DATASET_CACHE[cache_key])
 
-    # 1. Validate Report Registry Specification
-    rpt_def = get_report_definition(config.report_type)
-
     CONTEST_REPORT_TYPES = (
         "FRIDAY_OFFICIAL_CONTEST", "FRIDAY_OFFICIAL", "FRIDAY_OFFICIAL_RESULT",
         "CONTEST_PERFORMANCE", "OFFICIAL_CONTEST", "WEEKLY_CONTEST",
         "SUNDAY_LIVE_CONTEST", "WEEKLY_CONTEST_INTELLIGENCE",
         "CONTEST_ATTENDANCE_PARTICIPATION", "CONTEST_PERFORMANCE_RANKING",
         "SUNDAY_CONTEST", "WEEK_ON_WEEK_INTELLIGENCE", "WEEK_ON_WEEK",
+        "WOW_INTEL", "WOW", "WOW_INTELLIGENCE",
         "HISTORICAL_CONTEST_INTELLIGENCE", "HISTORICAL_CONTEST_INTEL"
     )
     if config.report_type and config.report_type.upper() in CONTEST_REPORT_TYPES:
@@ -286,17 +288,21 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         "participations": participations_dict
     }
 
-    # Persist in DB ReportHistory for auditability
-    history_entry = ReportHistory(
-        report_id=report_id,
-        report_type=config.report_type,
-        title=title,
-        filters=config.model_dump(),
-        dataset=dataset,
-        status="GENERATED"
-    )
-    db.add(history_entry)
-    db.commit()
+    # Persist in DB ReportHistory for auditability (safely catch and proceed)
+    try:
+        history_entry = ReportHistory(
+            report_id=report_id,
+            report_type=config.report_type,
+            title=title,
+            filters=config.model_dump(),
+            dataset=dataset,
+            status="GENERATED"
+        )
+        db.add(history_entry)
+        db.commit()
+    except Exception as ex:
+        db.rollback()
+        logger.warning(f"[REPORT_HISTORY_NOTE] {ex}")
 
     with _UNIVERSAL_CACHE_LOCK:
         _UNIVERSAL_DATASET_CACHE[cache_key] = copy.deepcopy(dataset)

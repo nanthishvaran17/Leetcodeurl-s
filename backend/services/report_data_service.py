@@ -94,7 +94,12 @@ def fetch_normalized_students(
     if "section" in kwargs and (section_filter == "ALL" or not section_filter):
         section_filter = kwargs.get("section")
 
-    query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
+    from sqlalchemy.orm import joinedload
+    query = db.query(Student).options(
+        joinedload(Student.stats),
+        joinedload(Student.department),
+        joinedload(Student.section)
+    ).filter((Student.is_active == True) | (Student.is_active.is_(None)))
 
     if current_user:
         query = apply_role_based_student_filter(query, current_user, db)
