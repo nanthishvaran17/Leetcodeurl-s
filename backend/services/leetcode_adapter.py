@@ -458,9 +458,105 @@ class ProductionLeetCodeAdapter(LeetCodeAdapter):
                         total_pages=total_pages,
                         data=entries
                     )
+                elif resp.status_code == 429:
+                    logger.warning(f"Rate limited (429) on ranking page {page} for {slug}")
+                else:
+                    logger.warning(f"HTTP {resp.status_code} fetching ranking page {page} for {slug}")
         except Exception as e:
             logger.warning(f"Error fetching ranking page {page} for {slug}: {e}")
         return None
+
+    async def fetch_contest_ranking_pages_bulk(
+        self, contest_slug: str, max_pages: int = 500, target_usernames: Optional[set] = None
+    ) -> Tuple[Dict[str, RankingEntry], str]:
+        """
+        Dynamically fetches contest ranking pages in bulk.
+        Stops fetching when:
+          - page > total_pages
+          - all target_usernames have been matched
+          - max_pages is reached
+        Returns (username -> RankingEntry map, capability_status).
+        """
+        matched_map: Dict[str, RankingEntry] = {}
+        target_set = {u.strip().lower() for u in target_usernames} if target_usernames else None
+        
+        current_page = 1
+        total_pages = 1
+        capability_status = "PUBLIC_AVAILABLE"
+
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            while current_page <= total_pages and current_page <= max_pages:
+                url = f"https://leetcode.com/contest/api/ranking/{contest_slug}/?pagination={current_page}&region=global"
+                try:
+                    resp = await client.get(url, headers=self.HEADERS)
+                    if resp.status_code == 429:
+                        capability_status = "RATE_LIMITED"
+                        logger.warning(f"[BULK_RANKING] Rate limited at page {current_page} for {contest_slug}")
+                        break
+                    elif resp.status_code != 200:
+                        capability_status = "UPSTREAM_ERROR"
+                        logger.warning(f"[BULK_RANKING] HTTP {resp.status_code} at page {current_page} for {contest_slug}")
+                        break
+
+                    data = resp.json()
+                    user_num = data.get("user_num", 0)
+                    if user_num:
+                        # Dynamic page size determination
+                        raw_entries = data.get("total_rank", [])
+                        page_size = len(raw_entries) if raw_entries else 25
+                        total_pages = max(1, (user_num + page_size - 1) // page_size) if page_size else 1
+
+                    raw_entries = data.get("total_rank", [])
+                    submissions_map = data.get("submissions", [])
+
+                    if not raw_entries:
+                        break
+
+                    for idx, entry in enumerate(raw_entries):
+                        uname = entry.get("user_slug") or entry.get("username")
+                        if not uname:
+                            continue
+                        u_norm = uname.strip().lower()
+
+                        sub_count = 0
+                        questions = []
+                        if idx < len(submissions_map) and submissions_map[idx]:
+                            sub_dict = submissions_map[idx]
+                            sub_count = len(sub_dict)
+                            for q_id, q_data in sub_dict.items():
+                                questions.append({
+                                    "question_id": q_id,
+                                    "status": "AC",
+                                    "time": q_data.get("date"),
+                                    "attempts": q_data.get("fail_count", 0) + 1
+                                })
+
+                        rentry = RankingEntry(
+                            username=uname,
+                            rank=entry.get("rank"),
+                            score=entry.get("score"),
+                            finish_time=entry.get("finish_time"),
+                            submission_count=sub_count,
+                            attempt_count=sub_count,
+                            questions=questions,
+                            source="contest_ranking"
+                        )
+
+                        if target_set is None or u_norm in target_set:
+                            matched_map[u_norm] = rentry
+
+                    # Check if all target usernames have been found early
+                    if target_set and target_set.issubset(matched_map.keys()):
+                        logger.info(f"[BULK_RANKING] All {len(target_set)} target usernames matched early at page {current_page}.")
+                        break
+
+                    current_page += 1
+                except Exception as exc:
+                    logger.error(f"[BULK_RANKING] Exception fetching page {current_page}: {exc}")
+                    capability_status = "FETCH_FAILED"
+                    break
+
+        return matched_map, capability_status
 
     async def get_user_contest_result(
         self, username: str, contest_slug: str
