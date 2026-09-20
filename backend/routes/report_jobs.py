@@ -216,7 +216,7 @@ def create_report_job(
     search: Optional[str] = Query(None),
     session_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
-    current_user = Depends(require_security_access(["admin", "hod", "faculty"]))
+    current_user = Depends(require_security_access(["admin", "super admin", "hod", "faculty", "staff", "student"]))
 ):
     """
     Creates an asynchronous report generation job and returns the job ID immediately.
