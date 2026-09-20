@@ -2,6 +2,8 @@ import datetime
 import uuid
 from sqlalchemy.orm import Session
 from typing import Optional
+from backend.models import Student, HODSnapshot
+
 
 def generate_hod_snapshot(db: Session, title: Optional[str] = None) -> HODSnapshot:
     """
