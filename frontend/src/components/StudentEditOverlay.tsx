@@ -141,6 +141,32 @@ export const resolveYearLevelFromRegNo = (regNoStr: string, currentYearVal?: any
   return "3";
 };
 
+export const resolveDepartmentFromRegNo = (regNoStr: string, departments?: any[], currentDeptId?: any): number | string => {
+  const norm = (regNoStr || '').trim().toUpperCase();
+  const match = norm.match(/(?:7322)?(?:\d{2})([A-Z]{2,4})\d+/);
+  if (match && match[1]) {
+    const code = match[1];
+    let targetCode = '';
+    if (code === 'CC') targetCode = 'CSE(CS)';
+    else if (code === 'CI') targetCode = 'CSE(IOT)';
+    else if (code === 'IT') targetCode = 'IT';
+    else if (code === 'CS' || code === 'CSE') targetCode = 'CSE';
+    else if (code === 'AD' || code === 'AIDS') targetCode = 'AIDS';
+    else if (code === 'EE' || code === 'EEE') targetCode = 'EEE';
+    else if (code === 'EC' || code === 'ECE') targetCode = 'ECE';
+    else if (code === 'AG' || code === 'AGRI') targetCode = 'AGRI';
+
+    if (targetCode && Array.isArray(departments) && departments.length > 0) {
+      const found = departments.find(
+        (d: any) => d.code === targetCode || d.code?.toUpperCase() === targetCode
+      );
+      if (found) return found.id;
+    }
+  }
+  return currentDeptId ?? 1;
+};
+
+
 export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   isOpen,
   student,
@@ -195,7 +221,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
     if (isOpen && student) {
       const initName = student.name || student.student_name || '';
       const initRegNo = student.reg_no || student.register_number || '';
-      const initDeptId = student.department_id || student.department?.id || 1;
+      const rawDeptId = student.department_id || student.department?.id;
+      const initDeptId = resolveDepartmentFromRegNo(initRegNo, departments, rawDeptId);
       const initYear = resolveYearLevelFromRegNo(initRegNo, student.year_level || student.year);
       const initSec = student.section?.name || student.section || 'A';
       const initUser = student.username || student.canonical_username || '';
@@ -610,6 +637,8 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
                       setRegNo(val);
                       const autoYear = resolveYearLevelFromRegNo(val, yearLevel);
                       setYearLevel(autoYear);
+                      const autoDept = resolveDepartmentFromRegNo(val, departments, deptId);
+                      if (autoDept) setDeptId(autoDept);
                       if (val.trim()) {
                         setInstitutionalEmail(generateEmailFromRegNo(val));
                       } else {
