@@ -289,11 +289,19 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   }, [name, regNo, deptId, yearLevel, section, username, leetcodeUrl, email, institutionalEmail, allocation, accommodation, twelfthCutoff, secondaryAccounts]);
 
 
-  const handleAddSecondaryAccount = () => {
+  const handleAddSecondaryAccount = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     setSecondaryAccounts(prev => [...prev, { username: '', url: '' }]);
   };
 
-  const handleRemoveSecondaryAccount = (idx: number) => {
+  const handleRemoveSecondaryAccount = (idx: number, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     setSecondaryAccounts(prev => prev.filter((_, i) => i !== idx));
   };
 

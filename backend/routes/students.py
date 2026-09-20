@@ -1187,9 +1187,11 @@ def update_student(
     if payload.secondary_accounts is not None:
         from backend.models import LeetCodeAccount
         db.query(LeetCodeAccount).filter(LeetCodeAccount.student_id == student.id).delete()
+        sec_usernames = []
         for sec in payload.secondary_accounts:
             u_clean = (sec.leetcode_username or "").strip()
             if u_clean:
+                sec_usernames.append(u_clean)
                 url_clean = (sec.profile_url or "").strip() or f"https://leetcode.com/u/{u_clean}/"
                 sec_account = LeetCodeAccount(
                     student_id=student.id,
@@ -1199,6 +1201,12 @@ def update_student(
                     is_verified=True
                 )
                 db.add(sec_account)
+        if sec_usernames:
+            student.secondary_leetcode_id = sec_usernames[0]  # type: ignore
+            student.secondary_status = "approved"  # type: ignore
+        else:
+            student.secondary_leetcode_id = None  # type: ignore
+            student.secondary_status = "none"  # type: ignore
 
     old_u_norm = (old_username or "").strip().lower()
     new_u_norm = (student.username or "").strip().lower()
