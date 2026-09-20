@@ -617,8 +617,9 @@ def generate_master_10_sheet_workbook(
 
     # Create openpyxl Workbook
     wb = openpyxl.Workbook()
-    if wb.active is not None:
-        wb.remove(wb.active)  # Remove default blank sheet
+    active_sheet = wb.active
+    if active_sheet is not None:
+        wb.remove(active_sheet)  # Remove default blank sheet
 
     contest_title = f"Weekly Contest {contest_id or 518}"
     session_date = datetime.date.today().strftime("%d-%m-%Y")

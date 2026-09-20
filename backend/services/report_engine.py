@@ -109,8 +109,8 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         students = sorted(
             students,
             key=lambda s: (
-                s.college_rank if (s.college_rank is not None and s.college_rank > 0) else 999999,
-                -(s.total_solved or 0)
+                getattr(s, "college_rank", None) if (getattr(s, "college_rank", None) is not None and (getattr(s, "college_rank", 0) or 0) > 0) else 999999,
+                -(getattr(s, "total_solved", 0) or 0)
             )
         )
 

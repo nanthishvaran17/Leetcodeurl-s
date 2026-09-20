@@ -178,12 +178,12 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         p_list = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id).all()
         for p in p_list:
             if getattr(p, "student_id", None) is not None:
-                public_map[int(getattr(p, "student_id"))] = p
+                public_map[int(str(getattr(p, "student_id")))] = p
 
         v_list = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == session_id).all()
         for v in v_list:
             if getattr(v, "student_id", None) is not None:
-                virtual_map[int(getattr(v, "student_id"))] = v
+                virtual_map[int(str(getattr(v, "student_id")))] = v
 
     if contest_name:
         parts = db.query(ContestParticipation).filter(
@@ -192,7 +192,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
         ).all()
         for pt in parts:
             if getattr(pt, "student_id", None) is not None:
-                part_map[int(getattr(pt, "student_id"))] = pt
+                part_map[int(str(getattr(pt, "student_id")))] = pt
 
     # 5. Build authoritative student-level contest rows
     student_rows: List[Dict[str, Any]] = []
@@ -229,13 +229,17 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
 
             if part_st in ("PUBLIC", "PUBLIC_ATTENDED", "OFFICIAL", "ATTENDED", "PUBLIC_LIVE", "PUBLIC_LIVE_VERIFIED"):
                 status = ContestStatus.PUBLIC_LIVE.value
-                q1_val = 1 if (p_res.q1 and p_res.q1 >= 1) else 0
-                q2_val = 1 if (p_res.q2 and p_res.q2 >= 1) else 0
-                q3_val = 1 if (p_res.q3 and p_res.q3 >= 1) else 0
-                q4_val = 1 if (p_res.q4 and p_res.q4 >= 1) else 0
+                p_q1 = getattr(p_res, "q1", 0) or 0
+                p_q2 = getattr(p_res, "q2", 0) or 0
+                p_q3 = getattr(p_res, "q3", 0) or 0
+                p_q4 = getattr(p_res, "q4", 0) or 0
+                q1_val = 1 if int(p_q1) >= 1 else 0
+                q2_val = 1 if int(p_q2) >= 1 else 0
+                q3_val = 1 if int(p_q3) >= 1 else 0
+                q4_val = 1 if int(p_q4) >= 1 else 0
                 actual_sum = q1_val + q2_val + q3_val + q4_val
-                tot_rec = getattr(p_res, "total_contest_solved", 0) or 0
-                solved_val = max(actual_sum, tot_rec)
+                tot_rec = int(getattr(p_res, "total_contest_solved", 0) or 0)
+                solved_val = int(max(actual_sum, tot_rec))
                 if solved_val > 0 and actual_sum < solved_val:
                     if solved_val >= 4:
                         q1_val = q2_val = q3_val = q4_val = 1
@@ -246,16 +250,21 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                     elif solved_val == 1:
                         q1_val = 1
                 rank_val = p_res.contest_rank
-                rating_val = getattr(p_res, "contest_rating", None)
+                r_val = getattr(p_res, "contest_rating", None)
+                rating_val = float(r_val) if r_val is not None else None
             elif part_st in ("VIRTUAL", "VIRTUAL_ATTENDED", "VIRTUAL_PRACTICE", "VIRTUAL_PRACTICE_VERIFIED"):
                 status = ContestStatus.VIRTUAL_PRACTICE.value
-                q1_val = 1 if (p_res.q1 and p_res.q1 >= 1) else 0
-                q2_val = 1 if (p_res.q2 and p_res.q2 >= 1) else 0
-                q3_val = 1 if (p_res.q3 and p_res.q3 >= 1) else 0
-                q4_val = 1 if (p_res.q4 and p_res.q4 >= 1) else 0
+                p_q1 = getattr(p_res, "q1", 0) or 0
+                p_q2 = getattr(p_res, "q2", 0) or 0
+                p_q3 = getattr(p_res, "q3", 0) or 0
+                p_q4 = getattr(p_res, "q4", 0) or 0
+                q1_val = 1 if int(p_q1) >= 1 else 0
+                q2_val = 1 if int(p_q2) >= 1 else 0
+                q3_val = 1 if int(p_q3) >= 1 else 0
+                q4_val = 1 if int(p_q4) >= 1 else 0
                 actual_sum = q1_val + q2_val + q3_val + q4_val
-                tot_rec = getattr(p_res, "total_contest_solved", 0) or 0
-                solved_val = max(actual_sum, tot_rec)
+                tot_rec = int(getattr(p_res, "total_contest_solved", 0) or 0)
+                solved_val = int(max(actual_sum, tot_rec))
                 if solved_val > 0 and actual_sum < solved_val:
                     if solved_val >= 4:
                         q1_val = q2_val = q3_val = q4_val = 1
@@ -266,7 +275,8 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                     elif solved_val == 1:
                         q1_val = 1
                 rank_val = p_res.contest_rank
-                rating_val = getattr(p_res, "contest_rating", None)
+                r_val = getattr(p_res, "contest_rating", None)
+                rating_val = float(r_val) if r_val is not None else None
             elif part_st in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT", "NO_PARTICIPATION"):
                 status = ContestStatus.NOT_ATTENDED.value
             elif fetch_st in ("USERNAME_NOT_FOUND", "INVALID_USERNAME", "INVALID_PROFILE", "INVALID_LINK"):
@@ -279,13 +289,17 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                 status = ContestStatus.NOT_ATTENDED.value
         elif v_res is not None:
             status = ContestStatus.VIRTUAL_PRACTICE.value
-            q1_val = 1 if (v_res.q1 and v_res.q1 >= 1) else 0
-            q2_val = 1 if (v_res.q2 and v_res.q2 >= 1) else 0
-            q3_val = 1 if (v_res.q3 and v_res.q3 >= 1) else 0
-            q4_val = 1 if (v_res.q4 and v_res.q4 >= 1) else 0
+            v_q1 = getattr(v_res, "q1", 0) or 0
+            v_q2 = getattr(v_res, "q2", 0) or 0
+            v_q3 = getattr(v_res, "q3", 0) or 0
+            v_q4 = getattr(v_res, "q4", 0) or 0
+            q1_val = 1 if int(v_q1) >= 1 else 0
+            q2_val = 1 if int(v_q2) >= 1 else 0
+            q3_val = 1 if int(v_q3) >= 1 else 0
+            q4_val = 1 if int(v_q4) >= 1 else 0
             actual_sum = q1_val + q2_val + q3_val + q4_val
-            tot_rec = getattr(v_res, "total_contest_solved", 0) or 0
-            solved_val = max(actual_sum, tot_rec)
+            tot_rec = int(getattr(v_res, "total_contest_solved", 0) or 0)
+            solved_val = int(max(actual_sum, tot_rec))
             if solved_val > 0 and actual_sum < solved_val:
                 if solved_val >= 4:
                     q1_val = q2_val = q3_val = q4_val = 1
@@ -300,7 +314,8 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             if p_type in ("OFFICIAL", "PUBLIC"):
                 status = ContestStatus.PUBLIC_LIVE.value
                 rank_val = part_res.contest_rank
-                rating_val = getattr(part_res, "contest_rating_after", None)
+                r_val2 = getattr(part_res, "contest_rating_after", None)
+                rating_val = float(r_val2) if r_val2 is not None else None
                 q1_val = getattr(part_res, "q1", None)
                 q2_val = getattr(part_res, "q2", None)
                 q3_val = getattr(part_res, "q3", None)
@@ -308,11 +323,12 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                 if q1_val is not None and q2_val is not None:
                     solved_val = int(q1_val) + int(q2_val) + int(q3_val or 0) + int(q4_val or 0)
                 else:
-                    solved_val = getattr(part_res, "problems_solved", 0) or 0
+                    solved_val = int(getattr(part_res, "problems_solved", 0) or 0)
             elif p_type in ("VIRTUAL",):
                 status = ContestStatus.VIRTUAL_PRACTICE.value
                 rank_val = part_res.contest_rank
-                rating_val = getattr(part_res, "contest_rating_after", None)
+                r_val2 = getattr(part_res, "contest_rating_after", None)
+                rating_val = float(r_val2) if r_val2 is not None else None
                 q1_val = getattr(part_res, "q1", None)
                 q2_val = getattr(part_res, "q2", None)
                 q3_val = getattr(part_res, "q3", None)
@@ -320,7 +336,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                 if q1_val is not None and q2_val is not None:
                     solved_val = int(q1_val) + int(q2_val) + int(q3_val or 0) + int(q4_val or 0)
                 else:
-                    solved_val = getattr(part_res, "problems_solved", 0) or 0
+                    solved_val = int(getattr(part_res, "problems_solved", 0) or 0)
             else:
                 status = ContestStatus.NOT_ATTENDED.value
         else:

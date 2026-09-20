@@ -568,7 +568,7 @@ def require_security_access(
                 try:
                     sid = int(student_id_param)
                     from backend.services.faculty_assignment_service import faculty_assignment_service
-                    assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, getattr(user, "id"))
+                    assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(getattr(user, "id")))
                     if assigned_ids and sid not in assigned_ids:
                         log_security_access_event(
                             db, request, user, action="ACCESS_RESOURCE",
@@ -623,7 +623,7 @@ def get_authenticated_user_scope(db: Session, user: User) -> dict:
         
     elif role in ["faculty", "staff", "professor", "faculty mentor", "staff mentor", "faculty_mentor", "staff_mentor"]:
         from backend.services.faculty_assignment_service import FacultyAssignmentService
-        assigned_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, getattr(user, "id"))
+        assigned_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, int(getattr(user, "id")))
         return {"type": "FACULTY", "student_ids": assigned_ids}
         
     elif role == "student":

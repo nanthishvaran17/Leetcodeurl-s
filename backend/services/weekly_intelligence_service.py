@@ -33,11 +33,12 @@ from backend.logger import logger
 import re
 
 def _extract_contest_num(s: WeeklySession) -> int:
-    name = str(s.contest_name or "")
+    name = str(s.contest_name) if s.contest_name is not None else ""
     m = re.search(r'\d+', name)
     if m:
         return int(m.group(0))
-    return getattr(s, "id", 0) or 0
+    sid = getattr(s, "id", 0)
+    return int(sid) if sid is not None else 0
 
 def _get_week_label(contest_name: Optional[str], default_id: int) -> str:
     """Extracts clean WXXX label from contest name (e.g. 'Weekly Contest 519' -> 'W519')"""
@@ -193,21 +194,21 @@ def generate_live_weekly_intelligence_data(
                 WeeklyPublicResult.session_id == curr_session_id,
                 WeeklyPublicResult.student_id.in_(student_ids)
             ).all():
-                curr_pub_results[getattr(r, "student_id")] = r
+                curr_pub_results[int(str(getattr(r, "student_id")))] = r
 
         if prev_session_id is not None:
             for r in db.query(WeeklyPublicResult).filter(
                 WeeklyPublicResult.session_id == prev_session_id,
                 WeeklyPublicResult.student_id.in_(student_ids)
             ).all():
-                prev_pub_results[getattr(r, "student_id")] = r
+                prev_pub_results[int(str(getattr(r, "student_id")))] = r
 
         if prev_prev_session_id is not None:
             for r in db.query(WeeklyPublicResult).filter(
                 WeeklyPublicResult.session_id == prev_prev_session_id,
                 WeeklyPublicResult.student_id.in_(student_ids)
             ).all():
-                prev_prev_pub_results[getattr(r, "student_id")] = r
+                prev_prev_pub_results[int(str(getattr(r, "student_id")))] = r
 
     # ─────────────────────────────────────────────────────────────────────────────
     # STEP 4: LOAD TOPIC & LANGUAGE STATS FOR AUTHORIZED STUDENTS
@@ -220,9 +221,9 @@ def generate_live_weekly_intelligence_data(
     if student_ids:
         topic_rows = db.query(LeetCodeTopicStats).filter(LeetCodeTopicStats.student_id.in_(student_ids)).all()
         for tr in topic_rows:
-            solved = getattr(tr, "problems_solved", 0) or 0
+            solved = int(getattr(tr, "problems_solved", 0) or 0)
             if solved > 0:
-                topics_by_student[getattr(tr, "student_id")].append({
+                topics_by_student[int(str(getattr(tr, "student_id")))].append({
                     "topic_name": tr.topic_name,
                     "topic_slug": tr.topic_slug,
                     "problems_solved": solved,
@@ -235,9 +236,9 @@ def generate_live_weekly_intelligence_data(
 
         lang_rows = db.query(LeetCodeLanguageStats).filter(LeetCodeLanguageStats.student_id.in_(student_ids)).all()
         for lr in lang_rows:
-            solved = getattr(lr, "problems_solved", 0) or 0
+            solved = int(getattr(lr, "problems_solved", 0) or 0)
             if solved > 0:
-                languages_by_student[getattr(lr, "student_id")].append({
+                languages_by_student[int(str(getattr(lr, "student_id")))].append({
                     "language_name": lr.language_name,
                     "problems_solved": solved
                 })
@@ -323,21 +324,22 @@ def generate_live_weekly_intelligence_data(
                 WeeklyStudentSnapshot.student_id.in_(student_ids),
                 WeeklyStudentSnapshot.reporting_period_id.in_([prev_label, f"2026-{prev_label}", f"W_{prev_session_id}"])
             ).all():
-                prev_snaps[getattr(snap, "student_id")] = snap
+                prev_snaps[int(str(getattr(snap, "student_id")))] = snap
 
         if prev_prev_label:
             for snap in db.query(WeeklyStudentSnapshot).filter(
                 WeeklyStudentSnapshot.student_id.in_(student_ids),
                 WeeklyStudentSnapshot.reporting_period_id.in_([prev_prev_label, f"2026-{prev_prev_label}", f"W_{prev_prev_session_id}"])
             ).all():
-                prev_prev_snaps[getattr(snap, "student_id")] = snap
+                prev_prev_snaps[int(str(getattr(snap, "student_id")))] = snap
 
     for idx, s in enumerate(students, start=1):
         st = s.stats
         dept_code = normalize_dept_code(s.department.code if s.department else "", s.department.name if s.department else "")
         dept_name = s.department.name if s.department else "Computer Science and Engineering"
-        year_roman = normalize_year_roman(str(s.year_level or ""))
-        batch_label = derive_student_batch(str(s.year_level or ""))
+        s_yr_val = getattr(s, "year_level", None)
+        year_roman = normalize_year_roman(str(s_yr_val) if s_yr_val is not None else "")
+        batch_label = derive_student_batch(str(s_yr_val) if s_yr_val is not None else "")
 
         # Total Solved Calculation
         tot_solved = st.total_solved if st and st.total_solved is not None else 0
@@ -348,10 +350,11 @@ def generate_live_weekly_intelligence_data(
         if easy_cnt + med_cnt + hard_cnt > 0 and tot_solved == 0:
             tot_solved = easy_cnt + med_cnt + hard_cnt
 
+        s_id_int = int(str(getattr(s, "id")))
         # Contest Results for 3 weeks
-        curr_res = curr_pub_results.get(getattr(s, "id"))
-        prev_res = prev_pub_results.get(getattr(s, "id"))
-        prev_prev_res = prev_prev_pub_results.get(getattr(s, "id"))
+        curr_res = curr_pub_results.get(s_id_int)
+        prev_res = prev_pub_results.get(s_id_int)
+        prev_prev_res = prev_prev_pub_results.get(s_id_int)
 
         # Weekly Solved & Immutable Historical Snapshots
         curr_w_solved = tot_solved
@@ -380,8 +383,8 @@ def generate_live_weekly_intelligence_data(
         pp_contest_solved = prev_prev_res.total_contest_solved if prev_prev_res and prev_prev_res.total_contest_solved is not None else 0
 
         # Immutable Historical Snapshot Resolution
-        prev_snap = prev_snaps.get(getattr(s, "id"))
-        prev_prev_snap = prev_prev_snaps.get(getattr(s, "id"))
+        prev_snap = prev_snaps.get(s_id_int)
+        prev_prev_snap = prev_prev_snaps.get(s_id_int)
 
         if prev_snap and prev_snap.primary_solved_count is not None:
             prev_w_solved = prev_snap.primary_solved_count
@@ -640,14 +643,16 @@ def generate_live_weekly_intelligence_data(
     dept_lang_matrix = defaultdict(lambda: defaultdict(int))
 
     for s in students:
-        s_y = normalize_year_roman(str(s.year_level or ""))
+        s_yr_val = getattr(s, "year_level", None)
+        s_y = normalize_year_roman(str(s_yr_val) if s_yr_val is not None else "")
         s_d = s.department.code if s.department else "CSE"
-        for t in topics_by_student.get(getattr(s, "id"), []):
+        s_id_val = int(str(getattr(s, "id")))
+        for t in topics_by_student.get(s_id_val, []):
             t_name = t.get("topic_name") or "General"
             p_cnt = t.get("problems_solved", 0)
             year_dsa_matrix[s_y][t_name] += p_cnt
             dept_dsa_matrix[s_d][t_name] += p_cnt
-        for l in languages_by_student.get(getattr(s, "id"), []):
+        for l in languages_by_student.get(s_id_val, []):
             l_name = l.get("language_name") or "General"
             p_cnt = l.get("problems_solved", 0)
             year_lang_matrix[s_y][l_name] += p_cnt

@@ -237,37 +237,40 @@ class SundayLiveIngestionEngine:
             return False, None, f"Database transaction failed: {str(err)}"
 
         # Recalculate summary metrics after commit
-        metrics = cls.recalculate_live_summary_metrics(db, getattr(session, "id"))
+        metrics = cls.recalculate_live_summary_metrics(db, int(session.id))
 
         # Broadcast Targeted WebSocket Events
         if has_changed:
             dept_name = student.department.name if student.department else ""
+            rec_off_rank = getattr(record, "official_rank", None)
+            rec_fin_time = getattr(record, "finish_time", None)
+            rec_yr_lvl = getattr(student, "year_level", None)
             await manager.broadcast_contest_result(
-                student_id=getattr(student, "id"),
+                student_id=int(student.id),
                 student_name=str(getattr(student, "name", "") or ""),
                 reg_no=str(getattr(student, "reg_no", "") or ""),
                 username=str(getattr(student, "username", "") or ""),
                 contest_id=str(getattr(session, "contest_id", "") or ""),
-                session_id=getattr(session, "id"),
-                q1=getattr(record, "q1", 0) or 0,
-                q2=getattr(record, "q2", 0) or 0,
-                q3=getattr(record, "q3", 0) or 0,
-                q4=getattr(record, "q4", 0) or 0,
+                session_id=int(session.id),
+                q1=int(getattr(record, "q1", 0) or 0),
+                q2=int(getattr(record, "q2", 0) or 0),
+                q3=int(getattr(record, "q3", 0) or 0),
+                q4=int(getattr(record, "q4", 0) or 0),
                 solved_count=new_solved_count,
-                official_rank=getattr(record, "official_rank", None),
-                finish_time=getattr(record, "finish_time", None),
+                official_rank=int(rec_off_rank) if rec_off_rank is not None else None,
+                finish_time=str(rec_fin_time) if rec_fin_time is not None else None,
                 participation_status=str(getattr(record, "participation_type", "PUBLIC") or "PUBLIC"),
                 evidence_state="VERIFIED_LIVE",
                 department_name=dept_name,
-                year_level=getattr(student, "year_level", None),
-                dataset_version=getattr(record, "dataset_version", 1) or 1
+                year_level=str(rec_yr_lvl) if rec_yr_lvl is not None else None,
+                dataset_version=int(getattr(record, "dataset_version", 1) or 1)
             )
 
             await manager.broadcast_contest_summary(
-                session_id=getattr(session, "id"),
+                session_id=int(session.id),
                 contest_id=str(getattr(session, "contest_id", "") or ""),
                 metrics=metrics,
-                dataset_version=getattr(record, "dataset_version", 1) or 1
+                dataset_version=int(getattr(record, "dataset_version", 1) or 1)
             )
 
         result_payload = {
