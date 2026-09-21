@@ -36,6 +36,26 @@ elif db_url.startswith("sqlite:///./"):
         pass
     db_url = f"sqlite:///{db_path}"
 
+# In development mode, verify PostgreSQL host DNS resolution. If offline or hostname unreachable, fallback to local SQLite DB.
+if ("postgresql" in db_url or "postgres" in db_url) and not env_is_prod:
+    import urllib.parse
+    import socket
+    try:
+        parsed = urllib.parse.urlparse(db_url)
+        hostname = parsed.hostname
+        if hostname:
+            socket.gethostbyname(hostname)
+    except Exception as _dns_exc:
+        local_sqlite = os.path.join(os.path.dirname(os.path.dirname(__file__)), "leetcode_tracker.db")
+        if not os.path.exists(local_sqlite):
+            local_sqlite = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "leetcode_tracker.db")
+        db_url = f"sqlite:///{local_sqlite}"
+        try:
+            from backend.logger import logger as _log
+            _log.warning(f"[DB_FALLBACK] PostgreSQL host '{hostname}' unreachable ({_dns_exc}). Falling back to local SQLite: {db_url}")
+        except Exception:
+            print(f"[DB_FALLBACK] PostgreSQL host '{hostname}' unreachable ({_dns_exc}). Falling back to local SQLite: {db_url}")
+
 from sqlalchemy.pool import NullPool
 
 engine_kwargs = {}
