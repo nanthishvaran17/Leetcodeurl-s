@@ -158,12 +158,13 @@ class HybridRedisCache:
     """
     def __init__(self):
         self.local_cache = FastCache()
-        self.use_redis = REDIS_URL is not None and redis is not None
-        if self.use_redis:
+        self.use_redis = bool(REDIS_URL and redis is not None and aioredis is not None)
+        if REDIS_URL and redis is not None and aioredis is not None:
             try:
                 self.redis_sync = redis.from_url(REDIS_URL, decode_responses=True)
                 self.redis_async = aioredis.from_url(REDIS_URL, decode_responses=True)
                 logger.info("Distributed Redis Cache initialized for stateless scaling.")
+                self.use_redis = True
             except Exception as e:
                 logger.error(f"Failed to connect to Redis: {e}. Falling back to local cache.")
                 self.use_redis = False

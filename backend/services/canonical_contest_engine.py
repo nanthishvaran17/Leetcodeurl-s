@@ -155,7 +155,7 @@ def build_canonical_contest_dataset(
     base_dataset = cache.get_or_compute(
         key=base_cache_key,
         compute_func=lambda: _build_canonical_contest_dataset_internal(
-            session_obj.id, session_obj, db, "ALL", "ALL", "ALL", current_user
+            int(session_obj.id), session_obj, db, "ALL", "ALL", "ALL", current_user
         ),
         ttl_seconds=ttl,
         tags=["contests"]
@@ -312,7 +312,7 @@ def _build_canonical_contest_dataset_internal(
             return False
         return True
 
-    all_master_students = [s for s in student_query.order_by(Student.id.asc()).all() if _is_real_student_record(s.reg_no, s.name)]
+    all_master_students = [s for s in student_query.order_by(Student.id.asc()).all() if _is_real_student_record(str(s.reg_no) if s.reg_no is not None else None, str(s.name) if s.name is not None else None)]
     total_master_count = len(all_master_students)
     
     student_ids = [s.id for s in all_master_students]

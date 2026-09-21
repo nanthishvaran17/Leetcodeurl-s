@@ -86,7 +86,8 @@ def generate_original_contest_excel_report(
     Generates the complete 6-sheet Excel workbook from reconstruction payload with clean borders and alignment.
     """
     wb = openpyxl.Workbook()
-    wb.remove(wb.active)  # Remove default sheet
+    if wb.active is not None:
+        wb.remove(wb.active)  # Remove default sheet
 
     meta = reconstruction_payload.get("snapshot_metadata", {})
 
