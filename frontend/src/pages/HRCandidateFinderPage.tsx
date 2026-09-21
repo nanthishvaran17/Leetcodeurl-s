@@ -5,7 +5,7 @@ import {
   Trophy, TrendingUp, TrendingDown, Minus,
   FileSpreadsheet, FileText, AlertTriangle, CheckCircle2,
   Brain, Star, Award, Users, Download, ExternalLink,
-  BarChart2, Target, Zap, Code2, Shield, X, Check, Info, Sparkles, UserCheck, HelpCircle
+  BarChart2, Target, Zap, Code2, Shield, X, Check, Info, Sparkles, UserCheck, HelpCircle, Eye
 } from "lucide-react";
 import api from "../services/api";
 import { useKeyboardContext } from "../context/KeyboardContext";
@@ -1376,19 +1376,19 @@ export const HRCandidateFinderPage: React.FC = () => {
     window.print();
   };
 
-  const selectClass = "w-full h-10 px-3.5 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-slate-300 dark:hover:border-navy-600 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all cursor-pointer shadow-2xs";
-  const inpClass = "w-full h-10 px-3.5 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-slate-300 dark:hover:border-navy-600 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all shadow-2xs";
+  const selectClass = "w-full h-10 px-3.5 rounded-2xl border border-slate-200/90 dark:border-navy-700 bg-white/90 dark:bg-navy-950/90 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:border-blue-400 dark:hover:border-navy-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all cursor-pointer shadow-2xs backdrop-blur-sm";
+  const inpClass = "w-full h-10 px-3.5 rounded-2xl border border-slate-200/90 dark:border-navy-700 bg-white/95 dark:bg-navy-950/95 text-xs font-semibold text-slate-800 dark:text-slate-100 hover:border-purple-300 dark:hover:border-purple-600 focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 focus:outline-none transition-all shadow-2xs backdrop-blur-sm";
 
   const renderRelationalFilter = (label: string, key: keyof AdvancedFilters) => {
     const nf = (filters[key] as NumericFilter) || defaultNumeric(0);
     const isActive = nf.active && (nf.val1 > 0 || nf.op === "BETWEEN");
     return (
       <div>
-        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1 flex items-center justify-between">
+        <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5 flex items-center justify-between">
           <span>{label}</span>
-          {isActive && <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" title="Active Filter" />}
+          {isActive && <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-xs shadow-blue-500/50 animate-pulse" title="Active Filter" />}
         </label>
-        <div className={`flex items-center rounded-2xl border ${isActive ? "border-blue-500 dark:border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/20 dark:bg-blue-950/30" : "border-slate-200/90 dark:border-navy-700 bg-white/90 dark:bg-navy-950/90"} overflow-hidden shadow-2xs hover:border-slate-300 dark:hover:border-navy-600 focus-within:ring-2 focus-within:ring-blue-500/25 focus-within:border-blue-500 transition-all`}>
+        <div className={`flex items-center rounded-2xl border ${isActive ? "border-blue-500 dark:border-blue-500 ring-4 ring-blue-500/20 bg-blue-50/40 dark:bg-blue-950/40 shadow-md shadow-blue-500/10" : "border-slate-200/90 dark:border-navy-700 bg-white/95 dark:bg-navy-950/95"} overflow-hidden shadow-2xs hover:border-slate-300 dark:hover:border-navy-600 focus-within:ring-4 focus-within:ring-blue-500/25 focus-within:border-blue-500 transition-all backdrop-blur-sm`}>
           <select
             value={nf.op}
             onChange={e => updateNumeric(key, "op", e.target.value)}
@@ -1428,9 +1428,9 @@ export const HRCandidateFinderPage: React.FC = () => {
   };
 
   const renderAcademicSection = () => (
-    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${showSectionFilter ? 'xl:grid-cols-7' : 'xl:grid-cols-6'} gap-3`}>
+    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${showSectionFilter ? 'xl:grid-cols-7' : 'xl:grid-cols-6'} gap-3 pt-2 pb-1`}>
       <div>
-        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Department</label>
+        <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 block mb-1.5">Department</label>
         <CustomSelectPopover
           value={filters.department}
           onChange={val => setFilters(p => ({ ...p, department: val }))}
@@ -1439,7 +1439,7 @@ export const HRCandidateFinderPage: React.FC = () => {
         />
       </div>
       <div>
-        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Degree</label>
+        <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 block mb-1.5">Degree</label>
         <CustomSelectPopover
           value={filters.degree}
           onChange={val => setFilters(p => ({ ...p, degree: val }))}
@@ -1448,7 +1448,7 @@ export const HRCandidateFinderPage: React.FC = () => {
         />
       </div>
       <div>
-        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Batch</label>
+        <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 block mb-1.5">Batch</label>
         <CustomSelectPopover
           value={filters.batch}
           onChange={val => setFilters(p => ({ ...p, batch: val }))}
@@ -1457,7 +1457,7 @@ export const HRCandidateFinderPage: React.FC = () => {
         />
       </div>
       <div>
-        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Academic Year</label>
+        <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 block mb-1.5">Academic Year</label>
         <CustomSelectPopover
           value={filters.year_level}
           onChange={val => setFilters(p => ({ ...p, year_level: val }))}
@@ -1467,7 +1467,7 @@ export const HRCandidateFinderPage: React.FC = () => {
       </div>
       {showSectionFilter && (
         <div>
-          <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Section</label>
+          <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 block mb-1.5">Section</label>
           <CustomSelectPopover
             value={filters.section}
             onChange={val => setFilters(p => ({ ...p, section: val }))}
@@ -1477,7 +1477,7 @@ export const HRCandidateFinderPage: React.FC = () => {
         </div>
       )}
       <div>
-        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Accommodation</label>
+        <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 block mb-1.5">Accommodation</label>
         <CustomSelectPopover
           value={filters.accommodation}
           onChange={val => setFilters(p => ({ ...p, accommodation: val }))}
@@ -1490,57 +1490,132 @@ export const HRCandidateFinderPage: React.FC = () => {
   );
 
   const renderIdentitySection = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2 pb-1">
+      {/* Student Name */}
       <div>
-        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Student Name</label>
+        <label className="text-[11px] font-extrabold uppercase tracking-wider text-purple-700 dark:text-purple-300 mb-1.5 flex items-center justify-between">
+          <span className="flex items-center gap-1.5">
+            <Users className="w-3.5 h-3.5 text-purple-500" />
+            Student Name
+          </span>
+          {filters.name_search.trim() && (
+            <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-xs shadow-purple-500/50 animate-pulse" title="Active Filter" />
+          )}
+        </label>
         <div className="relative group">
-          <Users className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-400 group-focus-within:text-purple-600 dark:group-focus-within:text-purple-400 transition-colors" />
+          <Users className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-400 group-focus-within:text-purple-600 dark:group-focus-within:text-purple-300 transition-colors" />
           <input
             type="text"
             value={filters.name_search}
             onChange={e => setFilters(p => ({ ...p, name_search: e.target.value }))}
             placeholder="Search student name..."
-            className={`${inpClass} pl-9 hover:border-purple-300 dark:hover:border-purple-600 focus:border-purple-500 focus:ring-purple-500/20`}
+            className={`${inpClass} pl-10 pr-9 border-purple-200/90 dark:border-purple-900/60 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 shadow-xs`}
           />
+          {filters.name_search && (
+            <button
+              type="button"
+              onClick={() => setFilters(p => ({ ...p, name_search: "" }))}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 p-0.5 rounded-full transition-colors cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Register Number */}
       <div>
-        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Register Number</label>
+        <label className="text-[11px] font-extrabold uppercase tracking-wider text-purple-700 dark:text-purple-300 mb-1.5 flex items-center justify-between">
+          <span className="flex items-center gap-1.5">
+            <FileText className="w-3.5 h-3.5 text-purple-500" />
+            Register Number
+          </span>
+          {filters.reg_no_search.trim() && (
+            <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-xs shadow-purple-500/50 animate-pulse" title="Active Filter" />
+          )}
+        </label>
         <div className="relative group">
-          <FileText className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-400 group-focus-within:text-purple-600 dark:group-focus-within:text-purple-400 transition-colors" />
+          <FileText className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-400 group-focus-within:text-purple-600 dark:group-focus-within:text-purple-300 transition-colors" />
           <input
             type="text"
             value={filters.reg_no_search}
             onChange={e => setFilters(p => ({ ...p, reg_no_search: e.target.value }))}
             placeholder="Search register number..."
-            className={`${inpClass} pl-9 hover:border-purple-300 dark:hover:border-purple-600 focus:border-purple-500 focus:ring-purple-500/20`}
+            className={`${inpClass} pl-10 pr-9 border-purple-200/90 dark:border-purple-900/60 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 shadow-xs`}
           />
+          {filters.reg_no_search && (
+            <button
+              type="button"
+              onClick={() => setFilters(p => ({ ...p, reg_no_search: "" }))}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 p-0.5 rounded-full transition-colors cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Roll Number */}
       <div>
-        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Roll Number</label>
+        <label className="text-[11px] font-extrabold uppercase tracking-wider text-purple-700 dark:text-purple-300 mb-1.5 flex items-center justify-between">
+          <span className="flex items-center gap-1.5">
+            <Target className="w-3.5 h-3.5 text-purple-500" />
+            Roll Number
+          </span>
+          {filters.roll_no_search.trim() && (
+            <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-xs shadow-purple-500/50 animate-pulse" title="Active Filter" />
+          )}
+        </label>
         <div className="relative group">
-          <Target className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-400 group-focus-within:text-purple-600 dark:group-focus-within:text-purple-400 transition-colors" />
+          <Target className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-400 group-focus-within:text-purple-600 dark:group-focus-within:text-purple-300 transition-colors" />
           <input
             type="text"
             value={filters.roll_no_search}
             onChange={e => setFilters(p => ({ ...p, roll_no_search: e.target.value }))}
             placeholder="Search roll number..."
-            className={`${inpClass} pl-9 hover:border-purple-300 dark:hover:border-purple-600 focus:border-purple-500 focus:ring-purple-500/20`}
+            className={`${inpClass} pl-10 pr-9 border-purple-200/90 dark:border-purple-900/60 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 shadow-xs`}
           />
+          {filters.roll_no_search && (
+            <button
+              type="button"
+              onClick={() => setFilters(p => ({ ...p, roll_no_search: "" }))}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 p-0.5 rounded-full transition-colors cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
+
+      {/* LeetCode Username */}
       <div>
-        <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">LeetCode Username</label>
+        <label className="text-[11px] font-extrabold uppercase tracking-wider text-purple-700 dark:text-purple-300 mb-1.5 flex items-center justify-between">
+          <span className="flex items-center gap-1.5">
+            <Code2 className="w-3.5 h-3.5 text-purple-500" />
+            LeetCode Username
+          </span>
+          {filters.username_search.trim() && (
+            <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-xs shadow-purple-500/50 animate-pulse" title="Active Filter" />
+          )}
+        </label>
         <div className="relative group">
-          <Code2 className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-400 group-focus-within:text-purple-600 dark:group-focus-within:text-purple-400 transition-colors" />
+          <Code2 className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-purple-400 group-focus-within:text-purple-600 dark:group-focus-within:text-purple-300 transition-colors" />
           <input
             type="text"
             value={filters.username_search}
             onChange={e => setFilters(p => ({ ...p, username_search: e.target.value }))}
             placeholder="Search username..."
-            className={`${inpClass} pl-9 hover:border-purple-300 dark:hover:border-purple-600 focus:border-purple-500 focus:ring-purple-500/20`}
+            className={`${inpClass} pl-10 pr-9 border-purple-200/90 dark:border-purple-900/60 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 shadow-xs`}
           />
+          {filters.username_search && (
+            <button
+              type="button"
+              onClick={() => setFilters(p => ({ ...p, username_search: "" }))}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-600 dark:hover:text-purple-300 p-0.5 rounded-full transition-colors cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -1962,150 +2037,180 @@ export const HRCandidateFinderPage: React.FC = () => {
         </div>
 
         {/* SECTION 1: ACADEMIC FILTERS */}
-        <div className="bg-gradient-to-br from-blue-50/60 via-slate-50/30 to-indigo-50/40 dark:from-navy-950/80 dark:via-blue-950/20 dark:to-navy-900/60 rounded-2xl border border-blue-100/90 dark:border-blue-900/40 shadow-2xs hover:border-blue-300/60 dark:hover:border-blue-700/50 transition-all overflow-hidden">
+        <div className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
+          desktopAccordions.academic
+            ? "bg-gradient-to-br from-blue-50/80 via-indigo-50/40 to-slate-50/50 dark:from-navy-950/90 dark:via-blue-950/40 dark:to-navy-900/80 border-blue-400/80 dark:border-blue-500/60 shadow-lg shadow-blue-500/5 ring-1 ring-blue-500/20"
+            : "bg-slate-50/60 dark:bg-navy-950/60 border-slate-200/90 dark:border-navy-800 hover:border-blue-300/80 dark:hover:border-blue-700/60 shadow-2xs"
+        }`}>
           <button
             type="button"
             onClick={() => toggleDesktopAccordion('academic')}
-            className="w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-blue-100/30 dark:hover:bg-blue-950/30 transition-colors"
+            className="w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-blue-500/5 transition-colors"
           >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20 shadow-2xs shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
                 <Users className="w-4 h-4" />
               </div>
-              <span className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">Academic Criteria</span>
-              {accordionSections[0].activeCount > 0 && (
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-500 text-white shadow-2xs">
-                  {accordionSections[0].activeCount} Active
-                </span>
-              )}
-              {!desktopAccordions.academic && (
-                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate hidden xl:inline-block ml-2">
-                  (Dept: {filters.department} • Degree: {filters.degree} • Batch: {filters.batch})
-                </span>
-              )}
+              <div className="flex items-center gap-2 flex-wrap min-w-0">
+                <span className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">Academic Criteria</span>
+                {accordionSections[0].activeCount > 0 && (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-600 text-white shadow-xs animate-pulse">
+                    {accordionSections[0].activeCount} Active
+                  </span>
+                )}
+                {!desktopAccordions.academic && (
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate hidden xl:inline-block ml-2">
+                    (Dept: {filters.department} • Degree: {filters.degree} • Batch: {filters.batch})
+                  </span>
+                )}
+              </div>
             </div>
-            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${desktopAccordions.academic ? "rotate-180 text-blue-500" : ""}`} />
+            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${desktopAccordions.academic ? "rotate-180 text-blue-500 font-bold" : ""}`} />
           </button>
           {desktopAccordions.academic && (
-            <div className="px-5 pb-5 pt-1 border-t border-blue-100/60 dark:border-blue-900/30 animate-fadeIn">
+            <div className="px-5 pb-5 pt-1 border-t border-blue-200/60 dark:border-blue-900/40 animate-fadeIn">
               {renderAcademicSection()}
             </div>
           )}
         </div>
 
         {/* SECTION 2: STUDENT IDENTITY */}
-        <div className="bg-gradient-to-br from-purple-50/60 via-slate-50/30 to-fuchsia-50/40 dark:from-purple-950/40 dark:via-navy-950/40 dark:to-navy-900/60 rounded-2xl border border-purple-100/90 dark:border-purple-900/40 shadow-2xs hover:border-purple-300/60 dark:hover:border-purple-700/50 transition-all overflow-hidden">
+        <div className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
+          desktopAccordions.identity
+            ? "bg-gradient-to-br from-purple-50/80 via-fuchsia-50/40 to-slate-50/50 dark:from-purple-950/60 dark:via-navy-950/90 dark:to-purple-900/40 border-purple-400/80 dark:border-purple-500/60 shadow-lg shadow-purple-500/5 ring-1 ring-purple-500/20"
+            : "bg-slate-50/60 dark:bg-navy-950/60 border-slate-200/90 dark:border-navy-800 hover:border-purple-300/80 dark:hover:border-purple-700/60 shadow-2xs"
+        }`}>
           <button
             type="button"
             onClick={() => toggleDesktopAccordion('identity')}
-            className="w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-purple-100/30 dark:hover:bg-purple-950/30 transition-colors"
+            className="w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-purple-500/5 transition-colors"
           >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20 shadow-2xs shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-fuchsia-600 text-white flex items-center justify-center shadow-md shadow-purple-500/20 shrink-0">
                 <Search className="w-4 h-4" />
               </div>
-              <span className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">Student Identity</span>
-              {accordionSections[1].activeCount > 0 && (
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-500 text-white shadow-2xs">
-                  {accordionSections[1].activeCount} Active
-                </span>
-              )}
-              {!desktopAccordions.identity && (filters.name_search || filters.reg_no_search || filters.username_search) && (
-                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate hidden xl:inline-block ml-2">
-                  (Search: {filters.name_search || filters.reg_no_search || filters.username_search})
-                </span>
-              )}
+              <div className="flex items-center gap-2 flex-wrap min-w-0">
+                <span className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">Student Identity</span>
+                {accordionSections[1].activeCount > 0 && (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-600 text-white shadow-xs animate-pulse">
+                    {accordionSections[1].activeCount} Active
+                  </span>
+                )}
+                {!desktopAccordions.identity && (filters.name_search || filters.reg_no_search || filters.username_search) && (
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate hidden xl:inline-block ml-2">
+                    (Search: {filters.name_search || filters.reg_no_search || filters.username_search})
+                  </span>
+                )}
+              </div>
             </div>
-            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${desktopAccordions.identity ? "rotate-180 text-purple-500" : ""}`} />
+            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${desktopAccordions.identity ? "rotate-180 text-purple-500 font-bold" : ""}`} />
           </button>
           {desktopAccordions.identity && (
-            <div className="px-5 pb-5 pt-1 border-t border-purple-100/60 dark:border-purple-900/30 animate-fadeIn">
+            <div className="px-5 pb-5 pt-1 border-t border-purple-200/60 dark:border-purple-900/40 animate-fadeIn">
               {renderIdentitySection()}
             </div>
           )}
         </div>
 
         {/* SECTION 3: CODING PERFORMANCE */}
-        <div className="bg-gradient-to-br from-emerald-50/60 via-slate-50/30 to-teal-50/40 dark:from-emerald-950/40 dark:via-navy-950/40 dark:to-navy-900/60 rounded-2xl border border-emerald-100/90 dark:border-emerald-900/40 shadow-2xs hover:border-emerald-300/60 dark:hover:border-emerald-700/50 transition-all overflow-hidden">
+        <div className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
+          desktopAccordions.coding
+            ? "bg-gradient-to-br from-emerald-50/80 via-teal-50/40 to-slate-50/50 dark:from-emerald-950/60 dark:via-navy-950/90 dark:to-teal-900/40 border-emerald-400/80 dark:border-emerald-500/60 shadow-lg shadow-emerald-500/5 ring-1 ring-emerald-500/20"
+            : "bg-slate-50/60 dark:bg-navy-950/60 border-slate-200/90 dark:border-navy-800 hover:border-emerald-300/80 dark:hover:border-emerald-700/60 shadow-2xs"
+        }`}>
           <button
             type="button"
             onClick={() => toggleDesktopAccordion('coding')}
-            className="w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-emerald-100/30 dark:hover:bg-emerald-950/30 transition-colors"
+            className="w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-emerald-500/5 transition-colors"
           >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20 shadow-2xs shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 shrink-0">
                 <Code2 className="w-4 h-4" />
               </div>
-              <span className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">Coding Performance</span>
-              {accordionSections[2].activeCount > 0 && (
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500 text-white shadow-2xs">
-                  {accordionSections[2].activeCount} Active
-                </span>
-              )}
-              {!desktopAccordions.coding && (
-                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate hidden xl:inline-block ml-2">
-                  (Lang: {filters.primary_language} • Solved: {filters.total_solved.active ? `≥${filters.total_solved.val1}` : 'All'})
-                </span>
-              )}
+              <div className="flex items-center gap-2 flex-wrap min-w-0">
+                <span className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">Coding Performance</span>
+                {accordionSections[2].activeCount > 0 && (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-600 text-white shadow-xs animate-pulse">
+                    {accordionSections[2].activeCount} Active
+                  </span>
+                )}
+                {!desktopAccordions.coding && (
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 truncate hidden xl:inline-block ml-2">
+                    (Lang: {filters.primary_language} • Solved: {filters.total_solved.active ? `≥${filters.total_solved.val1}` : 'All'})
+                  </span>
+                )}
+              </div>
             </div>
-            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${desktopAccordions.coding ? "rotate-180 text-emerald-500" : ""}`} />
+            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${desktopAccordions.coding ? "rotate-180 text-emerald-500 font-bold" : ""}`} />
           </button>
           {desktopAccordions.coding && (
-            <div className="px-5 pb-5 pt-1 border-t border-emerald-100/60 dark:border-emerald-900/30 animate-fadeIn">
+            <div className="px-5 pb-5 pt-1 border-t border-emerald-200/60 dark:border-emerald-900/40 animate-fadeIn">
               {renderCodingSection()}
             </div>
           )}
         </div>
 
         {/* SECTION 4: CONTEST PERFORMANCE */}
-        <div className="bg-gradient-to-br from-amber-50/60 via-slate-50/30 to-orange-50/40 dark:from-amber-950/40 dark:via-navy-950/40 dark:to-navy-900/60 rounded-2xl border border-amber-100/90 dark:border-amber-900/40 shadow-2xs hover:border-amber-300/60 dark:hover:border-amber-700/50 transition-all overflow-hidden">
+        <div className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
+          desktopAccordions.contest
+            ? "bg-gradient-to-br from-amber-50/80 via-orange-50/40 to-slate-50/50 dark:from-amber-950/60 dark:via-navy-950/90 dark:to-orange-900/40 border-amber-400/80 dark:border-amber-500/60 shadow-lg shadow-amber-500/5 ring-1 ring-amber-500/20"
+            : "bg-slate-50/60 dark:bg-navy-950/60 border-slate-200/90 dark:border-navy-800 hover:border-amber-300/80 dark:hover:border-amber-700/60 shadow-2xs"
+        }`}>
           <button
             type="button"
             onClick={() => toggleDesktopAccordion('contest')}
-            className="w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-amber-100/30 dark:hover:bg-amber-950/30 transition-colors"
+            className="w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-amber-500/5 transition-colors"
           >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 shadow-2xs shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-md shadow-amber-500/20 shrink-0">
                 <Trophy className="w-4 h-4" />
               </div>
-              <span className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">Contest Performance</span>
-              {accordionSections[3].activeCount > 0 && (
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white shadow-2xs">
-                  {accordionSections[3].activeCount} Active
-                </span>
-              )}
+              <div className="flex items-center gap-2 flex-wrap min-w-0">
+                <span className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">Contest Performance</span>
+                {accordionSections[3].activeCount > 0 && (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-600 text-white shadow-xs animate-pulse">
+                    {accordionSections[3].activeCount} Active
+                  </span>
+                )}
+              </div>
             </div>
-            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${desktopAccordions.contest ? "rotate-180 text-amber-500" : ""}`} />
+            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${desktopAccordions.contest ? "rotate-180 text-amber-500 font-bold" : ""}`} />
           </button>
           {desktopAccordions.contest && (
-            <div className="px-5 pb-5 pt-1 border-t border-amber-100/60 dark:border-amber-900/30 animate-fadeIn">
+            <div className="px-5 pb-5 pt-1 border-t border-amber-200/60 dark:border-amber-900/40 animate-fadeIn">
               {renderContestSection()}
             </div>
           )}
         </div>
 
         {/* SECTION 5: RESULTS OPTIONS */}
-        <div className="bg-gradient-to-br from-slate-100/80 via-slate-50/50 to-blue-50/30 dark:from-navy-950/80 dark:via-navy-900/60 dark:to-slate-900/60 rounded-2xl border border-slate-200/90 dark:border-navy-700 shadow-2xs hover:border-slate-300 dark:hover:border-navy-600 transition-all overflow-hidden">
+        <div className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
+          desktopAccordions.results
+            ? "bg-gradient-to-br from-cyan-50/80 via-slate-50/40 to-blue-50/50 dark:from-cyan-950/60 dark:via-navy-950/90 dark:to-slate-900/80 border-cyan-400/80 dark:border-cyan-500/60 shadow-lg shadow-cyan-500/5 ring-1 ring-cyan-500/20"
+            : "bg-slate-50/60 dark:bg-navy-950/60 border-slate-200/90 dark:border-navy-800 hover:border-cyan-300/80 dark:hover:border-cyan-700/60 shadow-2xs"
+        }`}>
           <button
             type="button"
             onClick={() => toggleDesktopAccordion('results')}
-            className="w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-slate-200/40 dark:hover:bg-navy-800/40 transition-colors"
+            className="w-full p-4 flex items-center justify-between text-left cursor-pointer hover:bg-cyan-500/5 transition-colors"
           >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-7 h-7 rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-300 flex items-center justify-center border border-slate-500/20 shadow-2xs shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-600 to-slate-700 text-white flex items-center justify-center shadow-md shadow-cyan-500/20 shrink-0">
                 <BarChart2 className="w-4 h-4" />
               </div>
-              <span className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">Results & Sorting Options</span>
-              {accordionSections[4].activeCount > 0 && (
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-600 text-white shadow-2xs">
-                  {accordionSections[4].activeCount} Active
-                </span>
-              )}
+              <div className="flex items-center gap-2 flex-wrap min-w-0">
+                <span className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">Results & Sorting Options</span>
+                {accordionSections[4].activeCount > 0 && (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-cyan-600 text-white shadow-xs animate-pulse">
+                    {accordionSections[4].activeCount} Active
+                  </span>
+                )}
+              </div>
             </div>
-            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${desktopAccordions.results ? "rotate-180 text-slate-500" : ""}`} />
+            <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${desktopAccordions.results ? "rotate-180 text-cyan-500 font-bold" : ""}`} />
           </button>
           {desktopAccordions.results && (
-            <div className="px-5 pb-5 pt-1 border-t border-slate-200/80 dark:border-navy-800 animate-fadeIn">
+            <div className="px-5 pb-5 pt-1 border-t border-cyan-200/60 dark:border-cyan-900/40 animate-fadeIn">
               {renderResultsSection()}
             </div>
           )}
@@ -2231,43 +2336,43 @@ export const HRCandidateFinderPage: React.FC = () => {
               {/* DESKTOP & TABLET FULL TABLE VIEW (>= 768px) */}
               <div className="hidden md:block overflow-x-auto max-h-[600px] overflow-y-auto">
                 <table className="w-full text-left text-xs whitespace-nowrap table-fixed">
-                  <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-navy-950 border-b border-slate-200 dark:border-navy-800 text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  <thead className="sticky top-0 z-10 bg-slate-50/95 dark:bg-navy-950/95 backdrop-blur-md border-b border-slate-200 dark:border-navy-800 text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                     <tr>
-                      <th className="py-3 px-4 text-left w-[20%]">Student</th>
-                      <th className="py-3 px-3 text-left w-[13%]">Register No</th>
-                      <th className="py-3 px-2 text-center w-[7%]">Dept</th>
-                      <th className="py-3 px-2 text-center w-[8%]">Batch</th>
-                      <th className="py-3 px-2 text-center w-[10%] cursor-pointer hover:text-blue-600 transition-colors" onClick={() => { setSortField("global_rank"); setSortAsc(!sortAsc); }}>Global Rank</th>
-                      <th className="py-3 px-2 text-center w-[9%] cursor-pointer hover:text-blue-600 transition-colors" onClick={() => { setSortField("total_solved"); setSortAsc(!sortAsc); }}>Total Solved</th>
-                      <th className="py-3 px-2 text-center w-[6%] cursor-pointer hover:text-emerald-600 transition-colors" onClick={() => { setSortField("easy_solved"); setSortAsc(!sortAsc); }}>Easy</th>
-                      <th className="py-3 px-2 text-center w-[6%] cursor-pointer hover:text-amber-600 transition-colors" onClick={() => { setSortField("medium_solved"); setSortAsc(!sortAsc); }}>Medium</th>
-                      <th className="py-3 px-2 text-center w-[6%] cursor-pointer hover:text-rose-600 transition-colors" onClick={() => { setSortField("hard_solved"); setSortAsc(!sortAsc); }}>Hard</th>
-                      <th className="py-3 px-2 text-center w-[8%] cursor-pointer hover:text-purple-600 transition-colors" onClick={() => { setSortField("contest_rating"); setSortAsc(!sortAsc); }}>Contest Rating</th>
-                      <th className="py-3 px-2 text-center w-[7%]">Action</th>
+                      <th className="py-3.5 px-4 text-left w-[18%]">Student</th>
+                      <th className="py-3.5 px-3 text-left w-[12%]">Register No</th>
+                      <th className="py-3.5 px-2 text-center w-[6%]">Dept</th>
+                      <th className="py-3.5 px-2 text-center w-[7%]">Batch</th>
+                      <th className="py-3.5 px-2 text-center w-[9%] cursor-pointer hover:text-blue-600 transition-colors" onClick={() => { setSortField("global_rank"); setSortAsc(!sortAsc); }}>Global Rank</th>
+                      <th className="py-3.5 px-2 text-center w-[8%] cursor-pointer hover:text-blue-600 transition-colors" onClick={() => { setSortField("total_solved"); setSortAsc(!sortAsc); }}>Total Solved</th>
+                      <th className="py-3.5 px-2 text-center w-[5%] cursor-pointer hover:text-emerald-600 transition-colors" onClick={() => { setSortField("easy_solved"); setSortAsc(!sortAsc); }}>Easy</th>
+                      <th className="py-3.5 px-2 text-center w-[5%] cursor-pointer hover:text-amber-600 transition-colors" onClick={() => { setSortField("medium_solved"); setSortAsc(!sortAsc); }}>Medium</th>
+                      <th className="py-3.5 px-2 text-center w-[5%] cursor-pointer hover:text-rose-600 transition-colors" onClick={() => { setSortField("hard_solved"); setSortAsc(!sortAsc); }}>Hard</th>
+                      <th className="py-3.5 px-2 text-center w-[8%] cursor-pointer hover:text-purple-600 transition-colors" onClick={() => { setSortField("contest_rating"); setSortAsc(!sortAsc); }}>Contest Rating</th>
+                      <th className="py-3.5 px-3 text-center w-[17%]">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
                     {displayCandidates.map((c) => (
-                      <tr key={c.id} onClick={() => setSelectedCandidate(c)} className="hover:bg-slate-50/80 dark:hover:bg-navy-800/50 transition-colors cursor-pointer">
-                        <td className="py-3 px-4 text-left font-bold text-slate-900 dark:text-white w-[20%]">
+                      <tr key={c.id} onClick={() => setSelectedCandidate(c)} className="hover:bg-blue-50/40 dark:hover:bg-navy-800/50 transition-colors cursor-pointer group">
+                        <td className="py-3.5 px-4 text-left font-bold text-slate-900 dark:text-white w-[18%]">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center font-black text-xs shadow-xs flex-shrink-0">
+                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center font-black text-xs shadow-xs flex-shrink-0 group-hover:scale-110 transition-transform">
                               {c.name.charAt(0)}
                             </div>
                             <div className="min-w-0 flex-1">
-                              <div className="font-bold text-slate-900 dark:text-white text-xs leading-tight truncate">{c.name}</div>
+                              <div className="font-bold text-slate-900 dark:text-white text-xs leading-tight truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{c.name}</div>
                               <div className="text-[10px] text-slate-400 font-mono leading-none truncate">{c.username}</div>
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 px-3 text-left font-mono text-slate-600 dark:text-slate-300 font-medium text-xs w-[13%]">{c.reg_no}</td>
-                        <td className="py-3 px-2 text-center w-[7%]">
-                          <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold text-[10px]">
+                        <td className="py-3.5 px-3 text-left font-mono text-slate-600 dark:text-slate-300 font-medium text-xs w-[12%]">{c.reg_no}</td>
+                        <td className="py-3.5 px-2 text-center w-[6%]">
+                          <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold text-[10px] border border-slate-200/60 dark:border-navy-700">
                             {c.dept_code}
                           </span>
                         </td>
-                        <td className="py-3 px-2 text-center font-semibold text-slate-600 dark:text-slate-400 text-xs w-[8%]">{c.batch}</td>
-                        <td className="py-3 px-2 text-center w-[10%]">
+                        <td className="py-3.5 px-2 text-center font-semibold text-slate-600 dark:text-slate-400 text-xs w-[7%]">{c.batch}</td>
+                        <td className="py-3.5 px-2 text-center w-[9%]">
                           <span className="px-2.5 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-mono font-black text-xs border border-blue-200/60 dark:border-blue-900/50">
                             {(() => {
                               const gr: any = c.global_rank;
@@ -2283,26 +2388,29 @@ export const HRCandidateFinderPage: React.FC = () => {
                             })()}
                           </span>
                         </td>
-                        <td className="py-3 px-2 text-center font-black text-slate-900 dark:text-white text-xs font-mono w-[9%]">{c.total_solved}</td>
-                        <td className="py-3 px-2 text-center font-bold text-emerald-600 dark:text-emerald-400 text-xs font-mono w-[6%]">{c.easy_solved}</td>
-                        <td className="py-3 px-2 text-center font-bold text-amber-600 dark:text-amber-400 text-xs font-mono w-[6%]">{c.medium_solved}</td>
-                        <td className="py-3 px-2 text-center font-bold text-rose-600 dark:text-rose-400 text-xs font-mono w-[6%]">{c.hard_solved}</td>
-                        <td className="py-3 px-2 text-center font-extrabold text-purple-600 dark:text-purple-400 text-xs font-mono w-[8%]">
+                        <td className="py-3.5 px-2 text-center font-black text-slate-900 dark:text-white text-xs font-mono w-[8%]">{c.total_solved}</td>
+                        <td className="py-3.5 px-2 text-center font-bold text-emerald-600 dark:text-emerald-400 text-xs font-mono w-[5%]">{c.easy_solved}</td>
+                        <td className="py-3.5 px-2 text-center font-bold text-amber-600 dark:text-amber-400 text-xs font-mono w-[5%]">{c.medium_solved}</td>
+                        <td className="py-3.5 px-2 text-center font-bold text-rose-600 dark:text-rose-400 text-xs font-mono w-[5%]">{c.hard_solved}</td>
+                        <td className="py-3.5 px-2 text-center font-extrabold text-purple-600 dark:text-purple-400 text-xs font-mono w-[8%]">
                           {c.contest_rating > 0 ? c.contest_rating.toLocaleString() : "—"}
                         </td>
-                        <td className="py-3 px-2 text-center w-[7%]">
-                          <div className="flex items-center justify-center gap-1.5">
+                        <td className="py-3.5 px-3 text-center w-[17%]">
+                          <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
                             <button
+                              type="button"
                               onClick={() => setSelectedCandidate(c)}
-                              className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white font-bold text-xs border border-blue-200 dark:border-blue-800 transition-all cursor-pointer shadow-2xs"
+                              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-extrabold text-[11px] shadow-xs shadow-blue-500/20 flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95 cursor-pointer shrink-0"
+                              title="View Detailed Student Analytics"
                             >
-                              View
+                              <Eye className="w-3.5 h-3.5 text-blue-100" />
+                              <span>View Profile</span>
                             </button>
                             <a
                               href={c.leetcode_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="p-1 rounded-lg text-slate-400 hover:text-orange-500 transition-colors"
+                              className="p-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30 hover:border-amber-500/60 transition-all shadow-2xs flex items-center justify-center shrink-0"
                               title="Open LeetCode Profile"
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
@@ -2342,18 +2450,20 @@ export const HRCandidateFinderPage: React.FC = () => {
                       </div>
 
                       {/* Action Buttons: View + External Link */}
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                         <button
+                          type="button"
                           onClick={() => setSelectedCandidate(c)}
-                          className="min-h-[44px] px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-blue-600/20 transition-all cursor-pointer flex items-center gap-1"
+                          className="min-h-[40px] px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 active:scale-95 text-white font-extrabold text-xs shadow-md shadow-blue-600/25 transition-all cursor-pointer flex items-center gap-1.5"
                         >
-                          View
+                          <Eye className="w-3.5 h-3.5 text-blue-100" />
+                          <span>View Profile</span>
                         </button>
                         <a
                           href={c.leetcode_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 hover:text-orange-500 border border-slate-200 dark:border-navy-700 transition-colors"
+                          className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition-all cursor-pointer"
                           title="Open LeetCode Profile"
                         >
                           <ExternalLink className="w-4 h-4" />

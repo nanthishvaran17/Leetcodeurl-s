@@ -76,6 +76,36 @@ export const getDepartmentTheme = (opt: GlobalFilterOption | undefined, isSelect
     };
   }
 
+  // Campus: NEC -> Blue / Indigo Theme
+  if (pill === 'NEC' || val === 'NEC' || label.includes('NANDHA ENGINEERING COLLEGE') || label.includes('NEC CAMPUS')) {
+    return {
+      iconBg: isSelected ? 'bg-white/20' : 'bg-blue-100 dark:bg-blue-950/80',
+      iconColor: isSelected ? 'text-white' : 'text-blue-600 dark:text-blue-400',
+      badgeBg: isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-blue-100 dark:bg-blue-950/90',
+      badgeText: isSelected ? 'text-white font-black' : 'text-blue-800 dark:text-blue-300',
+      badgeBorder: isSelected ? 'border-white/30' : 'border-blue-300 dark:border-blue-800',
+      hoverBg: 'hover:bg-blue-50/80 dark:hover:bg-blue-950/30',
+      selectedBg: 'bg-blue-600 text-white shadow-md shadow-blue-600/20 font-black',
+      selectedText: 'text-white font-black',
+      selectedCheck: 'text-white'
+    };
+  }
+
+  // Campus: NCT -> Cyan / Violet Theme
+  if (pill === 'NCT' || val === 'NCT' || label.includes('NANDHA COLLEGE OF TECHNOLOGY') || label.includes('NCT CAMPUS')) {
+    return {
+      iconBg: isSelected ? 'bg-white/20' : 'bg-cyan-100 dark:bg-cyan-950/80',
+      iconColor: isSelected ? 'text-white' : 'text-cyan-600 dark:text-cyan-400',
+      badgeBg: isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-cyan-100 dark:bg-cyan-950/90',
+      badgeText: isSelected ? 'text-white font-black' : 'text-cyan-800 dark:text-cyan-300',
+      badgeBorder: isSelected ? 'border-white/30' : 'border-cyan-300 dark:border-cyan-800',
+      hoverBg: 'hover:bg-cyan-50/80 dark:hover:bg-cyan-950/30',
+      selectedBg: 'bg-cyan-600 text-white shadow-md shadow-cyan-600/20 font-black',
+      selectedText: 'text-white font-black',
+      selectedCheck: 'text-white'
+    };
+  }
+
   // 1. CSE(IOT) → Orange (Check IOT first before general CSE or CS)
   if (pill.includes('IOT') || fullText.includes('IOT') || label.includes('INTERNET OF THINGS')) {
     return {

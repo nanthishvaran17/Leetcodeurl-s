@@ -1474,7 +1474,7 @@ def create_weekly_contest_matrix_sheet(ws, db: Session, batch_label: str, dept_i
 
         current_row += 1
 
-    ws.column_dimensions['A'].width = 8
+    ws.column_dimensions['A'].width = 7.5
     ws.column_dimensions['B'].width = 16
     ws.column_dimensions['C'].width = 25
     ws.column_dimensions['D'].width = 12
@@ -1920,7 +1920,7 @@ def generate_single_week_matrix_excel(
             current_row += 1
 
         # Column widths
-        ws.column_dimensions['A'].width = 8
+        ws.column_dimensions['A'].width = 7.5
         ws.column_dimensions['B'].width = 16
         ws.column_dimensions['C'].width = 28
         ws.column_dimensions['D'].width = 12
@@ -2042,7 +2042,7 @@ def generate_snapshot_excel_report(db: Session, snapshot_id: str) -> bytes:
                     c.font = Font(name=TNR, size=10, bold=True, color="006100")
         current_row += 1
         
-    ws_college.column_dimensions['A'].width = 8
+    ws_college.column_dimensions['A'].width = 7.5
     ws_college.column_dimensions['B'].width = 18
     ws_college.column_dimensions['C'].width = 35
     ws_college.column_dimensions['D'].width = 25
@@ -2100,7 +2100,7 @@ def generate_snapshot_excel_report(db: Session, snapshot_id: str) -> bytes:
                         c.font = Font(name=TNR, size=10, bold=True, color="006100")
             d_row += 1
             
-        ws_dept.column_dimensions['A'].width = 8
+        ws_dept.column_dimensions['A'].width = 7.5
         ws_dept.column_dimensions['B'].width = 18
         ws_dept.column_dimensions['C'].width = 35
         ws_dept.column_dimensions['D'].width = 15

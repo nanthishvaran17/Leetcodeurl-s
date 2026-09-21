@@ -7,6 +7,9 @@ from backend.database import get_db
 from backend.models import Student, StudentGoal, AuditLog
 from backend.routes.auth import get_current_user
 
+from backend.security import get_current_user_optional
+from backend.services.authorization_service import require_staff_student_access
+
 router = APIRouter(prefix="/api/goals", tags=["Student Goal Engine"])
 
 class GoalCreate(BaseModel):
@@ -14,13 +17,20 @@ class GoalCreate(BaseModel):
     target_date: str # YYYY-MM-DD
 
 @router.get("/{student_id}")
-def get_student_goal(student_id: int, db: Session = Depends(get_db)):
+def get_student_goal(
+    student_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user_optional)
+):
     """
     Returns current goal and progress percentage for student.
     """
     student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student not found.")
+
+    if current_user:
+        require_staff_student_access(db, current_user, student_id)
 
     goal = db.query(StudentGoal).filter(
         StudentGoal.student_id == student_id,
@@ -62,6 +72,8 @@ def set_student_goal(
     student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student not found.")
+
+    require_staff_student_access(db, current_user, student_id)
 
     # Archive previous active goals
     db.query(StudentGoal).filter(

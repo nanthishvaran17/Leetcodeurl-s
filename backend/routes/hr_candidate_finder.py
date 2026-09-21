@@ -1417,7 +1417,7 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
     ws1.freeze_panes = "A26"
 
     min_widths_sheet1 = {
-        "A": 6,   # Rank / #
+        "A": 7.5, # Rank / #
         "B": 24,  # Student Name
         "C": 18,  # Register No
         "D": 18,  # Roll No
@@ -1445,6 +1445,9 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
         max_len = max(len(str(cell.value or '')) for cell in col)
         req_min = min_widths_sheet1.get(col_letter, 12)
         ws1.column_dimensions[col_letter].width = max(req_min, min(35, max_len + 3))
+
+    # Enforce exact Rank column width 7.5
+    ws1.column_dimensions["A"].width = 7.5
 
     # ==========================================
     # SHEET 2: STUDENT OVERVIEW
@@ -1506,6 +1509,9 @@ def generate_hr_candidate_finder_excel(candidates: List[Dict[str, Any]], filters
         col_letter = get_column_letter(col[0].column)
         max_len = max(len(str(cell.value or '')) for cell in col)
         ws2.column_dimensions[col_letter].width = max(12, min(30, max_len + 3))
+
+    # Enforce exact Rank column width 7.5
+    ws2.column_dimensions["A"].width = 7.5
 
     # ==========================================
     # SHEET 3: DIFFICULTY ANALYSIS

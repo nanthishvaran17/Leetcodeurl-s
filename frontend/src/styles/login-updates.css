@@ -92,7 +92,7 @@
     height: auto !important;
     width: 100% !important;
     max-width: 100vw !important;
-    padding: max(6px, env(safe-area-inset-top, 6px)) 8px max(8px, env(safe-area-inset-bottom, 8px)) 8px !important;
+    padding: max(10px, env(safe-area-inset-top, 10px)) 12px max(10px, env(safe-area-inset-bottom, 10px)) 12px !important;
     margin: 0 !important;
     display: flex !important;
     flex-direction: column !important;
@@ -111,20 +111,20 @@
     text-align: center !important;
     width: 100% !important;
     margin-top: 0 !important;
-    margin-bottom: 4px !important;
+    margin-bottom: clamp(6px, 1.2vh, 12px) !important;
     flex-shrink: 0 !important;
     z-index: 10 !important;
   }
 
   .mobile-jubilee-badge {
-    width: clamp(40px, 4.5vh, 52px) !important;
-    height: clamp(40px, 4.5vh, 52px) !important;
+    width: clamp(44px, 5vh, 56px) !important;
+    height: clamp(44px, 5vh, 56px) !important;
     margin-bottom: 2px !important;
   }
 
   .mobile-eyebrow {
-    font-size: clamp(0.58rem, 0.8vh, 0.65rem) !important;
-    margin: 0 0 1px 0 !important;
+    font-size: clamp(0.62rem, 0.9vh, 0.7rem) !important;
+    margin: 0 0 2px 0 !important;
     color: #7DD3FC !important;
     letter-spacing: 0.15em !important;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 1) !important;
@@ -134,34 +134,35 @@
   }
 
   .mobile-title {
-    font-size: clamp(1.15rem, 1.8vh, 1.35rem) !important;
-    margin: 0 0 1px 0 !important;
+    font-size: clamp(1.25rem, 2.2vh, 1.5rem) !important;
+    margin: 0 0 2px 0 !important;
   }
 
   .mobile-subtitle {
-    font-size: clamp(0.68rem, 0.95vh, 0.75rem) !important;
+    font-size: clamp(0.72rem, 1.1vh, 0.8rem) !important;
     margin: 0 !important;
   }
 
   .login-frame {
     display: flex !important;
     flex-direction: column !important;
-    width: calc(100% - 16px) !important;
-    max-width: 420px !important;
+    width: min(94vw, 480px) !important;
+    max-width: 480px !important;
     min-height: 0 !important;
     height: auto !important;
     padding: 0 !important;
-    margin: 4px auto !important;
-    border-radius: 18px !important;
+    margin: 6px auto !important;
+    border-radius: 20px !important;
     flex: 0 1 auto !important;
     box-sizing: border-box !important;
-    box-shadow: 0 15px 35px -10px rgba(6, 29, 54, 0.25) !important;
+    box-shadow: 0 20px 45px -10px rgba(6, 29, 54, 0.28),
+                0 4px 16px rgba(6, 29, 54, 0.08) !important;
   }
 
   .panel-right {
     min-height: 0 !important;
     height: auto !important;
-    padding: 1.1rem 0.85rem 0.8rem 0.85rem !important;
+    padding: clamp(1.25rem, 2.5vh, 1.6rem) clamp(1.1rem, 4vw, 1.5rem) clamp(1rem, 2vh, 1.25rem) clamp(1.1rem, 4vw, 1.5rem) !important;
     flex: 0 1 auto !important;
     display: flex !important;
     flex-direction: column !important;
@@ -177,79 +178,88 @@
   }
 
   .form-head {
-    margin-bottom: 0.68rem !important;
+    margin-bottom: 0.9rem !important;
     margin-top: 0 !important;
     padding-top: 0 !important;
   }
 
   .form-head h2 {
-    font-size: clamp(1.15rem, 1.8vh, 1.35rem) !important;
+    font-size: clamp(1.3rem, 2.2vh, 1.55rem) !important;
+  }
+
+  .form-head p {
+    font-size: clamp(0.82rem, 1.1vh, 0.9rem) !important;
   }
 
   .tabs {
-    height: 40px !important;
-    margin-bottom: 0.68rem !important;
+    height: 46px !important;
+    margin-bottom: 0.9rem !important;
+    padding: 4px !important;
+    border-radius: 12px !important;
   }
 
   .tabs button {
-    height: 32px !important;
-    font-size: 0.82rem !important;
+    height: 38px !important;
+    font-size: 0.88rem !important;
+    border-radius: 9px !important;
   }
 
   .field {
-    margin-bottom: 0.68rem !important;
+    margin-bottom: 0.85rem !important;
   }
 
   .field label {
-    font-size: 0.8rem !important;
-    margin-bottom: 4px !important;
+    font-size: 0.84rem !important;
+    margin-bottom: 5px !important;
   }
 
   .field input[type="text"],
   .field input[type="email"],
   .field input[type="password"] {
-    height: 44px !important;
-    font-size: 0.86rem !important;
+    height: 48px !important;
+    font-size: 0.92rem !important;
+    border-radius: 12px !important;
   }
 
   .row-between {
-    margin-bottom: 0.72rem !important;
-    min-height: 24px !important;
+    margin-bottom: 0.88rem !important;
+    min-height: 28px !important;
     gap: 8px !important;
   }
 
   .remember {
-    font-size: 0.82rem !important;
+    font-size: 0.85rem !important;
   }
 
   .forgot {
-    font-size: 0.82rem !important;
+    font-size: 0.85rem !important;
     white-space: nowrap !important;
   }
 
   .submit-btn {
-    height: 44px !important;
-    font-size: 0.88rem !important;
+    height: 48px !important;
+    font-size: 0.94rem !important;
+    border-radius: 12px !important;
   }
 
   .help-card-row {
-    margin-top: 0.72rem !important;
+    margin-top: 0.9rem !important;
   }
 
   .help-trigger-btn {
-    min-height: 44px !important;
-    padding: 0.6rem 0.75rem !important;
+    min-height: 48px !important;
+    padding: 0.7rem 0.9rem !important;
   }
 
   .stamp {
-    margin-top: 0.55rem !important;
+    margin-top: 0.75rem !important;
     margin-bottom: 0 !important;
     padding: 0 !important;
-    font-size: 0.72rem !important;
+    font-size: 0.76rem !important;
   }
 
   .login-copyright {
-    margin-top: 0.3rem !important;
+    margin-top: 0.5rem !important;
     margin-bottom: 0 !important;
     padding: 0 0 2px 0 !important;
     min-height: 0 !important;
@@ -257,12 +267,12 @@
   }
 
   .copyright-line {
-    font-size: 0.72rem !important;
+    font-size: 0.74rem !important;
     margin-bottom: 1px !important;
   }
 
   .tagline-line {
-    font-size: 0.65rem !important;
+    font-size: 0.68rem !important;
   }
 }
 
@@ -277,9 +287,9 @@
    ANDROID APK / CAPACITOR NATIVE ONLY — EXTENDED HEIGHT LOGIN CARD
    ========================================================================== */
 .login-page-container.is-capacitor .login-frame {
-  width: calc(100% - 24px) !important;
-  max-width: 420px !important;
-  border-radius: 26px !important;
+  width: min(94vw, 480px) !important;
+  max-width: 480px !important;
+  border-radius: 24px !important;
   margin: 8px auto !important;
   box-shadow: 0 20px 45px -10px rgba(6, 29, 54, 0.32),
               0 4px 16px rgba(6, 29, 54, 0.12) !important;

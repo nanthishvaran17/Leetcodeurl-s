@@ -159,12 +159,12 @@ def get_command_center_summary(
         staff_users = staff_users_q.all()
         
         # Single efficient aggregation query for all staff assignments
-        from sqlalchemy import func, or_
+        from sqlalchemy import case, func, or_
         staff_assigned_stats_q = db.query(
             FacultyStudentAssignment.faculty_id.label("faculty_id"),
             func.count(Student.id).label("assigned_cnt"),
             func.sum(
-                func.case(
+                case(
                     (or_((LeetCodeProfileStats.total_solved > 0),
                          ((LeetCodeProfileStats.easy_solved + LeetCodeProfileStats.medium_solved + LeetCodeProfileStats.hard_solved) > 0)),
                      1),
@@ -172,7 +172,7 @@ def get_command_center_summary(
                 )
             ).label("active_cnt"),
             func.sum(
-                func.case(
+                case(
                     (LeetCodeProfileStats.total_solved >= 10, 1),
                     else_=0
                 )

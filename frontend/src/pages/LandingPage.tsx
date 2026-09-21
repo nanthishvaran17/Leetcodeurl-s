@@ -339,9 +339,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     try {
       const res = await api.get('/departments');
       if (res.data && Array.isArray(res.data) && res.data.length >= 1) {
-        // Filter to only show Cyber Security (id: 1) and IoT (id: 2)
-        const filteredDepts = res.data.filter((d: any) => d.id === 1 || d.id === 2);
-        setDepartments(filteredDepts.length > 0 ? filteredDepts : res.data);
+        setDepartments(res.data);
       }
     } catch (err) {
       console.warn("Failed to fetch departments:", err);
@@ -444,13 +442,47 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   ];
 
   const activeDepartmentDescription = useMemo(() => {
-    // 1. If user selected a specific department from the dropdown filter (not 'all')
+    const userName = (user?.name || (user as any)?.full_name || user?.username || '').trim();
+    const userRole = (user?.role || '').trim();
+
+    // 1. Resolve user's assigned department if logged in
+    let userDeptNames: string[] = [];
+
+    if (user?.authorized_department_codes && user.authorized_department_codes.length > 0) {
+      userDeptNames = user.authorized_department_codes.map(c => formatDepartmentName(c));
+    } else if (user?.department_id) {
+      const matched = departments.find(d => d.id === user.department_id);
+      if (matched) {
+        userDeptNames = [formatDepartmentName(matched)];
+      } else {
+        userDeptNames = [formatDepartmentName(user.department_id)];
+      }
+    } else if ((user as any)?.department) {
+      userDeptNames = [formatDepartmentName((user as any).department)];
+    } else if ((user as any)?.department_name) {
+      userDeptNames = [formatDepartmentName((user as any).department_name)];
+    } else if ((user as any)?.dept) {
+      userDeptNames = [formatDepartmentName((user as any).dept)];
+    }
+
+    // Filter out duplicate department names
+    userDeptNames = Array.from(new Set(userDeptNames.filter(Boolean)));
+
+    // 2. If user selected a specific department from the dropdown filter (not 'all')
     if (selectedDept && selectedDept !== 'all') {
       const matchedDept = departments.find(d => 
         (d.code && d.code.toUpperCase() === selectedDept.toUpperCase()) ||
         normalizeDepartment(d.code || d.name) === normalizeDepartment(selectedDept)
       );
       const deptFullName = matchedDept ? formatDepartmentName(matchedDept) : formatDepartmentName(selectedDept);
+      
+      if (userName && userDeptNames.length > 0) {
+        return (
+          <>
+            for <span className="font-bold text-white">{userName}</span> across <span className="font-bold text-white">{deptFullName}</span> department
+          </>
+        );
+      }
       return (
         <>
           across <span className="font-bold text-white">{deptFullName}</span> department
@@ -458,31 +490,31 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       );
     }
 
-    // 2. If user is logged in as HOD, Faculty, or Staff with an assigned department
-    const roleLower = (user?.role || '').toLowerCase();
-    const isDeptRole = ['hod', 'faculty', 'staff mentor', 'staff', 'department staff'].includes(roleLower);
-    
-    if (isDeptRole) {
-      let deptName = '';
-      if (user?.authorized_department_codes && user.authorized_department_codes.length === 1) {
-        deptName = formatDepartmentName(user.authorized_department_codes[0]);
-      } else if (user?.department_id && departments.length > 0) {
-        const matched = departments.find(d => d.id === user.department_id);
-        if (matched) deptName = formatDepartmentName(matched);
-      } else if ((user as any)?.department) {
-        deptName = formatDepartmentName((user as any).department);
-      }
+    // 3. If logged-in user has assigned department(s) (HOD / Faculty / Staff / Student)
+    if (userDeptNames.length > 0) {
+      const isMulti = userDeptNames.length > 1;
+      const deptText = userDeptNames.length === 1
+        ? <span className="font-bold text-white">{userDeptNames[0]}</span>
+        : userDeptNames.length === 2
+        ? <><span className="font-bold text-white">{userDeptNames[0]}</span> &amp; <span className="font-bold text-white">{userDeptNames[1]}</span></>
+        : <><span className="font-bold text-white">{userDeptNames.slice(0, -1).join(', ')}</span> &amp; <span className="font-bold text-white">{userDeptNames[userDeptNames.length - 1]}</span></>;
 
-      if (deptName) {
+      if (userName) {
         return (
           <>
-            across <span className="font-bold text-white">{deptName}</span> department
+            for <span className="font-bold text-white">{userName}</span> {userRole ? <span className="text-emerald-300 font-semibold">({userRole})</span> : null} across {deptText} {isMulti ? 'departments' : 'department'}
           </>
         );
       }
+
+      return (
+        <>
+          across {deptText} {isMulti ? 'departments' : 'department'}
+        </>
+      );
     }
 
-    // 3. Default overall institutional multi-department subtitle banner
+    // 4. Default for Super Admin or All Departments view
     if (departments.length > 0) {
       const formattedDepts = departments.map(d => formatDepartmentName(d));
       const uniqueDepts = Array.from(new Set(formattedDepts));
@@ -503,10 +535,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         );
       }
       
-      const lastDept = uniqueDepts.pop();
+      const lastDept = uniqueDepts[uniqueDepts.length - 1];
+      const leadingDepts = uniqueDepts.slice(0, -1);
       return (
         <>
-          across {uniqueDepts.map((dept, index) => (
+          across {leadingDepts.map((dept, index) => (
             <React.Fragment key={index}>
               <span className="font-bold text-white">{dept}</span>,{' '}
             </React.Fragment>
@@ -519,7 +552,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     // Fallback if departments are not loaded yet
     return (
       <>
-        across <span className="font-bold text-white">Cyber Security</span> &amp; <span className="font-bold text-white">IoT</span> departments
+        across <span className="font-bold text-white">Computer Science and Engineering (Cyber Security)</span> &amp; <span className="font-bold text-white">Computer Science and Engineering (IoT)</span> departments
       </>
     );
   }, [selectedDept, departments, user]);

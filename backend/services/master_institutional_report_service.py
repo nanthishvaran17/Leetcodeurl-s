@@ -156,6 +156,21 @@ def normalize_student_record(s_dict: Dict[str, Any]) -> Dict[str, Any]:
 
     staff_name = s_dict.get("staff_name") or s_dict.get("mentor_name") or "Staff allocation not available"
 
+    c_rat = s_dict.get("contest_rating") or s_dict.get("rating")
+    if c_rat is not None and str(c_rat).strip() not in ("0", "0.0", "N/A", "None", ""):
+        try:
+            contest_rating_val = round(float(c_rat), 1)
+        except (ValueError, TypeError):
+            contest_rating_val = None
+    else:
+        contest_rating_val = None
+
+    g_rnk = s_dict.get("global_rank") or s_dict.get("rank")
+    if g_rnk is not None and str(g_rnk).strip() not in ("0", "N/A", "None", ""):
+        global_rank_val = str(g_rnk)
+    else:
+        global_rank_val = None
+
     return {
         "reg_no": str(s_dict.get("reg_no") or s_dict.get("register_no") or "Not Available"),
         "name": str(s_dict.get("name") or s_dict.get("student_name") or "Not Available"),
@@ -170,6 +185,12 @@ def normalize_student_record(s_dict: Dict[str, Any]) -> Dict[str, Any]:
         "q3": q3,
         "q4": q4,
         "solved": solved,
+        "easy_solved": int(s_dict.get("easy_solved") or 0),
+        "medium_solved": int(s_dict.get("medium_solved") or 0),
+        "hard_solved": int(s_dict.get("hard_solved") or 0),
+        "lifetime_solved": int(s_dict.get("lifetime_solved") or 0),
+        "contest_rating": contest_rating_val,
+        "global_rank": global_rank_val,
         "score": score_display,
         "mentor_signal": get_mentor_signal(solved),
         "rank": s_dict.get("rank") or s_dict.get("global_rank") or s_dict.get("college_rank"),
@@ -525,7 +546,7 @@ def generate_master_10_sheet_workbook(
     raw_students = []
     for s in students_models:
         dept_name = s.department.code if s.department else "CSE"
-        st_stats = stats_map.get(s.id)
+        st_stats = stats_map.get(s.id) or getattr(s, "stats", None)
         
         p_res = public_map.get(s.id)
         v_res = virtual_map.get(s.id)
@@ -594,6 +615,17 @@ def generate_master_10_sheet_workbook(
         else:
             status_str = "VERIFIED" if s.username else "UNLINKED"
 
+        c_rating = (getattr(p_res, "contest_rating", None) if p_res else None) or \
+                   (getattr(v_res, "contest_rating", None) if v_res else None) or \
+                   (st_stats.contest_rating if st_stats and getattr(st_stats, "contest_rating", None) else None)
+        g_rank = (getattr(p_res, "contest_rank", None) if p_res else None) or \
+                 (st_stats.contest_global_ranking if st_stats and getattr(st_stats, "contest_global_ranking", None) else None) or \
+                 getattr(s, "global_rank", None)
+        easy_s = st_stats.easy_solved if (st_stats and st_stats.easy_solved is not None) else 0
+        med_s = st_stats.medium_solved if (st_stats and st_stats.medium_solved is not None) else 0
+        hard_s = st_stats.hard_solved if (st_stats and st_stats.hard_solved is not None) else 0
+        tot_lifetime = st_stats.total_solved if (st_stats and st_stats.total_solved is not None) else (easy_s + med_s + hard_s)
+
         raw_students.append({
             "reg_no": s.reg_no,
             "name": s.name,
@@ -605,8 +637,13 @@ def generate_master_10_sheet_workbook(
             "q1": q1_v, "q2": q2_v, "q3": q3_v, "q4": q4_v,
             "score": score_val,
             "rank": rank_val,
+            "contest_rating": c_rating,
+            "global_rank": g_rank,
+            "easy_solved": easy_s,
+            "medium_solved": med_s,
+            "hard_solved": hard_s,
             "staff_name": getattr(s, "mentor_name", "Staff allocation not available"),
-            "lifetime_solved": (st_stats.total_solved if st_stats and st_stats.total_solved is not None else 0),
+            "lifetime_solved": tot_lifetime,
         })
 
     # Step 1: 28-Point Validation Gate
@@ -712,7 +749,7 @@ def generate_master_10_sheet_workbook(
         elif s_name == "01 Official Leaderboard":
             write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=15)
             headers = ["S.No", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Status", "Q1", "Q2", "Q3", "Q4", "Contest Solved", "Score", "Contest Rank", "Rating"]
-            rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["status"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"], s["score"], s.get("rank") or (idx + 1), "1500.0"] for idx, s in enumerate(normalized_students)]
+            rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["status"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"], s["score"], s.get("rank") or (idx + 1), f"{s['contest_rating']:.1f}" if s.get("contest_rating") is not None else "N/A"] for idx, s in enumerate(normalized_students)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "02 Question Analysis":
@@ -836,13 +873,13 @@ def generate_master_10_sheet_workbook(
             write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=14)
             sorted_by_rank = sorted(normalized_students, key=lambda s: -s["solved"])
             headers = ["Rank", "Register No", "Student Name", "Department", "Year", "LeetCode Handle", "Q1", "Q2", "Q3", "Q4", "Solved", "Score", "Contest Rank", "Rating"]
-            rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"], s["score"], idx + 1, "1500.0"] for idx, s in enumerate(sorted_by_rank)]
+            rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["username"], s["q1"], s["q2"], s["q3"], s["q4"], s["solved"], s["score"], idx + 1, f"{s['contest_rating']:.1f}" if s.get("contest_rating") is not None else "N/A"] for idx, s in enumerate(sorted_by_rank)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "Student Performance Roster":
             write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=12)
             headers = ["S.No", "Register No", "Student Name", "Department", "Year", "Easy Solved", "Medium Solved", "Hard Solved", "Total Solved", "Contest Rating", "Global Rank", "Status"]
-            rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["q1"], s["q2"], s["q3"], s["solved"], "1500.0", s.get("rank") or (idx + 1), s["status"]] for idx, s in enumerate(normalized_students)]
+            rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["easy_solved"], s["medium_solved"], s["hard_solved"], s["lifetime_solved"], f"{s['contest_rating']:.1f}" if s.get("contest_rating") is not None else "N/A", s.get("global_rank") or (f"#{s['rank']}" if s.get("rank") else "N/A"), s["status"]] for idx, s in enumerate(normalized_students)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name in ("5-Week Performance Matrix", "Five-Week Longitudinal Performance Matrix"):
@@ -854,14 +891,20 @@ def generate_master_10_sheet_workbook(
         elif s_name == "Difficulty Intelligence Summary":
             write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=4)
             headers = ["S.No", "Category", "Total Solvers", "Percentage"]
-            cat_counts = {"Above 500": 0, "250-500": 0, "100-249": 0, "50-99": 0, "25-49": 0, "1-24": att_st, "0 Solved": tot_st - att_st}
+            cat_counts = {"Above 500": 0, "250-500": 0, "100-249": 0, "50-99": 0, "25-49": 0, "1-24": 0, "0 Solved": 0}
+            for s in normalized_students:
+                c = get_problem_category(s["lifetime_solved"])
+                if c in cat_counts:
+                    cat_counts[c] += 1
+                else:
+                    cat_counts["0 Solved"] += 1
             rows = [[idx, cat, cnt, f"{(cnt/max(tot_st,1)*100):.1f}%"] for idx, (cat, cnt) in enumerate(cat_counts.items(), 1)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "Student Difficulty Roster":
             write_sheet_header(ws, s_name, contest_title, session_date, roster_scope, cols=10)
             headers = ["S.No", "Register No", "Student Name", "Department", "Year", "Easy Solved", "Medium Solved", "Hard Solved", "Total Solved", "Category"]
-            rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["q1"], s["q2"], s["q3"], s["solved"], "1-24" if s["solved"] > 0 else "0"] for idx, s in enumerate(normalized_students)]
+            rows = [[idx + 1, s["reg_no"], s["name"], s["dept"], s["year"], s["easy_solved"], s["medium_solved"], s["hard_solved"], s["lifetime_solved"], get_problem_category(s["lifetime_solved"])] for idx, s in enumerate(normalized_students)]
             write_table_data(ws, start_row=8, headers=headers, data_rows=rows, primary_hex=pal["primary"])
 
         elif s_name == "Faculty Summary":

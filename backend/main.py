@@ -649,6 +649,22 @@ _CACHE_TTL_MAP: dict = {
     "/api/placement-eligibility/students": 120,
     "/api/gamification/leaderboard": 60,
     "/api/hr-candidate-finder/candidates": 30,
+    "/api/growth/improvers": 60,
+    "/api/growth/college-delta": 60,
+    "/api/growth/options": 300,
+    "/api/command-center/summary": 60,
+    "/api/institutional-dashboards/executive-summary": 60,
+    "/api/institutional-dashboards/department-matrix": 120,
+    "/api/contest-integrity/analysis": 60,
+    "/api/sync/status": 10,
+    "/api/stats/version": 300,
+    "/api/system/health": 15,
+    "/api/data/freshness": 30,
+    "/api/admin/staff-list": 300,
+    "/api/settings": 300,
+    "/api/settings/audit-logs": 60,
+    "/api/settings/system-health": 30,
+    "/api/auth/session": 15,
 }
 
 def purge_api_memory_cache():

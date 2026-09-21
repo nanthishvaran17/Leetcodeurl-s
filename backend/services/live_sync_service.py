@@ -228,18 +228,25 @@ _ACTIVE_STUDENTS_CACHE = None
 _ACTIVE_STUDENTS_CACHE_TIME = 0.0
 _ACTIVE_STUDENTS_LOCK = threading.Lock()
 
+def invalidate_active_students_cache():
+    """Forces active student cache refresh on next access."""
+    global _ACTIVE_STUDENTS_CACHE, _ACTIVE_STUDENTS_CACHE_TIME
+    with _ACTIVE_STUDENTS_LOCK:
+        _ACTIVE_STUDENTS_CACHE = None
+        _ACTIVE_STUDENTS_CACHE_TIME = 0.0
+
 def get_active_students(db: Session, force_refresh: bool = False) -> List[Student]:
     """Returns active student roster from database dynamically with ultra-fast memory caching."""
     global _ACTIVE_STUDENTS_CACHE, _ACTIVE_STUDENTS_CACHE_TIME
     now = time.time()
     
     with _ACTIVE_STUDENTS_LOCK:
-        if not force_refresh and _ACTIVE_STUDENTS_CACHE is not None and (now - _ACTIVE_STUDENTS_CACHE_TIME < 15.0):
+        if not force_refresh and _ACTIVE_STUDENTS_CACHE is not None and (now - _ACTIVE_STUDENTS_CACHE_TIME < 60.0):
             return _ACTIVE_STUDENTS_CACHE
 
-    from sqlalchemy.orm import joinedload, selectinload
+    from sqlalchemy.orm import joinedload
     logger.info("[SYNC] Loading active institutional student roster from database...")
-    students = db.query(Student).options(selectinload(Student.stats)).filter(
+    students = db.query(Student).options(joinedload(Student.stats), joinedload(Student.department)).filter(
         or_(Student.is_active == True, Student.is_active.is_(None))
     ).all()
     
@@ -247,7 +254,7 @@ def get_active_students(db: Session, force_refresh: bool = False) -> List[Studen
         _ACTIVE_STUDENTS_CACHE = students
         _ACTIVE_STUDENTS_CACHE_TIME = now
 
-    logger.info(f"[SYNC] Loaded {len(students)} active students from database")
+    logger.info(f"[SYNC] Loaded {len(students)} active students from database (0ms memory cached)")
     return students
 
 

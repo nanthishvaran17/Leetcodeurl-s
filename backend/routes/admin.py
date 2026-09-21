@@ -1385,7 +1385,28 @@ def get_all_staff_users(
     if role and role.upper() != 'ALL':
         query = query.filter(User.role.ilike(role))
 
-    staff_list = query.order_by(User.username.asc()).all()
+    all_raw_staff = query.order_by(User.username.asc()).all()
+    
+    # Exclude test/dummy/isolation accounts strictly from production list
+    staff_list = []
+    for s in all_raw_staff:
+        u_low = (s.username or "").lower()
+        e_low = (s.email or "").lower()
+        i_low = (s.institutional_id or "").lower()
+        
+        is_test = (
+            "test" in u_low or "test" in e_low or "test" in i_low or
+            "isolation" in u_low or "isolation" in e_low or
+            "hardening" in u_low or "hardening" in e_low or
+            "p930" in u_low or "p930" in e_low or
+            "notif" in u_low or "notif" in e_low or
+            "dummy" in u_low or "dummy" in e_low or
+            e_low.endswith(".test") or e_low.endswith("@college.edu") or
+            u_low.startswith("staff_") or u_low.startswith("test_")
+        )
+        if not is_test:
+            staff_list.append(s)
+
     fac_ids = [s.id for s in staff_list]
 
     count_rows = db.query(

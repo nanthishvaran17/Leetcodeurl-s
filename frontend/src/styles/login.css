@@ -1365,8 +1365,8 @@
   .login-frame {
     display: flex !important;
     flex-direction: column !important;
-    width: calc(100% - 24px) !important;
-    max-width: 420px !important;
+    width: min(94vw, 480px) !important;
+    max-width: 480px !important;
     min-height: 0 !important;
     height: auto !important;
     box-sizing: border-box !important;
@@ -1391,7 +1391,7 @@
 
   .panel-right {
     position: relative !important;
-    padding: 1rem 1rem 0.75rem 1rem !important;
+    padding: clamp(1.25rem, 2.5vh, 1.6rem) clamp(1.1rem, 4vw, 1.5rem) clamp(1rem, 2vh, 1.25rem) clamp(1.1rem, 4vw, 1.5rem) !important;
     background: transparent !important;
     width: 100% !important;
     max-width: 100% !important;

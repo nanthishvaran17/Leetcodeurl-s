@@ -708,7 +708,7 @@ def _safe_purge_or_merge_session(db: Session, old_sess_id: int, target_sess_id: 
                         tot = q1 + q2 + q3 + q4
                         score = q1*3 + q2*4 + q3*5 + q4*6
                         rank_val = 1000 + idx * 15
-                        rating_val = float(st.contest_rating or 1500) if st else 1500.0
+                        rating_val = float(st.contest_rating) if (st and st.contest_rating and float(st.contest_rating) > 0) else None
                 else:
                     p_status = "PUBLIC_NOT_ATTENDED" if c_num <= 515 else "PENDING"
                     q1 = q2 = q3 = q4 = tot = score = 0

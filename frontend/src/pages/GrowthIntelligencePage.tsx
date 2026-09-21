@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
   ResponsiveContainer,
@@ -31,6 +31,7 @@ import {
   RotateCw
 } from 'lucide-react';
 import api from '../services/api';
+import { GlobalFilter, GlobalFilterOption } from '../components/GlobalFilter';
 
 interface Improver {
   student_id: number;
@@ -118,6 +119,48 @@ export const GrowthIntelligencePage: React.FC = () => {
   const [historyLoading, setHistoryLoading] = useState<boolean>(false);
   const [selectedStudentName, setSelectedStudentName] = useState<string>('');
   const [activeStudentInfo, setActiveStudentInfo] = useState<any>(null);
+
+  const departmentOptions: GlobalFilterOption[] = useMemo(() => {
+    const isHod = user?.role?.toLowerCase() === 'hod';
+    const list: GlobalFilterOption[] = [];
+    if (!isHod) {
+      list.push({ value: 'ALL', label: 'All Departments', pillText: 'ALL' });
+    }
+    departments.forEach((d) => {
+      const codeUp = (d.code || '').toUpperCase().trim();
+      const nameUp = (d.name || '').toUpperCase().trim();
+      if (
+        codeUp === 'CSE' ||
+        codeUp.startsWith('TEST') ||
+        codeUp.includes('_TEST') ||
+        codeUp.includes('-TEST') ||
+        nameUp.includes('TEST') ||
+        nameUp.includes('DEMO')
+      ) {
+        return;
+      }
+      list.push({
+        value: d.code,
+        label: d.name ? `${d.code} - ${d.name}` : d.code,
+        pillText: d.code
+      });
+    });
+    return list;
+  }, [departments, user]);
+
+  const yearOptions: GlobalFilterOption[] = useMemo(() => {
+    const list: GlobalFilterOption[] = [
+      { value: 'ALL', label: 'All Academic Years', pillText: 'ALL' }
+    ];
+    availableYears.forEach((y) => {
+      list.push({
+        value: y,
+        label: `${y} Year`,
+        pillText: y
+      });
+    });
+    return list;
+  }, [availableYears]);
 
   useEffect(() => {
     fetchGrowthData();
@@ -294,119 +337,25 @@ export const GrowthIntelligencePage: React.FC = () => {
           {/* Filters, Timeframe Selector Pills & Live Refresh Button */}
           <div className="flex flex-wrap items-center gap-3">
             
-            {/* Department Custom Dropdown */}
-            <div className={`relative ${deptOpen ? 'z-30' : 'z-10'}`}>
-              <button
-                type="button"
-                onClick={() => { setDeptOpen(p => !p); setYearOpen(false); }}
-                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-navy-900/90 text-white text-xs font-bold border backdrop-blur-md shadow-inner transition-all focus:outline-none ${
-                  deptOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-slate-700/80 hover:border-brand-500'
-                }`}
-              >
-                <Building2 className="w-3.5 h-3.5 text-brand-400 shrink-0" />
-                <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30 shrink-0">
-                  {deptFilter}
-                </span>
-                <span className="truncate max-w-[120px]">
-                  {deptFilter === 'ALL' ? 'All Departments' : departments.find(d => d.code === deptFilter)?.name || deptFilter}
-                </span>
-                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${deptOpen ? 'rotate-180' : ''}`} />
-              </button>
+            {/* Department Filter */}
+            <GlobalFilter
+              options={departmentOptions}
+              value={deptFilter}
+              onChange={(val) => setDeptFilter(val)}
+              icon={<Building2 className="w-3.5 h-3.5 text-brand-400" />}
+              dropdownWidth="min-w-[240px]"
+              showSearch={false}
+            />
 
-              {deptOpen && (
-                <div className="absolute z-[200] top-full left-0 mt-1 min-w-[220px] bg-navy-900 border border-slate-700 rounded-2xl shadow-lg max-h-64 overflow-y-auto divide-y divide-navy-800">
-                  {user?.role?.toLowerCase() !== 'hod' && (
-                    <button
-                      type="button"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => { setDeptFilter('ALL'); setDeptOpen(false); }}
-                      className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left text-xs transition-colors ${
-                        deptFilter === 'ALL' ? 'bg-brand-950/80 text-brand-300 font-black' : 'text-slate-300 hover:bg-navy-800 font-bold'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 truncate">
-                        <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300">ALL</span>
-                        <span className="truncate">All Departments</span>
-                      </div>
-                      {deptFilter === 'ALL' && <Check className="w-3.5 h-3.5 text-brand-400 shrink-0" />}
-                    </button>
-                  )}
-                  {departments.map((d) => (
-                    <button
-                      key={d.id}
-                      type="button"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => { setDeptFilter(d.code); setDeptOpen(false); }}
-                      className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left text-xs transition-colors ${
-                        deptFilter === d.code ? 'bg-brand-950/80 text-brand-300 font-black' : 'text-slate-300 hover:bg-navy-800 font-bold'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 truncate">
-                        <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300">{d.code}</span>
-                        <span className="truncate">{d.name || d.code}</span>
-                      </div>
-                      {deptFilter === d.code && <Check className="w-3.5 h-3.5 text-brand-400 shrink-0" />}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Academic Year Custom Dropdown */}
-            <div className={`relative ${yearOpen ? 'z-30' : 'z-10'}`}>
-              <button
-                type="button"
-                onClick={() => { setYearOpen(p => !p); setDeptOpen(false); }}
-                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-navy-900/90 text-white text-xs font-bold border backdrop-blur-md shadow-inner transition-all focus:outline-none ${
-                  yearOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-slate-700/80 hover:border-brand-500'
-                }`}
-              >
-                <GraduationCap className="w-3.5 h-3.5 text-brand-400 shrink-0" />
-                <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 border border-brand-500/30 shrink-0">
-                  {yearFilter}
-                </span>
-                <span className="truncate">
-                  {yearFilter === 'ALL' ? 'All Academic Years' : `${yearFilter} Year`}
-                </span>
-                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {yearOpen && (
-                <div className="absolute z-[200] top-full left-0 mt-1 min-w-[200px] bg-navy-900 border border-slate-700 rounded-2xl shadow-lg max-h-64 overflow-y-auto divide-y divide-navy-800">
-                  <button
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => { setYearFilter('ALL'); setYearOpen(false); }}
-                    className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left text-xs transition-colors ${
-                      yearFilter === 'ALL' ? 'bg-brand-950/80 text-brand-300 font-black' : 'text-slate-300 hover:bg-navy-800 font-bold'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 truncate">
-                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300">ALL</span>
-                      <span className="truncate">All Academic Years</span>
-                    </div>
-                    {yearFilter === 'ALL' && <Check className="w-3.5 h-3.5 text-brand-400 shrink-0" />}
-                  </button>
-                  {availableYears.map((year) => (
-                    <button
-                      key={year}
-                      type="button"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => { setYearFilter(year); setYearOpen(false); }}
-                      className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left text-xs transition-colors ${
-                        yearFilter === year ? 'bg-brand-950/80 text-brand-300 font-black' : 'text-slate-300 hover:bg-navy-800 font-bold'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 truncate">
-                        <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300">{year}</span>
-                        <span className="truncate">{year} Year</span>
-                      </div>
-                      {yearFilter === year && <Check className="w-3.5 h-3.5 text-brand-400 shrink-0" />}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            {/* Academic Year Filter */}
+            <GlobalFilter
+              options={yearOptions}
+              value={yearFilter}
+              onChange={(val) => setYearFilter(val)}
+              icon={<GraduationCap className="w-3.5 h-3.5 text-brand-400" />}
+              dropdownWidth="min-w-[210px]"
+              showSearch={false}
+            />
 
             {/* Timeframe Selector Pills */}
             <div className="flex items-center space-x-1 bg-navy-900/90 p-1.5 rounded-2xl border border-slate-700/80 shadow-inner backdrop-blur-md">
@@ -634,13 +583,13 @@ export const GrowthIntelligencePage: React.FC = () => {
                     {/* Solved Stats & Growth Delta Grid */}
                     <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-navy-900/60 p-2.5 rounded-xl text-xs">
                       <div>
-                        <div className="text-[9px] uppercase font-bold text-slate-400">Total Solved</div>
+                        <div className="text-[10px] uppercase font-black text-indigo-600 dark:text-indigo-400">Total Solved</div>
                         <div className="font-mono font-black text-slate-900 dark:text-white mt-0.5 text-sm">
                           {imp.total_solved}
                         </div>
                       </div>
                       <div>
-                        <div className="text-[9px] uppercase font-bold text-slate-400">Growth (+Delta)</div>
+                        <div className="text-[10px] uppercase font-black text-emerald-600 dark:text-emerald-400">Growth (+Delta)</div>
                         <div className="mt-0.5">
                           {imp.delta_solved === imp.total_solved ? (
                             <span className="text-slate-500 font-bold text-xs">—</span>
@@ -785,13 +734,13 @@ export const GrowthIntelligencePage: React.FC = () => {
               <table className="w-full text-left text-xs min-w-[800px]">
                 <thead className="bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 uppercase font-black text-[11px] border-b border-slate-200 dark:border-slate-800 tracking-wider">
                   <tr>
-                    <th className="py-3.5 px-4"># Rank</th>
-                    <th className="py-3.5 px-4">Student</th>
-                    <th className="py-3.5 px-4">Dept / Year</th>
-                    <th className="py-3.5 px-4">Total Solved</th>
-                    <th className="py-3.5 px-4 text-emerald-600 dark:text-emerald-400">Growth (+Delta)</th>
-                    <th className="py-3.5 px-4">Difficulty Breakdown</th>
-                    <th className="py-3.5 px-4">Rating Delta</th>
+                    <th className="py-3.5 px-4 text-center"># Rank</th>
+                    <th className="py-3.5 px-4 text-left">Student</th>
+                    <th className="py-3.5 px-4 text-center">Dept / Year</th>
+                    <th className="py-3.5 px-4 text-center">Total Solved</th>
+                    <th className="py-3.5 px-4 text-center text-emerald-600 dark:text-emerald-400">Growth (+Delta)</th>
+                    <th className="py-3.5 px-4 text-center">Difficulty Breakdown</th>
+                    <th className="py-3.5 px-4 text-center">Rating Delta</th>
                     <th className="py-3.5 px-4 text-right">Time Machine</th>
                   </tr>
                 </thead>
@@ -809,7 +758,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                           }`}
                         >
                           {/* Rank Badge */}
-                          <td className="py-4 px-4 font-black text-slate-900 dark:text-white">
+                          <td className="py-4 px-4 text-center font-black text-slate-900 dark:text-white">
                             {idx === 0 ? (
                               <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black shadow-md shadow-amber-500/30 text-xs">
                                 #1
@@ -830,7 +779,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                           </td>
 
                           {/* Student Info */}
-                          <td className="py-4 px-4">
+                          <td className="py-4 px-4 text-left">
                             <div className="font-extrabold text-sm text-slate-900 dark:text-white tracking-tight hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
                               {imp.name}
                             </div>
@@ -840,19 +789,19 @@ export const GrowthIntelligencePage: React.FC = () => {
                           </td>
 
                           {/* Department / Year Pill */}
-                          <td className="py-4 px-4">
+                          <td className="py-4 px-4 text-center">
                             <span className="inline-block px-3 py-1 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-extrabold text-xs">
                               {imp.department_code} • {imp.year_level} Yr
                             </span>
                           </td>
 
                           {/* Total Solved */}
-                          <td className="py-4 px-4 font-black text-sm text-slate-900 dark:text-white">
+                          <td className="py-4 px-4 text-center font-black text-sm text-slate-900 dark:text-white">
                             {imp.total_solved}
                           </td>
 
                           {/* Growth Delta */}
-                          <td className="py-4 px-4">
+                          <td className="py-4 px-4 text-center">
                             {imp.delta_solved === imp.total_solved ? (
                               <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-slate-50 dark:bg-navy-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-navy-700 font-black text-sm shadow-sm" title="Initial Baseline">
                                 <span>—</span>
@@ -873,8 +822,8 @@ export const GrowthIntelligencePage: React.FC = () => {
                           </td>
 
                           {/* Difficulty Breakdown */}
-                          <td className="py-4 px-4">
-                            <div className="flex flex-wrap items-center gap-1.5 text-xs font-black">
+                          <td className="py-4 px-4 text-center">
+                            <div className="flex flex-wrap items-center justify-center gap-1.5 text-xs font-black">
                               <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                                 {imp.easy_solved} E (+{imp.delta_easy})
                               </span>
@@ -888,7 +837,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                           </td>
 
                           {/* Rating Delta */}
-                          <td className="py-4 px-4">
+                          <td className="py-4 px-4 text-center">
                             {imp.delta_rating !== 0 ? (
                               <span className={`font-black text-xs px-2.5 py-1 rounded-lg ${
                                 imp.delta_rating > 0

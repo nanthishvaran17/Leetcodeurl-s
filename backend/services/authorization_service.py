@@ -193,19 +193,14 @@ def apply_role_based_student_filter(query, user: Optional[User], db: Session):
             return query.filter(Student.department_id.in_(real_dept_ids)) if real_dept_ids else query
         return query.filter(Student.department_id.in_(dept_ids))
 
-    # 3. Staff / Faculty / Mentors → assigned students only (with department fallback)
+    # 3. Staff / Faculty / Mentors → assigned students only (fail-closed if no assigned students)
     if role in _STAFF_ROLES:
         u_id = getattr(user, "id", None)
-        u_dept_id = getattr(user, "department_id", None)
         assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, u_id) if u_id else []
         if assigned_ids:
             return query.filter(Student.id.in_(assigned_ids))
-        elif u_dept_id:
-            return query.filter(Student.department_id == u_dept_id)
-        else:
-            # Fallback to all real production department students if unassigned and no dept set
-            real_dept_ids = [d.id for d in db.query(Department).all() if d.code and "TEST" not in d.code.upper()]
-            return query.filter(Student.department_id.in_(real_dept_ids)) if real_dept_ids else query
+        # Unassigned staff member → fail-closed (0 students visible until allocated)
+        return query.filter(Student.id == -1)
 
     # 4. Student → self only
     if role == "student":

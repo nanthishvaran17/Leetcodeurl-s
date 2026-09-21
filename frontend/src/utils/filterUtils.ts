@@ -185,6 +185,98 @@ export function matchesDepartment(student: StudentData, selectedDept: string | a
 }
 
 /**
+ * Department Theme Color Mapping — Each department gets its own vibrant, distinct theme!
+ */
+export function getDepartmentThemeColor(dept: any): { bg: string; text: string; border: string; pillBg: string; pillText: string } {
+  const norm = normalizeDepartment(dept);
+  
+  if (norm === 'cse_iot') {
+    return {
+      bg: 'bg-orange-50 dark:bg-orange-950/40',
+      text: 'text-orange-700 dark:text-orange-300',
+      border: 'border-orange-200 dark:border-orange-800/60',
+      pillBg: 'bg-orange-100 dark:bg-orange-900/60',
+      pillText: 'text-orange-800 dark:text-orange-200'
+    };
+  }
+  if (norm === 'cse_cs') {
+    return {
+      bg: 'bg-purple-50 dark:bg-purple-950/40',
+      text: 'text-purple-700 dark:text-purple-300',
+      border: 'border-purple-200 dark:border-purple-800/60',
+      pillBg: 'bg-purple-100 dark:bg-purple-900/60',
+      pillText: 'text-purple-800 dark:text-purple-200'
+    };
+  }
+  if (norm === 'it') {
+    return {
+      bg: 'bg-emerald-50 dark:bg-emerald-950/40',
+      text: 'text-emerald-700 dark:text-emerald-300',
+      border: 'border-emerald-200 dark:border-emerald-800/60',
+      pillBg: 'bg-emerald-100 dark:bg-emerald-900/60',
+      pillText: 'text-emerald-800 dark:text-emerald-200'
+    };
+  }
+  if (norm === 'ece') {
+    return {
+      bg: 'bg-fuchsia-50 dark:bg-fuchsia-950/40',
+      text: 'text-fuchsia-700 dark:text-fuchsia-300',
+      border: 'border-fuchsia-200 dark:border-fuchsia-800/60',
+      pillBg: 'bg-fuchsia-100 dark:bg-fuchsia-900/60',
+      pillText: 'text-fuchsia-800 dark:text-fuchsia-200'
+    };
+  }
+  if (norm === 'eee') {
+    return {
+      bg: 'bg-amber-50 dark:bg-amber-950/40',
+      text: 'text-amber-700 dark:text-amber-300',
+      border: 'border-amber-200 dark:border-amber-800/60',
+      pillBg: 'bg-amber-100 dark:bg-amber-900/60',
+      pillText: 'text-amber-900 dark:text-amber-200'
+    };
+  }
+  if (norm === 'aids' || norm === 'aiml') {
+    return {
+      bg: 'bg-teal-50 dark:bg-teal-950/40',
+      text: 'text-teal-700 dark:text-teal-300',
+      border: 'border-teal-200 dark:border-teal-800/60',
+      pillBg: 'bg-teal-100 dark:bg-teal-900/60',
+      pillText: 'text-teal-800 dark:text-teal-200'
+    };
+  }
+  if (norm === 'agri') {
+    return {
+      bg: 'bg-rose-50 dark:bg-rose-950/40',
+      text: 'text-rose-700 dark:text-rose-300',
+      border: 'border-rose-200 dark:border-rose-800/60',
+      pillBg: 'bg-rose-100 dark:bg-rose-900/60',
+      pillText: 'text-rose-800 dark:text-rose-200'
+    };
+  }
+
+  // Fallback (Indigo / Brand)
+  return {
+    bg: 'bg-indigo-50 dark:bg-indigo-950/40',
+    text: 'text-indigo-700 dark:text-indigo-300',
+    border: 'border-indigo-200 dark:border-indigo-800/60',
+    pillBg: 'bg-indigo-100 dark:bg-indigo-900/60',
+    pillText: 'text-indigo-800 dark:text-indigo-200'
+  };
+}
+
+/**
+ * Campus filter matching predicate (NEC vs NCT vs ALL)
+ */
+export function matchesCampus(student: any, selectedCampus: string): boolean {
+  if (!selectedCampus || selectedCampus === 'all' || selectedCampus === 'ALL' || selectedCampus === 'ALL CAMPUSES') return true;
+  const sCampus = (student?.institution_id || student?.campus || student?.college || 'NEC').toUpperCase();
+  const target = selectedCampus.toUpperCase();
+  if (target.includes('NCT') && sCampus.includes('NCT')) return true;
+  if (target.includes('NEC') && (sCampus.includes('NEC') || !sCampus.includes('NCT'))) return true;
+  return sCampus.includes(target);
+}
+
+/**
  * Academic Year filter matching predicate
  */
 export function matchesAcademicYear(student: StudentData, selectedYear: string): boolean {

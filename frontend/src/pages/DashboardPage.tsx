@@ -555,28 +555,28 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <button
                 onClick={handleStartSync}
                 disabled={isSyncing}
-                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-md border border-blue-400/40 flex items-center justify-center space-x-2 transition-all duration-200 cursor-pointer disabled:opacity-50 focus:ring-2 focus:ring-blue-500 focus:outline-none transform hover:scale-[1.03] active:scale-95 group"
+                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-md border border-blue-400/40 flex items-center justify-center space-x-2 transition-all duration-75 cursor-pointer disabled:opacity-50 focus:ring-2 focus:ring-blue-500 focus:outline-none transform hover:scale-[1.02] active:scale-95 group"
                 aria-label="Fetch live LeetCode statistics"
                 title="Synchronize live profile statistics for all students"
               >
-                <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${isSyncing ? 'animate-spin text-white' : 'text-white group-hover:rotate-180 transition-transform duration-500'}`} />
+                <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${isSyncing ? 'animate-spin text-white' : 'text-white group-hover:rotate-180 transition-transform duration-300'}`} />
                 <span className="truncate tracking-wide font-black">{isSyncing ? 'Syncing...' : 'Fetch Live Data'}</span>
               </button>
 
               <button
                 onClick={onOpenImport}
-                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs shadow-md border border-slate-600 flex items-center justify-center space-x-2 transition-all duration-200 cursor-pointer focus:ring-2 focus:ring-brand-500 focus:outline-none transform hover:scale-[1.03] active:scale-95 group"
+                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs shadow-md border border-slate-600 flex items-center justify-center space-x-2 transition-all duration-75 cursor-pointer focus:ring-2 focus:ring-brand-500 focus:outline-none transform hover:scale-[1.02] active:scale-95 group"
                 aria-label="Import student roster from Excel"
                 title="Upload Excel roster (.xlsx) to parse, validate, and update student profiles"
               >
-                <Plus className="w-3.5 h-3.5 text-brand-400 group-hover:scale-125 group-hover:rotate-90 transition-transform duration-300 shrink-0" />
+                <Plus className="w-3.5 h-3.5 text-brand-400 group-hover:scale-125 group-hover:rotate-90 transition-transform duration-200 shrink-0" />
                 <span className="truncate tracking-wide font-black">Import Roster</span>
               </button>
 
               <button
                 onClick={handleExportExcel}
                 disabled={isExportingExcel}
-                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-md border border-emerald-400/40 flex items-center justify-center space-x-2 transition-all duration-200 cursor-pointer disabled:opacity-70 focus:ring-2 focus:ring-emerald-400 focus:outline-none transform hover:scale-[1.03] active:scale-95 group"
+                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs shadow-md border border-emerald-400/40 flex items-center justify-center space-x-2 transition-all duration-75 cursor-pointer disabled:opacity-70 focus:ring-2 focus:ring-emerald-400 focus:outline-none transform hover:scale-[1.02] active:scale-95 group"
                 aria-label="Export raw student roster to Excel"
                 title="Export current active student roster & raw LeetCode statistics to Excel workbook (.xlsx)"
               >
@@ -588,7 +588,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   </>
                 ) : (
                   <>
-                    <FileSpreadsheet className="w-4 h-4 text-white group-hover:scale-110 transition-transform duration-200 shrink-0" />
+                    <FileSpreadsheet className="w-4 h-4 text-white group-hover:scale-110 transition-transform duration-150 shrink-0" />
                     <span className="truncate tracking-wide font-black text-white">Export Excel</span>
                     <span className="px-1.5 py-0.5 rounded-md bg-white/20 text-[9px] font-mono text-white border border-white/30 font-black uppercase tracking-wider hidden sm:inline-block">
                       XLSX
@@ -600,7 +600,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <button
                 onClick={handleGenerateReport}
                 disabled={generatingReport}
-                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-white font-extrabold text-xs shadow-md border border-amber-300/40 flex items-center justify-center space-x-2 transition-all duration-200 cursor-pointer disabled:opacity-70 focus:ring-2 focus:ring-amber-400 focus:outline-none transform hover:scale-[1.03] active:scale-95 group"
+                className="relative overflow-hidden min-h-[44px] px-3.5 sm:px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-400 text-white font-extrabold text-xs shadow-md border border-amber-300/40 flex items-center justify-center space-x-2 transition-all duration-75 cursor-pointer disabled:opacity-70 focus:ring-2 focus:ring-amber-400 focus:outline-none transform hover:scale-[1.02] active:scale-95 group"
                 aria-label="Generate official weekly institutional report"
                 title="Instant download of pre-generated 8-sheet weekly performance tracker & PDF summary"
               >
@@ -612,7 +612,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                   </>
                 ) : (
                   <>
-                    <FileText className="w-4 h-4 text-white group-hover:scale-110 transition-transform duration-200 shrink-0" />
+                    <FileText className="w-4 h-4 text-white group-hover:scale-110 transition-transform duration-150 shrink-0" />
                     <span className="truncate tracking-wide font-black text-white">Weekly Report</span>
                     <span className="px-1.5 py-0.5 rounded-md bg-white/20 text-[9px] font-mono text-white border border-white/30 font-black uppercase tracking-wider hidden sm:inline-block">
                       PDF

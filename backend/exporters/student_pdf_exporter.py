@@ -18,65 +18,61 @@ import re
 def derive_student_batch_and_year(reg_no: str = "", batch: str = None, year_level: str = None) -> tuple:  # type: ignore
     """
     Returns (batch_str, year_str).
-    Institutional year mapping:
-    2026 entry -> 2026–2030 (Year I)
-    2025 entry -> 2025–2029 (Year II)
-    2024 entry -> 2024–2028 (Year III)
-    2023 entry -> 2023–2027 (Year IV)
+    Institutional year mapping for current academic year (2026):
+    2026 entry (reg 26) -> 2026–2030 (Year I)
+    2025 entry (reg 25) -> 2025–2029 (Year II)
+    2024 entry (reg 24) -> 2024–2028 (Year III)
+    2023 entry (reg 23) -> 2023–2027 (Year IV)
+    2022 entry (reg 22) -> 2022–2026 (Year IV)
     """
     clean_reg = str(reg_no or "").strip().upper()  # type: ignore
     
     # 1. Extract 2-digit entry year from reg_no if available
     join_year = None
-    if len(clean_reg) >= 6:
-        m = re.search(r'(?:7322)?(\d{2})[A-Z]{2}', clean_reg)
+    if len(clean_reg) >= 4:
+        # Matches 732224CC043, 732224CS012, 24CC043, 24CS012, etc.
+        m = re.search(r'(?:7322)?(\d{2})[A-Z]{2,4}', clean_reg)
         if m:
             yy = int(m.group(1))
             if 18 <= yy <= 35:
                 join_year = 2000 + yy
-
-    # 2. Determine batch
-    if batch and str(batch).strip() and str(batch).strip() not in ("N/A", "None", ""):  # type: ignore
-        calc_batch = str(batch).strip().replace("-", "–")  # type: ignore
-    elif join_year:
-        calc_batch = f"{join_year}–{join_year + 4}"
-    else:
-        if "24" in clean_reg:
-            calc_batch = "2024–2028"
-        elif "25" in clean_reg:
-            calc_batch = "2025–2029"
-        elif "23" in clean_reg:
-            calc_batch = "2023–2027"
-        elif "26" in clean_reg:
-            calc_batch = "2026–2030"
-        elif "22" in clean_reg:
-            calc_batch = "2022–2026"
         else:
-            calc_batch = "2024–2028"
+            m2 = re.search(r'(?:7322)?(\d{2})\d{3,}', clean_reg)
+            if m2:
+                yy2 = int(m2.group(1))
+                if 18 <= yy2 <= 35:
+                    join_year = 2000 + yy2
 
-    # 3. Determine year level per institutional rule:
-    # 2024 -> III
-    # 2025 -> II
-    # 2023 -> IV
-    # 2026 -> I
+    # 2. Register Number (join_year) is AUTHORITATIVE for batch derivation
     if join_year:
-        year_map = {2026: "I", 2025: "II", 2024: "III", 2023: "IV"}
-        calc_year = year_map.get(join_year, "III")
+        calc_batch = f"{join_year}–{join_year + 4}"
+    elif batch and str(batch).strip() and str(batch).strip() not in ("N/A", "None", ""):  # type: ignore
+        calc_batch = str(batch).strip().replace("-", "–")  # type: ignore
+        mb = re.search(r'(20\d{2})', calc_batch)
+        if mb:
+            join_year = int(mb.group(1))
     else:
-        if "24" in clean_reg:
-            calc_year = "III"
-        elif "25" in clean_reg:
-            calc_year = "II"
-        elif "23" in clean_reg:
+        calc_batch = "2024–2028"
+        join_year = 2024
+
+    # 3. Determine year level per institutional rule for current Academic Year (2026):
+    # 2026 -> I
+    # 2025 -> II
+    # 2024 -> III
+    # 2023 -> IV
+    # 2022 -> IV (Passed Out / Final Year)
+    if join_year:
+        year_map = {2026: "I", 2025: "II", 2024: "III", 2023: "IV", 2022: "IV"}
+        if join_year in year_map:
+            calc_year = year_map[join_year]
+        elif join_year < 2022:
             calc_year = "IV"
-        elif "26" in clean_reg:
-            calc_year = "I"
         else:
-            calc_year = "III"
+            calc_year = "I"
+    else:
+        calc_year = "III"
 
-    res_year = calc_year
-
-    return calc_batch, res_year
+    return calc_batch, calc_year
 
 
 class StudentNumberedCanvas(canvas.Canvas):
@@ -103,6 +99,16 @@ class StudentNumberedCanvas(canvas.Canvas):
     def draw_page_decorations(self, page_count: int):
         self.saveState()
         
+        # Set PDF Metadata properties to prevent '(anonymous)' browser tab title
+        if hasattr(self, 'setTitle') and getattr(self, '_pdf_doc_title', None):
+            try:
+                self.setTitle(self._pdf_doc_title)
+                self.setAuthor("Nandha Engineering College (Autonomous)")
+                self.setSubject("Individual Student Intelligence Analytics Report")
+                self.setCreator("NEC LeetCode Platform")
+            except Exception:
+                pass
+
         # Dimensions for A4
         p_width, p_height = A4
         margin = 18.0
@@ -326,10 +332,6 @@ def _build_student_identity_table(s: dict, styles: dict) -> Table:
     s_year_input = s.get("year") or s.get("year_level")
     batch_str, year_str = derive_student_batch_and_year(s_reg, s_batch_input, s_year_input)  # type: ignore
 
-    s_sec = str(s.get("section") or "Sec A").strip()
-    if s_sec and not s_sec.startswith("Sec") and len(s_sec) <= 3:
-        s_sec = f"Sec {s_sec}"
-
     s_user = s.get("username") or s_reg
     tz_ist = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
     gen_date = s.get("generatedAtIST") or datetime.datetime.now(tz_ist).strftime("%d %b %Y, %I:%M %p IST")
@@ -376,11 +378,26 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
     Generates a 6-Page Comprehensive Detailed Student Analytics PDF report for the selected student.
     Filename target: Nandha_Student_Report_<NAME>_<REGISTER>.pdf
     """
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=54, bottomMargin=40)
-    styles = _get_common_styles()
     rows = dataset.get("rows", [])
     s = rows[0] if rows else dataset
+    st_name = (s.get("name") or "Student").strip()
+    st_reg = (s.get("reg_no") or "").strip()
+    doc_title = f"Nandha Engineering College - Student Analytics Report - {st_name} ({st_reg})" if st_reg else f"Nandha Engineering College - Student Analytics Report - {st_name}"
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        leftMargin=36,
+        rightMargin=36,
+        topMargin=54,
+        bottomMargin=40,
+        title=doc_title,
+        author="Nandha Engineering College (Autonomous)",
+        subject="Individual Student Detailed Analytics Report",
+        creator="NEC LeetCode Platform"
+    )
+    styles = _get_common_styles()
     story = []
 
     # ----------------------------------------------------
@@ -750,11 +767,26 @@ def generate_student_summary_pdf(dataset: dict) -> bytes:
     Generates a concise Student Performance Summary PDF report for the selected student.
     Filename target: Nandha_Student_Summary_<NAME>_<REGISTER>.pdf
     """
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=54, bottomMargin=40)
-    styles = _get_common_styles()
     rows = dataset.get("rows", [])
     s = rows[0] if rows else dataset
+    st_name = (s.get("name") or "Student").strip()
+    st_reg = (s.get("reg_no") or "").strip()
+    doc_title = f"Nandha Engineering College - Performance Summary - {st_name} ({st_reg})" if st_reg else f"Nandha Engineering College - Performance Summary - {st_name}"
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        leftMargin=36,
+        rightMargin=36,
+        topMargin=54,
+        bottomMargin=40,
+        title=doc_title,
+        author="Nandha Engineering College (Autonomous)",
+        subject="Individual Student Performance Summary",
+        creator="NEC LeetCode Platform"
+    )
+    styles = _get_common_styles()
     story = []
 
     _add_institutional_header(
@@ -872,11 +904,26 @@ def generate_student_contest_matrix_pdf(dataset: dict) -> bytes:
     Generates a dedicated Student Contest Intelligence Matrix PDF report for the selected student.
     Filename target: Nandha_Student_Contest_Matrix_<NAME>_<REGISTER>.pdf
     """
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=36, rightMargin=36, topMargin=54, bottomMargin=40)
-    styles = _get_common_styles()
     rows = dataset.get("rows", [])
     s = rows[0] if rows else dataset
+    st_name = (s.get("name") or "Student").strip()
+    st_reg = (s.get("reg_no") or "").strip()
+    doc_title = f"Nandha Engineering College - Contest Matrix - {st_name} ({st_reg})" if st_reg else f"Nandha Engineering College - Contest Matrix - {st_name}"
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        leftMargin=36,
+        rightMargin=36,
+        topMargin=54,
+        bottomMargin=40,
+        title=doc_title,
+        author="Nandha Engineering College (Autonomous)",
+        subject="Individual Student Contest Intelligence Matrix",
+        creator="NEC LeetCode Platform"
+    )
+    styles = _get_common_styles()
     story = []
 
     _add_institutional_header(

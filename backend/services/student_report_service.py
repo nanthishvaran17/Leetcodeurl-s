@@ -37,6 +37,11 @@ def generate_student_report(
         student = db.query(Student).filter(Student.id == student_id).first()
         if not student:
             raise ValueError(f"Student with ID {student_id} not found.")
+
+        # Enforce strict RBAC allocation check if current_user is provided
+        if current_user:
+            from backend.services.authorization_service import require_staff_student_access
+            require_staff_student_access(db, current_user, student_id)
         
         stats = db.query(StudentStatSnapshot).filter(StudentStatSnapshot.student_id == student_id).first()
         contest_stats = db.query(StudentContestSnapshot).filter(StudentContestSnapshot.student_id == student_id).first()
@@ -48,12 +53,21 @@ def generate_student_report(
 
         dept_name = student.department.name if student.department else "Computer Science and Engineering"
         dept_code = student.department.code if student.department else "CSE"
-        section_name = student.section.name if student.section else "Sec A"
+        section_name = student.section.name if getattr(student, "section", None) else "A"
         batch_str, year_level = derive_student_batch_and_year(
             student.reg_no,  # type: ignore
             student.batch,  # type: ignore
             student.year_level  # type: ignore
         )
+        
+        # Automatically synchronize DB record if batch or year level was incorrect
+        if getattr(student, "batch", None) != batch_str or getattr(student, "year_level", None) != year_level:
+            student.batch = batch_str  # type: ignore
+            student.year_level = year_level  # type: ignore
+            try:
+                db.flush()
+            except Exception:
+                pass
         
         # Metrics Resolution
         total_solved = (rt_stats.total_solved if rt_stats and rt_stats.total_solved is not None 

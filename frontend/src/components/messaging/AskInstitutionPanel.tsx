@@ -31,10 +31,10 @@ export const AskInstitutionPanel: React.FC<{
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const presetQueries = [
+    'Yesterday vs Today Daily Solves',
+    'Sunday 9:35 AM Contest Report',
     'Who is inactive this week?',
-    'Who missed the last contest?',
-    'Which students improved most?',
-    'Which topics are difficult?'
+    'Which students improved most?'
   ];
 
   useEffect(() => {

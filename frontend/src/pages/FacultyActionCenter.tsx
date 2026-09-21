@@ -838,24 +838,18 @@ export const FacultyActionCenter: React.FC = () => {
 
           <div className="flex items-center gap-2 flex-wrap">
             {syncMsg && (
-              <span className={`text-xs font-bold px-3 py-1.5 rounded-xl bg-navy-900/90 border border-slate-700/80 ${syncMsg.startsWith('') ? 'text-emerald-400' : 'text-rose-400'}`}>
+              <span className={`text-xs font-bold px-3 py-1.5 rounded-xl bg-navy-900/90 border border-slate-700/80 ${syncMsg.includes('failed') ? 'text-rose-400' : 'text-emerald-400'}`}>
                 {syncMsg}
               </span>
             )}
             <button
+              type="button"
               onClick={handleSync}
               disabled={syncing}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs font-black shadow-md shadow-brand-600/30 transition-all cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white text-xs font-black shadow-lg shadow-brand-600/30 hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
             >
-              <RefreshCw size={13} className={syncing ? 'animate-spin' : ''} />
-              <span>{syncing ? 'Syncing...' : 'Force Sync'}</span>
-            </button>
-            <button
-              onClick={loadData}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-navy-900/90 hover:bg-navy-800 text-white text-xs font-bold border border-slate-700/80 backdrop-blur-md shadow-inner transition-all cursor-pointer"
-              title="Reload Data"
-            >
-              <RotateCcw size={13} className="text-slate-300" />
+              <RefreshCw size={14} className={syncing ? 'animate-spin text-amber-300' : 'text-amber-300'} />
+              <span>{syncing ? 'Resyncing All Data...' : 'Force Sync'}</span>
             </button>
           </div>
         </div>
@@ -1081,13 +1075,13 @@ export const FacultyActionCenter: React.FC = () => {
                   {/* Stats & Signal Grid */}
                   <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-navy-900/60 p-2 rounded-xl text-xs">
                     <div>
-                      <div className="text-[9px] uppercase font-bold text-slate-400">Coding Stats</div>
+                      <div className="text-[10px] uppercase font-black text-indigo-600 dark:text-indigo-400">Coding Stats</div>
                       <div className="font-mono font-bold text-slate-800 dark:text-slate-200 mt-0.5 text-[11px]">
                         Solved: {item.total_solved} <span className="text-slate-400 font-normal">| R: {item.current_rating}</span>
                       </div>
                     </div>
                     <div>
-                      <div className="text-[9px] uppercase font-bold text-slate-400">Signal Trigger</div>
+                      <div className="text-[10px] uppercase font-black text-purple-600 dark:text-purple-400">Signal Trigger</div>
                       <div className="font-medium text-slate-700 dark:text-slate-300 truncate mt-0.5 text-[11px]" title={item.signal_type}>
                         {item.signal_type}
                       </div>

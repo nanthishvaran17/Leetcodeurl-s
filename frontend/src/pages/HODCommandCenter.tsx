@@ -1813,11 +1813,11 @@ export const HODCommandCenter: React.FC = () => {
                   {/* Middle Row: Score Metrics Strip (Solved, Weekly Change, Contest) */}
                   <div className="grid grid-cols-3 gap-2 p-2 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-navy-800 text-center font-mono">
                     <div>
-                      <span className="text-[9px] uppercase font-bold text-slate-400 block">Solved</span>
+                      <span className="text-[10px] uppercase font-black text-indigo-600 dark:text-indigo-400 block">Solved</span>
                       <span className="text-xs font-black text-slate-900 dark:text-white">{s.total_solved}</span>
                     </div>
                     <div>
-                      <span className="text-[9px] uppercase font-bold text-slate-400 block">Weekly Δ</span>
+                      <span className="text-[10px] uppercase font-black text-emerald-600 dark:text-emerald-400 block">Weekly Δ</span>
                       <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
                         {(() => {
                           const w = String(s.weekly_change ?? 0);
@@ -1826,7 +1826,7 @@ export const HODCommandCenter: React.FC = () => {
                       </span>
                     </div>
                     <div>
-                      <span className="text-[9px] uppercase font-bold text-slate-400 block">Contest</span>
+                      <span className="text-[10px] uppercase font-black text-purple-600 dark:text-purple-400 block">Contest</span>
                       <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{s.contest_standing || '—'}</span>
                     </div>
                   </div>

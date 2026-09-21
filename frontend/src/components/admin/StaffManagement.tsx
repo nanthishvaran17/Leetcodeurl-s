@@ -363,14 +363,6 @@ export const StaffManagement: React.FC = () => {
         </div>
         <div className="flex items-center gap-3">
           <button
-            type="button"
-            onClick={() => fetchStaff()}
-            className="p-2 rounded-xl border border-slate-200 dark:border-navy-700 hover:bg-slate-50 dark:hover:bg-navy-750 text-slate-500 transition-colors cursor-pointer"
-            title="Refresh staff list"
-          >
-            <RefreshCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-          <button
             onClick={() => { resetForm(); setShowModal(true); }}
             className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white rounded-xl font-bold text-xs shadow-md shadow-brand-500/20 transition-all cursor-pointer"
           >

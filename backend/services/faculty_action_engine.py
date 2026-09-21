@@ -1,4 +1,5 @@
 from typing import List, Optional
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from backend.models import FacultyActionQueueItem as FacultyActionItem, Student, User
 from fastapi import HTTPException
@@ -53,10 +54,10 @@ class FacultyActionEngine:
         if status not in ["OPEN", "IN_REVIEW", "DISMISSED", "ACTIONED", "Pending", "In Progress", "Monitoring", "Completed", "Resolved"]:
             raise HTTPException(status_code=400, detail="Invalid status")
             
-        item.status = status
-        item.faculty_id = user.id
+        setattr(item, "status", status)
+        setattr(item, "faculty_id", user.id)
         if notes:
-            item.faculty_notes = notes
+            setattr(item, "faculty_notes", notes)
             
         db.commit()
         db.refresh(item)
@@ -160,14 +161,13 @@ class FacultyActionIngestion:
     ) -> FacultyActionItem:
         """Create queue item when risk_score > threshold."""
         import json
-        from datetime import datetime
         
         evidence_data = {
             "risk_score": risk_score,
             "threshold": threshold,
             "calculation_version": context.get("version"),
             "contributing_factors": context.get("factors"),
-            "timestamp": datetime.now(datetime.timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
         return FacultyActionEngine.create_action_item(
@@ -237,7 +237,6 @@ def get_faculty_actions_list(
     is_escalated: Optional[bool] = None,
 ) -> dict:
     from backend.models import FacultyActionQueueItem, Student, FacultyStudentAssignment
-    from datetime import datetime
     from sqlalchemy import or_
 
     query = db.query(FacultyActionQueueItem).join(Student, FacultyActionQueueItem.student_id == Student.id)
@@ -286,7 +285,7 @@ def get_faculty_actions_list(
         is_overdue_val = False
         days_overdue_val = 0
         if item.follow_up_date and item.status not in ["Completed", "Resolved"]:
-            today = datetime.now(datetime.timezone.utc).date()
+            today = datetime.now(timezone.utc).date()
             f_date = item.follow_up_date.date() if isinstance(item.follow_up_date, datetime) else item.follow_up_date
             if f_date < today:
                 is_overdue_val = True
@@ -340,7 +339,6 @@ def get_faculty_actions_list(
 
 def detect_and_sync_faculty_signals(db: Session, force: bool = False) -> dict:
     from backend.models import Student, FacultyActionQueueItem, LeetCodeProfileStats
-    from datetime import datetime
 
     students = db.query(Student).filter(Student.is_active == True).all()
     created_count = 0
@@ -390,16 +388,16 @@ def detect_and_sync_faculty_signals(db: Session, force: bool = False) -> dict:
                 recommended_action=rec_action,
                 status="Pending",
                 category="PERFORMANCE_DROP",
-                created_at=datetime.now(datetime.timezone.utc)
+                created_at=datetime.now(timezone.utc)
             )
             db.add(item)
             created_count += 1
         else:
-            existing.priority = prio
-            existing.priority_score = score
-            existing.reason = reason
-            existing.recommended_action = rec_action
-            existing.updated_at = datetime.now(datetime.timezone.utc)
+            setattr(existing, "priority", prio)
+            setattr(existing, "priority_score", score)
+            setattr(existing, "reason", reason)
+            setattr(existing, "recommended_action", rec_action)
+            setattr(existing, "updated_at", datetime.now(timezone.utc))
             updated_count += 1
 
     try:

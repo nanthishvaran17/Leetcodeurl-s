@@ -36,46 +36,59 @@ elif db_url.startswith("sqlite:///./"):
         pass
     db_url = f"sqlite:///{db_path}"
 
-# In development mode, verify PostgreSQL host DNS resolution. If offline or hostname unreachable, fallback to local SQLite DB.
+# In development mode, verify PostgreSQL host DNS resolution and TCP port reachability. If offline or hostname unreachable, fallback to local SQLite DB.
 if ("postgresql" in db_url or "postgres" in db_url) and not env_is_prod:
     import urllib.parse
     import socket
+    hostname = "unknown"
     try:
         parsed = urllib.parse.urlparse(db_url)
-        hostname = parsed.hostname
-        if hostname:
-            socket.gethostbyname(hostname)
-    except Exception as _dns_exc:
+        hostname = parsed.hostname or "unknown"
+        port = parsed.port or 5432
+        if hostname != "unknown":
+            s = socket.create_connection((hostname, port), timeout=2.5)
+            s.close()
+    except Exception as _net_exc:
         local_sqlite = os.path.join(os.path.dirname(os.path.dirname(__file__)), "leetcode_tracker.db")
         if not os.path.exists(local_sqlite):
             local_sqlite = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "leetcode_tracker.db")
         db_url = f"sqlite:///{local_sqlite}"
         try:
             from backend.logger import logger as _log
-            _log.warning(f"[DB_FALLBACK] PostgreSQL host '{hostname}' unreachable ({_dns_exc}). Falling back to local SQLite: {db_url}")
+            _log.warning(f"[DB_FALLBACK] PostgreSQL host '{hostname}' unreachable ({_net_exc}). Falling back to local SQLite: {db_url}")
         except Exception:
-            print(f"[DB_FALLBACK] PostgreSQL host '{hostname}' unreachable ({_dns_exc}). Falling back to local SQLite: {db_url}")
+            print(f"[DB_FALLBACK] PostgreSQL host '{hostname}' unreachable ({_net_exc}). Falling back to local SQLite: {db_url}")
 
 from sqlalchemy.pool import NullPool
 
 engine_kwargs = {}
 if "postgresql" in db_url or "postgres" in db_url:
+    pg_connect_args = {
+        "connect_timeout": 10,   # Fast connect timeout
+        "keepalives": 1,
+        "keepalives_idle": 30,   # probe after 30s idle (Neon is aggressive)
+        "keepalives_interval": 5,
+        "keepalives_count": 3,
+        "sslmode": "require",
+    }
+    try:
+        import urllib.parse
+        import socket
+        parsed_db_url = urllib.parse.urlparse(db_url)
+        if parsed_db_url.hostname:
+            resolved_v4 = socket.gethostbyname(parsed_db_url.hostname)
+            if resolved_v4:
+                pg_connect_args["hostaddr"] = resolved_v4
+    except Exception:
+        pass
+
     engine_kwargs.update({
         "pool_size": int(os.environ.get("DB_POOL_SIZE", 20)),
         "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", 25)),
         "pool_timeout": 30,          # wait up to 30s to checkout a connection
         "pool_pre_ping": True,       # verify liveness before returning from pool
         "pool_recycle": 120,         # recycle after 2min (Neon suspends idle connections)
-        "connect_args": {
-            "connect_timeout": 15,   # Neon cold-start can take ~5-10s
-            "keepalives": 1,
-            "keepalives_idle": 30,   # probe after 30s idle (Neon is aggressive)
-            "keepalives_interval": 5,
-            "keepalives_count": 3,
-            "sslmode": "require",
-            # Statement timeout: Removed for Neon Connection Pooler compatibility
-            # "options": "-c statement_timeout=20000"
-        }
+        "connect_args": pg_connect_args
     })
 else:
     engine_kwargs.update({

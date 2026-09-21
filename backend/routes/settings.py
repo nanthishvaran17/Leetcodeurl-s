@@ -315,47 +315,51 @@ def run_live_data_integrity_audit(
     now_ist = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=5, minutes=30)
     now_str = now_ist.strftime("%d %b %Y, %I:%M:%S %p IST")
 
-    total_students = db.query(Student).filter(Student.is_active == True).count()
-    total_sessions = db.query(WeeklySession).count()
-    all_results = db.query(WeeklyPublicResult).all()
+    total_students = db.execute(text("SELECT COUNT(*) FROM students WHERE is_active = true")).scalar() or 0
+    total_sessions = db.execute(text("SELECT COUNT(*) FROM weekly_sessions")).scalar() or 0
+    total_results = db.execute(text("SELECT COUNT(*) FROM weekly_public_results")).scalar() or 0
 
     # Rule 1: Question Equality Check
-    question_mismatches = []
-    for r in all_results:
-        if r.participation_status == "PUBLIC_ATTENDED":
-            q_sum = (r.q1 or 0) + (r.q2 or 0) + (r.q3 or 0) + (r.q4 or 0)
-            if q_sum != (r.total_contest_solved or 0):
-                question_mismatches.append(f"Result #{r.id} (Student #{r.student_id}): Q_sum({q_sum}) != Solved({r.total_contest_solved})")
+    raw_mismatches = db.execute(text(
+        "SELECT id, student_id, (COALESCE(q1,0) + COALESCE(q2,0) + COALESCE(q3,0) + COALESCE(q4,0)) as qsum, total_contest_solved "
+        "FROM weekly_public_results "
+        "WHERE participation_status = 'PUBLIC_ATTENDED' AND (COALESCE(q1,0) + COALESCE(q2,0) + COALESCE(q3,0) + COALESCE(q4,0)) != COALESCE(total_contest_solved,0)"
+    )).fetchall()
+    question_mismatches = [
+        f"Result #{r[0]} (Student #{r[1]}): Q_sum({r[2]}) != Solved({r[3]})" for r in raw_mismatches
+    ]
 
     # Rule 2: Student+Contest Isolation Check (Pairing unique per session)
-    seen_pairs = set()
-    duplicate_results = []
-    for r in all_results:
-        pair = (r.student_id, r.session_id)
-        if pair in seen_pairs:
-            duplicate_results.append(f"Duplicate result for Student #{r.student_id} in Session #{r.session_id}")
-        seen_pairs.add(pair)
+    raw_dups = db.execute(text(
+        "SELECT student_id, session_id, COUNT(*) FROM weekly_public_results GROUP BY student_id, session_id HAVING COUNT(*) > 1"
+    )).fetchall()
+    duplicate_results = [
+        f"Duplicate result for Student #{r[0]} in Session #{r[1]} ({r[2]} instances)" for r in raw_dups
+    ]
 
     # Rule 3: Sentinel Value Detection
-    sentinel_violations = []
-    for r in all_results:
-        if r.total_contest_solved is not None and r.total_contest_solved < 0:
-            sentinel_violations.append(f"Negative solve count in Result #{r.id}")
-        if r.contest_score is not None and (r.contest_score < 0 or r.contest_score > 100):
-            sentinel_violations.append(f"Invalid score ({r.contest_score}) in Result #{r.id}")
+    raw_sentinels = db.execute(text(
+        "SELECT id, total_contest_solved, contest_score FROM weekly_public_results "
+        "WHERE (total_contest_solved IS NOT NULL AND total_contest_solved < 0) OR (contest_score IS NOT NULL AND (contest_score < 0 OR contest_score > 100))"
+    )).fetchall()
+    sentinel_violations = [
+        f"Sentinel violation in Result #{r[0]}: Solved={r[1]}, Score={r[2]}" for r in raw_sentinels
+    ]
 
     # Rule 4: Synthetic / Mock Data Locked Off Verification
-    mock_violations = []
-    for s in db.query(Student).all():
-        if s.name and "MOCK" in s.name.upper() and not s.reg_no.startswith("TEST"):
-            mock_violations.append(f"Synthetic student name: {s.name}")
+    raw_mocks = db.execute(text(
+        "SELECT id, name, reg_no FROM students WHERE UPPER(name) LIKE '%MOCK%' AND (reg_no IS NULL OR reg_no NOT LIKE 'TEST%')"
+    )).fetchall()
+    mock_violations = [
+        f"Synthetic student name: {r[1]}" for r in raw_mocks
+    ]
 
     rule_checks = [
         {
             "rule": "Question Equality (Q1+Q2+Q3+Q4 == Solved)",
             "status": "PASS" if len(question_mismatches) == 0 else "FAIL",
             "passed": len(question_mismatches) == 0,
-            "evidence": f"0 mismatches across {len(all_results)} contest records" if len(question_mismatches) == 0 else f"{len(question_mismatches)} mismatches detected",
+            "evidence": f"0 mismatches across {total_results} contest records" if len(question_mismatches) == 0 else f"{len(question_mismatches)} mismatches detected",
             "offending_records": question_mismatches[:5]
         },
         {
@@ -369,7 +373,7 @@ def run_live_data_integrity_audit(
             "rule": "Duplicate Result Detection",
             "status": "PASS" if len(duplicate_results) == 0 else "FAIL",
             "passed": len(duplicate_results) == 0,
-            "evidence": f"{len(duplicate_results)} duplicate records in database ({len(all_results)} checked)",
+            "evidence": f"{len(duplicate_results)} duplicate records in database ({total_results} checked)",
             "offending_records": duplicate_results[:5]
         },
         {
@@ -407,7 +411,7 @@ def run_live_data_integrity_audit(
         action_type="INTEGRITY",
         target_type="DATABASE",
         target_id="ALL_STUDENT_RECORDS",
-        description=f"Live data integrity audit executed: {'ALL RULES PASSED' if all_passed else 'VIOLATIONS DETECTED'} across {len(all_results)} results.",
+        description=f"Live data integrity audit executed: {'ALL RULES PASSED' if all_passed else 'VIOLATIONS DETECTED'} across {total_results} results.",
         status="SUCCESS" if all_passed else "WARNING",
         created_at=datetime.datetime.now(datetime.timezone.utc)
     )
