@@ -155,7 +155,7 @@ def build_canonical_contest_dataset(
     base_dataset = cache.get_or_compute(
         key=base_cache_key,
         compute_func=lambda: _build_canonical_contest_dataset_internal(
-            int(session_obj.id), session_obj, db, "ALL", "ALL", "ALL", current_user
+            int(getattr(session_obj, "id")), session_obj, db, "ALL", "ALL", "ALL", current_user
         ),
         ttl_seconds=ttl,
         tags=["contests"]
@@ -187,7 +187,7 @@ def _filter_canonical_dataset_in_memory(
             rows = [r for r in rows if str(r.get("dept","")).upper() == d_upper]
 
     if year and year != "ALL":
-        y_upper = str(year).upper()
+        y_upper = year.upper()
         if y_upper in ("2", "II"):
             rows = [r for r in rows if str(r.get("year","")).upper() in ("2", "II", "2ND")]
         elif y_upper in ("3", "III"):
@@ -589,7 +589,7 @@ def _build_canonical_contest_dataset_internal(
             filtered_rows = [r for r in filtered_rows if str(r.get("dept","")).upper() == d_upper]
 
     if year and year != "ALL":
-        y_upper = str(year).upper()
+        y_upper = year.upper()
         if y_upper in ("2", "II"):
             filtered_rows = [r for r in filtered_rows if str(r.get("year","")).upper() in ("2", "II", "2ND")]
         elif y_upper in ("3", "III"):
