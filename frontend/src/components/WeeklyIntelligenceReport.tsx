@@ -462,12 +462,17 @@ export const WeeklyIntelligenceReport: React.FC<WeeklyIntelligenceReportProps> =
             aria-label="Department Scope"
             className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-medium text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="ALL">All Departments ({departments.length})</option>
-            {departments.map((d: any) => (
-              <option key={d.department} value={d.department}>
-                {d.department} ({d.total_students} students)
-              </option>
-            ))}
+            <option value="ALL">All Departments</option>
+            {departments
+              .filter((d: any) => {
+                const code = (d.department || d.code || '').toUpperCase().trim();
+                return code.includes('CS') || code.includes('CYBER') || code.includes('IOT') || code === 'IT' || code.includes('INFORMATION');
+              })
+              .map((d: any) => (
+                <option key={d.department} value={d.department}>
+                  {d.department} ({d.total_students} students)
+                </option>
+              ))}
           </select>
 
           {/* Year Filter */}

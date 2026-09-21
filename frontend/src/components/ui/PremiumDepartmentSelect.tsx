@@ -16,9 +16,9 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
   selectedDept, 
   onChange, 
   className = '', 
-  label = 'DEPARTMENT FILTER',
+  label = 'Department Filter',
   useIdAsValue = true,
-  dropdownWidth = 'min-w-[580px]'
+  dropdownWidth = 'min-w-[320px] max-w-[480px]'
 }) => {
   const { departments, isLoading } = useDepartments();
 

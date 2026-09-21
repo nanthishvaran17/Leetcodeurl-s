@@ -200,7 +200,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
 
   // Performance Range Dropdown Options
   const performanceOptions: DropdownOption[] = [
-    { value: 'all', label: 'All Students' },
+    { value: 'all', label: 'All Solvers', badge: 'ALL' },
     { value: '500_plus', label: '500+ Solved', badge: '500+', badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' },
     { value: '251_500', label: '251–500 Solved', badge: '251-500', badgeColor: 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20' },
     { value: '101_250', label: '101–250 Solved', badge: '101-250', badgeColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20' },

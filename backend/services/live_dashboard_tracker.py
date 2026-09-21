@@ -63,7 +63,7 @@ class LiveDashboardTracker:
             from backend.scheduler import scheduler
             from apscheduler.triggers.interval import IntervalTrigger
             
-            poll_interval = int(os.environ.get('CONTEST_POLL_INTERVAL_SECONDS', 180))
+            poll_interval = int(os.environ.get('CONTEST_POLL_INTERVAL_SECONDS', 45))
             scheduler.add_job(
                 self.poll_live_data,
                 IntervalTrigger(seconds=poll_interval, timezone=now_ist.tzinfo),

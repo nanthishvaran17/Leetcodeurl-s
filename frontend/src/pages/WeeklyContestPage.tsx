@@ -426,6 +426,23 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     setPreviewPage(1);
   }, [selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, debouncedSearchTerm]);
 
+  // Helper: Detect active Sunday 08:00 AM - 09:30 AM IST contest window
+  const isSundayLiveWindowActive = useCallback((): boolean => {
+    try {
+      const now = new Date();
+      const utcMs = now.getTime() + (now.getTimezoneOffset() * 60 * 1000);
+      const istMs = utcMs + (5.5 * 60 * 60 * 1000);
+      const istDate = new Date(istMs);
+      const day = istDate.getDay(); // 0 = Sunday
+      const hours = istDate.getHours();
+      const mins = istDate.getMinutes();
+      const timeInMins = hours * 60 + mins;
+      return day === 0 && timeInMins >= 480 && timeInMins <= 570; // 08:00 to 09:30 IST
+    } catch {
+      return false;
+    }
+  }, []);
+
   // Optimized Live Telemetry Polling Effect (only when tab is visible and session is LIVE)
   const pollTelemetry = useCallback(async () => {
     if (!selectedSessionId || (typeof document !== 'undefined' && document.visibilityState === 'hidden')) return;
@@ -448,7 +465,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     }
   }, [selectedSessionId, currentSession?.status]);
 
-  // Live Telemetry Auto-Poll: always runs every 30s when session is LIVE 
+  // Live Telemetry Auto-Poll: runs every 60s when session is LIVE or Sunday contest window
   useEffect(() => {
     let isMounted = true;
     let interval: ReturnType<typeof setInterval> | null = null;
@@ -457,13 +474,14 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     pollTelemetry();
 
     const activeObj = sessionsList.find(s => Number(s.sessionId) === Number(selectedSessionId)) || currentSession;
-    const isSessionLive = currentSession?.status === 'LIVE' || activeObj?.status === 'LIVE';
+    const isSundayActiveWindow = isSundayLiveWindowActive();
+    const isSessionLive = currentSession?.status === 'LIVE' || activeObj?.status === 'LIVE' || isSundayActiveWindow;
 
     if (isSessionLive || autoRefresh) {
-      // Always poll every 30s when LIVE; also poll if user manually enabled autoRefresh
+      // Poll telemetry every 60s when LIVE or during Sunday window
       interval = setInterval(() => {
         if (isMounted) pollTelemetry();
-      }, 30000);
+      }, 60000);
     }
 
     return () => {
@@ -471,12 +489,13 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       if (interval) clearInterval(interval);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pollTelemetry, autoRefresh, currentSession?.status, sessionsList, selectedSessionId]);
+  }, [pollTelemetry, autoRefresh, currentSession?.status, sessionsList, selectedSessionId, isSundayLiveWindowActive]);
 
-  // Live Matrix Rows Auto-Poll: refresh contest results every 5s when LIVE 
+  // Live Matrix Rows Auto-Poll: refresh contest results every 2 minutes (120s) when LIVE or during Sunday window
   useEffect(() => {
     if (!selectedSessionId) return;
-    const isSessionLive = currentSession?.status === 'LIVE';
+    const isSundayActiveWindow = isSundayLiveWindowActive();
+    const isSessionLive = currentSession?.status === 'LIVE' || isSundayActiveWindow;
     if (!isSessionLive && !autoRefresh) return;
 
     let isMounted = true;
@@ -484,14 +503,14 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       if (!isMounted || (typeof document !== 'undefined' && document.visibilityState === 'hidden')) return;
       // Silent refresh — keep existing rows, just update values
       fetchSessionDetails(selectedSessionId, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, true);
-    }, isSessionLive ? 10000 : 30000); // 10s when LIVE, 30s if user toggled autoRefresh for non-live
+    }, isSessionLive ? 120000 : 120000); // Every 2 minutes (120s) during LIVE / Sunday contest window
 
     return () => {
       isMounted = false;
       clearInterval(interval);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedSessionId, currentSession?.status, autoRefresh, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter]);
+  }, [selectedSessionId, currentSession?.status, autoRefresh, selectedDeptFilter, selectedYearFilter, selectedAttendanceFilter, isSundayLiveWindowActive]);
 
   // Post-9:30 AM Activity Fix: Automatic Final Fetch 
   useEffect(() => {
@@ -1299,15 +1318,59 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     const errorRows = sessionMetrics?.dataErrors ?? sessionMetrics?.totalErrors ?? sessionMetrics?.failedVerification ?? (errorLogs ? errorLogs.length : 0);
 
     // Active cohort total solve breakdown (4/4, 3/4, 2/4, 1/4 Solved)
-    const q4Solved = sessionMetrics?.q4Count ?? (isScopeActive ? 0 : (fastSummary?.solvedDistribution?.q4 ?? 0));
-    const q3Solved = sessionMetrics?.q3Count ?? (isScopeActive ? 0 : (fastSummary?.solvedDistribution?.q3 ?? 0));
-    const q2Solved = sessionMetrics?.q2Count ?? (isScopeActive ? 0 : (fastSummary?.solvedDistribution?.q2 ?? 0));
-    const q1Solved = sessionMetrics?.q1Count ?? (isScopeActive ? 0 : (fastSummary?.solvedDistribution?.q1 ?? 0));
+    const metricQ4 = sessionMetrics?.q4Count ?? sessionMetrics?.['4 Q Solved'];
+    const metricQ3 = sessionMetrics?.q3Count ?? sessionMetrics?.['3 Q Solved'];
+    const metricQ2 = sessionMetrics?.q2Count ?? sessionMetrics?.['2 Q Solved'];
+    const metricQ1 = sessionMetrics?.q1Count ?? sessionMetrics?.['1 Q Solved'];
 
-    const virtual4Solved = sessionMetrics?.virtual4Solved ?? 0;
-    const virtual3Solved = sessionMetrics?.virtual3Solved ?? 0;
-    const virtual2Solved = sessionMetrics?.virtual2Solved ?? 0;
-    const virtual1Solved = sessionMetrics?.virtual1Solved ?? 0;
+    let q4Solved = metricQ4;
+    let q3Solved = metricQ3;
+    let q2Solved = metricQ2;
+    let q1Solved = metricQ1;
+
+    let virtual4Solved = sessionMetrics?.virtual4Solved;
+    let virtual3Solved = sessionMetrics?.virtual3Solved;
+    let virtual2Solved = sessionMetrics?.virtual2Solved;
+    let virtual1Solved = sessionMetrics?.virtual1Solved;
+
+    if (q4Solved === undefined || q4Solved === null || q3Solved === undefined || q3Solved === null || q2Solved === undefined || q2Solved === null || q1Solved === undefined || q1Solved === null) {
+      if (matrixRows && matrixRows.length > 0) {
+        let calcQ4 = 0, calcQ3 = 0, calcQ2 = 0, calcQ1 = 0;
+        let calcV4 = 0, calcV3 = 0, calcV2 = 0, calcV1 = 0;
+
+        for (const r of matrixRows) {
+          const st = (r.participation_status || r.status || '').toString().toUpperCase();
+          if (st === 'PUBLIC' || st === 'PUBLIC_ATTENDED' || st === 'ATTENDED' || st === 'VIRTUAL' || st === 'VIRTUAL_ATTENDED') {
+            const solved = r.total_solved ?? r.score_solved ?? ((r.q1 === 1 ? 1 : 0) + (r.q2 === 1 ? 1 : 0) + (r.q3 === 1 ? 1 : 0) + (r.q4 === 1 ? 1 : 0));
+            if (solved >= 4) calcQ4++;
+            else if (solved === 3) calcQ3++;
+            else if (solved === 2) calcQ2++;
+            else if (solved === 1) calcQ1++;
+
+            if (st === 'VIRTUAL' || st === 'VIRTUAL_ATTENDED') {
+              if (solved >= 4) calcV4++;
+              else if (solved === 3) calcV3++;
+              else if (solved === 2) calcV2++;
+              else if (solved === 1) calcV1++;
+            }
+          }
+        }
+        q4Solved = calcQ4;
+        q3Solved = calcQ3;
+        q2Solved = calcQ2;
+        q1Solved = calcQ1;
+        virtual4Solved = calcV4 ?? 0;
+        virtual3Solved = calcV3 ?? 0;
+        virtual2Solved = calcV2 ?? 0;
+        virtual1Solved = calcV1 ?? 0;
+      } else {
+        q4Solved = fastSummary?.solvedDistribution?.q4 ?? 0;
+        q3Solved = fastSummary?.solvedDistribution?.q3 ?? 0;
+        q2Solved = fastSummary?.solvedDistribution?.q2 ?? 0;
+        q1Solved = fastSummary?.solvedDistribution?.q1 ?? 0;
+        virtual4Solved = 0; virtual3Solved = 0; virtual2Solved = 0; virtual1Solved = 0;
+      }
+    }
 
     const publicPct = totalRowsVal > 0 ? Math.min(100, Math.max(0, (attendedRows / totalRowsVal) * 100)).toFixed(1) : '0.0';
     const virtualPct = totalRowsVal > 0 ? Math.min(100, Math.max(0, (virtualRows / totalRowsVal) * 100)).toFixed(1) : '0.0';
@@ -2539,19 +2602,19 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           {(() => {
             const getDeptColor = (deptCode: string) => {
               const code = (deptCode || '').toUpperCase().trim();
-              if (code.includes('IOT')) return 'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800';
-              if (code.includes('CS') || code.includes('CYBER')) return 'text-blue-600 bg-blue-50 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800';
-              if (code === 'IT' || code.includes('INFORMATION')) return 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
-              if (code.includes('AIDS') || code.includes('AI')) return 'text-teal-600 bg-teal-50 dark:bg-teal-950 dark:text-teal-300 border border-teal-200 dark:border-teal-800';
-              if (code.includes('AGRI')) return 'text-rose-600 bg-rose-50 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800';
-              if (code.includes('EEE')) return 'text-orange-600 bg-orange-50 dark:bg-orange-950 dark:text-orange-300 border border-orange-200 dark:border-orange-800';
-              if (code.includes('ECE')) return 'text-fuchsia-600 bg-fuchsia-50 dark:bg-fuchsia-950 dark:text-fuchsia-300 border border-fuchsia-200 dark:border-fuchsia-800';
-              if (code.includes('CSE')) return 'text-purple-600 bg-purple-50 dark:bg-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-800';
-              return 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800';
+              if (code.includes('IOT')) return 'text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300 border border-amber-200 dark:border-amber-800 font-extrabold';
+              if (code.includes('CS') || code.includes('CYBER')) return 'text-blue-700 bg-blue-50 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-extrabold';
+              if (code === 'IT' || code.includes('INFORMATION')) return 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-extrabold';
+              if (code.includes('AIDS') || code.includes('AI')) return 'text-teal-700 bg-teal-50 dark:bg-teal-950 dark:text-teal-300 border border-teal-200 dark:border-teal-800 font-extrabold';
+              if (code.includes('AGRI')) return 'text-rose-700 bg-rose-50 dark:bg-rose-950 dark:text-rose-300 border border-rose-200 dark:border-rose-800 font-extrabold';
+              if (code.includes('EEE')) return 'text-orange-700 bg-orange-50 dark:bg-orange-950 dark:text-orange-300 border border-orange-200 dark:border-orange-800 font-extrabold';
+              if (code.includes('ECE')) return 'text-fuchsia-700 bg-fuchsia-50 dark:bg-fuchsia-950 dark:text-fuchsia-300 border border-fuchsia-200 dark:border-fuchsia-800 font-extrabold';
+              if (code.includes('CSE')) return 'text-purple-700 bg-purple-50 dark:bg-purple-950 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-extrabold';
+              return 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-extrabold';
             };
 
             const DEPT_OPTIONS = [
-              { value: 'ALL', label: 'All Departments', code: 'ALL', color: 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800' },
+              { value: 'ALL', label: 'All Departments', code: 'ALL', color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-extrabold' },
               ...departments.map((d) => ({
                 value: d.code,
                 label: d.name,
@@ -2573,7 +2636,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Department</p>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${selectedDeptObj.color}`}>{selectedDeptObj.code}</span>
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{selectedDeptObj.label}</span>
+                      <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{selectedDeptObj.label}</span>
                     </div>
                   </div>
                   <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${deptOpen ? 'rotate-180' : ''}`} />
@@ -2587,12 +2650,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                         type="button"
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => { setSelectedDeptFilter(opt.value); setDeptOpen(false); }}
-                        className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-navy-800 ${selectedDeptFilter === opt.value ? 'bg-indigo-50 dark:bg-indigo-950/60' : ''}`}
+                        className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-navy-800 ${selectedDeptFilter === opt.value ? 'bg-indigo-50/80 dark:bg-indigo-950/60' : ''}`}
                       >
                         <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                         <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${opt.color}`}>{opt.code}</span>
-                        <span className={`text-xs font-semibold truncate flex-1 ${selectedDeptFilter === opt.value ? 'text-indigo-700 dark:text-indigo-300 font-black' : 'text-slate-700 dark:text-slate-300'}`}>{opt.label}</span>
-                        {selectedDeptFilter === opt.value && <Check className="w-3.5 h-3.5 text-indigo-500 shrink-0" />}
+                        <span className={`text-xs truncate flex-1 ${selectedDeptFilter === opt.value ? 'text-indigo-950 dark:text-indigo-200 font-extrabold' : 'text-slate-800 dark:text-slate-200 font-semibold'}`}>{opt.label}</span>
+                        {selectedDeptFilter === opt.value && <Check className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />}
                       </button>
                     ))}
                   </div>
@@ -2615,23 +2678,20 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               <GraduationCap className="w-4 h-4 text-brand-500 shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Academic Year</p>
-                {!yearOpen && (
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    {selectedYearFilter === 'ALL' ? (
-                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300">ALL</span>
-                    ) : selectedYearFilter === '2' || selectedYearFilter === 'II' ? (
-                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300">II</span>
-                    ) : selectedYearFilter === '3' || selectedYearFilter === 'III' ? (
-                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300">III</span>
-                    ) : (
-                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300">IV</span>
-                    )}
-                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
-                      {selectedYearFilter === 'ALL' ? 'All Academic Years' : (selectedYearFilter === '2' || selectedYearFilter === 'II') ? 'Year (2025–2029)' : (selectedYearFilter === '3' || selectedYearFilter === 'III') ? 'Year (2024–2028)' : 'Year (2023–2027)'}
-                    </span>
-                  </div>
-                )}
-                {yearOpen && <p className="text-[10px] text-slate-400 mt-0.5 italic">Choose a year below...</p>}
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  {selectedYearFilter === 'ALL' ? (
+                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-brand-700 bg-brand-50 dark:bg-brand-950 dark:text-brand-300 font-extrabold">ALL</span>
+                  ) : selectedYearFilter === '2' || selectedYearFilter === 'II' ? (
+                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-sky-700 bg-sky-50 dark:bg-sky-950 dark:text-sky-300 font-extrabold">II</span>
+                  ) : selectedYearFilter === '3' || selectedYearFilter === 'III' ? (
+                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-violet-700 bg-violet-50 dark:bg-violet-950 dark:text-violet-300 font-extrabold">III</span>
+                  ) : (
+                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300 font-extrabold">IV</span>
+                  )}
+                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                    {selectedYearFilter === 'ALL' ? 'All Academic Years' : (selectedYearFilter === '2' || selectedYearFilter === 'II') ? 'Year (2025–2029)' : (selectedYearFilter === '3' || selectedYearFilter === 'III') ? 'Year (2024–2028)' : 'Year (2023–2027)'}
+                  </span>
+                </div>
               </div>
               <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
             </button>

@@ -437,7 +437,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   // Performance Range Dropdown Options
   const performanceOptions: DropdownOption[] = [
-    { value: 'all', label: 'All Solvers', count: performanceCounts.total },
+    { value: 'all', label: 'All Solvers', badge: 'ALL', count: performanceCounts.total },
     { value: '500_plus', label: '500+ Solved', badge: '500+', badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20', count: performanceCounts.above500 },
     { value: '251_500', label: '251–500 Solved', badge: '251-500', badgeColor: 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20', count: performanceCounts.between251And500 },
     { value: '101_250', label: '101–250 Solved', badge: '101-250', badgeColor: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20', count: performanceCounts.between101And250 },
@@ -886,13 +886,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           />
 
           {/* 3. Name Search */}
-          <div className="space-y-1.5 min-w-0">
-            <label htmlFor="landing-name-search" className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
+          <div className="flex flex-col space-y-1.5 min-w-0 w-full">
+            <label htmlFor="landing-name-search" className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate flex items-center h-4 leading-4 m-0 p-0">
               Search Student Name
             </label>
             <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                <Search className="w-3.5 h-3.5" />
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                <Search className="w-4 h-4" />
               </div>
               <input
                 id="landing-name-search"
@@ -903,7 +903,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   setDisplayCount(32);
                 }}
                 placeholder="Search name, reg no..."
-                className="w-full h-11 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-bold py-2.5 pl-8 pr-8 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 truncate transition-all"
+                className="w-full h-11 min-h-[44px] bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-bold py-2 px-3.5 pl-9 pr-8 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 truncate transition-all"
               />
               {nameSearch && (
                 <button

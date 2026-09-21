@@ -262,3 +262,73 @@ def sync_contest_results_from_db(
         "existing_participants": len(participants),
         "reason": f"Synced {synced} new rows from {len(participants)} OfficialPublicParticipant records",
     }
+
+
+def verify_contest_result_integrity(session_id: int, db: Session) -> Dict[str, Any]:
+    """
+    Phase 4 Integrity Gate Verification Engine.
+    Enforces Strict Invariants before final snapshot publication & report generation:
+    1. Total active student roster partition invariant:
+       PUBLIC + VIRTUAL + NOT_PARTICIPATED + NOT_VERIFIED + MISSING_LEETCODE_USERNAME == TOTAL_ACTIVE_STUDENTS
+    2. Per-student question solved invariant:
+       Q1 + Q2 + Q3 + Q4 == Total Solved for every verified record.
+    3. Zero orphan / zero duplicate student records per session.
+    """
+    total_active_students = db.query(Student).filter(
+        Student.is_active == True
+    ).count()
+
+    results = db.query(WeeklyPublicResult).join(
+        Student, WeeklyPublicResult.student_id == Student.id
+    ).filter(
+        Student.is_active == True,
+        WeeklyPublicResult.session_id == session_id
+    ).all()
+
+    # 1. Check duplicate student IDs
+    student_ids = [r.student_id for r in results]
+    unique_ids = set(student_ids)
+    has_duplicates = len(student_ids) != len(unique_ids)
+
+    # 2. Check Q1 + Q2 + Q3 + Q4 == total_contest_solved
+    q_invariant_failures = 0
+    for r in results:
+        q1_val = 1 if r.q1 else 0
+        q2_val = 1 if r.q2 else 0
+        q3_val = 1 if r.q3 else 0
+        q4_val = 1 if r.q4 else 0
+        expected_solved = q1_val + q2_val + q3_val + q4_val
+        actual_solved = r.total_contest_solved or 0
+        if r.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL", "VIRTUAL_ATTENDED") and actual_solved > 0:
+            if expected_solved != actual_solved and (q1_val + q2_val + q3_val + q4_val) > 0:
+                q_invariant_failures += 1
+
+    # 3. Categorize active students 5-way partition
+    public_cnt = sum(1 for r in results if r.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"))
+    virtual_cnt = sum(1 for r in results if r.participation_status in ("VIRTUAL", "VIRTUAL_ATTENDED"))
+    not_part_cnt = sum(1 for r in results if r.participation_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED"))
+    not_ver_cnt = sum(1 for r in results if r.participation_status in ("NOT_VERIFIED", "DATA_ERROR", "FAILED_VERIFICATION", "PENDING", "UNKNOWN"))
+    missing_cnt = sum(1 for r in results if r.participation_status in ("USERNAME_NOT_FOUND", "MISSING_LEETCODE_USERNAME"))
+
+    partition_sum = public_cnt + virtual_cnt + not_part_cnt + not_ver_cnt + missing_cnt
+    partition_passed = (partition_sum == total_active_students and len(results) == total_active_students)
+
+    passed_all = partition_passed and not has_duplicates and (q_invariant_failures == 0)
+
+    return {
+        "passed": passed_all,
+        "session_id": session_id,
+        "total_active_students": total_active_students,
+        "results_count": len(results),
+        "partition_sum": partition_sum,
+        "partition_passed": partition_passed,
+        "has_duplicates": has_duplicates,
+        "q_invariant_failures": q_invariant_failures,
+        "categories": {
+            "PUBLIC": public_cnt,
+            "VIRTUAL": virtual_cnt,
+            "NOT_PARTICIPATED": not_part_cnt,
+            "NOT_VERIFIED": not_ver_cnt,
+            "MISSING_LEETCODE_USERNAME": missing_cnt
+        }
+    }

@@ -240,9 +240,15 @@ export const Post930SolversView: React.FC = () => {
               className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950"
             >
               <option value="">All Depts</option>
-              {departments.map(d => (
-                <option key={d.id} value={d.code}>{d.name}</option>
-              ))}
+              {departments
+                .filter(d => {
+                  const code = (d.code || '').toUpperCase().trim();
+                  const name = (d.name || '').toUpperCase().trim();
+                  return code.includes('CS') || code.includes('CYBER') || code.includes('IOT') || code === 'IT' || name.includes('CYBER') || name.includes('IOT') || name.includes('INFORMATION');
+                })
+                .map(d => (
+                  <option key={d.id} value={d.code}>{d.name}</option>
+                ))}
             </select>
 
             <select

@@ -37,6 +37,7 @@ from backend.routes import command_center, scheduler, student_reports
 from backend import leetcode_tracker
 from backend.services.heartbeat_service import get_deep_health_telemetry
 from backend.websocket_manager import manager
+from backend.cache import cache
 
 
 # =====================================================================
@@ -553,23 +554,27 @@ def readiness_check(response: Response):
     Production Readiness Probe verifying critical runtime dependencies.
     Returns 200 when database is responsive, 503 if temporarily unavailable.
     """
-    try:
-        with engine.connect() as conn:
-            conn.execute(text("SELECT 1"))
-        return {
-            "status": "ready",
-            "database": "connected",
-            "service": "College LeetCode Weekly Tracker API",
-            "version": "2.2.0"
-        }
-    except Exception as exc:
+    def _check_db():
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+            return {
+                "status": "ready",
+                "database": "connected",
+                "service": "College LeetCode Weekly Tracker API",
+                "version": "2.2.0"
+            }
+        except Exception as exc:
+            return {
+                "status": "not_ready",
+                "database": "unreachable",
+                "error": str(exc),
+                "version": "2.2.0"
+            }
+    res = cache.get_or_compute("readiness_check_status", _check_db, ttl_seconds=2)
+    if res.get("status") != "ready":
         response.status_code = 503
-        return {
-            "status": "not_ready",
-            "database": "unreachable",
-            "error": str(exc),
-            "version": "2.2.0"
-        }
+    return res
 
 @app.api_route("/health/deep", methods=["GET"])
 @app.api_route("/api/health/deep", methods=["GET"])
@@ -615,6 +620,12 @@ if getattr(settings, "CORS_ALLOWED_ORIGINS", None):
         o_clean = o.strip()
         if o_clean and o_clean not in origins:
             origins.append(o_clean)
+
+from backend.middleware.idempotency import IdempotencyMiddleware
+
+# Add idempotency protection for mutation retries
+app.add_middleware(IdempotencyMiddleware)
+
 # Enable fast, lightweight GZip compression on responses > 500 bytes across all environments
 app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=5)
 
@@ -625,7 +636,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["Content-Disposition", "Content-Length", "Content-Type", "X-Report-Cache-Hit", "X-Report-Lookup-Ms"],
+    expose_headers=["Content-Disposition", "Content-Length", "Content-Type", "X-Report-Cache-Hit", "X-Report-Lookup-Ms", "X-Cache-Lookup"],
 )
 
 @app.middleware("http")

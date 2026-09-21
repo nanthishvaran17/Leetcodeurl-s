@@ -64,23 +64,13 @@ from sqlalchemy.pool import NullPool
 engine_kwargs = {}
 if "postgresql" in db_url or "postgres" in db_url:
     pg_connect_args = {
-        "connect_timeout": 10,   # Fast connect timeout
+        "connect_timeout": 15,   # Connect timeout for cloud PostgreSQL DB
         "keepalives": 1,
         "keepalives_idle": 30,   # probe after 30s idle (Neon is aggressive)
         "keepalives_interval": 5,
         "keepalives_count": 3,
         "sslmode": "require",
     }
-    try:
-        import urllib.parse
-        import socket
-        parsed_db_url = urllib.parse.urlparse(db_url)
-        if parsed_db_url.hostname:
-            resolved_v4 = socket.gethostbyname(parsed_db_url.hostname)
-            if resolved_v4:
-                pg_connect_args["hostaddr"] = resolved_v4
-    except Exception:
-        pass
 
     engine_kwargs.update({
         "pool_size": int(os.environ.get("DB_POOL_SIZE", 20)),
@@ -202,10 +192,11 @@ def get_db_session():
                 pass
 
 
-def execute_with_db_retry(func, max_retries=2, retry_delay=0.3):
+def execute_with_db_retry(func, max_retries=3, retry_delay=0.3):
     """
     Executes func(db) passing a DB session from get_db_session().
-    Retries up to max_retries with a fresh DB session if a transient database connection/OperationalError occurs.
+    Retries up to max_retries with a fresh DB session if a transient database connection,
+    OperationalError, or SQLite write lock contention ('database is locked') occurs.
     """
     last_exc = None
     for attempt in range(max_retries):
@@ -218,7 +209,8 @@ def execute_with_db_retry(func, max_retries=2, retry_delay=0.3):
             is_transient = any(kw in exc_str for kw in (
                 "ssl connection", "connection reset", "broken pipe",
                 "could not connect", "connection refused", "operationalerror",
-                "server closed the connection"
+                "server closed the connection", "database is locked", "sqlite3.operationalerror",
+                "lock timeout", "busy"
             ))
             try:
                 import psycopg2  # type: ignore
@@ -229,11 +221,12 @@ def execute_with_db_retry(func, max_retries=2, retry_delay=0.3):
             if is_transient and attempt < max_retries - 1:
                 import logging
                 import time
+                backoff = retry_delay * (2 ** attempt)
                 logging.warning(
-                    f"[DB_RETRY] Transient DB error on attempt {attempt + 1}/{max_retries}, retrying with fresh session: "
+                    f"[DB_RETRY] Transient DB error/lock on attempt {attempt + 1}/{max_retries}, retrying in {backoff:.2f}s with fresh session: "
                     f"{type(exc).__name__}: {str(exc)[:120]}"
                 )
-                time.sleep(retry_delay * (attempt + 1))
+                time.sleep(backoff)
             else:
                 raise
     if last_exc:

@@ -60,6 +60,18 @@ class ContestProblemSet:
 # Stored with exact canonical slugs to prevent fuzzy match errors.
 # The engine dynamically resolves any weekly contest N.
 OFFICIAL_CONTEST_PROBLEM_REGISTRY: Dict[int, List[Dict[str, Any]]] = {
+    520: [
+        {"index": 1, "problem_id": "Q1", "title_slug": "number-of-intersecting-interval-pairs-i", "title": "Number of Intersecting Interval Pairs I", "difficulty": "Easy", "points": 3},
+        {"index": 2, "problem_id": "Q2", "title_slug": "number-of-intersecting-interval-pairs-ii", "title": "Number of Intersecting Interval Pairs II", "difficulty": "Medium", "points": 4},
+        {"index": 3, "problem_id": "Q3", "title_slug": "count-rotations-with-exactly-k-equal-adjacent-pairs", "title": "Count Rotations With Exactly K Equal Adjacent Pairs", "difficulty": "Medium", "points": 5},
+        {"index": 4, "problem_id": "Q4", "title_slug": "count-good-cyclic-rotations", "title": "Count Good Cyclic Rotations", "difficulty": "Hard", "points": 6},
+    ],
+    519: [
+        {"index": 1, "problem_id": "Q1", "title_slug": "count-integers-appearing-in-a-single-block", "title": "Count Integers Appearing in a Single Block", "difficulty": "Easy", "points": 3},
+        {"index": 2, "problem_id": "Q2", "title_slug": "sum-of-decoded-numbers", "title": "Sum of Decoded Numbers", "difficulty": "Medium", "points": 4},
+        {"index": 3, "problem_id": "Q3", "title_slug": "longest-subarray-with-at-most-k-distinct-prime-factors", "title": "Longest Subarray With at Most K Distinct Prime Factors", "difficulty": "Medium", "points": 5},
+        {"index": 4, "problem_id": "Q4", "title_slug": "find-all-numbers-disappeared-in-an-array-ii", "title": "Find All Numbers Disappeared in an Array II", "difficulty": "Hard", "points": 6},
+    ],
     516: [
         {"index": 1, "problem_id": "Q1", "title_slug": "find-special-substring-of-length-k", "title": "Find Special Substring of Length K", "difficulty": "Easy", "points": 3},
         {"index": 2, "problem_id": "Q2", "title_slug": "maximum-manhattan-distance-after-k-changes", "title": "Maximum Manhattan Distance After K Changes", "difficulty": "Medium", "points": 4},

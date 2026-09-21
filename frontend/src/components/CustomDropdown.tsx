@@ -248,13 +248,8 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   return (
     <div className={`flex flex-col space-y-1.5 w-full max-w-full min-w-0 box-border relative ${className}`} ref={dropdownRef} id={id}>
       {label ? (
-        <label className={labelClassName || "block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate flex items-center justify-between h-4 leading-4 m-0 p-0"}>
+        <label className={labelClassName || "block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate flex items-center h-4 leading-4 m-0 p-0"}>
           <span>{label}</span>
-          {selectedOption?.count !== undefined && selectedOption.count > 0 && (
-            <span className="text-[9px] font-mono font-bold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-1.5 py-0.5 rounded-full border border-brand-500/20">
-              {selectedOption.count}
-            </span>
-          )}
         </label>
       ) : null}
 
@@ -291,16 +286,20 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
             : ''
         }`}
       >
-        <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden pr-2">
+        <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden pr-1.5">
           {HeaderIcon && (
-            <HeaderIcon className={`w-4 h-4 shrink-0 transition-colors ${
-              isOpen ? 'text-brand-500' : 'text-slate-400 group-hover:text-brand-500'
-            }`} />
+            <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border transition-colors ${
+              isOpen
+                ? 'bg-brand-50 dark:bg-brand-950/80 border-brand-300 text-brand-600 dark:text-brand-400'
+                : 'bg-slate-100 dark:bg-slate-800 border-slate-200/70 dark:border-slate-700/70 text-slate-400 dark:text-slate-500 group-hover:text-brand-500 group-hover:border-brand-500/30'
+            }`}>
+              <HeaderIcon className="w-3.5 h-3.5 shrink-0" />
+            </div>
           )}
           <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden">
             {selectedOption?.badge && !selectedOption.hidePill && !hideTriggerBadge && (
-              <span className={`shrink-0 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
-                selectedOption.badgeColor || 'bg-brand-500/15 text-brand-600 dark:text-brand-400 border border-brand-500/30'
+              <span className={`shrink-0 px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border ${
+                selectedOption.badgeColor || 'bg-brand-100 dark:bg-brand-900/80 text-brand-800 dark:text-brand-300 border-brand-200 dark:border-brand-800'
               }`}>
                 {selectedOption.badge}
               </span>

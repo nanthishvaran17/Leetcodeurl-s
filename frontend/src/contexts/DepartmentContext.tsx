@@ -82,10 +82,7 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           }
         });
 
-        const mappedDepts = Array.from(uniqueMap.values()).filter((d: any) => {
-          const c = (d.code || '').toUpperCase();
-          return c === 'CSE(CS)' || c === 'CSE(IOT)' || c === 'IT';
-        });
+        const mappedDepts = Array.from(uniqueMap.values());
 
         setDepartments(mappedDepts.length > 0 ? mappedDepts : [
           { id: 1, code: 'CSE(CS)', name: 'Computer Science and Engineering (Cyber Security)', pillText: 'CSE(CS)' },

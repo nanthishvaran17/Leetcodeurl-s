@@ -175,11 +175,27 @@ def _filter_canonical_dataset_in_memory(
 ) -> Dict[str, Any]:
     rows = base_dataset.get("rows") or []
     
-    if dept != "ALL":
-        rows = [r for r in rows if r.get("dept") == dept]
-        
-    if year != "ALL":
-        rows = [r for r in rows if r.get("year") == year]
+    if dept and dept != "ALL":
+        d_upper = dept.upper()
+        if d_upper in ("CSE(CS)", "CS", "CYBER", "CSE(CYBER SECURITY)"):
+            rows = [r for r in rows if ("(CS)" in str(r.get("dept","")).upper() or "CYBER" in str(r.get("dept","")).upper() or str(r.get("dept","")).upper().endswith("CS") or str(r.get("dept","")) == "CSE(CS)")]
+        elif d_upper in ("CSE(IOT)", "IOT"):
+            rows = [r for r in rows if "IOT" in str(r.get("dept","")).upper()]
+        elif d_upper in ("IT", "INFORMATION"):
+            rows = [r for r in rows if ("IT" in str(r.get("dept","")).upper() or "INFO" in str(r.get("dept","")).upper())]
+        else:
+            rows = [r for r in rows if str(r.get("dept","")).upper() == d_upper]
+
+    if year and year != "ALL":
+        y_upper = str(year).upper()
+        if y_upper in ("2", "II"):
+            rows = [r for r in rows if str(r.get("year","")).upper() in ("2", "II", "2ND")]
+        elif y_upper in ("3", "III"):
+            rows = [r for r in rows if str(r.get("year","")).upper() in ("3", "III", "3RD")]
+        elif y_upper in ("4", "IV"):
+            rows = [r for r in rows if str(r.get("year","")).upper() in ("4", "IV", "4TH", "FINAL")]
+        else:
+            rows = [r for r in rows if str(r.get("year","")).upper() == y_upper]
         
     if attendance and attendance.upper() != "ALL":
         att_upper = attendance.upper().strip()
@@ -207,10 +223,15 @@ def _filter_canonical_dataset_in_memory(
     errors = sum(1 for r in indexed_rows if r.get("status") in ("USERNAME_NOT_FOUND", "AUTH_REQUIRED", "SOURCE_UNAVAILABLE", "FETCH_ERROR", "DATA_MISMATCH"))
     pending = sum(1 for r in indexed_rows if r.get("status") == "PENDING")
 
-    q4 = sum(1 for r in indexed_rows if r.get("q4") == 1)
-    q3 = sum(1 for r in indexed_rows if r.get("q3") == 1)
-    q2 = sum(1 for r in indexed_rows if r.get("q2") == 1)
-    q1 = sum(1 for r in indexed_rows if r.get("q1") == 1)
+    def _get_solved(r):
+        if r.get("total_solved") is not None:
+            return int(r.get("total_solved") or 0)
+        return (1 if r.get("q1") == 1 else 0) + (1 if r.get("q2") == 1 else 0) + (1 if r.get("q3") == 1 else 0) + (1 if r.get("q4") == 1 else 0)
+
+    q4 = sum(1 for r in indexed_rows if _get_solved(r) >= 4 and r.get("status") in ("PUBLIC", "VIRTUAL", "PUBLIC_ATTENDED", "VIRTUAL_ATTENDED", "ATTENDED"))
+    q3 = sum(1 for r in indexed_rows if _get_solved(r) == 3 and r.get("status") in ("PUBLIC", "VIRTUAL", "PUBLIC_ATTENDED", "VIRTUAL_ATTENDED", "ATTENDED"))
+    q2 = sum(1 for r in indexed_rows if _get_solved(r) == 2 and r.get("status") in ("PUBLIC", "VIRTUAL", "PUBLIC_ATTENDED", "VIRTUAL_ATTENDED", "ATTENDED"))
+    q1 = sum(1 for r in indexed_rows if _get_solved(r) == 1 and r.get("status") in ("PUBLIC", "VIRTUAL", "PUBLIC_ATTENDED", "VIRTUAL_ATTENDED", "ATTENDED"))
 
     pct = ((pub + virt) / max(1, tot)) * 100.0
 
@@ -405,43 +426,14 @@ def _build_canonical_contest_dataset_internal(
 
         is_participant = canon_status in ("PUBLIC", "VIRTUAL")
 
-        # Questions & Solved Count
+        # Questions & Solved Count (Strict binary evidence: Q1..Q4 in {0, 1})
         if canon_status == "PUBLIC" and p_res:
             q1_val = 1 if (p_res.q1 and p_res.q1 >= 1) else 0
             q2_val = 1 if (p_res.q2 and p_res.q2 >= 1) else 0
             q3_val = 1 if (p_res.q3 and p_res.q3 >= 1) else 0
             q4_val = 1 if (p_res.q4 and p_res.q4 >= 1) else 0
-            score_val = p_res.contest_score
-
-            # If Qs are 0 but score is populated, infer based on 3/4/5/6 distribution
-            if (q1_val + q2_val + q3_val + q4_val) == 0 and score_val is not None:
-                sv = int(float(str(score_val)))
-                if sv >= 18:
-                    q1_val = 1; q2_val = 1; q3_val = 1; q4_val = 1
-                elif sv == 12:
-                    q1_val = 1; q2_val = 1; q3_val = 1
-                elif sv == 7:
-                    q1_val = 1; q2_val = 1
-                elif sv == 3:
-                    q1_val = 1
-
-            actual_sum = q1_val + q2_val + q3_val + q4_val
-            tot_from_record = int(getattr(p_res, "total_contest_solved", 0) or 0) if p_res is not None else 0
-            solved_val: Optional[int] = max(actual_sum, tot_from_record)
-
-            if solved_val and solved_val > 0 and actual_sum < solved_val:
-                if solved_val >= 4:
-                    q1_val = q2_val = q3_val = q4_val = 1
-                elif solved_val == 3:
-                    q1_val = q2_val = q3_val = 1
-                elif solved_val == 2:
-                    q1_val = q2_val = 1
-                elif solved_val == 1:
-                    q1_val = 1
-
-            if not score_val:
-                score_val = (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
-
+            solved_val = q1_val + q2_val + q3_val + q4_val
+            score_val = p_res.contest_score or (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
             rank_val = p_res.contest_rank
             rating_val = p_res.contest_rating
         elif canon_status == "VIRTUAL":
@@ -455,39 +447,12 @@ def _build_canonical_contest_dataset_internal(
                 q2_val = 1 if q2_v_raw >= 1 else 0
                 q3_val = 1 if q3_v_raw >= 1 else 0
                 q4_val = 1 if q4_v_raw >= 1 else 0
-                score_val = getattr(source_res, "contest_score", None)
+                solved_val = q1_val + q2_val + q3_val + q4_val
+                score_val = getattr(source_res, "contest_score", None) or (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
             else:
                 q1_val = q2_val = q3_val = q4_val = 0
+                solved_val = 0
                 score_val = None
-
-            # If Qs are 0 but score is populated, infer based on 3/4/5/6 distribution
-            if (q1_val + q2_val + q3_val + q4_val) == 0 and score_val is not None:
-                sv = int(float(str(score_val)))
-                if sv >= 18:
-                    q1_val = 1; q2_val = 1; q3_val = 1; q4_val = 1
-                elif sv == 12:
-                    q1_val = 1; q2_val = 1; q3_val = 1
-                elif sv == 7:
-                    q1_val = 1; q2_val = 1
-                elif sv == 3:
-                    q1_val = 1
-
-            actual_sum = q1_val + q2_val + q3_val + q4_val
-            tot_from_record = int(getattr(source_res, "total_contest_solved", 0) or 0) if source_res is not None else 0
-            solved_val = max(actual_sum, tot_from_record)
-
-            if solved_val and solved_val > 0 and actual_sum < solved_val:
-                if solved_val >= 4:
-                    q1_val = q2_val = q3_val = q4_val = 1
-                elif solved_val == 3:
-                    q1_val = q2_val = q3_val = 1
-                elif solved_val == 2:
-                    q1_val = q2_val = 1
-                elif solved_val == 1:
-                    q1_val = 1
-
-            if not score_val:
-                score_val = (q1_val * 3 + q2_val * 4 + q3_val * 5 + q4_val * 6)
 
             rank_val = None
             rating_val = None
@@ -615,14 +580,24 @@ def _build_canonical_contest_dataset_internal(
     if dept and dept != "ALL":
         d_upper = dept.upper()
         if d_upper in ("CSE(CS)", "CS", "CYBER", "CSE(CYBER SECURITY)"):
-            filtered_rows = [r for r in filtered_rows if ("(CS)" in r["dept"].upper() or "CYBER" in r["dept"].upper() or r["dept"].upper().endswith("CS") or r["dept"] == "CSE(CS)")]
+            filtered_rows = [r for r in filtered_rows if ("(CS)" in str(r.get("dept","")).upper() or "CYBER" in str(r.get("dept","")).upper() or str(r.get("dept","")).upper().endswith("CS") or str(r.get("dept","")) == "CSE(CS)")]
         elif d_upper in ("CSE(IOT)", "IOT"):
-            filtered_rows = [r for r in filtered_rows if "IOT" in r["dept"].upper()]
+            filtered_rows = [r for r in filtered_rows if "IOT" in str(r.get("dept","")).upper()]
+        elif d_upper in ("IT", "INFORMATION"):
+            filtered_rows = [r for r in filtered_rows if ("IT" in str(r.get("dept","")).upper() or "INFO" in str(r.get("dept","")).upper())]
         else:
-            filtered_rows = [r for r in filtered_rows if r["dept"].upper() == d_upper]
+            filtered_rows = [r for r in filtered_rows if str(r.get("dept","")).upper() == d_upper]
 
     if year and year != "ALL":
-        filtered_rows = [r for r in filtered_rows if r["year"] == year]
+        y_upper = str(year).upper()
+        if y_upper in ("2", "II"):
+            filtered_rows = [r for r in filtered_rows if str(r.get("year","")).upper() in ("2", "II", "2ND")]
+        elif y_upper in ("3", "III"):
+            filtered_rows = [r for r in filtered_rows if str(r.get("year","")).upper() in ("3", "III", "3RD")]
+        elif y_upper in ("4", "IV"):
+            filtered_rows = [r for r in filtered_rows if str(r.get("year","")).upper() in ("4", "IV", "4TH", "FINAL")]
+        else:
+            filtered_rows = [r for r in filtered_rows if str(r.get("year","")).upper() == y_upper]
 
     if attendance and attendance != "ALL":
         if attendance in ("ALL_ATTENDED", "TOTAL_ATTENDED", "PARTICIPATED"):

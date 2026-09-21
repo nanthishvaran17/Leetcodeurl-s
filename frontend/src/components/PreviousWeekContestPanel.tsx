@@ -12,7 +12,10 @@ import {
   WifiOff,
   Zap,
   CheckCircle2,
-  Clock
+  Clock,
+  Building2,
+  ChevronDown,
+  Check
 } from 'lucide-react';
 import api from '../services/api';
 import { useContestWebSocket } from '../hooks/useContestWebSocket';
@@ -127,6 +130,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedDeptFilter, setSelectedDeptFilter] = useState<string>('ALL');
+  const [deptDropdownOpen, setDeptDropdownOpen] = useState<boolean>(false);
   const [simulatingStudentId, setSimulatingStudentId] = useState<number | null>(null);
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(() => typeof window !== 'undefined' && window.innerWidth < 768 ? 10 : 25);
@@ -448,8 +452,13 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       if (selectedTypeFilter !== 'ALL' && r.participation_type !== selectedTypeFilter) {
         return false;
       }
-      if (selectedDeptFilter !== 'ALL' && r.department_name !== selectedDeptFilter) {
-        return false;
+      if (selectedDeptFilter !== 'ALL') {
+        const target = selectedDeptFilter.toUpperCase().trim();
+        const dName = (r.department_name || '').toUpperCase().trim();
+        if (target === 'CSE(CS)' && !dName.includes('CS') && !dName.includes('CYBER')) return false;
+        if (target === 'CSE(IOT)' && !dName.includes('IOT')) return false;
+        if (target === 'IT' && dName !== 'IT' && !dName.includes('INFORMATION')) return false;
+        if (target !== 'CSE(CS)' && target !== 'CSE(IOT)' && target !== 'IT' && dName !== target) return false;
       }
       if (searchTerm.trim() !== '') {
         const query = searchTerm.toLowerCase();
@@ -689,18 +698,60 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         </div>
 
         <div className="flex items-center gap-2">
-          <select
-            value={selectedDeptFilter}
-            onChange={(e) => setSelectedDeptFilter(e.target.value)}
-            className="px-3 py-2 text-xs font-bold rounded-xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 cursor-pointer"
-          >
-            <option value="ALL">All Departments</option>
-            {uniqueDepartments.map((dept) => (
-              <option key={dept} value={dept}>
-                {dept}
-              </option>
-            ))}
-          </select>
+          {/* Premium Custom Department Filter */}
+          {(() => {
+            const getDeptInfo = (code: string) => {
+              const c = (code || '').toUpperCase().trim();
+              if (c.includes('CS') || c.includes('CYBER')) return { label: 'Computer Science and Engineering (Cyber Security)', code: 'CSE(CS)', color: 'text-blue-700 bg-blue-50 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800' };
+              if (c.includes('IOT')) return { label: 'Computer Science and Engineering (IoT)', code: 'CSE(IOT)', color: 'text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800' };
+              if (c === 'IT' || c.includes('INFORMATION')) return { label: 'Information Technology', code: 'IT', color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' };
+              return { label: 'All Departments', code: 'ALL', color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' };
+            };
+
+            const DEPT_OPTS = [
+              { value: 'ALL', label: 'All Departments', code: 'ALL', color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' },
+              ...uniqueDepartments.map(d => ({
+                value: d,
+                ...getDeptInfo(d)
+              }))
+            ];
+
+            const currentObj = DEPT_OPTS.find(o => o.value === selectedDeptFilter) || DEPT_OPTS[0];
+
+            return (
+              <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDeptDropdownOpen(false); }}>
+                <button
+                  type="button"
+                  onClick={() => setDeptDropdownOpen(p => !p)}
+                  className={`flex items-center gap-2 bg-slate-50 dark:bg-navy-950 px-3 py-2 rounded-xl border shadow-sm text-left transition-all hover:border-indigo-300 focus:outline-none ${deptDropdownOpen ? 'border-indigo-400 ring-2 ring-indigo-400/20' : 'border-slate-200 dark:border-slate-700'}`}
+                >
+                  <Building2 className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 border ${currentObj.color}`}>{currentObj.code}</span>
+                  <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 truncate max-w-[160px]">{currentObj.label}</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${deptDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {deptDropdownOpen && (
+                  <div className="absolute z-50 top-full right-0 mt-1.5 w-72 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden py-1">
+                    {DEPT_OPTS.map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => { setSelectedDeptFilter(opt.value); setDeptDropdownOpen(false); }}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-navy-800 ${selectedDeptFilter === opt.value ? 'bg-indigo-50/80 dark:bg-indigo-950/60' : ''}`}
+                      >
+                        <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 border ${opt.color}`}>{opt.code}</span>
+                        <span className={`text-xs truncate flex-1 ${selectedDeptFilter === opt.value ? 'text-indigo-950 dark:text-indigo-200 font-extrabold' : 'text-slate-800 dark:text-slate-200 font-semibold'}`}>{opt.label}</span>
+                        {selectedDeptFilter === opt.value && <Check className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           <span className="text-xs font-bold text-slate-500 dark:text-slate-400 font-mono">
             Showing {filteredRecords.length} / {records.length} Students

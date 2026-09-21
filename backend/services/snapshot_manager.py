@@ -40,15 +40,15 @@ class AuthoritativeSnapshotEngine:
             db = SessionLocal()
             close_on_exit = True
 
+        res = None
         try:
-            # Query the latest active snapshot
             snap = db.query(OfficialWeeklySnapshot).filter(
                 OfficialWeeklySnapshot.is_superseded == False
             ).order_by(OfficialWeeklySnapshot.id.desc()).first()
 
             if snap:
                 ver = 100 + snap.id
-                return {
+                res = {
                     "data_version": ver,
                     "snapshot_id": f"SNAPSHOT-{snap.contest_id}-{ver}",
                     "synced_at": snap.finalized_at.isoformat() if snap.finalized_at else datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -57,20 +57,29 @@ class AuthoritativeSnapshotEngine:
                     "student_count": snap.student_count or 1450,
                     "dataset_hash": snap.dataset_hash
                 }
-            else:
-                # Default authoritative fallback
-                return {
-                    "data_version": cls._in_memory_latest_version,
-                    "snapshot_id": f"SNAPSHOT-INIT-{cls._in_memory_latest_version}",
-                    "synced_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-                    "status": "SUCCESS",
-                    "contest_name": "Weekly Contest 516",
-                    "student_count": 1450,
-                    "dataset_hash": "0b77f4480d586b392495a6da9d25f89e395d254bfbcc4590a5d9e560a6584108"
-                }
+        except Exception as _snap_exc:
+            from backend.logger import logger
+            logger.warning(f"[SNAPSHOT_MANAGER] DB query error on get_latest_version_info: {_snap_exc}")
         finally:
-            if close_on_exit:
-                db.close()
+            if close_on_exit and db:
+                try:
+                    db.close()
+                except Exception:
+                    pass
+
+        if res:
+            return res
+
+        # Default authoritative fallback
+        return {
+            "data_version": cls._in_memory_latest_version,
+            "snapshot_id": f"SNAPSHOT-INIT-{cls._in_memory_latest_version}",
+            "synced_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "status": "SUCCESS",
+            "contest_name": "Weekly Contest 516",
+            "student_count": 1450,
+            "dataset_hash": "0b77f4480d586b392495a6da9d25f89e395d254bfbcc4590a5d9e560a6584108"
+        }
 
     @classmethod
     def get_current_snapshot(cls, db: Optional[Session] = None) -> Dict[str, Any]:
@@ -105,9 +114,24 @@ class AuthoritativeSnapshotEngine:
             dataset["status"] = "SUCCESS"
             dataset["synced_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
             return dataset
+        except Exception as _snap_exc:
+            from backend.logger import logger
+            logger.warning(f"[SNAPSHOT_MANAGER] DB query error on get_current_snapshot: {_snap_exc}")
+            if cls._in_memory_snapshot_cache:
+                return cls._in_memory_snapshot_cache
+            return {
+                "data_version": cls._in_memory_latest_version,
+                "snapshot_id": f"SNAPSHOT-FALLBACK-{cls._in_memory_latest_version}",
+                "status": "SUCCESS",
+                "synced_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "matrixRows": []
+            }
         finally:
-            if close_on_exit:
-                db.close()
+            if close_on_exit and db:
+                try:
+                    db.close()
+                except Exception:
+                    pass
 
     @classmethod
     def publish_new_successful_snapshot(

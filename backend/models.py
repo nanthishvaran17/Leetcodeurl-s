@@ -1,6 +1,6 @@
 import datetime
-from sqlalchemy import Column, Integer, BigInteger, String, Boolean, DateTime, Date, Float, ForeignKey, Text, JSON, UniqueConstraint, Index
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy import Column, Integer, BigInteger, String, Boolean, DateTime, Date, Float, ForeignKey, Text, JSON, UniqueConstraint, Index, CheckConstraint
+from sqlalchemy.orm import relationship, backref, validates
 from backend.database import Base
 
 class Department(Base):
@@ -275,9 +275,11 @@ class WeeklySessionSnapshot(Base):
 class WeeklyPublicResult(Base):
     __tablename__ = "weekly_public_results"
     __table_args__ = (
+        UniqueConstraint("session_id", "student_id", name="uq_weekly_public_results_session_student"),
         Index("ix_weekly_public_results_session_student", "session_id", "student_id"),
         Index("ix_weekly_public_results_session_dept_year", "session_id", "dept", "year"),
         Index("ix_weekly_public_results_participation", "session_id", "participation_status"),
+        CheckConstraint("total_contest_solved >= 0 AND total_contest_solved <= 4", name="check_total_contest_solved_range"),
     )
 
     id = Column(Integer, primary_key=True, index=True)
@@ -316,6 +318,13 @@ class WeeklyPublicResult(Base):
 
     session = relationship("WeeklySession", back_populates="public_results")
     student = relationship("Student")
+
+    @validates("total_contest_solved")
+    def validate_total_contest_solved(self, key, value):
+        if value is not None:
+            if not (0 <= value <= 4):
+                raise ValueError(f"total_contest_solved must be between 0 and 4, got {value}")
+        return value
 
 class WeeklyVirtualResult(Base):
     __tablename__ = "weekly_virtual_results"
@@ -927,6 +936,7 @@ class StudentContestParticipation(Base):
     __tablename__ = "student_contest_participations"
     __table_args__ = (
         UniqueConstraint("student_id", "contest_id", "participation_mode", name="uix_student_contest_mode"),
+        CheckConstraint("questions_solved IS NULL OR (questions_solved >= 0 AND questions_solved <= 4)", name="check_questions_solved_range"),
     )
 
     id = Column(Integer, primary_key=True, index=True)
@@ -973,6 +983,13 @@ class StudentContestParticipation(Base):
     updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), onupdate=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student", back_populates="contest_participation_records")
+
+    @validates("questions_solved")
+    def validate_questions_solved(self, key, value):
+        if value is not None:
+            if not (0 <= value <= 4):
+                raise ValueError(f"questions_solved must be between 0 and 4, got {value}")
+        return value
 
 
 class AdminAuditLog(Base):
@@ -3231,3 +3248,76 @@ class StaffVerification(Base):
     department = relationship("Department")
     reporting_to_user = relationship("User", foreign_keys=[reporting_to_user_id])
     reviewer = relationship("User", foreign_keys=[verified_by])
+
+
+class ContestSubmissionEvidence(Base):
+    """
+    Immutable evidence record for submissions evaluated during Sunday contest verification.
+    Provides complete traceability for why a problem was counted or rejected.
+    """
+    __tablename__ = "contest_submission_evidence"
+    __table_args__ = (
+        UniqueConstraint("student_id", "contest_id", "submission_id", name="uq_contest_sub_evidence"),
+        Index("ix_evidence_student_contest", "student_id", "contest_id"),
+        Index("ix_evidence_contest_problem", "contest_id", "problem_id"),
+        {"extend_existing": True},
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    leetcode_username = Column(String(100), nullable=False, index=True)
+    contest_id = Column(String(100), nullable=False, index=True)
+    problem_id = Column(String(100), nullable=False, index=True)
+    question_number = Column(Integer, nullable=True)  # 1, 2, 3, 4
+    submission_id = Column(String(100), nullable=False, index=True)
+    submission_timestamp = Column(DateTime, nullable=True)
+    submission_status = Column(String(50), nullable=False, default="ACCEPTED")  # ACCEPTED, WRONG_ANSWER, etc.
+    participation_type = Column(String(30), nullable=False, default="NOT_VERIFIED")  # ACTUAL, VIRTUAL_ATTENDED, NOT_VERIFIED
+
+    is_within_contest_window = Column(Boolean, default=False)
+    is_contest_problem = Column(Boolean, default=False)
+    is_actual_participation = Column(Boolean, default=False)
+    is_verified = Column(Boolean, default=False)
+
+    evidence_source = Column(String(100), default="LEETCODE_API")  # LEETCODE_API, GRAPHQL_FETCH, SNAPSHOT
+    snapshot_id = Column(String(100), nullable=True)
+    verification_reason = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+
+    student = relationship("Student")
+
+
+class ContestProblemResult(Base):
+    """
+    Authoritative single-source-of-truth binary problem-level contest result.
+    q1..q4 are strictly {0, 1} where 1 = verified ACCEPTED submission on official contest problem
+    during ACTUAL participation inside the official contest window.
+    """
+    __tablename__ = "contest_problem_results"
+    __table_args__ = (
+        UniqueConstraint("student_id", "contest_id", name="uq_contest_prob_res_student_contest"),
+        Index("ix_cpr_student_contest", "student_id", "contest_id"),
+        Index("ix_cpr_contest_part", "contest_id", "participation_type"),
+        {"extend_existing": True},
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    contest_id = Column(String(100), nullable=False, index=True)
+    leetcode_username = Column(String(100), nullable=False, index=True)
+
+    q1 = Column(Integer, default=0, nullable=False)
+    q2 = Column(Integer, default=0, nullable=False)
+    q3 = Column(Integer, default=0, nullable=False)
+    q4 = Column(Integer, default=0, nullable=False)
+    verified_total = Column(Integer, default=0, nullable=False)  # q1 + q2 + q3 + q4
+    raw_ac_count = Column(Integer, default=0, nullable=False)    # Raw count of all AC submissions evaluated
+
+    participation_type = Column(String(30), default="NOT_VERIFIED", nullable=False)  # ACTUAL, VIRTUAL_ATTENDED, NOT_VERIFIED
+    evidence_complete = Column(Boolean, default=False)
+    evidence_status = Column(String(30), default="NOT_VERIFIED", nullable=False)     # VERIFIED, UNKNOWN, NOT_VERIFIED, PARTIAL
+    verification_notes = Column(Text, nullable=True)
+    last_verified_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+
+    student = relationship("Student")
+

@@ -756,11 +756,21 @@ def download_sample_student_excel():
 @router.get("/by-email", response_model=Optional[StudentOut])
 def get_student_by_email(email: str = Query(..., description="Student email address"), db: Session = Depends(get_db)):
     clean_email = email.strip().lower()
-    student = db.query(Student).filter(Student.email.ilike(clean_email)).first()
-    if not student:
-        return None
-    st_out = StudentOut.model_validate(student)
-    return st_out
+    def _compute():
+        student = db.query(Student).filter(
+            (Student.email == clean_email) | (Student.institutional_email == clean_email) |
+            (Student.email == email.strip()) | (Student.institutional_email == email.strip())
+        ).first()
+        if not student:
+            student = db.query(Student).filter(
+                (func.lower(Student.email) == clean_email) | (func.lower(Student.institutional_email) == clean_email)
+            ).first()
+        if not student:
+            return None
+        return StudentOut.model_validate(student).model_dump(mode="json")
+
+    res = cache.get_or_compute(f"st_by_email:{clean_email}", _compute, ttl_seconds=15)
+    return res
 
 @router.get("/{student_id}", response_model=StudentOut)
 def get_student_detail(student_id: str, request: Request, db: Session = Depends(get_db)):

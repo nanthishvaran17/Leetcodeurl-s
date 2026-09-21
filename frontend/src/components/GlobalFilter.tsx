@@ -384,7 +384,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
     const maxHeight = Math.max(160, Math.min(380, availableHeight));
 
     // Dynamic width calculation:
-    let baseWidth = 580;
+    let baseWidth = 320;
     if (dropdownWidth) {
       const match = dropdownWidth.match(/(?:min-w-\[|w-\[)(\d+)px\]/);
       if (match && match[1]) {

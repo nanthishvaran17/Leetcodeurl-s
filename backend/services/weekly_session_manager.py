@@ -940,7 +940,7 @@ def sync_single_historical_session(db: Session, session_id: int):
 
                                 canonical_u = matched.get("username", clean_u)
 
-                                # Strategy 1: Official userContestRankingHistory entry
+                                # Strategy 1 & 2: Authoritative Contest Problem Evidence Verification
                                 hist = data.get("userContestRankingHistory") or []
                                 target_hist = None
                                 for h in hist:
@@ -948,62 +948,54 @@ def sync_single_historical_session(db: Session, session_id: int):
                                         target_hist = h
                                         break
 
-                                if target_hist:
-                                    is_att = bool(target_hist.get("attended"))
-                                    solved = target_hist.get("problemsSolved") or 0
-                                    rank = target_hist.get("ranking")
-                                    rating = target_hist.get("rating")
-                                    if is_att:
-                                        q1 = 1 if solved >= 1 else 0
-                                        q2 = 1 if solved >= 2 else 0
-                                        q3 = 1 if solved >= 3 else 0
-                                        q4 = 1 if solved >= 4 else 0
-                                        score = q1 * 3 + q2 * 4 + q3 * 5 + q4 * 6
-                                        return {
-                                            "student_id": s.id, "reg_no": s.reg_no, "name": s.name,
-                                            "dept": s.department.code if s.department else "CSE", "year": s.year_level or "III",
-                                            "username": clean_u, "canonical_username": canonical_u,
-                                            "classification": "PUBLIC_ATTENDED",
-                                            "participation_status": "PUBLIC",
-                                            "data_fetch_status": "SUCCESS",
-                                            "confidence": "VERIFIED",
-                                            "reason": f"Official ranking entry in userContestRankingHistory ({target_contest_title})",
-                                            "attended": True, "problems_solved": solved, "q1": q1, "q2": q2, "q3": q3, "q4": q4,
-                                            "contest_score": score, "contest_rank": rank, "contest_rating": rating
-                                        }
-                                    elif solved > 0:
-                                        q1 = 1 if solved >= 1 else 0
-                                        q2 = 1 if solved >= 2 else 0
-                                        q3 = 1 if solved >= 3 else 0
-                                        q4 = 1 if solved >= 4 else 0
-                                        score = q1 * 3 + q2 * 4 + q3 * 5 + q4 * 6
-                                        return {
-                                            "student_id": s.id, "reg_no": s.reg_no, "name": s.name,
-                                            "dept": s.department.code if s.department else "CSE", "year": s.year_level or "III",
-                                            "username": clean_u, "canonical_username": canonical_u,
-                                            "classification": "VIRTUAL_ATTENDED",
-                                            "participation_status": "VIRTUAL",
-                                            "data_fetch_status": "SUCCESS",
-                                            "confidence": "VERIFIED",
-                                            "reason": f"Virtual contest participation entry in userContestRankingHistory ({target_contest_title})",
-                                            "attended": True, "problems_solved": solved, "q1": q1, "q2": q2, "q3": q3, "q4": q4,
-                                            "contest_score": score, "contest_rank": None, "contest_rating": None
-                                        }
-
-                                # Strategy 2: Live AC Submissions during contest session window
                                 subs = data.get("recentAcSubmissionList") or []
-                                session_subs = []
-                                for sub in subs:
-                                    ts = int(sub.get("timestamp", 0))
-                                    if (c_start_ts - 300) <= ts <= (c_end_ts + 300):
-                                        session_subs.append(sub)
 
-                                if session_subs:
-                                    solved = min(len(session_subs), 4)
-                                    q1 = 1 if solved >= 1 else 0
-                                    q2 = 1 if solved >= 2 else 0
-                                    q3 = 1 if solved >= 3 else 0
-                                    q4 = 1 if solved >= 4 else 0
+                                # Resolve canonical problem set for this contest
+                                from backend.services.contest_problem_accuracy_engine import ContestProblemAccuracyEngine
+                                from backend.services.contest_verification_engine import ContestVerificationEngine, ContestProblemMapping, ProblemDefinition
+
+                                problem_set = ContestProblemAccuracyEngine.resolve_official_problem_set(
+                                    contest_name=target_contest_title
+                                )
+
+                                mapping_problems = []
+                                for p in problem_set.problems:
+                                    mapping_problems.append(ProblemDefinition(
+                                        question_number=p.index,
+                                        problem_id=p.problem_id,
+                                        title_slug=p.title_slug,
+                                        title=p.title,
+                                        points=p.points
+                                    ))
+
+                                prob_mapping = ContestProblemMapping(
+                                    contest_id=problem_set.contest_id,
+                                    contest_name=problem_set.contest_name,
+                                    contest_number=problem_set.contest_number,
+                                    problems=mapping_problems
+                                )
+
+                                is_att = bool(target_hist.get("attended")) if target_hist else False
+                                solved_in_hist = (target_hist.get("problemsSolved") or 0) if target_hist else 0
+                                rank = target_hist.get("ranking") if target_hist else None
+                                rating = target_hist.get("rating") if target_hist else None
+
+                                participation_type = "ACTUAL" if is_att else ("VIRTUAL_ATTENDED" if solved_in_hist > 0 else "NOT_VERIFIED")
+
+                                # Verify submissions using ContestVerificationEngine
+                                v_res = ContestVerificationEngine.verify_student_contest_participation(
+                                    student_id=s.id,
+                                    leetcode_username=clean_u,
+                                    contest_id=problem_set.contest_id,
+                                    participation_type=participation_type,
+                                    problem_mapping=prob_mapping,
+                                    raw_submissions=subs,
+                                    evidence_source="userContestRankingHistory_and_recentAcSubmissions"
+                                )
+
+                                if is_att:
+                                    q1, q2, q3, q4 = v_res.q1, v_res.q2, v_res.q3, v_res.q4
+                                    verified_solved = v_res.verified_total
                                     score = q1 * 3 + q2 * 4 + q3 * 5 + q4 * 6
                                     return {
                                         "student_id": s.id, "reg_no": s.reg_no, "name": s.name,
@@ -1013,8 +1005,57 @@ def sync_single_historical_session(db: Session, session_id: int):
                                         "participation_status": "PUBLIC",
                                         "data_fetch_status": "SUCCESS",
                                         "confidence": "VERIFIED",
-                                        "reason": f"Verified {solved} AC problem submission(s) during live contest window",
-                                        "attended": True, "problems_solved": solved, "q1": q1, "q2": q2, "q3": q3, "q4": q4,
+                                        "reason": f"Official ranking entry in userContestRankingHistory ({target_contest_title}), verified solves: {verified_solved}/4",
+                                        "attended": True, "problems_solved": verified_solved, "q1": q1, "q2": q2, "q3": q3, "q4": q4,
+                                        "contest_score": score, "contest_rank": rank, "contest_rating": rating
+                                    }
+                                elif solved_in_hist > 0:
+                                    q1, q2, q3, q4 = v_res.q1, v_res.q2, v_res.q3, v_res.q4
+                                    verified_solved = v_res.verified_total
+                                    score = q1 * 3 + q2 * 4 + q3 * 5 + q4 * 6
+                                    return {
+                                        "student_id": s.id, "reg_no": s.reg_no, "name": s.name,
+                                        "dept": s.department.code if s.department else "CSE", "year": s.year_level or "III",
+                                        "username": clean_u, "canonical_username": canonical_u,
+                                        "classification": "VIRTUAL_ATTENDED",
+                                        "participation_status": "VIRTUAL",
+                                        "data_fetch_status": "SUCCESS",
+                                        "confidence": "VERIFIED",
+                                        "reason": f"Virtual contest participation entry in userContestRankingHistory ({target_contest_title}), verified solves: {verified_solved}/4",
+                                        "attended": True, "problems_solved": verified_solved, "q1": q1, "q2": q2, "q3": q3, "q4": q4,
+                                        "contest_score": score, "contest_rank": None, "contest_rating": None
+                                    }
+
+                                # Strategy 2: Live AC Submissions during contest session window
+                                session_subs = []
+                                for sub in subs:
+                                    ts = int(sub.get("timestamp", 0))
+                                    if (c_start_ts - 300) <= ts <= (c_end_ts + 300):
+                                        session_subs.append(sub)
+
+                                if session_subs:
+                                    v_res_live = ContestVerificationEngine.verify_student_contest_participation(
+                                        student_id=s.id,
+                                        leetcode_username=clean_u,
+                                        contest_id=problem_set.contest_id,
+                                        participation_type="ACTUAL",
+                                        problem_mapping=prob_mapping,
+                                        raw_submissions=session_subs,
+                                        evidence_source="live_ac_submissions"
+                                    )
+                                    q1, q2, q3, q4 = v_res_live.q1, v_res_live.q2, v_res_live.q3, v_res_live.q4
+                                    verified_solved = v_res_live.verified_total
+                                    score = q1 * 3 + q2 * 4 + q3 * 5 + q4 * 6
+                                    return {
+                                        "student_id": s.id, "reg_no": s.reg_no, "name": s.name,
+                                        "dept": s.department.code if s.department else "CSE", "year": s.year_level or "III",
+                                        "username": clean_u, "canonical_username": canonical_u,
+                                        "classification": "PUBLIC_ATTENDED",
+                                        "participation_status": "PUBLIC",
+                                        "data_fetch_status": "SUCCESS",
+                                        "confidence": "VERIFIED",
+                                        "reason": f"Verified {verified_solved} AC problem submission(s) during live contest window",
+                                        "attended": True, "problems_solved": verified_solved, "q1": q1, "q2": q2, "q3": q3, "q4": q4,
                                         "contest_score": score, "contest_rank": None, "contest_rating": None
                                     }
 

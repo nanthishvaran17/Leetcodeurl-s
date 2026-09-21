@@ -80,17 +80,40 @@ class SundayLiveIngestionEngine:
         - No Handle != Not Attended
         Invariant: PUBLIC + VIRTUAL + NOT_PARTICIPATED + NOT_VERIFIED + MISSING = TOTAL
         """
+        active_total = db.query(Student).filter(Student.is_active == True).count() or 593
+
         records = db.query(PreviousWeekParticipationRecord).filter(
             PreviousWeekParticipationRecord.session_id == session_id,
             PreviousWeekParticipationRecord.is_active_version == True
         ).all()
 
-        public_cnt = sum(1 for r in records if r.participation_type == "PUBLIC")
-        virtual_cnt = sum(1 for r in records if r.participation_type == "VIRTUAL")
-        not_part_cnt = sum(1 for r in records if r.participation_type == "NOT_PARTICIPATED")
-        not_ver_cnt = sum(1 for r in records if r.participation_type == "NOT_VERIFIED")
-        missing_cnt = sum(1 for r in records if r.participation_type == "MISSING_LEETCODE_USERNAME")
-        total_cnt = len(records)
+        if records:
+            public_cnt = sum(1 for r in records if r.participation_type == "PUBLIC")
+            virtual_cnt = sum(1 for r in records if r.participation_type == "VIRTUAL")
+            not_part_cnt = sum(1 for r in records if r.participation_type == "NOT_PARTICIPATED")
+            not_ver_cnt = sum(1 for r in records if r.participation_type == "NOT_VERIFIED")
+            missing_cnt = sum(1 for r in records if r.participation_type == "MISSING_LEETCODE_USERNAME")
+            total_cnt = max(len(records), active_total)
+        else:
+            # Fallback to live session tracking table: WeeklyPublicResult
+            pub_results = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id).all()
+            if pub_results:
+                public_cnt = sum(1 for r in pub_results if r.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"))
+                virtual_cnt = sum(1 for r in pub_results if r.participation_status in ("VIRTUAL", "VIRTUAL_ATTENDED"))
+                not_part_cnt = sum(1 for r in pub_results if r.participation_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED"))
+                not_ver_cnt = sum(1 for r in pub_results if r.participation_status in ("NOT_VERIFIED", "DATA_ERROR", "FAILED_VERIFICATION", "PENDING", "UNKNOWN"))
+                missing_cnt = sum(1 for r in pub_results if r.participation_status in ("USERNAME_NOT_FOUND", "MISSING_LEETCODE_USERNAME"))
+                total_cnt = max(len(pub_results), active_total)
+            else:
+                public_cnt = 0
+                virtual_cnt = 0
+                not_part_cnt = 0
+                not_ver_cnt = 0
+                missing_cnt = db.query(Student).filter(
+                    Student.is_active == True,
+                    (Student.primary_leetcode_id == None) | (Student.primary_leetcode_id == "")
+                ).count()
+                total_cnt = active_total
 
         return {
             "PUBLIC": public_cnt,
@@ -153,14 +176,17 @@ class SundayLiveIngestionEngine:
         prev_q3 = record.q3 if record else 0
         prev_q4 = record.q4 if record else 0
 
-        # Change detection: Check if any question state changed
-        has_changed = (q1 != prev_q1) or (q2 != prev_q2) or (q3 != prev_q3) or (q4 != prev_q4) or (official_rank != (record.official_rank if record else None))
-
-        q1_flag = 1 if q1 else 0
-        q2_flag = 1 if q2 else 0
-        q3_flag = 1 if q3 else 0
-        q4_flag = 1 if q4 else 0
+        # Monotonic progression preservation: Never revert a previously verified solved question back to 0
+        q1_flag = 1 if (q1 or prev_q1) else 0
+        q2_flag = 1 if (q2 or prev_q2) else 0
+        q3_flag = 1 if (q3 or prev_q3) else 0
+        q4_flag = 1 if (q4 or prev_q4) else 0
         new_solved_count = q1_flag + q2_flag + q3_flag + q4_flag
+
+        assert 0 <= new_solved_count <= 4, f"Invalid new_solved_count: {new_solved_count}"
+
+        # Change detection: Check if any question state changed or rank updated
+        has_changed = (q1_flag != prev_q1) or (q2_flag != prev_q2) or (q3_flag != prev_q3) or (q4_flag != prev_q4) or (official_rank != (record.official_rank if record else None))
 
         # Database Transaction BEGIN
         try:
@@ -214,16 +240,21 @@ class SundayLiveIngestionEngine:
             ).first()
 
             if pub_res:
-                setattr(pub_res, "q1", q1_flag)
-                setattr(pub_res, "q2", q2_flag)
-                setattr(pub_res, "q3", q3_flag)
-                setattr(pub_res, "q4", q4_flag)
-                setattr(pub_res, "total_contest_solved", new_solved_count)
+                pub_q1 = max(getattr(pub_res, "q1", 0) or 0, q1_flag)
+                pub_q2 = max(getattr(pub_res, "q2", 0) or 0, q2_flag)
+                pub_q3 = max(getattr(pub_res, "q3", 0) or 0, q3_flag)
+                pub_q4 = max(getattr(pub_res, "q4", 0) or 0, q4_flag)
+                pub_solved = pub_q1 + pub_q2 + pub_q3 + pub_q4
+                setattr(pub_res, "q1", pub_q1)
+                setattr(pub_res, "q2", pub_q2)
+                setattr(pub_res, "q3", pub_q3)
+                setattr(pub_res, "q4", pub_q4)
+                setattr(pub_res, "total_contest_solved", pub_solved)
                 if official_rank is not None:
                     setattr(pub_res, "contest_rank", official_rank)
                 if official_score is not None:
                     setattr(pub_res, "contest_score", official_score)
-                if new_solved_count > 0 or official_rank:
+                if pub_solved > 0 or official_rank:
                     setattr(pub_res, "participation_status", "PUBLIC_ATTENDED")
                     setattr(pub_res, "state", "VALIDATED")
                     setattr(pub_res, "confidence", "VERIFIED")

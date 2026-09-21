@@ -63,6 +63,7 @@ def get_upcoming_session_info(db: Session = Depends(get_db)):
     # Check if DB has a session for this date
     session = db.query(WeeklySession).filter(WeeklySession.session_code == meta["session_code"]).first()
     if not session:
+        active_cnt = db.query(Student).filter(Student.is_active == True).count() or 593
         session = WeeklySession(
             academic_year="2026-27",
             week_number=upcoming_sunday.isocalendar()[1],
@@ -73,7 +74,7 @@ def get_upcoming_session_info(db: Session = Depends(get_db)):
             start_time="08:00",
             end_time="09:30",
             status=meta["status"],
-            total_students=302
+            total_students=active_cnt
         )
         db.add(session)
         db.commit()
@@ -382,7 +383,8 @@ def get_session_live_telemetry(
             WeeklyPublicResult.student_id.in_(authorized_ids)
         )
     else:
-        total_students = session.total_students if session else 302
+        active_student_cnt = db.query(Student).filter(Student.is_active == True).count() or 593
+        total_students = (session.total_students if session and session.total_students and session.total_students > 0 else active_student_cnt) or active_student_cnt
         public_results_query = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id)
         
     public_results = public_results_query.all()
@@ -970,10 +972,14 @@ def get_normalized_contest_data(
             "failedVerification": metrics["errors"],
             "publicParticipationRate": metrics["participationPercentage"],
             "participationRate": f"{metrics['participationPercentage']:.2f}%",
-            "4 Q Solved": metrics["q4Count"],
-            "3 Q Solved": metrics["q3Count"],
-            "2 Q Solved": metrics["q2Count"],
-            "1 Q Solved": metrics["q1Count"],
+            "q4Count": metrics.get("q4Count", 0),
+            "q3Count": metrics.get("q3Count", 0),
+            "q2Count": metrics.get("q2Count", 0),
+            "q1Count": metrics.get("q1Count", 0),
+            "4 Q Solved": metrics.get("q4Count", 0),
+            "3 Q Solved": metrics.get("q3Count", 0),
+            "2 Q Solved": metrics.get("q2Count", 0),
+            "1 Q Solved": metrics.get("q1Count", 0),
         },
         "session": {
             "session_id": session_id,
