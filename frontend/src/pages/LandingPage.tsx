@@ -164,6 +164,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   });
 
   useEffect(() => {
+    if (user) {
+      let userDeptCode: string | null = null;
+      if (user.authorized_department_codes && user.authorized_department_codes.length > 0) {
+        userDeptCode = user.authorized_department_codes[0];
+      } else if (user.department) {
+        userDeptCode = user.department;
+      }
+      if (userDeptCode && selectedDept === 'all') {
+        setSelectedDept(userDeptCode);
+      }
+    }
+  }, [user]);
+
+  useEffect(() => {
     fetchDepartments();
     fetchFilteredStudents();
 
@@ -629,7 +643,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </motion.button>
 
             {(() => {
-              const totalStudents = summaryData?.total_students ?? summaryData?.scope?.total_students ?? students.length;
+              const activeCohort = (selectedDept !== 'all' || isFiltered) ? sortedList : students;
+              const totalStudents = activeCohort.length > 0 ? activeCohort.length : (summaryData?.total_students ?? students.length);
               const processedCount = syncProgress?.processed ?? 0;
               const totalProgress = syncProgress?.total ?? totalStudents;
 
@@ -640,7 +655,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   onClick={handleRefreshAll}
                   disabled={refreshing || syncProgress?.is_running}
                   className="px-5 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white border border-white/20 font-black text-sm backdrop-blur-md shadow-xl flex items-center space-x-2 transition-all cursor-pointer"
-                  title="Perform full live synchronization for active student roster"
+                  title="Perform live synchronization for active student roster"
                 >
                   <RefreshCw className={`w-4 h-4 ${refreshing || syncProgress?.is_running ? 'animate-spin' : ''}`} />
                   <span>
@@ -652,12 +667,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               );
             })()}
             {(() => {
-              const calculatedVerified = students.filter(s =>
+              const activeCohort = (selectedDept !== 'all' || isFiltered) ? sortedList : students;
+              const calculatedVerified = activeCohort.filter(s =>
                 s.stats?.sync_status === 'success' || s.stats?.sync_status === 'OK' || s.stats?.sync_status === 'verified' || s.stats?.sync_status === 'stale' || (s.stats?.total_solved !== null && (s.stats?.total_solved ?? 0) > 0)
               ).length;
-              const totalStudents = summaryData?.total_students ?? summaryData?.scope?.total_students ?? students.length;
+              const totalStudents = activeCohort.length;
               const verifiedCount = calculatedVerified;
-              const lastVerifiedTs = students
+              const lastVerifiedTs = activeCohort
                 .map(s => s.stats?.last_verified_at)
                 .filter(Boolean)
                 .sort()
@@ -705,16 +721,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* Stat Cards Grid — Data-quality-aware with Framer Motion hover & AnimatedNumber */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {(() => {
-          const calculatedVerified = students.filter(s =>
+          const activeCohort = (selectedDept !== 'all' || isFiltered) ? sortedList : students;
+          const totalStudents = activeCohort.length;
+
+          const calculatedVerified = activeCohort.filter(s =>
             s.stats?.sync_status === 'success' || s.stats?.sync_status === 'OK' || s.stats?.sync_status === 'verified' || (s.stats?.total_solved !== null && (s.stats?.total_solved ?? 0) > 0)
           ).length;
-          const calculatedNoUsername = students.filter(s => !s.username && (!s.leetcode_url || s.leetcode_url.includes('/problemset/'))).length;
-          const calculatedFailed = students.filter(s => s.stats?.sync_status === 'failed' || s.stats?.sync_status === 'mismatch' || s.stats?.sync_status === 'INVALID_USERNAME').length;
-          const calculatedPending = Math.max(0, students.length - (calculatedVerified + calculatedNoUsername + calculatedFailed));
-          const calculatedProblems = students.reduce((acc, s) => acc + (s.stats?.total_solved || 0), 0);
-          const calculatedActiveSolvers = students.filter(s => (s.stats?.total_solved || 0) > 0).length;
+          const calculatedNoUsername = activeCohort.filter(s => !s.username && (!s.leetcode_url || s.leetcode_url.includes('/problemset/'))).length;
+          const calculatedFailed = activeCohort.filter(s => s.stats?.sync_status === 'failed' || s.stats?.sync_status === 'mismatch' || s.stats?.sync_status === 'INVALID_USERNAME').length;
+          const calculatedPending = Math.max(0, activeCohort.length - (calculatedVerified + calculatedNoUsername + calculatedFailed));
+          const calculatedProblems = activeCohort.reduce((acc, s) => acc + (s.stats?.total_solved || (s as any).total_solved || 0), 0);
+          const calculatedActiveSolvers = activeCohort.filter(s => (s.stats?.total_solved || (s as any).total_solved || 0) > 0).length;
 
-          const totalStudents = summaryData?.total_students ?? summaryData?.scope?.total_students ?? students.length;
           const verified = calculatedVerified;
           const pending = calculatedPending;
           const failed = calculatedFailed;
@@ -736,7 +754,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <h4 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
                   <AnimatedNumber value={totalStudents} />
                 </h4>
-                <p className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100">Total Enrolled Students</p>
+                <p className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100">
+                  {selectedDept !== 'all' ? 'Department Enrolled Students' : 'Total Enrolled Students'}
+                </p>
               </motion.div>
 
               <motion.div
@@ -785,10 +805,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <div className="p-3 w-fit rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
                   <Trophy className="w-6 h-6 fill-amber-500" />
                 </div>
-                <h4 className="text-2xl sm:text-3xl font-black text-amber-500 truncate" title={summaryData?.top_college_ranker || (sortedList.length > 0 ? sortedList[0].name : 'Top Ranker')}>
-                  {summaryData?.top_college_ranker || (sortedList.length > 0 ? sortedList[0].name : 'Top Ranker')}
+                <h4 className="text-2xl sm:text-3xl font-black text-amber-500 truncate" title={activeCohort.length > 0 ? activeCohort[0].name : (summaryData?.top_college_ranker || 'Top Ranker')}>
+                  {activeCohort.length > 0 ? activeCohort[0].name : (summaryData?.top_college_ranker || 'Top Ranker')}
                 </h4>
-                <p className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100">Top College Ranker (#1)</p>
+                <p className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100">
+                  {selectedDept !== 'all' ? 'Top Department Ranker (#1)' : 'Top College Ranker (#1)'}
+                </p>
               </motion.div>
             </>
           );
@@ -924,174 +946,174 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       </div>
 
-      {/* Student Showcase Display */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <h3 className="font-black text-lg text-slate-900 dark:text-white">
-            <div className="flex flex-col">
-              <span>Showing {isFiltered ? sortedList.length : (summaryData?.total_students ?? students.length)} of {isFiltered ? sortedList.length : (summaryData?.total_students ?? students.length)} Students</span>
-              {(selectedDept !== 'all' || yearLevel !== 'all' || solvedFilter !== 'all') && (
-                <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1">
-                  Filtered by: {[
-                    selectedDept !== 'all' ? (departments.find(d => String(d.id) === String(selectedDept) || d.code === selectedDept)?.name || selectedDept) : null,
-                    yearLevel !== 'all' ? `${yearLevel} Year` : null,
-                    solvedFilter !== 'all' ? `${{
-                      '500_plus': '500+', 'above_500': '500+', '251_500': '251–500', '250_500': '251–500',
-                      '101_250': '101–250', '1_100': '1–100', 'less_100': '1–100', 'not_started': 'Not Started'
-                    }[solvedFilter] ?? ''} Solved` : null
-                  ].filter(Boolean).join(' • ')}
-                </span>
-              )}
-            </div>
-          </h3>
-          <button
-            onClick={handleRefreshAll}
-            disabled={refreshing || syncProgress?.is_running}
-            className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${refreshing || syncProgress?.is_running
-              ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
-              : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/30 cursor-pointer'
-              }`}
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing || syncProgress?.is_running ? 'animate-spin' : ''}`} />
-            <span>
-              {syncProgress?.is_running
-                ? `Syncing... ${syncProgress.processed} / ${syncProgress.total}`
-                : refreshing 
-                  ? 'Refreshing...' 
-                  : isFiltered 
-                    ? `Refresh Filtered (${sortedList.length} Students)` 
-                    : 'Refresh Allocated Students'
-              }
-            </span>
-          </button>
-        </div>
-
-        {/* Premium Live Sync Progress Bar */}
-        {syncProgress && (
-          <div className="p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-lg space-y-4 overflow-hidden relative">
-
-            <div className="flex justify-between items-end flex-wrap gap-2 relative z-10">
-              <div className="space-y-1">
-                <span className="text-xs font-black uppercase tracking-wider text-brand-600 dark:text-brand-400 flex items-center space-x-2">
-                  <RefreshCw className={`w-3.5 h-3.5 ${syncProgress.is_running ? 'animate-spin' : ''}`} />
-                  <span>
-                    {syncProgress.is_running 
-                      ? (isFiltered ? `Syncing Filtered Students (${syncProgress.processed}/${syncProgress.total})` : 'Sync Engine Running') 
-                      : 'Sync Process Complete'
-                    }
+        {/* Student Showcase Display */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <h3 className="font-black text-lg text-slate-900 dark:text-white">
+              <div className="flex flex-col">
+                <span>Showing {Math.min(displayCount, sortedList.length)} of {sortedList.length} Students</span>
+                {(selectedDept !== 'all' || yearLevel !== 'all' || solvedFilter !== 'all') && (
+                  <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1">
+                    Filtered by: {[
+                      selectedDept !== 'all' ? (departments.find(d => String(d.id) === String(selectedDept) || d.code === selectedDept)?.name || selectedDept) : null,
+                      yearLevel !== 'all' ? `${yearLevel} Year` : null,
+                      solvedFilter !== 'all' ? `${{
+                        '500_plus': '500+', 'above_500': '500+', '251_500': '251–500', '250_500': '251–500',
+                        '101_250': '101–250', '1_100': '1–100', 'less_100': '1–100', 'not_started': 'Not Started'
+                      }[solvedFilter] ?? ''} Solved` : null
+                    ].filter(Boolean).join(' • ')}
                   </span>
-                </span>
-                <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                  {syncProgress.is_running
-                    ? `Processing Profile: ${syncProgress.current_student || 'Initializing...'}`
-                    : `Student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}${syncProgress.triggered_by ? ` • Initiated by: ${syncProgress.triggered_by}` : ''}`
-                  }
-                </p>
-              </div>
-
-              <div className="text-right">
-                <span className="text-2xl font-black text-slate-900 dark:text-white font-mono tracking-tighter">
-                  {Math.round((syncProgress.processed / Math.max(1, syncProgress.total)) * 100)}%
-                </span>
-              </div>
-            </div>
-
-            <div className="w-full bg-slate-100 dark:bg-navy-950 h-2.5 rounded-full overflow-hidden relative z-10 shadow-inner">
-              <div
-                className="h-full bg-gradient-to-r from-brand-500 via-indigo-500 to-purple-600 rounded-full transition-all duration-700 ease-out relative"
-                style={{ width: `${Math.round((syncProgress.processed / Math.max(1, syncProgress.total)) * 100)}%` }}
-              >
-                {syncProgress.is_running && (
-                  <div className="absolute top-0 right-0 bottom-0 w-20 bg-gradient-to-r from-transparent to-white/30 animate-pulse"></div>
                 )}
               </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3 relative z-10 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <div className="flex flex-col">
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Successful</span>
-                <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
-                  {syncProgress.successful > 0
-                    ? syncProgress.successful
-                    : (summaryData?.verification?.verified ?? summaryData?.verified_profiles ?? Math.max(0, syncProgress.total - (syncProgress.failed || 0) - (syncProgress.pending_usernames || 0)))}
-                </span>
-              </div>
-              <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-3">
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pending</span>
-                <span className="text-sm font-black text-amber-500">
-                  {syncProgress.pending_usernames !== undefined
-                    ? syncProgress.pending_usernames
-                    : (summaryData?.verification?.pending ?? summaryData?.pending_sync ?? 0)}
-                </span>
-              </div>
-              <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-3">
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Failed</span>
-                <span className="text-sm font-black text-rose-500">
-                  {syncProgress.failed ?? (summaryData?.failed_sync ?? 0)}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {sortedList.length === 0 ? (
-          <div className="text-center py-16 px-6 bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-brand-500/10 text-brand-500 flex items-center justify-center mx-auto">
-              <Users className="w-6 h-6" />
-            </div>
-            <div className="space-y-1">
-              <h4 className="text-base font-black text-slate-900 dark:text-white">
-                No Student Records in Database
-              </h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                All previous student records have been wiped cleanly. Ready for fresh new student dataset import.
-              </p>
-            </div>
+            </h3>
             <button
-              onClick={handleResetFilters}
-              className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer inline-flex items-center space-x-1.5"
+              onClick={handleRefreshAll}
+              disabled={refreshing || syncProgress?.is_running}
+              className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${refreshing || syncProgress?.is_running
+                ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/30 cursor-pointer'
+                }`}
             >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset View</span>
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing || syncProgress?.is_running ? 'animate-spin' : ''}`} />
+              <span>
+                {syncProgress?.is_running
+                  ? `Syncing... ${syncProgress.processed} / ${syncProgress.total}`
+                  : refreshing 
+                    ? 'Refreshing...' 
+                    : isFiltered 
+                      ? `Refresh Filtered (${sortedList.length} Students)` 
+                      : 'Refresh Allocated Students'
+                }
+              </span>
             </button>
           </div>
-        ) : viewMode === 'cards' ? (
-          <div className="space-y-6">
-            <motion.div
-              initial="hidden"
-              animate="show"
-              variants={{
-                hidden: { opacity: 0 },
-                show: {
-                  opacity: 1,
-                  transition: { staggerChildren: 0.025 }
-                }
-              }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-            >
-              <AnimatePresence mode="popLayout">
-                {sortedList.slice(0, displayCount).map((st, idx) => (
-                  <motion.div
-                    key={st.id}
-                    variants={{
-                      hidden: { opacity: 0, y: 16, scale: 0.98 },
-                      show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.35, ease: "easeOut" } }
-                    }}
-                  >
-                    <StudentFlipCard
-                      student={st}
-                      onSelectStudent={onSelectStudent}
-                    />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </motion.div>
 
-            {displayCount < sortedList.length && (
-              <div className="flex flex-col items-center justify-center pt-4 space-y-2">
-                <p className="text-xs text-slate-500 font-semibold">
-                  Showing <span className="font-extrabold text-brand-600 dark:text-brand-400">{Math.min(displayCount, sortedList.length)}</span> of <span className="font-extrabold text-slate-900 dark:text-white">{isFiltered ? sortedList.length : (summaryData?.total_students ?? students.length)}</span> Students
+          {/* Premium Live Sync Progress Bar */}
+          {syncProgress && (
+            <div className="p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-lg space-y-4 overflow-hidden relative">
+
+              <div className="flex justify-between items-end flex-wrap gap-2 relative z-10">
+                <div className="space-y-1">
+                  <span className="text-xs font-black uppercase tracking-wider text-brand-600 dark:text-brand-400 flex items-center space-x-2">
+                    <RefreshCw className={`w-3.5 h-3.5 ${syncProgress.is_running ? 'animate-spin' : ''}`} />
+                    <span>
+                      {syncProgress.is_running 
+                        ? (isFiltered ? `Syncing Filtered Students (${syncProgress.processed}/${syncProgress.total})` : 'Sync Engine Running') 
+                        : 'Sync Process Complete'
+                      }
+                    </span>
+                  </span>
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                    {syncProgress.is_running
+                      ? `Processing Profile: ${syncProgress.current_student || 'Initializing...'}`
+                      : `Student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}${syncProgress.triggered_by ? ` • Initiated by: ${syncProgress.triggered_by}` : ''}`
+                    }
+                  </p>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-2xl font-black text-slate-900 dark:text-white font-mono tracking-tighter">
+                    {Math.round((syncProgress.processed / Math.max(1, syncProgress.total)) * 100)}%
+                  </span>
+                </div>
+              </div>
+
+              <div className="w-full bg-slate-100 dark:bg-navy-950 h-2.5 rounded-full overflow-hidden relative z-10 shadow-inner">
+                <div
+                  className="h-full bg-gradient-to-r from-brand-500 via-indigo-500 to-purple-600 rounded-full transition-all duration-700 ease-out relative"
+                  style={{ width: `${Math.round((syncProgress.processed / Math.max(1, syncProgress.total)) * 100)}%` }}
+                >
+                  {syncProgress.is_running && (
+                    <div className="absolute top-0 right-0 bottom-0 w-20 bg-gradient-to-r from-transparent to-white/30 animate-pulse"></div>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3 relative z-10 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Successful</span>
+                  <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
+                    {syncProgress.successful > 0
+                      ? syncProgress.successful
+                      : (summaryData?.verification?.verified ?? summaryData?.verified_profiles ?? Math.max(0, syncProgress.total - (syncProgress.failed || 0) - (syncProgress.pending_usernames || 0)))}
+                  </span>
+                </div>
+                <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-3">
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pending</span>
+                  <span className="text-sm font-black text-amber-500">
+                    {syncProgress.pending_usernames !== undefined
+                      ? syncProgress.pending_usernames
+                      : (summaryData?.verification?.pending ?? summaryData?.pending_sync ?? 0)}
+                  </span>
+                </div>
+                <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-3">
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Failed</span>
+                  <span className="text-sm font-black text-rose-500">
+                    {syncProgress.failed ?? (summaryData?.failed_sync ?? 0)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {sortedList.length === 0 ? (
+            <div className="text-center py-16 px-6 bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-brand-500/10 text-brand-500 flex items-center justify-center mx-auto">
+                <Users className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-base font-black text-slate-900 dark:text-white">
+                  No Student Records in Database
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                  All previous student records have been wiped cleanly. Ready for fresh new student dataset import.
                 </p>
+              </div>
+              <button
+                onClick={handleResetFilters}
+                className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer inline-flex items-center space-x-1.5"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset View</span>
+              </button>
+            </div>
+          ) : viewMode === 'cards' ? (
+            <div className="space-y-6">
+              <motion.div
+                initial="hidden"
+                animate="show"
+                variants={{
+                  hidden: { opacity: 0 },
+                  show: {
+                    opacity: 1,
+                    transition: { staggerChildren: 0.025 }
+                  }
+                }}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              >
+                <AnimatePresence mode="popLayout">
+                  {sortedList.slice(0, displayCount).map((st, idx) => (
+                    <motion.div
+                      key={st.id}
+                      variants={{
+                        hidden: { opacity: 0, y: 16, scale: 0.98 },
+                        show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.35, ease: "easeOut" } }
+                      }}
+                    >
+                      <StudentFlipCard
+                        student={st}
+                        onSelectStudent={onSelectStudent}
+                      />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+
+              {displayCount < sortedList.length && (
+                <div className="flex flex-col items-center justify-center pt-4 space-y-2">
+                  <p className="text-xs text-slate-500 font-semibold">
+                    Showing <span className="font-extrabold text-brand-600 dark:text-brand-400">{Math.min(displayCount, sortedList.length)}</span> of <span className="font-extrabold text-slate-900 dark:text-white">{sortedList.length}</span> Students
+                  </p>
                 <div className="flex items-center space-x-3">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
