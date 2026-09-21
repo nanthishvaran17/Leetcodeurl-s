@@ -3,8 +3,12 @@
  * SINGLE SOURCE OF TRUTH for all API communications across Website & Capacitor Android APK.
  */
 
-// Primary Production Backend Base URL
-export const PRODUCTION_BACKEND_URL = 'https://leetcodeurl-s-3fzh.onrender.com';
+// Primary Production Backend Base URL (Configurable via VITE_API_URL environment variable)
+const RAW_ENV_URL = (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '').trim();
+
+export const PRODUCTION_BACKEND_URL = RAW_ENV_URL 
+  ? RAW_ENV_URL.replace(/\/api\/?$/, '').replace(/\/+$/, '')
+  : 'https://api.nandhaengg.org'; // Permanent Cloudflare Tunnel production backend
 
 /**
  * Detects if the current runtime environment is a Capacitor Native App (Android / iOS)
@@ -33,9 +37,9 @@ export const isCapacitorNative = (): boolean => {
 
 /**
  * Resolves the API Base URL dynamically based on execution environment:
- * 1. Capacitor Native Android/iOS App -> Uses absolute Backend HTTPS URL (https://leetcodeurl-s-3fzh.onrender.com/api)
+ * 1. Capacitor Native Android/iOS App -> Uses absolute Backend HTTPS URL
  * 2. Web Browser (Vite dev server) -> Uses '/api' relative path proxied by Vite
- * 3. Production Web (Vercel) -> Uses absolute backend URL or explicit VITE_API_URL
+ * 3. Production Web (Vercel) -> Resolves VITE_API_URL or defaults to PRODUCTION_BACKEND_URL
  */
 export const getApiBaseUrl = (): string => {
   if (isCapacitorNative()) {
@@ -52,9 +56,14 @@ export const getApiBaseUrl = (): string => {
     return '/api';
   }
 
-  // If it's a Vercel deployment (or any production web build), forcefully use the correct Render URL
-  // We ignore VITE_API_URL here because Vercel might have stale environment variables pointing to a dead Render instance.
-  return 'https://leetcodeurl-s-3fzh.onrender.com/api';
+  // Production Web (Vercel or custom host)
+  if (RAW_ENV_URL) {
+    const cleanEnv = RAW_ENV_URL.replace(/\/+$/, '');
+    return cleanEnv.endsWith('/api') ? cleanEnv : `${cleanEnv}/api`;
+  }
+
+  const cleanFallback = PRODUCTION_BACKEND_URL.replace(/\/+$/, '');
+  return cleanFallback.endsWith('/api') ? cleanFallback : `${cleanFallback}/api`;
 };
 
 export const API_BASE_URL = getApiBaseUrl();
@@ -67,3 +76,4 @@ export const getApiUrl = (path: string): string => {
   }
   return `${currentBase}${cleanPath}`;
 };
+
