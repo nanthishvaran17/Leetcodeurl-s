@@ -78,13 +78,6 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
             _UNIVERSAL_DATASET_CACHE[cache_key] = copy.deepcopy(res)
         return res
 
-    from backend.services.authorization_service import apply_role_based_student_filter
-    base_query = db.query(Student).filter((Student.is_active == True) | (Student.is_active.is_(None)))
-    if current_user:
-        base_query = apply_role_based_student_filter(base_query, current_user, db)
-    raw_students = base_query.distinct().all()
-    data_quality = validate_data_quality(raw_students)
-
     cfg_filters = config.filters or {}
     students = fetch_normalized_students(
         db,
@@ -97,6 +90,7 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         performance_range=cfg_filters.get("performanceRange") or cfg_filters.get("range") or "ALL",
         current_user=current_user
     )
+    data_quality = validate_data_quality(students)
 
     if cfg_filters.get("student_id"):
         target_id = int(cfg_filters.get("student_id"))
