@@ -536,13 +536,10 @@ export const SettingsPage: React.FC = () => {
       ]
     };
 
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `Data_Integrity_Audit_Report_${new Date().toISOString().slice(0,10)}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+    const jsonStr = JSON.stringify(payload, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const filename = `Data_Integrity_Audit_Report_${new Date().toISOString().slice(0,10)}.json`;
+    triggerDownload(blob, filename, 'application/json');
     notify.success('Audit Report Exported', 'Data Integrity Evidence JSON downloaded successfully.', { category: 'DATA INTEGRITY' });
   };
 
@@ -580,13 +577,10 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
       institutional_standard: "ISO/IEC 27001 Data Integrity Specification"
     };
 
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `Rule_Certificate_${(rule.id || 'RULE').toUpperCase()}_${new Date().toISOString().slice(0,10)}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+    const jsonStr = JSON.stringify(payload, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const filename = `Rule_Certificate_${(rule.id || 'RULE').toUpperCase()}_${new Date().toISOString().slice(0,10)}.json`;
+    triggerDownload(blob, filename, 'application/json');
     notify.success('Certificate Exported', `Compliance certificate for '${rule.label}' exported as JSON.`, { category: 'DATA INTEGRITY' });
   };
 

@@ -75,10 +75,11 @@ def get_current_sync_status(db: Session = Depends(get_db)):
     from backend.config import Settings
     from backend.cache import cache as _cache
     
-    # Fast-path: serve cached result if available to prevent DB connection pool exhaustion
-    _cached = _cache.get("sync:status")
-    if _cached is not None:
-        return _cached
+    # Fast-path: serve cached result if available ONLY IF sync worker is not actively running
+    if not sync_tracker.is_running:
+        _cached = _cache.get("sync:status")
+        if _cached is not None:
+            return _cached
         
     cfg = Settings()
 
@@ -106,12 +107,13 @@ def get_current_sync_status(db: Session = Depends(get_db)):
         failed_cnt = max(0, tot - verified_cnt - pending_cnt)
 
         # Reconcile any zombie RUNNING jobs if in-memory sync worker is not active
-        running_job = db.query(SyncJob).filter(SyncJob.status == "RUNNING").first()
+        running_job = db.query(SyncJob).filter(SyncJob.status == "RUNNING").order_by(SyncJob.id.desc()).first()
         if running_job and not sync_tracker.is_running:
             logger.warning(f"Reconciling zombie lock for job {running_job.job_id}")
-            running_job.status = "INTERRUPTED"  # type: ignore
-            if not running_job.completed_at:
-                running_job.completed_at = datetime.datetime.now(datetime.timezone.utc)  # type: ignore
+            db.query(SyncJob).filter(SyncJob.status == "RUNNING").update({
+                "status": "INTERRUPTED",
+                "completed_at": datetime.datetime.now(datetime.timezone.utc)
+            }, synchronize_session=False)
             db.commit()
             running_job = None
 
@@ -247,10 +249,10 @@ def get_current_sync_status(db: Session = Depends(get_db)):
         "recent_logs": sync_tracker.recent_logs[-10:] if sync_tracker.recent_logs else [f"[{last_sync_time}] Synchronization worker ready. {successful} student profiles verified."]
     }
     
-    # Cache result: 10 seconds if idle, 2 seconds if running
-    # This severely limits DB load from frequent polling
-    ttl = 2 if is_running else 10
-    _cache.set("sync:status", result, ttl_seconds=ttl)
+    # Cache result: 10 seconds if idle, 0 seconds (no cache) if actively running for live progress updates
+    ttl = 0 if is_running else 10
+    if ttl > 0:
+        _cache.set("sync:status", result, ttl_seconds=ttl)
     
     return result
 

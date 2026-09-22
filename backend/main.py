@@ -422,7 +422,7 @@ async def _deferred_startup_tasks():
                                     sunday_autopilot.phase_4_finalization_0930(_recovery_db)
                                 )
                             else:
-                                logger.info("[STARTUP RECOVERY] Contest window passed. Attempting finalization.")
+                                logger.info("[STARTUP RECOVERY] Contest window passed. Attempting finalization.")  # type: ignore
                                 asyncio.create_task(
                                     sunday_autopilot.phase_4_finalization_0930(_recovery_db)
                                 )

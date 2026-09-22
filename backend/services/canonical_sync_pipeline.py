@@ -481,8 +481,8 @@ async def _sync_single_student_canonical_impl(
                     },
                     "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
                 }
-                if not defer_commit:
-                    await broadcast_sync_event(payload)
+                # Always broadcast sync_progress event for true live per-student streaming
+                await broadcast_sync_event(payload)
                 return payload
 
         except sqlalchemy.exc.OperationalError:
@@ -599,6 +599,25 @@ async def run_full_pipeline(
 
         if hasattr(progress_callback, "start"):
             progress_callback.start(effective_job_id, total_students)
+            if students and hasattr(progress_callback, "set_current"):
+                progress_callback.set_current(students[0].name, students[0].username)
+
+        # Broadcast initial sync_progress event immediately so UI updates at t=0s
+        from backend.services.live_sync_service import broadcast_sync_event
+        await broadcast_sync_event({
+            "type": "sync_progress",
+            "job_id": effective_job_id,
+            "processed": 0,
+            "total": total_students,
+            "successful": 0,
+            "failed": 0,
+            "pending": 0,
+            "current_student": students[0].name if students else "Initializing...",
+            "current_username": students[0].username if students else "",
+            "progress_percent": 0.0,
+            "is_running": True,
+            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        })
 
         from backend.config import settings
 
@@ -645,6 +664,8 @@ async def run_full_pipeline(
                 try:
                     chunk_payloads = []
                     for s in chunk:
+                        if progress_callback and hasattr(progress_callback, "set_current"):
+                            progress_callback.set_current(s.name, s.username)
                         uname, _, _ = extract_leetcode_username(s.username or s.leetcode_url)
                         pre_a = batched_a.get(uname) if uname else None
                         pre_b = batched_b.get(uname) if uname else None

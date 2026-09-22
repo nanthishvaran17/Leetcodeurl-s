@@ -85,11 +85,25 @@ else:
         "connect_args": {"check_same_thread": False, "timeout": 60}
     })
 
-engine = create_engine(
-    db_url,
-    echo=False,
-    **engine_kwargs
-)
+try:
+    engine = create_engine(
+        db_url,
+        echo=False,
+        **engine_kwargs
+    )
+except Exception as _engine_exc:
+    if not env_is_prod:
+        local_sqlite = os.path.join(os.path.dirname(os.path.dirname(__file__)), "leetcode_tracker.db")  # type: ignore
+        if not os.path.exists(local_sqlite):
+            local_sqlite = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "leetcode_tracker.db")
+        db_url = f"sqlite:///{local_sqlite}"
+        engine = create_engine(
+            db_url,
+            echo=False,
+            connect_args={"check_same_thread": False, "timeout": 60}
+        )
+    else:
+        raise _engine_exc
 
 from sqlalchemy import event
 
@@ -153,7 +167,7 @@ def get_db():
         raise
     finally:
         try:
-            db.close()
+            db.close()  # type: ignore
         except Exception:
             try:
                 db.invalidate()

@@ -25,7 +25,7 @@ from backend.models import (
     Student, Department, WeeklySession, WeeklyPublicResult, PreviousWeekParticipationRecord
 )
 from backend.services.contest_problem_accuracy_engine import (
-    ContestProblemAccuracyEngine, ContestProblemSet, ContestProblemDefinition
+    ContestProblemAccuracyEngine, ContestProblemSet, ContestProblemDefinition, normalize_slug, is_accepted_submission
 )
 from backend.services.contest_discovery import (
     get_immediately_previous_sunday_date, calculate_contest_number, IST_TZ
@@ -264,12 +264,14 @@ class MasterContestReconstructionEngine:
                     if not isinstance(sub, dict):
                         continue
 
-                    sub_slug = str(sub.get("titleSlug") or sub.get("title_slug") or "").strip().lower()
+                    sub_title_raw = str(sub.get("titleSlug") or sub.get("title_slug") or sub.get("title") or "").strip()
+                    sub_slug = normalize_slug(sub_title_raw)
                     sub_status = str(sub.get("status") or sub.get("statusDisplay") or "ACCEPTED").upper().strip()
                     sub_ts = int(sub.get("timestamp", 0))
                     sub_id = str(sub.get("id") or sub.get("submission_id") or sub_slug)
 
-                    is_prob_match = (sub_slug == prob_slug)
+                    norm_prob_slug = normalize_slug(prob.title_slug)
+                    is_prob_match = (sub_slug == norm_prob_slug) if sub_slug and norm_prob_slug else False
 
                     if sub_ts > 0:
                         sub_dt_ist = datetime.datetime.fromtimestamp(sub_ts, tz=IST)
@@ -283,7 +285,7 @@ class MasterContestReconstructionEngine:
                         is_in_window = False
 
                     is_actual = (participation_type == "ACTUAL" or is_in_window)
-                    is_verified = (is_prob_match and is_in_window and sub_status in ("ACCEPTED", "AC", "10") and account_ver_status != "DUPLICATE_ACCOUNT")
+                    is_verified = (is_prob_match and is_in_window and is_accepted_submission(sub_status) and account_ver_status != "DUPLICATE_ACCOUNT")
 
                     # Log every submission to EVIDENCE_AUDIT
                     evidence_audit_rows.append({
@@ -305,7 +307,7 @@ class MasterContestReconstructionEngine:
                         "counted": is_verified,
                         "rejection_reason": "Verified ACCEPTED contest submission" if is_verified else (
                             f"Rejected: Timestamp {sub_ist_str} outside official contest window {contest_start_dt.strftime('%Y-%m-%d 08:00')} - {contest_end_dt.strftime('09:30 IST')}" if not is_in_window else (
-                                f"Rejected: Submission status '{sub_status}' is not ACCEPTED" if sub_status not in ("ACCEPTED", "AC", "10") else "Rejected: Problem slug mismatch"
+                                f"Rejected: Submission status '{sub_status}' is not ACCEPTED" if not is_accepted_submission(sub_status) else "Rejected: Problem slug mismatch"
                             )
                         ),
                         "evidence_source": "LEETCODE_GRAPHQL_OFFICIAL",

@@ -66,13 +66,23 @@ export const AccreditationStudioPage: React.FC = () => {
     fetchMetrics();
   }, []);
 
-  const handleDownload = (format: "EXCEL" | "PDF") => {
+  const [downloadingFormat, setDownloadingFormat] = useState<string | null>(null);
+
+  const handleDownload = async (format: "EXCEL" | "PDF") => {
+    if (downloadingFormat) return;
+    setDownloadingFormat(format);
     const isPdf = format === "PDF";
-    downloadManager.download({
-      endpoint: isPdf ? '/reports/export-pdf' : '/reports/export-official-college-summary',
-      filename: isPdf ? 'Executive_PDF_Summary.pdf' : 'Nandha_College_Official_Weekly_Report.xlsx',
-      mimeType: isPdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    });
+    try {
+      await downloadManager.download({
+        endpoint: isPdf ? '/reports/export-pdf' : '/reports/export-official-college-summary',
+        filename: isPdf ? 'Executive_PDF_Summary.pdf' : 'Nandha_College_Official_Weekly_Report.xlsx',
+        mimeType: isPdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+    } catch (err) {
+      console.error("Accreditation download failed:", err);
+    } finally {
+      setDownloadingFormat(null);
+    }
   };
 
   return (

@@ -8,6 +8,7 @@ import {
   BarChart2, Target, Zap, Code2, Shield, X, Check, Info, Sparkles, UserCheck, HelpCircle, Eye
 } from "lucide-react";
 import api from "../services/api";
+import { triggerDownload } from "../utils/mobileDownload";
 import { useKeyboardContext } from "../context/KeyboardContext";
 import { StudentIntelligenceProfileModal } from "../components/StudentIntelligenceProfileModal";
 
@@ -1028,17 +1029,11 @@ export const HRCandidateFinderPage: React.FC = () => {
       const blob = new Blob([response.data], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `NANDHA_Management_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (err) {
+      const filename = `NANDHA_Management_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      await triggerDownload(blob, filename, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    } catch (err: any) {
       console.error("Backend Excel export failed:", err);
-      alert("Failed to export Excel report. Please ensure server is reachable and try again.");
+      alert(err.message || "Failed to export Excel report. Please ensure server is reachable and try again.");
     }
   };
 

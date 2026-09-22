@@ -112,6 +112,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             return {
               ...st,
               username: u.username || st.username,
+              total_solved: u.total_solved ?? st.total_solved,
+              easy_solved: u.easy_solved ?? st.easy_solved,
+              medium_solved: u.medium_solved ?? st.medium_solved,
+              hard_solved: u.hard_solved ?? st.hard_solved,
               stats: {
                 ...st.stats,
                 total_solved: u.total_solved ?? st.stats?.total_solved,
@@ -128,6 +132,31 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           return st;
         }));
       }
+    } else if (data.type === 'STUDENT_BATCH_UPDATED' && Array.isArray(data.updates)) {
+      setStudents(prev => {
+        const updateMap = new Map(data.updates.map((u: any) => [u.id, u]));
+        return prev.map(st => {
+          const u: any = updateMap.get(st.id);
+          if (u) {
+            return {
+              ...st,
+              username: u.username || st.username,
+              stats: {
+                ...st.stats,
+                total_solved: u.total_solved ?? st.stats?.total_solved,
+                easy_solved: u.easy_solved ?? st.stats?.easy_solved,
+                medium_solved: u.medium_solved ?? st.stats?.medium_solved,
+                hard_solved: u.hard_solved ?? st.stats?.hard_solved,
+                contest_rating: u.contest_rating ?? st.stats?.contest_rating,
+                sync_status: u.sync_status || st.stats?.sync_status,
+                status: u.status || st.stats?.status,
+                last_verified_at: new Date().toISOString()
+              }
+            };
+          }
+          return st;
+        });
+      });
     } else if (data.type === 'STUDENT_UPDATED') {
       setStudents(prev => prev.map(st => {
         if (st.id === data.student_id) {
@@ -251,14 +280,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           pending_usernames: statusData.pending_usernames ?? 0,
           current_student: statusData.current_student,
           current_username: statusData.current_username,
-          is_running: statusData.is_running,
+          is_running: statusData.is_running || (pollCount <= 2),
           last_sync_time: statusData.last_sync_timestamp,
           triggered_by: statusData.triggered_by || statusData.last_triggered_by
         });
 
-        // Removed aggressive roster polling during sync to prevent network flooding.
-        // We will fetch it exactly once when the sync completes (handled below).
-        if (!statusData.is_running || (currentProcessed >= totalCount && totalCount > 0)) {
+        // Stop polling ONLY when sync is no longer running (after warm up) OR when all records are processed
+        if ((pollCount > 2 && !statusData.is_running) || (currentProcessed >= totalCount && totalCount > 0)) {
           if (pollTimerRef.current) clearInterval(pollTimerRef.current);
           pollTimerRef.current = null;
           setRefreshing(false);
@@ -947,8 +975,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       </div>
 
         {/* Student Showcase Display */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="mt-6 space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-3.5 pb-1">
             <h3 className="font-black text-lg text-slate-900 dark:text-white">
               <div className="flex flex-col">
                 <span>Showing {Math.min(displayCount, sortedList.length)} of {sortedList.length} Students</span>
@@ -1033,17 +1061,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <div className="flex flex-col">
                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Successful</span>
                   <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
-                    {syncProgress.successful > 0
+                    {syncProgress.is_running
                       ? syncProgress.successful
-                      : (summaryData?.verification?.verified ?? summaryData?.verified_profiles ?? Math.max(0, syncProgress.total - (syncProgress.failed || 0) - (syncProgress.pending_usernames || 0)))}
+                      : (syncProgress.successful > 0
+                          ? syncProgress.successful
+                          : (summaryData?.verification?.verified ?? summaryData?.verified_profiles ?? Math.max(0, syncProgress.total - (syncProgress.failed || 0) - (syncProgress.pending_usernames || 0))))}
                   </span>
                 </div>
                 <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-3">
                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pending</span>
                   <span className="text-sm font-black text-amber-500">
-                    {syncProgress.pending_usernames !== undefined
-                      ? syncProgress.pending_usernames
-                      : (summaryData?.verification?.pending ?? summaryData?.pending_sync ?? 0)}
+                    {syncProgress.is_running
+                      ? (syncProgress.pending_usernames ?? 0)
+                      : (syncProgress.pending_usernames !== undefined
+                          ? syncProgress.pending_usernames
+                          : (summaryData?.verification?.pending ?? summaryData?.pending_sync ?? 0))}
                   </span>
                 </div>
                 <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-3">

@@ -191,7 +191,14 @@ class DownloadManager {
     const filename = sanitizeFilename(options.filename || `${options.report_type}.${options.format}`);
     const mimeType = getMimeTypeFromFilename(filename);
 
-    const downloadId = `job:${options.report_type}:${Date.now()}`;
+    const downloadId = `job:${options.report_type}:${options.format}:${JSON.stringify(options.filters || {})}`;
+
+    // DUPLICATE CLICK PROTECTION: Block concurrent duplicate taps
+    const existing = this.activeDownloads.get(downloadId);
+    if (existing && ['QUEUED', 'PROCESSING', 'GENERATING', 'AUTHENTICATING', 'PREPARING', 'READY', 'DOWNLOADING', 'STARTED'].includes(existing.status)) {
+      console.warn('[DownloadManager] Duplicate report job tap blocked:', downloadId);
+      return { success: false, downloadId, error: 'Report generation is already in progress.' };
+    }
 
     const state: DownloadState = {
       downloadId,
@@ -335,7 +342,14 @@ class DownloadManager {
     const startTime = performance.now();
     const safeFilename = sanitizeFilename(filename);
     const effectiveMime = mimeType || blob.type || getMimeTypeFromFilename(safeFilename);
-    const downloadId = `blob:${safeFilename}:${Date.now()}`;
+    const downloadId = `blob:${safeFilename}:${blob.size}`;
+
+    // DUPLICATE CLICK PROTECTION
+    const existing = this.activeDownloads.get(downloadId);
+    if (existing && ['PREPARING', 'DOWNLOADING', 'STARTED'].includes(existing.status)) {
+      console.warn('[DownloadManager] Duplicate blob export tap blocked:', downloadId);
+      return { success: false, downloadId, error: 'File export is already in progress.' };
+    }
 
     const state: DownloadState = {
       downloadId,

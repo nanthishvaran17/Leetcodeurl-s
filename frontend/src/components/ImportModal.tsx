@@ -192,6 +192,22 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
     }
   });
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   // Step 1 -> Step 2: File Select & Analyze
@@ -307,7 +323,12 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
   const isImporting = loading && step === 4;
 
   return (
-    <div className="modal-overlay-responsive animate-modal-backdrop">
+    <div 
+      className="modal-overlay-responsive animate-modal-backdrop"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="modal-container-responsive max-w-4xl glass-card rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl animate-modal-content overflow-hidden flex flex-col max-h-[90vh]">
 
         {/* Header with Wizard Step Indicator */}

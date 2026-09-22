@@ -6,6 +6,7 @@ import { ConversationInfoPanel } from '../components/messaging/ConversationInfoP
 import { AskInstitutionPanel } from '../components/messaging/AskInstitutionPanel';
 import { SmartGroupModal } from '../components/messaging/SmartGroupModal';
 import { getApiUrl, getAuthHeaders } from '../services/api';
+import { downloadManager } from '../services/download/downloadManager';
 import { useAuth } from '../context/AuthContext';
 import { useMessagingWebSocket } from '../hooks/useMessagingWebSocket';
 import axios from 'axios';
@@ -531,9 +532,11 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
     } else if (act.action === 'VIEW_TRANSPARENCY') {
       setActiveConversationId('system-transparency-agent');
     } else if (['DOWNLOAD_PDF', 'EXPORT_PDF', 'EXPORT_STUDENT_PDF'].includes(act.action)) {
-      const token = localStorage.getItem('token') || '';
-      const downloadUrl = `${getApiUrl('/reports/export-pdf')}?token=${token}`;
-      window.open(downloadUrl, '_blank');
+      downloadManager.download({
+        endpoint: '/reports/export-pdf',
+        filename: 'Executive_PDF_Summary.pdf',
+        mimeType: 'application/pdf',
+      });
     }
   };
 

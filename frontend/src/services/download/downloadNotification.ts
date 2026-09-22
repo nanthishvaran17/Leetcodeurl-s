@@ -51,7 +51,7 @@ class DownloadNotificationService {
     const reportId = typeof payload === 'string' ? undefined : payload.reportId;
 
     const fileType = filename.split('.').pop()?.toLowerCase() || 'document';
-    const notifUniqueKey = `download:${filename}:${localFileUri || Date.now()}`;
+    const notifUniqueKey = `download:${filename}:${localFileUri || reportId || 'web'}`;
     const notifId = hashStringToId(notifUniqueKey);
 
     const title = 'Report downloaded';

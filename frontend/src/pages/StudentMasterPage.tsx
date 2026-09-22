@@ -308,6 +308,22 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
     setLcValidation({ status: 'idle' });
   };
 
+  useEffect(() => {
+    if (!showAddModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleCloseAddModal();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [showAddModal]);
+
   const handleCreateStudent = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -616,7 +632,10 @@ export const StudentMasterPage: React.FC<StudentMasterPageProps> = ({
 
       {/* Add Student Modal */}
       {showAddModal && (
-        <div className="modal-overlay-responsive animate-modal-backdrop">
+        <div 
+          className="modal-overlay-responsive animate-modal-backdrop"
+          onClick={(e) => { if (e.target === e.currentTarget) handleCloseAddModal(); }}
+        >
           <div className="modal-container-responsive max-w-lg bg-white dark:bg-navy-950 rounded-3xl border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden animate-modal-content">
             
             {/* Header */}

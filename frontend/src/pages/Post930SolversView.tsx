@@ -74,19 +74,29 @@ export const Post930SolversView: React.FC = () => {
     }
   };
 
-  const handleExportExcel = () => {
-    const params = new URLSearchParams();
-    if (minSolves) params.append('min_post_window_solves', minSolves.toString());
-    if (dept) params.append('dept', dept);
-    if (yearLevel) params.append('year_level', yearLevel);
-    if (section) params.append('section', section);
-    if (search) params.append('search', search);
+  const [isExporting, setIsExporting] = useState(false);
 
-    downloadManager.download({
-      endpoint: `/contests/post-930-solvers/export?${params.toString()}`,
-      filename: `Post_930_Solvers_${data?.session_date || 'Report'}.xlsx`,
-      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    });
+  const handleExportExcel = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (minSolves) params.append('min_post_window_solves', minSolves.toString());
+      if (dept) params.append('dept', dept);
+      if (yearLevel) params.append('year_level', yearLevel);
+      if (section) params.append('section', section);
+      if (search) params.append('search', search);
+
+      await downloadManager.download({
+        endpoint: `/contests/post-930-solvers/export?${params.toString()}`,
+        filename: `Post_930_Solvers_${data?.session_date || 'Report'}.xlsx`,
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+    } catch (err) {
+      console.error("Post 9:30 solvers export failed:", err);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const studentsList = data?.students || [];

@@ -189,28 +189,25 @@ export async function validateFileBlob(blob: Blob, mimeType?: string): Promise<{
     return { valid: false, error: 'Downloaded file is 0 bytes.' };
   }
 
-  if (blob.type.includes('application/json') || mimeType?.includes('json')) {
+  // Inspect small blobs (<50KB) that might be disguised JSON error payloads or HTML error pages
+  if (blob.size < 50000 || blob.type.includes('application/json') || mimeType?.includes('json') || blob.type.includes('text/html')) {
     try {
       const text = await blob.text();
-      if (text.startsWith('{') && (text.includes('"detail"') || text.includes('"error"'))) {
-        const parsed = JSON.parse(text);
-        const detail = parsed.detail || parsed.error || 'Server returned an error response.';
-        return { valid: false, error: detail };
+      const trimmed = text.trim();
+      if (trimmed.startsWith('{') && (trimmed.includes('"detail"') || trimmed.includes('"error"') || trimmed.includes('"message"'))) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          const detail = parsed.detail || parsed.error || parsed.message || 'Server returned an error response.';
+          return { valid: false, error: detail };
+        } catch {
+          /* ignore parse error */
+        }
       }
-    } catch {
-      /* ignore parse error */
-    }
-  }
-
-  // Reject HTML payloads masking as files (e.g. 504 Gateway Timeout proxy pages)
-  if (blob.type.includes('text/html') || mimeType?.includes('html')) {
-    try {
-      const text = await blob.text();
-      if (text.toLowerCase().includes('504 gateway time-out') || text.toLowerCase().includes('502 bad gateway') || text.toLowerCase().includes('<html')) {
+      if (trimmed.toLowerCase().includes('504 gateway time-out') || trimmed.toLowerCase().includes('502 bad gateway') || trimmed.toLowerCase().startsWith('<!doctype html') || (trimmed.startsWith('<html') && trimmed.includes('error'))) {
         return { valid: false, error: 'Server returned an HTML error page. The request may have timed out.' };
       }
     } catch {
-      /* ignore parse error */
+      /* ignore read error */
     }
   }
 

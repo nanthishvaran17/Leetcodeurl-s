@@ -22,6 +22,32 @@ from typing import Dict, Any, List, Optional, Set
 
 
 
+def normalize_slug(val: Optional[str]) -> str:
+    """
+    Normalizes any problem title or titleSlug to a canonical hyphenated lowercase slug.
+    Replaces spaces, underscores, and non-alphanumeric characters (except hyphens).
+    """
+    if not val:
+        return ""
+    s = str(val).strip().lower()
+    s = re.sub(r'[^a-z0-9\s\-_]', '', s)
+    s = re.sub(r'[\s_]+', '-', s)
+    s = re.sub(r'-+', '-', s)
+    return s.strip('-')
+
+
+def is_accepted_submission(status: Optional[str]) -> bool:
+    """
+    Returns True ONLY if submission status is explicitly ACCEPTED.
+    Rejects Wrong Answer, Time Limit Exceeded, Runtime Error, Compilation Error, etc.
+    """
+    if not status:
+        return False
+    st = str(status).strip().upper()
+    return st in ("ACCEPTED", "AC", "10")
+
+
+
 # ALL 11 INSTITUTIONAL DEPARTMENTS 
 INSTITUTIONAL_DEPARTMENTS = [
     "CSE", "CSE(CS)", "CSE(IOT)", "IT", "AIDS", 
@@ -63,8 +89,8 @@ OFFICIAL_CONTEST_PROBLEM_REGISTRY: Dict[int, List[Dict[str, Any]]] = {
     520: [
         {"index": 1, "problem_id": "Q1", "title_slug": "number-of-intersecting-interval-pairs-i", "title": "Number of Intersecting Interval Pairs I", "difficulty": "Easy", "points": 3},
         {"index": 2, "problem_id": "Q2", "title_slug": "number-of-intersecting-interval-pairs-ii", "title": "Number of Intersecting Interval Pairs II", "difficulty": "Medium", "points": 4},
-        {"index": 3, "problem_id": "Q3", "title_slug": "count-rotations-with-exactly-k-equal-adjacent-pairs", "title": "Count Rotations With Exactly K Equal Adjacent Pairs", "difficulty": "Medium", "points": 5},
-        {"index": 4, "problem_id": "Q4", "title_slug": "count-good-cyclic-rotations", "title": "Count Good Cyclic Rotations", "difficulty": "Hard", "points": 6},
+        {"index": 3, "problem_id": "Q3", "title_slug": "maximum-pulse-value-after-one-subarray-rotation", "title": "Maximum Pulse Value After One Subarray Rotation", "difficulty": "Medium", "points": 5},
+        {"index": 4, "problem_id": "Q4", "title_slug": "lexicographically-largest-power-array", "title": "Lexicographically Largest Power Array", "difficulty": "Hard", "points": 6},
     ],
     519: [
         {"index": 1, "problem_id": "Q1", "title_slug": "count-integers-appearing-in-a-single-block", "title": "Count Integers Appearing in a Single Block", "difficulty": "Easy", "points": 3},
@@ -263,12 +289,13 @@ class ContestProblemAccuracyEngine:
         accepted_slugs: Set[str] = set()
 
         for sub in submissions:
-            raw_status = str(sub.get("status") or sub.get("statusDisplay") or sub.get("verdict") or "").upper().strip()
+            raw_status = sub.get("status") or sub.get("statusDisplay") or sub.get("verdict") or ""
             # ONLY 'ACCEPTED' is valid
-            if raw_status not in ("ACCEPTED", "AC", "10"):
+            if not is_accepted_submission(raw_status):
                 continue
 
-            sub_slug = str(sub.get("title_slug") or sub.get("titleSlug") or sub.get("slug") or "").strip().lower()
+            sub_slug_raw = str(sub.get("title_slug") or sub.get("titleSlug") or sub.get("slug") or "").strip()
+            sub_slug = normalize_slug(sub_slug_raw)
             sub_id = str(sub.get("problem_id") or sub.get("question_id") or "").strip()
             sub_ts = sub.get("timestamp") or sub.get("submit_time")
 
@@ -282,8 +309,9 @@ class ContestProblemAccuracyEngine:
                     pass
 
             for prob in problem_set.problems:
-                # Exact slug match or exact problem_id match
-                if sub_slug == prob.title_slug or (sub_id and sub_id == prob.problem_id):
+                # Exact normalized slug match or exact problem_id match
+                prob_norm_slug = normalize_slug(prob.title_slug)
+                if (sub_slug and prob_norm_slug and sub_slug == prob_norm_slug) or (sub_id and sub_id == prob.problem_id):
                     q_solved[prob.index] = 1
                     accepted_slugs.add(prob.title_slug)
 

@@ -722,7 +722,7 @@ I can show specific student progress assigned to any faculty member."""
             in_scope_results = [r for r in results if r.student_id in student_map]
             
             p_4 = sum(1 for r in in_scope_results if (r.total_contest_solved == 4 or (r.q1+r.q2+r.q3+r.q4) == 4))
-            p_3 = sum(1 for r in in_scope_results if (r.total_contest_solved == 3 or (r.q1+r.q2+r.q3+r.q4) == 3))
+            p_3 = sum(1 for r in in_scope_results if (r.total_contest_solved == 3 or (r.q1+r.q2+r.q3+r.q4) == 3))  # type: ignore
             p_2 = sum(1 for r in in_scope_results if (r.total_contest_solved == 2 or (r.q1+r.q2+r.q3+r.q4) == 2))
             p_1 = sum(1 for r in in_scope_results if (r.total_contest_solved == 1 or (r.q1+r.q2+r.q3+r.q4) == 1))
             p_0 = sum(1 for r in in_scope_results if (r.total_contest_solved == 0 or (r.q1+r.q2+r.q3+r.q4) == 0))
@@ -1148,7 +1148,7 @@ I am equipped with comprehensive AI assistant capabilities for **Nandha Engineer
                 topic=topic,
                 source_message_id=message_id,
                 difficulty_level="NEEDS_SUPPORT",
-                supporting_evidence=json.dumps({"message_excerpt": content[:150]}),
+                supporting_evidence=json.dumps({"message_excerpt": content[:150]}),  # type: ignore
                 suggested_action=json.dumps({"action": "RECOMMEND_PRACTICE", "topic": topic}),
                 created_at=datetime.datetime.now(datetime.timezone.utc)
             )
