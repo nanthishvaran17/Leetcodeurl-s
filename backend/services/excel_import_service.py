@@ -629,28 +629,28 @@ def commit_smart_excel_import(
                 # UPDATE check
                 sec_lc_url, sec_username = normalize_leetcode_url(raw_sec_lc) if raw_sec_lc else (None, None)
                 has_changes = False
-                if name and existing_st.name != name:
+                if name and str(getattr(existing_st, "name", "") or "") != name:
                     existing_st.name = name
                     has_changes = True
-                if dept_id and existing_st.department_id != dept_id:
+                if dept_id and getattr(existing_st, "department_id", None) != dept_id:
                     existing_st.department_id = dept_id
                     has_changes = True
-                if norm_year and existing_st.year_level != norm_year:
+                if norm_year and str(getattr(existing_st, "year_level", "") or "") != norm_year:
                     existing_st.year_level = norm_year
                     has_changes = True
-                if raw_email and existing_st.email != raw_email:
+                if raw_email and str(getattr(existing_st, "email", "") or "") != raw_email:
                     existing_st.email = raw_email
                     has_changes = True
-                if lc_username and existing_st.username != lc_username:
+                if lc_username and str(getattr(existing_st, "username", "") or "") != lc_username:
                     existing_st.username = lc_username
                     existing_st.primary_leetcode_id = lc_username
-                    existing_st.leetcode_url = lc_url
+                    existing_st.leetcode_url = lc_url or ""
                     has_changes = True
-                if sec_username and existing_st.secondary_leetcode_id != sec_username:
+                if sec_username and str(getattr(existing_st, "secondary_leetcode_id", "") or "") != sec_username:
                     existing_st.secondary_leetcode_id = sec_username
                     existing_st.secondary_status = "approved"
                     has_changes = True
-                if norm_batch and existing_st.batch != norm_batch:
+                if norm_batch and str(getattr(existing_st, "batch", "") or "") != norm_batch:
                     existing_st.batch = norm_batch
                     has_changes = True
 

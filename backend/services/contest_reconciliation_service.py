@@ -385,7 +385,7 @@ class UniversalContestReconciliationEngine:
     ) -> Dict[int, WeeklyPublicResult]:
         """Loads all verified live contest participation records for this session."""
         results = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == session_id).all()
-        return {r.student_id: r for r in results}
+        return {int(getattr(r, "student_id")): r for r in results}
 
     @classmethod
     def scan_virtual_evidence(
@@ -395,7 +395,7 @@ class UniversalContestReconciliationEngine:
     ) -> Dict[int, WeeklyVirtualResult]:
         """Loads all verified authoritative virtual contest results for this session."""
         results = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == session_id).all()
-        return {r.student_id: r for r in results}
+        return {int(getattr(r, "student_id")): r for r in results}
 
     @classmethod
     def classify_students(
@@ -420,7 +420,7 @@ class UniversalContestReconciliationEngine:
         records: List[Dict[str, Any]] = []
 
         for student in students:
-            s_id = student.id
+            s_id = int(getattr(student, "id"))
             reg_no = student.reg_no
             name = student.name
             dept_code = student.department.code if student.department else "CSE"
@@ -518,7 +518,7 @@ class UniversalContestReconciliationEngine:
                     "score": score_val,
                     "rank": rank_val,
                     "rating": rating_val,
-                    "submission_ids": [f"SUB-LIVE-{s_id}-Q{i}" for i in range(1, solved_val + 1)],
+                    "submission_ids": [f"SUB-LIVE-{s_id}-Q{i}" for i in range(1, int(solved_val) + 1)],
                     "first_accepted_at": None,
                     "last_accepted_at": None,
                     "first_accepted_ist": "2026-08-23 08:15:00 IST" if solved_val > 0 else None,
@@ -567,7 +567,7 @@ class UniversalContestReconciliationEngine:
                     "score": score_val,
                     "rank": None,
                     "rating": None,
-                    "submission_ids": [f"SUB-VIRT-{s_id}-Q{i}" for i in range(1, solved_val + 1)],
+                    "submission_ids": [f"SUB-VIRT-{s_id}-Q{i}" for i in range(1, int(solved_val) + 1)],
                     "first_accepted_at": None,
                     "last_accepted_at": None,
                     "first_accepted_ist": "2026-08-23 10:30:00 IST",
@@ -729,7 +729,9 @@ class UniversalContestReconciliationEngine:
 
         # 2. Parse Contest Live Window
         start_ist, end_ist, start_epoch, end_epoch = cls.parse_contest_window(
-            contest_date, session_obj.start_time if session_obj else "08:00", session_obj.end_time if session_obj else "09:30"
+            str(contest_date),
+            str(session_obj.start_time) if (session_obj and session_obj.start_time) else "08:00",
+            str(session_obj.end_time) if (session_obj and session_obj.end_time) else "09:30"
         )
 
         # 3. Query all active Master Students
@@ -741,9 +743,10 @@ class UniversalContestReconciliationEngine:
 
         total_roster = len(students)
 
+        sess_id_int = int(getattr(session_obj, "id")) if session_obj else 0
         # 4. Scan Live & Virtual Evidence
-        live_map = cls.scan_live_evidence(session_id, db)
-        virtual_map = cls.scan_virtual_evidence(session_id, db)
+        live_map = cls.scan_live_evidence(sess_id_int, db)
+        virtual_map = cls.scan_virtual_evidence(sess_id_int, db)
 
         # 5. Classify Students (mutually exclusive attendance states)
         student_records = cls.classify_students(
@@ -1007,14 +1010,14 @@ class UniversalContestReconciliationEngine:
 
         # 14. If NOT dry run and invariants pass, update DB and invalidate caches
         if not dry_run and invariant_pass and session_obj:
-            session_obj.total_students = total_roster
-            session_obj.official_participants = live_attended
-            session_obj.virtual_participants = virtual_attended
-            session_obj.not_participated = not_attended
-            session_obj.failed_verification = data_errors
+            session_obj.total_students = int(total_roster)
+            session_obj.official_participants = int(live_attended)
+            session_obj.virtual_participants = int(virtual_attended)
+            session_obj.not_participated = int(not_attended)
+            session_obj.failed_verification = int(data_errors)
             session_obj.sync_status = " Verified"
             session_obj.last_synced = datetime.datetime.now(UTC_TZ)
-            session_obj.dataset_hash = dataset_checksum
+            session_obj.dataset_hash = str(dataset_checksum)
             
             # Persist audit record in virtual_scan_audits table
             try:
@@ -1045,7 +1048,7 @@ class UniversalContestReconciliationEngine:
 
             try:
                 from backend.services.canonical_contest_engine import invalidate_canonical_cache
-                invalidate_canonical_cache(session_obj.id)
+                invalidate_canonical_cache(int(session_obj.id))
             except Exception:
                 pass
 
@@ -1082,7 +1085,7 @@ class UniversalContestReconciliationEngine:
                         "participation_status": "VIRTUAL",
                         "timestamp": datetime.datetime.now(UTC_TZ).isoformat()
                     }
-                    ws_manager.broadcast_virtual_result(session_obj.id, _event)
+                    ws_manager.broadcast_virtual_result(int(session_obj.id), _event)
 
                 if verified_virtual_list:
                     logger.info(
