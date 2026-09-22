@@ -1,7 +1,6 @@
 import hashlib
 import logging
-import datetime
-from datetime import datetime as dt_class, timezone, timedelta
+from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Any
 from backend.services.contest_problem_accuracy_engine import normalize_slug, is_accepted_submission
 
@@ -148,7 +147,7 @@ class ContestTruthEngine:
             if sub_ts <= 0:
                 continue
 
-            sub_time_ist = dt_class.fromtimestamp(sub_ts, tz=IST)
+            sub_time_ist = datetime.fromtimestamp(sub_ts, tz=IST)
             formatted_time = sub_time_ist.strftime("%Y-%m-%d %H:%M:%S IST")
 
             # Check exact date AND exact time window (08:00:00 AM - 09:30:00 AM IST)

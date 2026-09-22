@@ -101,7 +101,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </span>
                     ) : null}
                   </div>
-                  <span className="text-[8.5px] xs:text-[9px] leading-tight sm:text-[11px] sm:leading-snug text-slate-500 dark:text-slate-400 font-semibold tracking-wide truncate">
+                  <span className="text-[9px] xs:text-[10px] leading-tight sm:text-xs sm:leading-snug text-slate-700 dark:text-slate-200 font-bold tracking-wide truncate">
                     Nandha Engineering College<span className="hidden sm:inline"> • Erode</span>
                   </span>
                 </div>

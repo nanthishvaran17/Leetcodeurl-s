@@ -87,7 +87,7 @@ DEFAULT_SYSTEM_SETTINGS = {
 @router.get("")
 def get_admin_settings(db: Session = Depends(get_db)):
     rows = db.query(AdminSettingsModel).all()
-    settings_dict = {row.key: row.value for row in rows}
+    settings_dict = {str(row.key): str(row.value) for row in rows if row.key is not None and row.value is not None}
     
     merged = dict(DEFAULT_SYSTEM_SETTINGS)
     merged.update(settings_dict)
@@ -126,13 +126,19 @@ def update_admin_settings(
         if key == "SMTP_PASSWORD" and (raw_val == "••••••••" or not str(raw_val).strip()):
             continue  # Do not overwrite with masked placeholder
 
+        if key in ("PROGRESS_THRESHOLD", "FETCH_TIMEOUT", "RETRY_COUNT", "SMTP_PORT", "BACKUP_RETENTION", "ADMIN_SESSION_TIMEOUT", "EMAIL_RETRY_COUNT"):
+            try:
+                raw_val = int(raw_val)
+            except (ValueError, TypeError):
+                raise HTTPException(status_code=400, detail=f"Setting {key} must be a valid integer.")
+
         val_str = str(raw_val)
         row = db.query(AdminSettingsModel).filter(AdminSettingsModel.key == key).first()
         if not row:
             row = AdminSettingsModel(key=key, value=val_str)
             db.add(row)
         else:
-            row.value = val_str
+            setattr(row, "value", val_str)
 
     audit = AuditLog(
         user_id=current_user.id,
@@ -701,7 +707,7 @@ def get_operations_center_overview(db: Session = Depends(get_db)):
     from backend.services.schedule_service import get_schedule_status
     from backend.cache import cache
     import time
-    from datetime import datetime, timedelta
+    from datetime import datetime, timedelta, timezone
 
     cache_key = "settings:operations_overview"
     cached = cache.get(cache_key)
@@ -796,7 +802,7 @@ def get_operations_center_overview(db: Session = Depends(get_db)):
     ]
 
     # Dynamic Next Automation Date Calculation
-    now_ist = datetime.now(datetime.timezone.utc) + timedelta(hours=5, minutes=30)
+    now_ist = datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
     days_until_sun = (6 - now_ist.weekday()) % 7
     if days_until_sun == 0 and now_ist.hour >= 9:
         days_until_sun = 7
@@ -1225,7 +1231,7 @@ def get_forensic_audit_pdf_file(
         raise HTTPException(status_code=404, detail=f"No student record found matching '{clean_search}'.")
 
     try:
-        pdf_bytes = generate_forensic_audit_pdf(db, student_id=student.id, session_id=session_id)
+        pdf_bytes = generate_forensic_audit_pdf(db, student_id=int(student.id), session_id=session_id)
         filename = f"NEC_Forensic_Contest_Audit_{student.reg_no}_Session_{session_id}.pdf"
         return Response(
             content=pdf_bytes,
@@ -1322,7 +1328,7 @@ def correct_year_levels_from_reg_no(
             continue
 
         old_year = s.year_level
-        s.year_level = new_year
+        setattr(s, "year_level", new_year)
         updated.append({
             "id": s.id,
             "reg_no": s.reg_no,

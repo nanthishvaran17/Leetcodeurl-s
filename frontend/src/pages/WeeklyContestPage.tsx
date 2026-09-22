@@ -1310,12 +1310,49 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const stats = useMemo(() => {
     const totalRows = matrixRows.length;
     const isScopeActive = selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL';
-    const totalRowsVal = sessionMetrics?.totalStudents ?? sessionMetrics?.totalCount ?? (isScopeActive ? totalRows : (fastSummary?.totalStudents ?? totalRows ?? 0));
-    const attendedRows = sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? (isScopeActive ? 0 : (fastSummary?.participantCount ?? 0));
-    const notAttendedRows = sessionMetrics?.notAttended ?? sessionMetrics?.notParticipated ?? Math.max(0, totalRowsVal - attendedRows);
-    const virtualRows = sessionMetrics?.virtualAttended ?? sessionMetrics?.virtualParticipants ?? 0;
+
+    // Calculate real dynamic counts from matrixRows if available
+    let calcAttended = 0;
+    let calcVirtual = 0;
+    let calcNotAttended = 0;
+    let calcDataError = 0;
+
+    if (matrixRows && matrixRows.length > 0) {
+      for (const r of matrixRows) {
+        const st = (r.participation_status || r.status || '').toString().toUpperCase();
+        if (st === 'VIRTUAL' || st === 'VIRTUAL_ATTENDED') {
+          calcVirtual++;
+        } else if (st === 'PUBLIC' || st === 'PUBLIC_ATTENDED' || st === 'ATTENDED') {
+          calcAttended++;
+        } else if (st === 'DATA_ERROR' || st === 'ERROR') {
+          calcDataError++;
+        } else {
+          calcNotAttended++;
+        }
+      }
+    }
+
+    const totalRowsVal = (matrixRows && matrixRows.length > 0)
+      ? totalRows
+      : (sessionMetrics?.totalStudents ?? sessionMetrics?.totalCount ?? (isScopeActive ? totalRows : (fastSummary?.totalStudents ?? totalRows ?? 0)));
+
+    const attendedRows = (matrixRows && matrixRows.length > 0)
+      ? calcAttended
+      : (sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? (isScopeActive ? 0 : (fastSummary?.participantCount ?? 0)));
+
+    const virtualRows = (matrixRows && matrixRows.length > 0)
+      ? calcVirtual
+      : (sessionMetrics?.virtualAttended ?? sessionMetrics?.virtualParticipants ?? 0);
+
+    const notAttendedRows = (matrixRows && matrixRows.length > 0)
+      ? calcNotAttended
+      : (sessionMetrics?.notAttended ?? sessionMetrics?.notParticipated ?? Math.max(0, totalRowsVal - attendedRows - virtualRows));
+
+    const errorRows = (matrixRows && matrixRows.length > 0)
+      ? calcDataError
+      : (sessionMetrics?.dataErrors ?? sessionMetrics?.totalErrors ?? sessionMetrics?.failedVerification ?? (errorLogs ? errorLogs.length : 0));
+
     const isVirtualAvailable = sessionMetrics?.virtualDataStatus === 'AVAILABLE' || virtualRows > 0;
-    const errorRows = sessionMetrics?.dataErrors ?? sessionMetrics?.totalErrors ?? sessionMetrics?.failedVerification ?? (errorLogs ? errorLogs.length : 0);
 
     // Active cohort total solve breakdown (4/4, 3/4, 2/4, 1/4 Solved)
     const metricQ4 = sessionMetrics?.q4Count ?? sessionMetrics?.['4 Q Solved'];
@@ -2633,13 +2670,13 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 >
                   <Building2 className="w-4 h-4 text-indigo-500 shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Department</p>
+                    <p className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">Department</p>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${selectedDeptObj.color}`}>{selectedDeptObj.code}</span>
                       <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{selectedDeptObj.label}</span>
                     </div>
                   </div>
-                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${deptOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-500 dark:text-slate-400 transition-transform shrink-0 ${deptOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {/* Dropdown Panel */}
                 {deptOpen && (
@@ -2677,7 +2714,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             >
               <GraduationCap className="w-4 h-4 text-brand-500 shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Academic Year</p>
+                <p className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">Academic Year</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   {selectedYearFilter === 'ALL' ? (
                     <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-brand-700 bg-brand-50 dark:bg-brand-950 dark:text-brand-300 font-extrabold">ALL</span>
@@ -2693,7 +2730,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   </span>
                 </div>
               </div>
-              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-500 dark:text-slate-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
             </button>
             {yearOpen && (
               <div className="absolute z-[100] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-lg overflow-hidden">
@@ -2739,7 +2776,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             >
               <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Attendance Status</p>
+                <p className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">Attendance Status</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${({ 'ALL':'bg-slate-400','ALL_ATTENDED':'bg-indigo-500','PUBLIC_ATTENDED':'bg-emerald-500','VIRTUAL_ATTENDED':'bg-purple-500','PUBLIC_NOT_ATTENDED':'bg-rose-400','DATA_ERROR':'bg-amber-500' } as any)[selectedAttendanceFilter] || 'bg-slate-400'}`} />
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
@@ -2747,7 +2784,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   </span>
                 </div>
               </div>
-              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${attOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-500 dark:text-slate-400 transition-transform shrink-0 ${attOpen ? 'rotate-180' : ''}`} />
             </button>
             {attOpen && (
               <div className="absolute z-[100] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-lg overflow-hidden">
@@ -2961,8 +2998,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               }`}
           >
             <div className="flex items-center justify-between w-full">
-              <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Total Students</p>
-              <Users className="w-3.5 h-3.5 text-slate-400" />
+              <p className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">Total Students</p>
+              <Users className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
             </div>
             <p className="text-2xl sm:text-3xl font-black font-mono text-slate-900 dark:text-white">
               <AnimatedNumber value={stats.totalRows} />
@@ -3486,8 +3523,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
               <div className="table-responsive-container w-full min-w-0 max-w-full max-h-[75vh] overflow-y-auto overflow-x-auto">
                 <table className="w-full min-w-[900px] text-left text-xs">
-                  <thead className="bg-slate-900 dark:bg-navy-900 text-slate-200 text-[11px] font-black uppercase tracking-wider sticky top-0 z-10 shadow-sm hidden md:table-header-group">
-                    <tr className="border-b border-slate-800 dark:border-slate-700/80">
+                  <thead className="bg-slate-950 dark:bg-navy-950 text-white text-xs font-black uppercase tracking-wider sticky top-0 z-10 shadow-sm hidden md:table-header-group">
+                    <tr className="border-b border-slate-700 dark:border-slate-600">
                       {/* Checkbox Column */}
                       <th className="px-3 py-3.5 text-center w-10">
                         <input 
@@ -3504,35 +3541,35 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                           }}
                         />
                       </th>
-                      <th className="px-3 py-3.5 text-center text-slate-300">S.No</th>
-                      <th className="px-3 py-3.5 text-left text-slate-300 whitespace-nowrap">Reg No</th>
-                      <th className="px-3 py-3.5 text-left text-slate-300 whitespace-nowrap">Student Name</th>
-                      <th className="px-3 py-3.5 text-center text-slate-300">Dept</th>
-                      <th className="px-3 py-3.5 text-center text-slate-300">Year</th>
-                      <th className="px-3 py-3.5 text-center text-slate-300">Status</th>
+                      <th className="px-3 py-3.5 text-center text-white font-extrabold">S.No</th>
+                      <th className="px-3 py-3.5 text-left text-white font-extrabold whitespace-nowrap">Reg No</th>
+                      <th className="px-3 py-3.5 text-left text-white font-extrabold whitespace-nowrap">Student Name</th>
+                      <th className="px-3 py-3.5 text-center text-white font-extrabold">Dept</th>
+                      <th className="px-3 py-3.5 text-center text-white font-extrabold">Year</th>
+                      <th className="px-3 py-3.5 text-center text-white font-extrabold">Status</th>
                       
                       {/* Sortable Columns */}
                       {['q1', 'q2', 'q3', 'q4'].map((qKey) => (
-                        <th key={qKey} className="px-2 py-3.5 text-center cursor-pointer hover:bg-slate-800 transition-colors group select-none text-slate-300" onClick={() => handleSort(qKey)}>
+                        <th key={qKey} className="px-2 py-3.5 text-center cursor-pointer hover:bg-slate-800 transition-colors group select-none text-white font-extrabold" onClick={() => handleSort(qKey)}>
                           <div className="flex items-center justify-center space-x-1">
                             <span>{qKey.toUpperCase()}</span>
-                            <span className="text-[10px] opacity-40 group-hover:opacity-100">
+                            <span className="text-xs opacity-60 group-hover:opacity-100">
                               {sortConfig?.key === qKey ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
                             </span>
                           </div>
                         </th>
                       ))}
                       
-                      <th className="px-3 py-3.5 text-center cursor-pointer hover:bg-slate-800 transition-colors group select-none text-slate-300" onClick={() => handleSort('solved')}>
+                      <th className="px-3 py-3.5 text-center cursor-pointer hover:bg-slate-800 transition-colors group select-none text-white font-extrabold" onClick={() => handleSort('solved')}>
                         <div className="flex items-center justify-center space-x-1">
                           <span>Contest Solved</span>
-                          <span className="text-[10px] opacity-40 group-hover:opacity-100">
+                          <span className="text-xs opacity-60 group-hover:opacity-100">
                             {sortConfig?.key === 'solved' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
                           </span>
                         </div>
                       </th>
                       
-                      <th className="px-3 py-3.5 text-center text-slate-300">Actions</th>
+                      <th className="px-3 py-3.5 text-center text-white font-extrabold">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -4411,11 +4448,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-100 dark:border-slate-800">
-                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Total Solved</p>
+                  <p className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">Total Solved</p>
                   <p className="text-2xl font-black font-mono mt-1 text-slate-900 dark:text-white">{viewingProfileStudent.total_solved ?? viewingProfileStudent.total_contest_solved ?? ((viewingProfileStudent.q1 || 0) + (viewingProfileStudent.q2 || 0) + (viewingProfileStudent.q3 || 0) + (viewingProfileStudent.q4 || 0))}/4</p>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-100 dark:border-slate-800">
-                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Rank</p>
+                  <p className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">Rank</p>
                   <p className="text-2xl font-black font-mono mt-1 text-slate-900 dark:text-white">{viewingProfileStudent.rank || viewingProfileStudent.contest_rank || '—'}</p>
                 </div>
               </div>

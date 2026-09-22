@@ -145,17 +145,17 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
             <div className="p-4 rounded-2xl bg-white/10 backdrop-blur border border-white/15 text-center min-w-[90px]">
               <Users className="w-5 h-5 text-brand-400 mx-auto mb-1" />
               <div className="text-2xl font-black text-white">{students.length}</div>
-              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Students</div>
+              <div className="text-[10px] text-slate-300 font-extrabold uppercase tracking-wider">Students</div>
             </div>
             <div className="p-4 rounded-2xl bg-white/10 backdrop-blur border border-white/15 text-center min-w-[90px]">
               <Zap className="w-5 h-5 text-amber-400 mx-auto mb-1" />
               <div className="text-2xl font-black text-emerald-400">{totalSolved.toLocaleString()}</div>
-              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Solved</div>
+              <div className="text-[10px] text-slate-300 font-extrabold uppercase tracking-wider">Total Solved</div>
             </div>
             <div className="p-4 rounded-2xl bg-white/10 backdrop-blur border border-white/15 text-center min-w-[90px]">
               <TrendingUp className="w-5 h-5 text-indigo-400 mx-auto mb-1" />
               <div className="text-2xl font-black text-indigo-400">{avgSolved}</div>
-              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Avg / Student</div>
+              <div className="text-[10px] text-slate-300 font-extrabold uppercase tracking-wider">Avg / Student</div>
             </div>
           </div>
         </div>

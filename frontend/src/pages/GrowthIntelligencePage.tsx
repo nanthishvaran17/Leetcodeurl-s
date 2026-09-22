@@ -657,7 +657,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                         {/* Growth Breakdown Grid */}
                         <div className="grid grid-cols-2 gap-2 text-xs">
                           <div className="p-2.5 rounded-xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-sm">
-                            <span className="text-[9px] font-extrabold uppercase text-slate-400">Total Solved</span>
+                            <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300">Total Solved</span>
                             <div className="text-base font-black text-slate-900 dark:text-white mt-0.5">{imp.total_solved}</div>
                           </div>
                           <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/40 shadow-sm">
@@ -903,7 +903,7 @@ export const GrowthIntelligencePage: React.FC = () => {
                                 {/* Growth Breakdown Grid */}
                                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
                                   <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-sm">
-                                    <span className="text-[10px] font-extrabold uppercase text-slate-400">Total Solved</span>
+                                    <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300">Total Solved</span>
                                     <div className="text-lg font-black text-slate-900 dark:text-white mt-0.5">{imp.total_solved}</div>
                                   </div>
                                   <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/40 shadow-sm">

@@ -187,7 +187,7 @@ class MasterContestReconstructionEngine:
 
         # 5. Contest time boundaries (08:00 AM - 09:30 AM IST on contest date)
         try:
-            contest_date = datetime.datetime.strptime(session.session_date, "%Y-%m-%d").date()
+            contest_date = datetime.datetime.strptime(str(session.session_date), "%Y-%m-%d").date()
         except (ValueError, TypeError):
             contest_date = datetime.date(2026, 9, 20)
 
@@ -372,10 +372,15 @@ class MasterContestReconstructionEngine:
                 "q4_status": q_results["Q4"]["status"],
                 "q4_evidence": q_results["Q4"]["evidence"],
                 "q4_sub_time": q_results["Q4"]["sub_time"],
+                "q1": q_verified_flags["Q1"],
+                "q2": q_verified_flags["Q2"],
+                "q3": q_verified_flags["Q3"],
+                "q4": q_verified_flags["Q4"],
                 "verified_q1": q_verified_flags["Q1"],
                 "verified_q2": q_verified_flags["Q2"],
                 "verified_q3": q_verified_flags["Q3"],
                 "verified_q4": q_verified_flags["Q4"],
+                "total_contest_solved": verified_total,
                 "verified_total": verified_total,
                 "verification_status": ver_status
             }

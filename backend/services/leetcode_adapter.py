@@ -384,17 +384,76 @@ class ProductionLeetCodeAdapter(LeetCodeAdapter):
                 duration=5400,
                 status=status,
                 problem_list=[
-                    {"slug": f"{slug}-q1", "title": "Q1 (Easy)", "difficulty": "Easy", "score": 3},
-                    {"slug": f"{slug}-q2", "title": "Q2 (Medium)", "difficulty": "Medium", "score": 4},
-                    {"slug": f"{slug}-q3", "title": "Q3 (Medium/Hard)", "difficulty": "Medium", "score": 5},
-                    {"slug": f"{slug}-q4", "title": "Q4 (Hard)", "difficulty": "Hard", "score": 6},
+                    {"slug": f"{slug}-q1", "problem_id": None, "title": "Q1", "difficulty": "Easy", "score": 3, "question_order": 1},
+                    {"slug": f"{slug}-q2", "problem_id": None, "title": "Q2", "difficulty": "Medium", "score": 4, "question_order": 2},
+                    {"slug": f"{slug}-q3", "problem_id": None, "title": "Q3", "difficulty": "Medium", "score": 5, "question_order": 3},
+                    {"slug": f"{slug}-q4", "problem_id": None, "title": "Q4", "difficulty": "Hard", "score": 6, "question_order": 4},
                 ]
             ))
 
         return contests
 
+    async def fetch_official_contest_info(self, slug: str) -> Optional[Dict[str, Any]]:
+        """
+        Fetch authoritative contest metadata & Q1-Q4 problem set directly from official LeetCode endpoints.
+        Enforces OFFICIAL_METADATA_WINS rule.
+        """
+        urls = [
+            f"https://leetcode.com/contest/api/info/{slug}/",
+            f"https://leetcode.com/contest/api/ranking/{slug}/?pagination=1&region=global"
+        ]
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            for url in urls:
+                try:
+                    resp = await client.get(url, headers=self.HEADERS)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        if isinstance(data, dict) and ("questions" in data or "contest" in data):
+                            return data
+                except Exception as e:
+                    logger.warning(f"[Adapter] Error fetching official contest info from {url}: {e}")
+        return None
+
     async def get_contest_details(self, slug: str) -> Optional[ContestDetails]:
-        """Return detailed contest metadata."""
+        """
+        Return detailed contest metadata with OFFICIAL_METADATA_WINS rule.
+        Attempts to fetch live questions & official contest parameters before falling back to prediction.
+        """
+        official_data = await self.fetch_official_contest_info(slug)
+        if official_data:
+            c_info = official_data.get("contest") or {}
+            q_list = official_data.get("questions") or []
+            
+            parsed_questions = []
+            for idx, q in enumerate(q_list, start=1):
+                p_slug = q.get("title_slug") or q.get("slug") or f"{slug}-q{idx}"
+                parsed_questions.append({
+                    "question_id": q.get("question_id") or q.get("id"),
+                    "problem_id": q.get("question_id") or q.get("id"),
+                    "slug": p_slug,
+                    "title_slug": p_slug,
+                    "title": q.get("title") or f"Q{idx}",
+                    "question_order": idx,
+                    "difficulty": "Easy" if idx == 1 else "Medium" if idx in (2, 3) else "Hard",
+                    "score": q.get("credit", 3 if idx == 1 else 4 if idx == 2 else 5 if idx == 3 else 6),
+                    "points": q.get("credit", 3 if idx == 1 else 4 if idx == 2 else 5 if idx == 3 else 6)
+                })
+
+            if parsed_questions:
+                title = c_info.get("title") or slug.replace("-", " ").title()
+                start_sec = c_info.get("start_time")
+                duration = c_info.get("duration", 5400)
+                start_dt = datetime.fromtimestamp(start_sec, tz=timezone.utc) if start_sec else now_utc()
+                
+                return ContestDetails(
+                    contest_slug=slug,
+                    title=title,
+                    start_time=start_dt,
+                    duration=duration,
+                    problem_list=parsed_questions,
+                    total_participants=official_data.get("user_num")
+                )
+
         contests = await self.discover_contests()
         for c in contests:
             if c.contest_slug == slug:

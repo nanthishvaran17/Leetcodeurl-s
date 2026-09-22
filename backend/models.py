@@ -2458,7 +2458,7 @@ class AttendanceSnapshot(Base):
     snapshot_version = Column(Integer, default=1)
 
 
-class CorrectionEvent(Base):
+class AttendanceCorrectionEvent(Base):
     """
     Audit log record for legitimate administrative corrections to frozen snapshots.
     """
@@ -3320,4 +3320,28 @@ class ContestProblemResult(Base):
     last_verified_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     student = relationship("Student")
+
+
+class CorrectionEvent(Base):
+    """
+    Immutable audit record for post-freeze snapshot corrections.
+    Guarantees original frozen snapshot row is NEVER overwritten or deleted directly.
+    """
+    __tablename__ = "correction_events"
+    __table_args__ = (
+        Index("ix_correction_snapshot_student", "snapshot_id", "student_id"),
+        {"extend_existing": True},
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    snapshot_id = Column(String(100), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=False, index=True)
+    old_value = Column(JSON, nullable=True)
+    new_value = Column(JSON, nullable=False)
+    reason = Column(Text, nullable=False)
+    actor = Column(String(100), nullable=False)
+    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.datetime.now(datetime.timezone.utc), index=True)
+
+    student = relationship("Student")
+
 

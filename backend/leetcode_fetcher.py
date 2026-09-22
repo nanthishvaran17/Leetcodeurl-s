@@ -1,5 +1,6 @@
 import re
 import time
+import json
 import datetime
 import asyncio
 import httpx
@@ -350,7 +351,7 @@ async def fetch_leetcode_profile(
     finally:
         _in_flight_requests.pop(username, None)
 
-async def _fetch_leetcode_profile_impl(username: str, std_url: str, force_refresh: bool, retries: int, req_timeout: float) -> Dict[str, Any]:
+async def _fetch_leetcode_profile_impl(username: str, std_url: Optional[str] = None, force_refresh: bool = False, retries: int = 3, req_timeout: float = 10.0) -> Dict[str, Any]:
     """
     Fetches publicly available LeetCode profile statistics cleanly and safely.
     Strictly distinguishes Public Profile stats, Official Contest participation, and Virtual Contest participation.
@@ -569,6 +570,7 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: str, force_refres
                 "operationName": "userContestRankingInfo"
             }
             res_contest = await client.post(GRAPHQL_URL, json=payload_contest, headers=headers)
+            contest_history = []
             if res_contest.status_code == 200:
                 await circuit_breaker.record_success()
                 c_data = res_contest.json()
@@ -583,7 +585,6 @@ async def _fetch_leetcode_profile_impl(username: str, std_url: str, force_refres
                 contest_history = c_data.get("data", {}).get("userContestRankingHistory") or []
             elif res_contest.status_code == 429 or res_contest.status_code >= 500:
                 await circuit_breaker.record_failure()
-                contest_history = []
             
             if isinstance(contest_history, list):
                 for item in contest_history:
@@ -746,13 +747,14 @@ query recentAcSubmissions($username: String!, $limit: Int!) {
 # 
 
 def _make_headers(username: str) -> dict:
+    safe_username = re.sub(r'[^a-zA-Z0-9_-]', '', str(username or '')) or 'leetcode'
     return {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "Content-Type": "application/json",
         "Accept": "*/*",
         "Accept-Language": "en-US,en;q=0.9",
         "Origin": "https://leetcode.com",
-        "Referer": f"https://leetcode.com/u/{username}/",
+        "Referer": f"https://leetcode.com/u/{safe_username}/",
     }
 
 
@@ -982,7 +984,7 @@ async def fetch_contest_data(
         entry = {
             "contest_name":        c_title,
             "contest_type":        c_type,
-            "contest_start_time":  datetime.datetime.utcfromtimestamp(c_start) if c_start else None,
+            "contest_start_time":  datetime.datetime.fromtimestamp(c_start, datetime.timezone.utc) if c_start else None,
             "attended":            attended,
             "problems_solved":     item.get("problemsSolved", 0),
             "total_problems":      item.get("totalProblems", 4),
@@ -1092,7 +1094,7 @@ async def fetch_activity_calendar(
     active_dates: set = set()
     for ts_str, count in cal_map.items():
         try:
-            d = datetime.datetime.utcfromtimestamp(int(ts_str)).date()
+            d = datetime.datetime.fromtimestamp(int(ts_str), datetime.timezone.utc).date()
             if count and int(count) > 0:
                 active_dates.add(d)
         except Exception:
@@ -1244,8 +1246,8 @@ async def fetch_contest_metadata(
                 "contestId": slug_clean,
                 "contestSlug": slug_clean,
                 "contestName": c_info.get("title") or f"Weekly Contest {slug_clean.split('-')[-1]}",
-                "contestStartTime": datetime.datetime.utcfromtimestamp(start_ts) if start_ts else None,
-                "contestEndTime": datetime.datetime.utcfromtimestamp(end_ts) if end_ts else None,
+                "contestStartTime": datetime.datetime.fromtimestamp(start_ts, datetime.timezone.utc) if start_ts else None,
+                "contestEndTime": datetime.datetime.fromtimestamp(end_ts, datetime.timezone.utc) if end_ts else None,
                 "problemIds": prob_ids,
                 "problemSlugs": prob_slugs,
                 "totalProblems": len(prob_ids) if prob_ids else 4,
@@ -1294,7 +1296,7 @@ async def fetch_verified_student_contest_record(
     mode_clean = participation_mode.upper().strip()
     slug_clean = str(contest_slug).strip().lower()
 
-    base_record = {
+    base_record: Dict[str, Any] = {
         "username": username,
         "contestId": slug_clean,
         "contestName": f"Weekly Contest {slug_clean.split('-')[-1]}",
@@ -1637,7 +1639,7 @@ async def fetch_contest_data_batched(
             entry = {
                 "contest_name":        c_title,
                 "contest_type":        c_type,
-                "contest_start_time":  datetime.datetime.utcfromtimestamp(c_start) if c_start else None,
+                "contest_start_time":  datetime.datetime.fromtimestamp(c_start, datetime.timezone.utc) if c_start else None,
                 "attended":            attended,
                 "problems_solved":     item.get("problemsSolved", 0),
                 "total_problems":      item.get("totalProblems", 4),

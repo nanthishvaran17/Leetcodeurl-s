@@ -528,7 +528,7 @@ async def sync_single_student_by_id(student_id: int, timeout: float = 30.0) -> D
     finally:
         db.close()
 
-async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 20, per_worker_delay: float = 0.1, pre_run_id: Optional[str] = None) -> Dict[str, Any]:
+async def run_batch_sync(limit: Optional[int] = None, max_workers: int = 100, per_worker_delay: float = 0.0, pre_run_id: Optional[str] = None) -> Dict[str, Any]:
     """
     Executes extremely fast controlled queue sync for active students.
     Respects SYNC_LIMIT and LEETCODE_SYNC_CONCURRENCY env variables.

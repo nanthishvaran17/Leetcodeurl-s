@@ -344,9 +344,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     });
 
     try {
-      if ((isFiltered || isFaculty) && targetList.length > 0) {
-        const studentIds = targetList.map(s => s.id).filter((id): id is number => typeof id === 'number');
-        const tag = isFaculty && !isFiltered ? `Faculty (${targetList.length} Students)` : requesterTag;
+      const studentIds = targetList
+        .map(s => typeof s.id === 'number' ? s.id : parseInt(String(s.id), 10))
+        .filter((id): id is number => !isNaN(id) && id > 0);
+
+      if (isFiltered && studentIds.length > 0) {
+        const tag = isFaculty ? `Faculty (${studentIds.length} Students)` : requesterTag;
         await triggerTargetedSync(studentIds, tag);
       } else {
         await triggerFullSync(requesterTag);

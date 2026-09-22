@@ -553,7 +553,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 
       <div className="responsive-table-container w-full min-w-0 overflow-x-auto rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm bg-white dark:bg-navy-950 flex flex-col">
         {/* Table Header Wrapper (Sticky) */}
-        <div className="hidden md:flex bg-slate-50 dark:bg-navy-950 text-slate-500 dark:text-slate-400 font-extrabold border-b border-slate-200 dark:border-navy-800 uppercase tracking-wider text-[11px] w-full min-w-full md:min-w-[1100px] items-center">
+        <div className="hidden md:flex bg-slate-100/90 dark:bg-navy-900 text-slate-800 dark:text-slate-100 font-extrabold border-b border-slate-300 dark:border-navy-700 uppercase tracking-wider text-xs w-full min-w-full md:min-w-[1100px] items-center">
           <div className="flex-none w-10 py-3 px-3 text-center">
              <input type="checkbox" checked={deferredSortedStudents.length > 0 && selectedIds.length === deferredSortedStudents.length} onChange={toggleAll} className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer" />
           </div>

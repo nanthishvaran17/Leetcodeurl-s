@@ -847,31 +847,31 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                         <div className="font-black text-sm text-slate-900 dark:text-white">
                           {dept.department_code}
                         </div>
-                        <div className="text-xs text-slate-600 dark:text-slate-400 font-semibold break-words whitespace-normal leading-snug">
+                        <div className="text-xs text-slate-700 dark:text-slate-200 font-semibold break-words whitespace-normal leading-snug">
                           {dept.department_name}
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <span className="text-[10px] text-slate-400 uppercase font-extrabold block">Students</span>
+                        <span className="text-xs text-slate-700 dark:text-slate-200 uppercase font-extrabold block">Students</span>
                         <span className="text-base font-black text-slate-900 dark:text-white">{dept.total_students}</span>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 text-xs text-center">
-                      <div className="p-2 rounded-xl bg-slate-50 dark:bg-navy-900 border border-slate-100 dark:border-navy-800">
-                        <span className="text-[10px] text-slate-400 font-bold block uppercase">Active</span>
+                      <div className="p-2 rounded-xl bg-slate-100/90 dark:bg-navy-900 border border-slate-200 dark:border-navy-800">
+                        <span className="text-xs text-slate-700 dark:text-slate-200 font-extrabold block uppercase">Active</span>
                         <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
                           {dept.active_students ?? dept.active_count ?? Math.round(((dept.participation_rate || 0) / 100) * dept.total_students)}
                         </span>
                       </div>
-                      <div className="p-2 rounded-xl bg-slate-50 dark:bg-navy-900 border border-slate-100 dark:border-navy-800">
-                        <span className="text-[10px] text-slate-400 font-bold block uppercase">Weekly Attended</span>
+                      <div className="p-2 rounded-xl bg-slate-100/90 dark:bg-navy-900 border border-slate-200 dark:border-navy-800">
+                        <span className="text-xs text-slate-700 dark:text-slate-200 font-extrabold block uppercase">Weekly Attended</span>
                         <span className="font-extrabold text-indigo-600 dark:text-indigo-400">
                           {dept.contest_attended || 0}
                         </span>
                       </div>
-                      <div className="p-2 rounded-xl bg-slate-50 dark:bg-navy-900 border border-slate-100 dark:border-navy-800">
-                        <span className="text-[10px] text-slate-400 font-bold block uppercase">Attended %</span>
+                      <div className="p-2 rounded-xl bg-slate-100/90 dark:bg-navy-900 border border-slate-200 dark:border-navy-800">
+                        <span className="text-xs text-slate-700 dark:text-slate-200 font-extrabold block uppercase">Attended %</span>
                         <span className="font-black text-indigo-600 dark:text-indigo-400">
                           {dept.total_students > 0 ? Math.round(((dept.contest_attended || 0) / dept.total_students) * 100) : 0}%
                         </span>
@@ -880,7 +880,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
                     <div className="flex items-center justify-between pt-1 gap-2">
                       <div className="text-xs min-w-0 flex-1">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Top Performer</span>
+                        <span className="text-xs text-slate-700 dark:text-slate-200 font-extrabold uppercase block">Top Performer</span>
                         <button
                           type="button"
                           onClick={() => {

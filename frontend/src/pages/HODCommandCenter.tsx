@@ -110,14 +110,14 @@ const StudentDetailDrawer: React.FC<{
           {/* Key Metrics Grid */}
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-100 dark:border-navy-700">
-              <div className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Total Solved</div>
+              <div className="text-[10px] font-extrabold uppercase text-slate-600 dark:text-slate-300 tracking-wider">Total Solved</div>
               <div className="font-display text-2xl font-black text-slate-900 dark:text-white mt-0.5">
                 {student.total_solved}
               </div>
               <div className="text-[11px] text-emerald-600 font-medium">{student.weekly_change || '+0'} this week</div>
             </div>
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-100 dark:border-navy-700">
-              <div className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Contest Rating</div>
+              <div className="text-[10px] font-extrabold uppercase text-slate-600 dark:text-slate-300 tracking-wider">Contest Rating</div>
               <div className="font-display text-2xl font-black text-brand-600 mt-0.5">
                 {student.contest_rating || '—'}
               </div>
@@ -159,7 +159,7 @@ const StudentDetailDrawer: React.FC<{
                 </span>
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
+                <label className="block text-[10px] font-extrabold uppercase text-slate-600 dark:text-slate-300 mb-1">
                   Reassign Faculty Mentor:
                 </label>
                 <GlobalFilter
@@ -763,7 +763,7 @@ const ReportHubModal: React.FC<{
                 <div className="overflow-x-auto table-responsive-container">
                   <table className="w-full text-left text-xs border-collapse mobile-card-table font-sans">
                     <thead className="hidden md:table-header-group">
-                      <tr className="border-b border-slate-200 dark:border-navy-800 font-bold text-slate-600 dark:text-slate-300 uppercase text-[10px] tracking-wider font-display">
+                      <tr className="border-b border-slate-300 dark:border-navy-700 font-extrabold text-slate-800 dark:text-slate-100 bg-slate-100/90 dark:bg-navy-900 uppercase text-xs tracking-wider">
                         <th className="py-2.5 px-3">Faculty Mentor</th>
                         <th className="py-2.5 px-3">Dept</th>
                         <th className="py-2.5 px-3 text-right">Assigned</th>
@@ -802,7 +802,7 @@ const ReportHubModal: React.FC<{
                   <div className="overflow-x-auto table-responsive-container">
                     <table className="w-full text-left text-xs border-collapse mobile-card-table font-sans">
                       <thead className="hidden md:table-header-group">
-                        <tr className="border-b border-slate-200 dark:border-navy-800 font-bold text-slate-600 dark:text-slate-300 uppercase text-[10px] tracking-wider font-display">
+                        <tr className="border-b border-slate-300 dark:border-navy-700 font-extrabold text-slate-800 dark:text-slate-100 bg-slate-100/90 dark:bg-navy-900 uppercase text-xs tracking-wider">
                           <th className="py-2.5 px-3">Reg No</th>
                           <th className="py-2.5 px-3">Student Name</th>
                           <th className="py-2.5 px-3">Dept</th>
@@ -1251,6 +1251,9 @@ export const HODCommandCenter: React.FC = () => {
                 </>
               )}
             </h1>
+            <p className="text-xs sm:text-sm text-slate-300 max-w-2xl font-medium leading-relaxed mt-2">
+              Real-time institutional performance analytics, automated student mentoring, and forensic integrity tracking.
+            </p>
           </div>
 
           <div className="flex items-center gap-2.5 flex-wrap">
@@ -2323,7 +2326,7 @@ export const HODCommandCenter: React.FC = () => {
         <div className="overflow-x-auto table-responsive-container">
           <table className="w-full text-left text-xs border-collapse mobile-card-table">
             <thead className="hidden md:table-header-group">
-              <tr className="text-[10px] font-bold uppercase text-slate-400 font-mono border-b border-slate-100 dark:border-navy-800">
+              <tr className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 bg-slate-100/90 dark:bg-navy-900 border-b border-slate-300 dark:border-navy-700">
                 <th className="py-2.5 px-3">Faculty Mentor</th>
                 <th className="py-2.5 px-3">Dept</th>
                 <th className="py-2.5 px-3 text-right">Assigned Mentees</th>

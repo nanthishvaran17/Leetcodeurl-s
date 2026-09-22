@@ -236,25 +236,14 @@ def invalidate_active_students_cache():
         _ACTIVE_STUDENTS_CACHE_TIME = 0.0
 
 def get_active_students(db: Session, force_refresh: bool = False) -> List[Student]:
-    """Returns active student roster from database dynamically with ultra-fast memory caching."""
-    global _ACTIVE_STUDENTS_CACHE, _ACTIVE_STUDENTS_CACHE_TIME
-    now = time.time()
-    
-    with _ACTIVE_STUDENTS_LOCK:
-        if not force_refresh and _ACTIVE_STUDENTS_CACHE is not None and (now - _ACTIVE_STUDENTS_CACHE_TIME < 60.0):
-            return _ACTIVE_STUDENTS_CACHE
-
+    """Returns active student roster from database dynamically with joinedload stats."""
     from sqlalchemy.orm import joinedload
-    logger.info("[SYNC] Loading active institutional student roster from database...")
-    students = db.query(Student).options(joinedload(Student.stats), joinedload(Student.department)).filter(
+    students = db.query(Student).options(
+        joinedload(Student.stats),
+        joinedload(Student.department)
+    ).filter(
         or_(Student.is_active == True, Student.is_active.is_(None))
     ).all()
-    
-    with _ACTIVE_STUDENTS_LOCK:
-        _ACTIVE_STUDENTS_CACHE = students
-        _ACTIVE_STUDENTS_CACHE_TIME = now
-
-    logger.info(f"[SYNC] Loaded {len(students)} active students from database (0ms memory cached)")
     return students
 
 
@@ -610,6 +599,10 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
 
     except Exception as exc:
         logger.error(f"[WORKER] Job {job_id} failed: {exc}", exc_info=True)
+        try:
+            sync_tracker.finish("FAILED", str(exc))
+        except Exception:
+            pass
         for _attempt in range(3):
             _db = SessionLocal()
             try:
@@ -627,6 +620,7 @@ async def _run_full_sync_worker(job_id: str, target_student_ids: Optional[List[i
             finally:
                 _db.close()
     finally:
+        sync_tracker.is_running = False
         # Release lock using a fresh resilient session
         for _attempt in range(3):
             _db = SessionLocal()

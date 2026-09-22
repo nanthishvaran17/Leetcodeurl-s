@@ -464,13 +464,13 @@ export const StaffDashboardView: React.FC = () => {
                   >
                     <ShieldCheck className="w-4 h-4 text-indigo-500 shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Student Filter</p>
+                      <p className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">Student Filter</p>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${sel.color}`}>{sel.code}</span>
                         <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{sel.label}</span>
                       </div>
                     </div>
-                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${isFilterOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-500 dark:text-slate-400 transition-transform shrink-0 ${isFilterOpen ? 'rotate-180' : ''}`} />
                   </button>
 
                   {isFilterOpen && (

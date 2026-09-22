@@ -63,20 +63,20 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
 
   return (
     <div className="fixed inset-0 z-[100050] flex justify-end bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-xl h-full bg-white dark:bg-navy-950 border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-y-auto flex flex-col">
+      <div className="w-full max-w-xl h-full bg-white dark:bg-navy-950 border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-y-auto flex flex-col rounded-l-3xl">
         {/* Header Profile Section */}
-        <div className="bg-gradient-to-r from-brand-900 via-navy-900 to-slate-900 p-6 text-white border-b border-brand-800/50 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-brand-900 via-navy-900 to-slate-900 p-6 sm:p-7 text-white border-b border-brand-800/50 relative overflow-hidden rounded-tl-3xl">
           <div className="absolute right-0 top-0 w-64 h-64 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
           
           <div className="flex justify-between items-start mb-4 relative z-10">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-md text-brand-300 font-extrabold flex items-center justify-center text-2xl shadow-lg border border-white/20 shrink-0">
+              <div className="w-16 h-16 rounded-3xl bg-white/10 backdrop-blur-md text-brand-300 font-extrabold flex items-center justify-center text-2xl shadow-lg border border-white/20 shrink-0">
                 {staff.username ? staff.username.charAt(0).toUpperCase() : 'S'}
               </div>
               <div>
                 <h3 className="font-display text-xl font-bold text-white tracking-tight flex items-center gap-2">
                   <span>{staff.username}</span>
-                  <span className="px-2 py-0.5 rounded-full bg-brand-500/30 text-brand-200 text-[10px] font-extrabold border border-brand-400/30 uppercase">
+                  <span className="px-3 py-1 rounded-full bg-brand-500/30 text-brand-200 text-[10px] font-extrabold border border-brand-400/30 uppercase">
                     {staff.department_code || 'FACULTY'}
                   </span>
                 </h3>
@@ -84,15 +84,15 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                   <Mail size={13} className="text-brand-400" /> {staff.email}
                 </p>
                 <div className="flex items-center gap-2 mt-2.5">
-                  <span className="px-2.5 py-0.5 rounded-md bg-white/10 text-slate-200 text-[10px] font-bold border border-white/10">
+                  <span className="px-3 py-1 rounded-full bg-white/10 text-slate-200 text-[10px] font-bold border border-white/10">
                     {staff.role || 'Faculty Mentor'}
                   </span>
                   {staff.is_active ? (
-                    <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold flex items-center gap-1">
+                    <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Active Status
                     </span>
                   ) : (
-                    <span className="px-2.5 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] font-bold">
+                    <span className="px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] font-bold">
                       Inactive
                     </span>
                   )}
@@ -101,7 +101,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
             </div>
             <button 
               onClick={onClose} 
-              className="p-2 bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white rounded-xl backdrop-blur-md transition cursor-pointer"
+              className="p-2.5 bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white rounded-2xl backdrop-blur-md transition cursor-pointer"
             >
               <X size={18} />
             </button>
@@ -121,24 +121,24 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {/* Assigned Capacity */}
-              <div className="bg-white dark:bg-navy-900 p-4 rounded-xl border border-slate-200 dark:border-navy-800 shadow-sm">
+              <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm">
                 <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Assigned Capacity</div>
                 <div className="text-xl font-black text-slate-900 dark:text-white">
                   {assignedCount} <span className="text-xs text-slate-400 font-normal">/ {staff.max_allowed || 30}</span>
                 </div>
                 <div className="mt-2 text-[10px] font-bold">
                   {assignedCount >= (staff.max_allowed || 30) ? (
-                    <span className="text-purple-700 bg-purple-100 dark:bg-purple-950 dark:text-purple-300 px-2 py-0.5 rounded border border-purple-300">MAX CAPACITY</span>
+                    <span className="text-purple-700 bg-purple-100 dark:bg-purple-950 dark:text-purple-300 px-2.5 py-1 rounded-full border border-purple-300">MAX CAPACITY</span>
                   ) : assignedCount >= 20 ? (
-                    <span className="text-emerald-700 bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 px-2 py-0.5 rounded border border-emerald-300">TARGET REACHED</span>
+                    <span className="text-emerald-700 bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 px-2.5 py-1 rounded-full border border-emerald-300">TARGET REACHED</span>
                   ) : (
-                    <span className="text-blue-700 bg-blue-100 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-300">WITHIN CAPACITY</span>
+                    <span className="text-blue-700 bg-blue-100 dark:bg-blue-950 dark:text-blue-300 px-2.5 py-1 rounded-full border border-blue-300">WITHIN CAPACITY</span>
                   )}
                 </div>
               </div>
 
               {/* Active Solvers */}
-              <div className="bg-white dark:bg-navy-900 p-4 rounded-xl border border-slate-200 dark:border-navy-800 shadow-sm">
+              <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm">
                 <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Active Solvers</div>
                 <div className="flex items-baseline gap-1">
                   <div className="text-xl font-black text-emerald-600 dark:text-emerald-400">
@@ -153,7 +153,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
               </div>
 
               {/* Problems Solved */}
-              <div className="bg-white dark:bg-navy-900 p-4 rounded-xl border border-slate-200 dark:border-navy-800 shadow-sm">
+              <div className="bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm">
                 <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Total Solved</div>
                 <div className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-1.5">
                   <Activity size={16} className="text-brand-500" />
@@ -171,9 +171,9 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
             <h4 className="font-display text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
               <Code size={15} className="text-brand-500" /> Activity & Verification Meta
             </h4>
-            <div className="grid grid-cols-2 gap-3 bg-white dark:bg-navy-900 p-4 rounded-xl border border-slate-200 dark:border-navy-800 shadow-sm">
+            <div className="grid grid-cols-2 gap-3 bg-white dark:bg-navy-900 p-4 rounded-2xl border border-slate-200 dark:border-navy-800 shadow-sm">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-300 flex items-center justify-center shrink-0 border border-purple-200 dark:border-purple-800">
+                <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-300 flex items-center justify-center shrink-0 border border-purple-200 dark:border-purple-800">
                   <Clock size={16} />
                 </div>
                 <div>
@@ -182,7 +182,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0 border border-amber-200 dark:border-amber-800">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0 border border-amber-200 dark:border-amber-800">
                   <Calendar size={16} />
                 </div>
                 <div>
@@ -207,7 +207,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
               )}
             </div>
 
-            <div className="rounded-xl border border-slate-200 dark:border-navy-800 overflow-hidden bg-white dark:bg-navy-900 shadow-sm">
+            <div className="rounded-2xl border border-slate-200 dark:border-navy-800 overflow-hidden bg-white dark:bg-navy-900 shadow-sm">
               {mentees.length === 0 ? (
                 <div className="p-8 text-center text-slate-500 dark:text-slate-400 text-xs font-semibold">
                   {loadingMentees ? 'Fetching assigned mentees data...' : 'No students assigned to this faculty mentor yet.'}
@@ -246,11 +246,11 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                             </td>
                             <td className="py-2.5 px-3 text-center">
                               {isStudentActive ? (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-extrabold border border-emerald-300 dark:border-emerald-800">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-extrabold border border-emerald-300 dark:border-emerald-800">
                                   <CheckCircle size={11} className="text-emerald-600 dark:text-emerald-400" /> Active
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold border border-slate-300 dark:border-navy-700">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold border border-slate-300 dark:border-navy-700">
                                   Inactive
                                 </span>
                               )}
@@ -259,7 +259,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
                               <td className="py-2.5 px-3 text-center">
                                 <button
                                   onClick={() => onSelectStudent(s)}
-                                  className="px-2 py-1 rounded bg-brand-50 hover:bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 font-bold text-[10px] transition cursor-pointer border border-brand-200"
+                                  className="px-2.5 py-1 rounded-full bg-brand-50 hover:bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 font-bold text-[10px] transition cursor-pointer border border-brand-200"
                                 >
                                   Inspect →
                                 </button>
@@ -280,13 +280,13 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
         <div className="p-4 border-t border-slate-200 dark:border-navy-700 bg-slate-100 dark:bg-navy-950 flex justify-between items-center">
           <button 
             onClick={onClose}
-            className="px-4 py-2 bg-slate-200 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition cursor-pointer"
+            className="px-4 py-2 bg-slate-200 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 rounded-2xl text-xs font-bold transition cursor-pointer"
           >
             Close Drawer
           </button>
           <button 
             onClick={onManageAllocation}
-            className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-extrabold transition shadow-md shadow-brand-600/20 cursor-pointer flex items-center gap-1.5"
+            className="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl text-xs font-extrabold transition shadow-md shadow-brand-600/20 cursor-pointer flex items-center gap-1.5"
           >
             <Users size={14} />
             <span>Manage Allocation</span>

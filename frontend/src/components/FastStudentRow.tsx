@@ -117,11 +117,11 @@ export const FastStudentRow = memo(({
       <div className="flex md:hidden items-center justify-between w-full pt-3 border-t border-slate-100 dark:border-navy-800/60">
          <div className="flex gap-6">
              <div className="flex flex-col">
-                 <span className="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Solved</span>
+                 <span className="text-xs uppercase text-slate-700 dark:text-slate-200 font-extrabold tracking-wider">Solved</span>
                  <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">{totalSolved ?? '—'}</span>
              </div>
              <div className="flex flex-col">
-                 <span className="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Rating</span>
+                 <span className="text-xs uppercase text-slate-700 dark:text-slate-200 font-extrabold tracking-wider">Rating</span>
                   <span className="text-sm font-black text-amber-500">
                     {(() => {
                       const rawRating = student.stats?.contest_rating ?? (student as any).contest_rating;
@@ -154,15 +154,15 @@ export const FastStudentRow = memo(({
         {isSolver
           ? getRankBadge(effectiveCollegeRank)
           : syncState === 'pending'
-            ? <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-400 border border-slate-300"><Clock className="w-3 h-3" /><span>Pending</span></span>
+            ? <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700"><Clock className="w-3 h-3" /><span>Pending</span></span>
             : syncState === 'failed'
-              ? <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-600 border border-rose-300"><AlertCircle className="w-3 h-3" /><span>Failed</span></span>
-              : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-300">Unranked</span>
+              ? <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-bold bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800"><AlertCircle className="w-3 h-3" /><span>Failed</span></span>
+              : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700">Unranked</span>
         }
       </div>
 
       <div className="hidden md:flex flex-none w-32 items-center justify-start px-3">
-        <span className="font-mono text-xs font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-navy-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-navy-700">
+        <span className="font-mono text-xs font-extrabold text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-navy-800 px-2 py-0.5 rounded-md border border-slate-300 dark:border-navy-700">
           {student.reg_no}
         </span>
       </div>

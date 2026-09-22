@@ -6,7 +6,7 @@ import datetime
 import uuid
 
 from backend.database import get_db
-from backend.models import IntegrityCase, Student, User, AttendanceSnapshot, CorrectionEvent, NotificationEvent
+from backend.models import IntegrityCase, Student, User, AttendanceSnapshot, AttendanceCorrectionEvent, NotificationEvent
 from backend.security import get_current_user_optional
 from backend.services.contest_integrity_service import ContestIntegrityService
 from backend.services.integrity_audit_service import IntegrityAuditService
@@ -99,24 +99,24 @@ def review_case(case_id: str, req: CaseReviewRequest, request: Request, db: Sess
     if req.status not in ["CONFIRMED", "DISMISSED", "PENDING", "IDENTITY_REVIEW_REQUIRED"]:
         raise HTTPException(status_code=400, detail="Invalid status")
         
-    reviewer_name = req.reviewed_by or (user.full_name if user else "Staff Admin")
-    case.status = req.status
-    case.reviewed_by = reviewer_name
-    case.reviewed_at = datetime.datetime.now(datetime.timezone.utc)
+    reviewer_name = str(req.reviewed_by or (user.full_name if user else "Staff Admin"))
+    setattr(case, "status", req.status)
+    setattr(case, "reviewed_by", reviewer_name)
+    setattr(case, "reviewed_at", datetime.datetime.now(datetime.timezone.utc))
 
-    history = case.audit_history or []
+    history = list(case.audit_history or [])
     history.append({
         "event": f"STATUS_CHANGED_TO_{req.status}",
         "reviewed_by": reviewer_name,
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
     })
-    case.audit_history = history
+    setattr(case, "audit_history", history)
 
     audit_service = IntegrityAuditService(db)
     audit_service.log_event(
         event_type=f"CASE_RESOLVED_{req.status}",
-        contest_id=case.contest_id,
-        people_id=case.people_id,
+        contest_id=str(case.contest_id) if case.contest_id else None,
+        people_id=str(case.people_id) if case.people_id else None,
         details={"case_id": case.case_id, "status": req.status, "reviewer": reviewer_name},
         created_by=reviewer_name
     )
@@ -142,7 +142,7 @@ def administrative_correction(case_id: str, req: AdminCorrectionRequest, request
     ).first()
 
     audit_id = f"CORR-{uuid.uuid4().hex[:8].upper()}"
-    correction = CorrectionEvent(
+    correction = AttendanceCorrectionEvent(
         audit_id=audit_id,
         snapshot_id=snapshot.id if snapshot else 0,
         contest_id=case.contest_id,

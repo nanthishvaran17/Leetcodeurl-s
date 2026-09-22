@@ -93,7 +93,7 @@ async def _sync_single_student_canonical_impl(
         total_active_days = 0
 
         # PHASE 1: NETWORK ONLY — No DB session open during HTTP calls 
-        c_username, c_url, u_status = extract_leetcode_username(student.username or student.leetcode_url)
+        c_username, c_url, u_status = extract_leetcode_username(str(student.username or student.leetcode_url or ""))
 
         status_code = "PENDING_USERNAME"
         sync_status_str = "pending"
@@ -133,8 +133,8 @@ async def _sync_single_student_canonical_impl(
                     phase_b_res = await fetch_contest_data(c_username, client)
                     status_code = "SUCCESS"
                 else:
-                    primary_id = student.primary_leetcode_id or c_username
-                    secondary_id = student.secondary_leetcode_id
+                    primary_id = str(student.primary_leetcode_id or c_username or "")
+                    secondary_id = str(student.secondary_leetcode_id or "") if student.secondary_leetcode_id else None
 
                     tasks = [
                         fetch_profile_and_stats(primary_id, client),
@@ -147,34 +147,38 @@ async def _sync_single_student_canonical_impl(
                             fetch_contest_data(secondary_id, client)
                         ])
                         
-                    results = await asyncio.gather(*tasks, return_exceptions=True)
-                    
-                    for i, r in enumerate(results):
-                        if isinstance(r, Exception):
-                            results[i] = {"status": "error", "detail": str(r)}
+                    results_raw = await asyncio.gather(*tasks, return_exceptions=True)
+                    results: List[Dict[str, Any]] = []
+                    for r in results_raw:
+                        if isinstance(r, dict):
+                            results.append(r)
+                        elif isinstance(r, BaseException):
+                            results.append({"status": "error", "detail": str(r)})
+                        else:
+                            results.append({"status": "error", "detail": "Unknown fetch result"})
                             
                     if not secondary_id or not secondary_id.strip():
                         phase_a_res, phase_b_res = results[0], results[1]
                     else:
-                        p1_a, p1_b, p2_a, p2_b = results
+                        p1_a, p1_b, p2_a, p2_b = results[0], results[1], results[2], results[3]
                         phase_a_res = _merge_phase_a(p1_a, p2_a)
                         phase_b_res = _merge_phase_b(p1_b, p2_b)
     
-                    phase_a_status = phase_a_res.get("status")
+                    phase_a_status = phase_a_res.get("status") if isinstance(phase_a_res, dict) else "error"
     
                     if phase_a_status == "not_found":
                         status_code = "PROFILE_NOT_FOUND"
                     elif phase_a_status == "identity_mismatch":
                         status_code = "IDENTITY_MISMATCH"
-                        error_msg = phase_a_res.get("detail")
+                        error_msg = phase_a_res.get("detail") if isinstance(phase_a_res, dict) else None
                     elif phase_a_status == "timeout":
                         status_code = "TIMEOUT"
                         error_msg = "LeetCode upstream timeout"
-                    elif phase_a_status == "ok" and phase_a_res.get("data"):
+                    elif phase_a_status == "ok" and isinstance(phase_a_res, dict) and phase_a_res.get("data"):
                         status_code = "SUCCESS"
                     else:
                         status_code = "FETCH_FAILED"
-                        error_msg = phase_a_res.get("detail", "Fetch failed during Phase A")
+                        error_msg = phase_a_res.get("detail", "Fetch failed during Phase A") if isinstance(phase_a_res, dict) else "Fetch failed during Phase A"
 
         # PHASE 2: DATABASE — Short-lived session, NO network calls inside 
         db_student = db_session if db_session else SessionLocal()
@@ -621,97 +625,109 @@ async def run_full_pipeline(
 
         from backend.config import settings
 
+        # Hyper-fast GraphQL batch size per request: 20 students (fast, responsive, zero-timeout)
+        batch_size = 20
+        chunks = [students[i:i + batch_size] for i in range(0, len(students), batch_size)]
+        
+        # High concurrency worker pool for parallel batch execution
+        max_parallel_workers = min(100, max(20, getattr(settings, "CONCURRENCY_WORKERS", 100)))
+        batch_sem = asyncio.Semaphore(max_parallel_workers)
+        
         timeout_cfg = httpx.Timeout(
-            connect=settings.LEETCODE_CONNECT_TIMEOUT, 
-            read=settings.LEETCODE_READ_TIMEOUT, 
-            write=settings.LEETCODE_CONNECT_TIMEOUT, 
-            pool=settings.LEETCODE_CONNECT_TIMEOUT
+            connect=getattr(settings, "LEETCODE_CONNECT_TIMEOUT", 10.0), 
+            read=getattr(settings, "LEETCODE_READ_TIMEOUT", 20.0), 
+            write=getattr(settings, "LEETCODE_CONNECT_TIMEOUT", 10.0), 
+            pool=getattr(settings, "LEETCODE_CONNECT_TIMEOUT", 10.0)
         )
-        limits_cfg = httpx.Limits(max_keepalive_connections=settings.LEETCODE_MAX_CONCURRENCY, max_connections=settings.LEETCODE_MAX_CONCURRENCY * 2)
+        limits_cfg = httpx.Limits(
+            max_keepalive_connections=max_parallel_workers * 2,
+            max_connections=max_parallel_workers * 4
+        )
 
-        sem = asyncio.Semaphore(settings.LEETCODE_MAX_CONCURRENCY)
+        sem = asyncio.Semaphore(getattr(settings, "LEETCODE_MAX_CONCURRENCY", 100))
         lock = asyncio.Lock()
 
         async with httpx.AsyncClient(timeout=timeout_cfg, limits=limits_cfg, follow_redirects=True, http2=False) as client:
             from backend.leetcode_fetcher import fetch_profile_and_stats_batched, fetch_contest_data_batched
-            chunk_size = 40
-            
-            for i in range(0, len(students), chunk_size):
-                chunk = students[i:i + chunk_size]
-                
-                valid_usernames = []
-                for s in chunk:
-                     uname, _, u_status = extract_leetcode_username(s.username or s.leetcode_url)
-                     if u_status == "OK" and uname:
-                         valid_usernames.append(uname)
-                
-                batched_a = {}
-                batched_b = {}
-                
-                if valid_usernames:
-                    if sync_mode == "LIVE_MONITOR":
-                        batched_b = await fetch_contest_data_batched(valid_usernames, client)
-                    else:
-                        res_a, res_b = await asyncio.gather(
-                            fetch_profile_and_stats_batched(valid_usernames, client),
-                            fetch_contest_data_batched(valid_usernames, client),
-                            return_exceptions=True
-                        )
-                        if not isinstance(res_a, Exception): batched_a = res_a
-                        if not isinstance(res_b, Exception): batched_b = res_b
 
-                db_chunk = SessionLocal()
-                try:
-                    chunk_payloads = []
+            async def _process_student_chunk(chunk: List[Any]):
+                async with batch_sem:
+                    valid_usernames = []
                     for s in chunk:
-                        if progress_callback and hasattr(progress_callback, "set_current"):
-                            progress_callback.set_current(s.name, s.username)
-                        uname, _, _ = extract_leetcode_username(s.username or s.leetcode_url)
-                        pre_a = batched_a.get(uname) if uname else None
-                        pre_b = batched_b.get(uname) if uname else None
-                        
-                        payload = await _sync_single_student_canonical(
-                            student=s,
-                            client=client,
-                            sem=sem,
-                            lock=lock,
-                            job_id=effective_job_id,
-                            progress_callback=progress_callback,
-                            run_optional_phases=run_optional_phases,
-                            sync_mode=sync_mode,
-                            pre_fetched_a=pre_a,
-                            pre_fetched_b=pre_b,
-                            db_session=db_chunk,
-                            defer_commit=True
-                        )
-                        if payload:
-                            chunk_payloads.append(payload)
+                        uname, _, u_status = extract_leetcode_username(s.username or s.leetcode_url)
+                        if u_status == "OK" and uname:
+                            valid_usernames.append(uname)
                     
-                    db_chunk.commit()
+                    batched_a: Dict[str, Any] = {}
+                    batched_b: Dict[str, Any] = {}
                     
-                    if chunk_payloads:
-                        last_payload = chunk_payloads[-1].copy()
-                        last_payload["chunk_size"] = len(chunk_payloads)
-                        from backend.services.live_sync_service import broadcast_sync_event
-                        
-                        # Extract all student updates in this chunk
-                        student_updates = [p.get("student_update") for p in chunk_payloads if p.get("student_update")]
-                        if student_updates:
-                            # We MUST pass the version and timestamp so React Query cache merging works!
-                            batch_payload = {
-                                "type": "STUDENT_BATCH_UPDATED",
-                                "updates": student_updates,
-                                "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat() + "Z"
-                            }
-                            await broadcast_sync_event(batch_payload)
+                    if valid_usernames:
+                        if sync_mode == "LIVE_MONITOR":
+                            b_res = await fetch_contest_data_batched(valid_usernames, client)
+                            if isinstance(b_res, dict): batched_b = b_res
+                        else:
+                            res_a, res_b = await asyncio.gather(
+                                fetch_profile_and_stats_batched(valid_usernames, client),
+                                fetch_contest_data_batched(valid_usernames, client),
+                                return_exceptions=True
+                            )
+                            if isinstance(res_a, dict): batched_a = res_a
+                            if isinstance(res_b, dict): batched_b = res_b
+
+                    db_chunk = SessionLocal()
+                    try:
+                        chunk_payloads = []
+                        for s in chunk:
+                            if progress_callback and hasattr(progress_callback, "set_current"):
+                                progress_callback.set_current(s.name, s.username)
+                            uname, _, _ = extract_leetcode_username(str(s.username or s.leetcode_url or ""))
+                            pre_a = batched_a.get(uname) if uname else None
+                            pre_b = batched_b.get(uname) if uname else None
                             
-                        # Broadcast the sync progress for the UI progress bar
-                        await broadcast_sync_event(last_payload)
-                except Exception as e:
-                    db_chunk.rollback()
-                    logger.error(f"[CANONICAL_PIPELINE] Chunk commit failed: {e}")
-                finally:
-                    db_chunk.close()
+                            payload = await _sync_single_student_canonical(
+                                student=s,
+                                client=client,
+                                sem=sem,
+                                lock=lock,
+                                job_id=effective_job_id,
+                                progress_callback=progress_callback,
+                                run_optional_phases=run_optional_phases,
+                                sync_mode=sync_mode,
+                                pre_fetched_a=pre_a,
+                                pre_fetched_b=pre_b,
+                                db_session=db_chunk,
+                                defer_commit=True
+                            )
+                            if payload:
+                                chunk_payloads.append(payload)
+                        
+                        db_chunk.commit()
+                        
+                        if chunk_payloads:
+                            last_payload = chunk_payloads[-1].copy()
+                            last_payload["chunk_size"] = len(chunk_payloads)
+                            from backend.services.live_sync_service import broadcast_sync_event
+                            
+                            # Extract all student updates in this chunk
+                            student_updates = [p.get("student_update") for p in chunk_payloads if p.get("student_update")]
+                            if student_updates:
+                                batch_payload = {
+                                    "type": "STUDENT_BATCH_UPDATED",
+                                    "updates": student_updates,
+                                    "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat() + "Z"
+                                }
+                                await broadcast_sync_event(batch_payload)
+                                
+                            # Broadcast sync progress update for UI progress bar
+                            await broadcast_sync_event(last_payload)
+                    except Exception as e:
+                        db_chunk.rollback()
+                        logger.error(f"[CANONICAL_PIPELINE] Chunk commit failed: {e}")
+                    finally:
+                        db_chunk.close()
+
+            # Execute all chunks concurrently across parallel worker pool
+            await asyncio.gather(*[_process_student_chunk(chunk) for chunk in chunks])
 
         # Recalculate institutional multi-level rankings
         logger.info("[CANONICAL_PIPELINE] Recalculating college/department/year rankings post-sync...")

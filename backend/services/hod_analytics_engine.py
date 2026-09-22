@@ -432,16 +432,24 @@ def get_hod_what_is_happening_summary(
     }
 
 def simulate_what_if_scenario(
-    current_participation: float,
-    target_participation: float,
-    at_risk_count: int = 0
+    current_participation: float = 0.0,
+    target_participation: float = 0.0,
+    at_risk_count: int = 0,
+    current_part_pct: Optional[float] = None,
+    target_part_pct: Optional[float] = None,
+    current_at_risk: Optional[int] = None
 ) -> Dict[str, Any]:
-    delta_part = target_participation - current_participation
+    curr_p = current_part_pct if current_part_pct is not None else current_participation
+    targ_p = target_part_pct if target_part_pct is not None else target_participation
+    at_r = current_at_risk if current_at_risk is not None else at_risk_count
+
+    delta_part = targ_p - curr_p
     projected_health_delta = round(delta_part * 0.25, 1)
     base_health = 68.4
     return {
-        "current_participation": current_participation,
-        "target_participation": target_participation,
+        "current_participation": curr_p,
+        "target_participation": targ_p,
+        "at_risk_count": at_r,
         "projected_health_score": round(min(100.0, base_health + projected_health_delta), 1),
         "health_score_delta": f"+{projected_health_delta}" if projected_health_delta >= 0 else str(projected_health_delta),
         "students_activated": max(0, int(delta_part * 15.54)),

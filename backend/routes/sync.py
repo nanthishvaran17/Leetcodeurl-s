@@ -75,11 +75,9 @@ def get_current_sync_status(db: Session = Depends(get_db)):
     from backend.config import Settings
     from backend.cache import cache as _cache
     
-    # Fast-path: serve cached result if available ONLY IF sync worker is not actively running
-    if not sync_tracker.is_running:
-        _cached = _cache.get("sync:status")
-        if _cached is not None:
-            return _cached
+    # Fast-path: serve cached result if available ONLY IF sync worker and DB job are idle
+    if not sync_tracker.is_running and _cache.get("sync:status") is not None:
+        return _cache.get("sync:status")
         
     cfg = Settings()
 
@@ -114,8 +112,14 @@ def get_current_sync_status(db: Session = Depends(get_db)):
                 "status": "INTERRUPTED",
                 "completed_at": datetime.datetime.now(datetime.timezone.utc)
             }, synchronize_session=False)
+            from backend.services.live_sync_service import _release_global_lock
+            _release_global_lock(db, running_job.job_id)
             db.commit()
             running_job = None
+        elif not sync_tracker.is_running:
+            from backend.services.live_sync_service import _release_global_lock
+            _release_global_lock(db)
+            db.commit()
 
         # Fetch last 3 relevant jobs in one query (completed, failed, any)
         recent_jobs = db.query(SyncJob).order_by(SyncJob.id.desc()).limit(10).all()

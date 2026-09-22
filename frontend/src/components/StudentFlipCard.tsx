@@ -257,12 +257,12 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
           {/* Clean Line Divider */}
           <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 dark:via-navy-700 to-transparent shrink-0" />
 
-          {/* Stats Breakdown Container - Clean Typography (No boxes) */}
-          <div className="flex-1 flex flex-col justify-center py-4 min-w-0">
+          {/* Stats Breakdown Container - Clean Typography */}
+          <div className="flex-1 flex flex-col justify-center py-2 min-w-0">
             
             {!isVerified ? (
               <div className="text-center space-y-2">
-                <AlertCircle className="w-8 h-8 mx-auto text-slate-300 dark:text-navy-600 mb-4" />
+                <AlertCircle className="w-8 h-8 mx-auto text-slate-300 dark:text-navy-600 mb-3" />
                 <p className="font-extrabold text-sm text-slate-700 dark:text-slate-300">
                   {state === 'pending_username' ? 'Pending LeetCode Username' :
                    state === 'pending' ? 'Awaiting Scheduled Sync' :
@@ -279,30 +279,30 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 </p>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-3.5">
                 
-                {/* Total & Difficulty (Seamless layout) */}
+                {/* Total & Difficulty */}
                 <div className="text-center">
-                  <span className="text-4xl font-black text-slate-800 dark:text-white tracking-tighter">
+                  <span className="text-3xl sm:text-4xl font-black text-slate-800 dark:text-white tracking-tighter">
                     {totalSolved}
                   </span>
-                  <div className="text-[10px] font-extrabold uppercase text-slate-400 tracking-widest mt-1 mb-4">
+                  <div className="text-[10px] font-extrabold uppercase text-slate-400 tracking-widest mt-0.5 mb-2.5">
                     Total Solved
                   </div>
 
-                  <div className="flex justify-center items-center gap-6">
+                  <div className="flex justify-center items-center gap-5">
                     <div className="flex flex-col items-center">
-                      <span className="text-lg font-black text-emerald-500">{easy}</span>
+                      <span className="text-base font-black text-emerald-500">{easy}</span>
                       <span className="text-[9px] font-extrabold uppercase text-emerald-700/70 dark:text-emerald-400/70 tracking-widest">Easy</span>
                     </div>
-                    <div className="w-px h-8 bg-slate-200 dark:bg-navy-800" />
+                    <div className="w-px h-6 bg-slate-200 dark:bg-navy-800" />
                     <div className="flex flex-col items-center">
-                      <span className="text-lg font-black text-amber-500">{medium}</span>
+                      <span className="text-base font-black text-amber-500">{medium}</span>
                       <span className="text-[9px] font-extrabold uppercase text-amber-700/70 dark:text-amber-400/70 tracking-widest">Med</span>
                     </div>
-                    <div className="w-px h-8 bg-slate-200 dark:bg-navy-800" />
+                    <div className="w-px h-6 bg-slate-200 dark:bg-navy-800" />
                     <div className="flex flex-col items-center">
-                      <span className="text-lg font-black text-rose-500">{hard}</span>
+                      <span className="text-base font-black text-rose-500">{hard}</span>
                       <span className="text-[9px] font-extrabold uppercase text-rose-700/70 dark:text-rose-400/70 tracking-widest">Hard</span>
                     </div>
                   </div>
@@ -312,9 +312,9 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 <div className="h-px w-2/3 mx-auto bg-gradient-to-r from-transparent via-slate-200 dark:via-navy-700 to-transparent" />
 
                 {/* Additional Stats */}
-                <div className="grid grid-cols-2 gap-4 text-center px-4">
+                <div className="grid grid-cols-2 gap-3 text-center px-2">
                   <div className="flex flex-col items-center">
-                    <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider mb-1">Contest Rank</span>
+                    <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider mb-0.5">Contest Rank</span>
                     <span className="text-sm font-black text-indigo-500 truncate max-w-full">
                       {(() => {
                         const status = (student as any).contest_status || 'NOT_ATTENDED';
@@ -326,7 +326,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                     </span>
                   </div>
                   <div className="flex flex-col items-center">
-                    <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider mb-1">Global Rank</span>
+                    <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider mb-0.5">Global Rank</span>
                     <span className="text-sm font-black text-slate-700 dark:text-slate-200 truncate max-w-full">
                       {(() => {
                         const rawProfileRank = student.stats?.public_profile_ranking ?? (student as any).public_profile_ranking;
@@ -342,7 +342,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
           </div>
 
           {/* Action Footer: Buttons */}
-          <div className="flex items-center space-x-2 pt-4 mt-auto shrink-0">
+          <div className="flex items-center space-x-2 pt-2 pb-1 mt-auto shrink-0">
             <button
               type="button"
               onMouseEnter={() => { import('../pages/StudentProfilePage'); }}
@@ -350,7 +350,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 e.stopPropagation();
                 if (onSelectStudent) onSelectStudent(student);
               }}
-              className="flex-1 min-h-[44px] rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-extrabold text-xs shadow-lg shadow-brand-500/25 transition-all flex items-center justify-center space-x-2 cursor-pointer active:scale-95"
+              className="flex-1 py-2.5 min-h-[40px] rounded-xl sm:rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-extrabold text-xs shadow-md shadow-brand-500/20 transition-all flex items-center justify-center space-x-2 cursor-pointer active:scale-95"
             >
               <span>View Profile</span>
             </button>
@@ -362,7 +362,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                   e.stopPropagation();
                   onDeleteStudent(student);
                 }}
-                className="w-11 min-h-[44px] flex items-center justify-center rounded-2xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer active:scale-95"
+                className="w-10 min-h-[40px] flex items-center justify-center rounded-xl sm:rounded-2xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer active:scale-95"
                 title="Delete Student Record"
               >
                 <Trash2 className="w-4 h-4" />

@@ -684,12 +684,15 @@ I can show specific student progress assigned to any faculty member."""
                 key=lambda x: x["solved"],
                 reverse=True
             )
-            gainers = [g for g in gainers if g["student"] is not None][:5]
-            
-            gainer_rows = "\n".join([
-                f"| {i+1} | **{g['student'].name}** | `{g['student'].reg_no}` | {g['student'].department.code if g['student'].department else 'N/A'} | **{g['solved']}** |"
-                for i, g in enumerate(gainers)
-            ]) if gainers else "| 1 | **All Active Solvers** | Live Sync | Scope Active | 100% |"
+            valid_gainers = [g for g in gainers if g.get("student") is not None]
+            gainer_rows_list = []
+            for i, g in enumerate(valid_gainers[:5]):
+                st_obj = g["student"]
+                dept_str = st_obj.department.code if getattr(st_obj, "department", None) else "N/A"
+                gainer_rows_list.append(
+                    f"| {i+1} | **{st_obj.name}** | `{st_obj.reg_no}` | {dept_str} | **{g['solved']}** |"
+                )
+            gainer_rows = "\n".join(gainer_rows_list) if gainer_rows_list else "| 1 | **All Active Solvers** | Live Sync | Scope Active | 100% |"
 
             markdown_resp = f"""### 📊 Yesterday vs Today Daily Solves Digest
             

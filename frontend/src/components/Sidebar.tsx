@@ -258,10 +258,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
               {sections.map((section, sIdx) => (
                 <div key={sIdx} className="space-y-1.5">
                   <div className="px-1 pb-0.5 flex items-center justify-between">
-                    <span className="text-[10px] sm:text-[10.5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    <span className="text-[11px] font-mono font-extrabold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
                       {section.title}
                     </span>
-                    <span className="w-6 h-px bg-slate-200 dark:bg-navy-800 shrink-0" />
+                    <span className="w-6 h-px bg-slate-300 dark:bg-navy-700 shrink-0" />
                   </div>
 
                   <nav className="space-y-1">
@@ -293,7 +293,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                           className={`w-full min-h-[46px] sm:min-h-[50px] flex items-center justify-between px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-left cursor-pointer select-none transition-all duration-200 group active:scale-[0.98] ${
                             isActive
                               ? 'bg-brand-600 text-white font-bold shadow-sm shadow-brand-500/20 border border-brand-400/30'
-                              : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100/90 dark:hover:bg-navy-900/90 hover:text-brand-600 dark:hover:text-brand-400'
+                              : 'text-slate-800 dark:text-slate-100 hover:bg-slate-100/90 dark:hover:bg-navy-900/90 hover:text-brand-600 dark:hover:text-brand-400'
                           }`}
                         >
                           {/* Left Icon + Label */}
@@ -301,7 +301,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
                             <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200 ${
                               isActive 
                                 ? 'bg-white/20 text-white shadow-inner scale-105' 
-                                : 'bg-slate-100 dark:bg-navy-900 text-slate-500 dark:text-slate-400 group-hover:bg-brand-50 dark:group-hover:bg-navy-800 group-hover:text-brand-600 dark:group-hover:text-brand-300 shadow-xs'
+                                : 'bg-slate-100 dark:bg-navy-900 text-slate-700 dark:text-slate-200 group-hover:bg-brand-50 dark:group-hover:bg-navy-800 group-hover:text-brand-600 dark:group-hover:text-brand-300 shadow-xs'
                             }`}>
                               <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5 shrink-0 transition-transform duration-200" />
                             </div>

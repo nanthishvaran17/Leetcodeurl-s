@@ -178,9 +178,18 @@ export const AuditLogPage: React.FC = () => {
       {/* Logs Table */}
       <div className="glass-card rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-lg">
         {loading ? (
-          <div className="p-8 text-center text-slate-500 dark:text-slate-400 text-xs flex items-center justify-center space-x-2">
-            <RefreshCw className="w-4 h-4 animate-spin text-brand-600" />
-            <span>Loading audit log entries...</span>
+          <div className="p-6 space-y-3 animate-pulse">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
+              <div className="h-4 w-40 bg-slate-200 dark:bg-navy-700 rounded-lg"></div>
+              <div className="h-6 w-32 bg-brand-500/10 rounded-full"></div>
+            </div>
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-12 w-full bg-slate-50 dark:bg-navy-950/60 rounded-xl flex items-center justify-between px-4 border border-slate-100 dark:border-navy-800/60">
+                <div className="h-4 w-32 bg-slate-200 dark:bg-navy-700 rounded"></div>
+                <div className="h-4 w-48 bg-slate-200 dark:bg-navy-700 rounded"></div>
+                <div className="h-4 w-20 bg-slate-200 dark:bg-navy-700 rounded"></div>
+              </div>
+            ))}
           </div>
         ) : logs.length === 0 ? (
           <div className="p-8 text-center text-slate-500 dark:text-slate-400 text-xs">

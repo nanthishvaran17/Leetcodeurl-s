@@ -268,7 +268,9 @@ class SundayLiveIngestionEngine:
             return False, None, f"Database transaction failed: {str(err)}"
 
         # Recalculate summary metrics after commit
-        metrics = cls.recalculate_live_summary_metrics(db, int(session.id))
+        sess_id_int = int(getattr(session, "id"))
+        stud_id_int = int(getattr(student, "id"))
+        metrics = cls.recalculate_live_summary_metrics(db, sess_id_int)
 
         # Broadcast Targeted WebSocket Events
         if has_changed:
@@ -277,12 +279,12 @@ class SundayLiveIngestionEngine:
             rec_fin_time = getattr(record, "finish_time", None)
             rec_yr_lvl = getattr(student, "year_level", None)
             await manager.broadcast_contest_result(
-                student_id=int(student.id),
+                student_id=stud_id_int,
                 student_name=str(getattr(student, "name", "") or ""),
                 reg_no=str(getattr(student, "reg_no", "") or ""),
                 username=str(getattr(student, "username", "") or ""),
                 contest_id=str(getattr(session, "contest_id", "") or ""),
-                session_id=int(session.id),
+                session_id=sess_id_int,
                 q1=int(getattr(record, "q1", 0) or 0),
                 q2=int(getattr(record, "q2", 0) or 0),
                 q3=int(getattr(record, "q3", 0) or 0),
@@ -298,7 +300,7 @@ class SundayLiveIngestionEngine:
             )
 
             await manager.broadcast_contest_summary(
-                session_id=int(session.id),
+                session_id=sess_id_int,
                 contest_id=str(getattr(session, "contest_id", "") or ""),
                 metrics=metrics,
                 dataset_version=int(getattr(record, "dataset_version", 1) or 1)

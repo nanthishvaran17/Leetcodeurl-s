@@ -134,7 +134,7 @@ class FacultyEscalateRequest(BaseModel):
 
 @router.get("/faculty/actions/kpis")
 def get_faculty_kpis_endpoint(
-    dept_id: Optional[int] = None,
+    dept_id: Optional[int] = Query(None),
     year_level: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
     db: Session = Depends(get_db),
@@ -148,15 +148,21 @@ def get_faculty_kpis_endpoint(
     from backend.services.faculty_action_engine import get_faculty_kpis
     role_clean = (current_user.role or "").strip().lower()
     faculty_id = current_user.id if role_clean in ["faculty", "staff"] else None
-    eff_dept_id = dept_id
+    
+    clean_dept_id = dept_id if isinstance(dept_id, int) else None
+    clean_year = year_level if isinstance(year_level, str) else None
+    clean_search = search if isinstance(search, str) else None
+    eff_dept_id = clean_dept_id
 
     # HOD: enforce department scope — override any client-supplied dept_id
     if role_clean == "hod":
         if not current_user.department_id:
             return {"Critical": 0, "High": 0, "Monitoring": 0, "In Progress": 0, "Completed": 0, "Resolved": 0, "Overdue": 0, "Escalated": 0, "total": 0}
-        eff_dept_id = current_user.department_id
+        eff_dept_id = int(current_user.department_id) if current_user.department_id is not None else None
 
-    return get_faculty_kpis(db, department_id=eff_dept_id, faculty_id=faculty_id, year_level=year_level, search=search)
+    dept_id_val = int(eff_dept_id) if eff_dept_id is not None else None
+    faculty_id_val = int(faculty_id) if faculty_id is not None else None
+    return get_faculty_kpis(db, department_id=dept_id_val, faculty_id=faculty_id_val, year_level=clean_year, search=clean_search)
 
 
 @router.get("/faculty/actions")
@@ -187,46 +193,59 @@ def get_faculty_actions_endpoint(
     from backend.services.faculty_action_engine import get_faculty_actions_list, detect_and_sync_faculty_signals
     role_clean = (current_user.role or "").strip().lower()
     faculty_id = current_user.id if role_clean in ["faculty", "staff"] else None
-    eff_dept_id = department_id or dept_id
+
+    # Sanitize Query default objects into standard python types
+    clean_priority = priority if isinstance(priority, str) else None
+    clean_status = status if isinstance(status, str) else None
+    clean_dept_id = department_id if isinstance(department_id, int) else (dept_id if isinstance(dept_id, int) else None)
+    clean_year = year_level if isinstance(year_level, str) else None
+    clean_search = search if isinstance(search, str) else None
+    clean_overdue = is_overdue if isinstance(is_overdue, bool) else None
+    clean_escalated = is_escalated if isinstance(is_escalated, bool) else None
+    eff_dept_id = clean_dept_id
 
     # HOD: enforce department scope — ignore any client-supplied dept_id
     if role_clean == "hod":
         if not current_user.department_id:
             # Fail closed — HOD without department sees nothing
             return {"items": [], "total": 0, "page": page, "page_size": page_size, "kpi": {}}
-        eff_dept_id = current_user.department_id  # always override
+        eff_dept_id = int(current_user.department_id) if current_user.department_id is not None else None  # always override
 
-    eff_limit = limit if limit is not None else page_size
-    eff_offset = offset if offset is not None else (page - 1) * page_size
+    eff_limit = limit if (isinstance(limit, int) and limit > 0) else (page_size if isinstance(page_size, int) else 20)
+    eff_offset = offset if isinstance(offset, int) else ((page - 1) * eff_limit if isinstance(page, int) else 0)
+
+    dept_id_val = int(eff_dept_id) if eff_dept_id is not None else None
+    faculty_id_val = int(faculty_id) if faculty_id is not None else None
+
     data = get_faculty_actions_list(
         db,
-        priority=priority,
-        status=status,
-        department_id=eff_dept_id,
-        year_level=year_level,
-        search=search,
+        priority=clean_priority,
+        status=clean_status,
+        department_id=dept_id_val,
+        year_level=clean_year,
+        search=clean_search,
         limit=eff_limit,
         offset=eff_offset,
-        faculty_id=faculty_id,
-        is_overdue=is_overdue,
-        is_escalated=is_escalated
+        faculty_id=faculty_id_val,
+        is_overdue=clean_overdue,
+        is_escalated=clean_escalated
     )
-    if data["total"] == 0 and not search and not priority and not status:
+    if data["total"] == 0 and not clean_search and not clean_priority and not clean_status:
         detect_and_sync_faculty_signals(db)
         data = get_faculty_actions_list(
             db,
-            priority=priority,
-            status=status,
-            department_id=eff_dept_id,
-            year_level=year_level,
-            search=search,
+            priority=clean_priority,
+            status=clean_status,
+            department_id=dept_id_val,
+            year_level=clean_year,
+            search=clean_search,
             limit=eff_limit,
             offset=eff_offset,
-            faculty_id=faculty_id,
-            is_overdue=is_overdue,
-            is_escalated=is_escalated
+            faculty_id=faculty_id_val,
+            is_overdue=clean_overdue,
+            is_escalated=clean_escalated
         )
-    data["page"] = page
+    data["page"] = page if isinstance(page, int) else 1
     data["page_size"] = eff_limit
     return data
 
@@ -265,7 +284,7 @@ def put_faculty_action_endpoint(
     try:
         return update_faculty_action_details(
             db,
-            action_id=action_id,
+            item_id=action_id,
             status=req.status,
             assigned_faculty_name=req.assigned_faculty_name,
             action_taken=req.action_taken,
@@ -360,7 +379,7 @@ def patch_faculty_action_endpoint(
     try:
         res = update_faculty_action_details(
             db,
-            action_id=action_id,
+            item_id=action_id,
             status=req.status,
             assigned_faculty_name=req.assigned_faculty_name,
             action_taken=req.action_taken,
@@ -389,7 +408,7 @@ def post_assign_faculty_endpoint(
     try:
         return update_faculty_action_details(
             db,
-            action_id=action_id,
+            item_id=action_id,
             assigned_faculty_name=req.assigned_faculty_name,
             user_name=req.user_name or "Faculty Mentor"
         )
@@ -411,7 +430,7 @@ def post_status_faculty_endpoint(
     try:
         return update_faculty_action_details(
             db,
-            action_id=action_id,
+            item_id=action_id,
             status=req.status,
             faculty_notes=req.reason,
             user_name=req.user_name or "Faculty Mentor"
@@ -434,7 +453,7 @@ def post_follow_up_endpoint(
     try:
         return update_faculty_action_details(
             db,
-            action_id=action_id,
+            item_id=action_id,
             follow_up_date=req.follow_up_date,
             next_review_date=req.next_review_date,
             faculty_notes=req.note,
@@ -589,7 +608,7 @@ def get_system_alerts_endpoint(db: Session = Depends(get_db)):
 def mark_alert_read_endpoint(alert_id: int, db: Session = Depends(get_db)):
     alert = db.query(SystemAlert).filter(SystemAlert.id == alert_id).first()
     if alert:
-        alert.is_read = True
+        setattr(alert, "is_read", True)
         db.commit()
     return {"success": True}
 
@@ -597,7 +616,7 @@ def mark_alert_read_endpoint(alert_id: int, db: Session = Depends(get_db)):
 def mark_alert_resolve_endpoint(alert_id: int, db: Session = Depends(get_db)):
     alert = db.query(SystemAlert).filter(SystemAlert.id == alert_id).first()
     if alert:
-        alert.is_resolved = True
-        alert.is_read = True
+        setattr(alert, "is_resolved", True)
+        setattr(alert, "is_read", True)
         db.commit()
     return {"success": True}

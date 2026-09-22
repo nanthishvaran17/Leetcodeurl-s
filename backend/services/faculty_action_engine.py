@@ -85,9 +85,9 @@ class FacultyActionEngine:
             
         if department_id:
             query = query.filter(Student.department_id == department_id)
-        if year_level and year_level.upper() not in ["ALL", ""]:
+        if year_level and isinstance(year_level, str) and year_level.upper() not in ["ALL", ""]:
             query = query.filter(Student.year_level == year_level)
-        if search and search.strip():
+        if search and isinstance(search, str) and search.strip():
             search_str = f"%{search.strip()}%"
             query = query.filter(or_(
                 Student.name.ilike(search_str),
@@ -238,8 +238,11 @@ def get_faculty_actions_list(
 ) -> dict:
     from backend.models import FacultyActionQueueItem, Student, FacultyStudentAssignment
     from sqlalchemy import or_
+    from sqlalchemy.orm import joinedload
 
-    query = db.query(FacultyActionQueueItem).join(Student, FacultyActionQueueItem.student_id == Student.id)
+    query = db.query(FacultyActionQueueItem).options(
+        joinedload(FacultyActionQueueItem.student).joinedload(Student.department)
+    ).join(Student, FacultyActionQueueItem.student_id == Student.id)
 
     if faculty_id:
         assigned_student_ids = [a.student_id for a in db.query(FacultyStudentAssignment).filter(FacultyStudentAssignment.faculty_id == faculty_id).all()]
@@ -252,19 +255,20 @@ def get_faculty_actions_list(
     total_count = query.count()
 
     # Apply filters
-    if priority and priority.upper() not in ["ALL", ""]:
+    if priority and isinstance(priority, str) and priority.upper() not in ["ALL", ""]:
         query = query.filter(FacultyActionQueueItem.priority == priority)
-    if status and status.upper() not in ["ALL", ""]:
+    if status and isinstance(status, str) and status.upper() not in ["ALL", ""]:
         query = query.filter(FacultyActionQueueItem.status == status)
     if is_overdue:
-        query = query.filter(FacultyActionQueueItem.is_overdue_followup == True)
+        today_utc = datetime.now(timezone.utc)
+        query = query.filter(FacultyActionQueueItem.follow_up_date.isnot(None), FacultyActionQueueItem.follow_up_date < today_utc, FacultyActionQueueItem.status.not_in(["Completed", "Resolved"]))
     if is_escalated:
         query = query.filter(FacultyActionQueueItem.is_escalated == True)
     if department_id:
         query = query.filter(Student.department_id == department_id)
-    if year_level and year_level.upper() not in ["ALL", ""]:
+    if year_level and isinstance(year_level, str) and year_level.upper() not in ["ALL", ""]:
         query = query.filter(Student.year_level == year_level)
-    if search and search.strip():
+    if search and isinstance(search, str) and search.strip():
         search_str = f"%{search.strip()}%"
         query = query.filter(or_(
             Student.name.ilike(search_str),
@@ -418,8 +422,137 @@ def create_faculty_intervention(db, student_id, action_taken, notes=None):
 def calculate_intervention_effectiveness(db, student_id=None):
     return {"effectiveness_score": 85.0, "status": "active"}
 
-def update_faculty_action_details(db, item_id, action_taken=None, status=None, notes=None, faculty_id=None):
-    return {"status": "success", "item_id": item_id}
+def update_faculty_action_details(
+    db: Session,
+    item_id: int,
+    status: Optional[str] = None,
+    assigned_faculty_name: Optional[str] = None,
+    action_taken: Optional[str] = None,
+    faculty_notes: Optional[str] = None,
+    evidence_remarks: Optional[str] = None,
+    follow_up_date: Optional[str] = None,
+    next_review_date: Optional[str] = None,
+    user_name: str = "Faculty Mentor",
+    faculty_id: Optional[int] = None
+) -> dict:
+    from backend.models import FacultyActionQueueItem, FacultyActionAuditLog
+    from datetime import datetime, timezone
+
+    item = db.query(FacultyActionQueueItem).filter(FacultyActionQueueItem.id == item_id).first()
+    if not item:
+        raise ValueError(f"Action item {item_id} not found")
+
+    if status and status != item.status:
+        audit = FacultyActionAuditLog(
+            action_id=item.id,
+            user_name=user_name,
+            event_type="STATUS_CHANGED",
+            previous_value=str(item.status),
+            new_value=str(status)
+        )
+        db.add(audit)
+        setattr(item, "status", status)
+        if status in ["Completed", "Resolved"]:
+            setattr(item, "resolved_at", datetime.now(timezone.utc))
+
+    if assigned_faculty_name and assigned_faculty_name != item.assigned_faculty_name:
+        audit = FacultyActionAuditLog(
+            action_id=item.id,
+            user_name=user_name,
+            event_type="FACULTY_ASSIGNED",
+            previous_value=str(item.assigned_faculty_name or "Unassigned"),
+            new_value=str(assigned_faculty_name)
+        )
+        db.add(audit)
+        setattr(item, "assigned_faculty_name", assigned_faculty_name)
+
+    if faculty_id:
+        setattr(item, "faculty_id", faculty_id)
+
+    if action_taken:
+        setattr(item, "action_taken", action_taken)
+
+    if faculty_notes:
+        audit = FacultyActionAuditLog(
+            action_id=item.id,
+            user_name=user_name,
+            event_type="NOTE_ADDED",
+            reason=faculty_notes
+        )
+        db.add(audit)
+        setattr(item, "faculty_notes", faculty_notes)
+
+    if evidence_remarks:
+        setattr(item, "evidence_remarks", evidence_remarks)
+
+    if follow_up_date:
+        try:
+            dt = datetime.fromisoformat(follow_up_date)
+            setattr(item, "follow_up_date", dt)
+        except Exception:
+            pass
+
+    if next_review_date:
+        try:
+            dt = datetime.fromisoformat(next_review_date)
+            setattr(item, "next_review_date", dt)
+        except Exception:
+            pass
+
+    setattr(item, "updated_at", datetime.now(timezone.utc))
+    db.commit()
+    db.refresh(item)
+    return {"status": "success", "item_id": item.id}
+
+
+def get_action_timeline(db: Session, action_id: int) -> list:
+    from backend.models import FacultyActionAuditLog
+    logs = db.query(FacultyActionAuditLog).filter(FacultyActionAuditLog.action_id == action_id).order_by(FacultyActionAuditLog.id.asc()).all()
+    timeline = []
+    for l in logs:
+        timeline.append({
+            "id": l.id,
+            "event_type": l.event_type,
+            "user_name": l.user_name,
+            "previous_value": l.previous_value,
+            "new_value": l.new_value,
+            "reason": l.reason,
+            "created_at": l.created_at.isoformat() if l.created_at else ""
+        })
+    return timeline
+
+
+def escalate_faculty_action(
+    db: Session,
+    action_id: int,
+    escalated_to: str,
+    reason: str,
+    user_name: str = "Faculty Mentor"
+) -> dict:
+    from backend.models import FacultyActionQueueItem, FacultyActionAuditLog
+    from datetime import datetime, timezone
+
+    item = db.query(FacultyActionQueueItem).filter(FacultyActionQueueItem.id == action_id).first()
+    if not item:
+        raise ValueError(f"Action item {action_id} not found")
+
+    setattr(item, "is_escalated", True)
+    setattr(item, "escalated_to", escalated_to)
+    setattr(item, "escalated_at", datetime.now(timezone.utc))
+    setattr(item, "updated_at", datetime.now(timezone.utc))
+
+    audit = FacultyActionAuditLog(
+        action_id=item.id,
+        user_name=user_name,
+        event_type="ESCALATED",
+        new_value=escalated_to,
+        reason=reason
+    )
+    db.add(audit)
+    db.commit()
+    db.refresh(item)
+    return {"status": "success", "action_id": item.id, "escalated_to": escalated_to}
+
 
 
 

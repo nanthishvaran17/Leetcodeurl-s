@@ -4,10 +4,10 @@
 
 :root {
   --color-text-primary: #0F172A;
-  --color-text-secondary: #475569;
-  --color-text-muted: #64748B;
-  --color-text-subtle: #64748B;
-  --color-border: #E2E8F0;
+  --color-text-secondary: #334155;
+  --color-text-muted: #475569;
+  --color-text-subtle: #475569;
+  --color-border: #CBD5E1;
   --color-background: #F8FAFC;
   --color-surface: #FFFFFF;
   --color-primary: #2563EB;
@@ -20,14 +20,14 @@
   --color-error-light: #FEF2F2;
   --color-info: #0284C7;
   --color-info-light: #F0F9FF;
-  --label-high-contrast: #334155;
+  --label-high-contrast: #1E293B;
 }
 
 .dark {
   --color-text-primary: #F8FAFC;
-  --color-text-secondary: #CBD5E1;
-  --color-text-muted: #94A3B8;
-  --color-text-subtle: #64748B;
+  --color-text-secondary: #E2E8F0;
+  --color-text-muted: #CBD5E1;
+  --color-text-subtle: #94A3B8;
   --color-border: #334155;
   --color-background: #020617;
   --color-surface: #0F172A;
@@ -41,7 +41,7 @@
   --color-error-light: rgba(239, 68, 68, 0.15);
   --color-info: #38BDF8;
   --color-info-light: rgba(56, 189, 248, 0.15);
-  --label-high-contrast: #CBD5E1;
+  --label-high-contrast: #F1F5F9;
 }
 
 @layer base {
@@ -383,11 +383,11 @@
 }
 
 .student-reg {
-  @apply text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400;
+  @apply text-xs font-mono font-bold text-slate-700 dark:text-slate-200;
 }
 
 .student-meta {
-  @apply text-[11px] font-semibold text-slate-500 dark:text-slate-400;
+  @apply text-xs font-semibold text-slate-700 dark:text-slate-200;
 }
 
 /* ─── Standardized Status Badges ─────────────────────────── */
@@ -584,6 +584,37 @@
 
 .animate-fadeIn {
   animation: fadeSlideIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in-up {
+  animation: slideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes topLoaderProgress {
+  0% {
+    width: 0%;
+    opacity: 1;
+  }
+  50% {
+    width: 70%;
+    opacity: 1;
+  }
+  90% {
+    width: 95%;
+    opacity: 1;
+  }
+  100% {
+    width: 100%;
+    opacity: 0;
+  }
+}
+
+.animate-top-loader {
+  animation: topLoaderProgress 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Opacity-only page enter — no transform, so fixed/absolute modal children
