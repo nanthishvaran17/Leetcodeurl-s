@@ -101,7 +101,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </span>
                     ) : null}
                   </div>
-                  <span className="text-[9px] xs:text-[10px] leading-tight sm:text-xs sm:leading-snug text-slate-700 dark:text-slate-200 font-bold tracking-wide truncate">
+                  <span className="text-[9px] xs:text-[10px] leading-tight sm:text-xs sm:leading-snug text-slate-800 dark:text-slate-100 font-extrabold tracking-wide truncate">
                     Nandha Engineering College<span className="hidden sm:inline"> • Erode</span>
                   </span>
                 </div>
@@ -110,7 +110,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Middle: Quick Status Indicator */}
             <div className="hidden md:flex items-center space-x-4 flex-shrink-0 mx-2">
-              <div className="flex items-center space-x-2.5 px-3.5 py-1.5 rounded-2xl bg-slate-100/90 dark:bg-navy-950/90 border border-slate-200 dark:border-navy-800 text-xs shadow-inner">
+              <div className="flex items-center space-x-2.5 px-3.5 py-1.5 rounded-2xl bg-slate-100 dark:bg-navy-950 border border-slate-300 dark:border-navy-800 text-xs shadow-inner">
                 <div className={`w-2.5 h-2.5 rounded-full ${
                   currentSessionStatus === 'ACTIVE' || currentSessionStatus === 'LIVE' || currentSessionStatus === 'RUNNING'
                     ? 'bg-brand-500 pulse-live-indicator'
@@ -118,7 +118,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     ? 'bg-emerald-500'
                     : 'bg-brand-500'
                 }`} />
-                <span className="font-extrabold text-slate-700 dark:text-slate-300 tracking-tight flex items-center space-x-1.5">
+                <span className="font-black text-slate-900 dark:text-white tracking-tight flex items-center space-x-1.5">
                   <span>Sync Engine:</span>
                   <span className={`uppercase font-black tracking-wider px-2 py-0.5 rounded-md border text-[10px] ${
                     currentSessionStatus === 'ACTIVE' || currentSessionStatus === 'LIVE' || currentSessionStatus === 'RUNNING'

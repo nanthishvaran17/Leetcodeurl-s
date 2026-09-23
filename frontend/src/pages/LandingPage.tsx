@@ -651,7 +651,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               ))}
             </div>
 
-            <p className="text-xs md:text-[13px] text-slate-300/90 max-w-3xl leading-relaxed">
+            <p className="text-xs md:text-sm text-slate-100 dark:text-slate-100 font-bold max-w-3xl leading-relaxed drop-shadow-sm">
               Institutional competitive programming intelligence {activeDepartmentDescription} with verified Sunday contest forensics and automated reporting.
             </p>
           </motion.div>
@@ -858,7 +858,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <Filter className="w-4 h-4 text-brand-500" />
               <span>Student Performance Showcase</span>
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-700 dark:text-slate-200 font-bold">
               Filter student records by Department, Academic Year, and LeetCode Problem Solved Range
             </p>
           </div>
@@ -880,10 +880,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             {/* Reset Filters Button */}
             <button
               onClick={handleResetFilters}
-              className="flex items-center space-x-1.5 px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold border border-slate-200 dark:border-slate-700 transition-all cursor-pointer shadow-sm"
+              className="flex items-center space-x-1.5 px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-black border border-slate-300 dark:border-slate-700 transition-all cursor-pointer shadow-sm"
               title="Reset all filters to default"
             >
-              <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+              <RotateCcw className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
               <span>Reset Filters</span>
             </button>
           </div>
@@ -918,11 +918,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
           {/* 3. Name Search */}
           <div className="flex flex-col space-y-1.5 min-w-0 w-full">
-            <label htmlFor="landing-name-search" className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate flex items-center h-4 leading-4 m-0 p-0">
+            <label htmlFor="landing-name-search" className="block text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider truncate flex items-center h-4 leading-4 m-0 p-0">
               Search Student Name
             </label>
             <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-700 dark:text-slate-300">
                 <Search className="w-4 h-4" />
               </div>
               <input
@@ -934,12 +934,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   setDisplayCount(32);
                 }}
                 placeholder="Search name, reg no..."
-                className="w-full h-11 min-h-[44px] bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-bold py-2 px-3.5 pl-9 pr-8 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 truncate transition-all"
+                className="w-full h-11 min-h-[44px] bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-bold py-2 px-3.5 pl-9 pr-8 rounded-2xl border border-slate-300 dark:border-slate-700/80 shadow-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 placeholder-slate-500 dark:placeholder-slate-400 truncate transition-all"
               />
               {nameSearch && (
                 <button
                   onClick={() => { setNameSearch(''); setDisplayCount(32); }}
-                  className="absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                  className="absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
                   title="Clear search"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -984,7 +984,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               <div className="flex flex-col">
                 <span>Showing {Math.min(displayCount, sortedList.length)} of {sortedList.length} Students</span>
                 {(selectedDept !== 'all' || yearLevel !== 'all' || solvedFilter !== 'all') && (
-                  <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 mt-1">
+                  <span className="text-sm font-bold text-slate-700 dark:text-slate-300 mt-1">
                     Filtered by: {[
                       selectedDept !== 'all' ? (departments.find(d => String(d.id) === String(selectedDept) || d.code === selectedDept)?.name || selectedDept) : null,
                       yearLevel !== 'all' ? `${yearLevel} Year` : null,
@@ -1034,7 +1034,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                       }
                     </span>
                   </span>
-                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                  <p className="text-xs font-extrabold text-slate-700 dark:text-slate-200">
                     {syncProgress.is_running
                       ? `Processing Profile: ${syncProgress.current_student || 'Initializing...'}`
                       : `Student statistics are up to date${syncProgress.last_sync_time ? ` • Last synced: ${syncProgress.last_sync_time}` : ''}${syncProgress.triggered_by ? ` • Initiated by: ${syncProgress.triggered_by}` : ''}`
@@ -1062,7 +1062,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
               <div className="grid grid-cols-3 gap-3 relative z-10 pt-2 border-t border-slate-100 dark:border-slate-800">
                 <div className="flex flex-col">
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Successful</span>
+                  <span className="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest">Successful</span>
                   <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
                     {syncProgress.is_running
                       ? syncProgress.successful
@@ -1072,7 +1072,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </span>
                 </div>
                 <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-3">
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pending</span>
+                  <span className="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest">Pending</span>
                   <span className="text-sm font-black text-amber-500">
                     {syncProgress.is_running
                       ? (syncProgress.pending_usernames ?? 0)
@@ -1082,7 +1082,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   </span>
                 </div>
                 <div className="flex flex-col border-l border-slate-100 dark:border-slate-800 pl-3">
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Failed</span>
+                  <span className="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest">Failed</span>
                   <span className="text-sm font-black text-rose-500">
                     {syncProgress.failed ?? (summaryData?.failed_sync ?? 0)}
                   </span>
@@ -1146,8 +1146,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
               {displayCount < sortedList.length && (
                 <div className="flex flex-col items-center justify-center pt-4 space-y-2">
-                  <p className="text-xs text-slate-500 font-semibold">
-                    Showing <span className="font-extrabold text-brand-600 dark:text-brand-400">{Math.min(displayCount, sortedList.length)}</span> of <span className="font-extrabold text-slate-900 dark:text-white">{sortedList.length}</span> Students
+                  <p className="text-xs text-slate-800 dark:text-slate-200 font-extrabold">
+                    Showing <span className="font-black text-brand-600 dark:text-brand-400">{Math.min(displayCount, sortedList.length)}</span> of <span className="font-black text-slate-900 dark:text-white">{sortedList.length}</span> Students
                   </p>
                 <div className="flex items-center space-x-3">
                   <motion.button

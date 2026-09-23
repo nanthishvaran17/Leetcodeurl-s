@@ -189,7 +189,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
                 type="button"
                 onClick={() => handleSelect(opt.value)}
                 onMouseEnter={() => setFocusedIndex(idx)}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer group ${
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer group active:scale-[0.98] touch-manipulation ${
                   isSelected
                     ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30'
                     : isFocused
@@ -248,7 +248,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   return (
     <div className={`flex flex-col space-y-1.5 w-full max-w-full min-w-0 box-border relative ${className}`} ref={dropdownRef} id={id}>
       {label ? (
-        <label className={labelClassName || "block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate flex items-center h-4 leading-4 m-0 p-0"}>
+        <label className={labelClassName || "block text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider truncate flex items-center h-4 leading-4 m-0 p-0"}>
           <span>{label}</span>
         </label>
       ) : null}
@@ -278,8 +278,8 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
           }
           setIsOpen(!isOpen);
         }}
-        className={`flex items-center justify-between flex-nowrap space-x-2 transition-all duration-200 text-left cursor-pointer group shadow-sm box-border ${
-          triggerClassName || 'w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-white dark:bg-slate-800/90 border-slate-200 dark:border-slate-700/80 hover:border-brand-500/40'
+        className={`flex items-center justify-between flex-nowrap space-x-2 transition-all duration-200 text-left cursor-pointer group shadow-sm box-border active:scale-[0.98] touch-manipulation ${
+          triggerClassName || 'w-full h-11 min-h-[44px] py-2 px-3.5 rounded-2xl border bg-white dark:bg-slate-800/90 border-slate-300 dark:border-slate-700 hover:border-brand-500/60'
         } ${
           isOpen
             ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-md shadow-brand-500/10'
@@ -291,29 +291,29 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
             <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border transition-colors ${
               isOpen
                 ? 'bg-brand-50 dark:bg-brand-950/80 border-brand-300 text-brand-600 dark:text-brand-400'
-                : 'bg-slate-100 dark:bg-slate-800 border-slate-200/70 dark:border-slate-700/70 text-slate-400 dark:text-slate-500 group-hover:text-brand-500 group-hover:border-brand-500/30'
+                : 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 group-hover:text-brand-600 group-hover:border-brand-500/50'
             }`}>
               <HeaderIcon className="w-3.5 h-3.5 shrink-0" />
             </div>
           )}
           <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-hidden">
             {selectedOption?.badge && !selectedOption.hidePill && !hideTriggerBadge && (
-              <span className={`shrink-0 px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border ${
-                selectedOption.badgeColor || 'bg-brand-100 dark:bg-brand-900/80 text-brand-800 dark:text-brand-300 border-brand-200 dark:border-brand-800'
+              <span className={`shrink-0 px-1.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border ${
+                selectedOption.badgeColor || 'bg-brand-100 dark:bg-brand-900/80 text-brand-900 dark:text-brand-200 border-brand-300 dark:border-brand-800'
               }`}>
                 {selectedOption.badge}
               </span>
             )}
-            <span className={`text-xs font-bold truncate block min-w-0 flex-1 ${
-              selectedOption ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'
+            <span className={`text-xs font-black truncate block min-w-0 flex-1 ${
+              selectedOption ? 'text-slate-900 dark:text-slate-100' : 'text-slate-700 dark:text-slate-300'
             }`}>
               {selectedOption ? selectedOption.label : (placeholder || label || 'Select...')}
             </span>
           </div>
         </div>
 
-        <ChevronDown className={`w-4 h-4 shrink-0 text-slate-400 transition-transform duration-200 ${
-          isOpen ? 'rotate-180 text-brand-500' : 'group-hover:text-slate-600 dark:group-hover:text-slate-300'
+        <ChevronDown className={`w-4 h-4 shrink-0 text-slate-700 dark:text-slate-300 transition-transform duration-200 ${
+          isOpen ? 'rotate-180 text-brand-600 dark:text-brand-400' : 'group-hover:text-slate-900 dark:group-hover:text-white'
         }`} />
       </button>
 

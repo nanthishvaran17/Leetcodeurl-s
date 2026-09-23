@@ -61,6 +61,7 @@ class ConnectionManager:
     async def connect(self, websocket: WebSocket, token: Optional[str] = None) -> bool:
         """Accept a WebSocket connection. Enforces strict authentication when a token is provided."""
         await websocket.accept()
+        self._main_loop = asyncio.get_running_loop()
 
         user_ctx: Dict[str, Any] = {"user_id": None, "role": "anonymous", "authenticated": False}
         if token:
@@ -90,13 +91,40 @@ class ConnectionManager:
         if self._batch_task is None or self._batch_task.done():
             self._batch_task = asyncio.create_task(self._flush_loop())
 
+        # Push current live sync progress state immediately if a sync is running
+        try:
+            from backend.services.live_sync_service import sync_tracker
+            if sync_tracker.is_running:
+                import datetime
+                payload = {
+                    "type": "sync_progress",
+                    "job_id": sync_tracker.current_job_id,
+                    "processed": sync_tracker.students_processed,
+                    "total": sync_tracker.total_students,
+                    "successful": sync_tracker.successful,
+                    "failed": sync_tracker.failed,
+                    "pending": sync_tracker.pending_usernames,
+                    "invalid": sync_tracker.invalid,
+                    "unknown": sync_tracker.unknown,
+                    "current_student": sync_tracker.current_student,
+                    "current_username": sync_tracker.current_username,
+                    "current_status": sync_tracker.current_student_status,
+                    "progress_percent": sync_tracker.progress_percentage,
+                    "recent_completed": sync_tracker.recent_completed,
+                    "is_running": True,
+                    "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
+                }
+                await websocket.send_text(json.dumps(payload))
+                logger.info(f"[WS_CONNECT] Pushed active sync_progress to new client (processed: {sync_tracker.students_processed}/{sync_tracker.total_students})")
+        except Exception as e:
+            logger.warning(f"[WS_CONNECT] Sync state push note: {e}")
+
         # If it's a staff/admin connecting during an active live contest, push cached state immediately
         if user_ctx.get("role", "").lower() in ["super admin", "admin", "staff mentor", "faculty mentor", "faculty", "staff", "hod"]:
             try:
                 from backend.services.live_dashboard_tracker import live_dashboard_tracker
                 cached_state = live_dashboard_tracker.get_cached_state()
                 if cached_state and cached_state.get("data", {}).get("phase") in ["active", "degraded"]:
-                    import json
                     await websocket.send_text(json.dumps(cached_state))
                     logger.info(f"[WS_CONNECT] Sent cached live dashboard state to {user_ctx.get('email')}")
             except Exception as e:
@@ -362,21 +390,29 @@ class ConnectionManager:
             self.disconnect(conn)
 
     def _run_async_safely(self, coro):
-        """Thread-safe runner for async operations from synchronous callers."""
+        """Thread-safe runner for async operations from synchronous or background thread callers."""
         try:
-            try:
-                loop = asyncio.get_running_loop()
-            except RuntimeError:
-                loop = None
-
-            if loop and loop.is_running():
-                return asyncio.create_task(coro)
-            else:
-                new_loop = asyncio.new_event_loop()
+            main_loop = getattr(self, "_main_loop", None)
+            if main_loop and main_loop.is_running():
                 try:
-                    return new_loop.run_until_complete(coro)
-                finally:
-                    new_loop.close()
+                    curr_loop = asyncio.get_running_loop()
+                except RuntimeError:
+                    curr_loop = None
+
+                if curr_loop is main_loop:
+                    return asyncio.create_task(coro)
+                else:
+                    return asyncio.run_coroutine_threadsafe(coro, main_loop)
+            else:
+                try:
+                    loop = asyncio.get_running_loop()
+                    return loop.create_task(coro)
+                except RuntimeError:
+                    new_loop = asyncio.new_event_loop()
+                    try:
+                        return new_loop.run_until_complete(coro)
+                    finally:
+                        new_loop.close()
         except Exception as e:
             logger.warning(f"Could not execute websocket coroutine safely: {e}")
 

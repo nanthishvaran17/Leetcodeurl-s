@@ -160,7 +160,7 @@ class AuthenticatedVirtualContestProvider:
 
         # Gate 2: Account Identity Match
         evidence_username = str(evidence_record.get("leetcode_username", evidence_record.get("username", ""))).strip().lower()
-        clean_reg_username = str(registered_username or "").strip().lower()
+        clean_reg_username = (registered_username or "").strip().lower()
 
         if not clean_reg_username or not evidence_username:
             return {
@@ -187,7 +187,7 @@ class AuthenticatedVirtualContestProvider:
         # Gate 3: Canonical Contest Match
         c_id = str(evidence_record.get("contest_id", "")).lower()
         c_name = str(evidence_record.get("contest_name", "")).lower()
-        target_c_id = str(target_contest_id).lower()
+        target_c_id = target_contest_id.lower()
 
         is_contest_516 = (
             c_id == target_c_id or
@@ -258,7 +258,7 @@ class AuthenticatedVirtualContestProvider:
             }
 
         username_in_image = str(screenshot_record.get("leetcode_username", screenshot_record.get("username", ""))).strip().lower()
-        reg_username = str(registered_username or "").strip().lower()
+        reg_username = (registered_username or "").strip().lower()
 
         if not username_in_image:
             return {
@@ -483,7 +483,7 @@ class UniversalContestReconciliationEngine:
                 q3_val = 1 if (p_res.q3 and p_res.q3 >= 1) else 0
                 q4_val = 1 if (p_res.q4 and p_res.q4 >= 1) else 0
                 actual_sum = q1_val + q2_val + q3_val + q4_val
-                tot_rec = (p_res.total_contest_solved or 0)
+                tot_rec = int(getattr(p_res, "total_contest_solved", 0) or 0)
                 solved_val = max(actual_sum, tot_rec)
                 if solved_val > 0 and actual_sum < solved_val:
                     if solved_val >= 4:
@@ -534,7 +534,7 @@ class UniversalContestReconciliationEngine:
                 q3_val = 1 if (v_res.q3 and v_res.q3 >= 1) else 0
                 q4_val = 1 if (v_res.q4 and v_res.q4 >= 1) else 0
                 actual_sum = q1_val + q2_val + q3_val + q4_val
-                tot_rec = (v_res.total_contest_solved or 0)
+                tot_rec = int(getattr(v_res, "total_contest_solved", 0) or 0)
                 solved_val = max(actual_sum, tot_rec)
                 if solved_val > 0 and actual_sum < solved_val:
                     if solved_val >= 4:
@@ -1010,14 +1010,14 @@ class UniversalContestReconciliationEngine:
 
         # 14. If NOT dry run and invariants pass, update DB and invalidate caches
         if not dry_run and invariant_pass and session_obj:
-            session_obj.total_students = int(total_roster)
-            session_obj.official_participants = int(live_attended)
-            session_obj.virtual_participants = int(virtual_attended)
-            session_obj.not_participated = int(not_attended)
-            session_obj.failed_verification = int(data_errors)
-            session_obj.sync_status = " Verified"
-            session_obj.last_synced = datetime.datetime.now(UTC_TZ)
-            session_obj.dataset_hash = str(dataset_checksum)
+            setattr(session_obj, "total_students", total_roster)
+            setattr(session_obj, "official_participants", live_attended)
+            setattr(session_obj, "virtual_participants", virtual_attended)
+            setattr(session_obj, "not_participated", not_attended)
+            setattr(session_obj, "failed_verification", data_errors)
+            setattr(session_obj, "sync_status", " Verified")
+            setattr(session_obj, "last_synced", datetime.datetime.now(UTC_TZ))
+            setattr(session_obj, "dataset_hash", dataset_checksum)
             
             # Persist audit record in virtual_scan_audits table
             try:
@@ -1048,7 +1048,7 @@ class UniversalContestReconciliationEngine:
 
             try:
                 from backend.services.canonical_contest_engine import invalidate_canonical_cache
-                invalidate_canonical_cache(int(session_obj.id))
+                invalidate_canonical_cache(int(getattr(session_obj, "id")))
             except Exception:
                 pass
 
@@ -1085,7 +1085,7 @@ class UniversalContestReconciliationEngine:
                         "participation_status": "VIRTUAL",
                         "timestamp": datetime.datetime.now(UTC_TZ).isoformat()
                     }
-                    ws_manager.broadcast_virtual_result(int(session_obj.id), _event)
+                    ws_manager.broadcast_virtual_result(int(getattr(session_obj, "id")), _event)
 
                 if verified_virtual_list:
                     logger.info(
@@ -1212,7 +1212,7 @@ def match_contest_problem(slug_or_title: str, problems_dict: Any = None) -> Any:
     """Matches a submission slug or title to the canonical contest problem set."""
     if not slug_or_title:
         return None
-    clean = str(slug_or_title).lower().strip().replace(" ", "-").replace("_", "-")
+    clean = slug_or_title.lower().strip().replace(" ", "-").replace("_", "-")
     
     # 1. If explicit list of problems (e.g. from meta_517["problems"])
     if isinstance(problems_dict, list):

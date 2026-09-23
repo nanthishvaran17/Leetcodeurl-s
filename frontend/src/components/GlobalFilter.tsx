@@ -466,19 +466,16 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
     }
     if (options.some(o => o.pillText === 'EXE' || o.pillText === 'FAC' || o.value === 'EXECUTIVE' || o.label.toUpperCase().includes('REPORT'))) {
       return 'Search report type...';
-    }
-    if (options.some(o => o.pillText === 'A' || o.pillText === 'B' || o.label.toUpperCase().includes('SECTION') || o.label.toUpperCase().includes('COHORT'))) {
-      return 'Search section / cohort...';
-    }
-    return 'Search options...';
-  }, [searchPlaceholder, label, options]);
+    };
+  }, [isOpen]);
+
   const triggerTheme = getDepartmentTheme(selectedOption, false);
 
   return (
     <div className={twMerge('flex flex-col space-y-1.5 min-w-0 w-full', className)}>
       {/* Optional Top Label */}
       {label && (
-        <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate flex items-center justify-between h-4 leading-4 m-0 p-0">
+        <label className="block text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider truncate flex items-center justify-between h-4 leading-4 m-0 p-0">
           <span>{label}</span>
         </label>
       )}
@@ -494,7 +491,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
             "border transition-all duration-200 outline-none select-none rounded-2xl cursor-pointer shadow-sm text-left group",
             isOpen 
               ? "border-brand-500 ring-2 ring-brand-500/20 shadow-md shadow-brand-500/10" 
-              : "border-slate-200 dark:border-slate-700 hover:border-brand-500/40"
+              : "border-slate-300 dark:border-slate-700 hover:border-brand-500/60"
           )}
         >
           <div className="flex items-center space-x-2 overflow-hidden min-w-0 flex-1 pr-1.5">
@@ -502,9 +499,9 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
               <div className={clsx(
                 "w-5 h-5 rounded-md flex items-center justify-center shrink-0 transition-colors border",
                 triggerTheme.iconBg,
-                isOpen ? "border-brand-300" : "border-slate-200/60 dark:border-navy-700/60"
+                isOpen ? "border-brand-300" : "border-slate-300 dark:border-navy-700"
               )}>
-                <span className={isOpen ? "text-brand-600 dark:text-brand-400" : triggerTheme.iconColor}>
+                <span className={isOpen ? "text-brand-600 dark:text-brand-400 font-bold" : triggerTheme.iconColor}>
                   {selectedOption?.icon || icon}
                 </span>
               </div>
@@ -512,22 +509,22 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
             
             {selectedOption?.hidePill !== true && (
               <div className={clsx(
-                "shrink-0 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md border",
+                "shrink-0 text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md border",
                 triggerTheme.badgeBg, triggerTheme.badgeText, triggerTheme.badgeBorder
               )}>
                 {getPillText(selectedOption)}
               </div>
             )}
             
-            <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate flex-1 text-left">
+            <span className="text-xs font-black text-slate-900 dark:text-white truncate flex-1 text-left">
               {selectedOption ? selectedOption.label : placeholder}
             </span>
           </div>
 
           <ChevronDown 
             className={clsx(
-              "w-3.5 h-3.5 shrink-0 transition-transform duration-200 ml-1",
-              isOpen ? "rotate-180 text-brand-500" : "text-slate-400 dark:text-slate-500"
+              "w-4 h-4 shrink-0 transition-transform duration-200 ml-1",
+              isOpen ? "rotate-180 text-brand-600 dark:text-brand-400" : "text-slate-700 dark:text-slate-300"
             )} 
           />
         </button>

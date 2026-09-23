@@ -1168,41 +1168,6 @@ try:
 except Exception as e:
     logger.warning(f"Could not mount static reports directory: {e}")
 
-@app.websocket("/ws/notifications")
-@app.websocket("/ws/leaderboard")
-async def websocket_leaderboard_endpoint(websocket: WebSocket, token: Optional[str] = None):
-    """Authenticated real-time WebSocket endpoint for notifications and leaderboard events."""
-    connected = await manager.connect(websocket, token=token)
-    if not connected:
-        return
-    try:
-        while True:
-            data = await websocket.receive_text()
-            if data == "ping":
-                await websocket.send_text("pong")
-            else:
-                # Handle SUBSCRIBE / UNSUBSCRIBE for contest-scoped events
-                try:
-                    msg = json.loads(data)
-                    if msg.get("action") == "SUBSCRIBE" and msg.get("session_id"):
-                        manager.subscribe_session(websocket, int(msg["session_id"]))
-                        await websocket.send_text(json.dumps({"type": "SUBSCRIBED", "session_id": msg["session_id"]}))
-                    elif msg.get("action") == "UNSUBSCRIBE" and msg.get("session_id"):
-                        manager.unsubscribe_session(websocket, int(msg["session_id"]))
-                        await websocket.send_text(json.dumps({"type": "UNSUBSCRIBED", "session_id": msg["session_id"]}))
-                    
-                    # Messaging: Track active conversation to prevent duplicate FCM pushes
-                    elif msg.get("action") == "VIEW_CONVERSATION" and msg.get("conversation_id"):
-                        manager.set_active_conversation(websocket, msg["conversation_id"])
-                        await websocket.send_text(json.dumps({"type": "VIEWING_CONVERSATION", "conversation_id": msg["conversation_id"]}))
-                    elif msg.get("action") == "LEAVE_CONVERSATION":
-                        manager.set_active_conversation(websocket, None)
-                        await websocket.send_text(json.dumps({"type": "LEFT_CONVERSATION"}))
-                        
-                except (json.JSONDecodeError, ValueError):
-                    pass  # Non-JSON messages (e.g. plain strings) — ignore
-    except WebSocketDisconnect:
-        manager.disconnect(websocket)
 
 @app.websocket("/ws/contest/{contest_id}")
 async def websocket_contest_endpoint(websocket: WebSocket, contest_id: str, token: Optional[str] = None):

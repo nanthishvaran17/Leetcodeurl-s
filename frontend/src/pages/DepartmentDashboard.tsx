@@ -353,12 +353,12 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
 
           {/* 3. Name Search */}
           <div className="flex flex-col space-y-1.5 min-w-0 w-full">
-            <label htmlFor="dept-dashboard-name-search" className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate h-4 leading-4 m-0 p-0">
+            <label htmlFor="dept-dashboard-name-search" className="block text-[11px] font-black text-slate-900 dark:text-slate-100 uppercase tracking-wider truncate h-4 leading-4 m-0 p-0">
               Search Student Name
             </label>
             <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-                <Search className="w-4 h-4" />
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-700 dark:text-slate-200">
+                <Search className="w-4 h-4 stroke-[2.5]" />
               </div>
               <input
                 id="dept-dashboard-name-search"
@@ -369,7 +369,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
                   setDisplayCount(32);
                 }}
                 placeholder="Search by name, reg no..."
-                className="w-full h-11 min-h-[44px] bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-bold py-2 pl-9 pr-8 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 truncate transition-all"
+                className="w-full h-11 min-h-[44px] bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-600 dark:placeholder-slate-300 text-xs font-bold py-2 pl-9 pr-8 rounded-2xl border border-slate-300 dark:border-slate-700 shadow-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 truncate transition-all"
               />
               {nameSearch && (
                 <button

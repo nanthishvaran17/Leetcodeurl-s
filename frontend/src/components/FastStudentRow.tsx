@@ -235,7 +235,7 @@ export const FastStudentRow = memo(({
         })()}
       </div>
 
-      <div className="hidden md:flex flex-none w-24 px-3 items-center justify-center text-center text-amber-500 font-bold">
+      <div className="hidden md:flex flex-none w-24 px-3 items-center justify-center text-center text-amber-600 dark:text-amber-400 font-extrabold">
         {(() => {
           const rawRating = student.stats?.contest_rating ?? (student as any).contest_rating;
           if (rawRating == null || rawRating <= 0) return '—';
@@ -243,7 +243,7 @@ export const FastStudentRow = memo(({
         })()}
       </div>
 
-      <div className="hidden md:flex flex-none w-28 px-3 items-center justify-center text-center text-indigo-500 font-bold">
+      <div className="hidden md:flex flex-none w-28 px-3 items-center justify-center text-center text-indigo-700 dark:text-indigo-300 font-extrabold">
         {(() => {
           const rawRank = student.stats?.contest_global_ranking ?? (student as any).contest_global_ranking;
           if (rawRank == null || rawRank <= 0 || rawRank === 50000) return '—';
@@ -251,7 +251,7 @@ export const FastStudentRow = memo(({
         })()}
       </div>
 
-      <div className="hidden md:flex flex-none w-28 px-3 items-center justify-center text-center text-slate-700 dark:text-slate-300 font-bold">
+      <div className="hidden md:flex flex-none w-28 px-3 items-center justify-center text-center text-slate-900 dark:text-slate-100 font-extrabold">
         {(() => {
           const rawProfileRank = student.stats?.public_profile_ranking ?? (student as any).public_profile_ranking;
           if (!rawProfileRank || rawProfileRank >= 5000000 || rawProfileRank <= 0) return '—';

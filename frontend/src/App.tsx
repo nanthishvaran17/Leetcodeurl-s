@@ -16,6 +16,9 @@ import { InstallAppPrompt } from './components/InstallAppPrompt';
 import { AppUpdateNotifier } from './components/AppUpdateNotifier';
 import { useScrollLock } from './hooks/useScrollLock';
 import { StudentProfileSkeleton } from './components/StudentProfileSkeleton';
+import { MobileBottomNav } from './components/MobileBottomNav';
+import { StudentShareCardModal } from './components/StudentShareCardModal';
+import { MobileFilterDrawer } from './components/MobileFilterDrawer';
 
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
@@ -241,6 +244,8 @@ export const App: React.FC = () => {
   const [summaryData, setSummaryData] = useState<any>(() => getCachedSummary());
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showAiWidget, setShowAiWidget] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showMobileFilterDrawer, setShowMobileFilterDrawer] = useState(false);
 
   useGlobalKeyboardShortcuts({
     onOpenCommandPalette: () => setShowCommandPalette(true),
@@ -276,9 +281,25 @@ export const App: React.FC = () => {
       window.dispatchEvent(new CustomEvent('force_open_ai_widget'));
     };
     window.addEventListener('open_ai_widget', handleOpenAi);
+
+    const handleOpenFilterDrawer = () => {
+      setShowMobileFilterDrawer(true);
+    };
+    window.addEventListener('open_mobile_filter_drawer', handleOpenFilterDrawer);
+
+    const handleOpenShareModal = (e?: any) => {
+      if (e?.detail?.student) {
+        setSelectedStudent(e.detail.student);
+      }
+      setShowShareModal(true);
+    };
+    window.addEventListener('open_share_card', handleOpenShareModal);
+
     return () => {
       window.removeEventListener('toggle_sidebar', handleToggleSidebar);
       window.removeEventListener('open_ai_widget', handleOpenAi);
+      window.removeEventListener('open_mobile_filter_drawer', handleOpenFilterDrawer);
+      window.removeEventListener('open_share_card', handleOpenShareModal);
     };
   }, []);
 
@@ -412,6 +433,14 @@ export const App: React.FC = () => {
         backListenerHandle = await CapacitorApp.addListener('backButton', () => {
           if (showExitConfirmModal) {
             setShowExitConfirmModal(false);
+          } else if (showShareModal) {
+            setShowShareModal(false);
+          } else if (showMobileFilterDrawer) {
+            setShowMobileFilterDrawer(false);
+          } else if (showAiWidget) {
+            setShowAiWidget(false);
+          } else if (showShortcutsModal) {
+            setShowShortcutsModal(false);
           } else if (isSidebarOpen) {
             setIsSidebarOpen(false);
           } else if (showCommandPalette) {
@@ -443,6 +472,10 @@ export const App: React.FC = () => {
     };
   }, [
     showExitConfirmModal,
+    showShareModal,
+    showMobileFilterDrawer,
+    showAiWidget,
+    showShortcutsModal,
     isSidebarOpen,
     showCommandPalette,
     selectedStudent,
@@ -1061,6 +1094,40 @@ export const App: React.FC = () => {
 
       {/* App Update Notification Banner for Active Users */}
       <AppUpdateNotifier />
+
+      {/* Mobile Bottom Navigation Bar for APK & Mobile Web */}
+      <MobileBottomNav
+        activeTab={activeTab}
+        setActiveTab={handleTabChange}
+        onOpenShareCard={() => setShowShareModal(true)}
+        isAuthenticated={isAuthenticated}
+      />
+
+      {/* Shareable Achievement Card Modal */}
+      <StudentShareCardModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        student={selectedStudent || summaryData?.top_student || (user ? {
+          id: (user as any).id,
+          reg_no: (user as any).reg_no || (user as any).username || '',
+          name: (user as any).full_name || user.name || '',
+          department: (user as any).department,
+          batch: (user as any).batch,
+          year_level: (user as any).year_level,
+          college_rank: (user as any).college_rank || (user as any).rank,
+          total_solved: (user as any).total_solved,
+          easy_solved: (user as any).easy_solved,
+          medium_solved: (user as any).medium_solved,
+          hard_solved: (user as any).hard_solved,
+          streak_count: (user as any).streak_count || (user as any).current_streak
+        } : null)}
+      />
+
+      {/* Touch-Friendly Mobile Filter Drawer */}
+      <MobileFilterDrawer
+        isOpen={showMobileFilterDrawer}
+        onClose={() => setShowMobileFilterDrawer(false)}
+      />
 
     </div>
   );

@@ -104,18 +104,27 @@ def get_current_sync_status(db: Session = Depends(get_db)):
         pending_cnt = agg.pending
         failed_cnt = max(0, tot - verified_cnt - pending_cnt)
 
-        # Reconcile any zombie RUNNING jobs if in-memory sync worker is not active
+        # Reconcile true zombie RUNNING jobs (older than 2 hours) across multi-worker environments
         running_job = db.query(SyncJob).filter(SyncJob.status == "RUNNING").order_by(SyncJob.id.desc()).first()
-        if running_job and not sync_tracker.is_running:
-            logger.warning(f"Reconciling zombie lock for job {running_job.job_id}")
-            db.query(SyncJob).filter(SyncJob.status == "RUNNING").update({
-                "status": "INTERRUPTED",
-                "completed_at": datetime.datetime.now(datetime.timezone.utc)
-            }, synchronize_session=False)
-            from backend.services.live_sync_service import _release_global_lock
-            _release_global_lock(db, running_job.job_id)
-            db.commit()
-            running_job = None
+        now_utc = datetime.datetime.now(datetime.timezone.utc)
+        from backend.time_utils import ensure_utc
+
+        if running_job:
+            job_updated = ensure_utc(running_job.last_synced_at or running_job.started_at) if (running_job.last_synced_at or running_job.started_at) else None
+            last_activity_age = (now_utc - job_updated).total_seconds() if job_updated else 9999
+            
+            # Reconcile ghost zombie jobs when sync_tracker is not running in memory and inactive > 15s or negative age
+            is_ghost_zombie = not sync_tracker.is_running and (last_activity_age > 15 or last_activity_age < -5)
+            if is_ghost_zombie:
+                logger.warning(f"Reconciling ghost zombie lock for dead job {running_job.job_id} (inactive {last_activity_age:.1f}s)")
+                db.query(SyncJob).filter(SyncJob.job_id == running_job.job_id).update({
+                    "status": "INTERRUPTED",
+                    "completed_at": now_utc
+                }, synchronize_session=False)
+                from backend.services.live_sync_service import _release_global_lock
+                _release_global_lock(db, running_job.job_id)
+                db.commit()
+                running_job = None
         elif not sync_tracker.is_running:
             from backend.services.live_sync_service import _release_global_lock
             _release_global_lock(db)

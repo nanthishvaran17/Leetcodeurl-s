@@ -386,8 +386,19 @@ def log_security_access_event(
         db.add(audit_entry)
         db.commit()
     except Exception as ex:
-        db.rollback()
-        logger.error(f"Failed to record security audit log: {ex}")
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        exc_str = str(ex).lower()
+        if "operationalerror" in type(ex).__name__.lower() or any(k in exc_str for k in ("connection", "closed", "timeout")):
+            try:
+                db.invalidate()
+            except Exception:
+                pass
+            logger.warning(f"Notice: Security audit log deferred due to DB reconnection: {ex}")
+        else:
+            logger.error(f"Failed to record security audit log: {ex}")
 
 def extract_current_user_optional(request: Request, db: Session) -> Optional[User]:
     """Extracts authenticated user from HttpOnly Cookie or Bearer token if present."""

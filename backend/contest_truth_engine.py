@@ -129,7 +129,7 @@ class ContestTruthEngine:
 
         # Parse submission evidence
         if contest_problems:
-            clean_problems = [p.strip().lower() for p in contest_problems if p and str(p).strip()]
+            clean_problems = [p.strip().lower() for p in contest_problems if p and p.strip()]
         else:
             clean_problems = []
 

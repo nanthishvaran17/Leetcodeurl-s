@@ -138,7 +138,7 @@ def analyze_excel_import(file_bytes: bytes, custom_mapping: Optional[Dict[str, s
     and identifies newly discovered departments.
     """
     import io
-    import pandas as pd
+    import pandas as pd  # type: ignore
     from backend.models import Student, Department
     from backend.services.excel_intelligence_engine import (
         detect_column_headers, normalize_year_value, normalize_batch_value,
@@ -159,7 +159,7 @@ def analyze_excel_import(file_bytes: bytes, custom_mapping: Optional[Dict[str, s
                 "total_rows": 0
             }
 
-        raw_headers = [str(c).strip() for c in df.columns]
+        raw_headers = [c.strip() for c in df.columns]
         auto_mappings, confidence_map, unmapped = detect_column_headers(raw_headers)
 
         effective_mapping = {**auto_mappings, **(custom_mapping or {})}
@@ -186,7 +186,7 @@ def analyze_excel_import(file_bytes: bytes, custom_mapping: Optional[Dict[str, s
         seen_reg_nos = set()
 
         for idx, row in df.iterrows():
-            row_num = idx + 2  # 1-based + header row
+            row_num = int(idx) + 2  # 1-based + header row
 
             def _get_val(canonical_key: str) -> str:
                 raw_col = canonical_to_raw.get(canonical_key)
@@ -236,7 +236,7 @@ def analyze_excel_import(file_bytes: bytes, custom_mapping: Optional[Dict[str, s
             # Row classification: CREATE vs UPDATE vs UNCHANGED
             existing_st = existing_students_reg.get(reg_no)
 
-            row_summary = {
+            row_summary: Dict[str, Any] = {
                 "row_num": row_num,
                 "reg_no": reg_no,
                 "name": name,
@@ -317,7 +317,7 @@ def validate_excel_import_file(file_bytes: bytes) -> Dict[str, Any]:
     Returns row breakdown, valid count, invalid count, duplicates, and error preview.
     """
     import io
-    import pandas as pd
+    import pandas as pd  # type: ignore
     from backend.models import Student
     
     db = SessionLocal()
@@ -340,7 +340,7 @@ def validate_excel_import_file(file_bytes: bytes) -> Dict[str, Any]:
             }
 
         # Normalize column headers
-        df.columns = [str(c).strip().lower().replace(" ", "_").replace(".", "") for c in df.columns]
+        df.columns = [c.strip().lower().replace(" ", "_").replace(".", "") for c in df.columns]
         
         # Existing database reg_nos for duplicate checking
         existing_reg_nos = set(r[0] for r in db.query(Student.reg_no).all() if r[0])
@@ -355,7 +355,7 @@ def validate_excel_import_file(file_bytes: bytes) -> Dict[str, Any]:
         seen_in_file = set()
 
         for idx, row in df.iterrows():
-            row_num = idx + 2 # 1-based index + header row
+            row_num = int(idx) + 2 # 1-based index + header row
             reg_no = str(row.get("register_no") or row.get("reg_no") or row.get("register_number") or "").strip()
             name = str(row.get("name") or row.get("student_name") or "").strip()
             dept = str(row.get("department") or row.get("dept") or row.get("branch") or "").strip()
@@ -497,7 +497,7 @@ def commit_smart_excel_import(
     creates new students, invalidates cache, logs audit events, and triggers background LeetCode sync.
     """
     import io
-    import pandas as pd
+    import pandas as pd  # type: ignore
     from backend.models import Student, Department
     from backend.services.excel_intelligence_engine import (
         detect_column_headers, normalize_year_value, normalize_batch_value,
@@ -516,7 +516,7 @@ def commit_smart_excel_import(
         if df.empty:
             return {"success": False, "error": "Uploaded Excel file is empty."}
 
-        raw_headers = [str(c).strip() for c in df.columns]
+        raw_headers = [c.strip() for c in df.columns]
         auto_mappings, _, _ = detect_column_headers(raw_headers)
         effective_mapping = {**auto_mappings, **(custom_mapping or {})}
         canonical_to_raw = {v: k for k, v in effective_mapping.items()}
@@ -527,7 +527,7 @@ def commit_smart_excel_import(
 
         existing_depts_db = {d.code.upper(): d for d in db.query(Department).all()}
         for code in new_dept_codes:
-            code_upper = str(code).strip().upper()
+            code_upper = code.strip().upper()
             if code_upper and code_upper not in existing_depts_db:
                 new_d = Department(code=code_upper, name=f"{code_upper} Department")
                 db.add(new_d)
@@ -563,7 +563,7 @@ def commit_smart_excel_import(
         affected_student_ids = []
 
         for idx, row in df.iterrows():
-            row_num = idx + 2
+            row_num = int(idx) + 2
 
             def _get_val(canonical_key: str) -> str:
                 raw_col = canonical_to_raw.get(canonical_key)
@@ -630,28 +630,28 @@ def commit_smart_excel_import(
                 sec_lc_url, sec_username = normalize_leetcode_url(raw_sec_lc) if raw_sec_lc else (None, None)
                 has_changes = False
                 if name and str(getattr(existing_st, "name", "") or "") != name:
-                    existing_st.name = name
+                    setattr(existing_st, "name", name)
                     has_changes = True
                 if dept_id and getattr(existing_st, "department_id", None) != dept_id:
-                    existing_st.department_id = dept_id
+                    setattr(existing_st, "department_id", dept_id)
                     has_changes = True
                 if norm_year and str(getattr(existing_st, "year_level", "") or "") != norm_year:
-                    existing_st.year_level = norm_year
+                    setattr(existing_st, "year_level", norm_year)
                     has_changes = True
                 if raw_email and str(getattr(existing_st, "email", "") or "") != raw_email:
-                    existing_st.email = raw_email
+                    setattr(existing_st, "email", raw_email)
                     has_changes = True
                 if lc_username and str(getattr(existing_st, "username", "") or "") != lc_username:
-                    existing_st.username = lc_username
-                    existing_st.primary_leetcode_id = lc_username
-                    existing_st.leetcode_url = lc_url or ""
+                    setattr(existing_st, "username", lc_username)
+                    setattr(existing_st, "primary_leetcode_id", lc_username)
+                    setattr(existing_st, "leetcode_url", lc_url or "")
                     has_changes = True
                 if sec_username and str(getattr(existing_st, "secondary_leetcode_id", "") or "") != sec_username:
-                    existing_st.secondary_leetcode_id = sec_username
-                    existing_st.secondary_status = "approved"
+                    setattr(existing_st, "secondary_leetcode_id", sec_username)
+                    setattr(existing_st, "secondary_status", "approved")
                     has_changes = True
                 if norm_batch and str(getattr(existing_st, "batch", "") or "") != norm_batch:
-                    existing_st.batch = norm_batch
+                    setattr(existing_st, "batch", norm_batch)
                     has_changes = True
 
                 if has_changes:

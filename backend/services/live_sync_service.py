@@ -151,6 +151,29 @@ class LiveSyncTracker:
         if len(self.recent_logs) > 50:
             self.recent_logs.pop(0)
 
+        # Broadcast sync_progress immediately on every student completion for hyper-responsive UI
+        try:
+            from backend.websocket_manager import manager
+            manager.broadcast_sync({
+                "type": "sync_progress",
+                "job_id": self.current_job_id,
+                "processed": self.students_processed,
+                "total": self.total_students,
+                "successful": self.successful,
+                "failed": self.failed,
+                "pending": self.pending_usernames,
+                "invalid": self.invalid,
+                "unknown": self.unknown,
+                "current_student": student_name,
+                "current_username": username or "",
+                "current_status": status.upper(),
+                "progress_percent": self.progress_percentage,
+                "recent_completed": self.recent_completed,
+                "timestamp": now_iso
+            })
+        except Exception:
+            pass
+
     def update(self, success_inc=0, profiles_synced_inc=0, partial_inc=0, failed_inc=0, pending_inc=0, log_msg=""):
         self.students_processed += 1
         self.profiles_synced += profiles_synced_inc
@@ -235,16 +258,20 @@ def invalidate_active_students_cache():
         _ACTIVE_STUDENTS_CACHE = None
         _ACTIVE_STUDENTS_CACHE_TIME = 0.0
 
-def get_active_students(db: Session, force_refresh: bool = False) -> List[Student]:
+def get_active_students(db: Session = None, force_refresh: bool = False) -> List[Student]:
     """Returns active student roster from database dynamically with joinedload stats."""
     from sqlalchemy.orm import joinedload
-    students = db.query(Student).options(
-        joinedload(Student.stats),
-        joinedload(Student.department)
-    ).filter(
-        or_(Student.is_active == True, Student.is_active.is_(None))
-    ).all()
-    return students
+    s_db = SessionLocal()
+    try:
+        students = s_db.query(Student).options(
+            joinedload(Student.stats),
+            joinedload(Student.department)
+        ).filter(
+            or_(Student.is_active == True, Student.is_active.is_(None))
+        ).all()
+        return students
+    finally:
+        s_db.close()
 
 
 import threading
@@ -253,51 +280,54 @@ _background_tasks = set()
 
 def dispatch_background_task(coro):
     """Dispatches async coroutine task reliably and non-blockingly (<10ms) across all execution contexts."""
-    try:
-        loop = asyncio.get_running_loop()
-        task = loop.create_task(coro)
-        _background_tasks.add(task)
-        task.add_done_callback(_background_tasks.discard)
-    except RuntimeError:
-        t = threading.Thread(target=asyncio.run, args=(coro,), daemon=True)
-        t.start()
+    def _runner():
+        try:
+            asyncio.run(coro)
+        except Exception as _e:
+            logger.error(f"[BACKGROUND_TASK] Background coroutine error: {_e}", exc_info=True)
+    t = threading.Thread(target=_runner, daemon=True)
+    t.start()
 
 
 from backend.config import Settings
 settings = Settings()
 
-def _acquire_global_lock(db: Session, job_id: str, timeout_minutes: int = 120) -> bool:
-    """Atomic acquisition of the global sync lock using a single transaction."""
+def _acquire_global_lock(db: Session = None, job_id: str = "", timeout_minutes: int = 120) -> bool:
+    """Atomic acquisition of the global sync lock using a single short-lived transaction."""
     now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
     for attempt in range(3):
+        lock_db = SessionLocal()
         try:
             # Ensure a lock row exists (id=1)
-            lock_row = db.query(GlobalSyncLock).filter(GlobalSyncLock.id == 1).first()
+            lock_row = lock_db.query(GlobalSyncLock).filter(GlobalSyncLock.id == 1).first()
             if not lock_row:
                 try:
                     lock_row = GlobalSyncLock(id=1, is_locked=False)
-                    db.add(lock_row)
-                    db.commit()
+                    lock_db.add(lock_row)
+                    lock_db.commit()
                 except Exception:
-                    db.rollback()
+                    lock_db.rollback()
 
-            # Clear expired OR zombie locks if in-memory sync worker is not active
-            if not sync_tracker.is_running:
-                stmt_clear = (
-                    update(GlobalSyncLock)
-                    .where(GlobalSyncLock.id == 1)
-                    .where(GlobalSyncLock.is_locked == True)
-                    .values(is_locked=False, locked_by_job_id=None, locked_at=None, expires_at=None)
-                )
-            else:
-                stmt_clear = (
-                    update(GlobalSyncLock)
-                    .where(GlobalSyncLock.id == 1)
-                    .where(GlobalSyncLock.is_locked == True)
-                    .where(GlobalSyncLock.expires_at < now)
-                    .values(is_locked=False, locked_by_job_id=None, locked_at=None, expires_at=None)
-                )
-            db.execute(stmt_clear.execution_options(synchronize_session=False))
+            # Clear expired or ghost locks atomically
+            is_ghost_lock = False
+            if lock_row and lock_row.is_locked and lock_row.locked_at:
+                from backend.time_utils import ensure_utc
+                now_utc = datetime.datetime.now(datetime.timezone.utc)
+                locked_utc = ensure_utc(lock_row.locked_at)
+                locked_age = (now_utc - locked_utc).total_seconds() if locked_utc else 9999
+                # If sync_tracker is not running and lock is either older than 15s or has negative age, it's a ghost lock
+                if not sync_tracker.is_running and (locked_age > 15 or locked_age < -5):
+                    is_ghost_lock = True
+                    logger.info(f"[SYNC_LOCK] Clearing orphaned lock from dead process (locked_by={lock_row.locked_by_job_id}, age={locked_age:.1f}s)")
+
+            stmt_clear = (
+                update(GlobalSyncLock)
+                .where(GlobalSyncLock.id == 1)
+                .where(GlobalSyncLock.is_locked == True)
+                .where((GlobalSyncLock.expires_at < now) | (is_ghost_lock == True))
+                .values(is_locked=False, locked_by_job_id=None, locked_at=None, expires_at=None)
+            )
+            lock_db.execute(stmt_clear.execution_options(synchronize_session=False))
 
             # Attempt to acquire lock atomically
             stmt_lock = (
@@ -311,29 +341,38 @@ def _acquire_global_lock(db: Session, job_id: str, timeout_minutes: int = 120) -
                     expires_at=now + datetime.timedelta(minutes=timeout_minutes)
                 )
             )
-            result = db.execute(stmt_lock.execution_options(synchronize_session=False))
-            db.commit()  # type: ignore
+            result = lock_db.execute(stmt_lock.execution_options(synchronize_session=False))
+            lock_db.commit()
             return result.rowcount > 0  # type: ignore
         except Exception as e:
-            db.rollback()
+            lock_db.rollback()
             if attempt < 2 and ('SSL' in str(e) or 'OperationalError' in str(e) or 'connection' in str(e).lower()):
-                import time; time.sleep(0.5 * (attempt + 1))
+                import time; time.sleep(0.3 * (attempt + 1))
                 continue
             logger.error(f"[SYNC_LOCK] Error acquiring global lock: {e}")
             return False
+        finally:
+            lock_db.close()
     return False
 
-def _release_global_lock(db: Session, job_id: str = None):  # type: ignore
-    """Release the global sync lock."""
-    stmt = (
-        update(GlobalSyncLock)
-        .where(GlobalSyncLock.id == 1)
-    )
-    if job_id:
-        stmt = stmt.where(GlobalSyncLock.locked_by_job_id == job_id)
-    stmt = stmt.values(is_locked=False, locked_by_job_id=None, locked_at=None, expires_at=None)
-    db.execute(stmt)
-    db.commit()
+def _release_global_lock(db: Session = None, job_id: str = None):  # type: ignore
+    """Release the global sync lock using an isolated short-lived session."""
+    lock_db = SessionLocal()
+    try:
+        stmt = (
+            update(GlobalSyncLock)
+            .where(GlobalSyncLock.id == 1)
+        )
+        if job_id:
+            stmt = stmt.where(GlobalSyncLock.locked_by_job_id == job_id)
+        stmt = stmt.values(is_locked=False, locked_by_job_id=None, locked_at=None, expires_at=None)
+        lock_db.execute(stmt)
+        lock_db.commit()
+    except Exception as e:
+        lock_db.rollback()
+        logger.warning(f"[SYNC_LOCK] Lock release note: {e}")
+    finally:
+        lock_db.close()
 
 def start_full_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, Any]:
     """
@@ -344,45 +383,51 @@ def start_full_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, A
 
     # 1. DB-Level Single Job Lock Check
     if not _acquire_global_lock(db, job_id):
-        active_lock = db.query(GlobalSyncLock).filter(GlobalSyncLock.id == 1).first()
-        active_job_id = active_lock.locked_by_job_id if active_lock else "UNKNOWN"
-        logger.info(f"[SYNC] Sync job {active_job_id} is already RUNNING. Reusing active job.")
-        return {
-            "success": False,
-            "status": "SYNC_ALREADY_RUNNING",
-            "already_running": True,
-            "job_id": active_job_id,
-            "message": "A synchronization job is already in progress.",
-            "started_at": active_lock.locked_at.isoformat() if active_lock and active_lock.locked_at else None
-        }
+        s_lock_db = SessionLocal()
+        try:
+            active_lock = s_lock_db.query(GlobalSyncLock).filter(GlobalSyncLock.id == 1).first()
+            active_job_id = active_lock.locked_by_job_id if active_lock else "UNKNOWN"
+            logger.info(f"[SYNC] Sync job {active_job_id} is already RUNNING. Reusing active job.")
+            return {
+                "success": False,
+                "status": "SYNC_ALREADY_RUNNING",
+                "already_running": True,
+                "job_id": active_job_id,
+                "message": "A synchronization job is already in progress.",
+                "started_at": active_lock.locked_at.isoformat() if active_lock and active_lock.locked_at else None
+            }
+        finally:
+            s_lock_db.close()
 
     logger.info(f"[SYNC] Creating session: {job_id}")
     
-    # Mark any stale running jobs as INTERRUPTED
-    db.query(SyncJob).filter(SyncJob.status == "RUNNING").update({
-        "status": "INTERRUPTED",
-        "completed_at": datetime.datetime.now(datetime.timezone.utc)
-    }, synchronize_session=False)
+    # Mark any stale running jobs as INTERRUPTED & create new SyncJob record cleanly
+    s_job_db = SessionLocal()
+    try:
+        s_job_db.query(SyncJob).filter(SyncJob.status == "RUNNING").update({
+            "status": "INTERRUPTED",
+            "completed_at": datetime.datetime.now(datetime.timezone.utc)
+        }, synchronize_session=False)
 
-    # 2. Dynamic Active Roster Count
-    students = get_active_students(db)
-    total_count = len(students)
-    new_job = SyncJob(
-        job_id=job_id,
-        job_type="FULL_SYNC",
-        started_at=datetime.datetime.now(datetime.timezone.utc),
-        status="RUNNING",
-        total_records=total_count,
-        success_count=0,
-        partial_count=0,
-        error_count=0,
-        triggered_by=triggered_by
-    )
-    db.add(new_job)
-    db.commit()
-    db.refresh(new_job)
+        students = get_active_students()
+        total_count = len(students)
+        new_job = SyncJob(
+            job_id=job_id,
+            job_type="FULL_SYNC",
+            started_at=datetime.datetime.now(datetime.timezone.utc),
+            status="RUNNING",
+            total_records=total_count,
+            success_count=0,
+            partial_count=0,
+            error_count=0,
+            triggered_by=triggered_by
+        )
+        s_job_db.add(new_job)
+        s_job_db.commit()
+    finally:
+        s_job_db.close()
+
     logger.info(f"[QUEUE] Job queued: {job_id}")
-
     sync_tracker.start(job_id, total_count, triggered_by=triggered_by)
 
     # Invalidate fast cache immediately on job start
@@ -1156,59 +1201,102 @@ def sync_single_student(student_id: int, db: Session, force_refresh: bool = True
             _active_single_fetches.discard(student_id)
 
 
+_LAST_FRESHNESS_CACHE: Optional[Dict[str, Any]] = None
+_LAST_FRESHNESS_CACHE_TIME: float = 0.0
+
 def get_system_freshness(db: Session) -> Dict[str, Any]:
-    """Returns system-wide freshness metrics and verification summary."""
-    students = get_active_students(db)
-    total_count = len(students)
+    """Returns system-wide freshness metrics and verification summary with connection-retry resilience."""
+    global _LAST_FRESHNESS_CACHE, _LAST_FRESHNESS_CACHE_TIME
 
-    verified_count = 0
-    partial_count = 0
-    stale_count = 0
-    latest_sync: Optional[datetime.datetime] = None
+    current_db = db
+    for attempt in range(2):
+        try:
+            students = get_active_students(current_db)
+            total_count = len(students)
 
-    # Always work in UTC-aware datetimes to avoid offset-naive/aware TypeError
-    now = datetime.datetime.now(datetime.timezone.utc)
-    freshness_seconds = settings.SYNC_FRESHNESS_HOURS * 3600
+            verified_count = 0
+            partial_count = 0
+            stale_count = 0
+            latest_sync: Optional[datetime.datetime] = None
 
-    def _to_utc(dt: Optional[datetime.datetime]) -> Optional[datetime.datetime]:
-        """Normalise any datetime to UTC-aware; return None if input is None."""
-        if dt is None:
-            return None
-        if dt.tzinfo is None:
-            # Treat naive datetimes stored in DB as UTC
-            return dt.replace(tzinfo=datetime.timezone.utc)
-        return dt.astimezone(datetime.timezone.utc)
+            now = datetime.datetime.now(datetime.timezone.utc)
+            freshness_seconds = settings.SYNC_FRESHNESS_HOURS * 3600
 
-    for s in students:
-        st = s.stats
-        if st and st.sync_status in ("success", "verified") and st.total_solved is not None:
-            verified_count += 1
-            sync_ts = _to_utc(st.last_successful_sync)
-            if sync_ts and (latest_sync is None or sync_ts > latest_sync):
-                latest_sync = sync_ts
-            # Check if sync is older than configurable threshold
-            if sync_ts and (now - sync_ts).total_seconds() > freshness_seconds:
-                stale_count += 1
-        elif st and st.total_solved is not None:
-            partial_count += 1
-        else:
-            stale_count += 1
+            def _to_utc(dt: Optional[datetime.datetime]) -> Optional[datetime.datetime]:
+                """Normalise any datetime to UTC-aware; return None if input is None."""
+                if dt is None:
+                    return None
+                if dt.tzinfo is None:
+                    return dt.replace(tzinfo=datetime.timezone.utc)
+                return dt.astimezone(datetime.timezone.utc)
 
-    needs_attention = partial_count + stale_count
-    running_job = db.query(SyncJob).filter(SyncJob.status == "RUNNING").first()
+            for s in students:
+                st = s.stats
+                if st and st.sync_status in ("success", "verified") and st.total_solved is not None:
+                    verified_count += 1
+                    sync_ts = _to_utc(st.last_successful_sync)
+                    if sync_ts and (latest_sync is None or sync_ts > latest_sync):
+                        latest_sync = sync_ts
+                    if sync_ts and (now - sync_ts).total_seconds() > freshness_seconds:
+                        stale_count += 1
+                elif st and st.total_solved is not None:
+                    partial_count += 1
+                else:
+                    stale_count += 1
 
-    data_freshness = "FRESH" if (latest_sync and (now - latest_sync).total_seconds() <= freshness_seconds) else "STALE"
+            needs_attention = partial_count + stale_count
+            running_job = current_db.query(SyncJob).filter(SyncJob.status == "RUNNING").first()
 
-    return {
-        "total_students": total_count,
-        "verified_count": verified_count,
-        "partial_count": partial_count,
-        "stale_count": stale_count,
-        "needs_attention_count": needs_attention,
-        "data_freshness_status": data_freshness,
-        "freshness_hours_threshold": settings.SYNC_FRESHNESS_HOURS,
-        "last_successful_sync": latest_sync.isoformat() if latest_sync else None,
-        "is_sync_running": running_job is not None,
-        "running_job_id": running_job.job_id if running_job else None,
-        "freshness_badge": f" {verified_count}/{total_count} Verified | {needs_attention} Need Attention"
-    }
+            data_freshness = "FRESH" if (latest_sync and (now - latest_sync).total_seconds() <= freshness_seconds) else "STALE"
+
+            res = {
+                "total_students": total_count,
+                "verified_count": verified_count,
+                "partial_count": partial_count,
+                "stale_count": stale_count,
+                "needs_attention_count": needs_attention,
+                "data_freshness_status": data_freshness,
+                "freshness_hours_threshold": settings.SYNC_FRESHNESS_HOURS,
+                "last_successful_sync": latest_sync.isoformat() if latest_sync else None,
+                "is_sync_running": running_job is not None,
+                "running_job_id": running_job.job_id if running_job else None,
+                "freshness_badge": f" {verified_count}/{total_count} Verified | {needs_attention} Need Attention"
+            }
+            _LAST_FRESHNESS_CACHE = res
+            _LAST_FRESHNESS_CACHE_TIME = time.time()
+            return res
+        except Exception as exc:
+            try:
+                current_db.rollback()
+            except Exception:
+                pass
+            exc_str = str(exc).lower()
+            if attempt == 0 and any(k in exc_str or k in type(exc).__name__.lower() for k in ("operationalerror", "connection", "closed", "timeout")):
+                try:
+                    current_db.invalidate()
+                except Exception:
+                    pass
+                try:
+                    from backend.database import SessionLocal
+                    current_db = SessionLocal()
+                    continue
+                except Exception:
+                    pass
+            
+            logger.warning(f"[FRESHNESS] Database connection error in get_system_freshness: {exc}")
+            if _LAST_FRESHNESS_CACHE:
+                return _LAST_FRESHNESS_CACHE
+            return {
+                "total_students": 0,
+                "verified_count": 0,
+                "partial_count": 0,
+                "stale_count": 0,
+                "needs_attention_count": 0,
+                "data_freshness_status": "STALE",
+                "freshness_hours_threshold": settings.SYNC_FRESHNESS_HOURS,
+                "last_successful_sync": None,
+                "is_sync_running": False,
+                "running_job_id": None,
+                "freshness_badge": " Reconnecting DB"
+            }
+

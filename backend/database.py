@@ -64,20 +64,20 @@ from sqlalchemy.pool import NullPool
 engine_kwargs = {}
 if "postgresql" in db_url or "postgres" in db_url:
     pg_connect_args = {
-        "connect_timeout": 15,   # Connect timeout for cloud PostgreSQL DB
+        "connect_timeout": 5,    # Fast connect timeout (5s) for Neon AWS multi-IP failover
         "keepalives": 1,
-        "keepalives_idle": 30,   # probe after 30s idle (Neon is aggressive)
-        "keepalives_interval": 5,
+        "keepalives_idle": 15,   # Probe after 15s idle
+        "keepalives_interval": 3,
         "keepalives_count": 3,
         "sslmode": "require",
     }
 
     engine_kwargs.update({
-        "pool_size": int(os.environ.get("DB_POOL_SIZE", 35)),
-        "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", 60)),
-        "pool_timeout": 20,          # wait up to 20s to checkout a connection
+        "pool_size": int(os.environ.get("DB_POOL_SIZE", 15)),
+        "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", 25)),
+        "pool_timeout": 10,          # wait up to 10s to checkout a connection
         "pool_pre_ping": True,       # verify liveness before returning from pool
-        "pool_recycle": 60,          # recycle after 60s to purge stale reloaded connections quickly
+        "pool_recycle": 45,          # recycle after 45s to purge stale connections before Neon auto-suspends
         "connect_args": pg_connect_args
     })
 else:
@@ -128,42 +128,67 @@ Base = declarative_base()
 
 
 if "postgresql" in db_url or "postgres" in db_url:
-    try:
-        import psycopg2  # type: ignore
-        from sqlalchemy import event as _pg_event
+    from sqlalchemy import event as _pg_event
+    from sqlalchemy.exc import OperationalError as _SAOperationalError, DBAPIError as _SADBAPIError
 
-        @_pg_event.listens_for(engine, "handle_error")
-        def _invalidate_broken_pg_connection(exception_context):
-            """
-            Automatically invalidates and discards any PostgreSQL connection that
-            raises OperationalError (e.g. SSL closed unexpectedly, connection reset).
-            This ensures the pool never returns a stale/broken connection on retry.
-            """
-            orig = getattr(exception_context, 'original_exception', None)
-            if orig and isinstance(orig, (psycopg2.OperationalError, psycopg2.InterfaceError)):
-                from backend.logger import logger as _logger
-                conn = exception_context.connection
-                if conn is not None:
+    @_pg_event.listens_for(engine, "handle_error")
+    def _invalidate_broken_pg_connection(exception_context):
+        """
+        Automatically invalidates and discards any PostgreSQL connection that
+        raises OperationalError, timeout, or server closed connection.
+        This ensures the pool never returns a stale/broken connection on retry.
+        """
+        orig = getattr(exception_context, 'original_exception', None)
+        sa_exc = getattr(exception_context, 'sqlalchemy_exception', None)
+        
+        err_msg = ""
+        if orig:
+            err_msg += str(orig).lower()
+        if sa_exc:
+            err_msg += str(sa_exc).lower()
+            
+        is_conn_error = any(kw in err_msg for kw in (
+            "closed the connection",
+            "timeout expired",
+            "connection failed",
+            "connection reset",
+            "ssl syscall",
+            "could not connect",
+            "operationalerror",
+            "interfaceerror"
+        ))
+
+        if is_conn_error or isinstance(sa_exc, (_SAOperationalError, _SADBAPIError)):
+            from backend.logger import logger as _logger
+            conn = exception_context.connection
+            exception_context.is_disconnect = True
+            if conn is not None:
+                try:
                     _logger.warning(
                         "[DB_POOL] Invalidating broken PostgreSQL connection: "
-                        f"{type(orig).__name__}: {str(orig)[:120]}"
+                        f"{str(orig or sa_exc)[:140]}"
                     )
-                    exception_context.is_disconnect = True
                     conn.invalidate()
-    except ImportError:
-        pass  # psycopg2 not available in this environment
+                except Exception:
+                    pass
 
 
 def get_db():
-    """FastAPI dependency that provides a database session."""
+    """FastAPI dependency that provides a database session with disconnect resilience."""
     db = SessionLocal()
     try:
         yield db
-    except Exception:
+    except Exception as exc:
         try:
             db.rollback()
         except Exception:
             pass
+        exc_str = str(exc).lower()
+        if "operationalerror" in type(exc).__name__.lower() or any(k in exc_str for k in ("connection", "closed", "timeout")):
+            try:
+                db.invalidate()
+            except Exception:
+                pass
         raise
     finally:
         try:
