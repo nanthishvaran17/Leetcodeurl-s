@@ -1,15 +1,10 @@
-import sqlite3
 import os
+from sqlalchemy import text
 from backend.database import engine
 
 def clean_database():
-    # Use the connection directly from SQLAlchemy engine
-    conn = engine.raw_connection()
-    cursor = conn.cursor()
-    
-    try:
+    with engine.begin() as conn:
         print("=== STARTING DATABASE CLEANUP ===")
-        cursor.execute("PRAGMA foreign_keys = OFF;")
         
         # 1. Clean Fake/Test Staff & Admin Users
         test_user_emails = [
@@ -25,44 +20,48 @@ def clean_database():
             "hub_admin@test.com"
         ]
         
-        placeholders = ",".join("?" for _ in test_user_emails)
-        cursor.execute(f"SELECT id, email, full_name FROM users WHERE email IN ({placeholders})", test_user_emails)
-        test_user_rows = cursor.fetchall()
+        test_user_rows = conn.execute(
+            text("SELECT id, email, full_name FROM users WHERE email IN :emails"),
+            {"emails": tuple(test_user_emails)}
+        ).fetchall()
         test_u_ids = [r[0] for r in test_user_rows]
         print(f"Found {len(test_u_ids)} test/fake staff/admin user accounts to delete:")
         for r in test_user_rows:
             print(f"  - ID: {r[0]} | Name: {r[2]} | Email: {r[1]}")
             
         if test_u_ids:
-            u_placeholders = ",".join("?" for _ in test_u_ids)
-            cursor.execute(f"DELETE FROM hod_department_allocations WHERE user_id IN ({u_placeholders}) OR created_by IN ({u_placeholders})", test_u_ids + test_u_ids)
-            cursor.execute(f"DELETE FROM password_reset_otps WHERE user_id IN ({u_placeholders})", test_u_ids)
-            cursor.execute(f"DELETE FROM faculty_student_assignments WHERE faculty_id IN ({u_placeholders}) OR assigned_by_id IN ({u_placeholders})", test_u_ids + test_u_ids)
-            cursor.execute(f"DELETE FROM mentor_notes WHERE faculty_id IN ({u_placeholders})", test_u_ids)
-            cursor.execute(f"DELETE FROM student_assignment_history WHERE previous_faculty_id IN ({u_placeholders}) OR new_faculty_id IN ({u_placeholders}) OR assigned_by_id IN ({u_placeholders})", test_u_ids + test_u_ids + test_u_ids)
-            cursor.execute(f"DELETE FROM staff_follow_ups WHERE staff_id IN ({u_placeholders})", test_u_ids)
-            cursor.execute(f"DELETE FROM staff_alerts WHERE staff_id IN ({u_placeholders})", test_u_ids)
-            cursor.execute(f"DELETE FROM users WHERE id IN ({u_placeholders})", test_u_ids)
+            u_tuple = tuple(test_u_ids)
+            conn.execute(text("DELETE FROM hod_department_allocations WHERE user_id IN :uids OR created_by IN :uids"), {"uids": u_tuple})
+            conn.execute(text("DELETE FROM password_reset_otps WHERE user_id IN :uids"), {"uids": u_tuple})
+            conn.execute(text("DELETE FROM faculty_student_assignments WHERE faculty_id IN :uids OR assigned_by_id IN :uids"), {"uids": u_tuple})
+            conn.execute(text("DELETE FROM mentor_notes WHERE faculty_id IN :uids"), {"uids": u_tuple})
+            conn.execute(text("DELETE FROM student_assignment_history WHERE previous_faculty_id IN :uids OR new_faculty_id IN :uids OR assigned_by_id IN :uids"), {"uids": u_tuple})
+            conn.execute(text("DELETE FROM staff_follow_ups WHERE staff_id IN :uids"), {"uids": u_tuple})
+            conn.execute(text("DELETE FROM staff_alerts WHERE staff_id IN :uids"), {"uids": u_tuple})
+            conn.execute(text("DELETE FROM users WHERE id IN :uids"), {"uids": u_tuple})
             print(f"-> Successfully deleted {len(test_u_ids)} test/fake user accounts and associated records.")
 
-        # 2. Clean Non-Designated Departments (CSE_TEST, CSE, TEST_P930, TEST_DEPT)
-        test_dept_codes = ['CSE_TEST', 'CSE', 'TEST_P930', 'TEST_DEPT']
-        d_placeholders = ",".join("?" for _ in test_dept_codes)
-        cursor.execute(f"SELECT id, code, name FROM departments WHERE code IN ({d_placeholders})", test_dept_codes)
-        dept_rows = cursor.fetchall()
+        # 2. Clean Non-Designated / Test Departments (CSE_TEST, CSE, TEST_P930, TEST_DEPT, CSE-EDIT-TEST, CSE_AI_TEST)
+        test_dept_codes = ['CSE_TEST', 'CSE', 'TEST_P930', 'TEST_DEPT', 'CSE-EDIT-TEST', 'CSE_AI_TEST']
+        dept_rows = conn.execute(
+            text("SELECT id, code, name FROM departments WHERE code IN :codes"),
+            {"codes": tuple(test_dept_codes)}
+        ).fetchall()
         test_dept_ids = [r[0] for r in dept_rows]
         print(f"\nFound {len(test_dept_ids)} non-designated departments to delete:")
         for r in dept_rows:
             print(f"  - ID: {r[0]} | Code: {r[1]} | Name: {r[2]}")
             
         if test_dept_ids:
-            dept_id_placeholders = ",".join("?" for _ in test_dept_ids)
-            cursor.execute(f"SELECT id FROM students WHERE department_id IN ({dept_id_placeholders})", test_dept_ids)
-            student_rows = cursor.fetchall()
+            dept_id_tuple = tuple(test_dept_ids)
+            student_rows = conn.execute(
+                text("SELECT id FROM students WHERE department_id IN :dids"),
+                {"dids": dept_id_tuple}
+            ).fetchall()
             test_s_ids = [r[0] for r in student_rows]
             
             if test_s_ids:
-                s_placeholders = ",".join("?" for _ in test_s_ids)
+                s_tuple = tuple(test_s_ids)
                 print(f"Found {len(test_s_ids)} test/sample students in non-designated departments to remove.")
                 
                 tables_with_student_id = [
@@ -76,47 +75,36 @@ def clean_database():
                 
                 for tbl in tables_with_student_id:
                     try:
-                        cursor.execute(f"DELETE FROM {tbl} WHERE student_id IN ({s_placeholders})", test_s_ids)
+                        conn.execute(text(f"DELETE FROM {tbl} WHERE student_id IN :sids"), {"sids": s_tuple})
                     except Exception as e:
                         print(f"   (Note: clean step for {tbl}: {e})")
                         
-                cursor.execute(f"DELETE FROM students WHERE id IN ({s_placeholders})", test_s_ids)
+                conn.execute(text("DELETE FROM students WHERE id IN :sids"), {"sids": s_tuple})
                 print(f"-> Successfully deleted {len(test_s_ids)} test/sample student records.")
 
-            cursor.execute(f"DELETE FROM sections WHERE department_id IN ({dept_id_placeholders})", test_dept_ids)
-            cursor.execute(f"DELETE FROM hod_department_allocations WHERE department_id IN ({dept_id_placeholders})", test_dept_ids)
-            cursor.execute(f"DELETE FROM users WHERE department_id IN ({dept_id_placeholders})", test_dept_ids)
-            cursor.execute(f"DELETE FROM departments WHERE id IN ({dept_id_placeholders})", test_dept_ids)
+            conn.execute(text("DELETE FROM sections WHERE department_id IN :dids"), {"dids": dept_id_tuple})
+            conn.execute(text("DELETE FROM hod_department_allocations WHERE department_id IN :dids"), {"dids": dept_id_tuple})
+            conn.execute(text("DELETE FROM users WHERE department_id IN :dids"), {"dids": dept_id_tuple})
+            conn.execute(text("DELETE FROM departments WHERE id IN :dids"), {"dids": dept_id_tuple})
             print(f"-> Successfully deleted {len(test_dept_ids)} non-designated department records.")
 
-        cursor.execute("PRAGMA foreign_keys = ON;")
-        conn.commit()
         print("\n=== CLEANUP TRANSACTION COMMITTED SUCCESSFULLY ===")
         
         # Verify Final Remaining Departments & Students
         print("\n=== REMAINING DEPARTMENTS ===")
-        cursor.execute("SELECT id, name, code FROM departments")
-        for d in cursor.fetchall():
-            cursor.execute("SELECT COUNT(*) FROM students WHERE department_id = ? AND is_active = 1", (d[0],))
-            cnt = cursor.fetchone()[0]
+        remaining_depts = conn.execute(text("SELECT id, name, code FROM departments ORDER BY id")).fetchall()
+        for d in remaining_depts:
+            cnt = conn.execute(text("SELECT COUNT(*) FROM students WHERE department_id = :did AND is_active = true"), {"did": d[0]}).scalar()
             print(f"ID: {d[0]} | Code: {d[2]} | Name: {d[1]} | Active Genuine Students: {cnt}")
             
-        cursor.execute("SELECT COUNT(*) FROM students WHERE is_active = 1")
-        total_gen_students = cursor.fetchone()[0]
+        total_gen_students = conn.execute(text("SELECT COUNT(*) FROM students WHERE is_active = true")).scalar()
         print(f"\nTOTAL GENUINE ACTIVE STUDENTS IN SYSTEM: {total_gen_students}")
         
         print("\n=== REMAINING STAFF / ADMIN USERS ===")
-        cursor.execute("SELECT id, full_name, email, role FROM users")
-        for u in cursor.fetchall():
+        remaining_users = conn.execute(text("SELECT id, full_name, email, role FROM users ORDER BY id")).fetchall()
+        for u in remaining_users:
             print(f"ID: {u[0]} | Name: {u[1]} | Email: {u[2]} | Role: {u[3]}")
-
-    except Exception as e:
-        conn.rollback()
-        print(f"ERROR during cleanup: {e}")
-        import traceback
-        traceback.print_exc()
-    finally:
-        conn.close()
 
 if __name__ == '__main__':
     clean_database()
+
