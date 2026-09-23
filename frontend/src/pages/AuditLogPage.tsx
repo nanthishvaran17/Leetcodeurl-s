@@ -91,20 +91,23 @@ export const AuditLogPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pt-2 pb-16 animate-slideUp">
       
       {/* HEADER (RICH GLOWING INSTITUTIONAL GRADIENT) */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-lg border border-brand-500/30">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 md:p-8 shadow-xl border border-brand-500/30">
+        <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl"></div>
+        </div>
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
-          <div className="space-y-2.5 max-w-2xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
+          <div className="space-y-3 max-w-2xl">
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
               <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
               <span>ADMIN IDENTITY & AUDIT TRAIL</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white leading-tight">
               Admin Identity & <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">Audit Log</span>
             </h1>
-            <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide">
+            <p className="text-xs md:text-sm text-slate-200 font-semibold leading-relaxed">
               Real-time database audit log recording administrator identity, logins, page visits, report generation, email dispatches & setting modifications. Click any log entry to inspect full event telemetry.
             </p>
           </div>
@@ -112,7 +115,7 @@ export const AuditLogPage: React.FC = () => {
             <button
               onClick={() => fetchLogs()}
               disabled={loading}
-              className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 disabled:opacity-50 text-white rounded-2xl text-xs font-bold shadow-lg shadow-brand-600/30 transition-all cursor-pointer"
+              className="flex items-center space-x-2 px-5 py-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 disabled:opacity-50 text-white rounded-2xl text-xs font-black shadow-lg shadow-brand-600/30 transition-all cursor-pointer active:scale-95"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               <span>{loading ? 'Refreshing...' : 'Refresh Logs'}</span>
@@ -122,33 +125,33 @@ export const AuditLogPage: React.FC = () => {
       </div>
 
       {/* Filter Controls */}
-      <div className="glass-card p-5 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-4">
+      <div className="glass-card p-5 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm bg-white dark:bg-navy-950">
         <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+            <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500 dark:text-slate-400 pointer-events-none" />
             <input
               type="text"
               placeholder="Search by Audit ID, Admin Name, Email, Action, or Description..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-2xl text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
           </div>
           <button
             type="submit"
-            className="px-5 py-2 bg-brand-600 text-white text-xs font-bold rounded-2xl hover:bg-brand-700 transition-all"
+            className="px-6 py-2.5 bg-brand-600 hover:bg-brand-500 text-white text-xs font-black rounded-2xl transition-all shadow-md shadow-brand-600/20 cursor-pointer"
           >
             Search
           </button>
         </form>
 
-        <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-slate-200 dark:border-slate-800">
           <div className="flex items-center space-x-2">
-            <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Role:</span>
+            <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">Role:</span>
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1 text-xs text-slate-900 dark:text-white font-medium cursor-pointer"
+              className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white font-extrabold cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
               <option value="ALL">All Roles</option>
               <option value="ADMIN">ADMIN</option>
@@ -160,11 +163,11 @@ export const AuditLogPage: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-2">
-            <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Status:</span>
+            <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">Status:</span>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1 text-xs text-slate-900 dark:text-white font-medium cursor-pointer"
+              className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white font-extrabold cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
               <option value="ALL">All Statuses</option>
               <option value="SUCCESS">SUCCESS</option>
@@ -176,7 +179,7 @@ export const AuditLogPage: React.FC = () => {
       </div>
 
       {/* Logs Table */}
-      <div className="glass-card rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-lg">
+      <div className="glass-card rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-lg bg-white dark:bg-navy-950">
         {loading ? (
           <div className="p-6 space-y-3 animate-pulse">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
@@ -192,7 +195,7 @@ export const AuditLogPage: React.FC = () => {
             ))}
           </div>
         ) : logs.length === 0 ? (
-          <div className="p-8 text-center text-slate-500 dark:text-slate-400 text-xs">
+          <div className="p-8 text-center text-slate-600 dark:text-slate-300 font-bold text-xs">
             No audit activity logged yet.
           </div>
         ) : (
@@ -200,75 +203,75 @@ export const AuditLogPage: React.FC = () => {
             {/* Desktop Table View */}
             <table className="hidden md:table w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-slate-100/80 dark:bg-navy-950/80 text-slate-700 dark:text-slate-300 font-extrabold border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider">
-                  <th className="py-3 px-4">Audit ID</th>
-                  <th className="py-3 px-4">Admin Name / Email</th>
-                  <th className="py-3 px-4">Role</th>
-                  <th className="py-3 px-4">Action</th>
-                  <th className="py-3 px-4">Description</th>
-                  <th className="py-3 px-4 text-center">Status</th>
-                  <th className="py-3 px-4 text-right">Timestamp</th>
+                <tr className="bg-slate-100 dark:bg-navy-900 text-slate-800 dark:text-slate-100 font-black border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider text-[11px]">
+                  <th className="py-3.5 px-4">Audit ID</th>
+                  <th className="py-3.5 px-4">Admin Name / Email</th>
+                  <th className="py-3.5 px-4">Role</th>
+                  <th className="py-3.5 px-4">Action</th>
+                  <th className="py-3.5 px-4">Description</th>
+                  <th className="py-3.5 px-4 text-center">Status</th>
+                  <th className="py-3.5 px-4 text-right">Timestamp</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800 font-medium">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-semibold bg-white dark:bg-navy-950">
                 {logs.map((log) => (
                   <tr
                     key={log.id}
                     onClick={() => setSelectedLog(log)}
-                    className="hover:bg-brand-50/40 dark:hover:bg-brand-950/30 transition-colors cursor-pointer group"
+                    className="hover:bg-brand-50/60 dark:hover:bg-brand-950/40 transition-colors cursor-pointer group"
                     title="Click to inspect full audit event telemetry"
                   >
-                    <td className="py-3 px-4 font-mono font-bold text-brand-600 dark:text-brand-400 flex items-center space-x-1.5">
+                    <td className="py-3.5 px-4 font-mono font-extrabold text-brand-600 dark:text-brand-400 flex items-center space-x-1.5">
                       <Eye className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-brand-500 shrink-0" />
                       <span>{log.audit_id}</span>
                     </td>
 
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4">
                       <div className="flex flex-col">
-                        <span className="font-bold text-slate-900 dark:text-white">{log.admin_name}</span>
-                        <span className="text-[11px] text-slate-400">{log.admin_email}</span>
+                        <span className="font-extrabold text-slate-900 dark:text-white text-xs">{log.admin_name}</span>
+                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 font-mono">{log.admin_email}</span>
                       </div>
                     </td>
 
-                    <td className="py-3 px-4">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-300">
+                    <td className="py-3.5 px-4">
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-indigo-100 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-700">
                         {log.admin_role}
                       </span>
                     </td>
 
-                    <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">
+                    <td className="py-3.5 px-4 font-bold text-slate-900 dark:text-white">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase font-mono ${
-                        log.action === 'PAGE_NAVIGATE' ? 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300 border border-brand-300' :
-                        log.action.includes('SYNC') ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300' :
-                        log.action.includes('LOGIN') || log.action.includes('LOGOUT') ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300' :
-                        'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-300'
+                        log.action === 'PAGE_NAVIGATE' ? 'bg-brand-100 text-brand-900 dark:bg-brand-950 dark:text-brand-200 border border-brand-300 dark:border-brand-700' :
+                        log.action.includes('SYNC') ? 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-700' :
+                        log.action.includes('LOGIN') || log.action.includes('LOGOUT') ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700' :
+                        'bg-slate-200 text-slate-900 dark:bg-slate-800 dark:text-slate-100 border border-slate-300 dark:border-slate-700'
                       }`}>
                         {log.action}
                       </span>
                     </td>
 
-                    <td className="py-3 px-4 text-slate-600 dark:text-slate-300 max-w-xs truncate">
-                      <div className="font-semibold text-slate-900 dark:text-slate-100 truncate">{log.description || '—'}</div>
+                    <td className="py-3.5 px-4 text-slate-800 dark:text-slate-200 max-w-xs">
+                      <div className="font-extrabold text-slate-900 dark:text-slate-100 truncate">{log.description || '—'}</div>
                       {log.ip_address && (
-                        <div className="text-[9.5px] font-mono text-slate-400">IP: {log.ip_address}</div>
+                        <div className="text-[10px] font-mono font-extrabold text-slate-600 dark:text-slate-400">IP: {log.ip_address}</div>
                       )}
                     </td>
 
-                    <td className="py-3 px-4 text-center">
+                    <td className="py-3.5 px-4 text-center">
                       {log.status === 'SUCCESS' ? (
-                        <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300">
+                        <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700">
                           <CheckCircle2 className="w-3 h-3" />
                           <span>SUCCESS</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300">
+                        <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200 border border-rose-300 dark:border-rose-700">
                           <AlertTriangle className="w-3 h-3" />
                           <span>{log.status}</span>
                         </span>
                       )}
                     </td>
 
-                    <td className="py-3 px-4 text-right font-mono text-slate-400 text-[11px] whitespace-nowrap">
+                    <td className="py-3.5 px-4 text-right font-mono font-black text-slate-800 dark:text-slate-200 text-[11px] whitespace-nowrap">
                       {formatAuditDate(log.created_at)}
                     </td>
                   </tr>
@@ -277,50 +280,50 @@ export const AuditLogPage: React.FC = () => {
             </table>
 
             {/* Mobile Cards View */}
-            <div className="md:hidden divide-y divide-gray-100 dark:divide-gray-800">
+            <div className="md:hidden divide-y divide-slate-200 dark:divide-slate-800">
               {logs.map((log) => (
-                <div key={`mob-${log.id}`} onClick={() => setSelectedLog(log)} className="p-4 hover:bg-brand-50/40 dark:hover:bg-brand-950/30 cursor-pointer space-y-3 transition-colors">
+                <div key={`mob-${log.id}`} onClick={() => setSelectedLog(log)} className="p-4 hover:bg-brand-50/60 dark:hover:bg-brand-950/40 cursor-pointer space-y-3 transition-colors bg-white dark:bg-navy-950">
                   <div className="flex justify-between items-start">
                     <div className="space-y-1">
-                      <div className="font-mono font-bold text-brand-600 dark:text-brand-400 flex items-center space-x-1.5">
+                      <div className="font-mono font-extrabold text-brand-600 dark:text-brand-400 flex items-center space-x-1.5">
                         <Eye className="w-3.5 h-3.5 text-brand-500" />
                         <span>{log.audit_id}</span>
                       </div>
                       <div className="flex flex-col">
-                        <span className="font-bold text-slate-900 dark:text-white">{log.admin_name}</span>
-                        <span className="text-[11px] text-slate-400">{log.admin_email}</span>
+                        <span className="font-extrabold text-slate-900 dark:text-white">{log.admin_name}</span>
+                        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 font-mono">{log.admin_email}</span>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase font-mono ${
-                        log.action === 'PAGE_NAVIGATE' ? 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300 border border-brand-300' :
-                        log.action.includes('SYNC') ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300' :
-                        log.action.includes('LOGIN') || log.action.includes('LOGOUT') ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300' :
-                        'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-300'
+                        log.action === 'PAGE_NAVIGATE' ? 'bg-brand-100 text-brand-900 dark:bg-brand-950 dark:text-brand-200 border border-brand-300 dark:border-brand-700' :
+                        log.action.includes('SYNC') ? 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-700' :
+                        log.action.includes('LOGIN') || log.action.includes('LOGOUT') ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700' :
+                        'bg-slate-200 text-slate-900 dark:bg-slate-800 dark:text-slate-100 border border-slate-300 dark:border-slate-700'
                       }`}>
                         {log.action}
                       </span>
                       {log.status === 'SUCCESS' ? (
-                        <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300">
+                        <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700">
                           <CheckCircle2 className="w-3 h-3" />
                           <span>SUCCESS</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300">
+                        <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200 border border-rose-300 dark:border-rose-700">
                           <AlertTriangle className="w-3 h-3" />
                           <span>{log.status}</span>
                         </span>
                       )}
                     </div>
                   </div>
-                  <div className="font-semibold text-slate-900 dark:text-slate-100 text-xs break-words">
+                  <div className="font-extrabold text-slate-900 dark:text-slate-100 text-xs break-words">
                     {log.description || '—'}
                   </div>
-                  <div className="flex justify-between items-center text-[10px]">
-                    <span className="px-2.5 py-0.5 rounded-full font-black bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-300">
+                  <div className="flex justify-between items-center text-[11px]">
+                    <span className="px-2.5 py-0.5 rounded-full font-black bg-indigo-100 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-700">
                       {log.admin_role}
                     </span>
-                    <span className="font-mono text-slate-400">
+                    <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
                       {formatAuditDate(log.created_at)}
                     </span>
                   </div>
@@ -342,17 +345,17 @@ export const AuditLogPage: React.FC = () => {
             if (e.target === e.currentTarget) setSelectedLog(null);
           }}
         >
-          <div className="modal-container-responsive max-w-xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-3xl shadow-lg p-6 space-y-4 animate-modal-content">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-navy-800">
+          <div className="modal-container-responsive max-w-xl bg-white dark:bg-navy-950 border border-slate-300 dark:border-navy-800 rounded-3xl shadow-2xl p-6 space-y-4 animate-modal-content">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-navy-800">
               <div className="flex items-center space-x-2.5">
-                <div className="p-2 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+                <div className="p-2 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/30">
                   <ShieldAlert className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="text-base font-black text-slate-900 dark:text-white font-mono">
                     {selectedLog.audit_id}
                   </h3>
-                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  <p className="text-xs font-extrabold text-slate-700 dark:text-slate-300">
                     Administrator Event & Activity Inspection
                   </p>
                 </div>
@@ -360,7 +363,7 @@ export const AuditLogPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedLog(null)}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition-all cursor-pointer"
+                className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-800 transition-all cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -368,51 +371,51 @@ export const AuditLogPage: React.FC = () => {
 
             <div className="space-y-3.5 text-xs">
               {/* Admin Identity Card */}
-              <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800">
+              <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-100/90 dark:bg-navy-900/90 border border-slate-300 dark:border-navy-700/80 shadow-xs">
                 <div>
-                  <span className="font-extrabold text-slate-400 uppercase tracking-wider text-[10px]">Administrator / User</span>
-                  <div className="font-black text-slate-900 dark:text-white text-sm mt-0.5">{selectedLog.admin_name}</div>
-                  <div className="text-slate-500 text-[11px] font-mono">{selectedLog.admin_email}</div>
+                  <span className="font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10.5px]">Administrator / User</span>
+                  <div className="font-black text-slate-950 dark:text-white text-sm mt-0.5">{selectedLog.admin_name}</div>
+                  <div className="text-slate-700 dark:text-slate-300 text-[11px] font-bold font-mono mt-0.5">{selectedLog.admin_email}</div>
                 </div>
                 <div>
-                  <span className="font-extrabold text-slate-400 uppercase tracking-wider text-[10px]">Role / Access Level</span>
-                  <div className="font-black text-slate-900 dark:text-white text-sm mt-0.5">{selectedLog.admin_role || 'Admin'}</div>
-                  <div className="text-slate-500 text-[11px] font-mono">{selectedLog.ip_address || '127.0.0.1'}</div>
+                  <span className="font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10.5px]">Role / Access Level</span>
+                  <div className="font-black text-slate-950 dark:text-white text-sm mt-0.5">{selectedLog.admin_role || 'Admin'}</div>
+                  <div className="text-slate-700 dark:text-slate-300 text-[11px] font-bold font-mono mt-0.5">{selectedLog.ip_address || '127.0.0.1'}</div>
                 </div>
               </div>
 
               {/* Event Description */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-1">
-                <span className="font-extrabold text-slate-400 uppercase tracking-wider text-[10px]">Event Summary & Detail</span>
-                <div className="font-bold text-slate-900 dark:text-white text-xs leading-relaxed">
+              <div className="p-4 rounded-2xl bg-slate-100/90 dark:bg-navy-900/90 border border-slate-300 dark:border-navy-700/80 space-y-1 shadow-xs">
+                <span className="font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10.5px]">Event Summary & Detail</span>
+                <div className="font-extrabold text-slate-950 dark:text-white text-xs leading-relaxed">
                   {selectedLog.details || selectedLog.action}
                 </div>
               </div>
 
               {/* Target Metadata */}
               {(selectedLog.target_type || selectedLog.target_id) && (
-                <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800">
+                <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-100/90 dark:bg-navy-900/90 border border-slate-300 dark:border-navy-700/80 shadow-xs">
                   <div>
-                    <span className="font-extrabold text-slate-400 uppercase tracking-wider text-[10px]">Target Resource</span>
-                    <div className="font-mono font-bold text-indigo-600 dark:text-indigo-300 text-xs mt-0.5">
+                    <span className="font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10.5px]">Target Resource</span>
+                    <div className="font-mono font-black text-indigo-700 dark:text-indigo-300 text-xs mt-0.5">
                       {selectedLog.target_type || 'System Resource'} {selectedLog.target_id ? `(#${selectedLog.target_id})` : ''}
                     </div>
                   </div>
                   <div>
-                    <span className="font-extrabold text-slate-400 uppercase tracking-wider text-[10px]">Action Classification</span>
-                    <div className="font-mono font-bold text-slate-900 dark:text-white text-xs mt-0.5">{selectedLog.action_type || 'GENERAL'}</div>
+                    <span className="font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10.5px]">Action Classification</span>
+                    <div className="font-mono font-black text-slate-950 dark:text-white text-xs mt-0.5">{selectedLog.action_type || 'GENERAL'}</div>
                   </div>
                 </div>
               )}
 
               {/* User Agent / Device Signature */}
               {selectedLog.user_agent && (
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-1">
-                  <span className="font-extrabold text-slate-400 uppercase tracking-wider text-[10px] flex items-center gap-1">
-                    <Laptop className="w-3 h-3 text-indigo-500" />
+                <div className="p-4 rounded-2xl bg-slate-100/90 dark:bg-navy-900/90 border border-slate-300 dark:border-navy-700/80 space-y-1 shadow-xs">
+                  <span className="font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10.5px] flex items-center gap-1">
+                    <Laptop className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                     <span>Browser & Device Signature</span>
                   </span>
-                  <div className="font-mono text-[10.5px] text-slate-600 dark:text-slate-300 break-all leading-tight">
+                  <div className="font-mono font-bold text-[10.5px] text-slate-800 dark:text-slate-200 break-all leading-tight">
                     {selectedLog.user_agent}
                   </div>
                 </div>
@@ -420,16 +423,16 @@ export const AuditLogPage: React.FC = () => {
 
               {/* Detailed Key-Value Event Payload Grid */}
               {selectedLog.metadata && Object.keys(selectedLog.metadata).length > 0 && (
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-2">
-                  <span className="font-extrabold text-slate-400 uppercase tracking-wider text-[10px] flex items-center gap-1">
-                    <Terminal className="w-3 h-3 text-indigo-500" />
+                <div className="p-4 rounded-2xl bg-slate-100/90 dark:bg-navy-900/90 border border-slate-300 dark:border-navy-700/80 space-y-2 shadow-xs">
+                  <span className="font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[10.5px] flex items-center gap-1">
+                    <Terminal className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                     <span>Structured Event Attributes ({Object.keys(selectedLog.metadata).length} Parameters)</span>
                   </span>
                   <div className="grid grid-cols-2 gap-2 text-[11px]">
                     {Object.entries(selectedLog.metadata).map(([key, val]) => (
-                      <div key={key} className="p-2 rounded-xl bg-white dark:bg-navy-950 border border-slate-100 dark:border-navy-800 flex flex-col justify-center">
-                        <span className="text-[9.5px] font-extrabold uppercase text-slate-400 font-mono tracking-wider">{key}</span>
-                        <span className="font-mono font-bold text-slate-900 dark:text-slate-100 truncate mt-0.5">
+                      <div key={key} className="p-2.5 rounded-xl bg-white dark:bg-navy-950 border border-slate-300 dark:border-navy-800 flex flex-col justify-center">
+                        <span className="text-[9.5px] font-black uppercase text-slate-700 dark:text-slate-300 font-mono tracking-wider">{key}</span>
+                        <span className="font-mono font-extrabold text-slate-950 dark:text-slate-100 truncate mt-0.5">
                           {typeof val === 'object' ? JSON.stringify(val) : String(val)}
                         </span>
                       </div>
@@ -440,12 +443,12 @@ export const AuditLogPage: React.FC = () => {
 
               {/* Metadata JSON Raw Inspector */}
               {selectedLog.metadata && Object.keys(selectedLog.metadata).length > 0 && (
-                <div className="p-4 rounded-2xl bg-slate-950 text-slate-200 border border-slate-800 space-y-1.5 font-mono">
-                  <span className="font-extrabold text-slate-400 uppercase tracking-wider text-[10px] flex items-center gap-1">
+                <div className="p-4 rounded-2xl bg-slate-950 text-slate-200 border border-slate-800 space-y-1.5 font-mono shadow-md">
+                  <span className="font-black text-slate-300 uppercase tracking-wider text-[10px] flex items-center gap-1">
                     <Terminal className="w-3 h-3 text-emerald-400" />
                     <span>Raw Event Payload Metadata (JSON)</span>
                   </span>
-                  <pre className="text-[10.5px] text-emerald-400 overflow-x-auto p-2.5 bg-black/50 rounded-xl max-h-48 no-scrollbar leading-relaxed">
+                  <pre className="text-[10.5px] text-emerald-400 font-bold overflow-x-auto p-2.5 bg-black/60 rounded-xl max-h-48 no-scrollbar leading-relaxed">
                     {JSON.stringify(selectedLog.metadata, null, 2)}
                   </pre>
                 </div>
@@ -456,7 +459,7 @@ export const AuditLogPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedLog(null)}
-                className="px-5 py-2 bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-900 dark:text-white font-extrabold rounded-xl text-xs transition-colors cursor-pointer"
+                className="px-6 py-2.5 bg-slate-900 dark:bg-navy-800 hover:bg-slate-800 dark:hover:bg-navy-700 text-white font-black rounded-2xl text-xs transition-colors cursor-pointer shadow-md"
               >
                 Close Inspection
               </button>
