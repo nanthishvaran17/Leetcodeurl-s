@@ -305,12 +305,12 @@ const EmptyStateSuggestions: React.FC<{
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-full py-6 px-4 space-y-5">
+    <div className="flex flex-col items-center justify-start py-3 px-3 sm:px-4 space-y-3 my-auto">
       <div className="space-y-1 text-center">
-        <div className="w-10 h-10 mx-auto rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center shadow-md">
-          <Sparkles className="w-5 h-5 text-white" />
+        <div className="w-9 h-9 mx-auto rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center shadow-sm">
+          <Sparkles className="w-4.5 h-4.5 text-white" />
         </div>
-        <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 pt-1">
+        <p className="text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 pt-0.5">
           {activeContext ? `Ask AI about ${activeContext.type.toLowerCase()} context ${activeContext.id ? `#${activeContext.id}` : ''}` : 'Ask anything about NEC student data'}
         </p>
       </div>
@@ -797,7 +797,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
             className={`bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-navy-800 shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-slate-100 transition-all duration-300 ${
               isExpanded
                 ? 'w-[840px] max-w-[calc(100vw-1.5rem)] h-[800px] max-h-[calc(100dvh-3.5rem)]'
-                : 'w-[min(430px,calc(100vw-1rem))] h-[min(640px,calc(100dvh-5rem))]'
+                : 'w-[min(430px,calc(100vw-1rem))] h-[min(590px,calc(100dvh-5.5rem))]'
             }`}
           >
 
@@ -1319,12 +1319,7 @@ export const AIAssistantWidget: React.FC<{ onNavigateTab?: (tab: string) => void
                       : 'bg-gradient-to-br from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white shadow-sm cursor-pointer active:scale-95'
                   }`}
                 >
-                  {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                 </button>
-              </div>
-              <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 px-1 font-medium select-none">
-                <span>Enter to send · Shift+Enter for new line</span>
-                {input.trim().length > 0 && <span>{input.trim().length} chars</span>}
               </div>
             </div>
 

@@ -65,8 +65,8 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white dark:bg-navy-950 border-b border-slate-200 dark:border-navy-800 transition-colors shadow-sm pt-[env(safe-area-inset-top,0px)]">
-        <div className="w-full max-w-[1800px] mx-auto px-2 sm:px-4 lg:px-8">
+      <header className="sticky top-0 z-40 bg-white dark:bg-navy-950 border-b border-slate-200 dark:border-navy-800 transition-colors shadow-xs pt-[env(safe-area-inset-top,0px)]">
+        <div className="w-full max-w-full mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-[56px] sm:h-[68px] gap-1 sm:gap-4">
             
             {/* Left: Hamburger Button (Mobile/Tablet) + Branding */}
@@ -91,8 +91,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <div className="hidden sm:block"><CollegeLogo size={34} className="transition-transform group-hover:scale-105" /></div>
                 </div>
                 <div className="flex flex-col justify-center min-w-0">
-                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                    <span className="font-black text-[10.5px] xs:text-[11.5px] leading-tight sm:text-base sm:leading-tight tracking-tight text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors whitespace-nowrap flex-shrink-0">
+                  <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+                    <span className="font-black text-[10px] xs:text-[11.5px] leading-tight sm:text-base sm:leading-tight tracking-tight text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors whitespace-nowrap truncate">
                       NANDHA INTELLIGENCE
                     </span>
                     {freshness?.total_students ? (
@@ -101,7 +101,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </span>
                     ) : null}
                   </div>
-                  <span className="text-[9px] xs:text-[10px] leading-tight sm:text-xs sm:leading-snug text-slate-800 dark:text-slate-100 font-extrabold tracking-wide truncate">
+                  <span className="text-[8.5px] xs:text-[10px] leading-tight sm:text-xs sm:leading-snug text-slate-800 dark:text-slate-100 font-extrabold tracking-wide truncate">
                     Nandha Engineering College<span className="hidden sm:inline"> • Erode</span>
                   </span>
                 </div>

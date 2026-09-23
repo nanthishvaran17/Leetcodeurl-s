@@ -734,15 +734,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.45 }}
-        className="space-y-2"
+        className="mt-8 sm:mt-10 mb-8 space-y-3"
       >
-        <div className="flex items-center justify-between px-2">
-          <div className="flex items-center space-x-2">
-            <span className="text-xs font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-3 py-1">
+          <div className="flex items-center space-x-2.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-brand-500 animate-pulse shrink-0" />
+            <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-wide">
               {summaryData?.is_session_live ? 'Live Sunday Monitoring Session' : 'Next Sunday Session Timer'}
             </span>
           </div>
-          <span className="text-xs font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 px-2.5 py-0.5 rounded-full border border-brand-200/60 dark:border-brand-500/30">
+          <span className="text-xs font-extrabold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/80 px-3.5 py-1.5 rounded-full border border-brand-200/80 dark:border-brand-500/40 shadow-xs whitespace-nowrap self-start sm:self-auto">
             Official Window: 08:00 AM – 09:30 AM IST
           </span>
         </div>

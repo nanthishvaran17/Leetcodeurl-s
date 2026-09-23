@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, UploadCloud, CheckCircle2, AlertTriangle, FileSpreadsheet, Loader2, 
-  RefreshCw, Zap, ShieldCheck, Terminal, ArrowRight, Check, ChevronRight, 
+  RefreshCw, Zap, ShieldCheck, Terminal, ArrowRight, Check, ChevronRight, ChevronLeft, 
   Info, Building2, User, Mail, Link, Layers, Calendar, XCircle, HelpCircle, AlertCircle 
 } from 'lucide-react';
 import api from '../services/api';
@@ -332,28 +332,28 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
       <div className="modal-container-responsive max-w-4xl glass-card rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl animate-modal-content overflow-hidden flex flex-col max-h-[90vh]">
 
         {/* Header with Wizard Step Indicator */}
-        <div className="border-b p-6 border-slate-200 dark:border-slate-800 shrink-0 bg-gradient-to-r from-slate-50 via-slate-50 to-slate-100 dark:from-navy-900 dark:via-navy-950 dark:to-slate-900">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className={`p-3 rounded-2xl ${isCompleted ? 'bg-emerald-600' : isImporting ? 'bg-brand-600 animate-pulse' : 'bg-indigo-600'} text-white shadow-lg`}>
+        <div className="border-b p-4 sm:p-6 border-slate-200 dark:border-slate-800 shrink-0 bg-gradient-to-r from-slate-50 via-slate-50 to-slate-100 dark:from-navy-900 dark:via-navy-950 dark:to-slate-900">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center space-x-3 min-w-0">
+              <div className={`p-2.5 sm:p-3 rounded-2xl ${isCompleted ? 'bg-emerald-600' : isImporting ? 'bg-brand-600 animate-pulse' : 'bg-indigo-600'} text-white shadow-lg shrink-0`}>
                 {isCompleted ? (
-                  <CheckCircle2 className="w-6 h-6" />
+                  <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
                 ) : isImporting ? (
-                  <RefreshCw className="w-6 h-6 animate-spin" />
+                  <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" />
                 ) : (
-                  <FileSpreadsheet className="w-6 h-6" />
+                  <FileSpreadsheet className="w-5 h-5 sm:w-6 sm:h-6" />
                 )}
               </div>
-              <div>
-                <h3 className="font-black text-xl text-slate-900 dark:text-white tracking-tight flex items-center space-x-2">
-                  <span>
+              <div className="min-w-0">
+                <h3 className="font-black text-base sm:text-xl text-slate-900 dark:text-white tracking-tight flex items-center space-x-2 truncate">
+                  <span className="truncate">
                     {step === 1 && 'Upload Student Roster'}
                     {step === 2 && 'Smart Column Header Mapping'}
                     {step === 3 && 'Roster Import Preview & Audit'}
                     {step === 4 && (isCompleted ? 'Import Execution Complete' : 'Executing Database Import')}
                   </span>
                 </h3>
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="text-[11px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5 truncate">
                   Intelligent auto-detection engine for any institutional Excel format
                 </p>
               </div>
@@ -361,32 +361,76 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
             <button
               onClick={onClose}
               disabled={isImporting}
-              className={`p-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ${isImporting ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+              className={`p-2 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0 ${isImporting ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Step Progress Pills */}
-          <div className="flex items-center justify-between mt-5 max-w-xl mx-auto px-4">
-            <div className={`flex items-center space-x-2 text-xs font-bold ${step >= 1 ? 'text-brand-600 dark:text-brand-400' : 'text-slate-400'}`}>
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] ${step >= 1 ? 'bg-brand-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>1</span>
-              <span>Upload</span>
-            </div>
-            <ChevronRight className="w-4 h-4 text-slate-400" />
-            <div className={`flex items-center space-x-2 text-xs font-bold ${step >= 2 ? 'text-brand-600 dark:text-brand-400' : 'text-slate-400'}`}>
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] ${step >= 2 ? 'bg-brand-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>2</span>
-              <span>Mapping</span>
-            </div>
-            <ChevronRight className="w-4 h-4 text-slate-400" />
-            <div className={`flex items-center space-x-2 text-xs font-bold ${step >= 3 ? 'text-brand-600 dark:text-brand-400' : 'text-slate-400'}`}>
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] ${step >= 3 ? 'bg-brand-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>3</span>
-              <span>Preview</span>
-            </div>
-            <ChevronRight className="w-4 h-4 text-slate-400" />
-            <div className={`flex items-center space-x-2 text-xs font-bold ${step >= 4 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] ${step >= 4 ? 'bg-emerald-600 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'}`}>4</span>
-              <span>Commit</span>
+          {/* Step Progress Pills - Optimized to fit all 4 steps cleanly on mobile screens */}
+          <div className="mt-3 sm:mt-5 w-full mx-auto px-0 sm:px-4">
+            <div className="flex items-center justify-between sm:justify-center gap-1 sm:gap-3 overflow-x-auto no-scrollbar py-0.5">
+              {/* Step 1 */}
+              <div className={`flex items-center space-x-1 sm:space-x-2 font-bold shrink-0 px-1.5 sm:px-2.5 py-1 rounded-xl transition-all ${
+                step === 1 
+                  ? 'bg-brand-500/15 dark:bg-brand-500/25 text-brand-600 dark:text-brand-400 border border-brand-500/30 shadow-xs' 
+                  : step > 1 
+                  ? 'text-brand-600 dark:text-brand-400' 
+                  : 'text-slate-400 dark:text-slate-500'
+              }`}>
+                <span className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[10px] sm:text-[11px] font-black shrink-0 ${
+                  step >= 1 ? 'bg-brand-600 text-white shadow-xs' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
+                }`}>1</span>
+                <span className="text-[10px] sm:text-xs tracking-tight">Upload</span>
+              </div>
+
+              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-slate-300 dark:text-slate-700 shrink-0" />
+
+              {/* Step 2 */}
+              <div className={`flex items-center space-x-1 sm:space-x-2 font-bold shrink-0 px-1.5 sm:px-2.5 py-1 rounded-xl transition-all ${
+                step === 2 
+                  ? 'bg-brand-500/15 dark:bg-brand-500/25 text-brand-600 dark:text-brand-400 border border-brand-500/30 shadow-xs' 
+                  : step > 2 
+                  ? 'text-brand-600 dark:text-brand-400' 
+                  : 'text-slate-400 dark:text-slate-500'
+              }`}>
+                <span className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[10px] sm:text-[11px] font-black shrink-0 ${
+                  step >= 2 ? 'bg-brand-600 text-white shadow-xs' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
+                }`}>2</span>
+                <span className="text-[10px] sm:text-xs tracking-tight">Mapping</span>
+              </div>
+
+              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-slate-300 dark:text-slate-700 shrink-0" />
+
+              {/* Step 3 */}
+              <div className={`flex items-center space-x-1 sm:space-x-2 font-bold shrink-0 px-1.5 sm:px-2.5 py-1 rounded-xl transition-all ${
+                step === 3 
+                  ? 'bg-brand-500/15 dark:bg-brand-500/25 text-brand-600 dark:text-brand-400 border border-brand-500/30 shadow-xs' 
+                  : step > 3 
+                  ? 'text-brand-600 dark:text-brand-400' 
+                  : 'text-slate-400 dark:text-slate-500'
+              }`}>
+                <span className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[10px] sm:text-[11px] font-black shrink-0 ${
+                  step >= 3 ? 'bg-brand-600 text-white shadow-xs' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
+                }`}>3</span>
+                <span className="text-[10px] sm:text-xs tracking-tight">Preview</span>
+              </div>
+
+              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-slate-300 dark:text-slate-700 shrink-0" />
+
+              {/* Step 4 */}
+              <div className={`flex items-center space-x-1 sm:space-x-2 font-bold shrink-0 px-1.5 sm:px-2.5 py-1 rounded-xl transition-all ${
+                step === 4 
+                  ? 'bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shadow-xs' 
+                  : step > 4 
+                  ? 'text-emerald-600 dark:text-emerald-400' 
+                  : 'text-slate-400 dark:text-slate-500'
+              }`}>
+                <span className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[10px] sm:text-[11px] font-black shrink-0 ${
+                  step >= 4 ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
+                }`}>4</span>
+                <span className="text-[10px] sm:text-xs tracking-tight">Commit</span>
+              </div>
             </div>
           </div>
         </div>
@@ -498,19 +542,20 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
                 </table>
               </div>
 
-              <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  className="px-5 py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm font-extrabold border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-navy-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 cursor-pointer transition-all flex items-center justify-center space-x-2 shadow-sm"
                 >
-                  Back to Upload
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Back to Upload</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleMappingConfirm}
                   disabled={loading}
-                  className="px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-black text-xs shadow-lg shadow-brand-600/30 flex items-center space-x-2 cursor-pointer transition-all"
+                  className="px-6 py-2.5 sm:py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-black text-xs sm:text-sm shadow-lg shadow-brand-600/30 flex items-center justify-center space-x-2 cursor-pointer transition-all"
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
                   <span>Proceed to Import Preview</span>
@@ -524,7 +569,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
             <div className="space-y-5">
 
               {/* 5 Summary Breakdown Cards */}
-              <div className="grid grid-cols-5 gap-2 text-center">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
                 <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50">
                   <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">New (CREATE)</span>
                   <p className="text-xl font-black text-emerald-700 dark:text-emerald-300">{analysisData.summary?.create_count || 0}</p>
@@ -541,7 +586,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
                   <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase">Warnings</span>
                   <p className="text-xl font-black text-amber-700 dark:text-amber-300">{analysisData.summary?.warning_count || 0}</p>
                 </div>
-                <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/50">
+                <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/50 col-span-2 sm:col-span-1">
                   <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase">Errors</span>
                   <p className="text-xl font-black text-rose-700 dark:text-rose-300">{analysisData.summary?.error_count || 0}</p>
                 </div>
@@ -567,34 +612,34 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
 
               {/* Tabbed Row Preview Table */}
               <div className="space-y-2">
-                <div className="flex items-center space-x-2 border-b border-slate-200 dark:border-slate-800 pb-2 text-xs font-bold">
+                <div className="flex items-center space-x-2 border-b border-slate-200 dark:border-slate-800 pb-2 text-xs font-bold overflow-x-auto no-scrollbar">
                   <button
                     onClick={() => setPreviewTab('all')}
-                    className={`px-3 py-1.5 rounded-xl cursor-pointer ${previewTab === 'all' ? 'bg-brand-600 text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-navy-900'}`}
+                    className={`px-3 py-1.5 rounded-xl cursor-pointer whitespace-nowrap shrink-0 ${previewTab === 'all' ? 'bg-brand-600 text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-navy-900'}`}
                   >
                     All Preview Rows
                   </button>
                   <button
                     onClick={() => setPreviewTab('create')}
-                    className={`px-3 py-1.5 rounded-xl cursor-pointer ${previewTab === 'create' ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-navy-900'}`}
+                    className={`px-3 py-1.5 rounded-xl cursor-pointer whitespace-nowrap shrink-0 ${previewTab === 'create' ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-navy-900'}`}
                   >
                     Create ({analysisData.summary?.create_count || 0})
                   </button>
                   <button
                     onClick={() => setPreviewTab('update')}
-                    className={`px-3 py-1.5 rounded-xl cursor-pointer ${previewTab === 'update' ? 'bg-brand-600 text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-navy-900'}`}
+                    className={`px-3 py-1.5 rounded-xl cursor-pointer whitespace-nowrap shrink-0 ${previewTab === 'update' ? 'bg-brand-600 text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-navy-900'}`}
                   >
                     Updates ({analysisData.summary?.update_count || 0})
                   </button>
                   <button
                     onClick={() => setPreviewTab('unchanged')}
-                    className={`px-3 py-1.5 rounded-xl cursor-pointer ${previewTab === 'unchanged' ? 'bg-slate-700 text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-navy-900'}`}
+                    className={`px-3 py-1.5 rounded-xl cursor-pointer whitespace-nowrap shrink-0 ${previewTab === 'unchanged' ? 'bg-slate-700 text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-navy-900'}`}
                   >
                     Unchanged ({analysisData.summary?.unchanged_count || 0})
                   </button>
                   <button
                     onClick={() => setPreviewTab('errors')}
-                    className={`px-3 py-1.5 rounded-xl cursor-pointer ${previewTab === 'errors' ? 'bg-rose-600 text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-navy-900'}`}
+                    className={`px-3 py-1.5 rounded-xl cursor-pointer whitespace-nowrap shrink-0 ${previewTab === 'errors' ? 'bg-rose-600 text-white' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-navy-900'}`}
                   >
                     Errors ({analysisData.summary?.error_count || 0})
                   </button>
@@ -685,19 +730,20 @@ export const ImportModal: React.FC<ImportModalProps> = ({ isOpen, onClose, onSuc
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setStep(2)}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  className="px-5 py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm font-extrabold border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-navy-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 cursor-pointer transition-all flex items-center justify-center space-x-2 shadow-sm"
                 >
-                  Back to Header Mapping
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Back to Header Mapping</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleExecuteCommit}
                   disabled={loading}
-                  className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-lg shadow-emerald-600/30 flex items-center space-x-2 cursor-pointer transition-all"
+                  className="px-6 py-2.5 sm:py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2 cursor-pointer transition-all"
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
                   <span>Confirm & Execute Import</span>

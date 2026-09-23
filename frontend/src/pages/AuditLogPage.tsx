@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useScrollLock } from '../hooks/useScrollLock';
 import { createPortal } from 'react-dom';
-import { ShieldAlert, Clock, Search, Filter, RefreshCw, CheckCircle2, AlertTriangle, UserCheck, X, Eye, Laptop, Terminal } from 'lucide-react';
+import { ShieldAlert, Clock, Search, Filter, RefreshCw, CheckCircle2, AlertTriangle, UserCheck, X, Eye, Laptop, Terminal, User } from 'lucide-react';
 import api from '../services/api';
+import { CustomDropdown, DropdownOption } from '../components/CustomDropdown';
 
 const formatAuditDate = (dateString: string) => {
   if (!dateString) return '—';
@@ -31,6 +32,22 @@ export const AuditLogPage: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [selectedLog, setSelectedLog] = useState<any | null>(null);
+
+  const roleOptions: DropdownOption[] = useMemo(() => [
+    { value: 'ALL', label: 'All Roles', badge: 'ALL', badgeColor: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-700' },
+    { value: 'ADMIN', label: 'ADMIN', badge: 'ROLE', badgeColor: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-300 dark:border-indigo-700' },
+    { value: 'Super Admin', label: 'Super Admin', badge: 'SUPER', badgeColor: 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border-purple-300 dark:border-purple-700' },
+    { value: 'MANAGEMENT', label: 'MANAGEMENT', badge: 'MGMT', badgeColor: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300 dark:border-blue-700' },
+    { value: 'HOD', label: 'HOD', badge: 'DEPT', badgeColor: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700' },
+    { value: 'SYSTEM', label: 'SYSTEM', badge: 'AUTO', badgeColor: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300 dark:border-amber-700' },
+  ], []);
+
+  const statusOptions: DropdownOption[] = useMemo(() => [
+    { value: 'ALL', label: 'All Statuses', badge: 'ALL', badgeColor: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-700' },
+    { value: 'SUCCESS', label: 'SUCCESS', badge: 'OK', badgeColor: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700' },
+    { value: 'FAILED', label: 'FAILED', badge: 'ERR', badgeColor: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-300 dark:border-rose-700' },
+    { value: 'WARNING', label: 'WARNING', badge: 'WARN', badgeColor: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300 dark:border-amber-700' },
+  ], []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -145,35 +162,25 @@ export const AuditLogPage: React.FC = () => {
           </button>
         </form>
 
-        <div className="flex flex-wrap items-center gap-4 pt-3 border-t border-slate-200 dark:border-slate-800">
-          <div className="flex items-center space-x-2">
-            <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">Role:</span>
-            <select
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pt-3 border-t border-slate-200 dark:border-slate-800">
+          <div className="w-full">
+            <CustomDropdown
+              label="Role Filter"
+              options={roleOptions}
               value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white font-extrabold cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500"
-            >
-              <option value="ALL">All Roles</option>
-              <option value="ADMIN">ADMIN</option>
-              <option value="Super Admin">Super Admin</option>
-              <option value="MANAGEMENT">MANAGEMENT</option>
-              <option value="HOD">HOD</option>
-              <option value="SYSTEM">SYSTEM</option>
-            </select>
+              onChange={setRoleFilter}
+              icon={UserCheck}
+            />
           </div>
 
-          <div className="flex items-center space-x-2">
-            <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">Status:</span>
-            <select
+          <div className="w-full">
+            <CustomDropdown
+              label="Status Filter"
+              options={statusOptions}
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white font-extrabold cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500"
-            >
-              <option value="ALL">All Statuses</option>
-              <option value="SUCCESS">SUCCESS</option>
-              <option value="FAILED">FAILED</option>
-              <option value="WARNING">WARNING</option>
-            </select>
+              onChange={setStatusFilter}
+              icon={Filter}
+            />
           </div>
         </div>
       </div>

@@ -13,6 +13,7 @@ import { useFilters, useFilteredStudents } from '../context/FilterContext';
 import { useGlobalData } from '../context/GlobalDataContext';
 import { useDepartments } from '../contexts/DepartmentContext';
 import { XCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface PublicLeaderboardPageProps {
   onSelectStudent?: (student: StudentData) => void;
@@ -108,9 +109,9 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
   const uniqueYears = [...new Set(students.map(s => s.year_level).filter(Boolean))];
 
   const MEDAL_CONFIGS = [
-    { rank: 2, color: 'from-slate-400 to-slate-500', borderColor: 'border-slate-300', textColor: 'text-slate-300', emoji: '', label: 'SILVER', size: 'scale-90', order: 'order-1' },
-    { rank: 1, color: 'from-amber-400 to-yellow-500', borderColor: 'border-amber-400', textColor: 'text-amber-300', emoji: '', label: 'GOLD', size: 'scale-110', order: 'order-2' },
-    { rank: 3, color: 'from-orange-500 to-amber-600', borderColor: 'border-orange-400', textColor: 'text-orange-300', emoji: '', label: 'BRONZE', size: 'scale-90', order: 'order-3' },
+    { rank: 2, color: 'from-slate-400 to-slate-600', borderColor: 'border-slate-300 dark:border-slate-600', textColor: 'text-slate-800 dark:text-slate-100 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-300 dark:border-slate-700 shadow-2xs', emoji: '🥈', label: 'SILVER', size: 'scale-95', order: 'order-1' },
+    { rank: 1, color: 'from-amber-400 via-amber-500 to-yellow-500', borderColor: 'border-amber-400 dark:border-amber-500', textColor: 'text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/80 px-2.5 py-0.5 rounded-md border border-amber-300 dark:border-amber-800 shadow-2xs', emoji: '🥇', label: 'GOLD', size: 'scale-110', order: 'order-2' },
+    { rank: 3, color: 'from-amber-600 to-orange-600', borderColor: 'border-amber-500 dark:border-orange-500', textColor: 'text-orange-800 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/80 px-2 py-0.5 rounded-md border border-orange-300 dark:border-orange-800 shadow-2xs', emoji: '🥉', label: 'BRONZE', size: 'scale-95', order: 'order-3' },
   ];
 
   return (
@@ -141,21 +142,21 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 shrink-0">
-            <div className="p-4 rounded-2xl bg-white/10 backdrop-blur border border-white/15 text-center min-w-[90px]">
-              <Users className="w-5 h-5 text-brand-400 mx-auto mb-1" />
-              <div className="text-2xl font-black text-white">{students.length}</div>
-              <div className="text-[10px] text-slate-300 font-extrabold uppercase tracking-wider">Students</div>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full md:w-auto shrink-0">
+            <div className="p-2.5 sm:p-4 rounded-2xl bg-white/10 backdrop-blur border border-white/15 text-center min-w-0 flex flex-col items-center justify-center shadow-xs">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 text-brand-400 mx-auto mb-1" />
+              <div className="text-base xs:text-lg sm:text-2xl font-black text-white font-mono tracking-tight truncate w-full">{students.length}</div>
+              <div className="text-[9px] sm:text-[10px] text-slate-300 font-extrabold uppercase tracking-wider truncate w-full mt-0.5">Students</div>
             </div>
-            <div className="p-4 rounded-2xl bg-white/10 backdrop-blur border border-white/15 text-center min-w-[90px]">
-              <Zap className="w-5 h-5 text-amber-400 mx-auto mb-1" />
-              <div className="text-2xl font-black text-emerald-400">{totalSolved.toLocaleString()}</div>
-              <div className="text-[10px] text-slate-300 font-extrabold uppercase tracking-wider">Total Solved</div>
+            <div className="p-2.5 sm:p-4 rounded-2xl bg-white/10 backdrop-blur border border-white/15 text-center min-w-0 flex flex-col items-center justify-center shadow-xs">
+              <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 mx-auto mb-1" />
+              <div className="text-base xs:text-lg sm:text-2xl font-black text-emerald-400 font-mono tracking-tight truncate w-full" title={totalSolved.toLocaleString()}>{totalSolved.toLocaleString()}</div>
+              <div className="text-[9px] sm:text-[10px] text-slate-300 font-extrabold uppercase tracking-wider truncate w-full mt-0.5">Total Solved</div>
             </div>
-            <div className="p-4 rounded-2xl bg-white/10 backdrop-blur border border-white/15 text-center min-w-[90px]">
-              <TrendingUp className="w-5 h-5 text-indigo-400 mx-auto mb-1" />
-              <div className="text-2xl font-black text-indigo-400">{avgSolved}</div>
-              <div className="text-[10px] text-slate-300 font-extrabold uppercase tracking-wider">Avg / Student</div>
+            <div className="p-2.5 sm:p-4 rounded-2xl bg-white/10 backdrop-blur border border-white/15 text-center min-w-0 flex flex-col items-center justify-center shadow-xs">
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-400 mx-auto mb-1" />
+              <div className="text-base xs:text-lg sm:text-2xl font-black text-indigo-400 font-mono tracking-tight truncate w-full">{avgSolved}</div>
+              <div className="text-[9px] sm:text-[10px] text-slate-300 font-extrabold uppercase tracking-wider truncate w-full mt-0.5">Avg / Student</div>
             </div>
           </div>
         </div>
@@ -190,15 +191,21 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
 
                   {/* Info */}
                   <div className="text-center space-y-0.5 w-full px-1">
-                    <div className={`text-[10px] sm:text-xs font-black ${cfg.textColor}`}>{cfg.label}</div>
-                    <div className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white truncate max-w-[85px] sm:max-w-[130px] mx-auto" title={s.name}>{s.name}</div>
-                    <div className="text-[9px] sm:text-[10px] text-slate-500 font-mono truncate">{s.reg_no}</div>
+                    <div className={`text-[10px] sm:text-xs font-black inline-block tracking-wider uppercase ${cfg.textColor}`}>{cfg.label}</div>
+                    <div className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white truncate max-w-[85px] sm:max-w-[130px] mx-auto mt-1" title={s.name}>{s.name}</div>
+                    <div className="text-[9px] sm:text-[10px] text-slate-700 dark:text-slate-300 font-mono font-bold truncate">{s.reg_no}</div>
                     <div className="pt-0.5">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-black border ${getDeptBadgeStyle(s.department?.code || s.department?.name || '')}`}>
-                        {s.department?.code || 'DEPT'} • {s.year_level} Yr
-                      </span>
+                      {(() => {
+                        const cleanYear = s.year_level ? String(s.year_level).replace(/\s*Yr\s*/gi, '').replace(/\s*Year\s*/gi, '').trim() : '';
+                        const deptCode = s.department?.code || s.department?.name || 'DEPT';
+                        return (
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-black border ${getDeptBadgeStyle(deptCode)}`}>
+                            {deptCode}{cleanYear ? ` • ${cleanYear} Year` : ''}
+                          </span>
+                        );
+                      })()}
                     </div>
-                    <div className="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black text-[10px] sm:text-xs border border-emerald-500/20 mt-1 inline-block whitespace-nowrap">
+                    <div className="px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-black text-[10px] sm:text-xs border border-emerald-500/20 mt-1 inline-block whitespace-nowrap shadow-2xs">
                       {s.stats?.total_solved || 0} Solved
                     </div>
                     {s.username && (
@@ -281,22 +288,33 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
             />
           </div>
 
-          {/* Sort By */}
-          <div className="flex items-center space-x-1 bg-slate-100 dark:bg-navy-950 p-1 rounded-2xl border border-slate-200 dark:border-navy-700 overflow-x-auto max-w-full custom-scrollbar shrink-0">
-            {(['rank', 'easy', 'medium', 'hard'] as const).map(s => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setSortBy(s)}
-                className={`px-3 py-1.5 min-h-[38px] rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
-                  sortBy === s
-                    ? 'bg-brand-600 text-white shadow-md'
-                    : 'text-slate-500 hover:text-brand-600'
-                }`}
-              >
-                {s === 'rank' ? 'Overall Rank' : `Most ${s.charAt(0).toUpperCase() + s.slice(1)}`}
-              </button>
-            ))}
+          {/* Sort By Animated Tabs */}
+          <div className="flex items-center space-x-1.5 bg-slate-100 dark:bg-navy-950 p-1.5 rounded-2xl border border-slate-200 dark:border-navy-700 overflow-x-auto max-w-full custom-scrollbar shrink-0 shadow-inner">
+            {(['rank', 'easy', 'medium', 'hard'] as const).map(s => {
+              const isActive = sortBy === s;
+              const label = s === 'rank' ? 'Overall Rank' : `Most ${s.charAt(0).toUpperCase() + s.slice(1)}`;
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setSortBy(s)}
+                  className={`relative px-4 py-2 min-h-[40px] rounded-xl text-xs font-black transition-colors duration-200 cursor-pointer whitespace-nowrap outline-none flex items-center justify-center ${
+                    isActive
+                      ? 'text-white'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-300'
+                  }`}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeLeaderboardSortPill"
+                      className="absolute inset-0 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-blue-600 shadow-md shadow-brand-500/30"
+                      transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+                    />
+                  )}
+                  <span className="relative z-10 font-black tracking-tight">{label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 

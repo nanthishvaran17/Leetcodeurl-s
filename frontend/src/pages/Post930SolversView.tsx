@@ -6,6 +6,7 @@ import {
 import api from '../services/api';
 import { downloadManager } from '../services/download/downloadManager';
 import { useDepartments } from '../contexts/DepartmentContext';
+import { CustomDropdown, DropdownOption } from '../components/CustomDropdown';
 
 export const Post930SolversView: React.FC = () => {
   const [data, setData] = useState<any>(null);
@@ -117,17 +118,18 @@ export const Post930SolversView: React.FC = () => {
   return (
     <div className="space-y-8 py-2 animate-fade-in">
 
-      {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-950 via-slate-900 to-indigo-950 text-white p-8 shadow-lg border border-amber-500/30">
+      {/* Header Banner - Sleek Dark Indigo & Brand Gradient */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-950 via-indigo-950 to-navy-950 text-white p-6 sm:p-8 shadow-2xl border border-brand-500/30">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
-          <div className="space-y-2">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black border border-amber-400/30">
-              <Clock className="w-4 h-4 text-amber-400" />
+          <div className="space-y-2 max-w-2xl">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-brand-500/20 text-brand-300 text-xs font-black border border-brand-500/40">
+              <Clock className="w-4 h-4 text-brand-400" />
               <span>POST-09:30 AM IST ACTIVITY ENGINE</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-black">Post-9:30 AM Solvers Report</h1>
-            <p className="text-xs text-slate-300">
+            <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">Post-9:30 AM Solvers Report</h1>
+            <p className="text-xs text-slate-300 leading-relaxed">
               Verified problem submissions timestamped after official Sunday Contest snapshot lock. Official contest scores remain 100% immutable.
             </p>
           </div>
@@ -135,17 +137,17 @@ export const Post930SolversView: React.FC = () => {
           <div className="flex items-center space-x-3">
             <button
               onClick={handleExportExcel}
-              className="relative overflow-hidden px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black shadow-lg shadow-emerald-500/30 border border-white/20 flex items-center space-x-2 transition-all duration-200 cursor-pointer transform hover:scale-105 active:scale-90 group"
+              className="relative overflow-hidden px-4.5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black shadow-lg shadow-emerald-500/25 border border-emerald-400/30 flex items-center space-x-2 transition-all duration-200 cursor-pointer active:scale-95 group"
             >
-              <FileSpreadsheet className="w-4 h-4 text-white group-hover:scale-115 group-hover:-rotate-12 transition-transform duration-300 shrink-0" />
-              <span className="font-extrabold tracking-wide">Export Excel (.xlsx)</span>
+              <FileSpreadsheet className="w-4 h-4 text-white group-hover:scale-110 transition-transform shrink-0" />
+              <span className="font-black tracking-wide">Export Excel (.xlsx)</span>
             </button>
 
             <button
               onClick={fetchPost930Solvers}
-              className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 flex items-center space-x-2 transition-all"
+              className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/25 text-white text-xs font-black border border-white/20 flex items-center space-x-2 transition-all active:scale-95 cursor-pointer shadow-sm"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 text-brand-300 ${loading ? 'animate-spin' : ''}`} />
               <span>Refresh</span>
             </button>
           </div>
@@ -154,11 +156,11 @@ export const Post930SolversView: React.FC = () => {
 
       {/* Summary KPI Grid — 5 Headline Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-        <div className="glass-card p-5 rounded-3xl border border-amber-500/30 space-y-1.5 shadow-lg">
-          <span className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider">
+        <div className="glass-card p-5 rounded-3xl border border-indigo-500/30 space-y-1.5 shadow-lg">
+          <span className="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-wider">
             Students Detected
           </span>
-          <p className="text-3xl font-black text-amber-600 dark:text-amber-400">
+          <p className="text-3xl font-black text-indigo-600 dark:text-indigo-400">
             {summary.students_detected}
           </p>
           <p className="text-[10px] text-slate-400">Verified post-window solvers</p>
@@ -205,80 +207,179 @@ export const Post930SolversView: React.FC = () => {
         </div>
       </div>
 
-      {/* Filters & Search Control Bar */}
-      <div className="glass-card p-5 rounded-3xl border space-y-4 shadow-xl">
-        <div className="flex items-center justify-between flex-wrap gap-4">
+      {/* Filters & Search Control Bar - Uniform Responsive Grid */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 items-center">
 
           {/* Search Input */}
-          <div className="relative w-full sm:w-72">
-            <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+          <div className="relative w-full">
+            <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search name, reg no, username..."
-              className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs focus:ring-2 focus:ring-amber-500"
+              className="w-full pl-10 pr-4 h-11 rounded-2xl border border-slate-300 dark:border-navy-700 bg-slate-50 dark:bg-navy-900 text-xs font-semibold focus:ring-2 focus:ring-brand-500 transition-all shadow-xs"
             />
           </div>
 
-          {/* Dropdown Filters */}
-          <div className="flex items-center space-x-3 flex-wrap gap-2 text-xs font-bold">
-            <select
-              value={minSolves}
-              onChange={(e) => setMinSolves(Number(e.target.value))}
-              className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950"
-            >
-              <option value={1}>1+ Post-9:30 Solves</option>
-              <option value={2}>2+ Post-9:30 Solves</option>
-              <option value={3}>3+ Post-9:30 Solves</option>
-            </select>
+          {/* Min Solves Filter */}
+          <CustomDropdown
+            label="Min Solves"
+            value={String(minSolves)}
+            onChange={(val) => setMinSolves(Number(val))}
+            options={[
+              { value: '1', label: '1+ Post-9:30 Solves' },
+              { value: '2', label: '2+ Post-9:30 Solves' },
+              { value: '3', label: '3+ Post-9:30 Solves' }
+            ]}
+            placeholder="Select Min Solves"
+            triggerClassName="w-full h-11 bg-slate-50 dark:bg-navy-900 border-slate-300 dark:border-navy-700 text-xs font-bold text-slate-800 dark:text-slate-200 rounded-2xl shadow-xs"
+          />
 
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950"
-            >
-              <option value="latest">Sort: Latest Activity</option>
-              <option value="highest">Sort: Highest Solves Count</option>
-              <option value="earliest">Sort: Earliest Activity</option>
-              <option value="name">Sort: Student Name A-Z</option>
-            </select>
+          {/* Sort By Filter */}
+          <CustomDropdown
+            label="Sort Order"
+            value={sortBy}
+            onChange={(val) => setSortBy(val)}
+            options={[
+              { value: 'latest', label: 'Sort: Latest Activity' },
+              { value: 'highest', label: 'Sort: Highest Solves' },
+              { value: 'earliest', label: 'Sort: Earliest Activity' },
+              { value: 'name', label: 'Sort: Student Name A-Z' }
+            ]}
+            placeholder="Select Sort"
+            triggerClassName="w-full h-11 bg-slate-50 dark:bg-navy-900 border-slate-300 dark:border-navy-700 text-xs font-bold text-slate-800 dark:text-slate-200 rounded-2xl shadow-xs"
+          />
 
-            <select
-              value={dept}
-              onChange={(e) => setDept(e.target.value)}
-              className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950"
-            >
-              <option value="">All Depts</option>
-              {departments
+          {/* Department Filter */}
+          <CustomDropdown
+            label="Department"
+            value={dept}
+            onChange={(val) => setDept(val)}
+            options={[
+              { value: '', label: 'All Depts' },
+              ...departments
                 .filter(d => {
                   const code = (d.code || '').toUpperCase().trim();
                   const name = (d.name || '').toUpperCase().trim();
                   return code.includes('CS') || code.includes('CYBER') || code.includes('IOT') || code === 'IT' || name.includes('CYBER') || name.includes('IOT') || name.includes('INFORMATION');
                 })
-                .map(d => (
-                  <option key={d.id} value={d.code}>{d.name}</option>
-                ))}
-            </select>
+                .map(d => ({
+                  value: d.code,
+                  label: d.name
+                }))
+            ]}
+            placeholder="All Depts"
+            triggerClassName="w-full h-11 bg-slate-50 dark:bg-navy-900 border-slate-300 dark:border-navy-700 text-xs font-bold text-slate-800 dark:text-slate-200 rounded-2xl shadow-xs"
+          />
 
-            <select
-              value={yearLevel}
-              onChange={(e) => setYearLevel(e.target.value)}
-              className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950"
-            >
-              <option value="">All Years</option>
-              <option value="II">II Year</option>
-              <option value="III">III Year</option>
-              <option value="IV">IV Year</option>
-            </select>
-          </div>
+          {/* Year Filter */}
+          <CustomDropdown
+            label="Academic Year"
+            value={yearLevel}
+            onChange={(val) => setYearLevel(val)}
+            options={[
+              { value: '', label: 'All Years' },
+              { value: 'II', label: 'II Year' },
+              { value: 'III', label: 'III Year' },
+              { value: 'IV', label: 'IV Year' }
+            ]}
+            placeholder="All Years"
+            triggerClassName="w-full h-11 bg-slate-50 dark:bg-navy-900 border-slate-300 dark:border-navy-700 text-xs font-bold text-slate-800 dark:text-slate-200 rounded-2xl shadow-xs"
+          />
 
         </div>
       </div>
 
-      {/* Main Solvers Table */}
+      {/* Main Solvers Table (Desktop) & Cards (Mobile) */}
       <div className="glass-card rounded-3xl border overflow-hidden shadow-xl">
-        <div className="overflow-x-auto">
+        
+        {/* MOBILE CARDS VIEW (md:hidden) */}
+        <div className="block md:hidden p-4 space-y-3">
+          {loading ? (
+            <div className="p-8 text-center text-slate-400 font-bold animate-pulse">
+              Detecting post-9:30 AM solvers & verifying submission timestamps...
+            </div>
+          ) : error ? (
+            <div className="p-6 text-center text-rose-500 font-bold">
+              {error}
+            </div>
+          ) : filteredStudents.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 italic">
+              No students solved problems after the official 09:30 AM lock for the selected filters.
+            </div>
+          ) : (
+            filteredStudents.map((st: any) => (
+              <div
+                key={st.student_id}
+                className="bg-white dark:bg-navy-900/90 rounded-2xl p-4 border border-slate-200/90 dark:border-navy-700/80 shadow-md space-y-3 transition-all hover:shadow-lg"
+              >
+                {/* Header: Name, Reg No & Dept Badge */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-black text-sm text-slate-900 dark:text-white truncate">
+                      {st.student_name}
+                    </h4>
+                    <p className="font-mono text-xs text-slate-500 dark:text-slate-400 font-bold truncate">
+                      {st.register_number || st.reg_no}
+                    </p>
+                  </div>
+                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-black border shrink-0 ${getDeptBadgeStyle(st.department)}`}>
+                    <span>{st.department}</span>
+                    <span className="opacity-75 font-semibold text-[10px]">({(st.year || st.year_level || '').replace(/year/gi, '').trim()} Yr)</span>
+                  </span>
+                </div>
+
+                {/* Stats 4-Grid */}
+                <div className="grid grid-cols-4 gap-1.5 p-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-100 dark:border-navy-850 text-center">
+                  <div>
+                    <span className="text-[9px] font-black text-slate-500 uppercase block">Official</span>
+                    <span className="text-xs font-black text-slate-800 dark:text-slate-200">{st.official_locked_solved}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-black text-amber-500 uppercase block">Post-9:30</span>
+                    <span className="text-xs font-black text-amber-500">
+                      {st.post_window_solve_count?.toString().startsWith('+') ? st.post_window_solve_count : `+${st.post_window_solve_count}`}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-black text-purple-500 uppercase block">Subs</span>
+                    <span className="text-xs font-black text-purple-500">{st.post_window_submission_count || st.post_window_solve_count}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-black text-indigo-500 uppercase block">Total</span>
+                    <span className="text-xs font-black text-indigo-500">{st.current_total_solved}</span>
+                  </div>
+                </div>
+
+                {/* Timestamps & Actions */}
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-navy-800 gap-2">
+                  <div className="flex flex-col text-[10px] text-slate-500 dark:text-slate-400 font-bold min-w-0">
+                    <span className="truncate">First: <strong className="text-slate-700 dark:text-slate-300">{st.first_post_window_solve_formatted || '—'}</strong></span>
+                    <span className="truncate">Latest: <strong className="text-slate-700 dark:text-slate-300">{st.latest_post_window_solve_formatted || '—'}</strong></span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/15 text-emerald-500 border border-emerald-500/30">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                      <span>{st.evidence_status || 'VERIFIED'}</span>
+                    </span>
+                    <button
+                      onClick={() => setSelectedStudent(st)}
+                      className="px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold flex items-center space-x-1 transition-all text-[11px] shadow-xs active:scale-95 cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Inspect</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* DESKTOP TABLE VIEW (hidden md:block) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-navy-950 text-slate-400 font-black uppercase text-[10px] tracking-wider border-b">
               <tr>

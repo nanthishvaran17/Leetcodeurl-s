@@ -298,6 +298,28 @@ def get_contest_fast_summary_endpoint(
     return _get_fast_contest_summary(session, db, current_user)
 
 
+@router.get("/sessions/{session_id}/metadata")
+@router.get("/{session_id}/metadata")
+async def get_contest_metadata_endpoint(
+    session_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Fetches the raw GraphQL metadata for a given contest session.
+    """
+    session = _resolve_session(session_id, db)
+    if not session:
+        raise HTTPException(status_code=404, detail="Contest session not found")
+    
+    from backend.leetcode_fetcher import fetch_contest_metadata
+    
+    try:
+        meta = await fetch_contest_metadata(session.contest_id)
+        return meta
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/sessions/{session_id}/questions")
 @router.get("/{session_id}/questions")
 def get_contest_questions_endpoint(
@@ -1000,7 +1022,7 @@ def get_normalized_contest_data(
 def get_session_matrix(
     session_id: int, 
     page: int = Query(1, ge=1),
-    limit: int = Query(50, ge=1, le=500),
+    limit: int = Query(50, ge=1, le=2000),
     paginated: bool = Query(False),
     search: Optional[str] = Query(None),
     sort_by: Optional[str] = Query(None),

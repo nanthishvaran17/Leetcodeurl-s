@@ -138,7 +138,8 @@ class InstitutionalIntelligenceService:
 
         if rule_type == "INACTIVE_STUDENTS":
             days = criteria.get("days", 7)
-            cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=days)
+            now_utc = datetime.datetime.now(datetime.timezone.utc)
+            cutoff = now_utc - datetime.timedelta(days=days)
             
             # Query active students whose last activity or profile sync is older than cutoff
             students = db.query(Student).filter(Student.is_active == True)
@@ -147,7 +148,10 @@ class InstitutionalIntelligenceService:
                 
             for s in students.all():
                 stats = db.query(LeetCodeProfileStats).filter_by(student_id=s.id).first()
-                if not stats or not stats.last_successful_sync or stats.last_successful_sync < cutoff or getattr(stats, 'active_days', 0) == 0:
+                sync_time = getattr(stats, 'last_successful_sync', None) if stats else None
+                if sync_time and sync_time.tzinfo is None:
+                    sync_time = sync_time.replace(tzinfo=datetime.timezone.utc)
+                if not stats or not sync_time or sync_time < cutoff or getattr(stats, 'active_days', 0) == 0:
                     matched_user_ids.append(MessagingService._get_user_id(s))
 
         elif rule_type == "MISSED_CONTEST":
@@ -841,11 +845,15 @@ I can show specific student progress assigned to any faculty member."""
 
         # D. INACTIVE / PENDING STUDENTS
         if any(w in q_clean for w in ["inactive", "idle", "pending students", "pending", "zero", "kudu"]):
-            cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
+            now_utc = datetime.datetime.now(datetime.timezone.utc)
+            cutoff = now_utc - datetime.timedelta(days=7)
             inactive_students = []
             for s in all_students:
                 stats = db.query(LeetCodeProfileStats).filter_by(student_id=s.id).first()
-                if not stats or not stats.last_successful_sync or stats.last_successful_sync < cutoff or getattr(stats, 'active_days', 0) == 0:
+                sync_time = getattr(stats, 'last_successful_sync', None) if stats else None
+                if sync_time and sync_time.tzinfo is None:
+                    sync_time = sync_time.replace(tzinfo=datetime.timezone.utc)
+                if not stats or not sync_time or sync_time < cutoff or getattr(stats, 'active_days', 0) == 0:
                     inactive_students.append(s)
 
             if not inactive_students:
@@ -1199,8 +1207,14 @@ I am equipped with comprehensive AI assistant capabilities for **Nandha Engineer
             last_sync = stats.last_successful_sync.strftime("%Y-%m-%d %H:%M") if stats and stats.last_successful_sync else "Recently Synchronized"
 
             reasons = []
-            cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
-            if not stats or not stats.last_successful_sync or stats.last_successful_sync < cutoff:
+            now_utc = datetime.datetime.now(datetime.timezone.utc)
+            cutoff = now_utc - datetime.timedelta(days=7)
+
+            sync_time = getattr(stats, "last_successful_sync", None) if stats else None
+            if sync_time and sync_time.tzinfo is None:
+                sync_time = sync_time.replace(tzinfo=datetime.timezone.utc)
+
+            if not stats or not sync_time or sync_time < cutoff:
                 reasons.append("Zero verified submissions in the past 7 days")
 
             latest_session = db.query(WeeklySession).order_by(desc(WeeklySession.id)).first()
@@ -1236,7 +1250,7 @@ I am equipped with comprehensive AI assistant capabilities for **Nandha Engineer
                 "globalRank": g_rank,
                 "lastSync": last_sync,
                 "objectiveReasons": reasons,
-                "note": "This transparency view is grounded 100% in objective, verified institutional database records. No subjective AI metrics or black-box scoring are applied."
+                "note": "This transparency view is grounded 100% in objective, verified platform data and institutional database records. No subjective AI metrics or black-box scoring are applied."
             }
 
         # Fallback for Staff/Admin user without individual student record

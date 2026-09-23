@@ -3,11 +3,11 @@ import { useStudentEntity } from '../stores/studentLiveStore';
 import { Clock, AlertCircle, Trophy, Flame, Award, TrendingUp, RefreshCw, Trash2, Edit3, Eye, ExternalLink } from 'lucide-react';
 
 function getRankBadge(rank?: number) {
-  if (!rank || rank <= 0) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-300">Unranked</span>;
-  if (rank === 1) return <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-100 text-amber-800 border border-amber-300 shadow-sm"><Trophy className="w-3.5 h-3.5 text-amber-500" /><span>#1</span></span>;
-  if (rank === 2) return <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-slate-100 text-slate-800 border border-slate-300 shadow-sm"><Trophy className="w-3.5 h-3.5 text-slate-500" /><span>#2</span></span>;
-  if (rank === 3) return <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-orange-100 text-orange-800 border border-orange-300 shadow-sm"><Trophy className="w-3.5 h-3.5 text-orange-500" /><span>#3</span></span>;
-  return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-white text-slate-700 border border-slate-200">#{rank}</span>;
+  if (!rank || rank <= 0) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-navy-700">Unranked</span>;
+  if (rank === 1) return <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-black bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 text-white shadow-md shadow-amber-500/30 border border-amber-300/60"><Trophy className="w-3.5 h-3.5 text-white" /><span>#1</span></span>;
+  if (rank === 2) return <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-black bg-gradient-to-r from-slate-400 via-slate-500 to-slate-600 text-white shadow-md shadow-slate-500/20 border border-slate-300/60"><Trophy className="w-3.5 h-3.5 text-white" /><span>#2</span></span>;
+  if (rank === 3) return <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-black bg-gradient-to-r from-amber-700 via-orange-600 to-orange-500 text-white shadow-md shadow-amber-700/20 border border-amber-600/60"><Trophy className="w-3.5 h-3.5 text-white" /><span>#3</span></span>;
+  return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-navy-700">#{rank}</span>;
 }
 
 function parseUtcTime(ts?: string): number {
@@ -89,56 +89,102 @@ export const FastStudentRow = memo(({
         }
         onView(student, e);
       }}
-      className="flex flex-col md:flex-row p-4 md:py-2.5 md:px-0 gap-3 md:gap-0 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10 transition-colors duration-150 group font-medium text-xs border border-slate-100 md:border-t-0 md:border-x-0 md:border-b dark:border-navy-800/60 cursor-pointer w-full min-w-full md:min-w-[1100px] items-start md:items-center bg-white md:bg-transparent dark:bg-navy-950 md:dark:bg-transparent rounded-2xl md:rounded-none shadow-sm md:shadow-none mb-3 md:mb-0 min-h-[52px]"
+      className="flex flex-col md:flex-row p-3 md:py-2.5 md:px-0 gap-3 md:gap-0 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10 transition-all duration-150 group font-medium text-xs border border-slate-200/80 md:border-t-0 md:border-x-0 md:border-b dark:border-navy-800/60 cursor-pointer w-full min-w-full md:min-w-[1100px] items-start md:items-center bg-white md:bg-transparent dark:bg-navy-950 md:dark:bg-transparent rounded-2xl md:rounded-none shadow-sm md:shadow-none mb-3 md:mb-0 min-h-[52px]"
     >
-      {/* MOBILE LAYOUT */}
-      <div className="flex md:hidden items-center justify-between w-full">
-         <div className="flex items-center gap-2">
-            <input type="checkbox" checked={isSelected} onChange={() => toggleStudent(student.id)} className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer" onClick={(e) => e.stopPropagation()} />
-            {isSolver ? getRankBadge(effectiveCollegeRank) : <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-300">Unranked</span>}
-         </div>
-          <div className="flex items-center gap-1 text-[11px] font-bold">
-             <span className="text-slate-900 dark:text-white font-extrabold">{student.department?.code || student.department?.name || '—'}</span>
-             <span className="text-slate-600 dark:text-slate-300 shrink-0 font-extrabold px-0.5">/</span>
-             <span className="text-slate-800 dark:text-slate-200 font-extrabold">{String(student.year_level || '').replace(/\s*Yr\s*/gi, '').replace(/\s*Year\s*/gi, '').trim()} Yr</span>
+      {/* MOBILE LAYOUT (PREMIUM CARD DESIGN) */}
+      <div className="flex md:hidden flex-col w-full p-4 space-y-3 bg-white dark:bg-navy-900/90 rounded-2xl border border-slate-200/90 dark:border-navy-700/80 shadow-md hover:shadow-xl transition-all duration-200 relative overflow-hidden backdrop-blur-md">
+        
+        {/* Top Header Row: Checkbox + Rank Badge on Left, Department/Year Pill on Right */}
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-2.5">
+            <input 
+              type="checkbox" 
+              checked={isSelected} 
+              onChange={() => toggleStudent(student.id)} 
+              className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer" 
+              onClick={(e) => e.stopPropagation()} 
+            />
+            {isSolver ? getRankBadge(effectiveCollegeRank) : <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-navy-700">Unranked</span>}
           </div>
-      </div>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100/90 dark:bg-navy-800/90 border border-slate-200/80 dark:border-navy-700/80 text-[11px] font-black tracking-tight text-slate-700 dark:text-slate-200 shadow-2xs">
+            <span>{student.department?.code || student.department?.name || '—'}</span>
+            <span className="text-slate-400 font-normal">•</span>
+            <span>{String(student.year_level || '').replace(/\s*Yr\s*/gi, '').replace(/\s*Year\s*/gi, '').trim()} Yr</span>
+          </div>
+        </div>
 
-      <div className="flex md:hidden items-center gap-3 w-full">
-          <div className="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-indigo-600 text-white font-black text-sm flex items-center justify-center shadow-sm">
+        {/* Student Profile Info Row */}
+        <div className="flex items-center gap-3 w-full">
+          <div className="shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-500 via-indigo-600 to-purple-600 text-white font-black text-base flex items-center justify-center shadow-md shadow-brand-500/20 ring-2 ring-white dark:ring-navy-900">
             {student.name.charAt(0).toUpperCase()}
           </div>
-          <div className="flex flex-col min-w-0">
-             <span className="font-black text-sm text-slate-900 dark:text-white truncate">{student.name}</span>
-             <span className="font-mono text-xs font-bold text-slate-600 dark:text-slate-400 truncate">{student.reg_no}</span>
+          <div className="flex flex-col min-w-0 flex-1">
+            <span className="font-black text-sm text-slate-900 dark:text-white truncate tracking-tight group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+              {student.name}
+            </span>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400 truncate">
+                {student.reg_no}
+              </span>
+              {student.username && (
+                <span className="font-mono text-[11px] font-bold text-brand-600 dark:text-brand-400 truncate">
+                  @{student.username}
+                </span>
+              )}
+            </div>
           </div>
-      </div>
+        </div>
 
-      <div className="flex md:hidden items-center justify-between w-full pt-3 border-t border-slate-100 dark:border-navy-800/60">
-         <div className="flex gap-6">
-             <div className="flex flex-col">
-                 <span className="text-xs uppercase text-slate-700 dark:text-slate-200 font-extrabold tracking-wider">Solved</span>
-                 <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">{totalSolved ?? '—'}</span>
-             </div>
-             <div className="flex flex-col">
-                 <span className="text-xs uppercase text-slate-700 dark:text-slate-200 font-extrabold tracking-wider">Rating</span>
-                  <span className="text-sm font-black text-amber-500">
-                    {(() => {
-                      const rawRating = student.stats?.contest_rating ?? (student as any).contest_rating;
-                      if (rawRating == null || rawRating <= 0) return '—';
-                      return Math.round(Number(rawRating)).toLocaleString();
-                    })()}
-                  </span>
-             </div>
-         </div>
-          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-            <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onView(student, e); }} className="p-2.5 rounded-xl text-brand-600 bg-brand-50 dark:bg-brand-950/50 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer active:scale-95 transition-transform" title="View Student"><Eye className="w-4 h-4" /></button>
-            <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(student, e); }} className="p-2.5 rounded-xl text-amber-600 bg-amber-50 dark:bg-amber-950/50 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer active:scale-95 transition-transform" title="Edit Student"><Edit3 className="w-4 h-4" /></button>
+        {/* Bottom Row: Stats Chips & Action Buttons */}
+        <div className="flex items-center justify-between w-full pt-3 border-t border-slate-100 dark:border-navy-800/80 gap-2">
+          
+          {/* Solved & Rating Metric Chips */}
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0">
+              <span className="text-[10px] font-black uppercase tracking-wider">SOLVED</span>
+              <span className="text-xs font-black font-mono text-emerald-700 dark:text-emerald-300">{totalSolved ?? '—'}</span>
+            </div>
+
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">
+              <span className="text-[10px] font-black uppercase tracking-wider">RATING</span>
+              <span className="text-xs font-black font-mono text-amber-700 dark:text-amber-300">
+                {(() => {
+                  const rawRating = student.stats?.contest_rating ?? (student as any).contest_rating;
+                  if (rawRating == null || rawRating <= 0) return '—';
+                  return Math.round(Number(rawRating)).toLocaleString();
+                })()}
+              </span>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+            <button 
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onView(student, e); }} 
+              className="w-9 h-9 rounded-xl text-brand-600 dark:text-brand-400 bg-brand-50 hover:bg-brand-500 hover:text-white dark:bg-brand-950/60 dark:hover:bg-brand-500 dark:hover:text-white flex items-center justify-center cursor-pointer active:scale-95 transition-all shadow-xs" 
+              title="View Student"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+            <button 
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(student, e); }} 
+              className="w-9 h-9 rounded-xl text-amber-600 dark:text-amber-400 bg-amber-50 hover:bg-amber-500 hover:text-white dark:bg-amber-950/60 dark:hover:bg-amber-500 dark:hover:text-white flex items-center justify-center cursor-pointer active:scale-95 transition-all shadow-xs" 
+              title="Edit Student"
+            >
+              <Edit3 className="w-4 h-4" />
+            </button>
             {onDelete && (
-              <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(student, e); }} className="p-2.5 rounded-xl text-rose-600 bg-rose-50 dark:bg-rose-950/50 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer active:scale-95 transition-transform" title="Delete Student Record"><Trash2 className="w-4 h-4" /></button>
+              <button 
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(student, e); }} 
+                className="w-9 h-9 rounded-xl text-rose-600 dark:text-rose-400 bg-rose-50 hover:bg-rose-500 hover:text-white dark:bg-rose-950/60 dark:hover:bg-rose-500 dark:hover:text-white flex items-center justify-center cursor-pointer active:scale-95 transition-all shadow-xs" 
+                title="Delete Student Record"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             )}
           </div>
-       </div>
+        </div>
+      </div>
 
       {/* DESKTOP LAYOUT COLUMNS */}
       <div className="hidden md:flex flex-none w-10 items-center justify-center text-center px-3" onClick={(e) => e.stopPropagation()}>

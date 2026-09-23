@@ -64,10 +64,10 @@ from sqlalchemy.pool import NullPool
 engine_kwargs = {}
 if "postgresql" in db_url or "postgres" in db_url:
     pg_connect_args = {
-        "connect_timeout": 3,    # Fast connect timeout (3s) for Neon AWS multi-IP failover
+        "connect_timeout": 30,   # 30s connect timeout for Neon serverless wake-up & AWS multi-IP failover
         "keepalives": 1,
         "keepalives_idle": 15,   # Probe after 15s idle
-        "keepalives_interval": 3,
+        "keepalives_interval": 5,
         "keepalives_count": 3,
         "sslmode": "require",
     }
@@ -75,9 +75,9 @@ if "postgresql" in db_url or "postgres" in db_url:
     engine_kwargs.update({
         "pool_size": int(os.environ.get("DB_POOL_SIZE", 30)),
         "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", 50)),
-        "pool_timeout": 20,          # wait up to 20s to checkout a connection under high load
+        "pool_timeout": 30,          # wait up to 30s to checkout a connection under load
         "pool_pre_ping": True,       # verify liveness before returning from pool
-        "pool_recycle": 45,          # recycle after 45s to purge stale connections before Neon auto-suspends
+        "pool_recycle": 120,         # recycle after 120s to prevent stale connection pool sockets
         "connect_args": pg_connect_args
     })
 else:

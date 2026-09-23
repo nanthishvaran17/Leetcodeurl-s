@@ -23,7 +23,7 @@ export const ExportStatus: React.FC<ExportStatusProps> = ({ state, onRetry, onCl
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 15, scale: 0.96 }}
         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-        className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))] right-4 left-4 sm:left-auto z-[100060] bg-slate-900/85 backdrop-blur-2xl rounded-3xl shadow-2xl shadow-slate-950/50 text-white max-w-[calc(100vw-2rem)] sm:max-w-[420px] w-full border border-white/[0.08] font-sans overflow-hidden"
+        className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-6 right-4 left-4 sm:left-auto z-[100060] bg-slate-900/85 backdrop-blur-2xl rounded-3xl shadow-2xl shadow-slate-950/50 text-white max-w-[calc(100vw-2rem)] sm:max-w-[420px] w-full border border-white/[0.08] font-sans overflow-hidden"
       >
         {/* Subtle premium gradient background effect */}
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-brand-500/5 pointer-events-none" />

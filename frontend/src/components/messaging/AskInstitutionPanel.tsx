@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import api from '../../services/api';
-import { Sparkles, CheckCircle2, ShieldAlert, ArrowRight, RefreshCw, Send, AlertTriangle, Bot, User } from 'lucide-react';
+import { Sparkles, CheckCircle2, ShieldAlert, ArrowRight, RefreshCw, Send, AlertTriangle, Bot, User, ArrowLeft } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -19,9 +19,15 @@ interface ChatMessage {
   dataConfidence?: string;
 }
 
-export const AskInstitutionPanel: React.FC<{
+interface AskInstitutionPanelProps {
   onActionTrigger?: (action: ActionTrigger) => void;
-}> = ({ onActionTrigger }) => {
+  onBack?: () => void;
+}
+
+export const AskInstitutionPanel: React.FC<AskInstitutionPanelProps> = ({ 
+  onActionTrigger,
+  onBack
+}) => {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -38,11 +44,13 @@ export const AskInstitutionPanel: React.FC<{
   ];
 
   useEffect(() => {
-    endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messages.length > 0) {
+      endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
   }, [messages, loading]);
 
   useEffect(() => {
-    textareaRef.current?.focus();
+    textareaRef.current?.focus({ preventScroll: true });
   }, []);
 
   const handleSearch = async (queryText?: string) => {
@@ -55,7 +63,6 @@ export const AskInstitutionPanel: React.FC<{
       content: targetQuery
     };
 
-    // Maintain max history (last 10 messages)
     const currentHistory = [...messages].slice(-10);
     setMessages(prev => [...prev, userMessage]);
     setQuery('');
@@ -64,8 +71,8 @@ export const AskInstitutionPanel: React.FC<{
 
     setTimeout(() => {
       if (textareaRef.current) {
-        textareaRef.current.focus();
-        textareaRef.current.style.height = '52px';
+        textareaRef.current.focus({ preventScroll: true });
+        textareaRef.current.style.height = '44px';
       }
     }, 30);
 
@@ -98,7 +105,7 @@ export const AskInstitutionPanel: React.FC<{
     } finally {
       setLoading(false);
       setTimeout(() => {
-        textareaRef.current?.focus();
+        textareaRef.current?.focus({ preventScroll: true });
       }, 50);
     }
   };
@@ -112,176 +119,193 @@ export const AskInstitutionPanel: React.FC<{
 
   return (
     <div className="bg-white dark:bg-[#0B1120] text-slate-800 dark:text-slate-200 w-full flex flex-col h-full overflow-hidden relative">
-      {/* Premium Header */}
-      <div className="flex items-center p-4 md:p-6 bg-white dark:bg-[#0B1120] border-b border-slate-100 dark:border-slate-800/50 shrink-0 relative z-10 w-full">
-        <div className="max-w-5xl mx-auto w-full flex items-center space-x-4">
-            <div className="p-3 bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-xl flex items-center justify-center relative overflow-hidden shrink-0">
-                <Sparkles className="w-6 h-6 relative z-10" />
-            </div>
-            <div>
-              <h2 className="text-2xl md:text-[28px] font-bold text-slate-800 dark:text-slate-100 tracking-tight leading-none">Institution Intelligence Assistant</h2>
-              <p className="text-sm font-medium mt-1.5 text-slate-500 flex items-center">
-                <ShieldAlert className="w-4 h-4 mr-1.5 text-emerald-500 shrink-0" />
-                <span>RBAC-enforced AI assistant grounded strictly in verified institutional database records.</span>
-              </p>
-            </div>
+      {/* Streamlined Responsive Header */}
+      <div className="flex items-center px-4 py-3 sm:px-5 sm:py-3.5 bg-white dark:bg-[#0B1120] border-b border-slate-200/80 dark:border-slate-800/60 shrink-0 relative z-10 w-full shadow-xs">
+        <div className="max-w-5xl mx-auto w-full flex items-center space-x-3">
+          {onBack && (
+            <button
+              onClick={onBack}
+              aria-label="Back to messages"
+              className="p-2 -ml-1 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-xl transition-colors shrink-0 cursor-pointer"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          )}
+          <div className="p-2 sm:p-2.5 bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-xl flex items-center justify-center relative overflow-hidden shrink-0 shadow-xs">
+            <Sparkles className="w-5 h-5 relative z-10" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base sm:text-lg md:text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-tight truncate">
+              Institution Intelligence Assistant
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 flex items-center truncate">
+              <ShieldAlert className="w-3.5 h-3.5 mr-1 text-emerald-500 shrink-0" />
+              <span className="truncate">RBAC-enforced AI assistant grounded in verified DB records.</span>
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Chat Area */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-6 space-y-6 scroll-smooth bg-slate-50/50 dark:bg-[#060B14]">
-        <div className="max-w-5xl mx-auto w-full space-y-6 min-h-full flex flex-col justify-center">
-        {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center text-center my-auto py-4 animate-in fade-in zoom-in duration-500">
-            <div className="relative w-12 h-12 sm:w-14 sm:h-14 bg-white dark:bg-slate-800 border border-indigo-100 dark:border-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center shadow-sm mb-3">
-                <Bot className="w-6 h-6 sm:w-7 sm:h-7" />
+      {/* Chat Messages / Container */}
+      <div className="flex-1 overflow-y-auto p-2.5 sm:p-4 space-y-3 bg-slate-50/50 dark:bg-[#060B14]">
+        <div className="max-w-5xl mx-auto w-full space-y-3">
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-start text-center py-3 sm:py-5 animate-in fade-in zoom-in duration-300 max-w-xl mx-auto px-2 my-auto">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center shadow-xs mb-2">
+                <Bot className="w-5 h-5" />
+              </div>
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-1">
+                How can I help you today?
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed font-medium mb-3">
+                Ask me to generate reports, find inactive students, or analyze performance. All answers are verified against live DB records.
+              </p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
+                {presetQueries.map((preset, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleSearch(preset);
+                    }}
+                    className="bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10 hover:text-indigo-700 dark:hover:text-indigo-300 text-slate-700 dark:text-slate-300 text-xs font-semibold px-3 py-2.5 rounded-xl transition-colors cursor-pointer text-left flex justify-between items-center group shadow-xs"
+                  >
+                    <span className="truncate">{preset}</span>
+                    <div className="w-4 h-4 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-1.5">
+                      <ArrowRight className="w-3 h-3 text-indigo-600 dark:text-indigo-300" />
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
-            <h3 className="text-2xl sm:text-[28px] md:text-[32px] font-bold text-slate-800 dark:text-slate-100 tracking-tight mb-2">How can I help you today?</h3>
-            <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed font-medium mb-5">Ask me to generate reports, find inactive students, or analyze performance. All answers are verified against live DB records.</p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl">
-              {presetQueries.map((preset, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleSearch(preset)}
-                  className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-700 dark:hover:text-indigo-300 text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-semibold px-4 py-3 min-h-[48px] rounded-xl transition-colors cursor-pointer text-left flex justify-between items-center group shadow-sm"
-                >
-                  <span>{preset}</span>
-                  <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-2">
-                    <ArrowRight className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-300" />
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : (
-          messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} w-full animate-in fade-in slide-in-from-bottom-3 duration-300`}>
-              <div className={`flex max-w-[92%] sm:max-w-[88%] ${msg.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''} space-x-4`}>
-                
-                {/* Avatar */}
-                <div className="shrink-0 flex items-start pt-1">
+          ) : (
+            messages.map((msg) => (
+              <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} w-full animate-in fade-in slide-in-from-bottom-2 duration-200`}>
+                <div className={`flex max-w-[94%] sm:max-w-[88%] ${msg.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''} space-x-3 sm:space-x-4`}>
+                  
+                  {/* Avatar */}
+                  <div className="shrink-0 flex items-start pt-1">
                     {msg.role === 'user' ? (
-                        <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-white shadow-md ring-2 ring-slate-100">
-                            <User className="w-4 h-4" />
-                        </div>
+                      <div className="w-8 h-8 rounded-full bg-slate-800 dark:bg-slate-700 flex items-center justify-center text-white shadow-xs">
+                        <User className="w-4 h-4" />
+                      </div>
                     ) : (
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg ring-2 ring-indigo-50">
-                            <Sparkles className="w-4 h-4" />
-                        </div>
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-xs">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
                     )}
-                </div>
+                  </div>
 
-                {/* Message Bubble */}
-                <div className={`flex flex-col space-y-3 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                    <div className={`px-6 py-4 rounded-3xl text-[14.5px] leading-relaxed shadow-sm ${
-                        msg.role === 'user' 
-                        ? 'bg-slate-800 text-white rounded-tr-sm font-medium' 
-                        : 'bg-white border border-slate-200/70 text-slate-800 rounded-tl-sm w-full'
+                  {/* Message Bubble */}
+                  <div className={`flex flex-col space-y-2 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                    <div className={`px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-xs ${
+                      msg.role === 'user' 
+                        ? 'bg-slate-800 text-white dark:bg-indigo-600 rounded-tr-xs font-medium' 
+                        : 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-800 dark:text-slate-100 rounded-tl-xs w-full'
                     }`}>
-                        {msg.role === 'assistant' ? (
-                            <div className="prose prose-sm prose-slate max-w-none prose-tables:border prose-tables:rounded-xl prose-th:bg-slate-50 prose-th:text-slate-600 prose-td:border-t prose-p:my-2 prose-ul:my-2 font-medium">
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                    {msg.content}
-                                </ReactMarkdown>
-                            </div>
-                        ) : (
-                            <span>{msg.content}</span>
-                        )}
+                      {msg.role === 'assistant' ? (
+                        <div className="prose prose-sm dark:prose-invert max-w-none prose-tables:border prose-tables:rounded-xl prose-th:bg-slate-50 dark:prose-th:bg-slate-800/60 prose-th:text-slate-700 dark:prose-th:text-slate-300 prose-td:border-t prose-p:my-1.5 prose-ul:my-1.5 font-medium">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {msg.content}
+                          </ReactMarkdown>
+                        </div>
+                      ) : (
+                        <span>{msg.content}</span>
+                      )}
                     </div>
                     
-                    {/* Assistant Metadata (Evidence & Actions) */}
+                    {/* Metadata & Actions */}
                     {msg.role === 'assistant' && (
-                        <div className="w-full flex flex-col space-y-3 pl-1 pr-4">
-                            {/* Confidence Badge */}
-                            {msg.dataConfidence && (
-                                <div className="flex items-center space-x-1.5 self-start px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm">
-                                    <CheckCircle2 className="w-4 h-4" />
-                                    <span>{msg.dataConfidence}</span>
-                                </div>
-                            )}
+                      <div className="w-full flex flex-col space-y-2.5 pt-1">
+                        {msg.dataConfidence && (
+                          <div className="flex items-center space-x-1.5 self-start px-2.5 py-1 rounded-md text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 shadow-xs">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>{msg.dataConfidence}</span>
+                          </div>
+                        )}
 
-                            {/* Evidence Trace */}
-                            {msg.evidence && msg.evidence.length > 0 && (
-                                <div className="bg-slate-50/80 border border-slate-200 rounded-2xl p-4 text-[12.5px] space-y-2 max-w-xl shadow-inner">
-                                <div className="font-bold text-slate-700 flex items-center space-x-1.5 mb-1.5">
-                                    <ShieldAlert className="w-4 h-4 text-slate-500" />
-                                    <span>Verified Provenance</span>
-                                </div>
-                                <ul className="space-y-1.5 text-slate-500 font-medium list-disc list-inside">
-                                    {msg.evidence.map((ev, i) => (
-                                    <li key={i}>{ev}</li>
-                                    ))}
-                                </ul>
-                                </div>
-                            )}
+                        {msg.evidence && msg.evidence.length > 0 && (
+                          <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs space-y-1.5 max-w-xl">
+                            <div className="font-bold text-slate-700 dark:text-slate-300 flex items-center space-x-1.5 mb-1">
+                              <ShieldAlert className="w-3.5 h-3.5 text-slate-500" />
+                              <span>Verified Provenance</span>
+                            </div>
+                            <ul className="space-y-1 text-slate-500 dark:text-slate-400 font-medium list-disc list-inside">
+                              {msg.evidence.map((ev, i) => (
+                                <li key={i}>{ev}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
 
-                            {/* Actions */}
-                            {msg.actions && msg.actions.length > 0 && (
-                                <div className="flex flex-wrap gap-2.5 pt-1">
-                                    {msg.actions.map((act, i) => (
-                                    <button
-                                        key={i}
-                                        onClick={() => {
-                                            if (act.action === 'RUN_QUERY') {
-                                                handleSearch(act.params.query);
-                                            } else if (['DOWNLOAD_PDF', 'EXPORT_PDF', 'EXPORT_STUDENT_PDF'].includes(act.action)) {
-                                                const token = localStorage.getItem('token') || '';
-                                                const downloadUrl = `${api.defaults.baseURL || '/api'}/reports/export-pdf?token=${token}`;
-                                                window.open(downloadUrl, '_blank');
-                                            } else {
-                                                onActionTrigger && onActionTrigger(act);
-                                            }
-                                        }}
-                                        className="bg-white hover:bg-indigo-600 text-indigo-600 hover:text-white border border-indigo-200 hover:border-transparent px-4 py-2 rounded-xl text-[13px] font-bold flex items-center space-x-2 transition-all duration-300 shadow-sm hover:shadow-indigo-500/25 cursor-pointer group"
-                                    >
-                                        <span>{act.label}</span>
-                                        <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
-                                    </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                        {msg.actions && msg.actions.length > 0 && (
+                          <div className="flex flex-wrap gap-2 pt-0.5">
+                            {msg.actions.map((act, i) => (
+                              <button
+                                key={i}
+                                type="button"
+                                onClick={() => {
+                                  if (act.action === 'RUN_QUERY') {
+                                    handleSearch(act.params.query);
+                                  } else if (['DOWNLOAD_PDF', 'EXPORT_PDF', 'EXPORT_STUDENT_PDF'].includes(act.action)) {
+                                    const token = localStorage.getItem('token') || '';
+                                    const downloadUrl = `${api.defaults.baseURL || '/api'}/reports/export-pdf?token=${token}`;
+                                    window.open(downloadUrl, '_blank');
+                                  } else {
+                                    onActionTrigger && onActionTrigger(act);
+                                  }
+                                }}
+                                className="bg-white dark:bg-slate-900 hover:bg-indigo-600 dark:hover:bg-indigo-600 text-indigo-600 dark:text-indigo-400 hover:text-white dark:hover:text-white border border-indigo-200 dark:border-indigo-800 hover:border-transparent px-3 py-1.5 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all duration-200 shadow-xs cursor-pointer group"
+                              >
+                                <span>{act.label}</span>
+                                <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     )}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+
+          {/* Loading Indicator */}
+          {loading && (
+            <div className="flex justify-start w-full animate-pulse">
+              <div className="flex space-x-3 items-center">
+                <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900">
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                </div>
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-4 py-3 rounded-2xl rounded-tl-xs shadow-xs flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 ml-2">Analyzing verified records...</span>
                 </div>
               </div>
             </div>
-          ))
-        )}
+          )}
 
-        {/* Loading Indicator */}
-        {loading && (
-            <div className="flex justify-start w-full animate-pulse">
-                <div className="flex space-x-4 items-center">
-                    <div className="w-9 h-9 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-inner border border-indigo-100">
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                    </div>
-                    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-6 py-4 rounded-3xl rounded-tl-sm shadow-sm flex items-center space-x-2.5">
-                        <div className="w-2.5 h-2.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                        <div className="w-2.5 h-2.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                        <div className="w-2.5 h-2.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                        <span className="text-sm font-semibold text-slate-500 ml-3">Analyzing verified records...</span>
-                    </div>
-                </div>
+          {/* Error state */}
+          {error && (
+            <div className="flex justify-center my-3 w-full animate-in fade-in slide-in-from-top-2">
+              <div className="px-4 py-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-center space-x-2.5 shadow-xs max-w-lg">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-500" />
+                <span>{error}</span>
+              </div>
             </div>
-        )}
-
-        {/* Error state */}
-        {error && (
-            <div className="flex justify-center my-4 w-full animate-in fade-in slide-in-from-top-2">
-                <div className="px-5 py-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-sm flex items-center space-x-3 shadow-sm max-w-lg">
-                    <AlertTriangle className="w-5 h-5 shrink-0 text-rose-500" />
-                    <span className="font-semibold">{error}</span>
-                </div>
-            </div>
-        )}
+          )}
 
         </div>
         <div ref={endOfMessagesRef} />
       </div>
 
-      {/* Modern Input Area */}
-      <div className="p-3 sm:p-4 md:p-5 bg-white dark:bg-[#0B1120] border-t border-slate-100 dark:border-slate-800/50 shrink-0 w-full">
+      {/* Input Footer */}
+      <div className="p-2 sm:p-2.5 bg-white dark:bg-[#0B1120] border-t border-slate-200/80 dark:border-slate-800/60 shrink-0 w-full">
         <div className="relative max-w-5xl mx-auto w-full group">
           <textarea
             ref={textareaRef}
@@ -291,33 +315,29 @@ export const AskInstitutionPanel: React.FC<{
             disabled={loading}
             placeholder="Ask anything (e.g. Who missed the last contest?)..."
             aria-label="Ask institution intelligence"
-            className="w-full bg-slate-50 dark:bg-[#060B14] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-sm sm:text-base font-medium rounded-2xl pl-4 pr-14 py-3 min-h-[52px] max-h-32 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none transition-all placeholder-slate-400 dark:placeholder-slate-600 shadow-sm"
+            className="w-full bg-slate-50 dark:bg-[#060B14] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-medium rounded-xl pl-3.5 pr-12 py-2 min-h-[40px] max-h-24 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none transition-all placeholder-slate-400 dark:placeholder-slate-600 shadow-xs"
             rows={1}
             style={{
-                height: query ? 'auto' : '52px',
-                overflowY: query.split('\n').length > 3 ? 'auto' : 'hidden'
+              height: query ? 'auto' : '40px',
+              overflowY: query.split('\n').length > 3 ? 'auto' : 'hidden'
             }}
             onInput={(e) => {
-                const target = e.target as HTMLTextAreaElement;
-                target.style.height = '52px';
-                if (target.value) {
-                    target.style.height = `${Math.min(target.scrollHeight, 120)}px`;
-                }
+              const target = e.target as HTMLTextAreaElement;
+              target.style.height = '40px';
+              if (target.value) {
+                target.style.height = `${Math.min(target.scrollHeight, 100)}px`;
+              }
             }}
           />
           <button
+            type="button"
             onClick={() => handleSearch()}
             disabled={!query.trim() || loading}
             aria-label="Send message"
-            className="absolute right-2 bottom-2 w-9 h-9 sm:w-10 sm:h-10 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white rounded-xl transition-all flex items-center justify-center shadow-sm cursor-pointer disabled:cursor-not-allowed"
+            className="absolute right-1.5 bottom-1.5 w-7 h-7 sm:w-8 sm:h-8 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white rounded-lg transition-all flex items-center justify-center shadow-xs cursor-pointer disabled:cursor-not-allowed"
           >
-            <Send className="w-4 h-4 relative right-[-0.5px]" />
+            <Send className="w-3.5 h-3.5" />
           </button>
-        </div>
-        <div className="text-center mt-2 max-w-5xl mx-auto">
-            <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
-                Institution Intelligence verifies all records · Enter to send · Shift+Enter for new line
-            </span>
         </div>
       </div>
     </div>

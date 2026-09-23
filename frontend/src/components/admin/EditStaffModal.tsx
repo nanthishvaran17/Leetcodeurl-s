@@ -126,7 +126,7 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
         username: staffObj.username || '',
         email: staffObj.email || '',
         phone_number: staffObj.phone_number || '',
-        role: staffObj.role || 'Faculty Mentor',
+        role: (staffObj.role === 'Admin' || staffObj.role === 'ADMIN') ? 'Administrator' : (staffObj.role || 'Faculty Mentor'),
         department_id: staffObj.department_id ? String(staffObj.department_id) : '0',
         academic_year: (staffObj.academic_year && staffObj.academic_year.trim() && staffObj.academic_year !== 'None' && staffObj.academic_year !== 'null') ? staffObj.academic_year : 'ALL',
         designation: staffObj.designation || '',
@@ -221,7 +221,6 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
     { value: 'Faculty Mentor', label: 'Faculty Mentor', badge: 'FAC', sublabel: 'Student mentoring & intervention access', icon: GraduationCap },
     { value: 'Staff Mentor', label: 'Staff Mentor', badge: 'STF', sublabel: 'Student support & academic guidance', icon: User },
     { value: 'Department HOD', label: 'Department HOD', badge: 'HOD', sublabel: 'Department-level academic oversight', icon: Building2 },
-    { value: 'Admin', label: 'Admin', badge: 'ADM', sublabel: 'Institutional administration & management', icon: Key },
     { value: 'Administrator', label: 'Administrator', badge: 'ADM', sublabel: 'Institutional administration & management', icon: Key },
     { value: 'Super Admin', label: 'Super Admin', badge: 'S-ADM', sublabel: 'Full system control & root access', icon: Shield }
   ];
@@ -400,64 +399,78 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
       <div className="bg-white dark:bg-navy-950 rounded-[2.2rem] w-full max-w-[1050px] shadow-2xl flex flex-col h-[92vh] max-h-[880px] overflow-hidden border border-slate-200/80 dark:border-navy-700/80 animate-fade-in-up">
         
         {/* HEADER */}
-        <div className="px-6 py-4 bg-slate-50/90 dark:bg-navy-950/80 border-b border-slate-200 dark:border-navy-800 flex items-center justify-between shrink-0 z-20">
-          <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-600 to-brand-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20">
-              <Edit3 className="w-5 h-5" />
+        <div className="px-6 sm:px-8 py-5 bg-gradient-to-r from-slate-50 via-indigo-50/40 to-slate-50 dark:from-navy-950 dark:via-indigo-950/30 dark:to-navy-950 border-b border-slate-200 dark:border-navy-800 flex items-start justify-between shrink-0 z-20 gap-4">
+          <div className="flex items-start space-x-4 min-w-0 flex-1">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 via-brand-600 to-indigo-700 text-white flex items-center justify-center shadow-lg shadow-indigo-500/25 border border-indigo-400/30 shrink-0 mt-0.5">
+              <Edit3 className="w-6 h-6" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
-                  {staff.institutional_id || `NEC-STAFF-${staff.id}`}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h2 className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white tracking-tight">
+                  Edit Staff Member
+                </h2>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 font-mono font-black text-xs shadow-2xs">
+                  <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" />
+                  {staff.institutional_id || `NEC-STAFF-${String(staff.id).padStart(3, '0')}`}
                 </span>
-                <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl border text-xs font-black shadow-2xs ${
                   isActive 
-                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' 
-                    : 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400'
+                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30' 
+                    : 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30'
                 }`}>
                   <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></span>
-                  {isActive ? ' ACTIVE ACCOUNT' : ' SUSPENDED ACCOUNT'}
+                  {isActive ? 'ACTIVE ACCOUNT' : 'SUSPENDED ACCOUNT'}
                 </span>
               </div>
-              <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight mt-0.5">
-                Edit Staff Member
-              </h2>
+              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">
+                Update staff identity, academic scope, access roles, and security credentials
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0 self-start pt-0.5">
             {isDirty && (
-              <span className="hidden sm:inline-flex px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 text-[11px] font-bold border border-amber-200 dark:border-amber-800/50">
+              <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-800 dark:text-amber-300 text-xs font-black border border-amber-500/30 animate-pulse">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
                 Unsaved Changes
               </span>
             )}
             <button 
               type="button"
               onClick={handleAttemptClose} 
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 dark:hover:text-white dark:hover:bg-navy-800 transition-all cursor-pointer"
+              className="w-10 h-10 rounded-2xl bg-white dark:bg-navy-900 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-slate-200 dark:border-navy-700 transition-all shadow-sm flex items-center justify-center active:scale-95 cursor-pointer hover:scale-105"
+              title="Close Modal"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5 stroke-[2.5]" />
             </button>
           </div>
         </div>
 
         {/* COMPACT STAFF SUMMARY BANNER */}
-        <div className="px-6 py-3 bg-slate-100/70 dark:bg-navy-950/60 border-b border-slate-200 dark:border-navy-800 shrink-0 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-          <div>
-            <span className="text-slate-400 font-bold uppercase text-[9px] block">Full Name</span>
-            <span className="font-black text-slate-900 dark:text-white truncate block">{formData.full_name || staff.username}</span>
+        <div className="px-6 sm:px-8 py-3.5 bg-slate-100/90 dark:bg-navy-950/80 border-b border-slate-200 dark:border-navy-800 shrink-0 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="bg-white/90 dark:bg-navy-900/90 rounded-2xl p-2.5 border border-slate-200/90 dark:border-navy-800 shadow-2xs">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5">
+              <User className="w-3 h-3 text-brand-500" /> Full Name
+            </span>
+            <span className="font-black text-xs text-slate-950 dark:text-white truncate block">{formData.full_name || staff.username}</span>
           </div>
-          <div>
-            <span className="text-slate-400 font-bold uppercase text-[9px] block">Official Email</span>
-            <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block">{formData.email}</span>
+          <div className="bg-white/90 dark:bg-navy-900/90 rounded-2xl p-2.5 border border-slate-200/90 dark:border-navy-800 shadow-2xs">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5">
+              <Mail className="w-3 h-3 text-indigo-500" /> Official Email
+            </span>
+            <span className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate block">{formData.email}</span>
           </div>
-          <div>
-            <span className="text-slate-400 font-bold uppercase text-[9px] block">Assigned Role</span>
-            <span className="font-black text-indigo-600 dark:text-indigo-400 truncate block">{formData.role}</span>
+          <div className="bg-white/90 dark:bg-navy-900/90 rounded-2xl p-2.5 border border-slate-200/90 dark:border-navy-800 shadow-2xs">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5">
+              <Briefcase className="w-3 h-3 text-emerald-500" /> Assigned Role
+            </span>
+            <span className="font-black text-xs text-indigo-600 dark:text-indigo-400 truncate block">{formData.role}</span>
           </div>
-          <div>
-            <span className="text-slate-400 font-bold uppercase text-[9px] block">Last Updated</span>
-            <span className="font-mono text-slate-600 dark:text-slate-400 truncate block">
+          <div className="bg-white/90 dark:bg-navy-900/90 rounded-2xl p-2.5 border border-slate-200/90 dark:border-navy-800 shadow-2xs">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-0.5">
+              <Clock className="w-3 h-3 text-amber-500" /> Last Updated
+            </span>
+            <span className="font-mono font-bold text-xs text-slate-700 dark:text-slate-300 truncate block">
               {lastUpdatedAt
                 ? lastUpdatedAt.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
                 : 'Active System'}

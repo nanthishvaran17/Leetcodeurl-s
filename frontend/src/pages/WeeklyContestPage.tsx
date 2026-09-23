@@ -416,7 +416,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
   // Ultra-Fast Virtualized Pagination States
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(50);
+  const [pageSize, setPageSize] = useState<number>(15);
   const [previewPage, setPreviewPage] = useState<number>(1);
   const [previewPageSize, setPreviewPageSize] = useState<number>(50);
 
@@ -1563,20 +1563,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                   <span>FINALIZING SNAPSHOT</span>
                 </span>
-              ) : (
-                <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center space-x-1.5 shadow-sm bg-indigo-600/90 text-white border border-indigo-400/30">
-                  <Lock className="w-3.5 h-3.5" />
-                  <span>LOCKED & FINALIZED</span>
-                </span>
-              )}
+              ) : null}
 
-              <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-300 text-xs font-black">
-                <Layers className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span className="hidden sm:inline">CONTEST ANALYTICS • INSTITUTIONAL EDITION (CYBER SECURITY, IOT & INFORMATION TECHNOLOGY)</span>
-                <span className="sm:hidden">CONTEST ANALYTICS • CSE / IOT / IT</span>
-              </div>
-
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/10 text-slate-300 text-xs font-mono font-bold">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-slate-200 text-xs font-mono font-bold border border-white/10 shadow-xs">
                 <Clock className="w-3.5 h-3.5 text-brand-400 shrink-0" />
                 <span>08:00 AM – 09:30 AM IST</span>
               </span>
@@ -1653,35 +1642,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             </div>
           </div>
 
-          {/* Right Controls: Unified Session Selector, Date Picker & Admin Monitor Toggle */}
+          {/* Right Controls: Unified Session Selector & Admin Monitor Toggle */}
           <div className="w-full lg:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white/10 dark:bg-navy-950/80 p-2.5 rounded-2xl border border-white/15 backdrop-blur-md shadow-lg">
-            {/* Calendar Date Picker */}
-            <div className="flex items-center justify-between min-w-[140px] bg-gradient-to-r from-navy-950 to-slate-900/90 pl-3 pr-2 py-2 rounded-xl border border-indigo-500/20 shadow-sm hover:border-indigo-500/40 transition-all duration-300 focus-within:border-indigo-400 focus-within:ring-1 focus-within:ring-indigo-400/50">
-              <div className="flex items-center flex-1">
-                <Calendar className="w-4 h-4 text-indigo-400 mr-2 shrink-0" />
-                <input
-                  type="date"
-                  value={customCalendarDate}
-                  onChange={(e) => handleCalendarDateChange(e.target.value)}
-                  style={{ colorScheme: 'dark' }}
-                  className="bg-transparent text-xs font-bold text-slate-200 outline-none cursor-pointer w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-60 hover:[&::-webkit-calendar-picker-indicator]:opacity-100 transition-opacity"
-                />
-              </div>
-              {customCalendarDate && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleCalendarDateChange('');
-                  }}
-                  className="ml-1.5 p-1 hover:bg-rose-500/20 rounded-full transition-colors text-rose-400 hover:text-rose-300 cursor-pointer shrink-0"
-                  title="Clear Date Filter"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
 
             {/* Session Dropdown Selector with Delete Option */}
             <div className="flex items-center space-x-2 flex-1 min-w-[180px]">
@@ -2620,16 +2582,52 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             </button>
 
             {/* Auto Refresh Toggle */}
-            <div className="flex items-center space-x-2 ml-2 pl-3 border-l border-slate-200 dark:border-slate-700">
-              <span className="text-[10px] font-bold text-slate-500 uppercase">Auto-Refresh</span>
-              <button
-                type="button"
-                onClick={() => setAutoRefresh(!autoRefresh)}
-                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${autoRefresh ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+            <button
+              type="button"
+              onClick={() => setAutoRefresh(!autoRefresh)}
+              className={`group relative flex items-center gap-2.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer shadow-md border ${
+                autoRefresh
+                  ? 'bg-slate-900 text-emerald-400 border-emerald-500/50 shadow-emerald-950/40 ring-1 ring-emerald-500/30'
+                  : 'bg-slate-900/90 text-slate-300 hover:text-white border-slate-800 hover:bg-slate-900 hover:border-slate-700'
+              }`}
+              title={autoRefresh ? 'Auto-refresh active (every 2 mins)' : 'Click to enable auto-refresh'}
+            >
+              <div className="relative flex items-center justify-center">
+                {autoRefresh ? (
+                  <>
+                    <span className="absolute -inset-1 rounded-full bg-emerald-500/30 animate-ping opacity-75" />
+                    <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse relative z-10" />
+                  </>
+                ) : (
+                  <RefreshCw className="w-3.5 h-3.5 text-slate-400 group-hover:rotate-45 transition-transform duration-300" />
+                )}
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <span className="tracking-wide uppercase text-[10px] font-black">Auto-Refresh</span>
+                <span
+                  className={`text-[9px] px-1.5 py-0.5 rounded-md font-mono font-black uppercase tracking-wider transition-colors ${
+                    autoRefresh
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                      : 'bg-slate-800 text-slate-400 border border-slate-700'
+                  }`}
+                >
+                  {autoRefresh ? 'LIVE' : 'OFF'}
+                </span>
+              </div>
+
+              <div
+                className={`relative inline-flex h-4 w-7 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out ${
+                  autoRefresh ? 'bg-emerald-500' : 'bg-slate-700'
+                }`}
               >
-                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${autoRefresh ? 'translate-x-5' : 'translate-x-1'}`} />
-              </button>
-            </div>
+                <span
+                  className={`inline-block h-3 w-3 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
+                    autoRefresh ? 'translate-x-3.5 bg-slate-950' : 'translate-x-0.5'
+                  }`}
+                />
+              </div>
+            </button>
           </div>
         </div>
 
@@ -3259,16 +3257,16 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           </div>
 
           {stats.virtualRows > 0 ? (
-            <div className="flex items-center gap-2.5 flex-wrap">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full sm:w-auto">
               {[
                 { label: '4/4 Solved', count: stats.virtual4Solved, bg: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' },
                 { label: '3/4 Solved', count: stats.virtual3Solved, bg: 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800' },
                 { label: '2/4 Solved', count: stats.virtual2Solved, bg: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' },
                 { label: '1/4 Solved', count: stats.virtual1Solved, bg: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' },
               ].map((item, idx) => (
-                <div key={idx} className={`px-4 py-2 rounded-2xl border text-center min-w-[85px] shadow-sm transition-transform hover:scale-105 ${item.bg}`}>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider block opacity-80">{item.label}</span>
-                  <span className="text-lg font-black font-mono">{item.count}</span>
+                <div key={idx} className={`px-4 py-2.5 rounded-2xl border text-center w-full sm:w-28 h-16 flex flex-col items-center justify-center shadow-sm transition-all hover:scale-105 ${item.bg}`}>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider block opacity-80 whitespace-nowrap">{item.label}</span>
+                  <span className="text-xl font-black font-mono leading-none mt-1">{item.count}</span>
                 </div>
               ))}
             </div>
@@ -3300,16 +3298,16 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full sm:w-auto">
             {[
               { label: '4/4 Solved', count: stats.q4Solved, color: 'text-emerald-700 dark:text-emerald-300', bg: 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800' },
               { label: '3/4 Solved', count: stats.q3Solved, color: 'text-purple-700 dark:text-purple-300', bg: 'bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800' },
               { label: '2/4 Solved', count: stats.q2Solved, color: 'text-indigo-700 dark:text-indigo-300', bg: 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800' },
               { label: '1/4 Solved', count: stats.q1Solved, color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800' },
             ].map((item, idx) => (
-              <div key={idx} className={`px-4 py-2 rounded-2xl border text-center min-w-[90px] shadow-sm transition-transform hover:scale-105 ${item.bg}`}>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider block opacity-80">{item.label}</span>
-                <span className={`text-xl font-black font-mono ${item.color}`}>{item.count}</span>
+              <div key={idx} className={`px-4 py-2.5 rounded-2xl border text-center w-full sm:w-28 h-16 flex flex-col items-center justify-center shadow-sm transition-all hover:scale-105 ${item.bg}`}>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider block opacity-80 whitespace-nowrap">{item.label}</span>
+                <span className={`text-xl font-black font-mono leading-none mt-1 ${item.color}`}>{item.count}</span>
               </div>
             ))}
           </div>
@@ -3378,11 +3376,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               <button
                 onClick={() => setSubTab('post_930_activity')}
                 className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-1.5 cursor-pointer ${subTab === 'post_930_activity'
-                  ? 'bg-amber-600 text-white shadow-md'
-                  : 'bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                  ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-500/25 active:scale-95'
+                  : 'bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-700'
                   }`}
               >
-                <Clock className="w-3.5 h-3.5 text-amber-400" />
+                <Clock className={`w-3.5 h-3.5 ${subTab === 'post_930_activity' ? 'text-white' : 'text-brand-500'}`} />
                 <span>Post-9:30 AM Activity</span>
               </button>
             </div>
@@ -3454,7 +3452,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 </div>
               )}
 
-              {/* Table Legend */}
+              {/* Table Legend & Top Quick Pagination */}
               <div className="px-5 py-3 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 bg-slate-50/80 dark:bg-navy-900/60 text-xs font-medium backdrop-blur-xs">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-extrabold text-[11px] uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-1">Legend:</span>
@@ -3475,13 +3473,41 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     DATA ERROR
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 bg-white dark:bg-navy-950 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
-                  <span className="font-semibold">Q cells:</span>
-                  <span className="inline-flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400"><b className="w-4 h-4 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-center leading-4 text-[10px]">1</b> solved</span>
-                  <span className="text-slate-300 dark:text-slate-700">•</span>
-                  <span className="inline-flex items-center gap-1 font-bold text-rose-500 dark:text-rose-400"><b className="w-4 h-4 rounded bg-rose-500/20 text-rose-500 dark:text-rose-400 text-center leading-4 text-[10px]">0</b> unsolved</span>
-                  <span className="text-slate-300 dark:text-slate-700">•</span>
-                  <span className="text-slate-400 font-bold"><b>—</b> not attended</span>
+
+                <div className="flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 bg-white dark:bg-navy-950 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
+                    <span className="font-semibold">Q cells:</span>
+                    <span className="inline-flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400"><b className="w-4 h-4 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-center leading-4 text-[10px]">1</b> solved</span>
+                    <span className="text-slate-300 dark:text-slate-700">•</span>
+                    <span className="inline-flex items-center gap-1 font-bold text-rose-500 dark:text-rose-400"><b className="w-4 h-4 rounded bg-rose-500/20 text-rose-500 dark:text-rose-400 text-center leading-4 text-[10px]">0</b> unsolved</span>
+                    <span className="text-slate-300 dark:text-slate-700">•</span>
+                    <span className="text-slate-400 font-bold"><b>—</b> not attended</span>
+                  </div>
+
+                  {/* Top Pagination Controls for Zero-Scroll Navigation */}
+                  {totalRows > 0 && (
+                    <div className="flex items-center gap-1.5 bg-white dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                      <button
+                        type="button"
+                        disabled={currentPage <= 1}
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      >
+                        ‹ Prev
+                      </button>
+                      <span className="text-[10px] font-mono font-black text-brand-600 dark:text-brand-400 px-1.5">
+                        {currentPage}/{totalPages}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={currentPage >= totalPages}
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-navy-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                      >
+                        Next ›
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -3521,7 +3547,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 </div>
               )}
 
-              <div className="table-responsive-container w-full min-w-0 max-w-full max-h-[75vh] overflow-y-auto overflow-x-auto">
+              <div className="table-responsive-container w-full min-w-0 max-w-full max-h-[520px] overflow-y-auto overflow-x-auto">
                 <table className="w-full min-w-[900px] text-left text-xs">
                   <thead className="bg-slate-950 dark:bg-navy-950 text-white text-xs font-black uppercase tracking-wider sticky top-0 z-10 shadow-sm hidden md:table-header-group">
                     <tr className="border-b border-slate-700 dark:border-slate-600">
@@ -3620,7 +3646,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   <div className="flex items-center space-x-2">
                     <span className="text-slate-400 font-medium">Rows per page:</span>
                     <div className="flex items-center space-x-1 bg-white dark:bg-navy-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                      {[50, 100, 250, 1450].map(sz => (
+                      {[10, 15, 25, 50, 100, 250, 1450].map(sz => (
                         <button
                           key={sz}
                           type="button"
@@ -3767,8 +3793,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                       const tot = dStats.total || 0;
                       const pub = dStats.public || 0;
                       const virt = dStats.virtual || 0;
-                      const notAtt = dStats.not_attended || 0;
                       const errs = dStats.errors || 0;
+                      let notAtt = dStats.not_attended || 0;
+                      if (notAtt === 0 && tot > (pub + virt + errs)) {
+                        notAtt = tot - (pub + virt + errs);
+                      }
                       const pct = tot > 0 ? (((pub + virt) / tot) * 100).toFixed(1) : '0.0';
 
                       const dotColors = ['bg-indigo-500', 'bg-teal-500', 'bg-blue-500', 'bg-emerald-500', 'bg-purple-500'];
@@ -3794,12 +3823,37 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
                     {/* Academic Year breakdown rows */}
                     {['II', 'III', 'IV'].map((yr) => {
-                      const yStats = yearStats?.[yr] || { total: 0, public: 0, virtual: 0, not_attended: 0, errors: 0 };
+                      const normY = (y: any): string => {
+                        if (!y) return '';
+                        const str = String(y).toUpperCase().trim();
+                        if (str.includes('2') || str.includes('II')) return 'II';
+                        if (str.includes('3') || str.includes('III')) return 'III';
+                        if (str.includes('4') || str.includes('IV')) return 'IV';
+                        if (str.includes('1') || str.includes('I')) return 'I';
+                        return str;
+                      };
+                      let yStats = yearStats?.[yr] || { total: 0, public: 0, virtual: 0, not_attended: 0, errors: 0 };
+                      if (yStats.total === 0 && (matrixRows.length > 0 || cachedStudents?.length > 0 || globalStudents?.length > 0)) {
+                        const pool = matrixRows.length > 0 ? matrixRows : (cachedStudents?.length > 0 ? cachedStudents : globalStudents);
+                        const yrNorm = normY(yr);
+                        const yrStudents = pool.filter((s: any) => normY(s.year || s.year_level || s.academic_year) === yrNorm);
+                        if (yrStudents.length > 0) {
+                          const t = yrStudents.length;
+                          const p = yrStudents.filter((s: any) => ['PUBLIC_ATTENDED', 'PUBLIC', 'ATTENDED'].includes((s.participation_status || s.status || '').toUpperCase())).length;
+                          const v = yrStudents.filter((s: any) => ['VIRTUAL_ATTENDED', 'VIRTUAL'].includes((s.participation_status || s.status || '').toUpperCase())).length;
+                          const e = yrStudents.filter((s: any) => ['DATA_ERROR', 'SOURCE_ERROR', 'CONFLICT'].includes((s.participation_status || s.status || '').toUpperCase())).length;
+                          const n = Math.max(0, t - (p + v + e));
+                          yStats = { total: t, public: p, virtual: v, not_attended: n, errors: e };
+                        }
+                      }
                       const tot = yStats.total || 0;
                       const pub = yStats.public || 0;
                       const virt = yStats.virtual || 0;
-                      const notAtt = yStats.not_attended || 0;
                       const errs = yStats.errors || 0;
+                      let notAtt = yStats.not_attended || 0;
+                      if (notAtt === 0 && tot > (pub + virt + errs)) {
+                        notAtt = tot - (pub + virt + errs);
+                      }
                       const pct = tot > 0 ? (((pub + virt) / tot) * 100).toFixed(1) : '0.0';
 
                       return (
@@ -3844,80 +3898,132 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 </span>
               </div>
 
-              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto overflow-y-hidden shadow-sm">
-                <table className="w-full min-w-[700px] text-left text-xs">
-                  <thead className="bg-navy-950 text-white font-black uppercase">
-                    <tr>
-                      <th className="px-4 py-3 text-center">#</th>
-                      <th className="px-4 py-3">Register No</th>
-                      <th className="px-4 py-3">Student Name</th>
-                      <th className="px-4 py-3 text-center">Dept</th>
-                      <th className="px-4 py-3 text-center">Year</th>
-                      <th className="px-4 py-3">Root Cause / Issue</th>
-                      <th className="px-4 py-3 text-center">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                    {(() => {
-                      const errorRows = matrixRows.filter(r => 
-                        !r.username || 
-                        selectedAttendanceFilter === 'DATA_ERROR' ||
-                        ['USERNAME_NOT_FOUND', 'DATA_ERROR', 'FETCH_ERROR', 'ERROR', 'INVALID', 'DATA_MISMATCH', 'AUTH_REQUIRED', 'BLOCKED'].includes(r.status) || 
-                        r.participation_status === 'DATA_ERROR'
-                      );
+              {(() => {
+                const errorRows = matrixRows.filter(r => 
+                  !r.username || 
+                  selectedAttendanceFilter === 'DATA_ERROR' ||
+                  ['USERNAME_NOT_FOUND', 'DATA_ERROR', 'FETCH_ERROR', 'ERROR', 'INVALID', 'DATA_MISMATCH', 'AUTH_REQUIRED', 'BLOCKED'].includes(r.status) || 
+                  r.participation_status === 'DATA_ERROR'
+                );
 
-                      if (errorRows.length === 0) {
-                        return (
-                          <tr>
-                            <td colSpan={7} className="p-8 text-center text-slate-500 font-bold">
-                              No data quality errors found for current filter scope.
-                            </td>
-                          </tr>
-                        );
-                      }
+                return (
+                  <>
+                    {/* Mobile View: Clean No-Scroll Card Stack */}
+                    <div className="md:hidden space-y-3">
+                      {errorRows.length === 0 ? (
+                        <div className="p-6 text-center text-slate-500 font-bold bg-slate-50 dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+                          No data quality errors found for current filter scope.
+                        </div>
+                      ) : (
+                        errorRows.map((errStudent, idx) => (
+                          <div 
+                            key={errStudent.reg_no || errStudent.id || idx}
+                            className="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-amber-200/80 dark:border-amber-900/50 shadow-sm space-y-3"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-mono font-bold text-slate-400">#{(currentPage - 1) * pageSize + idx + 1}</span>
+                                <span className="font-mono font-bold text-amber-600 dark:text-amber-400 text-xs">{errStudent.reg_no}</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500">
+                                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800">{errStudent.dept}</span>
+                                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800">{errStudent.year}</span>
+                              </div>
+                            </div>
 
-                      return errorRows.map((errStudent, idx) => (
-                        <tr key={errStudent.reg_no || errStudent.id || idx} className="hover:bg-amber-50/50 dark:hover:bg-amber-950/20">
-                          <td className="px-4 py-2.5 text-center text-slate-400 font-mono font-bold">
-                            {(currentPage - 1) * pageSize + idx + 1}
-                          </td>
-                          <td className="px-4 py-2.5 font-bold font-mono text-amber-600 dark:text-amber-400">
-                            {errStudent.reg_no}
-                          </td>
-                          <td className="px-4 py-2.5 font-semibold text-slate-900 dark:text-white">
-                            {errStudent.name}
-                          </td>
-                          <td className="px-4 py-2.5 text-center font-bold">
-                            {errStudent.dept}
-                          </td>
-                          <td className="px-4 py-2.5 text-center text-slate-500">
-                            {errStudent.year}
-                          </td>
-                          <td className="px-4 py-2.5 text-slate-500">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
-                              {!errStudent.username 
-                                ? 'Missing LeetCode Username Handle' 
-                                : errStudent.status === 'USERNAME_NOT_FOUND' 
-                                ? 'Username Not Found on LeetCode' 
-                                : errStudent.status === 'FETCH_ERROR' 
-                                ? 'LeetCode API Fetch Error' 
-                                : 'Invalid LeetCode Handle / API Error'}
-                            </span>
-                          </td>
-                          <td className="px-4 py-2.5 text-center">
+                            <div>
+                              <h4 className="font-bold text-slate-900 dark:text-white text-sm">{errStudent.name}</h4>
+                              <div className="mt-1.5">
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300/60">
+                                  {!errStudent.username 
+                                    ? 'Missing LeetCode Username Handle' 
+                                    : errStudent.status === 'USERNAME_NOT_FOUND' 
+                                    ? 'Username Not Found on LeetCode' 
+                                    : errStudent.status === 'FETCH_ERROR' 
+                                    ? 'LeetCode API Fetch Error' 
+                                    : 'Invalid LeetCode Handle / API Error'}
+                                </span>
+                              </div>
+                            </div>
+
                             <button
                               onClick={() => handleOpenEditStudent(errStudent)}
-                              className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow transition-all cursor-pointer active:scale-95"
+                              className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer active:scale-95 flex items-center justify-center space-x-1.5"
                             >
-                              Add Username
+                              <span>Add Username</span>
                             </button>
-                          </td>
-                        </tr>
-                      ));
-                    })()}
-                  </tbody>
-                </table>
-              </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    {/* Desktop View: Full-width Table */}
+                    <div className="hidden md:block border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto shadow-sm">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-navy-950 text-white font-black uppercase">
+                          <tr>
+                            <th className="px-4 py-3 text-center">#</th>
+                            <th className="px-4 py-3">Register No</th>
+                            <th className="px-4 py-3">Student Name</th>
+                            <th className="px-4 py-3 text-center">Dept</th>
+                            <th className="px-4 py-3 text-center">Year</th>
+                            <th className="px-4 py-3">Root Cause / Issue</th>
+                            <th className="px-4 py-3 text-center">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                          {errorRows.length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="p-8 text-center text-slate-500 font-bold">
+                                No data quality errors found for current filter scope.
+                              </td>
+                            </tr>
+                          ) : (
+                            errorRows.map((errStudent, idx) => (
+                              <tr key={errStudent.reg_no || errStudent.id || idx} className="hover:bg-amber-50/50 dark:hover:bg-amber-950/20">
+                                <td className="px-4 py-2.5 text-center text-slate-400 font-mono font-bold">
+                                  {(currentPage - 1) * pageSize + idx + 1}
+                                </td>
+                                <td className="px-4 py-2.5 font-bold font-mono text-amber-600 dark:text-amber-400">
+                                  {errStudent.reg_no}
+                                </td>
+                                <td className="px-4 py-2.5 font-semibold text-slate-900 dark:text-white">
+                                  {errStudent.name}
+                                </td>
+                                <td className="px-4 py-2.5 text-center font-bold">
+                                  {errStudent.dept}
+                                </td>
+                                <td className="px-4 py-2.5 text-center text-slate-500">
+                                  {errStudent.year}
+                                </td>
+                                <td className="px-4 py-2.5 text-slate-500">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+                                    {!errStudent.username 
+                                      ? 'Missing LeetCode Username Handle' 
+                                      : errStudent.status === 'USERNAME_NOT_FOUND' 
+                                      ? 'Username Not Found on LeetCode' 
+                                      : errStudent.status === 'FETCH_ERROR' 
+                                      ? 'LeetCode API Fetch Error' 
+                                      : 'Invalid LeetCode Handle / API Error'}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-2.5 text-center">
+                                  <button
+                                    onClick={() => handleOpenEditStudent(errStudent)}
+                                    className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow transition-all cursor-pointer active:scale-95"
+                                  >
+                                    Add Username
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           )}
 

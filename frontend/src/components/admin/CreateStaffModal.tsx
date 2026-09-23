@@ -211,45 +211,51 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
     return () => document.removeEventListener('mousedown', handler);
   }, [roleOpen]);
 
-  // Unique Username Generator (with dynamic candidate cycling on repeated clicks)
-  const generateUniqueUsername = () => {
+  // Unique Username Generator (Guarantees 100% non-conflicting usernames against all existing allocated staff)
+  const generateUniqueUsername = (overrideName?: string) => {
     const existing = new Set((staffList || []).map((s: any) => (s.username || '').toLowerCase().trim()));
-    
-    let raw = (formData.full_name || '').trim().toLowerCase();
+    // System reserved handles
+    ['admin', 'administrator', 'root', 'system', 'staff', 'user', 'demo'].forEach(h => existing.add(h));
+
+    const nameToUse = overrideName !== undefined ? overrideName : formData.full_name;
+    let raw = (nameToUse || '').trim().toLowerCase();
     // Strip common honorifics: Dr., Prof., Mr., Mrs., Ms., Er.
     raw = raw.replace(/^(dr|prof|mr|mrs|ms|er)\.?\s+/i, '');
     let clean = raw.replace(/[^a-z0-9\s.]/g, '').trim();
     if (!clean) clean = 'staff';
-    
+
     const parts = clean.split(/[\s.]+/).filter(Boolean);
     const firstName = parts[0] || 'staff';
     const lastName = parts.length > 1 ? parts[parts.length - 1] : '';
-    
+
     const deptObj = departments.find(d => String(d.id) === String(formData.department_id));
     const deptCode = (deptObj?.code || deptObj?.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-    
+
     const isMentor = ['Faculty Mentor', 'Staff Mentor'].includes(formData.role);
     const roleTag = isMentor ? 'fac' : ['Department HOD'].includes(formData.role) ? 'hod' : 'adm';
 
     const rawCandidates: string[] = [];
-    
-    if (firstName) rawCandidates.push(firstName);
+
     if (firstName && lastName) rawCandidates.push(`${firstName}.${lastName}`);
     if (firstName && deptCode) rawCandidates.push(`${firstName}.${deptCode}`);
     if (firstName && roleTag) rawCandidates.push(`${firstName}.${roleTag}`);
     if (firstName && lastName && deptCode) rawCandidates.push(`${firstName}.${lastName}.${deptCode}`);
     if (firstName) rawCandidates.push(`${firstName}.nec`);
-    if (firstName) rawCandidates.push(`${firstName}01`);
-    if (firstName) rawCandidates.push(`${firstName}02`);
-    if (firstName) rawCandidates.push(`${firstName}03`);
     if (firstName) rawCandidates.push(`${firstName}.staff`);
 
-    // Deduplicate candidates preserving order & filter out already taken usernames in DB/staffList
+    // Dynamic numbered candidates starting from 01 up to 50
+    for (let i = 1; i <= 30; i++) {
+      const num = i.toString().padStart(2, '0');
+      rawCandidates.push(`${firstName}${num}`);
+      if (lastName) rawCandidates.push(`${firstName}.${lastName}${num}`);
+    }
+
+    // Deduplicate candidates preserving order & filter out already allocated usernames in DB/staffList
     const validCandidates: string[] = [];
     const seen = new Set<string>();
-    
+
     for (const c of rawCandidates) {
-      const lower = c.toLowerCase();
+      const lower = c.toLowerCase().trim();
       if (!seen.has(lower) && !existing.has(lower)) {
         seen.add(lower);
         validCandidates.push(c);
@@ -258,7 +264,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
 
     if (validCandidates.length === 0) {
       let suffix = 1;
-      while (existing.has(`${firstName}${suffix.toString().padStart(2, '0')}`)) {
+      while (existing.has(`${firstName}${suffix.toString().padStart(2, '0')}`) || existing.has(`${firstName}${suffix}`)) {
         suffix++;
       }
       validCandidates.push(`${firstName}${suffix.toString().padStart(2, '0')}`);
@@ -275,6 +281,7 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
     const chosen = validCandidates[nextIndex];
     setFormData(prev => ({ ...prev, username: chosen }));
     if (formErrors.username) setFormErrors(prev => ({ ...prev, username: '' }));
+    return chosen;
   };
 
   // DOB Formatter
@@ -845,11 +852,26 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                           value={formData.full_name}
                           onChange={e => {
                             const val = e.target.value;
-                            setFormData(prev => ({
-                              ...prev,
-                              full_name: val,
-                              username: prev.username || val.toLowerCase().trim().replace(/\s+/g, '.')
-                            }));
+                            setFormData(prev => {
+                              const newObj = { ...prev, full_name: val };
+                              if (!prev.username || prev.username.trim() === '') {
+                                // Auto-generate guaranteed non-conflicting username when name is typed
+                                const existingSet = new Set((staffList || []).map((s: any) => (s.username || '').toLowerCase().trim()));
+                                ['admin', 'administrator', 'root', 'system', 'staff', 'user', 'demo'].forEach(h => existingSet.add(h));
+                                let rawClean = val.trim().toLowerCase().replace(/^(dr|prof|mr|mrs|ms|er)\.?\s+/i, '').replace(/[^a-z0-9\s.]/g, '').trim();
+                                if (!rawClean) rawClean = 'staff';
+                                const parts = rawClean.split(/[\s.]+/).filter(Boolean);
+                                const firstName = parts[0] || 'staff';
+                                let base = firstName;
+                                if (existingSet.has(base)) {
+                                  let sIdx = 1;
+                                  while (existingSet.has(`${firstName}${sIdx.toString().padStart(2, '0')}`)) sIdx++;
+                                  base = `${firstName}${sIdx.toString().padStart(2, '0')}`;
+                                }
+                                newObj.username = base;
+                              }
+                              return newObj;
+                            });
                           }}
                           placeholder="e.g. Dr. A. Ramanathan"
                           className={`w-full h-12 px-4 rounded-2xl border ${formErrors.full_name ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
@@ -870,27 +892,53 @@ export const CreateStaffModal: React.FC<CreateStaffModalProps> = ({
                               if (formErrors.username) setFormErrors(prev => ({ ...prev, username: '' }));
                             }}
                             placeholder="e.g. ramanathan.dept"
-                            className={`flex-1 h-12 px-4 rounded-2xl border ${formErrors.username ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
+                            className={`flex-1 h-12 px-4 rounded-2xl border ${formErrors.username || (formData.username && (staffList || []).some((s: any) => (s.username || '').toLowerCase().trim() === formData.username.toLowerCase().trim())) ? 'border-rose-400 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-navy-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20'} bg-slate-50 dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white outline-none transition-all`}
                           />
                           <button
                             type="button"
-                            onClick={generateUniqueUsername}
-                            className="h-12 px-4 rounded-2xl bg-brand-100 dark:bg-brand-500/20 text-brand-700 dark:text-brand-300 text-xs font-bold hover:bg-brand-200 transition-all flex items-center shrink-0 cursor-pointer"
+                            onClick={() => generateUniqueUsername()}
+                            className="h-12 px-4 rounded-2xl bg-brand-100 dark:bg-brand-500/20 text-brand-700 dark:text-brand-300 text-xs font-bold hover:bg-brand-200 transition-all flex items-center shrink-0 cursor-pointer active:scale-95"
                             title="Auto-suggest unique username"
                           >
                             <Sparkles className="w-3.5 h-3.5 mr-1.5" /> Suggest Username
                           </button>
                         </div>
-                        {formErrors.username ? (
-                          <p className="text-[10px] text-rose-500 font-bold ml-1 flex items-center gap-1">
-                            <AlertCircle size={12} className="shrink-0" />
-                            <span>{formErrors.username}</span>
-                          </p>
-                        ) : (
-                          <p className="text-[10px] text-slate-400 font-semibold ml-1">
-                            Unique staff login handle. Click "Suggest Username" to generate a unique handle.
-                          </p>
-                        )}
+                        
+                        {/* Real-time allocated username detection warning */}
+                        {(() => {
+                          const uLower = formData.username.trim().toLowerCase();
+                          const takenStaff = uLower ? (staffList || []).find((s: any) => (s.username || '').toLowerCase().trim() === uLower) : null;
+                          if (takenStaff) {
+                            return (
+                              <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-[11px] font-extrabold flex items-center justify-between gap-2 mt-1.5 animate-scale-in">
+                                <span className="flex items-center gap-1.5 min-w-0 truncate">
+                                  <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-500" />
+                                  <span className="truncate">Username '@{formData.username}' is already allocated to <strong>{takenStaff.full_name || takenStaff.username}</strong></span>
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => generateUniqueUsername()}
+                                  className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-black text-[10px] uppercase transition cursor-pointer shrink-0 active:scale-95"
+                                >
+                                  Suggest Unique
+                                </button>
+                              </div>
+                            );
+                          }
+                          if (formErrors.username) {
+                            return (
+                              <p className="text-[10px] text-rose-500 font-bold ml-1 flex items-center gap-1 mt-1">
+                                <AlertCircle size={12} className="shrink-0" />
+                                <span>{formErrors.username}</span>
+                              </p>
+                            );
+                          }
+                          return (
+                            <p className="text-[10px] text-slate-400 font-semibold ml-1">
+                              Unique staff login handle. Click "Suggest Username" to generate a guaranteed available handle.
+                            </p>
+                          );
+                        })()}
                       </div>
 
                       {/* Password */}

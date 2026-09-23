@@ -92,7 +92,7 @@ export const InstallAppPrompt: React.FC = () => {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 animate-slide-up">
+    <div className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 animate-slide-up">
       <div className="bg-slate-900/95 dark:bg-navy-950/95 backdrop-blur-md border border-brand-500/30 rounded-2xl p-4 shadow-2xl text-white relative">
         <button
           onClick={handleDismiss}

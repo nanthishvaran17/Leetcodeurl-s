@@ -319,43 +319,41 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       
       {/* Header Bar with Close Button & Actions — restored from reference commit structure */}
       <div className="p-4 sm:p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex flex-col md:flex-row items-center justify-between gap-4 border-b border-slate-800 shrink-0 relative z-50 shadow-xl">
-        <div className="flex items-center space-x-4 w-full md:w-auto">
+        <div className="flex items-center space-x-3 sm:space-x-4 w-full md:w-auto">
           <button
             type="button"
             onClick={() => onBack()}
-            className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer flex items-center space-x-2 text-xs font-bold shadow-sm"
+            className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-white border border-slate-700/80 transition-all cursor-pointer flex items-center space-x-1.5 text-xs font-bold shadow-md hover:scale-105 shrink-0"
             title="Back"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Back</span>
+            <ArrowLeft className="w-4 h-4 text-white shrink-0" />
+            <span className="font-bold text-white">Back</span>
           </button>
-          <div className="flex-1">
-            <h2 className="text-lg sm:text-xl font-black text-white">{detail?.name || student?.name}</h2>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg sm:text-xl font-black text-white truncate">{detail?.name || student?.name}</h2>
             <p className="text-[10px] sm:text-xs text-brand-300 font-mono font-bold mt-0.5 truncate max-w-sm">
               {detail?.reg_no || student?.reg_no} • {detail?.department?.name || detail?.department?.code || student?.department?.code} {detail?.year_level ? `• ${String(detail.year_level).replace(/\s*Yr\s*/gi, '').replace(/\s*Year\s*/gi, '').trim()} Year` : ''}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 -mb-1 flex-nowrap md:flex-wrap justify-start md:justify-end custom-scrollbar shrink-0">
-
-
-            {/* 2. EDIT */}
+        <div className="grid grid-cols-5 gap-1.5 sm:flex sm:items-center sm:gap-2.5 w-full md:w-auto shrink-0">
+            {/* 1. EDIT */}
             <button
               type="button"
               onClick={handleOpenEditModal}
-              className="w-10 h-10 sm:w-auto sm:min-h-[40px] sm:px-3 sm:py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-[11px] flex items-center justify-center space-x-1.5 shadow-md shadow-amber-500/30 transition-all hover:scale-105 shrink-0 whitespace-nowrap cursor-pointer"
+              className="min-h-[38px] px-2 sm:px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs flex items-center justify-center space-x-1 sm:space-x-1.5 shadow-md shadow-amber-500/30 transition-all hover:scale-105 min-w-0 cursor-pointer"
             >
-              <Edit3 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-              <span className="hidden sm:inline">Edit</span>
+              <Edit3 className="w-3.5 h-3.5 text-white shrink-0" />
+              <span className="truncate">Edit</span>
             </button>
 
-            {/* 3. SYNC */}
+            {/* 2. SYNC */}
             <button
               type="button"
               onClick={handleLiveFetch}
               disabled={isLiveFetching}
-              className={`w-10 h-10 sm:w-auto sm:min-h-[40px] sm:px-3 sm:py-2 rounded-xl font-bold text-[11px] flex items-center justify-center space-x-1.5 shadow-md transition-all hover:scale-105 shrink-0 whitespace-nowrap disabled:opacity-50 cursor-pointer ${
+              className={`min-h-[38px] px-2 sm:px-3 py-2 rounded-xl font-bold text-xs flex items-center justify-center space-x-1 sm:space-x-1.5 shadow-md transition-all hover:scale-105 min-w-0 disabled:opacity-50 cursor-pointer ${
                 syncSuccess
                   ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/30'
                   : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/30'
@@ -363,60 +361,49 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
             >
               {syncSuccess ? (
                 <>
-                  <CheckCircle2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                  <span className="hidden sm:inline">Synced!</span>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-white shrink-0" />
+                  <span className="truncate">Synced</span>
                 </>
               ) : (
                 <>
-                  <RefreshCw className={`w-4 h-4 sm:w-3.5 sm:h-3.5 ${isLiveFetching ? 'animate-spin' : ''}`} />
-                  <span className="hidden sm:inline">{isLiveFetching ? 'Syncing...' : 'Sync'}</span>
+                  <RefreshCw className={`w-3.5 h-3.5 text-white shrink-0 ${isLiveFetching ? 'animate-spin' : ''}`} />
+                  <span className="truncate">{isLiveFetching ? 'Syncing...' : 'Sync'}</span>
                 </>
               )}
             </button>
 
-            {/* 4. CERTIFICATE */}
+            {/* 3. CERTIFICATE */}
             <button
               type="button"
               onClick={handleGenerateCert}
               disabled={downloadingCert}
-              className="w-10 h-10 sm:w-auto sm:min-h-[40px] sm:px-3 sm:py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] flex items-center justify-center space-x-1.5 shadow-md shadow-amber-600/30 transition-all hover:scale-105 disabled:opacity-50 shrink-0 whitespace-nowrap cursor-pointer"
+              className="min-h-[38px] px-2 sm:px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center space-x-1 sm:space-x-1.5 shadow-md shadow-amber-600/30 transition-all hover:scale-105 disabled:opacity-50 min-w-0 cursor-pointer"
             >
-              <Award className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-              <span className="hidden sm:inline">{downloadingCert ? '...' : 'Certificate'}</span>
+              <Award className="w-3.5 h-3.5 text-white shrink-0" />
+              <span className="truncate">{downloadingCert ? '...' : <><span className="sm:hidden">Cert</span><span className="hidden sm:inline">Certificate</span></>}</span>
             </button>
 
-            {/* 5. AUDIT */}
+            {/* 4. AUDIT */}
             <button
               type="button"
               onClick={() => setShowAuditModal(true)}
-              className="w-10 h-10 sm:w-auto sm:min-h-[40px] sm:px-3 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] flex items-center justify-center space-x-1.5 shadow-md shadow-emerald-600/30 transition-all hover:scale-105 shrink-0 whitespace-nowrap cursor-pointer"
+              className="min-h-[38px] px-2 sm:px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center space-x-1 sm:space-x-1.5 shadow-md shadow-emerald-600/30 transition-all hover:scale-105 min-w-0 cursor-pointer"
             >
-              <FileText className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-              <span className="hidden sm:inline">Audit</span>
+              <FileText className="w-3.5 h-3.5 text-white shrink-0" />
+              <span className="truncate">Audit</span>
             </button>
 
-            {/* 6. DELETE */}
+            {/* 5. DELETE / DEACTIVATE */}
             <button
               type="button"
               onClick={handleDelete}
               disabled={isDeleting}
-              className="w-10 h-10 sm:w-auto sm:min-h-[40px] sm:px-3 sm:py-2 rounded-xl bg-rose-600/90 hover:bg-rose-600 text-white font-bold text-[11px] flex items-center justify-center space-x-1.5 shadow-md shadow-rose-600/30 transition-all hover:scale-105 shrink-0 whitespace-nowrap disabled:opacity-50 cursor-pointer"
+              className="min-h-[38px] px-2 sm:px-3 py-2 rounded-xl bg-rose-600/90 hover:bg-rose-600 text-white font-bold text-xs flex items-center justify-center space-x-1 sm:space-x-1.5 shadow-md shadow-rose-600/30 transition-all hover:scale-105 min-w-0 disabled:opacity-50 cursor-pointer"
               title="Deactivate Student"
             >
-              <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-              <span className="hidden sm:inline">{isDeleting ? '...' : 'Deactivate'}</span>
+              <Trash2 className="w-3.5 h-3.5 text-white shrink-0" />
+              <span className="truncate">{isDeleting ? '...' : <><span className="sm:hidden">Deact</span><span className="hidden sm:inline">Deactivate</span></>}</span>
             </button>
-
-          {/* CLOSE BUTTON */}
-          <button
-            type="button"
-            onClick={() => onBack()}
-            className="w-10 h-10 sm:w-auto sm:min-h-[40px] sm:px-3 sm:py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white transition-all font-black text-[11px] flex items-center justify-center space-x-1 shrink-0 whitespace-nowrap cursor-pointer"
-            title="Close Modal"
-          >
-            <X className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-            <span className="hidden sm:inline">Close</span>
-          </button>
         </div>
       </div>
       
@@ -427,29 +414,33 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       )}
 
 
-      {/* Custom Tab Navigation */}
-      <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-navy-900/50 overflow-x-auto custom-scrollbar shrink-0">
-        <div className="flex px-2 sm:px-4">
+      {/* Custom Tab Navigation - High Contrast & Color Vibrancy */}
+      <div className="w-full border-b border-slate-200 dark:border-slate-800 bg-slate-100/80 dark:bg-navy-900/80 shrink-0 relative z-10 shadow-xs">
+        <div className="grid grid-cols-5 w-full px-1 sm:px-4">
           {[
-            { id: 'overview', label: 'Overview', icon: <FileText className="w-4 h-4" /> },
-            { id: 'analytics', label: 'Analytics', icon: <BarChart2 className="w-4 h-4" /> },
-            { id: 'contests', label: 'Contests', icon: <Trophy className="w-4 h-4" /> },
-            { id: 'activity', label: 'Activity', icon: <Activity className="w-4 h-4" /> },
-            { id: 'reports', label: 'Reports', icon: <BookOpen className="w-4 h-4" /> }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as TabId)}
-              className={`flex items-center gap-2 px-4 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm font-bold border-b-2 transition-all whitespace-nowrap outline-none ${
-                activeTab === tab.id
-                  ? 'border-brand-500 text-brand-600 dark:text-brand-400'
-                  : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/50'
-              }`}
-            >
-              {tab.icon}
-              {tab.label}
-            </button>
-          ))}
+            { id: 'overview', label: 'Overview', icon: <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" /> },
+            { id: 'analytics', label: 'Analytics', icon: <BarChart2 className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" /> },
+            { id: 'contests', label: 'Contests', icon: <Trophy className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" /> },
+            { id: 'activity', label: 'Activity', icon: <Activity className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" /> },
+            { id: 'reports', label: 'Reports', icon: <BookOpen className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" /> }
+          ].map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id as TabId)}
+                className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-1 py-2.5 sm:px-3 sm:py-3.5 text-xs sm:text-sm transition-all outline-none text-center cursor-pointer min-w-0 border-b-2 ${
+                  isActive
+                    ? 'border-brand-600 text-slate-900 dark:text-white bg-white dark:bg-navy-950 font-black shadow-xs'
+                    : 'border-transparent text-slate-800 dark:text-slate-100 font-extrabold hover:text-slate-950 dark:hover:text-white hover:bg-white/60 dark:hover:bg-navy-800/60'
+                }`}
+              >
+                {tab.icon}
+                <span className="truncate max-w-full tracking-tight">{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
         
         <ExportStatus 
@@ -467,72 +458,72 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
         {/* Left Section: Rankings & Activity (7 columns) */}
-        <div className="lg:col-span-7 bg-white dark:bg-navy-900/40 rounded-3xl border border-slate-200/60 dark:border-navy-700/60 p-5 sm:p-6 shadow-sm relative overflow-hidden backdrop-blur-xl">
+        <div className="lg:col-span-7 bg-white dark:bg-navy-900/40 rounded-3xl border border-slate-200 dark:border-navy-700 p-5 sm:p-6 shadow-sm relative overflow-hidden backdrop-blur-xl">
           <div className="absolute top-0 right-0 p-32 bg-brand-500/5 dark:bg-brand-500/10 blur-3xl rounded-full -translate-y-1/2 translate-x-1/3"></div>
           
           <div className="flex items-center space-x-2 mb-5 relative z-10">
-            <Trophy className="w-4 h-4 text-brand-500" />
-            <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Rankings & Activity</h4>
+            <Trophy className="w-4 h-4 text-brand-500 shrink-0" />
+            <h4 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Rankings & Activity</h4>
           </div>
 
           <div className="grid grid-cols-2 gap-4 relative z-10">
-            <div className="bg-slate-50/80 dark:bg-navy-900/50 rounded-2xl p-4 border border-slate-100 dark:border-navy-800 transition-transform hover:scale-[1.02]">
+            <div className="bg-slate-100/80 dark:bg-navy-900/80 rounded-2xl p-4 border border-slate-200/90 dark:border-navy-700 transition-transform hover:scale-[1.02] shadow-2xs">
               <div className="flex items-center space-x-2 mb-2">
-                <div className="p-1.5 rounded-lg bg-brand-100 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400">
+                <div className="p-1.5 rounded-lg bg-brand-500/15 text-brand-700 dark:bg-brand-900/50 dark:text-brand-300">
                   <Trophy className="w-3.5 h-3.5" />
                 </div>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">College Rank</p>
+                <p className="text-[11px] font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">College Rank</p>
               </div>
-              <h3 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white">#{detail?.college_rank || '—'}</h3>
+              <h3 className="text-2xl sm:text-3xl font-black text-slate-950 dark:text-white">#{detail?.college_rank || '—'}</h3>
             </div>
 
-            <div className="bg-slate-50/80 dark:bg-navy-900/50 rounded-2xl p-4 border border-slate-100 dark:border-navy-800 transition-transform hover:scale-[1.02]">
+            <div className="bg-slate-100/80 dark:bg-navy-900/80 rounded-2xl p-4 border border-slate-200/90 dark:border-navy-700 transition-transform hover:scale-[1.02] shadow-2xs">
               <div className="flex items-center space-x-2 mb-2">
-                <div className="p-1.5 rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
+                <div className="p-1.5 rounded-lg bg-indigo-500/15 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">
                   <Medal className="w-3.5 h-3.5" />
                 </div>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Dept Rank</p>
+                <p className="text-[11px] font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Dept Rank</p>
               </div>
-              <h3 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white">#{detail?.dept_rank || '—'}</h3>
+              <h3 className="text-2xl sm:text-3xl font-black text-slate-950 dark:text-white">#{detail?.dept_rank || '—'}</h3>
             </div>
 
-            <div className="bg-slate-50/80 dark:bg-navy-900/50 rounded-2xl p-4 border border-slate-100 dark:border-navy-800 transition-transform hover:scale-[1.02]">
+            <div className="bg-slate-100/80 dark:bg-navy-900/80 rounded-2xl p-4 border border-slate-200/90 dark:border-navy-700 transition-transform hover:scale-[1.02] shadow-2xs">
               <div className="flex items-center space-x-2 mb-2">
-                <div className="p-1.5 rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
+                <div className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
                   <TrendingUp className="w-3.5 h-3.5" />
                 </div>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Weekly Progress</p>
+                <p className="text-[11px] font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Weekly Progress</p>
               </div>
               <h3 className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">+{detail?.weekly_progress || 0}</h3>
             </div>
 
-            <div className="bg-slate-50/80 dark:bg-navy-900/50 rounded-2xl p-4 border border-slate-100 dark:border-navy-800 transition-transform hover:scale-[1.02]">
+            <div className="bg-slate-100/80 dark:bg-navy-900/80 rounded-2xl p-4 border border-slate-200/90 dark:border-navy-700 transition-transform hover:scale-[1.02] shadow-2xs">
               <div className="flex items-center space-x-2 mb-2">
-                <div className="p-1.5 rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
+                <div className="p-1.5 rounded-lg bg-amber-500/15 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
                   <Flame className="w-3.5 h-3.5" />
                 </div>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Active Streak</p>
+                <p className="text-[11px] font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Active Streak</p>
               </div>
-              <h3 className="text-2xl sm:text-3xl font-black text-amber-500">{detail?.lc_activity?.current_streak || detail?.streak_count || 0} <span className="text-sm font-bold text-amber-500/70">Days</span></h3>
+              <h3 className="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-400">{detail?.lc_activity?.current_streak || detail?.streak_count || 0} <span className="text-sm font-black text-amber-700 dark:text-amber-300">Days</span></h3>
             </div>
           </div>
         </div>
 
         {/* Right Section: Contest Metrics (5 columns) */}
-        <div className="lg:col-span-5 bg-white dark:bg-navy-900/40 rounded-3xl border border-slate-200/60 dark:border-navy-700/60 p-5 sm:p-6 shadow-sm relative overflow-hidden backdrop-blur-xl flex flex-col">
+        <div className="lg:col-span-5 bg-white dark:bg-navy-900/40 rounded-3xl border border-slate-200 dark:border-navy-700 p-5 sm:p-6 shadow-sm relative overflow-hidden backdrop-blur-xl flex flex-col">
           <div className="absolute bottom-0 right-0 p-32 bg-indigo-500/5 dark:bg-indigo-500/10 blur-3xl rounded-full translate-y-1/3 translate-x-1/3"></div>
           
           <div className="flex items-center space-x-2 mb-5 relative z-10">
-            <Target className="w-4 h-4 text-indigo-500" />
-            <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Contest Performance</h4>
+            <Target className="w-4 h-4 text-indigo-500 shrink-0" />
+            <h4 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Contest Performance</h4>
           </div>
 
           <div className="flex-1 flex flex-col justify-center space-y-4 relative z-10">
             {/* Rating Highlight */}
-            <div className="bg-gradient-to-br from-indigo-500 to-brand-600 rounded-2xl p-5 text-white shadow-lg shadow-brand-500/20 transform transition-transform hover:scale-[1.02]">
+            <div className="bg-gradient-to-br from-indigo-600 via-brand-600 to-indigo-700 rounded-2xl p-5 text-white shadow-lg shadow-brand-500/20 transform transition-transform hover:scale-[1.02]">
               <div className="flex items-center justify-between mb-1">
-                <p className="text-[10px] font-bold text-indigo-100 uppercase tracking-wider">Global Rating</p>
-                <Award className="w-4 h-4 text-brand-200" />
+                <p className="text-[11px] font-black text-white uppercase tracking-wider">Global Rating</p>
+                <Award className="w-4 h-4 text-white" />
               </div>
               <h3 className="text-3xl sm:text-4xl font-black text-white">
                 {(detail?.lc_contest_standing?.contest_rating || detail?.stats?.contest_rating) ? (detail.lc_contest_standing?.contest_rating || detail.stats?.contest_rating).toLocaleString('en-US', { minimumFractionDigits: 1 }) : 'Unrated'}
@@ -541,13 +532,13 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
 
             {/* Official / Virtual Split */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-slate-50/80 dark:bg-navy-900/50 rounded-2xl p-4 border border-slate-100 dark:border-navy-800 transition-transform hover:scale-[1.02]">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Official</p>
-                <h3 className="text-2xl font-black text-slate-800 dark:text-white">{detail?.lc_contest_standing?.attended_count || detail?.stats?.official_contests || 0}</h3>
+              <div className="bg-slate-100/80 dark:bg-navy-900/80 rounded-2xl p-4 border border-slate-200/90 dark:border-navy-700 transition-transform hover:scale-[1.02] shadow-2xs">
+                <p className="text-[11px] font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-1">Official</p>
+                <h3 className="text-2xl font-black text-slate-950 dark:text-white">{detail?.lc_contest_standing?.attended_count || detail?.stats?.official_contests || 0}</h3>
               </div>
-              <div className="bg-slate-50/80 dark:bg-navy-900/50 rounded-2xl p-4 border border-slate-100 dark:border-navy-800 transition-transform hover:scale-[1.02]">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Virtual</p>
-                <h3 className="text-2xl font-black text-slate-800 dark:text-white">{detail?.stats?.virtual_contests || (detail?.has_virtual ? 1 : 0)}</h3>
+              <div className="bg-slate-100/80 dark:bg-navy-900/80 rounded-2xl p-4 border border-slate-200/90 dark:border-navy-700 transition-transform hover:scale-[1.02] shadow-2xs">
+                <p className="text-[11px] font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-1">Virtual</p>
+                <h3 className="text-2xl font-black text-slate-950 dark:text-white">{detail?.stats?.virtual_contests || (detail?.has_virtual ? 1 : 0)}</h3>
               </div>
             </div>
           </div>

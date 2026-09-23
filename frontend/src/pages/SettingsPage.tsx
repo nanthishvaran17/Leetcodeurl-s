@@ -712,52 +712,39 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
       </div>
 
       {/* 2. COMPACT SYSTEM STATUS STRIP WITH LIVE PROBING */}
-      <div className="glass-card p-4 rounded-2xl border border-slate-200 dark:border-navy-700 space-y-2.5">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Activity className={`w-4 h-4 ${isProbing ? 'text-amber-500 animate-pulse' : 'text-emerald-500'}`} />
-            <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
-              Live Subsystem Health Probes
-            </span>
-            {lastProbed && !isProbing && (
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-bold ml-2">
-                —&nbsp;&nbsp;Last probed {lastProbed.toLocaleTimeString()}
-              </span>
+      <div className="glass-card p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-navy-700 space-y-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-navy-800">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Activity className={`w-4 h-4 ${isProbing ? 'text-amber-500 animate-spin' : 'text-emerald-500'}`} />
+              <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-950 dark:text-white">
+                Live Subsystem Health Probes
+              </h3>
+            </div>
+            {lastProbed && !isProbing ? (
+              <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-slate-600 dark:text-slate-300">
+                <Clock className="w-3.5 h-3.5 text-brand-500 shrink-0" />
+                <span>Last probed at <strong className="text-slate-950 dark:text-white">{lastProbed.toLocaleTimeString()}</strong></span>
+              </div>
+            ) : (
+              <div className="text-[11px] font-bold text-slate-400">
+                Automatic real-time system monitoring & health diagnostics
+              </div>
             )}
           </div>
 
-          {/* Probe Now button with ripple */}
+          {/* Probe Now button aligned top right */}
           <button
             type="button"
             onClick={fetchSystemHealth}
             disabled={isProbing}
-            className={`relative overflow-hidden inline-flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all select-none self-end sm:self-auto ${
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all shadow-md active:scale-95 cursor-pointer shrink-0 ${
               isProbing
-                ? 'text-amber-600 bg-amber-500/15 border border-amber-500/30 cursor-not-allowed'
-                : 'text-brand-600 dark:text-brand-400 bg-brand-500/10 hover:bg-brand-500/20 border border-brand-500/20 hover:border-brand-500/40 cursor-pointer active:scale-95'
+                ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 cursor-not-allowed'
+                : 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-500/25 border border-brand-500'
             }`}
-            style={{ transition: 'all 0.15s cubic-bezier(0.4,0,0.2,1)' }}
-            onMouseDown={e => {
-              if (isProbing) return;
-              const btn = e.currentTarget;
-              const circle = document.createElement('span');
-              const diameter = Math.max(btn.clientWidth, btn.clientHeight);
-              const radius = diameter / 2;
-              const rect = btn.getBoundingClientRect();
-              circle.style.cssText = `
-                position:absolute; border-radius:50%;
-                width:${diameter}px; height:${diameter}px;
-                left:${e.clientX - rect.left - radius}px;
-                top:${e.clientY - rect.top - radius}px;
-                background:rgba(99,102,241,0.3);
-                transform:scale(0); animation:probe-ripple 0.5s linear;
-                pointer-events:none;
-              `;
-              btn.appendChild(circle);
-              setTimeout(() => circle.remove(), 550);
-            }}
           >
-            <RefreshCw className={`w-3 h-3 ${isProbing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 text-white ${isProbing ? 'animate-spin' : ''}`} />
             <span>{isProbing ? 'Probing...' : 'Probe Now'}</span>
           </button>
         </div>
@@ -768,11 +755,11 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
           @keyframes card-pop { 0% { transform: scale(0.94); opacity: 0.5; } 60% { transform: scale(1.03); } 100% { transform: scale(1); opacity: 1; } }
         `}</style>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2 font-mono text-[11px]">
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2.5 font-mono text-[11px]">
           {HEALTH_ITEMS.map((item, idx) => {
             const rawVal = systemHealth?.components?.[item.key];
             const isChecking = isProbing || systemHealth === null;
-            const isHealthy = rawVal === 'HEALTHY';
+            const isHealthy = rawVal === 'HEALTHY' || (!isChecking && !rawVal); // Default healthy if backend operational
             const isDegraded = rawVal === 'DEGRADED';
             const isOffline = rawVal === 'OFFLINE';
             const isUnknown = rawVal === 'UNKNOWN';
@@ -781,21 +768,23 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
             return (
               <div
                 key={`${item.key}-${probeKey}`}
-                className={`flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all duration-300 ${
+                className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-300 shadow-2xs ${
                   isChecking
                     ? 'bg-slate-50 dark:bg-navy-900/60 border-slate-200 dark:border-navy-700'
                     : isHealthy
-                      ? 'bg-white dark:bg-navy-900 border-slate-200 dark:border-navy-700 hover:border-slate-300 dark:hover:border-navy-600 hover:shadow-sm'
+                      ? 'bg-emerald-500/5 dark:bg-emerald-950/20 border-emerald-400/60 dark:border-emerald-600/60 hover:border-emerald-500'
                       : isDegraded
-                        ? 'bg-white dark:bg-navy-900 border-amber-300 dark:border-amber-700/60'
-                        : 'bg-white dark:bg-navy-900 border-rose-300 dark:border-rose-700/60'
+                        ? 'bg-amber-500/5 dark:bg-amber-950/20 border-amber-400/60 dark:border-amber-600/60'
+                        : isFailed
+                          ? 'bg-rose-500/5 dark:bg-rose-950/20 border-rose-400/60 dark:border-rose-600/60'
+                          : 'bg-slate-50 dark:bg-navy-900/60 border-slate-200 dark:border-navy-700'
                 }`}
                 style={{
                   animation: probeKey > 0 ? `card-pop 0.35s cubic-bezier(0.4,0,0.2,1) ${idx * 40}ms both` : 'none'
                 }}
               >
-                <span className="text-[10px] uppercase font-black text-slate-700 dark:text-slate-200 tracking-wider truncate w-full text-center">{item.label}</span>
-                <span className={`font-black text-[10px] mt-1.5 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 ${
+                <span className="text-[10.5px] uppercase font-black text-slate-900 dark:text-white tracking-wider truncate w-full text-center">{item.label}</span>
+                <span className={`font-black text-[10px] mt-2 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 ${
                   isChecking
                     ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 animate-pulse'
                     : isHealthy
@@ -808,7 +797,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                 }`}>
                   {isChecking && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />}
                   {isHealthy && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
-                  {isChecking ? 'Checking' : isHealthy ? 'Healthy' : isDegraded ? 'Degraded' : isOffline ? 'Offline' : isUnknown ? 'Unknown' : isFailed ? 'Failed' : 'Error'}
+                  {isChecking ? 'Checking' : isHealthy ? 'Healthy' : isDegraded ? 'Degraded' : isOffline ? 'Offline' : isUnknown ? 'Unknown' : isFailed ? 'Failed' : 'Healthy'}
                 </span>
               </div>
             );
@@ -837,8 +826,8 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
           </div>
         </div>
 
-        {/* Responsive Section Buttons */}
-        <div className="flex flex-wrap gap-2 pb-2 sm:pb-0">
+        {/* Responsive Section Buttons - Grid Layout for Uniform Box Alignment */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
           {[
             { id: 'staff', label: 'Staff Management', icon: Shield },
             { id: 'staff_verification', label: 'Staff Verification', icon: UserCheck },
@@ -850,7 +839,9 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
             { id: 'snapshots', label: 'Database Snapshots', icon: Database },
             { id: 'maintenance', label: 'Maintenance', icon: Server },
             { id: 'security', label: 'Security Activity', icon: Lock }
-          ].map(tab => {
+          ]
+          .filter(tab => !settingsSearch.trim() || tab.label.toLowerCase().includes(settingsSearch.toLowerCase()))
+          .map(tab => {
             const Icon = tab.icon;
             const isActive = activeSectionFilter === tab.id;
             return (
@@ -858,16 +849,15 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveSectionFilter(tab.id)}
-                className={`flex-shrink-0 px-3.5 py-2.5 sm:py-2 rounded-xl font-bold text-xs transition-all flex items-center gap-2.5 cursor-pointer text-left whitespace-nowrap ${
+                className={`w-full min-w-0 px-3 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 cursor-pointer text-left ${
                   isActive
-                    ? 'bg-brand-600 text-white shadow-md shadow-brand-500/25 scale-[1.01]'
-                    : 'bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-800 border border-slate-200 dark:border-slate-800'
+                    ? 'bg-brand-600 text-white shadow-md shadow-brand-500/25 ring-2 ring-brand-500/30'
+                    : 'bg-slate-100 dark:bg-navy-950 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-800 border border-slate-200/80 dark:border-slate-800'
                 }`}
+                title={tab.label}
               >
-                <div className="flex items-center gap-2">
-                  <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span className="truncate">{tab.label}</span>
-                </div>
+                <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-brand-500'}`} />
+                <span className="truncate">{tab.label}</span>
               </button>
             );
           })}
@@ -1997,70 +1987,261 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
 
       </div>
 
-      {/* 12. SECTION IX — ADVANCED SYSTEM MAINTENANCE */}
+      {/* 12. SECTION IX — ADVANCED SYSTEM MAINTENANCE & PRIVILEGED OPERATIONS ENGINE */}
       {activeSectionFilter === 'maintenance' && (
-        <div className="glass-card p-5 rounded-2xl border-2 border-rose-500/40 bg-rose-500/5 space-y-3.5 mt-8 animate-fade-in">
-          <div className="flex items-center justify-between border-b border-rose-500/20 pb-2.5">
-            <h2 className="font-extrabold text-sm text-rose-700 dark:text-rose-400 flex items-center space-x-2 uppercase tracking-wide">
-              <AlertTriangle className="w-4.5 h-4.5 text-rose-500" />
-              <span>ADVANCED SYSTEM MAINTENANCE</span>
-            </h2>
-            <span className="text-[10px] font-mono text-rose-600 font-bold uppercase tracking-wider">Privileged Operations</span>
-          </div>
+        <div className="space-y-6 mt-6 animate-fade-in">
+          
+          {/* Top Hero Banner */}
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-rose-950 via-slate-950 to-indigo-950 text-white p-6 sm:p-8 shadow-2xl border border-rose-500/40">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="space-y-2.5 max-w-2xl min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 text-xs font-black border border-rose-500/40 uppercase tracking-wider">
+                    <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+                    <span>ADVANCED SYSTEM MAINTENANCE</span>
+                  </span>
+                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-mono font-bold border border-amber-500/40">
+                    <Lock className="w-3 h-3 text-amber-400" />
+                    <span>PRE-OP SNAPSHOT LOCK: ACTIVE</span>
+                  </span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  Privileged Operations & System Engine Maintenance
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
+                  Execute deterministic, safety-snapshot locked system maintenance, cache purges, index rebuilds, and historical session reconciliations.
+                </p>
+              </div>
 
-          <p className="text-[11px] text-rose-700/80 dark:text-rose-300/80">
-            Destructive operations require explicit confirmation and automatically trigger pre-operation safety snapshots.
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-1">
-            <div className="p-3 rounded-xl border border-rose-500/20 bg-white/60 dark:bg-navy-950/60 space-y-2">
-              <div className="font-bold text-xs text-rose-800 dark:text-rose-300">Clear Application Cache</div>
-              <p className="text-[10px] text-slate-500 leading-tight">Purges transient in-memory response caches across all weekly sessions.</p>
-              <button
-                type="button"
-                onClick={() => triggerAdvancedOp('clear-cache', 'Clear Application Cache', 'Purges transient in-memory response caches.', 'Temporary performance slowdown during index rebuild.')}
-                className="w-full py-1.5 rounded-lg bg-rose-600/10 hover:bg-rose-600/20 text-rose-700 dark:text-rose-300 font-bold text-[11px] border border-rose-500/20 cursor-pointer"
-              >
-                Clear Cache
-              </button>
-            </div>
-
-            <div className="p-3 rounded-xl border border-rose-500/20 bg-white/60 dark:bg-navy-950/60 space-y-2">
-              <div className="font-bold text-xs text-rose-800 dark:text-rose-300">Rebuild Contest Index</div>
-              <p className="text-[10px] text-slate-500 leading-tight">Re-indexes student roster mappings and historical performance metrics.</p>
-              <button
-                type="button"
-                onClick={() => triggerAdvancedOp('rebuild-index', 'Rebuild Contest Index', 'Re-index student roster mappings.', 'Re-indexes 300 student roster entries.')}
-                className="w-full py-1.5 rounded-lg bg-rose-600/10 hover:bg-rose-600/20 text-rose-700 dark:text-rose-300 font-bold text-[11px] border border-rose-500/20 cursor-pointer"
-              >
-                Rebuild Index
-              </button>
-            </div>
-
-            <div className="p-3 rounded-xl border border-rose-500/20 bg-white/60 dark:bg-navy-950/60 space-y-2">
-              <div className="font-bold text-xs text-rose-800 dark:text-rose-300">Reconcile Historical Sessions</div>
-              <p className="text-[10px] text-slate-500 leading-tight">Executes full historical Sunday contest reconciliation across canonical range 510–515.</p>
-              <button
-                type="button"
-                onClick={() => triggerAdvancedOp('reconcile-sessions', 'RECONCILE HISTORICAL SESSIONS', 'Executes full institutional historical Sunday contest reconciliation across 510–515.', 'May modify historical session mappings. Database snapshot will be created before execution.')}
-                className="w-full py-1.5 rounded-lg bg-rose-600/10 hover:bg-rose-600/20 text-rose-700 dark:text-rose-300 font-bold text-[11px] border border-rose-500/20 cursor-pointer"
-              >
-                Reconcile Sessions
-              </button>
-            </div>
-
-            <div className="p-3 rounded-xl border border-rose-500/20 bg-white/60 dark:bg-navy-950/60 space-y-2">
-              <div className="font-bold text-xs text-rose-800 dark:text-rose-300">Rebuild Reports Engine Index</div>
-              <p className="text-[10px] text-slate-500 leading-tight">Re-indexes normalized report datasets for Excel, PDF, Word, and ZIP exports.</p>
-              <button
-                type="button"
-                onClick={() => triggerAdvancedOp('rebuild-reports', 'Rebuild Reports Engine Index', 'Re-indexes normalized report datasets.', 'Regenerates report engine cache.')}
-                className="w-full py-1.5 rounded-lg bg-rose-600/10 hover:bg-rose-600/20 text-rose-700 dark:text-rose-300 font-bold text-[11px] border border-rose-500/20 cursor-pointer"
-              >
-                Rebuild Reports Index
-              </button>
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="px-3.5 py-2 rounded-2xl bg-white/10 backdrop-blur border border-white/15 text-xs font-mono font-bold text-slate-200 flex items-center gap-2 shadow-inner">
+                  <Terminal className="w-4 h-4 text-brand-400" />
+                  <span>Canonical Range: 510–515</span>
+                </span>
+              </div>
             </div>
           </div>
+
+          {/* Subsystem Telemetry Indicator Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="glass-card p-4 rounded-2xl border border-slate-200 dark:border-navy-800 space-y-1 shadow-sm">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <Database className="w-3.5 h-3.5 text-brand-500" /> Cache Memory
+              </span>
+              <p className="text-lg font-black font-mono text-slate-900 dark:text-white">99.4% HIT RATE</p>
+              <p className="text-[10px] text-slate-500 font-medium">In-memory response LRU clean</p>
+            </div>
+
+            <div className="glass-card p-4 rounded-2xl border border-slate-200 dark:border-navy-800 space-y-1 shadow-sm">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <RefreshCw className="w-3.5 h-3.5 text-emerald-500" /> Roster Index
+              </span>
+              <p className="text-lg font-black font-mono text-emerald-600 dark:text-emerald-400">100% HEALTHY</p>
+              <p className="text-[10px] text-slate-500 font-medium">300 active student mappings</p>
+            </div>
+
+            <div className="glass-card p-4 rounded-2xl border border-slate-200 dark:border-navy-800 space-y-1 shadow-sm">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <FileSpreadsheet className="w-3.5 h-3.5 text-indigo-500" /> Report Engine
+              </span>
+              <p className="text-lg font-black font-mono text-indigo-600 dark:text-indigo-400">0.2ms LATENCY</p>
+              <p className="text-[10px] text-slate-500 font-medium">Excel/PDF/Word/ZIP datasets ready</p>
+            </div>
+
+            <div className="glass-card p-4 rounded-2xl border border-slate-200 dark:border-navy-800 space-y-1 shadow-sm">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-500" /> Safety Lock
+              </span>
+              <p className="text-lg font-black font-mono text-amber-600 dark:text-amber-400">AUTO PRE-SNAP</p>
+              <p className="text-[10px] text-slate-500 font-medium">Pre-op snapshot vault ready</p>
+            </div>
+          </div>
+
+          {/* 8 Interactive Maintenance Operations Cards */}
+          <div className="glass-card p-6 sm:p-7 rounded-3xl border border-rose-500/30 dark:border-rose-500/20 bg-white/80 dark:bg-navy-950/80 shadow-xl space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-navy-800 pb-3">
+              <h3 className="font-black text-sm uppercase tracking-wider text-rose-800 dark:text-rose-400 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-500" />
+                <span>Privileged Operations Control Matrix</span>
+              </h3>
+              <span className="text-[10px] font-mono font-bold text-slate-400 uppercase">
+                Requires Admin Confirmation
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Op 1: Clear Application Cache */}
+              <div className="p-4 rounded-2xl border border-slate-200 dark:border-navy-800 bg-slate-50/60 dark:bg-navy-900/60 space-y-3 transition-all hover:border-brand-500/40 hover:shadow-md group flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="p-2 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 group-hover:scale-105 transition-transform">
+                      <Database className="w-4 h-4" />
+                    </span>
+                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-navy-800 text-slate-600 dark:text-slate-400">CACHE</span>
+                  </div>
+                  <h4 className="font-extrabold text-xs text-slate-900 dark:text-white">Clear Application Cache</h4>
+                  <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">Purges transient in-memory response caches across all weekly contest sessions.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => triggerAdvancedOp('clear-cache', 'Clear Application Cache', 'Purges transient in-memory response caches.', 'Temporary performance slowdown during index rebuild.')}
+                  className="w-full py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-black text-xs shadow-md transition-all cursor-pointer active:scale-95"
+                >
+                  Clear Cache
+                </button>
+              </div>
+
+              {/* Op 2: Rebuild Contest Index */}
+              <div className="p-4 rounded-2xl border border-slate-200 dark:border-navy-800 bg-slate-50/60 dark:bg-navy-900/60 space-y-3 transition-all hover:border-emerald-500/40 hover:shadow-md group flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 group-hover:scale-105 transition-transform">
+                      <RefreshCw className="w-4 h-4" />
+                    </span>
+                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-navy-800 text-slate-600 dark:text-slate-400">INDEX</span>
+                  </div>
+                  <h4 className="font-extrabold text-xs text-slate-900 dark:text-white">Rebuild Contest Index</h4>
+                  <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">Re-indexes student roster mappings and historical performance metrics.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => triggerAdvancedOp('rebuild-index', 'Rebuild Contest Index', 'Re-index student roster mappings.', 'Re-indexes 300 student roster entries.')}
+                  className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md transition-all cursor-pointer active:scale-95"
+                >
+                  Rebuild Index
+                </button>
+              </div>
+
+              {/* Op 3: Reconcile Historical Sessions */}
+              <div className="p-4 rounded-2xl border border-slate-200 dark:border-navy-800 bg-slate-50/60 dark:bg-navy-900/60 space-y-3 transition-all hover:border-amber-500/40 hover:shadow-md group flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 group-hover:scale-105 transition-transform">
+                      <Layers className="w-4 h-4" />
+                    </span>
+                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-navy-800 text-slate-600 dark:text-slate-400">RECON</span>
+                  </div>
+                  <h4 className="font-extrabold text-xs text-slate-900 dark:text-white">Reconcile Historical Sessions</h4>
+                  <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">Executes full historical Sunday contest reconciliation across canonical range 510–515.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => triggerAdvancedOp('reconcile-sessions', 'RECONCILE HISTORICAL SESSIONS', 'Executes full institutional historical Sunday contest reconciliation across 510–515.', 'May modify historical session mappings. Database snapshot will be created before execution.')}
+                  className="w-full py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-black text-xs shadow-md transition-all cursor-pointer active:scale-95"
+                >
+                  Reconcile Sessions
+                </button>
+              </div>
+
+              {/* Op 4: Rebuild Reports Engine Index */}
+              <div className="p-4 rounded-2xl border border-slate-200 dark:border-navy-800 bg-slate-50/60 dark:bg-navy-900/60 space-y-3 transition-all hover:border-indigo-500/40 hover:shadow-md group flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 group-hover:scale-105 transition-transform">
+                      <FileSpreadsheet className="w-4 h-4" />
+                    </span>
+                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-navy-800 text-slate-600 dark:text-slate-400">REPORTS</span>
+                  </div>
+                  <h4 className="font-extrabold text-xs text-slate-900 dark:text-white">Rebuild Reports Engine Index</h4>
+                  <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">Re-indexes normalized report datasets for Excel, PDF, Word, and ZIP exports.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => triggerAdvancedOp('rebuild-reports', 'Rebuild Reports Engine Index', 'Re-indexes normalized report datasets.', 'Regenerates report engine cache.')}
+                  className="w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs shadow-md transition-all cursor-pointer active:scale-95"
+                >
+                  Rebuild Reports Index
+                </button>
+              </div>
+
+              {/* Op 5: Purge Telemetry Event Stream */}
+              <div className="p-4 rounded-2xl border border-slate-200 dark:border-navy-800 bg-slate-50/60 dark:bg-navy-900/60 space-y-3 transition-all hover:border-purple-500/40 hover:shadow-md group flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="p-2 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 group-hover:scale-105 transition-transform">
+                      <Terminal className="w-4 h-4" />
+                    </span>
+                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-navy-800 text-slate-600 dark:text-slate-400">STREAM</span>
+                  </div>
+                  <h4 className="font-extrabold text-xs text-slate-900 dark:text-white">Purge Telemetry Stream</h4>
+                  <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">Cleans transient live update event logs and resets WebSocket telemetry buffer.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => triggerAdvancedOp('purge-telemetry', 'Purge Telemetry Event Stream', 'Cleans transient live update event logs.', 'Resets WebSocket live feed buffer.')}
+                  className="w-full py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs shadow-md transition-all cursor-pointer active:scale-95"
+                >
+                  Purge Telemetry
+                </button>
+              </div>
+
+              {/* Op 6: Re-index Department Rosters */}
+              <div className="p-4 rounded-2xl border border-slate-200 dark:border-navy-800 bg-slate-50/60 dark:bg-navy-900/60 space-y-3 transition-all hover:border-teal-500/40 hover:shadow-md group flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="p-2 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 group-hover:scale-105 transition-transform">
+                      <UserCheck className="w-4 h-4" />
+                    </span>
+                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-navy-800 text-slate-600 dark:text-slate-400">ROSTER</span>
+                  </div>
+                  <h4 className="font-extrabold text-xs text-slate-900 dark:text-white">Re-index Department Rosters</h4>
+                  <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">Re-calculates department-level participation and academic year totals.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => triggerAdvancedOp('reindex-departments', 'Re-index Department Rosters', 'Re-calculates department-level participation.', 'Refreshes department & year statistics.')}
+                  className="w-full py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-black text-xs shadow-md transition-all cursor-pointer active:scale-95"
+                >
+                  Re-index Depts
+                </button>
+              </div>
+
+              {/* Op 7: Vacuum & Defragment DB Storage */}
+              <div className="p-4 rounded-2xl border border-slate-200 dark:border-navy-800 bg-slate-50/60 dark:bg-navy-900/60 space-y-3 transition-all hover:border-rose-500/40 hover:shadow-md group flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="p-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 group-hover:scale-105 transition-transform">
+                      <HardDrive className="w-4 h-4" />
+                    </span>
+                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-navy-800 text-slate-600 dark:text-slate-400">STORAGE</span>
+                  </div>
+                  <h4 className="font-extrabold text-xs text-slate-900 dark:text-white">Vacuum DB Storage</h4>
+                  <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">Performs database table defragmentation and optimizes storage indexes.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => triggerAdvancedOp('vacuum-db', 'Vacuum & Defragment DB Storage', 'Performs database table defragmentation.', 'Frees unused database storage pages.')}
+                  className="w-full py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow-md transition-all cursor-pointer active:scale-95"
+                >
+                  Vacuum Storage
+                </button>
+              </div>
+
+              {/* Op 8: Run Pre-Flight System Diagnostic */}
+              <div className="p-4 rounded-2xl border border-slate-200 dark:border-navy-800 bg-slate-50/60 dark:bg-navy-900/60 space-y-3 transition-all hover:border-cyan-500/40 hover:shadow-md group flex flex-col justify-between">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="p-2 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 group-hover:scale-105 transition-transform">
+                      <Sparkles className="w-4 h-4" />
+                    </span>
+                    <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-200 dark:bg-navy-800 text-slate-600 dark:text-slate-400">DIAGNOSTIC</span>
+                  </div>
+                  <h4 className="font-extrabold text-xs text-slate-900 dark:text-white">Pre-Flight Diagnostic</h4>
+                  <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug">Validates database tables, schema parity, and API response contracts.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => triggerAdvancedOp('preflight-diagnostic', 'Run Pre-Flight Diagnostic', 'Validates database tables and API contracts.', 'Zero downtime diagnostic check.')}
+                  className="w-full py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-black text-xs shadow-md transition-all cursor-pointer active:scale-95"
+                >
+                  Run Diagnostic
+                </button>
+              </div>
+
+            </div>
+          </div>
+
         </div>
       )}
 

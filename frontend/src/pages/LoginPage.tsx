@@ -274,7 +274,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
       const res = await api.post('/auth/login', {
         username: username.trim().toLowerCase(),
         password
-      });
+      }, { timeout: 60000 });
       if (res.data?.access_token) {
         setAuthStatusText('Authenticating...');
         setSuccessMsg('Authentication verified. Directing to workspace...');
@@ -699,7 +699,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                   <div className="flex-1 min-w-0 space-y-1 text-left">
                     <p className="text-xs font-bold leading-normal">{error || authError}</p>
                     {((error || authError || '').toLowerCase().includes('cannot reach server') ||
-                      (error || authError || '').toLowerCase().includes('network error')) && (
+                      (error || authError || '').toLowerCase().includes('network error') ||
+                      (error || authError || '').toLowerCase().includes('timed out') ||
+                      (error || authError || '').toLowerCase().includes('retry')) && (
                         <button
                           type="button"
                           onClick={(e) => {
@@ -707,10 +709,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess }) => {
                             clearAuthError();
                             if (username && password) handlePasswordLogin(e);
                           }}
-                          className="inline-flex items-center space-x-1 text-[11px] font-black underline hover:text-white transition-colors cursor-pointer"
+                          className="inline-flex items-center space-x-1 text-[11px] font-black underline hover:text-white transition-colors cursor-pointer mt-1"
                         >
                           <RefreshCw className="w-3 h-3 animate-spin-hover" />
-                          <span>Tap here to retry login now</span>
+                          <span>Tap here to retry sign-in now</span>
                         </button>
                       )}
                   </div>

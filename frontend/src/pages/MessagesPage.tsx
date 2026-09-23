@@ -587,11 +587,11 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
   const isSystemActive = isAiAgentActive || isTransparencyActive;
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-8.5rem-env(safe-area-inset-bottom,0px))] sm:h-[calc(100dvh-9rem)] md:h-[calc(100vh-7rem)] bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-slate-200 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl dark:shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-800">
+    <div className="flex flex-col h-[calc(100dvh-56px)] sm:h-[calc(100dvh-68px)] bg-white dark:bg-[#0B1120] text-slate-900 dark:text-slate-200 w-full overflow-hidden border-0 rounded-none shadow-none">
       
       {/* Top Institutional Intelligence Hub Header */}
       <div className={`m-2.5 sm:m-4 p-4 sm:p-5 rounded-2xl sm:rounded-3xl relative overflow-hidden bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 text-white flex-wrap items-center justify-between gap-4 shrink-0 shadow-xl border border-indigo-500/30 dark:border-indigo-500/40 z-20 backdrop-blur-md ${
-        activeConversationId ? 'hidden md:flex' : 'flex'
+        activeConversationId ? 'hidden' : 'flex'
       }`}>
         <div className="relative z-10 flex items-center space-x-3.5 sm:space-x-4">
           {onNavigateTab && (
@@ -678,21 +678,12 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
           )}
 
           {isAiAgentActive && (
-            <div className="flex-1 min-h-0 flex flex-col relative bg-white">
-               {/* Mobile back button header */}
-               <div className="md:hidden w-full bg-white border-b border-slate-200 p-3 shrink-0 flex items-center shadow-sm">
-                  <button onClick={() => setActiveConversationId(null)} className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg">
-                     <ArrowLeft className="w-5 h-5" />
-                  </button>
-                  <div className="ml-3 flex items-center space-x-2">
-                     <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                        <Sparkles className="w-4 h-4 text-indigo-600" />
-                     </div>
-                     <span className="font-bold text-slate-800">Institution Intelligence</span>
-                  </div>
-               </div>
+            <div className="flex-1 min-h-0 flex flex-col relative bg-white dark:bg-[#0B1120]">
                <div className="flex-1 min-h-0 w-full flex flex-col">
-                 <AskInstitutionPanel onActionTrigger={handleActionTrigger} />
+                 <AskInstitutionPanel 
+                   onBack={() => setActiveConversationId(null)} 
+                   onActionTrigger={handleActionTrigger} 
+                 />
                </div>
             </div>
           )}

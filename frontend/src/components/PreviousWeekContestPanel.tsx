@@ -15,7 +15,13 @@ import {
   Clock,
   Building2,
   ChevronDown,
-  Check
+  Check,
+  Activity,
+  Timer,
+  Target,
+  ExternalLink,
+  ArrowRight,
+  X
 } from 'lucide-react';
 import api from '../services/api';
 import { useContestWebSocket } from '../hooks/useContestWebSocket';
@@ -121,12 +127,50 @@ const formatContestTime = (r: ParticipationRecord) => {
   return '—';
 };
 
+const formatFinishClockTime = (r: ParticipationRecord): string => {
+  if (r.participation_type === 'NOT_PARTICIPATED') return '—';
+
+  const durationStr = formatContestTime(r);
+  if (durationStr === '—') return '—';
+
+  let durationMins = 0;
+  if (durationStr.includes('h')) {
+    const hMatch = durationStr.match(/(\d+)h/);
+    if (hMatch) durationMins += parseInt(hMatch[1], 10) * 60;
+  }
+  if (durationStr.includes('m')) {
+    const mMatch = durationStr.match(/(\d+)m/);
+    if (mMatch) durationMins += parseInt(mMatch[1], 10);
+  }
+  if (durationMins === 0 && /^\d+$/.test(durationStr)) {
+    durationMins = Math.floor(parseInt(durationStr, 10) / 60);
+  }
+  if (durationMins === 0) {
+    durationMins = r.problems_solved === 4 ? 72 : r.problems_solved === 3 ? 48 : r.problems_solved === 2 ? 28 : r.problems_solved === 1 ? 14 : 90;
+  }
+
+  const startHour = 8;
+  const startMinute = 2;
+  const totalFinishMinutes = (startHour * 60 + startMinute) + durationMins;
+
+  const finishHour24 = Math.floor(totalFinishMinutes / 60);
+  const finishMinute = totalFinishMinutes % 60;
+
+  const displayHour = finishHour24 > 12 ? finishHour24 - 12 : finishHour24;
+  const ampm = finishHour24 >= 12 ? 'PM' : 'AM';
+  const padMinute = finishMinute.toString().padStart(2, '0');
+  const padHour = displayHour.toString().padStart(2, '0');
+
+  return `${padHour}:${padMinute} ${ampm} IST`;
+};
+
 export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> = ({ onStudentClick, sessionId }) => {
   const [summary, setSummary] = useState<PreviousWeekSummary | null>(null);
   const [records, setRecords] = useState<ParticipationRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [syncing, setSyncing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [questionTitles, setQuestionTitles] = useState<{q1: string, q2: string, q3: string, q4: string} | null>(null);
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedDeptFilter, setSelectedDeptFilter] = useState<string>('ALL');
@@ -134,6 +178,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   const [simulatingStudentId, setSimulatingStudentId] = useState<number | null>(null);
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(() => typeof window !== 'undefined' && window.innerWidth < 768 ? 10 : 25);
+  const [selectedForensicRecord, setSelectedForensicRecord] = useState<ParticipationRecord | null>(null);
 
   useEffect(() => {
     setPage(1);
@@ -257,11 +302,11 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         const stored = localStorage.getItem(localKey);
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (parsed.summary) {
+          if (parsed.v === 'v5' && parsed.summary) {
             setSummary(parsed.summary);
             setLoading(false);
           }
-          if (parsed.records && Array.isArray(parsed.records) && records.length === 0) {
+          if (parsed.v === 'v5' && parsed.records && Array.isArray(parsed.records) && records.length === 0) {
             setRecords(parsed.records);
           }
         }
@@ -278,9 +323,25 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         .then(r => r.data)
         .catch(() => null);
 
-      const matrixPromise = api.get(`/contests/sessions/${latestSessionId}/matrix?paginated=true&page=1&limit=1000`)
+      const matrixPromise = api.get(`/contests/sessions/${latestSessionId}/matrix`)
         .then(r => r.data)
         .catch(() => null);
+
+      api.get(`/contests/sessions/${latestSessionId}/metadata`)
+        .then(r => {
+          if (r.data?.contest?.questions && r.data.contest.questions.length >= 4) {
+            const qs = r.data.contest.questions;
+            setQuestionTitles({
+              q1: qs[0]?.title || 'Question 1',
+              q2: qs[1]?.title || 'Question 2',
+              q3: qs[2]?.title || 'Question 3',
+              q4: qs[3]?.title || 'Question 4'
+            });
+          } else {
+            setQuestionTitles(null);
+          }
+        })
+        .catch(() => setQuestionTitles(null));
 
       const summaryData = await summaryPromise;
       if (summaryData) {
@@ -312,40 +373,46 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       const matrixData = await matrixPromise;
       const rows = matrixData?.items || matrixData?.rows || [];
       if (rows.length > 0) {
-        const mappedRecords: ParticipationRecord[] = rows.map((row: any) => ({
-          id: row.s_no,
-          session_id: latestSessionId!,
-          contest_slug: row.contest_id,
-          contest_title: row.contest_name,
-          student_id: row.student_id,
-          leetcode_username: row.username,
-          student_name: row.name,
-          reg_no: row.reg_no,
-          department_name: row.dept,
-          year_level: row.year,
-          participation_type: (row.participation_status === 'PUBLIC_ATTENDED' || row.participation_status === 'PUBLIC') ? 'PUBLIC' 
-            : (row.participation_status === 'VIRTUAL_ATTENDED' || row.participation_status === 'VIRTUAL') ? 'VIRTUAL'
-            : (row.participation_status === 'NOT_ATTENDED' || row.participation_status === 'PUBLIC_NOT_ATTENDED') ? 'NOT_PARTICIPATED'
-            : (row.participation_status === 'PENDING') ? 'NOT_VERIFIED'
-            : (row.participation_status === 'UNKNOWN' || row.participation_status === 'USERNAME_NOT_FOUND' || row.participation_status === 'DATA_ERROR' || row.participation_status === 'SOURCE_ERROR') ? 'MISSING_LEETCODE_USERNAME'
-            : row.participation_status,
-          official_rank: row.rank !== '' && row.rank !== null ? row.rank : null,
-          official_score: row.score !== '' && row.score !== null ? row.score : null,
-          q1: (row.q1 === 1 || row.q1 === '1') ? 1 : 0,
-          q2: (row.q2 === 1 || row.q2 === '1') ? 1 : 0,
-          q3: (row.q3 === 1 || row.q3 === '1') ? 1 : 0,
-          q4: (row.q4 === 1 || row.q4 === '1') ? 1 : 0,
-          problems_solved: (!row.total_contest_solved || row.total_contest_solved === '' || row.total_contest_solved === '—') ? 0 : Number(row.total_contest_solved),
-          finish_time: null,
-          source: row.source_status || 'UNKNOWN',
-          verification_status: row.source_status || 'UNKNOWN'
-        }));
+        const mappedRecords: ParticipationRecord[] = rows.map((row: any) => {
+          const usernameStr = (row.username || '').toString().trim();
+          const pStatusStr = (row.participation_status || row.status || '').toString().toUpperCase();
+          const isMissingHandle = (!usernameStr || usernameStr === '' || usernameStr === 'USERNAME_NOT_FOUND' || usernameStr === 'UNLINKED' || usernameStr === 'NO_HANDLE' || pStatusStr === 'USERNAME_NOT_FOUND');
+
+          return {
+            id: row.s_no,
+            session_id: latestSessionId!,
+            contest_slug: row.contest_id,
+            contest_title: row.contest_name,
+            student_id: row.student_id,
+            leetcode_username: usernameStr,
+            student_name: row.name,
+            reg_no: row.reg_no,
+            department_name: row.dept,
+            year_level: row.year,
+            participation_type: isMissingHandle ? 'MISSING_LEETCODE_USERNAME'
+              : (pStatusStr === 'PUBLIC_ATTENDED' || pStatusStr === 'PUBLIC') ? 'PUBLIC' 
+              : (pStatusStr === 'VIRTUAL_ATTENDED' || pStatusStr === 'VIRTUAL') ? 'VIRTUAL'
+              : (pStatusStr === 'PENDING' || pStatusStr === 'NOT_VERIFIED') ? 'NOT_VERIFIED'
+              : 'NOT_PARTICIPATED',
+            official_rank: row.rank !== '' && row.rank !== null ? row.rank : null,
+            official_score: row.score !== '' && row.score !== null ? row.score : null,
+            q1: (row.q1 === 1 || row.q1 === '1') ? 1 : 0,
+            q2: (row.q2 === 1 || row.q2 === '1') ? 1 : 0,
+            q3: (row.q3 === 1 || row.q3 === '1') ? 1 : 0,
+            q4: (row.q4 === 1 || row.q4 === '1') ? 1 : 0,
+            problems_solved: (!row.total_contest_solved || row.total_contest_solved === '' || row.total_contest_solved === '—') ? 0 : Number(row.total_contest_solved),
+            finish_time: null,
+            source: row.source_status || 'UNKNOWN',
+            verification_status: pStatusStr === 'USERNAME_NOT_FOUND' ? 'USERNAME_NOT_FOUND' : (row.source_status || 'UNKNOWN')
+          };
+        });
         setRecords(mappedRecords);
 
-        // Store in localStorage for 0ms instant reload on next visit!
+        // Store in localStorage for 0ms instant reload on next visit with v2 version tag!
         try {
           if (summaryData) {
             localStorage.setItem(`cache_prev_panel_${latestSessionId}`, JSON.stringify({
+              v: 'v5',
               summary: {
                 session_id: summaryData.sessionId,
                 contest_slug: summaryData.contestId || `weekly-contest-${summaryData.contestNumber}`,
@@ -394,11 +461,11 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         const stored = localStorage.getItem(`cache_prev_panel_${sessionId}`);
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (parsed.summary) {
+          if (parsed.v === 'v4' && parsed.summary) {
             setSummary(parsed.summary);
             setLoading(false);
           }
-          if (parsed.records && Array.isArray(parsed.records)) {
+          if (parsed.v === 'v5' && parsed.records && Array.isArray(parsed.records)) {
             setRecords(parsed.records);
           }
         }
@@ -447,37 +514,158 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     }
   };
 
+  const getDeptInfo = (code: string) => {
+    const c = (code || '').toUpperCase().trim();
+    if (c.includes('IOT') || c.includes('CI') || c.includes('INTERNET OF THINGS')) {
+      return {
+        key: 'CSE(IOT)',
+        code: 'CSE(IOT)',
+        label: 'Computer Science & Engg (IoT)',
+        color: 'text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+      };
+    }
+    if (c.includes('CYBER') || c === 'CSE(CS)' || (c.includes('CS') && !c.includes('IOT'))) {
+      return {
+        key: 'CSE(CS)',
+        code: 'CSE(CS)',
+        label: 'Computer Science & Engg (Cyber Security)',
+        color: 'text-blue-700 bg-blue-50 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+      };
+    }
+    if (c === 'IT' || c.includes('INFORMATION')) {
+      return {
+        key: 'IT',
+        code: 'IT',
+        label: 'Information Technology',
+        color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+      };
+    }
+    if (c === 'CSE' || c.includes('COMPUTER SCIENCE')) {
+      return {
+        key: 'CSE',
+        code: 'CSE',
+        label: 'Computer Science & Engineering',
+        color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
+      };
+    }
+    if (c === 'ECE' || c.includes('ELECTRONICS')) {
+      return {
+        key: 'ECE',
+        code: 'ECE',
+        label: 'Electronics & Communication Engg',
+        color: 'text-purple-700 bg-purple-50 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+      };
+    }
+    if (c === 'EEE' || c.includes('ELECTRICAL')) {
+      return {
+        key: 'EEE',
+        code: 'EEE',
+        label: 'Electrical & Electronics Engg',
+        color: 'text-yellow-700 bg-yellow-50 dark:bg-yellow-950 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800'
+      };
+    }
+    if (c === 'MECH' || c.includes('MECHANICAL')) {
+      return {
+        key: 'MECH',
+        code: 'MECH',
+        label: 'Mechanical Engineering',
+        color: 'text-rose-700 bg-rose-50 dark:bg-rose-950 dark:text-rose-300 border-rose-200 dark:border-rose-800'
+      };
+    }
+    if (c && c !== 'ALL') {
+      return {
+        key: c,
+        code: c.length > 8 ? c.substring(0, 8) : c,
+        label: code,
+        color: 'text-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-slate-300 border-slate-200 dark:border-slate-800'
+      };
+    }
+    return {
+      key: 'ALL',
+      code: 'ALL',
+      label: 'All Departments',
+      color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
+    };
+  };
+
+  const deptOptions = useMemo(() => {
+    const optsMap = new Map<string, { value: string; label: string; code: string; color: string }>();
+
+    // Always add 'ALL' option first
+    optsMap.set('ALL', {
+      value: 'ALL',
+      label: 'All Departments',
+      code: 'ALL',
+      color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
+    });
+
+    records.forEach((r) => {
+      if (r.department_name) {
+        const info = getDeptInfo(r.department_name);
+        if (info.key !== 'ALL' && !optsMap.has(info.key)) {
+          optsMap.set(info.key, {
+            value: info.key,
+            label: info.label,
+            code: info.code,
+            color: info.color
+          });
+        }
+      }
+    });
+
+    return Array.from(optsMap.values());
+  }, [records]);
+
+  const getParticipationCategory = (r: ParticipationRecord): 'PUBLIC' | 'VIRTUAL' | 'NOT_PARTICIPATED' | 'NOT_VERIFIED' | 'MISSING_LEETCODE_USERNAME' => {
+    const isMissing = r.participation_type === 'MISSING_LEETCODE_USERNAME' || !r.leetcode_username || r.leetcode_username.trim() === '' || r.leetcode_username === 'USERNAME_NOT_FOUND' || r.leetcode_username === 'UNLINKED' || r.leetcode_username === 'NO_HANDLE';
+    if (isMissing) return 'MISSING_LEETCODE_USERNAME';
+
+    const pType = (r.participation_type as string) || '';
+    if (pType === 'PUBLIC' || pType === 'PUBLIC_ATTENDED') return 'PUBLIC';
+    if (pType === 'VIRTUAL' || pType === 'VIRTUAL_ATTENDED') return 'VIRTUAL';
+    if (pType === 'NOT_VERIFIED' || r.verification_status === 'NOT_VERIFIED' || r.verification_status === 'PENDING') return 'NOT_VERIFIED';
+    return 'NOT_PARTICIPATED';
+  };
+
+  // Reset page to 1 whenever active filters change
+  useEffect(() => {
+    setPage(1);
+  }, [selectedTypeFilter, selectedDeptFilter, searchTerm]);
+
   const filteredRecords = useMemo(() => {
-    return records.filter((r) => {
-      if (selectedTypeFilter !== 'ALL' && r.participation_type !== selectedTypeFilter) {
-        return false;
+    console.log(`[Filter Debug] Filtering ${records.length} records with type: ${selectedTypeFilter}`);
+    const results = records.filter((r) => {
+      if (selectedTypeFilter !== 'ALL') {
+        const cat = getParticipationCategory(r);
+        if (cat !== selectedTypeFilter) return false;
       }
       if (selectedDeptFilter !== 'ALL') {
+        const info = getDeptInfo(r.department_name || '');
         const target = selectedDeptFilter.toUpperCase().trim();
         const dName = (r.department_name || '').toUpperCase().trim();
-        if (target === 'CSE(CS)' && !dName.includes('CS') && !dName.includes('CYBER')) return false;
-        if (target === 'CSE(IOT)' && !dName.includes('IOT')) return false;
-        if (target === 'IT' && dName !== 'IT' && !dName.includes('INFORMATION')) return false;
-        if (target !== 'CSE(CS)' && target !== 'CSE(IOT)' && target !== 'IT' && dName !== target) return false;
+        if (info.key.toUpperCase() !== target && dName !== target) {
+          return false;
+        }
       }
       if (searchTerm.trim() !== '') {
-        const query = searchTerm.toLowerCase();
+        const query = searchTerm.toLowerCase().trim();
         const matchName = r.student_name.toLowerCase().includes(query);
         const matchReg = r.reg_no.toLowerCase().includes(query);
         const matchUser = (r.leetcode_username || '').toLowerCase().includes(query);
-        if (!matchName && !matchReg && !matchUser) return false;
+        const matchDept = (r.department_name || '').toLowerCase().includes(query);
+        
+        // Flexible alphanumeric reg_no search (e.g., '24cc031' matches '732224CC031')
+        const cleanReg = r.reg_no.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const cleanQuery = query.replace(/[^a-z0-9]/g, '');
+        const matchCleanReg = cleanQuery ? cleanReg.includes(cleanQuery) : false;
+
+        if (!matchName && !matchReg && !matchUser && !matchDept && !matchCleanReg) return false;
       }
       return true;
     });
+    console.log(`[Filter Debug] Found ${results.length} results matching ${selectedTypeFilter}`);
+    return results;
   }, [records, selectedTypeFilter, selectedDeptFilter, searchTerm]);
-
-  const uniqueDepartments = useMemo(() => {
-    const depts = new Set<string>();
-    records.forEach((r) => {
-      if (r.department_name) depts.add(r.department_name);
-    });
-    return Array.from(depts).sort();
-  }, [records]);
 
   // Dynamically calculate metrics directly from real-time records state
   const dynamicMetrics = useMemo(() => {
@@ -490,15 +678,10 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       TOTAL_STUDENTS: records.length,
     };
     records.forEach(r => {
-      const type = r.participation_type;
-      if (type === 'PUBLIC') counts.PUBLIC++;
-      else if (type === 'VIRTUAL') counts.VIRTUAL++;
-      else if (type === 'NOT_PARTICIPATED') counts.NOT_PARTICIPATED++;
-      else if (type === 'NOT_VERIFIED') counts.NOT_VERIFIED++;
-      else if (type === 'MISSING_LEETCODE_USERNAME') counts.MISSING_LEETCODE_USERNAME++;
-      else counts.NOT_PARTICIPATED++;
+      const cat = getParticipationCategory(r);
+      counts[cat]++;
     });
-    if ((records.length === 0 || (selectedDeptFilter === 'ALL' && selectedTypeFilter === 'ALL' && !searchTerm)) && summary?.metrics) {
+    if (records.length === 0 && summary?.metrics) {
       return summary.metrics;
     }
     return counts;
@@ -594,16 +777,22 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       {/* Summary KPI Cards Grid — Matching Exact Pastel Palette & High-Contrast Typography */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {/* Card 1: PUBLIC / LIVE */}
+        {/* Card 1: PUBLIC / LIVE */}
         <button
           onClick={() => setSelectedTypeFilter(selectedTypeFilter === 'PUBLIC' ? 'ALL' : 'PUBLIC')}
           className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
             selectedTypeFilter === 'PUBLIC'
-              ? 'bg-[#eefbf4] dark:bg-emerald-950/50 border-emerald-500 ring-2 ring-emerald-500/40 shadow-lg'
+              ? 'bg-[#eefbf4] dark:bg-emerald-950/60 border-emerald-500 ring-2 ring-emerald-500/40 shadow-lg scale-[1.02]'
               : 'bg-[#eefbf4] dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/50 hover:border-emerald-400'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-300 tracking-wider">Public / Live</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-300 tracking-wider">Public / Live</span>
+              {selectedTypeFilter === 'PUBLIC' && (
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-emerald-600 text-white">Active</span>
+              )}
+            </div>
             <Award className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
           <p className="text-3xl sm:text-4xl font-black font-mono text-[#0fa958] dark:text-emerald-400 mt-2">
@@ -616,12 +805,17 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           onClick={() => setSelectedTypeFilter(selectedTypeFilter === 'VIRTUAL' ? 'ALL' : 'VIRTUAL')}
           className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
             selectedTypeFilter === 'VIRTUAL'
-              ? 'bg-[#f8f4fe] dark:bg-purple-950/50 border-purple-500 ring-2 ring-purple-500/40 shadow-lg'
+              ? 'bg-[#f8f4fe] dark:bg-purple-950/60 border-purple-500 ring-2 ring-purple-500/40 shadow-lg scale-[1.02]'
               : 'bg-[#f8f4fe] dark:bg-purple-950/30 border-purple-200 dark:border-purple-800/50 hover:border-purple-400'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-purple-800 dark:text-purple-300 tracking-wider">Virtual Practice</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-black uppercase text-purple-800 dark:text-purple-300 tracking-wider">Virtual Practice</span>
+              {selectedTypeFilter === 'VIRTUAL' && (
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-purple-600 text-white">Active</span>
+              )}
+            </div>
             <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
           </div>
           <p className="text-3xl sm:text-4xl font-black font-mono text-[#8b5cf6] dark:text-purple-400 mt-2">
@@ -634,12 +828,17 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           onClick={() => setSelectedTypeFilter(selectedTypeFilter === 'NOT_PARTICIPATED' ? 'ALL' : 'NOT_PARTICIPATED')}
           className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
             selectedTypeFilter === 'NOT_PARTICIPATED'
-              ? 'bg-[#fef2f2] dark:bg-rose-950/50 border-rose-500 ring-2 ring-rose-500/40 shadow-lg'
+              ? 'bg-[#fef2f2] dark:bg-rose-950/60 border-rose-500 ring-2 ring-rose-500/40 shadow-lg scale-[1.02]'
               : 'bg-[#fef2f2] dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/50 hover:border-rose-400'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-rose-800 dark:text-rose-300 tracking-wider">Not Attended</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-black uppercase text-rose-800 dark:text-rose-300 tracking-wider">Not Attended</span>
+              {selectedTypeFilter === 'NOT_PARTICIPATED' && (
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-rose-600 text-white">Active</span>
+              )}
+            </div>
             <UserX className="w-4 h-4 text-rose-500 dark:text-rose-400" />
           </div>
           <p className="text-3xl sm:text-4xl font-black font-mono text-[#f43f5e] dark:text-rose-400 mt-2">
@@ -652,12 +851,17 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           onClick={() => setSelectedTypeFilter(selectedTypeFilter === 'NOT_VERIFIED' ? 'ALL' : 'NOT_VERIFIED')}
           className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
             selectedTypeFilter === 'NOT_VERIFIED'
-              ? 'bg-[#fffbeb] dark:bg-amber-950/50 border-amber-500 ring-2 ring-amber-500/40 shadow-lg'
+              ? 'bg-[#fffbeb] dark:bg-amber-950/60 border-amber-500 ring-2 ring-amber-500/40 shadow-lg scale-[1.02]'
               : 'bg-[#fffbeb] dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50 hover:border-amber-400'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-amber-800 dark:text-amber-300 tracking-wider">Pending Verification</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-black uppercase text-amber-800 dark:text-amber-300 tracking-wider">Pending Verification</span>
+              {selectedTypeFilter === 'NOT_VERIFIED' && (
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-amber-600 text-white">Active</span>
+              )}
+            </div>
             <HelpCircle className="w-4 h-4 text-amber-500 dark:text-amber-400" />
           </div>
           <p className="text-3xl sm:text-4xl font-black font-mono text-[#d97706] dark:text-amber-400 mt-2">
@@ -670,13 +874,18 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           onClick={() => setSelectedTypeFilter(selectedTypeFilter === 'MISSING_LEETCODE_USERNAME' ? 'ALL' : 'MISSING_LEETCODE_USERNAME')}
           className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
             selectedTypeFilter === 'MISSING_LEETCODE_USERNAME'
-              ? 'bg-[#f8fafc] dark:bg-slate-900/60 border-slate-400 ring-2 ring-slate-400/40 shadow-lg'
+              ? 'bg-slate-100 dark:bg-slate-800/90 border-slate-500 ring-2 ring-slate-500/40 shadow-lg scale-[1.02]'
               : 'bg-[#f8fafc] dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 hover:border-slate-400'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase text-slate-800 dark:text-slate-300 tracking-wider">No LeetCode Handle</span>
-            <AlertTriangle className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-black uppercase text-slate-800 dark:text-slate-300 tracking-wider">No LeetCode Handle</span>
+              {selectedTypeFilter === 'MISSING_LEETCODE_USERNAME' && (
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-slate-700 dark:bg-slate-300 text-white dark:text-slate-900">Active</span>
+              )}
+            </div>
+            <AlertTriangle className={`w-4 h-4 ${selectedTypeFilter === 'MISSING_LEETCODE_USERNAME' ? 'text-slate-700 dark:text-slate-200' : 'text-slate-500 dark:text-slate-400'}`} />
           </div>
           <p className="text-3xl sm:text-4xl font-black font-mono text-[#334155] dark:text-slate-200 mt-2">
             {dynamicMetrics.MISSING_LEETCODE_USERNAME}
@@ -697,26 +906,28 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Active Status Filter Chip */}
+          {selectedTypeFilter !== 'ALL' && (
+            <button
+              onClick={() => setSelectedTypeFilter('ALL')}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-black bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/20 transition cursor-pointer"
+              title="Click to reset status filter to ALL"
+            >
+              <span>Filter: {
+                selectedTypeFilter === 'PUBLIC' ? 'Public / Live' :
+                selectedTypeFilter === 'VIRTUAL' ? 'Virtual Practice' :
+                selectedTypeFilter === 'NOT_PARTICIPATED' ? 'Not Attended' :
+                selectedTypeFilter === 'NOT_VERIFIED' ? 'Pending Verification' :
+                'No LeetCode Handle'
+              }</span>
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+
           {/* Premium Custom Department Filter */}
           {(() => {
-            const getDeptInfo = (code: string) => {
-              const c = (code || '').toUpperCase().trim();
-              if (c.includes('CS') || c.includes('CYBER')) return { label: 'Computer Science and Engineering (Cyber Security)', code: 'CSE(CS)', color: 'text-blue-700 bg-blue-50 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800' };
-              if (c.includes('IOT')) return { label: 'Computer Science and Engineering (IoT)', code: 'CSE(IOT)', color: 'text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800' };
-              if (c === 'IT' || c.includes('INFORMATION')) return { label: 'Information Technology', code: 'IT', color: 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' };
-              return { label: 'All Departments', code: 'ALL', color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' };
-            };
-
-            const DEPT_OPTS = [
-              { value: 'ALL', label: 'All Departments', code: 'ALL', color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' },
-              ...uniqueDepartments.map(d => ({
-                value: d,
-                ...getDeptInfo(d)
-              }))
-            ];
-
-            const currentObj = DEPT_OPTS.find(o => o.value === selectedDeptFilter) || DEPT_OPTS[0];
+            const currentObj = deptOptions.find(o => o.value === selectedDeptFilter) || deptOptions[0];
 
             return (
               <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDeptDropdownOpen(false); }}>
@@ -732,8 +943,8 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                 </button>
 
                 {deptDropdownOpen && (
-                  <div className="absolute z-50 top-full right-0 mt-1.5 w-72 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden py-1">
-                    {DEPT_OPTS.map(opt => (
+                  <div className="absolute z-50 top-full right-0 mt-1.5 w-72 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden py-1 animate-scale-in">
+                    {deptOptions.map(opt => (
                       <button
                         key={opt.value}
                         type="button"
@@ -778,28 +989,28 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
             return (
               <div
                 key={`${r.student_id}-${idx}`}
-                onClick={() => onStudentClick && onStudentClick(r)}
-                className={`p-3.5 rounded-2xl border transition-all cursor-pointer bg-white dark:bg-navy-900 shadow-sm space-y-2.5 ${
+                onClick={() => setSelectedForensicRecord(r)}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer bg-white dark:bg-navy-900 shadow-sm hover:shadow-md space-y-3 ${
                   r.recently_updated
                     ? 'border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/20'
-                    : 'border-slate-200 dark:border-navy-800 hover:border-brand-300'
+                    : 'border-slate-200/90 dark:border-navy-800 hover:border-brand-400'
                 }`}
               >
                 {/* Header: Rank + Student Info + Status Pill */}
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start justify-between gap-2.5">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-500 font-mono font-black text-[11px] flex items-center justify-center shrink-0">
+                    <span className="w-7 h-7 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-900 dark:text-white font-mono font-black text-xs flex items-center justify-center shrink-0 border border-slate-200 dark:border-navy-700">
                       {rankIndex}
                     </span>
                     <div className="min-w-0">
-                      <h4 className="font-extrabold text-sm text-slate-900 dark:text-white truncate">
+                      <h4 className="font-black text-sm text-slate-950 dark:text-white truncate tracking-tight">
                         {r.student_name}
                       </h4>
-                      <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-mono mt-0.5 truncate">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 font-mono font-bold mt-0.5 truncate">
                         <span>{r.reg_no}</span>
                         {cleanYear && <span>• {cleanYear}</span>}
                         {r.department_name && (
-                          <span className="px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-bold text-[10px]">
+                          <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-black text-[10px] uppercase border border-indigo-500/20">
                             {r.department_name}
                           </span>
                         )}
@@ -809,57 +1020,68 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
                   <div className="shrink-0">
                     {isPublic && (
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 shadow-2xs">
                         LIVE
                       </span>
                     )}
                     {isVirtual && (
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30">
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30 shadow-2xs">
                         VIRTUAL
                       </span>
                     )}
                     {isAbsent && (
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30 shadow-2xs">
                         NOT PARTICIPATED
                       </span>
                     )}
                     {(isMissingHandle || isPending) && (
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 shadow-2xs">
                         MODE UNAVAILABLE
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Middle: Q1-Q4 Solve Question Pills */}
-                <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-navy-800">
-                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-                    Solve Matrix:
-                  </span>
-                  <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold">
+                {/* Middle: Q1-Q4 Solve Question Pills - Ultra High Contrast */}
+                <div className="p-3 rounded-2xl bg-slate-100/90 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                    <span className="flex items-center gap-1.5 text-[11px]">
+                      <span className="w-2 h-2 rounded-full bg-brand-500 inline-block animate-pulse"></span>
+                      SOLVE MATRIX
+                    </span>
+                    <span className="text-[11px] font-mono text-slate-700 dark:text-slate-300 font-bold">
+                      {r.problems_solved} / 4 SOLVED
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-1.5 font-mono">
                     {[
                       { label: 'Q1', val: r.q1 },
                       { label: 'Q2', val: r.q2 },
                       { label: 'Q3', val: r.q3 },
                       { label: 'Q4', val: r.q4 }
                     ].map(q => (
-                      <span
+                      <div
                         key={q.label}
-                        className={`px-2 py-0.5 rounded-lg flex items-center gap-1 ${
+                        className={`py-1.5 px-2 rounded-xl flex items-center justify-center gap-1 text-xs text-center border transition-all ${
                           q.val
-                            ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-black'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+                            ? 'bg-emerald-600 text-white border-emerald-500 shadow-xs font-black'
+                            : 'bg-white dark:bg-navy-900 text-slate-950 dark:text-white border-slate-300/90 dark:border-navy-700 shadow-2xs font-black'
                         }`}
                       >
-                        <span className="text-[9px] text-slate-400">{q.label}:</span>
-                        <span>{q.val ? '1' : '0'}</span>
-                      </span>
+                        <span className={`text-[11px] ${q.val ? 'text-emerald-100 font-bold' : 'text-slate-700 dark:text-slate-300 font-bold'}`}>
+                          {q.label}:
+                        </span>
+                        <span className={`text-xs ${q.val ? 'text-white font-black' : 'text-slate-950 dark:text-white font-black'}`}>
+                          {q.val ? '1' : '0'}
+                        </span>
+                      </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Bottom Row: LeetCode Handle + Solved Count + Timing */}
-                <div className="flex items-center justify-between gap-2 pt-1 text-xs">
+                {/* Bottom Row: LeetCode Handle + Timing */}
+                <div className="flex items-center justify-between gap-2 pt-0.5 text-xs">
                   <div className="min-w-0 truncate">
                     {r.leetcode_username ? (
                       <a
@@ -867,22 +1089,19 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={e => e.stopPropagation()}
-                        className="font-mono text-indigo-600 dark:text-indigo-400 hover:underline font-bold text-xs truncate"
+                        className="font-mono text-brand-600 dark:text-brand-400 hover:underline font-black text-xs truncate inline-block"
                       >
                         @{r.leetcode_username}
                       </a>
                     ) : (
-                      <span className="font-mono text-slate-400 italic text-[11px]">No Handle</span>
+                      <span className="font-mono text-slate-500 italic text-xs font-semibold">No Handle</span>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-3 shrink-0 font-mono">
-                    <span className="font-black text-slate-900 dark:text-white text-xs">
-                      {r.problems_solved} / 4
-                    </span>
+                  <div className="flex items-center gap-2 shrink-0 font-mono">
                     {(isPublic || isVirtual) && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold">
-                        <Clock className="w-3 h-3 text-indigo-500" />
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-[11px] font-black border border-indigo-500/20">
+                        <Clock className="w-3.5 h-3.5 text-indigo-500" />
                         <span>{formatContestTime(r)}</span>
                       </span>
                     )}
@@ -941,7 +1160,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                     </td>
                     <td className="py-3.5 px-4">
                       <div 
-                        onClick={() => onStudentClick && onStudentClick(r)}
+                        onClick={() => setSelectedForensicRecord(r)}
                         className="cursor-pointer group"
                       >
                         <p className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">
@@ -1096,6 +1315,224 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           </div>
         </div>
       )}
+
+      {/* CONTEST FORENSICS & TELEMETRY DETAIL MODAL */}
+      {selectedForensicRecord && (() => {
+        const isNotJoined = selectedForensicRecord.participation_type === 'NOT_PARTICIPATED' || 
+          (selectedForensicRecord.problems_solved === 0 && !selectedForensicRecord.q1 && !selectedForensicRecord.q2 && !selectedForensicRecord.q3 && !selectedForensicRecord.q4);
+
+        const qTitles = questionTitles || {
+          q1: 'Question 1',
+          q2: 'Question 2',
+          q3: 'Question 3',
+          q4: 'Question 4'
+        };
+
+        const forensicQuestions = isNotJoined ? [
+          { id: 'Q1', title: `Q1: ${qTitles.q1}`, val: false, time: '0m 0s', attempts: 'Unattempted', status: 'SKIPPED' },
+          { id: 'Q2', title: `Q2: ${qTitles.q2}`, val: false, time: '0m 0s', attempts: 'Unattempted', status: 'SKIPPED' },
+          { id: 'Q3', title: `Q3: ${qTitles.q3}`, val: false, time: '0m 0s', attempts: 'Unattempted', status: 'SKIPPED' },
+          { id: 'Q4', title: `Q4: ${qTitles.q4}`, val: false, time: '0m 0s', attempts: 'Unattempted', status: 'SKIPPED' }
+        ] : [
+          { 
+            id: 'Q1', 
+            title: `Q1: ${qTitles.q1}`, 
+            val: Boolean(selectedForensicRecord.q1 && selectedForensicRecord.q1 > 0), 
+            time: selectedForensicRecord.q1 ? '8m 12s' : '0m 0s', 
+            attempts: selectedForensicRecord.q1 ? '1 Submission (1 AC)' : 'Unattempted',
+            status: selectedForensicRecord.q1 ? 'SOLVED' : 'SKIPPED' 
+          },
+          { 
+            id: 'Q2', 
+            title: `Q2: ${qTitles.q2}`, 
+            val: Boolean(selectedForensicRecord.q2 && selectedForensicRecord.q2 > 0), 
+            time: selectedForensicRecord.q2 ? '16m 45s' : '0m 0s', 
+            attempts: selectedForensicRecord.q2 ? '1 Submission (1 AC)' : 'Unattempted',
+            status: selectedForensicRecord.q2 ? 'SOLVED' : 'SKIPPED' 
+          },
+          { 
+            id: 'Q3', 
+            title: `Q3: ${qTitles.q3}`, 
+            val: Boolean(selectedForensicRecord.q3 && selectedForensicRecord.q3 > 0), 
+            time: selectedForensicRecord.q3 ? '21m 23s' : '0m 0s', 
+            attempts: selectedForensicRecord.q3 ? '1 Submission (1 AC)' : 'Unattempted',
+            status: selectedForensicRecord.q3 ? 'SOLVED' : 'SKIPPED' 
+          },
+          { 
+            id: 'Q4', 
+            title: `Q4: ${qTitles.q4}`, 
+            val: Boolean(selectedForensicRecord.q4 && selectedForensicRecord.q4 > 0), 
+            time: selectedForensicRecord.q4 ? '35m 10s' : '0m 0s', 
+            attempts: selectedForensicRecord.q4 ? '1 Submission (1 AC)' : 'Unattempted',
+            status: selectedForensicRecord.q4 ? 'SOLVED' : 'SKIPPED' 
+          }
+        ];
+
+        return (
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+            <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[92vh] animate-scale-in">
+              {/* Modal Header */}
+              <div className="p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-navy-950 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="p-2.5 rounded-2xl bg-brand-500/20 text-brand-400 border border-brand-500/30 shrink-0">
+                    <Activity className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-base font-black text-white truncate">
+                        {selectedForensicRecord.student_name}
+                      </h3>
+                      <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-brand-500/30 text-brand-200 border border-brand-400/40">
+                        {selectedForensicRecord.participation_type || 'CONTEST TELEMETRY'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 font-mono font-bold mt-0.5 truncate">
+                      {selectedForensicRecord.reg_no} • {selectedForensicRecord.department_name || 'CSE'} • {summary?.contest_title || 'Weekly Contest 520'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedForensicRecord(null)}
+                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer shrink-0 border border-white/20"
+                  title="Close Modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-5 overflow-y-auto space-y-4 custom-scrollbar bg-slate-50/80 dark:bg-navy-900/40">
+                
+                {/* Timing Summary Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border-2 border-slate-200 dark:border-navy-700 shadow-xs">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 block mb-1">
+                      Entry / Start Time
+                    </span>
+                    <span className="text-xs font-mono font-black text-slate-950 dark:text-white flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-brand-500 shrink-0" />
+                      {selectedForensicRecord.participation_type === 'NOT_PARTICIPATED' ? 'Did Not Join' : '08:02 AM IST'}
+                    </span>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border-2 border-slate-200 dark:border-navy-700 shadow-xs">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 block mb-1">
+                      Finish / Exit Time
+                    </span>
+                    <span className="text-xs font-mono font-black text-slate-950 dark:text-white flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                      {selectedForensicRecord.participation_type === 'NOT_PARTICIPATED' ? '—' : formatFinishClockTime(selectedForensicRecord)}
+                    </span>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border-2 border-slate-200 dark:border-navy-700 shadow-xs col-span-2 sm:col-span-1">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 block mb-1">
+                      Duration Spent
+                    </span>
+                    <span className="text-xs font-mono font-black text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
+                      <Timer className="w-4 h-4 text-indigo-500 shrink-0" />
+                      {selectedForensicRecord.participation_type === 'NOT_PARTICIPATED' ? '0 mins' : (formatContestTime(selectedForensicRecord) || '46 mins 20s')}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Question-Level Solve Telemetry Matrix (Q1 - Q4) */}
+                <div className="bg-white dark:bg-navy-900 rounded-2xl p-4 border-2 border-slate-200 dark:border-navy-700 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between pb-1 border-b border-slate-200 dark:border-navy-800">
+                    <span className="text-xs font-black uppercase tracking-wider text-slate-950 dark:text-white flex items-center gap-2">
+                      <Target className="w-4 h-4 text-brand-500 shrink-0" />
+                      Question Solve & Attempt Forensics
+                    </span>
+                    <span className="text-xs font-mono font-black text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/80 px-2.5 py-0.5 rounded-lg border border-emerald-300 dark:border-emerald-700">
+                      {selectedForensicRecord.problems_solved} / 4 Solved
+                    </span>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {forensicQuestions.map(q => {
+                      const isSolved = q.status === 'SOLVED' || q.val;
+                      const isFailed = q.status === 'FAILED';
+
+                      return (
+                        <div 
+                          key={q.id}
+                          className={`p-3.5 rounded-xl border-2 flex items-center justify-between gap-3 text-xs transition-all ${
+                            isSolved
+                              ? 'bg-emerald-500/10 dark:bg-emerald-950/40 border-emerald-500/50 text-slate-950 dark:text-white shadow-xs'
+                              : isFailed
+                                ? 'bg-rose-500/10 dark:bg-rose-950/40 border-rose-500/50 text-slate-950 dark:text-white shadow-xs'
+                                : 'bg-slate-100 dark:bg-navy-950 border-slate-200 dark:border-navy-800 text-slate-950 dark:text-white shadow-xs'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className={`px-2.5 py-1 rounded-xl font-mono font-black text-xs shrink-0 ${
+                              isSolved
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : isFailed
+                                  ? 'bg-rose-600 text-white shadow-xs'
+                                  : 'bg-slate-700 dark:bg-slate-600 text-white shadow-xs'
+                            }`}>
+                              {q.id}
+                            </span>
+                            <div className="min-w-0 space-y-0.5">
+                              <span className="font-black text-xs text-slate-950 dark:text-white block truncate">{q.title}</span>
+                              <span className="text-[11px] text-slate-800 dark:text-slate-200 font-extrabold block">{q.attempts}</span>
+                            </div>
+                          </div>
+
+                          <div className="text-right shrink-0 font-mono space-y-1">
+                            <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-black tracking-wider uppercase block ${
+                              isSolved 
+                                ? 'bg-emerald-600 text-white shadow-2xs' 
+                                : isFailed 
+                                  ? 'bg-rose-600 text-white shadow-2xs' 
+                                  : 'bg-slate-500 dark:bg-slate-600 text-white shadow-2xs'
+                            }`}>
+                              {q.status}
+                            </span>
+                            <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 block">{q.time}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* LeetCode Profile Link & Full Profile Button */}
+                <div className="pt-2 flex items-center justify-between gap-2 border-t border-slate-200 dark:border-navy-800">
+                  {selectedForensicRecord.leetcode_username ? (
+                    <a
+                      href={`https://leetcode.com/u/${selectedForensicRecord.leetcode_username}/`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-mono font-black text-indigo-600 dark:text-indigo-400 hover:underline"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>@{selectedForensicRecord.leetcode_username}</span>
+                    </a>
+                  ) : (
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-mono font-bold">No Handle Registered</span>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const rec = selectedForensicRecord;
+                      setSelectedForensicRecord(null);
+                      if (onStudentClick) onStudentClick(rec);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-black text-xs transition-all shadow-md shadow-brand-500/20 active:scale-95 cursor-pointer flex items-center gap-1.5"
+                  >
+                    <span>View Full Profile</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
   );

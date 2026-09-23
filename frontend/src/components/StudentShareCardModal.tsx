@@ -37,9 +37,9 @@ export const StudentShareCardModal: React.FC<StudentShareCardModalProps> = ({
   const totalSolved = Number(student.total_solved) || (calculatedSolved > 0 ? calculatedSolved : 0);
 
   const rawRank = student.college_rank ?? student.rank ?? student.dept_rank;
-  const rank = (rawRank !== undefined && rawRank !== null && !isNaN(Number(rawRank))) 
+  const rankDisplay = (rawRank !== undefined && rawRank !== null && rawRank !== '' && !isNaN(Number(rawRank))) 
     ? `#${rawRank}` 
-    : 'N/A';
+    : 'Unranked';
 
   const rawStreak = student.streak_count ?? student.current_streak;
   const streak = (rawStreak !== undefined && rawStreak !== null && !isNaN(Number(rawStreak))) 
@@ -55,7 +55,7 @@ export const StudentShareCardModal: React.FC<StudentShareCardModalProps> = ({
     ? (student.department?.code || student.department?.name || 'CSE') 
     : (student.department || 'CSE');
 
-  const shareText = `🔥 Check out my LeetCode Stats!\n👤 ${student.name || 'Student'} (${deptName})\n📊 Solved: ${totalSolved} Problems (E:${easy} M:${medium} H:${hard})\n🏆 Rank: ${rank} | Rating: ${contestRating}\n⚡ Streak: ${streak} Days\n\nTracked via College LeetCode Hub!`;
+  const shareText = `🔥 Check out my LeetCode Stats!\n👤 ${student.name || 'Student'} (${deptName})\n📊 Solved: ${totalSolved} Problems (E:${easy} M:${medium} H:${hard})\n🏆 Rank: ${rankDisplay} | Rating: ${contestRating}\n⚡ Streak: ${streak} Days\n\nTracked via College LeetCode Hub!`;
 
   // Handle Native Share functionality
   const handleShare = async () => {
@@ -105,8 +105,8 @@ export const StudentShareCardModal: React.FC<StudentShareCardModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-[#000000] z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-sm bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-slate-200/80 dark:border-navy-800 overflow-hidden flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-sm sm:max-w-md bg-white dark:bg-navy-900 rounded-3xl shadow-2xl border border-slate-200/80 dark:border-navy-800 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header bar */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-navy-800">
           <div className="flex items-center gap-2">
@@ -117,7 +117,7 @@ export const StudentShareCardModal: React.FC<StudentShareCardModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+            className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -127,28 +127,28 @@ export const StudentShareCardModal: React.FC<StudentShareCardModalProps> = ({
         <div className="p-5 overflow-y-auto">
           <div 
             ref={cardRef}
-            className="relative rounded-2xl p-5 bg-gradient-to-br from-slate-900 via-navy-950 to-blue-950 text-white shadow-xl overflow-hidden border border-blue-500/20 space-y-4"
+            className="relative rounded-2xl p-5 sm:p-6 bg-gradient-to-br from-slate-950 via-navy-950 to-blue-950 text-white shadow-2xl overflow-hidden border border-blue-500/30 space-y-4"
           >
             {/* Background Glow Accents */}
-            <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-amber-500/20 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/20 rounded-full blur-2xl pointer-events-none"></div>
+            <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-amber-500/20 rounded-full blur-2xl pointer-events-none"></div>
 
             {/* Top User Header */}
-            <div className="flex items-start justify-between">
-              <div>
-                <span className="text-[11px] font-semibold text-blue-400 tracking-wider uppercase">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <span className="text-[11px] font-semibold text-blue-400 tracking-wider uppercase block">
                   LEETCODE TRACKER
                 </span>
-                <h3 className="text-xl font-black text-white tracking-tight mt-0.5">
-                  {student.name}
+                <h3 className="text-xl font-black text-white tracking-tight mt-0.5 truncate">
+                  {student.name || 'Student'}
                 </h3>
-                <p className="text-xs text-slate-400 font-medium">
+                <p className="text-xs text-slate-400 font-medium truncate">
                   {deptName} • {student.batch || 'Batch'}
                 </p>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold text-xs">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold text-xs shrink-0">
                 <Trophy className="w-3.5 h-3.5 text-amber-400" />
-                #{rank}
+                <span>{rankDisplay}</span>
               </div>
             </div>
 
@@ -202,19 +202,19 @@ export const StudentShareCardModal: React.FC<StudentShareCardModalProps> = ({
         </div>
 
         {/* Action Buttons Footer */}
-        <div className="p-4 bg-slate-50 dark:bg-navy-950 border-t border-slate-100 dark:border-navy-800 flex gap-2">
+        <div className="p-4 bg-slate-50 dark:bg-navy-950 border-t border-slate-100 dark:border-navy-800 flex items-center gap-2.5">
           <button
             onClick={handleShare}
             disabled={sharing}
-            className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-semibold text-sm transition-all shadow-md shadow-blue-500/20"
+            className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-blue-600 hover:from-brand-500 hover:to-blue-500 active:scale-95 text-white font-extrabold text-sm transition-all shadow-md shadow-brand-500/20 cursor-pointer"
           >
             <Share2 className="w-4 h-4" />
-            {sharing ? 'Sharing...' : 'Share Rank Card'}
+            <span>{sharing ? 'Sharing...' : 'Share Rank Card'}</span>
           </button>
           
           <button
             onClick={handleCopy}
-            className="flex items-center justify-center p-3 rounded-xl bg-slate-200 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 font-medium active:scale-95 transition-all"
+            className="flex items-center justify-center w-12 h-11 rounded-xl bg-slate-200 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 font-medium active:scale-95 transition-all cursor-pointer border border-slate-300/60 dark:border-navy-700 shrink-0"
             title="Copy Stats"
           >
             {copied ? <Check className="w-5 h-5 text-emerald-500" /> : <Copy className="w-5 h-5" />}

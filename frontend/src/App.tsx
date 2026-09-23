@@ -16,7 +16,6 @@ import { InstallAppPrompt } from './components/InstallAppPrompt';
 import { AppUpdateNotifier } from './components/AppUpdateNotifier';
 import { useScrollLock } from './hooks/useScrollLock';
 import { StudentProfileSkeleton } from './components/StudentProfileSkeleton';
-import { MobileBottomNav } from './components/MobileBottomNav';
 import { StudentShareCardModal } from './components/StudentShareCardModal';
 import { MobileFilterDrawer } from './components/MobileFilterDrawer';
 
@@ -758,7 +757,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-navy-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 overflow-x-hidden w-full relative">
+    <div className="min-h-screen bg-white dark:bg-navy-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 overflow-x-hidden w-full relative">
       {/* Top Page Transition Progress Loader */}
       {isNavigating && (
         <div className="fixed top-0 left-0 right-0 z-[100050] h-[3px] bg-brand-500/10 dark:bg-brand-400/10 pointer-events-none">
@@ -796,7 +795,11 @@ export const App: React.FC = () => {
         setIsSidebarOpen={setIsSidebarOpen}
       />
 
-      <div className="flex-1 w-full pt-2.5 sm:pt-6 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 px-3 sm:px-5 lg:px-7 2xl:px-8 max-w-full mx-auto relative">
+      <div className={`flex-1 w-full mx-auto relative ${
+        activeTab === 'messages'
+          ? 'pt-0 pb-0 px-0 max-w-full'
+          : 'pt-2.5 sm:pt-6 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 px-3 sm:px-5 lg:px-7 2xl:px-8 max-w-full'
+      }`}>
         
         {/* Slide-out Sidebar Drawer */}
         {isAuthenticated && (
@@ -1094,14 +1097,6 @@ export const App: React.FC = () => {
 
       {/* App Update Notification Banner for Active Users */}
       <AppUpdateNotifier />
-
-      {/* Mobile Bottom Navigation Bar for APK & Mobile Web */}
-      <MobileBottomNav
-        activeTab={activeTab}
-        setActiveTab={handleTabChange}
-        onOpenShareCard={() => setShowShareModal(true)}
-        isAuthenticated={isAuthenticated}
-      />
 
       {/* Shareable Achievement Card Modal */}
       <StudentShareCardModal

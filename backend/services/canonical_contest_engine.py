@@ -204,9 +204,11 @@ def _filter_canonical_dataset_in_memory(
         elif att_upper in ("VIRTUAL", "VIRTUAL_ATTENDED"):
             rows = [r for r in rows if r.get("status") in ("VIRTUAL", "VIRTUAL_ATTENDED")]
         elif att_upper in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT", "NOT_PARTICIPATED", "UNATTENDED"):
-            rows = [r for r in rows if r.get("status") in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT", "PENDING")]
-        elif att_upper in ("ERRORS", "DATA_ERRORS", "DATA_ERROR", "FAILED"):
-            rows = [r for r in rows if r.get("status") in ("USERNAME_NOT_FOUND", "AUTH_REQUIRED", "SOURCE_UNAVAILABLE", "FETCH_ERROR", "DATA_MISMATCH")]
+            rows = [r for r in rows if r.get("status") in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT") and r.get("username") and r.get("username") not in ("USERNAME_NOT_FOUND", "UNLINKED", "NO_HANDLE", "")]
+        elif att_upper in ("ERRORS", "DATA_ERRORS", "DATA_ERROR", "FAILED", "MISSING_LEETCODE_USERNAME", "MISSING_USERNAME", "USERNAME_NOT_FOUND"):
+            rows = [r for r in rows if r.get("status") in ("USERNAME_NOT_FOUND", "AUTH_REQUIRED", "SOURCE_UNAVAILABLE", "FETCH_ERROR", "DATA_MISMATCH") or not r.get("username") or r.get("username") in ("USERNAME_NOT_FOUND", "UNLINKED", "NO_HANDLE", "")]
+        elif att_upper in ("NOT_VERIFIED", "PENDING", "UNVERIFIED"):
+            rows = [r for r in rows if r.get("status") in ("PENDING", "NOT_VERIFIED", "UNVERIFIED")]
         elif att_upper in ("ALL_ATTENDED", "PARTICIPATED"):
             rows = [r for r in rows if r.get("status") in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "VIRTUAL", "VIRTUAL_ATTENDED")]
 
@@ -499,11 +501,14 @@ def _build_canonical_contest_dataset_internal(
         dept_norm = str(dept_code) if dept_code else ""
         if dept_norm in dept_stats_map:
             dept_stats_map[dept_norm]["total"] += 1
-            if canon_status == "PUBLIC": dept_stats_map[dept_norm]["public"] += 1
-            elif canon_status == "VIRTUAL": dept_stats_map[dept_norm]["virtual"] += 1
-            elif canon_status == "NOT_ATTENDED": dept_stats_map[dept_norm]["not_attended"] += 1
-            elif canon_status in ("NOT_VERIFIED", "NOT_VERIFIED_FINAL", "PENDING"): dept_stats_map[dept_norm]["pending"] += 1
-            else: dept_stats_map[dept_norm]["errors"] += 1
+            if canon_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
+                dept_stats_map[dept_norm]["public"] += 1
+            elif canon_status in ("VIRTUAL", "VIRTUAL_ATTENDED"):
+                dept_stats_map[dept_norm]["virtual"] += 1
+            elif canon_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT", "PENDING", "NOT_VERIFIED", "UNVERIFIED", "USERNAME_NOT_FOUND"):
+                dept_stats_map[dept_norm]["not_attended"] += 1
+            else:
+                dept_stats_map[dept_norm]["errors"] += 1
 
             if is_participant and solved_val:
                 if solved_val >= 4: dept_stats_map[dept_norm]["q4"] += 1
@@ -517,11 +522,14 @@ def _build_canonical_contest_dataset_internal(
 
         if yr_norm in year_stats_map:
             year_stats_map[yr_norm]["total"] += 1
-            if canon_status == "PUBLIC": year_stats_map[yr_norm]["public"] += 1
-            elif canon_status == "VIRTUAL": year_stats_map[yr_norm]["virtual"] += 1
-            elif canon_status == "NOT_ATTENDED": year_stats_map[yr_norm]["not_attended"] += 1
-            elif canon_status in ("NOT_VERIFIED", "NOT_VERIFIED_FINAL", "PENDING"): year_stats_map[yr_norm]["pending"] += 1
-            else: year_stats_map[yr_norm]["errors"] += 1
+            if canon_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
+                year_stats_map[yr_norm]["public"] += 1
+            elif canon_status in ("VIRTUAL", "VIRTUAL_ATTENDED"):
+                year_stats_map[yr_norm]["virtual"] += 1
+            elif canon_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT", "PENDING", "NOT_VERIFIED", "UNVERIFIED", "USERNAME_NOT_FOUND"):
+                year_stats_map[yr_norm]["not_attended"] += 1
+            else:
+                year_stats_map[yr_norm]["errors"] += 1
 
             if is_participant and solved_val:
                 if solved_val >= 4: year_stats_map[yr_norm]["q4"] += 1

@@ -373,7 +373,7 @@ export const StaffManagement: React.FC = () => {
 
       {/* Filter & Search Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 bg-slate-50 dark:bg-navy-950/60 rounded-2xl border border-slate-200/80 dark:border-navy-700">
-        <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
+        <div className="grid grid-cols-5 gap-1 sm:flex sm:items-center sm:gap-1.5 w-full sm:w-auto">
           {[
             { id: 'ALL', label: `All (${staffList.length})` },
             { id: 'FACULTY', label: 'Faculty' },
@@ -385,12 +385,12 @@ export const StaffManagement: React.FC = () => {
               key={tab.id}
               type="button"
               onClick={() => setRoleFilter(tab.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${roleFilter === tab.id
+              className={`px-1.5 sm:px-3 py-2 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-black transition-all cursor-pointer text-center min-w-0 flex items-center justify-center ${roleFilter === tab.id
                 ? 'bg-brand-600 text-white shadow-sm'
-                : 'bg-white dark:bg-navy-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-700 border border-slate-200/60 dark:border-navy-700'
+                : 'bg-white dark:bg-navy-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-700 border border-slate-200/60 dark:border-navy-700'
                 }`}
             >
-              {tab.label}
+              <span className="truncate">{tab.label}</span>
             </button>
           ))}
         </div>
@@ -489,97 +489,145 @@ export const StaffManagement: React.FC = () => {
               </div>
             ) : (
               <>
-                {/* MOBILE CARD VIEW (< 768px) */}
-                <div className="block md:hidden divide-y divide-slate-100 dark:divide-navy-750">
+                {/* MOBILE CARD VIEW (< 768px) - High Tech Institutional Card */}
+                <div className="block md:hidden p-3 space-y-3.5 bg-slate-100/50 dark:bg-navy-950/40">
                   {filteredStaff.map((staff) => {
                     const workloadPct = Math.min(100, Math.round(((staff.assigned_count || 0) / (staff.max_capacity || 30)) * 100));
+                    const initials = (staff.full_name || staff.username || 'S')
+                      .split(' ')
+                      .filter(Boolean)
+                      .map((n: string) => n[0])
+                      .join('')
+                      .toUpperCase()
+                      .slice(0, 2) || 'S';
+
                     return (
-                      <div key={staff.id} className="p-4 bg-white dark:bg-navy-800 space-y-3.5 border-b border-slate-100 dark:border-navy-750 last:border-b-0">
-                        {/* Header: Name, Root Tag, Status Badge */}
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0 flex-1 space-y-0.5">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white truncate">
-                                {staff.full_name || staff.username}
-                              </h4>
-                              {staff.role === 'Super Admin' && (
-                                <span className="px-1.5 py-0.2 rounded text-[9px] font-black bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-                                  ROOT
-                                </span>
-                              )}
+                      <div
+                        key={staff.id}
+                        className="relative rounded-3xl p-5 bg-gradient-to-br from-white via-slate-50/90 to-indigo-50/40 dark:from-navy-900 dark:via-navy-900/95 dark:to-slate-900/90 border border-slate-200/90 dark:border-navy-750 shadow-lg hover:shadow-2xl transition-all duration-300 space-y-4 overflow-hidden backdrop-blur-xl group"
+                      >
+                        {/* Top Gradient Mesh Orb */}
+                        <div className="absolute -top-10 -right-10 w-28 h-28 bg-brand-500/10 rounded-full blur-2xl pointer-events-none" />
+
+                        {/* Decorative Left Accent Bar */}
+                        <div className={`absolute top-0 bottom-0 left-0 w-1.5 rounded-l-3xl ${
+                          staff.is_active
+                            ? 'bg-gradient-to-b from-brand-500 via-indigo-500 to-emerald-500'
+                            : 'bg-gradient-to-b from-rose-500 to-amber-500'
+                        }`} />
+
+                        {/* Top Header: Avatar, Name, Email, Status */}
+                        <div className="flex items-start justify-between gap-3 pl-1">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className="relative shrink-0">
+                              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-sm flex items-center justify-center shadow-md shadow-brand-500/25 ring-2 ring-white dark:ring-navy-800 uppercase tracking-widest">
+                                {initials}
+                              </div>
+                              <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-navy-800 ${
+                                staff.is_active ? 'bg-emerald-500 shadow-sm animate-pulse' : 'bg-rose-500'
+                              }`} />
                             </div>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 break-all font-medium">
-                              {staff.email || `@${staff.username}`}
-                            </p>
+
+                            <div className="min-w-0 flex-1 space-y-0.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <h4 className="font-black text-base text-slate-900 dark:text-white tracking-tight truncate">
+                                  {staff.full_name || staff.username}
+                                </h4>
+                                {staff.role === 'Super Admin' && (
+                                  <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+                                    ROOT
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 break-all font-semibold flex items-center gap-1">
+                                <Mail className="w-3 h-3 text-brand-500 shrink-0" />
+                                <span className="truncate">{staff.email || `@${staff.username}`}</span>
+                              </p>
+                            </div>
                           </div>
 
                           <div className="shrink-0">
                             {staff.is_active ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                <CheckCircle className="w-3 h-3" /> Active
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 shadow-xs">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                                Active
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-500 dark:text-rose-400 border border-rose-500/20">
-                                <Ban className="w-3 h-3" /> Suspended
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 shadow-xs">
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                                Suspended
                               </span>
                             )}
                           </div>
                         </div>
 
-                        {/* Institutional ID & Department / Scope */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-slate-100 dark:border-navy-750/60 text-xs">
-                          <div>
-                            <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest block mb-0.5">Institutional ID</span>
-                            <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400 break-all text-xs">
+                        {/* Modern High-Contrast Metric Grid */}
+                        <div className="grid grid-cols-2 gap-3 pl-1">
+                          {/* Institutional ID */}
+                          <div className="p-3.5 rounded-2xl bg-white/90 dark:bg-navy-950/80 border border-slate-200 dark:border-navy-750 shadow-xs space-y-1.5">
+                            <span className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider block">
+                              Institutional ID
+                            </span>
+                            <span className="font-mono font-black text-xs sm:text-sm text-indigo-700 dark:text-indigo-300 break-all bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-200/80 dark:border-indigo-800/60 inline-block">
                               {staff.institutional_id || `NEC-STAFF-${staff.id}`}
                             </span>
                           </div>
-                          <div>
-                            <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest block mb-0.5">Department / Scope</span>
-                            <span className="inline-block px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 max-w-full truncate">
+
+                          {/* Department / Scope */}
+                          <div className="p-3.5 rounded-2xl bg-white/90 dark:bg-navy-950/80 border border-slate-200 dark:border-navy-750 shadow-xs space-y-1.5">
+                            <span className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider block">
+                              Department / Scope
+                            </span>
+                            <span className="inline-block px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-slate-100 text-slate-900 dark:bg-navy-800 dark:text-slate-100 border border-slate-300 dark:border-navy-700 max-w-full truncate">
                               {staff.department || 'INSTITUTIONAL'}
                             </span>
                           </div>
-                        </div>
 
-                        {/* Role & Workload */}
-                        <div className="grid grid-cols-2 gap-3 text-xs">
-                          <div>
-                            <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest block mb-0.5">Role</span>
-                            <span className={`inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold border ${
+                          {/* Role */}
+                          <div className="p-3.5 rounded-2xl bg-white/90 dark:bg-navy-950/80 border border-slate-200 dark:border-navy-750 shadow-xs space-y-1.5">
+                            <span className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider block">
+                              Role
+                            </span>
+                            <span className={`inline-block px-3 py-1 rounded-lg text-xs font-black border ${
                               staff.role === 'Faculty'
-                                ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20'
+                                ? 'bg-indigo-600 text-white border-indigo-500'
                                 : (staff.role === 'HOD'
-                                  ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
+                                  ? 'bg-purple-600 text-white border-purple-500'
                                   : (staff.role?.includes('Admin')
-                                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-                                    : 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border-brand-500/20'))
+                                    ? 'bg-amber-500 text-slate-950 border-amber-400 font-extrabold'
+                                    : 'bg-brand-600 text-white border-brand-500'))
                             }`}>
                               {staff.role || 'Staff'}
                             </span>
                           </div>
-                          <div>
-                            <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest block mb-0.5">Workload</span>
-                            <div className="space-y-1">
-                              <div className="text-xs font-black text-slate-700 dark:text-slate-300">
-                                {staff.assigned_count || 0} / {staff.max_capacity || 30}
-                              </div>
-                              <div className="w-full h-1.5 bg-slate-100 dark:bg-navy-950 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-brand-500 rounded-full transition-all duration-300"
-                                  style={{ width: `${workloadPct}%` }}
-                                />
-                              </div>
+
+                          {/* Workload Progress */}
+                          <div className="p-3.5 rounded-2xl bg-white/90 dark:bg-navy-950/80 border border-slate-200 dark:border-navy-750 shadow-xs space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider block">
+                                Workload
+                              </span>
+                              <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
+                                {staff.assigned_count || 0}/{staff.max_capacity || 30}
+                              </span>
+                            </div>
+                            <div className="w-full h-2.5 bg-slate-200 dark:bg-navy-900 rounded-full overflow-hidden border border-slate-300/60 dark:border-navy-800">
+                              <div
+                                className={`h-full rounded-full transition-all duration-300 ${
+                                  workloadPct > 85 ? 'bg-rose-500' : workloadPct > 50 ? 'bg-amber-500' : 'bg-emerald-500'
+                                }`}
+                                style={{ width: `${workloadPct}%` }}
+                              />
                             </div>
                           </div>
                         </div>
 
-                        {/* Touch-Friendly Action Buttons */}
-                        <div className="pt-2 border-t border-slate-100 dark:border-navy-750/60 flex items-center justify-end gap-2">
+                        {/* Interactive Action Buttons */}
+                        <div className="pt-1 flex items-center justify-end gap-2.5 pl-1">
                           <button
                             type="button"
                             onClick={() => handleOpenEditModal(staff)}
-                            className="flex-1 min-h-[44px] px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-navy-750 text-slate-700 dark:text-slate-200 hover:bg-brand-600 hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                            className="flex-1 py-2.5 px-3 rounded-xl font-black text-xs bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white shadow-md shadow-brand-500/20 active:scale-95 transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                             <span>Edit</span>
@@ -587,10 +635,10 @@ export const StaffManagement: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleToggleStatus(staff.id, staff.is_active)}
-                            className={`flex-1 min-h-[44px] px-3 py-2 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                            className={`flex-1 py-2.5 px-3 rounded-xl font-black text-xs border shadow-sm active:scale-95 transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer ${
                               staff.is_active
-                                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500 hover:text-white'
-                                : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500 hover:text-white'
+                                ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 hover:bg-amber-500 hover:text-white'
+                                : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500 hover:text-white'
                             }`}
                           >
                             {staff.is_active ? <UserX className="w-3.5 h-3.5" /> : <RefreshCcw className="w-3.5 h-3.5" />}
@@ -599,7 +647,7 @@ export const StaffManagement: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => setDeletingStaff(staff)}
-                            className="min-h-[44px] px-3 py-2 rounded-xl text-xs font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                            className="py-2.5 px-3.5 rounded-xl font-black text-xs bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 hover:bg-rose-600 hover:text-white shadow-sm active:scale-95 transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
                             title="Delete Staff Account"
                           >
                             <Trash2 className="w-3.5 h-3.5" />

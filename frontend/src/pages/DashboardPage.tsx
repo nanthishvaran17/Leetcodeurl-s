@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Users, Trophy, Activity, AlertTriangle, FileSpreadsheet,
-  RefreshCw, Plus, Building2, PieChart, ShieldCheck,
+  RefreshCw, Plus, PieChart, ShieldCheck,
   FileText, CheckCircle2, Play, Clock, History,
-  AlertOctagon, TrendingUp, Database, Brain
+  AlertOctagon, TrendingUp, Database, Brain, Building2
 } from 'lucide-react';
 import { StatCard } from '../components/StatCard';
 import { CountdownTimer } from '../components/CountdownTimer';
@@ -15,6 +15,7 @@ import api, { triggerSingleStudentSync } from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { AnimatedWelcomeHeading } from '../components/AnimatedWelcomeHeading';
+import { LiveIndicator } from '../components/LiveIndicator';
 import { useGlobalData } from '../context/GlobalDataContext';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
@@ -480,14 +481,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           {/* Left: Title & Description */}
           <div className="space-y-3.5 min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-brand-300 text-[11px] font-black tracking-wider uppercase shadow-xs">
-                <Building2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span className="truncate max-w-[180px] sm:max-w-none">NANDHA ENGINEERING COLLEGE • ERODE</span>
-              </div>
-              <div className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full border text-[11px] font-black tracking-wider uppercase shadow-xs ${liveStatus.color}`}>
-                <span className={`w-2 h-2 rounded-full shrink-0 ${liveStatus.dot}`} />
-                <span>{liveStatus.label}</span>
-              </div>
+              <LiveIndicator />
             </div>
 
             <AnimatedWelcomeHeading
@@ -499,16 +493,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               <p className="text-slate-300 text-xs sm:text-sm font-semibold mt-1">Manage your institutional intelligence workspace.</p>
             )}
 
-            <p className="text-xs sm:text-sm text-slate-300 font-medium tracking-wide leading-relaxed max-w-3xl">
+            <p className="text-xs sm:text-sm text-slate-300/90 font-medium tracking-wide leading-relaxed max-w-2xl">
               {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') 
                 ? 'Your exclusive mentorship cohort — live sync, contest verification, and analytics.'
                 : loading
                   ? 'Loading institutional data...'
                   : studentsError
                     ? 'Unable to load student data. Please retry.'
-                    : canonicalTotal !== null
-                      ? `${canonicalTotal.toLocaleString()} enrolled students across all departments — live sync, contest verification, leaderboard analytics, and automated reporting.`
-                      : `${totalStudents.toLocaleString()} enrolled students — live sync, contest verification, leaderboard analytics, and automated reporting.`}
+                    : `${canonicalTotal !== null ? canonicalTotal.toLocaleString() : totalStudents.toLocaleString()} enrolled students across all departments • Live sync, contest verification, & automated reporting.`}
             </p>
 
             {/* Embedded Live Metric Pills */}
