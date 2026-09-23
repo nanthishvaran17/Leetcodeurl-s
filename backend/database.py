@@ -73,9 +73,9 @@ if "postgresql" in db_url or "postgres" in db_url:
     }
 
     engine_kwargs.update({
-        "pool_size": int(os.environ.get("DB_POOL_SIZE", 15)),
-        "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", 25)),
-        "pool_timeout": 10,          # wait up to 10s to checkout a connection
+        "pool_size": int(os.environ.get("DB_POOL_SIZE", 30)),
+        "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", 50)),
+        "pool_timeout": 20,          # wait up to 20s to checkout a connection under high load
         "pool_pre_ping": True,       # verify liveness before returning from pool
         "pool_recycle": 45,          # recycle after 45s to purge stale connections before Neon auto-suspends
         "connect_args": pg_connect_args
