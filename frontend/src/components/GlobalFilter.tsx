@@ -26,6 +26,7 @@ export interface GlobalFilterProps {
   align?: 'left' | 'right';
   showSearch?: boolean;
   searchPlaceholder?: string;
+  variant?: 'default' | 'dark' | 'glass';
 }
 
 export interface DepartmentTheme {
@@ -40,15 +41,19 @@ export interface DepartmentTheme {
   selectedCheck: string;
 }
 
-export const getDepartmentTheme = (opt: GlobalFilterOption | undefined, isSelected: boolean): DepartmentTheme => {
+export const getDepartmentTheme = (
+  opt: GlobalFilterOption | undefined, 
+  isSelected: boolean,
+  isDarkVariant: boolean = false
+): DepartmentTheme => {
   if (!opt) {
     return {
-      iconBg: 'bg-slate-100 dark:bg-navy-800',
-      iconColor: 'text-slate-500 dark:text-slate-400',
-      badgeBg: 'bg-slate-100 dark:bg-navy-800',
-      badgeText: 'text-slate-700 dark:text-slate-300',
-      badgeBorder: 'border-slate-200 dark:border-navy-700',
-      hoverBg: 'hover:bg-slate-50 dark:hover:bg-navy-800',
+      iconBg: isDarkVariant ? 'bg-slate-800/80 border border-slate-700/60' : 'bg-slate-100 dark:bg-navy-800',
+      iconColor: isDarkVariant ? 'text-slate-300' : 'text-slate-500 dark:text-slate-400',
+      badgeBg: isDarkVariant ? 'bg-slate-800/80' : 'bg-slate-100 dark:bg-navy-800',
+      badgeText: isDarkVariant ? 'text-slate-200 font-bold' : 'text-slate-700 dark:text-slate-300',
+      badgeBorder: isDarkVariant ? 'border-slate-700/60' : 'border-slate-200 dark:border-navy-700',
+      hoverBg: isDarkVariant ? 'hover:bg-slate-800/80' : 'hover:bg-slate-50 dark:hover:bg-navy-800',
       selectedBg: 'bg-brand-600 text-white font-extrabold shadow-md',
       selectedText: 'text-white font-black',
       selectedCheck: 'text-white'
@@ -63,6 +68,19 @@ export const getDepartmentTheme = (opt: GlobalFilterOption | undefined, isSelect
   const isAll = val === 'ALL' || val === '' || pill === 'ALL' || label.includes('ALL INSTITUTIONAL') || label.includes('ALL DEPARTMENTS') || label.includes('ALL SECTIONS') || label.includes('ALL ACADEMIC');
 
   if (isAll) {
+    if (isDarkVariant) {
+      return {
+        iconBg: isSelected ? 'bg-brand-500/30 border border-brand-400/40' : 'bg-brand-500/20 border border-brand-400/30',
+        iconColor: 'text-brand-300',
+        badgeBg: isSelected ? 'bg-brand-500/40 text-white border border-white/30' : 'bg-brand-500/20 text-brand-300 border border-brand-400/30',
+        badgeText: isSelected ? 'text-white font-black' : 'text-brand-300 font-extrabold',
+        badgeBorder: isSelected ? 'border-white/30' : 'border-brand-400/30',
+        hoverBg: 'hover:bg-brand-950/50',
+        selectedBg: 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-500/20 font-black',
+        selectedText: 'text-white font-black',
+        selectedCheck: 'text-white'
+      };
+    }
     return {
       iconBg: isSelected ? 'bg-white/20' : 'bg-brand-50 dark:bg-brand-950/80',
       iconColor: isSelected ? 'text-white' : 'text-brand-600 dark:text-brand-400',
@@ -78,6 +96,19 @@ export const getDepartmentTheme = (opt: GlobalFilterOption | undefined, isSelect
 
   // Campus: NEC -> Blue / Indigo Theme
   if (pill === 'NEC' || val === 'NEC' || label.includes('NANDHA ENGINEERING COLLEGE') || label.includes('NEC CAMPUS')) {
+    if (isDarkVariant) {
+      return {
+        iconBg: isSelected ? 'bg-blue-500/30 border border-blue-400/40' : 'bg-blue-500/20 border border-blue-400/30',
+        iconColor: 'text-blue-300',
+        badgeBg: isSelected ? 'bg-blue-500/40 text-white border border-white/30' : 'bg-blue-500/20 text-blue-300 border border-blue-400/30',
+        badgeText: isSelected ? 'text-white font-black' : 'text-blue-300 font-extrabold',
+        badgeBorder: isSelected ? 'border-white/30' : 'border-blue-400/30',
+        hoverBg: 'hover:bg-blue-950/50',
+        selectedBg: 'bg-blue-600 text-white shadow-md shadow-blue-600/20 font-black',
+        selectedText: 'text-white font-black',
+        selectedCheck: 'text-white'
+      };
+    }
     return {
       iconBg: isSelected ? 'bg-white/20' : 'bg-blue-100 dark:bg-blue-950/80',
       iconColor: isSelected ? 'text-white' : 'text-blue-600 dark:text-blue-400',
@@ -93,6 +124,19 @@ export const getDepartmentTheme = (opt: GlobalFilterOption | undefined, isSelect
 
   // Campus: NCT -> Cyan / Violet Theme
   if (pill === 'NCT' || val === 'NCT' || label.includes('NANDHA COLLEGE OF TECHNOLOGY') || label.includes('NCT CAMPUS')) {
+    if (isDarkVariant) {
+      return {
+        iconBg: isSelected ? 'bg-cyan-500/30 border border-cyan-400/40' : 'bg-cyan-500/20 border border-cyan-400/30',
+        iconColor: 'text-cyan-300',
+        badgeBg: isSelected ? 'bg-cyan-500/40 text-white border border-white/30' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/30',
+        badgeText: isSelected ? 'text-white font-black' : 'text-cyan-300 font-extrabold',
+        badgeBorder: isSelected ? 'border-white/30' : 'border-cyan-400/30',
+        hoverBg: 'hover:bg-cyan-950/50',
+        selectedBg: 'bg-cyan-600 text-white shadow-md shadow-cyan-600/20 font-black',
+        selectedText: 'text-white font-black',
+        selectedCheck: 'text-white'
+      };
+    }
     return {
       iconBg: isSelected ? 'bg-white/20' : 'bg-cyan-100 dark:bg-cyan-950/80',
       iconColor: isSelected ? 'text-white' : 'text-cyan-600 dark:text-cyan-400',
@@ -108,6 +152,19 @@ export const getDepartmentTheme = (opt: GlobalFilterOption | undefined, isSelect
 
   // 1. CSE(IOT) → Orange (Check IOT first before general CSE or CS)
   if (pill.includes('IOT') || fullText.includes('IOT') || label.includes('INTERNET OF THINGS')) {
+    if (isDarkVariant) {
+      return {
+        iconBg: isSelected ? 'bg-orange-500/30 border border-orange-400/40' : 'bg-orange-500/20 border border-orange-400/30',
+        iconColor: 'text-orange-300',
+        badgeBg: isSelected ? 'bg-orange-500/40 text-white border border-white/30' : 'bg-orange-500/20 text-orange-300 border border-orange-400/30',
+        badgeText: isSelected ? 'text-white font-black' : 'text-orange-300 font-extrabold',
+        badgeBorder: isSelected ? 'border-white/30' : 'border-orange-400/30',
+        hoverBg: 'hover:bg-orange-950/50',
+        selectedBg: 'bg-orange-600 text-white shadow-md shadow-orange-600/20 font-black',
+        selectedText: 'text-white font-black',
+        selectedCheck: 'text-white'
+      };
+    }
     return {
       iconBg: isSelected ? 'bg-white/20' : 'bg-orange-100 dark:bg-orange-950/80',
       iconColor: isSelected ? 'text-white' : 'text-orange-600 dark:text-orange-400',
@@ -121,8 +178,21 @@ export const getDepartmentTheme = (opt: GlobalFilterOption | undefined, isSelect
     };
   }
 
-  // 2. CSE(CS) / Cyber Security → Purple / Violet (Darker, more attractive)
+  // 2. CSE(CS) / Cyber Security → Purple / Violet
   if (pill === 'CSE(CS)' || pill === 'CS' || label.includes('CYBER') || label.includes('SECURITY') || pill.includes('(CS)')) {
+    if (isDarkVariant) {
+      return {
+        iconBg: isSelected ? 'bg-purple-500/30 border border-purple-400/40' : 'bg-purple-500/20 border border-purple-400/30',
+        iconColor: 'text-purple-300',
+        badgeBg: isSelected ? 'bg-purple-500/40 text-white border border-white/30' : 'bg-purple-500/20 text-purple-300 border border-purple-400/30',
+        badgeText: isSelected ? 'text-white font-black' : 'text-purple-300 font-extrabold',
+        badgeBorder: isSelected ? 'border-white/30' : 'border-purple-400/30',
+        hoverBg: 'hover:bg-purple-950/50',
+        selectedBg: 'bg-purple-700 text-white shadow-md shadow-purple-700/20 font-black',
+        selectedText: 'text-white font-black',
+        selectedCheck: 'text-white'
+      };
+    }
     return {
       iconBg: isSelected ? 'bg-white/20' : 'bg-purple-200 dark:bg-purple-900/60',
       iconColor: isSelected ? 'text-white' : 'text-purple-700 dark:text-purple-300',
@@ -138,6 +208,19 @@ export const getDepartmentTheme = (opt: GlobalFilterOption | undefined, isSelect
 
   // 3. ECE → Magenta / Pink
   if (pill.includes('ECE') || val.includes('ECE') || label.includes('ELECTRONICS AND COMMUNICATION') || label.includes('ECE')) {
+    if (isDarkVariant) {
+      return {
+        iconBg: isSelected ? 'bg-fuchsia-500/30 border border-fuchsia-400/40' : 'bg-fuchsia-500/20 border border-fuchsia-400/30',
+        iconColor: 'text-fuchsia-300',
+        badgeBg: isSelected ? 'bg-fuchsia-500/40 text-white border border-white/30' : 'bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-400/30',
+        badgeText: isSelected ? 'text-white font-black' : 'text-fuchsia-300 font-extrabold',
+        badgeBorder: isSelected ? 'border-white/30' : 'border-fuchsia-400/30',
+        hoverBg: 'hover:bg-fuchsia-950/50',
+        selectedBg: 'bg-fuchsia-600 text-white shadow-md shadow-fuchsia-600/20 font-black',
+        selectedText: 'text-white font-black',
+        selectedCheck: 'text-white'
+      };
+    }
     return {
       iconBg: isSelected ? 'bg-white/20' : 'bg-fuchsia-100 dark:bg-fuchsia-950/80',
       iconColor: isSelected ? 'text-white' : 'text-fuchsia-600 dark:text-fuchsia-400',
@@ -153,6 +236,19 @@ export const getDepartmentTheme = (opt: GlobalFilterOption | undefined, isSelect
 
   // 4. EEE → Amber / Yellow
   if (pill.includes('EEE') || val.includes('EEE') || label.includes('ELECTRICAL') || label.includes('EEE')) {
+    if (isDarkVariant) {
+      return {
+        iconBg: isSelected ? 'bg-amber-500/30 border border-amber-400/40' : 'bg-amber-500/20 border border-amber-400/30',
+        iconColor: 'text-amber-300',
+        badgeBg: isSelected ? 'bg-amber-500/40 text-slate-950 border border-white/30' : 'bg-amber-500/20 text-amber-300 border border-amber-400/30',
+        badgeText: isSelected ? 'text-slate-950 font-black' : 'text-amber-300 font-extrabold',
+        badgeBorder: isSelected ? 'border-white/30' : 'border-amber-400/30',
+        hoverBg: 'hover:bg-amber-950/50',
+        selectedBg: 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black',
+        selectedText: 'text-slate-950 font-black',
+        selectedCheck: 'text-slate-950'
+      };
+    }
     return {
       iconBg: isSelected ? 'bg-white/20' : 'bg-amber-100 dark:bg-amber-950/80',
       iconColor: isSelected ? 'text-slate-950' : 'text-amber-600 dark:text-amber-400',
@@ -168,6 +264,19 @@ export const getDepartmentTheme = (opt: GlobalFilterOption | undefined, isSelect
 
   // 5. AIDS / AI → Teal / Cyan
   if (pill.includes('AIDS') || pill === 'AI' || label.includes('ARTIFICIAL') || label.includes('DATA SCIENCE') || label.includes('AIDS')) {
+    if (isDarkVariant) {
+      return {
+        iconBg: isSelected ? 'bg-teal-500/30 border border-teal-400/40' : 'bg-teal-500/20 border border-teal-400/30',
+        iconColor: 'text-teal-300',
+        badgeBg: isSelected ? 'bg-teal-500/40 text-white border border-white/30' : 'bg-teal-500/20 text-teal-300 border border-teal-400/30',
+        badgeText: isSelected ? 'text-white font-black' : 'text-teal-300 font-extrabold',
+        badgeBorder: isSelected ? 'border-white/30' : 'border-teal-400/30',
+        hoverBg: 'hover:bg-teal-950/50',
+        selectedBg: 'bg-teal-600 text-white shadow-md shadow-teal-600/20 font-black',
+        selectedText: 'text-white font-black',
+        selectedCheck: 'text-white'
+      };
+    }
     return {
       iconBg: isSelected ? 'bg-white/20' : 'bg-teal-100 dark:bg-teal-950/80',
       iconColor: isSelected ? 'text-white' : 'text-teal-600 dark:text-teal-400',
@@ -183,6 +292,19 @@ export const getDepartmentTheme = (opt: GlobalFilterOption | undefined, isSelect
 
   // 6. IT / Information Technology → Green / Emerald
   if (pill === 'IT' || label.includes('INFORMATION TECHNOLOGY') || (label.includes('IT') && !label.includes('SECURITY') && !label.includes('SUITE'))) {
+    if (isDarkVariant) {
+      return {
+        iconBg: isSelected ? 'bg-emerald-500/30 border border-emerald-400/40' : 'bg-emerald-500/20 border border-emerald-400/30',
+        iconColor: 'text-emerald-300',
+        badgeBg: isSelected ? 'bg-emerald-500/40 text-white border border-white/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30',
+        badgeText: isSelected ? 'text-white font-black' : 'text-emerald-300 font-extrabold',
+        badgeBorder: isSelected ? 'border-white/30' : 'border-emerald-400/30',
+        hoverBg: 'hover:bg-emerald-950/50',
+        selectedBg: 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20 font-black',
+        selectedText: 'text-white font-black',
+        selectedCheck: 'text-white'
+      };
+    }
     return {
       iconBg: isSelected ? 'bg-white/20' : 'bg-emerald-100 dark:bg-emerald-950/80',
       iconColor: isSelected ? 'text-white' : 'text-emerald-600 dark:text-emerald-400',
@@ -198,6 +320,19 @@ export const getDepartmentTheme = (opt: GlobalFilterOption | undefined, isSelect
 
   // 7. AGRI → Red / Coral
   if (pill.includes('AGRI') || pill.includes('AG') || label.includes('AGRICULTUR')) {
+    if (isDarkVariant) {
+      return {
+        iconBg: isSelected ? 'bg-rose-500/30 border border-rose-400/40' : 'bg-rose-500/20 border border-rose-400/30',
+        iconColor: 'text-rose-300',
+        badgeBg: isSelected ? 'bg-rose-500/40 text-white border border-white/30' : 'bg-rose-500/20 text-rose-300 border border-rose-400/30',
+        badgeText: isSelected ? 'text-white font-black' : 'text-rose-300 font-extrabold',
+        badgeBorder: isSelected ? 'border-white/30' : 'border-rose-400/30',
+        hoverBg: 'hover:bg-rose-950/50',
+        selectedBg: 'bg-rose-600 text-white shadow-md shadow-rose-600/20 font-black',
+        selectedText: 'text-white font-black',
+        selectedCheck: 'text-white'
+      };
+    }
     return {
       iconBg: isSelected ? 'bg-white/20' : 'bg-rose-100 dark:bg-rose-950/80',
       iconColor: isSelected ? 'text-white' : 'text-rose-600 dark:text-rose-400',
@@ -211,8 +346,21 @@ export const getDepartmentTheme = (opt: GlobalFilterOption | undefined, isSelect
     };
   }
 
-  // 9. Academic Year 1ST -> Emerald
+  // 9. Academic Year 1ST / I -> Emerald
   if (pill === '1ST' || val === '1' || label.includes('I YEAR') || label.includes('1ST YEAR')) {
+    if (isDarkVariant) {
+      return {
+        iconBg: isSelected ? 'bg-emerald-500/30 border border-emerald-400/40' : 'bg-emerald-500/20 border border-emerald-400/30',
+        iconColor: 'text-emerald-300',
+        badgeBg: isSelected ? 'bg-emerald-500/40 text-white border border-white/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30',
+        badgeText: isSelected ? 'text-white font-black' : 'text-emerald-300 font-extrabold',
+        badgeBorder: isSelected ? 'border-white/30' : 'border-emerald-400/30',
+        hoverBg: 'hover:bg-emerald-950/50',
+        selectedBg: 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20 font-black',
+        selectedText: 'text-white font-black',
+        selectedCheck: 'text-white'
+      };
+    }
     return {
       iconBg: isSelected ? 'bg-white/20' : 'bg-emerald-100 dark:bg-emerald-950/80',
       iconColor: isSelected ? 'text-white' : 'text-emerald-600 dark:text-emerald-400',
@@ -226,8 +374,21 @@ export const getDepartmentTheme = (opt: GlobalFilterOption | undefined, isSelect
     };
   }
 
-  // 10. Academic Year 2ND -> Amber / Gold
+  // 10. Academic Year 2ND / II -> Amber
   if (pill === '2ND' || val === '2' || label.includes('II YEAR') || label.includes('2ND YEAR')) {
+    if (isDarkVariant) {
+      return {
+        iconBg: isSelected ? 'bg-amber-500/30 border border-amber-400/40' : 'bg-amber-500/20 border border-amber-400/30',
+        iconColor: 'text-amber-300',
+        badgeBg: isSelected ? 'bg-amber-500/40 text-slate-950 border border-white/30' : 'bg-amber-500/20 text-amber-300 border border-amber-400/30',
+        badgeText: isSelected ? 'text-slate-950 font-black' : 'text-amber-300 font-extrabold',
+        badgeBorder: isSelected ? 'border-white/30' : 'border-amber-400/30',
+        hoverBg: 'hover:bg-amber-950/50',
+        selectedBg: 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-black',
+        selectedText: 'text-slate-950 font-black',
+        selectedCheck: 'text-slate-950'
+      };
+    }
     return {
       iconBg: isSelected ? 'bg-white/20' : 'bg-amber-100 dark:bg-amber-950/80',
       iconColor: isSelected ? 'text-slate-950' : 'text-amber-600 dark:text-amber-400',
@@ -241,8 +402,21 @@ export const getDepartmentTheme = (opt: GlobalFilterOption | undefined, isSelect
     };
   }
 
-  // 11. Academic Year 3RD -> Purple / Violet
+  // 11. Academic Year 3RD / III -> Purple
   if (pill === '3RD' || val === '3' || label.includes('III YEAR') || label.includes('3RD YEAR')) {
+    if (isDarkVariant) {
+      return {
+        iconBg: isSelected ? 'bg-purple-500/30 border border-purple-400/40' : 'bg-purple-500/20 border border-purple-400/30',
+        iconColor: 'text-purple-300',
+        badgeBg: isSelected ? 'bg-purple-500/40 text-white border border-white/30' : 'bg-purple-500/20 text-purple-300 border border-purple-400/30',
+        badgeText: isSelected ? 'text-white font-black' : 'text-purple-300 font-extrabold',
+        badgeBorder: isSelected ? 'border-white/30' : 'border-purple-400/30',
+        hoverBg: 'hover:bg-purple-950/50',
+        selectedBg: 'bg-purple-600 text-white shadow-md shadow-purple-600/20 font-black',
+        selectedText: 'text-white font-black',
+        selectedCheck: 'text-white'
+      };
+    }
     return {
       iconBg: isSelected ? 'bg-white/20' : 'bg-purple-100 dark:bg-purple-950/80',
       iconColor: isSelected ? 'text-white' : 'text-purple-600 dark:text-purple-400',
@@ -256,8 +430,21 @@ export const getDepartmentTheme = (opt: GlobalFilterOption | undefined, isSelect
     };
   }
 
-  // 12. Academic Year 4TH -> Indigo
+  // 12. Academic Year 4TH / IV -> Indigo
   if (pill === '4TH' || val === '4' || label.includes('IV YEAR') || label.includes('4TH YEAR')) {
+    if (isDarkVariant) {
+      return {
+        iconBg: isSelected ? 'bg-indigo-500/30 border border-indigo-400/40' : 'bg-indigo-500/20 border border-indigo-400/30',
+        iconColor: 'text-indigo-300',
+        badgeBg: isSelected ? 'bg-indigo-500/40 text-white border border-white/30' : 'bg-indigo-500/20 text-indigo-300 border border-indigo-400/30',
+        badgeText: isSelected ? 'text-white font-black' : 'text-indigo-300 font-extrabold',
+        badgeBorder: isSelected ? 'border-white/30' : 'border-indigo-400/30',
+        hoverBg: 'hover:bg-indigo-950/50',
+        selectedBg: 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20 font-black',
+        selectedText: 'text-white font-black',
+        selectedCheck: 'text-white'
+      };
+    }
     return {
       iconBg: isSelected ? 'bg-white/20' : 'bg-indigo-100 dark:bg-indigo-950/80',
       iconColor: isSelected ? 'text-white' : 'text-indigo-600 dark:text-indigo-400',
@@ -272,6 +459,19 @@ export const getDepartmentTheme = (opt: GlobalFilterOption | undefined, isSelect
   }
 
   // Fallback (Indigo)
+  if (isDarkVariant) {
+    return {
+      iconBg: isSelected ? 'bg-indigo-500/30 border border-indigo-400/40' : 'bg-indigo-500/20 border border-indigo-400/30',
+      iconColor: 'text-indigo-300',
+      badgeBg: isSelected ? 'bg-indigo-500/40 text-white border border-white/30' : 'bg-indigo-500/20 text-indigo-300 border border-indigo-400/30',
+      badgeText: isSelected ? 'text-white font-black' : 'text-indigo-300 font-extrabold',
+      badgeBorder: isSelected ? 'border-white/30' : 'border-indigo-400/30',
+      hoverBg: 'hover:bg-indigo-950/50',
+      selectedBg: 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20 font-black',
+      selectedText: 'text-white font-black',
+      selectedCheck: 'text-white'
+    };
+  }
   return {
     iconBg: isSelected ? 'bg-white/20' : 'bg-indigo-100 dark:bg-indigo-950/80',
     iconColor: isSelected ? 'text-white' : 'text-indigo-600 dark:text-indigo-400',
@@ -305,7 +505,8 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
   placeholder = 'Select an option',
   align = 'left',
   showSearch = true,
-  searchPlaceholder
+  searchPlaceholder,
+  variant = 'default'
 }) => {
 
   const [isOpen, setIsOpen] = useState(false);
@@ -469,13 +670,16 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
     };
   }, [isOpen]);
 
-  const triggerTheme = getDepartmentTheme(selectedOption, false);
+  const triggerTheme = getDepartmentTheme(selectedOption, false, variant === 'dark' || variant === 'glass');
 
   return (
     <div className={twMerge('flex flex-col space-y-1.5 min-w-0 w-full', className)}>
       {/* Optional Top Label */}
       {label && (
-        <label className="block text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider truncate flex items-center justify-between h-4 leading-4 m-0 p-0">
+        <label className={clsx(
+          "block text-[11px] font-black uppercase tracking-wider truncate flex items-center justify-between h-4 leading-4 m-0 p-0",
+          (variant === 'dark' || variant === 'glass') ? "text-slate-200" : "text-slate-800 dark:text-slate-100"
+        )}>
           <span>{label}</span>
         </label>
       )}
@@ -487,11 +691,16 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={twMerge(
-            "relative w-full flex items-center justify-between px-3.5 py-2 h-11 min-h-[44px] bg-white dark:bg-navy-950",
+            "relative w-full flex items-center justify-between px-3.5 py-2 h-11 min-h-[44px]",
             "border transition-all duration-200 outline-none select-none rounded-2xl cursor-pointer shadow-sm text-left group",
+            variant === 'dark'
+              ? "bg-navy-900/90 text-white border-slate-700/80 hover:border-brand-500/60 shadow-inner backdrop-blur-md"
+              : variant === 'glass'
+              ? "bg-white/10 dark:bg-navy-900/40 text-white border-white/20 hover:border-white/40 shadow-lg backdrop-blur-lg"
+              : "bg-white dark:bg-navy-950 border-slate-300 dark:border-slate-700 hover:border-brand-500/60 text-slate-900 dark:text-white",
             isOpen 
-              ? "border-brand-500 ring-2 ring-brand-500/20 shadow-md shadow-brand-500/10" 
-              : "border-slate-300 dark:border-slate-700 hover:border-brand-500/60"
+              ? "border-brand-500 ring-2 ring-brand-500/30 shadow-md shadow-brand-500/20" 
+              : ""
           )}
         >
           <div className="flex items-center space-x-2 overflow-hidden min-w-0 flex-1 pr-1.5">
@@ -499,9 +708,9 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
               <div className={clsx(
                 "w-5 h-5 rounded-md flex items-center justify-center shrink-0 transition-colors border",
                 triggerTheme.iconBg,
-                isOpen ? "border-brand-300" : "border-slate-300 dark:border-navy-700"
+                isOpen ? "border-brand-400" : (variant === 'dark' || variant === 'glass' ? "border-slate-700/60" : "border-slate-300 dark:border-navy-700")
               )}>
-                <span className={isOpen ? "text-brand-600 dark:text-brand-400 font-bold" : triggerTheme.iconColor}>
+                <span className={isOpen ? "text-brand-400 font-bold" : triggerTheme.iconColor}>
                   {selectedOption?.icon || icon}
                 </span>
               </div>
@@ -516,7 +725,10 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
               </div>
             )}
             
-            <span className="text-xs font-black text-slate-900 dark:text-white truncate flex-1 text-left">
+            <span className={clsx(
+              "text-xs font-black truncate flex-1 text-left",
+              (variant === 'dark' || variant === 'glass') ? "text-white" : "text-slate-900 dark:text-white"
+            )}>
               {selectedOption ? selectedOption.label : placeholder}
             </span>
           </div>
@@ -524,7 +736,9 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
           <ChevronDown 
             className={clsx(
               "w-4 h-4 shrink-0 transition-transform duration-200 ml-1",
-              isOpen ? "rotate-180 text-brand-600 dark:text-brand-400" : "text-slate-700 dark:text-slate-300"
+              isOpen 
+                ? "rotate-180 text-brand-400" 
+                : (variant === 'dark' || variant === 'glass') ? "text-slate-300 group-hover:text-white" : "text-slate-700 dark:text-slate-300"
             )} 
           />
         </button>

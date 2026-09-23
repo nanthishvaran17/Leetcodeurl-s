@@ -10,6 +10,7 @@ interface PremiumDepartmentSelectProps {
   label?: string;
   useIdAsValue?: boolean;
   dropdownWidth?: string;
+  variant?: 'default' | 'dark' | 'glass';
 }
 
 const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({ 
@@ -18,7 +19,8 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
   className = '', 
   label = 'Department Filter',
   useIdAsValue = true,
-  dropdownWidth = 'min-w-[320px] max-w-[480px]'
+  dropdownWidth = 'min-w-[320px] max-w-[480px]',
+  variant = 'default'
 }) => {
   const { departments, isLoading } = useDepartments();
 
@@ -42,6 +44,7 @@ const PremiumDepartmentSelect: React.FC<PremiumDepartmentSelectProps> = ({
       dropdownWidth={dropdownWidth}
       showSearch={true}
       searchPlaceholder="Search department..."
+      variant={variant}
     />
   );
 };

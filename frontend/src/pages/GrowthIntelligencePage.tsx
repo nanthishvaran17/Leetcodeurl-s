@@ -345,6 +345,7 @@ export const GrowthIntelligencePage: React.FC = () => {
               icon={<Building2 className="w-3.5 h-3.5 text-brand-400" />}
               dropdownWidth="min-w-[240px]"
               showSearch={false}
+              variant="dark"
             />
 
             {/* Academic Year Filter */}
@@ -355,6 +356,7 @@ export const GrowthIntelligencePage: React.FC = () => {
               icon={<GraduationCap className="w-3.5 h-3.5 text-brand-400" />}
               dropdownWidth="min-w-[210px]"
               showSearch={false}
+              variant="dark"
             />
 
             {/* Timeframe Selector Pills */}
