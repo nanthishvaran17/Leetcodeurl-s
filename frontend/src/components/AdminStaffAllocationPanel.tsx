@@ -524,10 +524,10 @@ export const AdminStaffAllocationPanel: React.FC = () => {
               <Users className="w-5 h-5 text-sky-600" />
               <span>Staff Workload & Mentoring Completion Tracking</span>
             </h3>
-            <p className="text-xs text-slate-500 dark:text-navy-400 font-medium mt-0.5">
-              Configured Capacity Cap: <strong className="text-sky-600 dark:text-sky-400 font-bold">{capacityCap >= 9999 ? 'Unlimited' : `${capacityCap} Max / Staff`}</strong>
-              {allowOverAllocation && <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">Admin Over-Allocation Enabled</span>}
-            </p>
+            <div className="text-xs text-slate-500 dark:text-navy-400 font-medium mt-1 flex flex-wrap items-center gap-2">
+              <span>Configured Capacity Cap: <strong className="text-sky-600 dark:text-sky-400 font-bold ml-1 whitespace-nowrap">{capacityCap >= 9999 ? 'Unlimited' : `${capacityCap} Max / Staff`}</strong></span>
+              {allowOverAllocation && <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 whitespace-nowrap flex-shrink-0">Admin Over-Allocation Enabled</span>}
+            </div>
           </div>
         </div>
 

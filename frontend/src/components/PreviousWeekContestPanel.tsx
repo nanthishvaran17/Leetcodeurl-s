@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useDeferredValue } from 'react';
 import { useDebounce } from '../hooks/useDebounce';
 import { 
   ShieldCheck, 
@@ -72,6 +72,7 @@ export interface ParticipationRecord {
   verification_status: string;
   verified_at?: string | null;
   recently_updated?: boolean;
+  _clean_reg?: string;
 }
 
 interface PreviousWeekContestPanelProps {
@@ -173,6 +174,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   const [questionTitles, setQuestionTitles] = useState<{q1: string, q2: string, q3: string, q4: string} | null>(null);
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const deferredSearchTerm = useDeferredValue(searchTerm);
   const [selectedDeptFilter, setSelectedDeptFilter] = useState<string>('ALL');
   const [deptDropdownOpen, setDeptDropdownOpen] = useState<boolean>(false);
   const [simulatingStudentId, setSimulatingStudentId] = useState<number | null>(null);
@@ -184,6 +186,17 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     setPage(1);
   }, [searchTerm, selectedTypeFilter, selectedDeptFilter]);
 
+  // Handle Escape key to close the modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedForensicRecord) {
+        setSelectedForensicRecord(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedForensicRecord]);
+
   // Hook up live websocket updates in a batched way
   const { status: wsStatus, lastSyncAt, latestUpdate: wsLatestUpdate } = useContestWebSocket({
     sessionId: sessionId || null,
@@ -192,16 +205,25 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         let changed = false;
         const updated = [...prev];
         
+        const byStudentId = new Map<number, number>();
+        const byRegNo = new Map<string, number>();
+        const byUsername = new Map<string, number>();
+        
+        for (let i = 0; i < updated.length; i++) {
+          const r = updated[i];
+          if (r.student_id != null) byStudentId.set(r.student_id, i);
+          if (r.reg_no) byRegNo.set(r.reg_no.toLowerCase(), i);
+          if (r.leetcode_username) byUsername.set(r.leetcode_username.toLowerCase(), i);
+        }
+
         for (const event of events) {
           if (!event) continue;
           
-          let idx = event.studentId != null ? updated.findIndex(rec => rec.student_id === event.studentId) : -1;
-          if (idx === -1 && event.regNo) {
-            idx = updated.findIndex(rec => rec.reg_no.toLowerCase() === event.regNo.toLowerCase());
-          }
-          if (idx === -1 && event.username) {
-            idx = updated.findIndex(rec => (rec.leetcode_username || '').toLowerCase() === event.username.toLowerCase());
-          }
+          let idx = -1;
+          if (event.studentId != null && byStudentId.has(event.studentId)) idx = byStudentId.get(event.studentId)!;
+          else if (event.regNo && byRegNo.has(event.regNo.toLowerCase())) idx = byRegNo.get(event.regNo.toLowerCase())!;
+          else if (event.username && byUsername.has(event.username.toLowerCase())) idx = byUsername.get(event.username.toLowerCase())!;
+          
           if (idx === -1) continue;
           
           changed = true;
@@ -245,8 +267,8 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     setRecords(prev => {
       const updated = [...prev];
       let idx = evt.student_id != null ? updated.findIndex(r => r.student_id === evt.student_id) : -1;
-      if (idx === -1 && evt.people_id) idx = updated.findIndex(r => r.reg_no === evt.people_id);
-      if (idx === -1 && evt.reg_no) idx = updated.findIndex(r => r.reg_no === evt.reg_no);
+      if (idx === -1 && evt.people_id) idx = updated.findIndex(r => r.reg_no && r.reg_no.toLowerCase() === evt.people_id.toLowerCase());
+      if (idx === -1 && evt.reg_no) idx = updated.findIndex(r => r.reg_no && r.reg_no.toLowerCase() === evt.reg_no.toLowerCase());
       if (idx === -1 && evt.account_id) idx = updated.findIndex(r => (r.leetcode_username || '').toLowerCase() === evt.account_id.toLowerCase());
 
       if (idx !== -1) {
@@ -329,13 +351,89 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
       api.get(`/contests/sessions/${latestSessionId}/metadata`)
         .then(r => {
-          if (r.data?.contest?.questions && r.data.contest.questions.length >= 4) {
-            const qs = r.data.contest.questions;
+          let slugs = r.data?.problemSlugs;
+          
+          // Hardcode fallback for Recent Contests if the backend cache is stuck returning an empty array due to Cloudflare blocks
+          const fallbackMap: Record<string, string[]> = {
+            'weekly-contest-520': [
+              "number-of-intersecting-interval-pairs-i",
+              "number-of-intersecting-interval-pairs-ii",
+              "maximum-pulse-value-after-one-subarray-rotation",
+              "lexicographically-largest-power-array"
+            ],
+            'weekly-contest-519': [
+              "count-subarrays-with-distant-sums",
+              "cyclically-shift-rows-and-columns",
+              "minimum-operations-to-make-every-element-palindromic",
+              "minimum-operations-to-make-every-element-palindromic-ii"
+            ],
+            'weekly-contest-518': [
+              "count-rotations-with-exactly-k-equal-adjacent-pairs",
+              "count-good-cyclic-rotations",
+              "count-robot-groups",
+              "minimum-cost-path-with-at-most-k-turns"
+            ],
+            'weekly-contest-517': [
+              "count-integers-appearing-in-a-single-block",
+              "sum-of-decoded-numbers",
+              "minimum-operations-to-form-subset-sum-i",
+              "minimum-operations-to-form-subset-sum-ii"
+            ],
+            'weekly-contest-516': [
+              "find-all-numbers-disappeared-in-an-array-ii",
+              "longest-subarray-with-at-most-k-distinct-prime-factors",
+              "minimum-cost-to-connect-stations",
+              "maximum-operations-to-empty-an-array"
+            ],
+            'weekly-contest-515': [
+              "nearest-available-drone",
+              "minimize-the-maximum-waiting-time",
+              "maximum-gap-between-stations",
+              "minimum-cost-path-with-at-most-k-turns-ii"
+            ],
+            'weekly-contest-514': [
+              "minimum-total-price-after-applying-discounts",
+              "weighted-sum-of-a-tree",
+              "maximum-area-of-two-non-overlapping-square-submatrices",
+              "peaks-in-array-ii"
+            ],
+            'weekly-contest-513': [
+              "maximize-pair-strength-using-gcd",
+              "count-subarrays-with-even-odd-ratio-i",
+              "count-of-unfinished-tasks-after-each-shift",
+              "count-subarrays-with-even-odd-ratio-ii"
+            ],
+            'weekly-contest-512': [
+              "largest-integer-with-given-digit-sum",
+              "aggregate-two-time-series",
+              "count-valid-sequences",
+              "minimum-cost-path-with-alternating-directions-iii"
+            ],
+            'weekly-contest-511': [
+              "even-number-of-knight-moves",
+              "count-dominant-nodes-in-a-binary-tree",
+              "transform-binary-string-using-subsequence-sort",
+              "minimum-number-of-string-groups-through-transformations"
+            ],
+            'weekly-contest-510': [
+              "number-of-elapsed-seconds-between-two-times",
+              "minimum-total-cost-to-process-all-elements",
+              "create-grid-with-exactly-k-paths-i",
+              "maximum-consistent-columns-in-a-grid"
+            ]
+          };
+
+          if ((!slugs || slugs.length < 4) && r.data?.contestSlug && fallbackMap[r.data.contestSlug]) {
+            slugs = fallbackMap[r.data.contestSlug];
+          }
+
+          if (slugs && slugs.length >= 4) {
+            const formatSlug = (s: string) => s ? s.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : '';
             setQuestionTitles({
-              q1: qs[0]?.title || 'Question 1',
-              q2: qs[1]?.title || 'Question 2',
-              q3: qs[2]?.title || 'Question 3',
-              q4: qs[3]?.title || 'Question 4'
+              q1: formatSlug(slugs[0]) || 'Question 1',
+              q2: formatSlug(slugs[1]) || 'Question 2',
+              q3: formatSlug(slugs[2]) || 'Question 3',
+              q4: formatSlug(slugs[3]) || 'Question 4'
             });
           } else {
             setQuestionTitles(null);
@@ -396,14 +494,16 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
               : 'NOT_PARTICIPATED',
             official_rank: row.rank !== '' && row.rank !== null ? row.rank : null,
             official_score: row.score !== '' && row.score !== null ? row.score : null,
-            q1: (row.q1 === 1 || row.q1 === '1') ? 1 : 0,
-            q2: (row.q2 === 1 || row.q2 === '1') ? 1 : 0,
-            q3: (row.q3 === 1 || row.q3 === '1') ? 1 : 0,
-            q4: (row.q4 === 1 || row.q4 === '1') ? 1 : 0,
+            q1: Number(row.q1) || 0,
+            q2: Number(row.q2) || 0,
+            q3: Number(row.q3) || 0,
+            q4: Number(row.q4) || 0,
+            q_timing: (row as any).q_timing || null,
             problems_solved: (!row.total_contest_solved || row.total_contest_solved === '' || row.total_contest_solved === '—') ? 0 : Number(row.total_contest_solved),
             finish_time: null,
             source: row.source_status || 'UNKNOWN',
-            verification_status: pStatusStr === 'USERNAME_NOT_FOUND' ? 'USERNAME_NOT_FOUND' : (row.source_status || 'UNKNOWN')
+            verification_status: pStatusStr === 'USERNAME_NOT_FOUND' ? 'USERNAME_NOT_FOUND' : (row.source_status || 'UNKNOWN'),
+            _clean_reg: row.reg_no ? row.reg_no.toLowerCase().replace(/[^a-z0-9]/g, '') : ''
           };
         });
         setRecords(mappedRecords);
@@ -633,39 +733,39 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   }, [selectedTypeFilter, selectedDeptFilter, searchTerm]);
 
   const filteredRecords = useMemo(() => {
-    console.log(`[Filter Debug] Filtering ${records.length} records with type: ${selectedTypeFilter}`);
-    const results = records.filter((r) => {
-      if (selectedTypeFilter !== 'ALL') {
-        const cat = getParticipationCategory(r);
-        if (cat !== selectedTypeFilter) return false;
+    const isTypeAll = selectedTypeFilter === 'ALL';
+    const isDeptAll = selectedDeptFilter === 'ALL';
+    const targetDept = selectedDeptFilter.toUpperCase().trim();
+    const query = deferredSearchTerm.toLowerCase().trim();
+    const cleanQuery = query ? query.replace(/[^a-z0-9]/g, '') : '';
+    const hasSearch = query !== '';
+
+    return records.filter((r) => {
+      if (!isTypeAll) {
+        if (getParticipationCategory(r) !== selectedTypeFilter) return false;
       }
-      if (selectedDeptFilter !== 'ALL') {
+      if (!isDeptAll) {
         const info = getDeptInfo(r.department_name || '');
-        const target = selectedDeptFilter.toUpperCase().trim();
         const dName = (r.department_name || '').toUpperCase().trim();
-        if (info.key.toUpperCase() !== target && dName !== target) {
+        if (info.key.toUpperCase() !== targetDept && dName !== targetDept) {
           return false;
         }
       }
-      if (searchTerm.trim() !== '') {
-        const query = searchTerm.toLowerCase().trim();
-        const matchName = r.student_name.toLowerCase().includes(query);
-        const matchReg = r.reg_no.toLowerCase().includes(query);
-        const matchUser = (r.leetcode_username || '').toLowerCase().includes(query);
-        const matchDept = (r.department_name || '').toLowerCase().includes(query);
+      if (hasSearch) {
+        if (r.student_name.toLowerCase().includes(query)) return true;
+        if (r.reg_no.toLowerCase().includes(query)) return true;
+        if ((r.leetcode_username || '').toLowerCase().includes(query)) return true;
+        if ((r.department_name || '').toLowerCase().includes(query)) return true;
         
-        // Flexible alphanumeric reg_no search (e.g., '24cc031' matches '732224CC031')
-        const cleanReg = r.reg_no.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const cleanQuery = query.replace(/[^a-z0-9]/g, '');
-        const matchCleanReg = cleanQuery ? cleanReg.includes(cleanQuery) : false;
-
-        if (!matchName && !matchReg && !matchUser && !matchDept && !matchCleanReg) return false;
+        if (cleanQuery) {
+          const cleanReg = r._clean_reg || r.reg_no.toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (cleanReg.includes(cleanQuery)) return true;
+        }
+        return false;
       }
       return true;
     });
-    console.log(`[Filter Debug] Found ${results.length} results matching ${selectedTypeFilter}`);
-    return results;
-  }, [records, selectedTypeFilter, selectedDeptFilter, searchTerm]);
+  }, [records, selectedTypeFilter, selectedDeptFilter, deferredSearchTerm]);
 
   // Dynamically calculate metrics directly from real-time records state
   const dynamicMetrics = useMemo(() => {
@@ -779,7 +879,8 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         {/* Card 1: PUBLIC / LIVE */}
         {/* Card 1: PUBLIC / LIVE */}
         <button
-          onClick={() => setSelectedTypeFilter(selectedTypeFilter === 'PUBLIC' ? 'ALL' : 'PUBLIC')}
+          type="button"
+          onClick={(e) => { e.preventDefault(); setSelectedTypeFilter('PUBLIC'); }}
           className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
             selectedTypeFilter === 'PUBLIC'
               ? 'bg-[#eefbf4] dark:bg-emerald-950/60 border-emerald-500 ring-2 ring-emerald-500/40 shadow-lg scale-[1.02]'
@@ -802,7 +903,8 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
         {/* Card 2: VIRTUAL PRACTICE */}
         <button
-          onClick={() => setSelectedTypeFilter(selectedTypeFilter === 'VIRTUAL' ? 'ALL' : 'VIRTUAL')}
+          type="button"
+          onClick={(e) => { e.preventDefault(); setSelectedTypeFilter('VIRTUAL'); }}
           className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
             selectedTypeFilter === 'VIRTUAL'
               ? 'bg-[#f8f4fe] dark:bg-purple-950/60 border-purple-500 ring-2 ring-purple-500/40 shadow-lg scale-[1.02]'
@@ -825,7 +927,8 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
         {/* Card 3: NOT ATTENDED */}
         <button
-          onClick={() => setSelectedTypeFilter(selectedTypeFilter === 'NOT_PARTICIPATED' ? 'ALL' : 'NOT_PARTICIPATED')}
+          type="button"
+          onClick={(e) => { e.preventDefault(); setSelectedTypeFilter('NOT_PARTICIPATED'); }}
           className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
             selectedTypeFilter === 'NOT_PARTICIPATED'
               ? 'bg-[#fef2f2] dark:bg-rose-950/60 border-rose-500 ring-2 ring-rose-500/40 shadow-lg scale-[1.02]'
@@ -848,7 +951,8 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
         {/* Card 4: PENDING VERIFICATION */}
         <button
-          onClick={() => setSelectedTypeFilter(selectedTypeFilter === 'NOT_VERIFIED' ? 'ALL' : 'NOT_VERIFIED')}
+          type="button"
+          onClick={(e) => { e.preventDefault(); setSelectedTypeFilter('NOT_VERIFIED'); }}
           className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
             selectedTypeFilter === 'NOT_VERIFIED'
               ? 'bg-[#fffbeb] dark:bg-amber-950/60 border-amber-500 ring-2 ring-amber-500/40 shadow-lg scale-[1.02]'
@@ -871,7 +975,8 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
         {/* Card 5: NO LEETCODE HANDLE */}
         <button
-          onClick={() => setSelectedTypeFilter(selectedTypeFilter === 'MISSING_LEETCODE_USERNAME' ? 'ALL' : 'MISSING_LEETCODE_USERNAME')}
+          type="button"
+          onClick={(e) => { e.preventDefault(); setSelectedTypeFilter('MISSING_LEETCODE_USERNAME'); }}
           className={`p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
             selectedTypeFilter === 'MISSING_LEETCODE_USERNAME'
               ? 'bg-slate-100 dark:bg-slate-800/90 border-slate-500 ring-2 ring-slate-500/40 shadow-lg scale-[1.02]'
@@ -978,11 +1083,12 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           </div>
         ) : (
           filteredRecords.slice((page - 1) * pageSize, page * pageSize).map((r, idx) => {
-            const isAbsent = r.participation_type === 'NOT_PARTICIPATED';
-            const isMissingHandle = r.participation_type === 'MISSING_LEETCODE_USERNAME';
-            const isPending = r.participation_type === 'NOT_VERIFIED';
-            const isPublic = r.participation_type === 'PUBLIC';
-            const isVirtual = r.participation_type === 'VIRTUAL';
+            const cat = getParticipationCategory(r);
+            const isMissingHandle = cat === 'MISSING_LEETCODE_USERNAME';
+            const isAbsent = cat === 'NOT_PARTICIPATED';
+            const isPending = cat === 'NOT_VERIFIED';
+            const isPublic = cat === 'PUBLIC';
+            const isVirtual = cat === 'VIRTUAL';
             const cleanYear = r.year_level ? r.year_level.replace(/(?:\s*Year)+/gi, '').trim() + ' Year' : '';
             const rankIndex = (page - 1) * pageSize + idx + 1;
 
@@ -1140,11 +1246,12 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
               </tr>
             ) : (
               filteredRecords.slice((page - 1) * pageSize, page * pageSize).map((r, idx) => {
-                const isAbsent = r.participation_type === 'NOT_PARTICIPATED';
-                const isMissingHandle = r.participation_type === 'MISSING_LEETCODE_USERNAME';
-                const isPending = r.participation_type === 'NOT_VERIFIED';
-                const isPublic = r.participation_type === 'PUBLIC';
-                const isVirtual = r.participation_type === 'VIRTUAL';
+                const cat = getParticipationCategory(r);
+                const isMissingHandle = cat === 'MISSING_LEETCODE_USERNAME';
+                const isAbsent = cat === 'NOT_PARTICIPATED';
+                const isPending = cat === 'NOT_VERIFIED';
+                const isPublic = cat === 'PUBLIC';
+                const isVirtual = cat === 'VIRTUAL';
                 const cleanYear = r.year_level ? r.year_level.replace(/(?:\s*Year)+/gi, '').trim() + ' Year' : '';
                 const rankIndex = (page - 1) * pageSize + idx + 1;
 
@@ -1321,80 +1428,169 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
         const isNotJoined = selectedForensicRecord.participation_type === 'NOT_PARTICIPATED' || 
           (selectedForensicRecord.problems_solved === 0 && !selectedForensicRecord.q1 && !selectedForensicRecord.q2 && !selectedForensicRecord.q3 && !selectedForensicRecord.q4);
 
-        const qTitles = questionTitles || {
+        let qTitles = questionTitles;
+        if (!qTitles && summary?.contest_slug) {
+          const fallbackMap: Record<string, string[]> = {
+            'weekly-contest-520': [
+              "Number Of Intersecting Interval Pairs I",
+              "Number Of Intersecting Interval Pairs Ii",
+              "Maximum Pulse Value After One Subarray Rotation",
+              "Lexicographically Largest Power Array"
+            ],
+            'weekly-contest-519': [
+              "Count Subarrays With Distant Sums",
+              "Cyclically Shift Rows And Columns",
+              "Minimum Operations To Make Every Element Palindromic",
+              "Minimum Operations To Make Every Element Palindromic Ii"
+            ],
+            'weekly-contest-518': [
+              "Count Rotations With Exactly K Equal Adjacent Pairs",
+              "Count Good Cyclic Rotations",
+              "Count Robot Groups",
+              "Minimum Cost Path With At Most K Turns"
+            ],
+            'weekly-contest-517': [
+              "Count Integers Appearing In A Single Block",
+              "Sum Of Decoded Numbers",
+              "Minimum Operations To Form Subset Sum I",
+              "Minimum Operations To Form Subset Sum Ii"
+            ],
+            'weekly-contest-516': [
+              "Find All Numbers Disappeared In An Array Ii",
+              "Longest Subarray With At Most K Distinct Prime Factors",
+              "Minimum Cost To Connect Stations",
+              "Maximum Operations To Empty An Array"
+            ],
+            'weekly-contest-515': [
+              "Nearest Available Drone",
+              "Minimize The Maximum Waiting Time",
+              "Maximum Gap Between Stations",
+              "Minimum Cost Path With At Most K Turns Ii"
+            ],
+            'weekly-contest-514': [
+              "Minimum Total Price After Applying Discounts",
+              "Weighted Sum Of A Tree",
+              "Maximum Area Of Two Non-Overlapping Square Submatrices",
+              "Peaks In Array Ii"
+            ],
+            'weekly-contest-513': [
+              "Maximize Pair Strength Using Gcd",
+              "Count Subarrays With Even Odd Ratio I",
+              "Count Of Unfinished Tasks After Each Shift",
+              "Count Subarrays With Even Odd Ratio Ii"
+            ],
+            'weekly-contest-512': [
+              "Largest Integer With Given Digit Sum",
+              "Aggregate Two Time Series",
+              "Count Valid Sequences",
+              "Minimum Cost Path With Alternating Directions Iii"
+            ],
+            'weekly-contest-511': [
+              "Even Number Of Knight Moves",
+              "Count Dominant Nodes In A Binary Tree",
+              "Transform Binary String Using Subsequence Sort",
+              "Minimum Number Of String Groups Through Transformations"
+            ],
+            'weekly-contest-510': [
+              "Number Of Elapsed Seconds Between Two Times",
+              "Minimum Total Cost To Process All Elements",
+              "Create Grid With Exactly K Paths I",
+              "Maximum Consistent Columns In A Grid"
+            ]
+          };
+          
+          if (fallbackMap[summary.contest_slug]) {
+            qTitles = {
+              q1: fallbackMap[summary.contest_slug][0],
+              q2: fallbackMap[summary.contest_slug][1],
+              q3: fallbackMap[summary.contest_slug][2],
+              q4: fallbackMap[summary.contest_slug][3]
+            };
+          }
+        }
+
+        qTitles = qTitles || {
           q1: 'Question 1',
           q2: 'Question 2',
           q3: 'Question 3',
           q4: 'Question 4'
         };
 
+        const formatQTime = (qTime: number | undefined) => {
+          if (qTime === undefined || qTime === null) return 'Unknown';
+          if (qTime === 0) return 'Not Solved';
+          if (qTime === 1) return 'Solved'; // The DB stores 1 for solved without time evidence
+          if (qTime > 1000000000) return 'Solved'; // Fallback for epoch timestamp
+          const hrs = Math.floor(qTime / 3600);
+          const mins = Math.floor((qTime % 3600) / 60);
+          const secs = qTime % 60;
+          if (hrs > 0) return `${hrs}h ${mins}m ${secs}s`;
+          return `${mins}m ${secs}s`;
+        };
+
         const forensicQuestions = isNotJoined ? [
-          { id: 'Q1', title: `Q1: ${qTitles.q1}`, val: false, time: '0m 0s', attempts: 'Unattempted', status: 'SKIPPED' },
-          { id: 'Q2', title: `Q2: ${qTitles.q2}`, val: false, time: '0m 0s', attempts: 'Unattempted', status: 'SKIPPED' },
-          { id: 'Q3', title: `Q3: ${qTitles.q3}`, val: false, time: '0m 0s', attempts: 'Unattempted', status: 'SKIPPED' },
-          { id: 'Q4', title: `Q4: ${qTitles.q4}`, val: false, time: '0m 0s', attempts: 'Unattempted', status: 'SKIPPED' }
-        ] : [
-          { 
-            id: 'Q1', 
-            title: `Q1: ${qTitles.q1}`, 
-            val: Boolean(selectedForensicRecord.q1 && selectedForensicRecord.q1 > 0), 
-            time: selectedForensicRecord.q1 ? '8m 12s' : '0m 0s', 
-            attempts: selectedForensicRecord.q1 ? '1 Submission (1 AC)' : 'Unattempted',
-            status: selectedForensicRecord.q1 ? 'SOLVED' : 'SKIPPED' 
-          },
-          { 
-            id: 'Q2', 
-            title: `Q2: ${qTitles.q2}`, 
-            val: Boolean(selectedForensicRecord.q2 && selectedForensicRecord.q2 > 0), 
-            time: selectedForensicRecord.q2 ? '16m 45s' : '0m 0s', 
-            attempts: selectedForensicRecord.q2 ? '1 Submission (1 AC)' : 'Unattempted',
-            status: selectedForensicRecord.q2 ? 'SOLVED' : 'SKIPPED' 
-          },
-          { 
-            id: 'Q3', 
-            title: `Q3: ${qTitles.q3}`, 
-            val: Boolean(selectedForensicRecord.q3 && selectedForensicRecord.q3 > 0), 
-            time: selectedForensicRecord.q3 ? '21m 23s' : '0m 0s', 
-            attempts: selectedForensicRecord.q3 ? '1 Submission (1 AC)' : 'Unattempted',
-            status: selectedForensicRecord.q3 ? 'SOLVED' : 'SKIPPED' 
-          },
-          { 
-            id: 'Q4', 
-            title: `Q4: ${qTitles.q4}`, 
-            val: Boolean(selectedForensicRecord.q4 && selectedForensicRecord.q4 > 0), 
-            time: selectedForensicRecord.q4 ? '35m 10s' : '0m 0s', 
-            attempts: selectedForensicRecord.q4 ? '1 Submission (1 AC)' : 'Unattempted',
-            status: selectedForensicRecord.q4 ? 'SOLVED' : 'SKIPPED' 
-          }
-        ];
+          { id: 'Q1', title: `Q1: ${qTitles.q1}`, val: false, time: 'Unknown', timingSource: null, timeDisplay: null, attempts: 'Unattempted', status: 'SKIPPED' },
+          { id: 'Q2', title: `Q2: ${qTitles.q2}`, val: false, time: 'Unknown', timingSource: null, timeDisplay: null, attempts: 'Unattempted', status: 'SKIPPED' },
+          { id: 'Q3', title: `Q3: ${qTitles.q3}`, val: false, time: 'Unknown', timingSource: null, timeDisplay: null, attempts: 'Unattempted', status: 'SKIPPED' },
+          { id: 'Q4', title: `Q4: ${qTitles.q4}`, val: false, time: 'Unknown', timingSource: null, timeDisplay: null, attempts: 'Unattempted', status: 'SKIPPED' }
+        ] : [1, 2, 3, 4].map(qIdx => {
+          const qKey = `q${qIdx}` as 'q1'|'q2'|'q3'|'q4';
+          const qBin = (selectedForensicRecord as any)[qKey];
+          const isSolvedQ = qBin && qBin > 0;
+          // Prefer structured q_timing from API, fallback to legacy binary
+          const qt = (selectedForensicRecord as any).q_timing;
+          const qTiming = qt ? qt[qKey] : null;
+          const timingSource: string|null = qTiming?.source || null;
+          const timeDisplay: string|null = qTiming?.display || null;
+          const qTitleMap: Record<number,string> = {1: qTitles.q1, 2: qTitles.q2, 3: qTitles.q3, 4: qTitles.q4};
+          return {
+            id: `Q${qIdx}`,
+            title: `Q${qIdx}: ${qTitleMap[qIdx]}`,
+            val: Boolean(isSolvedQ),
+            time: timeDisplay || (isSolvedQ ? 'Solved' : '--'),
+            timingSource,
+            timeDisplay,
+            attempts: isSolvedQ ? '1+ Submissions (AC)' : 'Unattempted',
+            status: isSolvedQ ? 'SOLVED' : 'SKIPPED',
+          };
+        });
 
         return (
           <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
             <div className="bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[92vh] animate-scale-in">
               {/* Modal Header */}
-              <div className="p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-navy-950 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="p-2.5 rounded-2xl bg-brand-500/20 text-brand-400 border border-brand-500/30 shrink-0">
+              <div className="relative p-4 sm:p-5 bg-gradient-to-br from-indigo-50/90 via-white to-sky-50/80 dark:bg-gradient-to-r dark:from-slate-900 dark:via-indigo-950 dark:to-navy-950 text-slate-900 dark:text-white flex items-center justify-between border-b border-indigo-100/50 dark:border-slate-800 shrink-0 overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 dark:bg-brand-500/10 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                <div className="flex items-center gap-3 min-w-0 relative z-10">
+                  <div className="p-2.5 rounded-2xl bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 border border-brand-500/20 dark:border-brand-500/30 shrink-0">
                     <Activity className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-base font-black text-white truncate">
+                      <h3 className="text-base font-black text-slate-900 dark:text-white truncate">
                         {selectedForensicRecord.student_name}
                       </h3>
-                      <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-brand-500/30 text-brand-200 border border-brand-400/40">
+                      <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-brand-500/10 dark:bg-brand-500/30 text-brand-700 dark:text-brand-200 border border-brand-200 dark:border-brand-400/40">
                         {selectedForensicRecord.participation_type || 'CONTEST TELEMETRY'}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-300 font-mono font-bold mt-0.5 truncate">
-                      {selectedForensicRecord.reg_no} • {selectedForensicRecord.department_name || 'CSE'} • {summary?.contest_title || 'Weekly Contest 520'}
-                    </p>
+                    <div className="flex items-center gap-1.5 mt-1 flex-wrap max-w-full">
+                      <span className="text-[11px] font-mono font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-300 dark:border-slate-600 shadow-sm truncate max-w-[120px] sm:max-w-none">
+                        {selectedForensicRecord.reg_no}
+                      </span>
+                      <span className="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-900/50 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-700/50 shadow-sm truncate max-w-[100px] sm:max-w-none">
+                        {selectedForensicRecord.department_name || 'CSE'}
+                      </span>
+                      <span className="text-[11px] font-bold text-fuchsia-700 dark:text-fuchsia-300 bg-fuchsia-100 dark:bg-fuchsia-900/50 px-2 py-0.5 rounded-md border border-fuchsia-200 dark:border-fuchsia-700/50 shadow-sm truncate max-w-[160px] sm:max-w-none">
+                        {summary?.contest_title || 'Weekly Contest 520'}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSelectedForensicRecord(null)}
-                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer shrink-0 border border-white/20"
+                  className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-500 dark:text-white transition-all cursor-pointer shrink-0 border border-slate-200 dark:border-white/20"
                   title="Close Modal"
                 >
                   <X className="w-5 h-5" />
@@ -1457,41 +1653,54 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                       return (
                         <div 
                           key={q.id}
-                          className={`p-3.5 rounded-xl border-2 flex items-center justify-between gap-3 text-xs transition-all ${
+                          className={`p-3 rounded-xl border flex items-center justify-between gap-3 text-xs transition-all hover:shadow-md ${
                             isSolved
-                              ? 'bg-emerald-500/10 dark:bg-emerald-950/40 border-emerald-500/50 text-slate-950 dark:text-white shadow-xs'
+                              ? 'bg-emerald-100/70 dark:bg-emerald-900/40 border-emerald-400/80 dark:border-emerald-500/60 text-slate-900 dark:text-white ring-1 ring-emerald-400/40 shadow-sm'
                               : isFailed
-                                ? 'bg-rose-500/10 dark:bg-rose-950/40 border-rose-500/50 text-slate-950 dark:text-white shadow-xs'
-                                : 'bg-slate-100 dark:bg-navy-950 border-slate-200 dark:border-navy-800 text-slate-950 dark:text-white shadow-xs'
+                                ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200/60 dark:border-rose-800/50 text-slate-900 dark:text-white'
+                                : 'bg-white dark:bg-navy-950 border-slate-200 dark:border-navy-800 text-slate-900 dark:text-white shadow-sm'
                           }`}
                         >
                           <div className="flex items-center gap-3 min-w-0">
-                            <span className={`px-2.5 py-1 rounded-xl font-mono font-black text-xs shrink-0 ${
+                            <span className={`px-2.5 py-1 rounded-lg font-mono font-black text-[10px] shrink-0 border shadow-sm ${
                               isSolved
-                                ? 'bg-emerald-600 text-white shadow-xs'
+                                ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30'
                                 : isFailed
-                                  ? 'bg-rose-600 text-white shadow-xs'
-                                  : 'bg-slate-700 dark:bg-slate-600 text-white shadow-xs'
+                                  ? 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/30'
+                                  : 'bg-white text-slate-500 border-slate-200 dark:bg-navy-800 dark:text-slate-400 dark:border-navy-700'
                             }`}>
                               {q.id}
                             </span>
                             <div className="min-w-0 space-y-0.5">
-                              <span className="font-black text-xs text-slate-950 dark:text-white block truncate">{q.title}</span>
-                              <span className="text-[11px] text-slate-800 dark:text-slate-200 font-extrabold block">{q.attempts}</span>
+                              <span className="font-bold text-xs text-slate-900 dark:text-white block truncate">{q.title}</span>
+                              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold block">{q.attempts}</span>
                             </div>
                           </div>
 
-                          <div className="text-right shrink-0 font-mono space-y-1">
-                            <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-black tracking-wider uppercase block ${
+                          <div className="text-right shrink-0 font-mono space-y-1.5">
+                            <span className={`px-2 py-0.5 rounded text-[9px] font-black tracking-wider uppercase block border shadow-sm ${
                               isSolved 
-                                ? 'bg-emerald-600 text-white shadow-2xs' 
+                                ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30' 
                                 : isFailed 
-                                  ? 'bg-rose-600 text-white shadow-2xs' 
-                                  : 'bg-slate-500 dark:bg-slate-600 text-white shadow-2xs'
+                                  ? 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/30' 
+                                  : 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-navy-800 dark:text-slate-400 dark:border-navy-700'
                             }`}>
                               {q.status}
                             </span>
-                            <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 block">{q.time}</span>
+                            {/* Forensic-grade timing display */}
+                            {q.timingSource === 'OBSERVED_LIVE' && q.timeDisplay ? (
+                              <div className="text-right mt-1">
+                                <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 block">{q.timeDisplay}</span>
+                                <span title="Calculated from verified live activity events" className="inline-block mt-0.5 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-700 border border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-600 cursor-help">● OBSERVED</span>
+                              </div>
+                            ) : q.timingSource === 'ESTIMATED_DIFFICULTY_WEIGHT' && q.timeDisplay ? (
+                              <div className="text-right mt-1">
+                                <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 block">{q.timeDisplay}</span>
+                                <span title="Difficulty-weighted allocation from contest presence. Not exact — per-question LeetCode timestamps unavailable." className="inline-block mt-0.5 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-300 dark:bg-amber-900/40 dark:text-amber-400 dark:border-amber-600 cursor-help">~ ESTIMATED</span>
+                              </div>
+                            ) : isSolved ? (
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-1">Time Unavailable</span>
+                            ) : null}
                           </div>
                         </div>
                       );
@@ -1537,3 +1746,4 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     </div>
   );
 };
+

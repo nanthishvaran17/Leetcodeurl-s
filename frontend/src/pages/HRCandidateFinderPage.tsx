@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from "react";
+import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef, useDeferredValue } from "react";
 import { createPortal } from "react-dom";
 import {
   Search, RefreshCw, Filter, ChevronUp, ChevronDown,
@@ -424,6 +424,7 @@ export const HRCandidateFinderPage: React.FC = () => {
   const [sortField, setSortField] = useState<keyof Candidate>("total_solved");
   const [sortAsc, setSortAsc] = useState<boolean>(false);
   const [tableSearch, setTableSearch] = useState<string>("");
+  const deferredTableSearch = useDeferredValue(tableSearch);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [intelData, setIntelData] = useState<any>(null);
   const [intelLoading, setIntelLoading] = useState<boolean>(false);
@@ -922,15 +923,16 @@ export const HRCandidateFinderPage: React.FC = () => {
 
   // Live table search
   const displayCandidates = useMemo(() => {
-    if (!tableSearch.trim()) return filteredCandidates;
-    const q = tableSearch.toLowerCase();
-    return filteredCandidates.filter(c =>
-      c.name.toLowerCase().includes(q) ||
-      c.reg_no.toLowerCase().includes(q) ||
-      c.dept_code.toLowerCase().includes(q) ||
-      c.primary_language.toLowerCase().includes(q)
-    );
-  }, [filteredCandidates, tableSearch]);
+    if (!deferredTableSearch.trim()) return filteredCandidates;
+    const q = deferredTableSearch.toLowerCase();
+    return filteredCandidates.filter(c => {
+      if (c.name.toLowerCase().includes(q)) return true;
+      if (c.reg_no.toLowerCase().includes(q)) return true;
+      if (c.dept_code.toLowerCase().includes(q)) return true;
+      if (c.primary_language.toLowerCase().includes(q)) return true;
+      return false;
+    });
+  }, [filteredCandidates, deferredTableSearch]);
 
   // Summary counts with safe case-insensitive matching
   const summaryCounts = useMemo(() => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
 import { 
   Globe, Trophy, Shield, Users, TrendingUp, Search, 
   Star, Award, Zap, ChevronLeft, ChevronRight, BarChart3, Filter, ExternalLink, Calendar, Building2, LayoutList
@@ -56,18 +56,21 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
   const [limit, setLimit] = useState(50);
   const [sortBy, setSortBy] = useState<'rank' | 'easy' | 'medium' | 'hard'>('rank');
 
+  const deferredSearchQuery = useDeferredValue(filters.searchQuery);
+
   // Filter & Sort Logic
   const filteredAndSorted = useMemo(() => {
     let result = [...globalStudents];
 
-    if (filters.searchQuery) {
-      const q = filters.searchQuery.toLowerCase();
-      result = result.filter((s: any) =>
-        s.name?.toLowerCase().includes(q) ||
-        s.reg_no?.toLowerCase().includes(q) ||
-        s.username?.toLowerCase().includes(q) ||
-        s.codeforces_username?.toLowerCase().includes(q)
-      );
+    if (deferredSearchQuery) {
+      const q = deferredSearchQuery.toLowerCase();
+      result = result.filter((s: any) => {
+        if (s.name?.toLowerCase().includes(q)) return true;
+        if (s.reg_no?.toLowerCase().includes(q)) return true;
+        if (s.username?.toLowerCase().includes(q)) return true;
+        if (s.codeforces_username?.toLowerCase().includes(q)) return true;
+        return false;
+      });
     }
     if (filters.department !== 'ALL') {
       result = result.filter((s: any) => s.department?.code === filters.department);
@@ -83,7 +86,7 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
     // Default 'rank' uses global ranking / total solved which is already sorted from backend
 
     return result;
-  }, [globalStudents, filters.searchQuery, filters.department, filters.academicYear, sortBy]);
+  }, [globalStudents, deferredSearchQuery, filters.department, filters.academicYear, sortBy]);
 
   const total = filteredAndSorted.length;
   const top3 = filteredAndSorted.slice(0, 3);

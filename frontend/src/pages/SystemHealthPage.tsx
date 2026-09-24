@@ -53,7 +53,9 @@ import {
   ChevronDown,
   ChevronUp,
   Download,
-  Printer
+  Printer,
+  User,
+  Award
 } from 'lucide-react';
 import api from '../services/api';
 import { DownloadState } from '../services/download/downloadTypes';
@@ -349,13 +351,15 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
     const q = raw.toLowerCase();
     const cleanQ = raw.replace(/[^A-Za-z0-9]+/g, '').toLowerCase();
 
-    // 1. Instant local filter from cached roster (0ms latency, zero lag)
     const localMatches = (cachedStudentsRef.current || []).filter((st: any) => {
-      const nameMatch = st.name && st.name.toLowerCase().includes(q);
-      const regMatch = st.reg_no && st.reg_no.toLowerCase().includes(q);
-      const cleanRegMatch = st.reg_no && st.reg_no.replace(/[^A-Za-z0-9]+/g, '').toLowerCase().includes(cleanQ);
-      const userMatch = st.username && st.username.toLowerCase().includes(q);
-      return nameMatch || regMatch || cleanRegMatch || userMatch;
+      if (st.name && st.name.toLowerCase().includes(q)) return true;
+      if (st.reg_no && st.reg_no.toLowerCase().includes(q)) return true;
+      if (st.username && st.username.toLowerCase().includes(q)) return true;
+      if (st.reg_no) {
+        const cleanReg = st.reg_no.replace(/[^A-Za-z0-9]+/g, '').toLowerCase();
+        if (cleanReg.includes(cleanQ)) return true;
+      }
+      return false;
     }).slice(0, 12);
 
     setStudentSuggestions(localMatches);
@@ -1378,62 +1382,81 @@ export const SystemHealthPage: React.FC<{ onNavigateTab?: (tab: string) => void 
               {/* Top Result Bento Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {/* Student Identity */}
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950/40 border border-slate-200 dark:border-slate-800 space-y-1">
-                  <span className="text-[10px] font-black uppercase text-slate-400">Student Identity</span>
-                  <p className="text-xs font-black text-slate-900 dark:text-white">{forensicResult.student.name}</p>
-                  <p className="text-[11px] text-indigo-600 dark:text-indigo-400 font-mono font-bold">
-                    {forensicResult.student.reg_no} • {forensicResult.student.department} ({forensicResult.student.year})
-                  </p>
-                  <p className="text-[10px] text-slate-500 font-mono">@{forensicResult.student.username}</p>
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-white dark:from-navy-900 dark:to-navy-950 border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col justify-center space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-navy-300">Student Identity</span>
+                  </div>
+                  <p className="text-sm font-black text-slate-900 dark:text-white truncate" title={forensicResult.student.name}>{forensicResult.student.name}</p>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="px-1.5 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-[10px] font-black border border-indigo-200 dark:border-indigo-800/50">
+                      {forensicResult.student.reg_no}
+                    </span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate">@{forensicResult.student.username}</span>
+                  </div>
                 </div>
 
                 {/* Contest & Resolved State */}
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950/40 border border-slate-200 dark:border-slate-800 space-y-1">
-                  <span className="text-[10px] font-black uppercase text-slate-400">Contest & Resolved State</span>
-                  <p className="text-xs font-black text-slate-900 dark:text-white">
-                    {forensicResult.contest.contestName}
-                  </p>
-                  <span
-                    className={`inline-block px-2.5 py-0.5 text-[10.5px] font-black rounded-lg mt-0.5 ${
-                      forensicResult.result.participation_status === 'PUBLIC_ATTENDED'
-                        ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
-                        : forensicResult.result.participation_status === 'VIRTUAL_ATTENDED'
-                        ? 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30'
-                        : forensicResult.result.participation_status === 'PUBLIC_NOT_ATTENDED'
-                        ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30'
-                        : 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30'
-                    }`}
-                  >
-                     {forensicResult.result.participation_status}
-                  </span>
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-white dark:from-navy-900 dark:to-navy-950 border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col justify-center space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-brand-500 dark:text-brand-400" />
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-navy-300">Contest & State</span>
+                  </div>
+                  <p className="text-sm font-black text-slate-900 dark:text-white truncate" title={forensicResult.contest.contestName}>{forensicResult.contest.contestName}</p>
+                  <div>
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 text-[9.5px] font-black uppercase tracking-wider rounded-md border ${
+                        forensicResult.result.participation_status === 'PUBLIC_ATTENDED'
+                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border-emerald-300 dark:border-emerald-500/30'
+                          : forensicResult.result.participation_status === 'VIRTUAL_ATTENDED'
+                          ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400 border-indigo-300 dark:border-indigo-500/30'
+                          : forensicResult.result.participation_status === 'PUBLIC_NOT_ATTENDED'
+                          ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400 border-rose-300 dark:border-rose-500/30'
+                          : 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border-amber-300 dark:border-amber-500/30'
+                      }`}
+                    >
+                       {forensicResult.result.participation_status.replace(/_/g, ' ')}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Score & Questions */}
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950/40 border border-slate-200 dark:border-slate-800 space-y-1">
-                  <span className="text-[10px] font-black uppercase text-slate-400">Score & Questions</span>
-                  <p className="text-xs font-black text-slate-900 dark:text-white">
-                    Solved: {forensicResult.result.total_solved} Q • Score: {forensicResult.result.contest_score}
-                  </p>
-                  <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-500 pt-0.5">
-                    <span>Q1:{forensicResult.result.q1}</span>
-                    <span>|</span>
-                    <span>Q2:{forensicResult.result.q2}</span>
-                    <span>|</span>
-                    <span>Q3:{forensicResult.result.q3}</span>
-                    <span>|</span>
-                    <span>Q4:{forensicResult.result.q4}</span>
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-white dark:from-navy-900 dark:to-navy-950 border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col justify-center space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <Activity className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-navy-300">Score & Questions</span>
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-2xl font-black text-slate-900 dark:text-white leading-none tracking-tight">{forensicResult.result.contest_score}</span>
+                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase">Points</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[10px] font-black tracking-wider text-slate-600 dark:text-slate-300">
+                    <span className={forensicResult.result.q1 ? 'text-emerald-600 dark:text-emerald-400' : 'opacity-40'}>Q1:{forensicResult.result.q1}</span>
+                    <span className="opacity-30">|</span>
+                    <span className={forensicResult.result.q2 ? 'text-emerald-600 dark:text-emerald-400' : 'opacity-40'}>Q2:{forensicResult.result.q2}</span>
+                    <span className="opacity-30">|</span>
+                    <span className={forensicResult.result.q3 ? 'text-emerald-600 dark:text-emerald-400' : 'opacity-40'}>Q3:{forensicResult.result.q3}</span>
+                    <span className="opacity-30">|</span>
+                    <span className={forensicResult.result.q4 ? 'text-emerald-600 dark:text-emerald-400' : 'opacity-40'}>Q4:{forensicResult.result.q4}</span>
                   </div>
                 </div>
 
                 {/* Rank & Rating */}
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950/40 border border-slate-200 dark:border-slate-800 space-y-1">
-                  <span className="text-[10px] font-black uppercase text-slate-400">Rank & Rating</span>
-                  <p className="text-xs font-black text-slate-900 dark:text-white">
-                    Rank: {forensicResult.result.contest_rank ? `#${forensicResult.result.contest_rank.toLocaleString()}` : '—'}
-                  </p>
-                  <p className="text-[10.5px] text-slate-500 font-bold">
-                    Rating: {forensicResult.result.contest_rating || '—'}
-                  </p>
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-white dark:from-navy-900 dark:to-navy-950 border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col justify-center space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <Award className="w-3.5 h-3.5 text-purple-500 dark:text-purple-400" />
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-navy-300">Global Rank & Rating</span>
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-none tracking-tight">
+                      {forensicResult.result.contest_rank ? `#${forensicResult.result.contest_rank.toLocaleString()}` : 'Unranked'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50">
+                      Rating: {forensicResult.result.contest_rating || 'N/A'}
+                    </span>
+                  </div>
                 </div>
               </div>
 

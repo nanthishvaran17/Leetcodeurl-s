@@ -568,6 +568,7 @@ def _build_canonical_contest_dataset_internal(
             "q2": q2_val,
             "q3": q3_val,
             "q4": q4_val,
+            "q_timing": __import__("backend.routes.weekly_contests", fromlist=["_build_q_timing"])._build_q_timing(p_res) if p_res else None,
             "total_solved": solved_val,
             "total_contest_solved": solved_val,
             "contest_score": score_val,

@@ -101,11 +101,13 @@ export const Post930SolversView: React.FC = () => {
   };
 
   const studentsList = data?.students || [];
-  const filteredStudents = studentsList.filter((s: any) =>
-    (s.student_name || s.name || '').toLowerCase().includes(search.toLowerCase()) ||
-    (s.register_number || s.reg_no || '').toLowerCase().includes(search.toLowerCase()) ||
-    (s.username || '').toLowerCase().includes(search.toLowerCase())
-  );
+  const q = search.toLowerCase();
+  const filteredStudents = studentsList.filter((s: any) => {
+    if ((s.student_name || s.name) && (s.student_name || s.name).toLowerCase().includes(q)) return true;
+    if ((s.register_number || s.reg_no) && (s.register_number || s.reg_no).toLowerCase().includes(q)) return true;
+    if (s.username && s.username.toLowerCase().includes(q)) return true;
+    return false;
+  });
 
   const summary = data?.summary || {
     students_detected: 0,

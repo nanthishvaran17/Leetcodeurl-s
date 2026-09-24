@@ -897,7 +897,14 @@ export const FacultyActionCenter: React.FC = () => {
         </div>
         <CustomSelect
           value={filterPriority}
-          onChange={v => { setFilterPriority(v); setKpiFilter(v); setPage(1); }}
+          onChange={v => { 
+            setFilterPriority(v); 
+            setFilterStatus('');
+            setFilterOverdue(false);
+            setFilterEscalated(false);
+            setKpiFilter(v); 
+            setPage(1); 
+          }}
           placeholder="All Priorities"
           icon={<Building2 size={16} />}
           options={[
@@ -910,7 +917,14 @@ export const FacultyActionCenter: React.FC = () => {
         
         <CustomSelect
           value={filterStatus}
-          onChange={v => { setFilterStatus(v); setPage(1); }}
+          onChange={v => { 
+            setFilterStatus(v); 
+            setFilterPriority('');
+            setFilterOverdue(false);
+            setFilterEscalated(false);
+            setKpiFilter(v);
+            setPage(1); 
+          }}
           placeholder="All Statuses"
           icon={<Activity size={16} />}
           options={[

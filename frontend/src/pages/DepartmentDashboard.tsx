@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
 import { Layers, Users, Trophy, CheckCircle2, RefreshCw, LayoutGrid, List, ChevronDown, Building2, GraduationCap, RotateCcw, Filter, AlertCircle, Search, X, ArrowUpDown, Star, Flame } from 'lucide-react';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import api from '../services/api';
@@ -24,6 +24,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   const [selectedDept, setSelectedDept] = useState<string>('all');
   const [yearLevel, setYearLevel] = useState<string>('all');
   const [nameSearch, setNameSearch] = useState<string>('');
+  const deferredNameSearch = useDeferredValue(nameSearch);
   const [sortBy, setSortBy] = useState<string>('top_solved');
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [displayCount, setDisplayCount] = useState<number>(32);
@@ -79,13 +80,14 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
     }
 
     // Name search filter
-    if (nameSearch.trim()) {
-      const q = nameSearch.trim().toLowerCase();
-      list = list.filter((s: any) =>
-        s.name?.toLowerCase().includes(q) ||
-        s.reg_no?.toLowerCase().includes(q) ||
-        s.username?.toLowerCase().includes(q)
-      );
+    if (deferredNameSearch.trim()) {
+      const q = deferredNameSearch.trim().toLowerCase();
+      list = list.filter((s: any) => {
+        if (s.name?.toLowerCase().includes(q)) return true;
+        if (s.reg_no?.toLowerCase().includes(q)) return true;
+        if (s.username?.toLowerCase().includes(q)) return true;
+        return false;
+      });
     }
 
     // Performance / solved range filter
@@ -122,7 +124,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
 
     // Apply displayCount limit
     return list.slice(0, displayCount);
-  }, [allStudents, selectedDept, yearLevel, nameSearch, solvedParams, sortBy, displayCount]);
+  }, [allStudents, selectedDept, yearLevel, deferredNameSearch, solvedParams, sortBy, displayCount]);
 
   const totalStudents = useMemo(() => {
     // Total BEFORE displayCount slice (for the header count)
@@ -140,13 +142,14 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
         return yr === yrClean;
       });
     }
-    if (nameSearch.trim()) {
-      const q = nameSearch.trim().toLowerCase();
-      list = list.filter((s: any) =>
-        s.name?.toLowerCase().includes(q) ||
-        s.reg_no?.toLowerCase().includes(q) ||
-        s.username?.toLowerCase().includes(q)
-      );
+    if (deferredNameSearch.trim()) {
+      const q = deferredNameSearch.trim().toLowerCase();
+      list = list.filter((s: any) => {
+        if (s.name?.toLowerCase().includes(q)) return true;
+        if (s.reg_no?.toLowerCase().includes(q)) return true;
+        if (s.username?.toLowerCase().includes(q)) return true;
+        return false;
+      });
     }
     const { min_solved, max_solved } = solvedParams;
     if (min_solved !== undefined || max_solved !== undefined) {
@@ -159,7 +162,7 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
       });
     }
     return list.length;
-  }, [allStudents, selectedDept, yearLevel, nameSearch, solvedParams]);
+  }, [allStudents, selectedDept, yearLevel, deferredNameSearch, solvedParams]);
 
   const handleRefreshAllStats = async () => {
     setIsRefreshing(true);

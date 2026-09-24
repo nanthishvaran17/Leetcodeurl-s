@@ -114,12 +114,11 @@ export const StaffDashboardView: React.FC = () => {
     // Text Search Filter
     const q = search.toLowerCase().trim();
     if (!q) return true;
-    return (
-      (s.name || '').toLowerCase().includes(q) ||
-      (s.reg_no || '').toLowerCase().includes(q) ||
-      (s.username || '').toLowerCase().includes(q) ||
-      (s.department || '').toLowerCase().includes(q)
-    );
+    if (s.name && s.name.toLowerCase().includes(q)) return true;
+    if (s.reg_no && s.reg_no.toLowerCase().includes(q)) return true;
+    if (s.username && s.username.toLowerCase().includes(q)) return true;
+    if (s.department && s.department.toLowerCase().includes(q)) return true;
+    return false;
   });
 
   const handleCardFilterClick = (status: 'ALL' | 'ACTIVE' | 'COMPLETED' | 'ATTENTION' | 'AT_RISK') => {

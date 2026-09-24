@@ -28,6 +28,53 @@ from backend.services.contest_discovery import (
 
 from backend.services.canonical_contest_engine import build_canonical_contest_dataset
 from backend.security import require_security_access, get_current_user_optional
+try:
+    from backend.services.time_estimation_engine import (
+        SOURCE_OBSERVED_LIVE, SOURCE_AUTHORITATIVE_TELEMETRY,
+        SOURCE_ESTIMATED_DIFFICULTY_WEIGHT, SOURCE_UNAVAILABLE,
+        CONFIDENCE_MAP
+    )
+except ImportError:
+    SOURCE_OBSERVED_LIVE = "OBSERVED_LIVE"
+    SOURCE_AUTHORITATIVE_TELEMETRY = "AUTHORITATIVE_TELEMETRY"
+    SOURCE_ESTIMATED_DIFFICULTY_WEIGHT = "ESTIMATED_DIFFICULTY_WEIGHT"
+    SOURCE_UNAVAILABLE = "UNAVAILABLE"
+    CONFIDENCE_MAP = {}
+
+
+def _build_q_timing(r: Any) -> Dict[str, Any]:
+    """
+    Build structured per-question timing object for API response.
+    Priority: OBSERVED > ESTIMATED > UNAVAILABLE.
+    Backward compat: q=1 means SOLVED with no time evidence.
+    """
+    result = {}
+    for q_idx in range(1, 5):
+        q_bin   = getattr(r, f"q{q_idx}", 0) or 0          # binary 0/1
+        obs_sec = getattr(r, f"q{q_idx}_observed_seconds", None)
+        est_sec = getattr(r, f"q{q_idx}_estimated_seconds", None)
+        source  = getattr(r, f"q{q_idx}_time_source", None)
+
+        status = "SOLVED" if q_bin else "NOT_SOLVED"
+
+        if obs_sec and obs_sec > 1:
+            h = obs_sec // 3600; m = (obs_sec % 3600) // 60; s = obs_sec % 60
+            display = f"{h}h {m}m {s}s" if h > 0 else f"{m}m {s}s"
+            result[f"q{q_idx}"] = {"status": status, "seconds": obs_sec, "source": SOURCE_OBSERVED_LIVE, "method": "LIVE_ACTIVITY_TELEMETRY", "confidence": "HIGH", "display": display, "approximate": False}
+        elif est_sec and est_sec > 0 and source == SOURCE_ESTIMATED_DIFFICULTY_WEIGHT:
+            h = est_sec // 3600; m = (est_sec % 3600) // 60; s = est_sec % 60
+            display = f"~{h}h {m}m {s}s" if h > 0 else f"~{m}m {s}s"
+            result[f"q{q_idx}"] = {"status": status, "seconds": est_sec, "source": SOURCE_ESTIMATED_DIFFICULTY_WEIGHT, "method": "ENTRY_EXIT_DIFFICULTY_WEIGHT", "confidence": "MEDIUM", "display": display, "approximate": True}
+        elif q_bin == 1:
+            result[f"q{q_idx}"] = {"status": "SOLVED", "seconds": None, "source": SOURCE_UNAVAILABLE, "method": "LEGACY_BINARY", "confidence": "NONE", "display": None, "approximate": False}
+        else:
+            result[f"q{q_idx}"] = {"status": "NOT_SOLVED", "seconds": None, "source": SOURCE_UNAVAILABLE, "method": None, "confidence": "NONE", "display": None, "approximate": False}
+
+    result["timing_confidence"] = getattr(r, "timing_confidence", "NONE") or "NONE"
+    result["calculation_version"] = getattr(r, "timing_calculation_version", None)
+    return result
+
+
 
 router = APIRouter(prefix="/contests", tags=["Weekly Contests"])
 
@@ -315,6 +362,30 @@ async def get_contest_metadata_endpoint(
     
     try:
         meta = await fetch_contest_metadata(session.contest_id)
+        
+        # DYNAMIC FALLBACK: If LeetCode Cloudflare blocks the GraphQL API, we extract the questions dynamically 
+        # from our own telemetry (LiveEvent) where students have already submitted them!
+        if not meta.get("problemSlugs") or len(meta["problemSlugs"]) < 4:
+            from backend.models import LiveEvent
+            from sqlalchemy import select
+            
+            stmt = select(LiveEvent.question_id, LiveEvent.title_slug).where(
+                LiveEvent.session_id == session.id,
+                LiveEvent.question_id.isnot(None)
+            ).distinct()
+            
+            records = db.execute(stmt).all()
+            if records:
+                slug_map = {r.question_id: r.title_slug for r in records if r.title_slug}
+                slugs = [
+                    slug_map.get(1, "question-1"), 
+                    slug_map.get(2, "question-2"), 
+                    slug_map.get(3, "question-3"), 
+                    slug_map.get(4, "question-4")
+                ]
+                if any(slug != f"question-{i+1}" for i, slug in enumerate(slugs)):
+                    meta["problemSlugs"] = slugs
+                    
         return meta
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -945,6 +1016,7 @@ def get_normalized_contest_data(
             "q2": r["q2"] if is_att and r["q2"] is not None else "—",
             "q3": r["q3"] if is_att and r["q3"] is not None else "—",
             "q4": r["q4"] if is_att and r["q4"] is not None else "—",
+            "q_timing": r.get("q_timing"),
             "total_solved": r["total_solved"] if is_att and r["total_solved"] is not None else "—",
             "total_contest_solved": r["total_solved"] if is_att and r["total_solved"] is not None else "—",
             "score": r["score"] if is_att and r["score"] is not None else 0,
@@ -1094,6 +1166,7 @@ def get_session_matrix(
                 "q2": r.get("q2") if is_att and r.get("q2") is not None else "—",
                 "q3": r.get("q3") if is_att and r.get("q3") is not None else "—",
                 "q4": r.get("q4") if is_att and r.get("q4") is not None else "—",
+                "q_timing": r.get("q_timing"),
                 "total_solved": r.get("total_solved") if is_att and r.get("total_solved") is not None else "—",
                 "total_contest_solved": r.get("total_solved") if is_att and r.get("total_solved") is not None else "—",
                 "score": r.get("score") if is_att and r.get("score") is not None else 0,
@@ -1374,7 +1447,11 @@ def get_session_diagnostics_detail(
             "reg_no": r.reg_no,
             "name": r.name,
             "status": r.participation_status,
-            "q1": r.q1, "q2": r.q2, "q3": r.q3, "q4": r.q4,
+            "q1": getattr(r, "q1_observed_seconds", None) or r.q1,
+            "q2": getattr(r, "q2_observed_seconds", None) or r.q2,
+            "q3": getattr(r, "q3_observed_seconds", None) or r.q3,
+            "q4": getattr(r, "q4_observed_seconds", None) or r.q4,
+            "q_timing": _build_q_timing(r),
             "solved": r.total_contest_solved,
             "rank": r.contest_rank
         })
@@ -1453,10 +1530,11 @@ def get_contest_leaderboard(
             "regNo": r.reg_no,
             "dept": r.dept,
             "year": r.year,
-            "q1": r.q1 or 0,
-            "q2": r.q2 or 0,
-            "q3": r.q3 or 0,
-            "q4": r.q4 or 0,
+            "q1": getattr(r, "q1_observed_seconds", None) or getattr(r, "q1", 0) or 0,
+            "q2": getattr(r, "q2_observed_seconds", None) or getattr(r, "q2", 0) or 0,
+            "q3": getattr(r, "q3_observed_seconds", None) or getattr(r, "q3", 0) or 0,
+            "q4": getattr(r, "q4_observed_seconds", None) or getattr(r, "q4", 0) or 0,
+            "q_timing": _build_q_timing(r),
             "totalSolved": r.total_contest_solved or 0,
             "score": r.contest_score or 0,
             "contestRank": r.contest_rank,
@@ -3126,6 +3204,10 @@ class LiveSolveIngestRequest(BaseModel):
     q2: int = Field(default=0, ge=0, le=1)
     q3: int = Field(default=0, ge=0, le=1)
     q4: int = Field(default=0, ge=0, le=1)
+    q1_observed_seconds: Optional[int] = None
+    q2_observed_seconds: Optional[int] = None
+    q3_observed_seconds: Optional[int] = None
+    q4_observed_seconds: Optional[int] = None
     official_rank: Optional[int] = None
     official_score: Optional[int] = None
     finish_time: Optional[str] = None
@@ -3158,6 +3240,10 @@ async def ingest_live_contest_solve(
         q2=req.q2,
         q3=req.q3,
         q4=req.q4,
+        q1_observed_seconds=req.q1_observed_seconds,
+        q2_observed_seconds=req.q2_observed_seconds,
+        q3_observed_seconds=req.q3_observed_seconds,
+        q4_observed_seconds=req.q4_observed_seconds,
         official_rank=req.official_rank,
         official_score=req.official_score,
         finish_time=req.finish_time,

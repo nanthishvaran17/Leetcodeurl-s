@@ -1,5 +1,5 @@
 // WeeklyContestPage.tsx - LeetCode Intelligence Dashboard
-import React, { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, memo, useRef, useDeferredValue } from 'react';
 import { createPortal } from 'react-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 import { useScrollLock } from '../hooks/useScrollLock';
@@ -340,6 +340,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const [subTab, setSubTab] = useState<'matrix' | 'dept_year' | 'error_board' | 'post_930_activity'>('matrix');
   const [showDetailedView, setShowDetailedView] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const deferredSearchTerm = useDeferredValue(searchTerm);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [customCalendarDate, setCustomCalendarDate] = useState<string>('');
@@ -364,11 +365,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const [invariantResults, setInvariantResults] = useState<any | null>(null);
 
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 250);
-    return () => clearTimeout(handler);
-  }, [searchTerm]);
+    setDebouncedSearchTerm(deferredSearchTerm);
+  }, [deferredSearchTerm]);
 
   const [showPreviewModal, setShowPreviewModal] = useState<boolean>(false);
   const [showEmailModal, setShowEmailModal] = useState<boolean>(false);
@@ -527,12 +525,27 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       let changed = false;
       const updated = [...prev];
 
+      const byId = new Map<number, number>();
+      const byRegNo = new Map<string, number>();
+      const byName = new Map<string, number>();
+      const byUsername = new Map<string, number>();
+
+      for (let i = 0; i < updated.length; i++) {
+        const r = updated[i];
+        if (r.student_id != null || r.id != null) byId.set((r.student_id || r.id), i);
+        if (r.reg_no) byRegNo.set(r.reg_no, i);
+        if (r.name) byName.set(r.name, i);
+        if (r.username) byUsername.set(r.username, i);
+      }
+
       for (const event of events) {
-        // Primary: match by student_id or id; Fallback: reg_no or username
-        let idx = event.studentId != null ? updated.findIndex(r => (r.student_id || r.id) === event.studentId) : -1;
-        if (idx === -1 && event.regNo) idx = updated.findIndex(r => r.reg_no === event.regNo);
-        if (idx === -1 && event.studentName) idx = updated.findIndex(r => r.username === event.contestId || r.name === event.studentName);
-        if (idx === -1) continue; // Still not found — do not insert dynamically
+        let idx = -1;
+        if (event.studentId != null && byId.has(event.studentId)) idx = byId.get(event.studentId)!;
+        else if (event.regNo && byRegNo.has(event.regNo)) idx = byRegNo.get(event.regNo)!;
+        else if (event.studentName && byName.has(event.studentName)) idx = byName.get(event.studentName)!;
+        else if (event.contestId && byUsername.has(event.contestId)) idx = byUsername.get(event.contestId)!;
+        
+        if (idx === -1) continue;
 
         changed = true;
         updated[idx] = {
@@ -2399,20 +2412,27 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 type="button"
                 onClick={() => setShowExportMenu(!showExportMenu)}
                 disabled={!selectedSessionId || isSyncing}
-                className={`group relative flex items-center space-x-2.5 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold transition-all duration-200 cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed border ${
+                className={`group relative flex items-center space-x-2.5 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-extrabold transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border ${
                   showExportMenu
-                    ? 'bg-gradient-to-r from-indigo-600 via-indigo-700 to-brand-600 text-white border-transparent shadow-lg shadow-indigo-500/25 ring-2 ring-indigo-500/30'
-                    : 'bg-white dark:bg-navy-950 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-navy-800 hover:border-indigo-400 dark:hover:border-indigo-600 hover:bg-slate-50 dark:hover:bg-navy-900 shadow-slate-200/50 dark:shadow-none'
+                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent shadow-[0_0_20px_rgba(79,70,229,0.3)] ring-2 ring-indigo-500/30 ring-offset-1 dark:ring-offset-navy-900'
+                    : 'bg-white dark:bg-navy-900/80 text-slate-800 dark:text-slate-100 border-slate-200 dark:border-navy-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-lg hover:shadow-indigo-500/10 dark:hover:shadow-indigo-900/20'
                 }`}
               >
-                <div className={`p-1 rounded-lg transition-colors ${
-                  showExportMenu ? 'bg-white/20 text-white' : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/80'
+                {/* Subtle animated background gradient on hover (only when not active) */}
+                {!showExportMenu && (
+                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500/0 via-purple-500/10 to-indigo-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                )}
+                
+                <div className={`p-1.5 rounded-xl transition-all duration-300 relative z-10 ${
+                  showExportMenu 
+                    ? 'bg-white/25 text-white shadow-inner' 
+                    : 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900 group-hover:scale-105'
                 }`}>
                   <Download className="w-4 h-4 stroke-[2.5]" />
                 </div>
-                <span className="tracking-tight font-extrabold">Actions & Export</span>
-                <ChevronDown className={`w-4 h-4 ml-0.5 transition-transform duration-200 ${
-                  showExportMenu ? 'rotate-180 text-white' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'
+                <span className="tracking-wide font-black relative z-10">Actions & Export</span>
+                <ChevronDown className={`w-4 h-4 ml-1 transition-transform duration-300 relative z-10 ${
+                  showExportMenu ? 'rotate-180 text-white' : 'text-slate-400 group-hover:text-indigo-500 dark:group-hover:text-indigo-400'
                 }`} />
               </button>
               
@@ -2422,150 +2442,187 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     initial={{ opacity: 0, y: -8, scale: 0.96 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                    transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute z-50 right-0 mt-2.5 w-72 sm:w-80 rounded-[16px] bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border border-slate-200/80 dark:border-navy-800/80 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] p-2.5 divide-y divide-slate-100 dark:divide-navy-800/80 focus:outline-none overflow-hidden select-none"
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute z-50 right-0 mt-3 w-80 sm:w-[360px] rounded-2xl bg-white/95 dark:bg-navy-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-navy-700/80 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_60px_-12px_rgba(0,0,0,0.6)] p-3 space-y-1 focus:outline-none overflow-hidden select-none"
                   >
                     {/* SECTION 1: ACTIONS */}
-                    <div className="pb-2">
-                      <div className="px-3 pt-1 pb-1.5 text-[10px] font-extrabold tracking-wider uppercase text-slate-400 dark:text-slate-500">
-                        Actions
+                    <div className="pb-2 mb-2 border-b border-slate-100 dark:border-navy-800">
+                      <div className="px-3 pt-1 pb-2 flex items-center space-x-2">
+                         <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+                         <span className="text-[10px] font-black tracking-widest uppercase text-slate-400 dark:text-slate-500">
+                           Primary Actions
+                         </span>
                       </div>
                       <div className="space-y-1">
                         <button
                           type="button"
                           onClick={() => { setShowPreviewModal(true); setShowExportMenu(false); }}
-                          className="w-full flex items-center justify-between h-11 sm:h-12 px-3 rounded-xl text-left transition-all duration-150 group hover:bg-purple-500/10 dark:hover:bg-purple-500/15 cursor-pointer"
+                          className="w-full flex items-center justify-between p-3 rounded-xl text-left transition-all duration-200 group hover:bg-purple-50 dark:hover:bg-purple-900/20 cursor-pointer border border-transparent hover:border-purple-100 dark:hover:border-purple-800/50"
                         >
-                          <div className="flex items-center space-x-3 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
-                              <Eye className="w-5 h-5 stroke-[2]" />
+                          <div className="flex items-center space-x-3.5 min-w-0">
+                            <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                              <Eye className="w-5 h-5 stroke-[2.5]" />
                             </div>
-                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">
-                              Live Preview
-                            </span>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors">
+                                Live Preview
+                              </span>
+                              <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 group-hover:text-purple-500/80 dark:group-hover:text-purple-400/80 transition-colors">
+                                Review dataset before export
+                              </span>
+                            </div>
                           </div>
-                          <ArrowUpRight className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:text-purple-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200" />
+                          <ArrowUpRight className="w-4 h-4 text-slate-300 dark:text-navy-600 opacity-0 group-hover:opacity-100 group-hover:text-purple-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-300" />
                         </button>
 
                         <button
                           type="button"
                           onClick={() => { setShowEmailModal(true); setShowExportMenu(false); }}
-                          className="w-full flex items-center justify-between h-11 sm:h-12 px-3 rounded-xl text-left transition-all duration-150 group hover:bg-indigo-500/10 dark:hover:bg-indigo-500/15 cursor-pointer"
+                          className="w-full flex items-center justify-between p-3 rounded-xl text-left transition-all duration-200 group hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer border border-transparent hover:border-indigo-100 dark:hover:border-indigo-800/50"
                         >
-                          <div className="flex items-center space-x-3 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
-                              <Mail className="w-5 h-5 stroke-[2]" />
+                          <div className="flex items-center space-x-3.5 min-w-0">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shadow-sm">
+                              <Mail className="w-5 h-5 stroke-[2.5]" />
                             </div>
-                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
-                              Send Email Report
-                            </span>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-bold text-slate-700 dark:text-slate-200 group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">
+                                Send Email Report
+                              </span>
+                              <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 group-hover:text-indigo-500/80 dark:group-hover:text-indigo-400/80 transition-colors">
+                                Distribute securely to faculty
+                              </span>
+                            </div>
                           </div>
-                          <ArrowUpRight className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 group-hover:text-indigo-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200" />
+                          <ArrowUpRight className="w-4 h-4 text-slate-300 dark:text-navy-600 opacity-0 group-hover:opacity-100 group-hover:text-indigo-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-300" />
                         </button>
                       </div>
                     </div>
 
                     {/* SECTION 2: EXPORT */}
-                    <div className="py-2">
-                      <div className="px-3 pt-1.5 pb-1.5 text-[10px] font-extrabold tracking-wider uppercase text-slate-400 dark:text-slate-500">
-                        Export
+                    <div className="pb-2 mb-2 border-b border-slate-100 dark:border-navy-800">
+                      <div className="px-3 pt-1 pb-2 flex items-center space-x-2">
+                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                         <span className="text-[10px] font-black tracking-widest uppercase text-slate-400 dark:text-slate-500">
+                           Export Formats
+                         </span>
                       </div>
                       <div className="space-y-1">
                         <button
                           type="button"
                           onClick={() => { downloadReportFile('excel'); setShowExportMenu(false); }}
-                          className="w-full flex items-center justify-between h-11 sm:h-12 px-3 rounded-xl text-left transition-all duration-150 group hover:bg-emerald-500/10 dark:hover:bg-emerald-500/15 cursor-pointer"
+                          className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-200 group hover:bg-emerald-50 dark:hover:bg-emerald-900/20 cursor-pointer"
                         >
-                          <div className="flex items-center space-x-3 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
-                              <FileSpreadsheet className="w-5 h-5 stroke-[2]" />
+                          <div className="flex items-center space-x-3.5 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                              <FileSpreadsheet className="w-4 h-4 stroke-[2.5]" />
                             </div>
-                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors">
-                              Export as Excel
-                            </span>
+                            <div className="flex flex-col">
+                              <span className="text-[13px] font-bold text-slate-700 dark:text-slate-200 group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">
+                                Excel Workbook
+                              </span>
+                              <span className="text-[9.5px] font-semibold text-slate-400 dark:text-slate-500 transition-colors">
+                                Raw structured data
+                              </span>
+                            </div>
                           </div>
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-                            .XLSX
+                          <span className="text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                            XLSX
                           </span>
                         </button>
 
                         <button
                           type="button"
                           onClick={() => { downloadReportFile('pdf'); setShowExportMenu(false); }}
-                          className="w-full flex items-center justify-between h-11 sm:h-12 px-3 rounded-xl text-left transition-all duration-150 group hover:bg-rose-500/10 dark:hover:bg-rose-500/15 cursor-pointer"
+                          className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-200 group hover:bg-rose-50 dark:hover:bg-rose-900/20 cursor-pointer"
                         >
-                          <div className="flex items-center space-x-3 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
-                              <FileText className="w-5 h-5 stroke-[2]" />
+                          <div className="flex items-center space-x-3.5 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                              <FileText className="w-4 h-4 stroke-[2.5]" />
                             </div>
-                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-rose-600 dark:group-hover:text-rose-300 transition-colors">
-                              Export as PDF
-                            </span>
+                            <div className="flex flex-col">
+                              <span className="text-[13px] font-bold text-slate-700 dark:text-slate-200 group-hover:text-rose-700 dark:group-hover:text-rose-300 transition-colors">
+                                PDF Document
+                              </span>
+                              <span className="text-[9.5px] font-semibold text-slate-400 dark:text-slate-500 transition-colors">
+                                Formatted print layout
+                              </span>
+                            </div>
                           </div>
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-600 dark:text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-colors">
-                            .PDF
+                          <span className="text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded-md bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                            PDF
                           </span>
                         </button>
 
                         <button
                           type="button"
                           onClick={() => { downloadReportFile('word'); setShowExportMenu(false); }}
-                          className="w-full flex items-center justify-between h-11 sm:h-12 px-3 rounded-xl text-left transition-all duration-150 group hover:bg-blue-500/10 dark:hover:bg-blue-500/15 cursor-pointer"
+                          className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-200 group hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer"
                         >
-                          <div className="flex items-center space-x-3 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
-                              <FileText className="w-5 h-5 stroke-[2]" />
+                          <div className="flex items-center space-x-3.5 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                              <FileText className="w-4 h-4 stroke-[2.5]" />
                             </div>
-                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-300 transition-colors">
-                              Export as Word
-                            </span>
+                            <div className="flex flex-col">
+                              <span className="text-[13px] font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
+                                Word Document
+                              </span>
+                              <span className="text-[9.5px] font-semibold text-slate-400 dark:text-slate-500 transition-colors">
+                                Editable text report
+                              </span>
+                            </div>
                           </div>
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                            .DOCX
+                          <span className="text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                            DOCX
                           </span>
                         </button>
 
                         <button
                           type="button"
                           onClick={() => { downloadReportFile('zip'); setShowExportMenu(false); }}
-                          className="w-full flex items-center justify-between h-11 sm:h-12 px-3 rounded-xl text-left transition-all duration-150 group hover:bg-amber-500/10 dark:hover:bg-amber-500/15 cursor-pointer"
+                          className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-200 group hover:bg-amber-50 dark:hover:bg-amber-900/20 cursor-pointer"
                         >
-                          <div className="flex items-center space-x-3 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
-                              <FileArchive className="w-5 h-5 stroke-[2]" />
+                          <div className="flex items-center space-x-3.5 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300">
+                              <FileArchive className="w-4 h-4 stroke-[2.5]" />
                             </div>
-                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors">
-                              Download ZIP
-                            </span>
+                            <div className="flex flex-col">
+                              <span className="text-[13px] font-bold text-slate-700 dark:text-slate-200 group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors">
+                                ZIP Archive
+                              </span>
+                              <span className="text-[9.5px] font-semibold text-slate-400 dark:text-slate-500 transition-colors">
+                                Bundle all formats
+                              </span>
+                            </div>
                           </div>
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition-colors">
-                            .ZIP
+                          <span className="text-[9px] font-black tracking-wider px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                            ZIP
                           </span>
                         </button>
                       </div>
                     </div>
 
                     {/* SECTION 3: UTILITY */}
-                    <div className="pt-2">
-                      <div className="px-3 pt-1.5 pb-1.5 text-[10px] font-extrabold tracking-wider uppercase text-slate-400 dark:text-slate-500">
-                        Utility
+                    <div>
+                      <div className="px-3 pt-1 pb-1 flex items-center space-x-2">
+                         <div className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500" />
+                         <span className="text-[10px] font-black tracking-widest uppercase text-slate-400 dark:text-slate-500">
+                           Utility
+                         </span>
                       </div>
-                      <div className="space-y-1">
-                        <button
-                          type="button"
-                          onClick={() => { window.print(); setShowExportMenu(false); }}
-                          className="w-full flex items-center justify-between h-11 sm:h-12 px-3 rounded-xl text-left transition-all duration-150 group hover:bg-slate-500/10 dark:hover:bg-slate-500/15 cursor-pointer"
-                        >
-                          <div className="flex items-center space-x-3 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-slate-500/10 dark:bg-slate-500/20 text-slate-600 dark:text-slate-300 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
-                              <Printer className="w-5 h-5 stroke-[2]" />
-                            </div>
-                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
-                              Print View
-                            </span>
+                      <button
+                        type="button"
+                        onClick={() => { window.print(); setShowExportMenu(false); }}
+                        className="w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all duration-200 group hover:bg-slate-100 dark:hover:bg-navy-800 cursor-pointer"
+                      >
+                        <div className="flex items-center space-x-3.5 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:bg-slate-800 group-hover:text-white dark:group-hover:bg-slate-200 dark:group-hover:text-slate-900 transition-all duration-300">
+                            <Printer className="w-4 h-4 stroke-[2.5]" />
                           </div>
-                        </button>
-                      </div>
+                          <span className="text-[13px] font-bold text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                            Print View
+                          </span>
+                        </div>
+                      </button>
                     </div>
                   </motion.div>
                 )}
@@ -2663,129 +2720,204 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 {/* Trigger */}
                 <button
                   type="button"
-                  onClick={() => setDeptOpen(p => !p)}
-                  className={`w-full flex items-center gap-2.5 bg-slate-50 dark:bg-navy-950 px-3.5 py-2.5 rounded-2xl border shadow-sm text-left transition-all hover:border-indigo-300 dark:hover:border-indigo-600 focus:outline-none ${deptOpen ? 'border-indigo-400 ring-2 ring-indigo-400/20 dark:border-indigo-500' : 'border-slate-200 dark:border-slate-800'}`}
+                  onClick={() => { setDeptOpen(p => !p); setYearOpen(false); setAttOpen(false); }}
+                  className={`group relative w-full flex items-center gap-3 bg-white dark:bg-navy-900/80 px-4 py-3 rounded-2xl border text-left transition-all duration-300 focus:outline-none overflow-hidden ${
+                    deptOpen
+                      ? 'border-indigo-500/50 shadow-[0_0_20px_rgba(99,102,241,0.2)] dark:shadow-[0_0_25px_rgba(99,102,241,0.15)] ring-2 ring-indigo-500/20'
+                      : 'border-slate-200 dark:border-navy-700 hover:border-indigo-300/80 dark:hover:border-indigo-600/50 hover:shadow-lg hover:shadow-indigo-500/5 dark:hover:shadow-indigo-900/20'
+                  }`}
                 >
-                  <Building2 className="w-4 h-4 text-indigo-500 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">Department</p>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${selectedDeptObj.color}`}>{selectedDeptObj.code}</span>
-                      <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{selectedDeptObj.label}</span>
+                  {/* Subtle animated background gradient on hover */}
+                  {!deptOpen && (
+                     <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500/0 via-indigo-500/5 to-indigo-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                  )}
+                  
+                  <div className={`p-2 rounded-xl transition-all duration-300 relative z-10 ${
+                    deptOpen 
+                      ? 'bg-indigo-500 text-white shadow-inner scale-105' 
+                      : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/80 group-hover:scale-105'
+                  }`}>
+                    <Building2 className={`w-4 h-4 ${deptOpen ? 'stroke-[2.5]' : 'stroke-[2]'}`} />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0 relative z-10">
+                    <p className={`text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${deptOpen ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-indigo-400 dark:group-hover:text-indigo-300'}`}>Department</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 shadow-sm transition-all duration-300 ${selectedDeptObj.color}`}>{selectedDeptObj.code}</span>
+                      <span className={`text-[13px] font-bold truncate transition-colors duration-300 ${deptOpen ? 'text-indigo-950 dark:text-indigo-100' : 'text-slate-900 dark:text-slate-100 group-hover:text-indigo-900 dark:group-hover:text-indigo-200'}`}>{selectedDeptObj.label}</span>
                     </div>
                   </div>
-                  <ChevronDown className={`w-3.5 h-3.5 text-slate-500 dark:text-slate-400 transition-transform shrink-0 ${deptOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-300 relative z-10 ${deptOpen ? 'rotate-180 text-indigo-500' : 'text-slate-400 group-hover:text-indigo-400'}`} />
                 </button>
                 {/* Dropdown Panel */}
+                <AnimatePresence>
                 {deptOpen && (
-                  <div className="absolute z-50 top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden max-h-72 overflow-y-auto">
+                  <motion.div
+                    initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute z-50 top-full left-0 right-0 mt-2.5 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border border-slate-200/80 dark:border-navy-700/80 rounded-2xl shadow-[0_20px_60px_-12px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_60px_-12px_rgba(0,0,0,0.6)] overflow-hidden max-h-72 overflow-y-auto custom-scrollbar p-1.5"
+                  >
                     {DEPT_OPTIONS.map(opt => (
                       <button
                         key={opt.value}
                         type="button"
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => { setSelectedDeptFilter(opt.value); setDeptOpen(false); }}
-                        className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-navy-800 ${selectedDeptFilter === opt.value ? 'bg-indigo-50/80 dark:bg-indigo-950/60' : ''}`}
+                        className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all duration-200 group ${
+                          selectedDeptFilter === opt.value 
+                            ? 'bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-800/50' 
+                            : 'border border-transparent hover:bg-slate-50 dark:hover:bg-navy-800 hover:border-slate-100 dark:hover:border-navy-700'
+                        }`}
                       >
-                        <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${opt.color}`}>{opt.code}</span>
-                        <span className={`text-xs truncate flex-1 ${selectedDeptFilter === opt.value ? 'text-indigo-950 dark:text-indigo-200 font-extrabold' : 'text-slate-800 dark:text-slate-200 font-semibold'}`}>{opt.label}</span>
-                        {selectedDeptFilter === opt.value && <Check className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />}
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 ${
+                          selectedDeptFilter === opt.value ? 'bg-indigo-100 dark:bg-indigo-800 text-indigo-600 dark:text-indigo-300' : 'bg-slate-100 dark:bg-navy-800 text-slate-400 dark:text-slate-500'
+                        }`}>
+                          <Building2 className="w-4 h-4 stroke-[2.5]" />
+                        </div>
+                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 shadow-sm ${opt.color}`}>{opt.code}</span>
+                        <span className={`text-xs truncate flex-1 ${selectedDeptFilter === opt.value ? 'text-indigo-900 dark:text-indigo-200 font-extrabold' : 'text-slate-700 dark:text-slate-300 font-semibold group-hover:text-slate-900 dark:group-hover:text-slate-100'}`}>{opt.label}</span>
+                        {selectedDeptFilter === opt.value && <Check className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />}
                       </button>
                     ))}
-                  </div>
+                  </motion.div>
                 )}
+                </AnimatePresence>
               </div>
             );
           })()}
 
           {/* Academic Year — Premium Custom Dropdown */}
-          <div className="relative">
+          <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setYearOpen(false); }}>
             <button
               type="button"
               onClick={() => { setYearOpen(p => !p); setDeptOpen(false); setAttOpen(false); }}
-              className={`w-full flex items-center gap-2.5 bg-slate-50 dark:bg-navy-950 px-3.5 py-2.5 rounded-2xl border shadow-sm text-left transition-all focus:outline-none ${
+              className={`group relative w-full flex items-center gap-3 bg-white dark:bg-navy-900/80 px-4 py-3 rounded-2xl border text-left transition-all duration-300 focus:outline-none overflow-hidden ${
                 yearOpen
-                  ? 'border-brand-400 ring-2 ring-brand-400/20 dark:border-brand-500'
-                  : 'border-slate-200 dark:border-slate-800 hover:border-brand-300'
+                  ? 'border-brand-400/50 shadow-[0_0_20px_rgba(249,115,22,0.2)] dark:shadow-[0_0_25px_rgba(249,115,22,0.15)] ring-2 ring-brand-500/20'
+                  : 'border-slate-200 dark:border-navy-700 hover:border-brand-300/80 dark:hover:border-brand-600/50 hover:shadow-lg hover:shadow-brand-500/5 dark:hover:shadow-brand-900/20'
               }`}
             >
-              <GraduationCap className="w-4 h-4 text-brand-500 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">Academic Year</p>
-                <div className="flex items-center gap-1.5 mt-0.5">
+              {!yearOpen && (
+                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-brand-500/0 via-brand-500/5 to-brand-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+              )}
+              
+              <div className={`p-2 rounded-xl transition-all duration-300 relative z-10 ${
+                yearOpen 
+                  ? 'bg-brand-500 text-white shadow-inner scale-105' 
+                  : 'bg-brand-50 dark:bg-brand-950/60 text-brand-500 dark:text-brand-400 group-hover:bg-brand-100 dark:group-hover:bg-brand-900/80 group-hover:scale-105'
+              }`}>
+                <GraduationCap className={`w-4 h-4 ${yearOpen ? 'stroke-[2.5]' : 'stroke-[2]'}`} />
+              </div>
+
+              <div className="flex-1 min-w-0 relative z-10">
+                <p className={`text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${yearOpen ? 'text-brand-500 dark:text-brand-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-brand-400 dark:group-hover:text-brand-300'}`}>Academic Year</p>
+                <div className="flex items-center gap-2 mt-0.5">
                   {selectedYearFilter === 'ALL' ? (
-                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-brand-700 bg-brand-50 dark:bg-brand-950 dark:text-brand-300 font-extrabold">ALL</span>
+                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-brand-700 bg-brand-50 dark:bg-brand-950 dark:text-brand-300 font-extrabold shadow-sm">ALL</span>
                   ) : selectedYearFilter === '2' || selectedYearFilter === 'II' ? (
-                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-sky-700 bg-sky-50 dark:bg-sky-950 dark:text-sky-300 font-extrabold">II</span>
+                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-sky-700 bg-sky-50 dark:bg-sky-950 dark:text-sky-300 font-extrabold shadow-sm">II</span>
                   ) : selectedYearFilter === '3' || selectedYearFilter === 'III' ? (
-                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-violet-700 bg-violet-50 dark:bg-violet-950 dark:text-violet-300 font-extrabold">III</span>
+                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-violet-700 bg-violet-50 dark:bg-violet-950 dark:text-violet-300 font-extrabold shadow-sm">III</span>
                   ) : (
-                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300 font-extrabold">IV</span>
+                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300 font-extrabold shadow-sm">IV</span>
                   )}
-                  <span className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                  <span className={`text-[13px] font-bold truncate transition-colors duration-300 ${yearOpen ? 'text-brand-950 dark:text-brand-100' : 'text-slate-900 dark:text-slate-100 group-hover:text-brand-900 dark:group-hover:text-brand-200'}`}>
                     {selectedYearFilter === 'ALL' ? 'All Academic Years' : (selectedYearFilter === '2' || selectedYearFilter === 'II') ? 'Year (2025–2029)' : (selectedYearFilter === '3' || selectedYearFilter === 'III') ? 'Year (2024–2028)' : 'Year (2023–2027)'}
                   </span>
                 </div>
               </div>
-              <ChevronDown className={`w-3.5 h-3.5 text-slate-500 dark:text-slate-400 transition-transform shrink-0 ${yearOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-4 h-4 transition-transform duration-300 relative z-10 ${yearOpen ? 'rotate-180 text-brand-500' : 'text-slate-400 group-hover:text-brand-400'}`} />
             </button>
+            <AnimatePresence>
             {yearOpen && (
-              <div className="absolute z-[100] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-lg overflow-hidden">
+              <motion.div
+                initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute z-50 top-full left-0 right-0 mt-2.5 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border border-slate-200/80 dark:border-navy-700/80 rounded-2xl shadow-[0_20px_60px_-12px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_60px_-12px_rgba(0,0,0,0.6)] overflow-hidden p-1.5"
+              >
                 {[
                   { value: 'ALL', label: 'All Academic Years', code: 'ALL', color: 'text-brand-600 bg-brand-50 dark:bg-brand-950 dark:text-brand-300' },
                   { value: 'II',  label: 'Year (2025–2029)',    code: 'II',  color: 'text-sky-600 bg-sky-50 dark:bg-sky-950 dark:text-sky-300' },
                   { value: 'III', label: 'Year (2024–2028)',   code: 'III', color: 'text-violet-600 bg-violet-50 dark:bg-violet-950 dark:text-violet-300' },
                   { value: 'IV',  label: 'Year (2023–2027)',    code: 'IV',  color: 'text-amber-600 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
-                ].map(opt => (
+                ].map(opt => {
+                  const isSelected = selectedYearFilter === opt.value || (selectedYearFilter === '3' && opt.value === 'III') || (selectedYearFilter === '2' && opt.value === 'II') || (selectedYearFilter === '4' && opt.value === 'IV');
+                  return (
                   <button
                     key={opt.value}
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => { setSelectedYearFilter(opt.value); setYearOpen(false); }}
-                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${
-                      selectedYearFilter === opt.value || (selectedYearFilter === '3' && opt.value === 'III') || (selectedYearFilter === '2' && opt.value === 'II') || (selectedYearFilter === '4' && opt.value === 'IV')
-                        ? 'bg-brand-50 dark:bg-brand-950/60'
-                        : 'hover:bg-slate-50 dark:hover:bg-navy-800'
+                    className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all duration-200 group ${
+                      isSelected
+                        ? 'bg-brand-50 dark:bg-brand-900/40 border border-brand-100 dark:border-brand-800/50'
+                        : 'border border-transparent hover:bg-slate-50 dark:hover:bg-navy-800 hover:border-slate-100 dark:hover:border-navy-700'
                     }`}
                   >
-                    <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${opt.color}`}>{opt.code}</span>
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 ${
+                      isSelected ? 'bg-brand-100 dark:bg-brand-800 text-brand-600 dark:text-brand-300' : 'bg-slate-100 dark:bg-navy-800 text-slate-400 dark:text-slate-500'
+                    }`}>
+                      <GraduationCap className="w-4 h-4 stroke-[2.5]" />
+                    </div>
+                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 shadow-sm ${opt.color}`}>{opt.code}</span>
                     <span className={`text-xs truncate flex-1 ${
-                      selectedYearFilter === opt.value || (selectedYearFilter === '3' && opt.value === 'III') || (selectedYearFilter === '2' && opt.value === 'II') || (selectedYearFilter === '4' && opt.value === 'IV') ? 'font-black text-brand-700 dark:text-brand-300' : 'font-semibold text-slate-700 dark:text-slate-300'
+                      isSelected ? 'font-extrabold text-brand-900 dark:text-brand-200' : 'font-semibold text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100'
                     }`}>{opt.label}</span>
-                    {(selectedYearFilter === opt.value || (selectedYearFilter === '3' && opt.value === 'III') || (selectedYearFilter === '2' && opt.value === 'II') || (selectedYearFilter === '4' && opt.value === 'IV')) && <Check className="w-3.5 h-3.5 text-brand-500 shrink-0" />}
+                    {isSelected && <Check className="w-4 h-4 text-brand-600 dark:text-brand-400 shrink-0" />}
                   </button>
-                ))}
-              </div>
+                )})}
+              </motion.div>
             )}
+            </AnimatePresence>
           </div>
 
           {/* Attendance Status — Premium Custom Dropdown */}
-          <div className="relative">
+          <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setAttOpen(false); }}>
             <button
               type="button"
               onClick={() => { setAttOpen(p => !p); setDeptOpen(false); setYearOpen(false); }}
-              className={`w-full flex items-center gap-2.5 bg-slate-50 dark:bg-navy-950 px-3.5 py-2.5 rounded-2xl border shadow-sm text-left transition-all focus:outline-none ${
+              className={`group relative w-full flex items-center gap-3 bg-white dark:bg-navy-900/80 px-4 py-3 rounded-2xl border text-left transition-all duration-300 focus:outline-none overflow-hidden ${
                 attOpen
-                  ? 'border-emerald-400 ring-2 ring-emerald-400/20 dark:border-emerald-500'
-                  : 'border-slate-200 dark:border-slate-800 hover:border-emerald-300'
+                  ? 'border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.2)] dark:shadow-[0_0_25px_rgba(16,185,129,0.15)] ring-2 ring-emerald-500/20'
+                  : 'border-slate-200 dark:border-navy-700 hover:border-emerald-300/80 dark:hover:border-emerald-600/50 hover:shadow-lg hover:shadow-emerald-500/5 dark:hover:shadow-emerald-900/20'
               }`}
             >
-              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300 tracking-wider">Attendance Status</p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${({ 'ALL':'bg-slate-400','ALL_ATTENDED':'bg-indigo-500','PUBLIC_ATTENDED':'bg-emerald-500','VIRTUAL_ATTENDED':'bg-purple-500','PUBLIC_NOT_ATTENDED':'bg-rose-400','DATA_ERROR':'bg-amber-500' } as any)[selectedAttendanceFilter] || 'bg-slate-400'}`} />
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+              {!attOpen && (
+                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-500/0 via-emerald-500/5 to-emerald-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+              )}
+              
+              <div className={`p-2 rounded-xl transition-all duration-300 relative z-10 ${
+                attOpen 
+                  ? 'bg-emerald-500 text-white shadow-inner scale-105' 
+                  : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/80 group-hover:scale-105'
+              }`}>
+                <CheckCircle2 className={`w-4 h-4 ${attOpen ? 'stroke-[2.5]' : 'stroke-[2]'}`} />
+              </div>
+
+              <div className="flex-1 min-w-0 relative z-10">
+                <p className={`text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${attOpen ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-emerald-400 dark:group-hover:text-emerald-300'}`}>Attendance Status</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className={`w-2 h-2 rounded-full shrink-0 shadow-sm ${({ 'ALL':'bg-slate-400','ALL_ATTENDED':'bg-indigo-500','PUBLIC_ATTENDED':'bg-emerald-500','VIRTUAL_ATTENDED':'bg-purple-500','PUBLIC_NOT_ATTENDED':'bg-rose-400','DATA_ERROR':'bg-amber-500' } as any)[selectedAttendanceFilter] || 'bg-slate-400'}`} />
+                  <span className={`text-[13px] font-bold truncate transition-colors duration-300 ${attOpen ? 'text-emerald-950 dark:text-emerald-100' : 'text-slate-900 dark:text-slate-100 group-hover:text-emerald-900 dark:group-hover:text-emerald-200'}`}>
                     {({ 'ALL':'All Statuses','ALL_ATTENDED':'Participated','PUBLIC_ATTENDED':'Public Attended','VIRTUAL_ATTENDED':'Virtual Attended','PUBLIC_NOT_ATTENDED':'Not Attended','DATA_ERROR':'Data Errors' } as any)[selectedAttendanceFilter] || 'All Statuses'}
                   </span>
                 </div>
               </div>
-              <ChevronDown className={`w-3.5 h-3.5 text-slate-500 dark:text-slate-400 transition-transform shrink-0 ${attOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-4 h-4 transition-transform duration-300 relative z-10 ${attOpen ? 'rotate-180 text-emerald-500' : 'text-slate-400 group-hover:text-emerald-400'}`} />
             </button>
+            <AnimatePresence>
             {attOpen && (
-              <div className="absolute z-[100] top-full left-0 right-0 mt-1.5 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-lg overflow-hidden">
+              <motion.div
+                initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute z-50 top-full left-0 right-0 mt-2.5 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border border-slate-200/80 dark:border-navy-700/80 rounded-2xl shadow-[0_20px_60px_-12px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_60px_-12px_rgba(0,0,0,0.6)] overflow-hidden p-1.5"
+              >
                 {[
                   { value: 'ALL',                label: 'All Statuses',    code: 'ALL',  dot: 'bg-slate-400',    color: 'text-slate-600 bg-slate-100 dark:bg-slate-800 dark:text-slate-300' },
                   { value: 'ALL_ATTENDED',       label: 'Participated',    code: 'PART', dot: 'bg-indigo-500',   color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300' },
@@ -2793,28 +2925,36 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   { value: 'VIRTUAL_ATTENDED',   label: 'Virtual Attended',code: 'VIRT', dot: 'bg-purple-500',  color: 'text-purple-700 bg-purple-50 dark:bg-purple-950 dark:text-purple-300' },
                   { value: 'PUBLIC_NOT_ATTENDED',label: 'Not Attended',    code: 'ABS',  dot: 'bg-rose-400',   color: 'text-rose-700 bg-rose-50 dark:bg-rose-950 dark:text-rose-300' },
                   { value: 'DATA_ERROR',         label: 'Data Errors',     code: 'ERR',  dot: 'bg-amber-500',  color: 'text-amber-700 bg-amber-50 dark:bg-amber-950 dark:text-amber-300' },
-                ].map(opt => (
+                ].map(opt => {
+                  const isSelected = selectedAttendanceFilter === opt.value;
+                  return (
                   <button
                     key={opt.value}
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => { setSelectedAttendanceFilter(opt.value); setAttOpen(false); }}
-                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-left transition-colors ${
-                      selectedAttendanceFilter === opt.value
-                        ? 'bg-emerald-50 dark:bg-emerald-950/60'
-                        : 'hover:bg-slate-50 dark:hover:bg-navy-800'
+                    className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all duration-200 group ${
+                      isSelected
+                        ? 'bg-emerald-50 dark:bg-emerald-900/40 border border-emerald-100 dark:border-emerald-800/50'
+                        : 'border border-transparent hover:bg-slate-50 dark:hover:bg-navy-800 hover:border-slate-100 dark:hover:border-navy-700'
                     }`}
                   >
-                    <span className={`w-2 h-2 rounded-full shrink-0 ${opt.dot}`} />
-                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${opt.color}`}>{opt.code}</span>
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 ${
+                      isSelected ? 'bg-emerald-100 dark:bg-emerald-800 text-emerald-600 dark:text-emerald-300' : 'bg-slate-100 dark:bg-navy-800 text-slate-400 dark:text-slate-500'
+                    }`}>
+                      <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
+                    </div>
+                    <span className={`w-2 h-2 rounded-full shrink-0 shadow-sm ${opt.dot}`} />
+                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 shadow-sm ${opt.color}`}>{opt.code}</span>
                     <span className={`text-xs truncate flex-1 ${
-                      selectedAttendanceFilter === opt.value ? 'font-black text-emerald-700 dark:text-emerald-300' : 'font-semibold text-slate-700 dark:text-slate-300'
+                      isSelected ? 'font-extrabold text-emerald-900 dark:text-emerald-200' : 'font-semibold text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100'
                     }`}>{opt.label}</span>
-                    {selectedAttendanceFilter === opt.value && <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />}
+                    {isSelected && <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />}
                   </button>
-                ))}
-              </div>
+                )})}
+              </motion.div>
             )}
+            </AnimatePresence>
           </div>
 
           {/* Reset Filters Control — Always Clickable & Reactive */}
@@ -4251,7 +4391,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   <span>Dispatch Filtered Weekly Report</span>
                 </h3>
                 <p className="text-xs text-slate-300 font-bold mt-0.5">
-                  Sends the exact generated Excel report (<code className="text-indigo-300 font-mono">NEC_Weekly_Contest_{selectedSessionId}_PUBLIC.xlsx</code>)
+                  Sends the exact generated Excel report (<code className="text-indigo-300 font-mono">NEC_Weekly_Contest_{activeSessionObj?.contestName?.match(/\d+/)?.[0] || selectedSessionId}_PUBLIC.xlsx</code>)
                 </p>
               </div>
               <button
