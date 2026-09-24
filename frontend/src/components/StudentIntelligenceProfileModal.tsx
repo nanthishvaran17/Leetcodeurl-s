@@ -827,9 +827,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                   <button
                     key={tab.id}
                     onClick={() => {
-                      React.startTransition(() => {
-                        setActiveTab(tab.id as any);
-                      });
+                      setActiveTab(tab.id as any);
                     }}
                     className={`px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
                       isActive

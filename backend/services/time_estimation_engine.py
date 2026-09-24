@@ -1,4 +1,4 @@
-﻿"""
+"""
 Forensic-Grade Per-Question Time Estimation Engine
 ===================================================
 Strictly separates OBSERVED, ESTIMATED, and UNAVAILABLE timing.
@@ -118,13 +118,17 @@ def estimate_question_times(entry_timestamp_str, exit_timestamp_str, solved_ques
     allocatable = max(0, presence_seconds - total_already_observed)
     total_weight = sum(weights.get(QUESTION_DIFFICULTY_MAP.get(q, "easy"), 1.0) for q in questions_needing_estimation)
     total_estimated = 0
-    for q_idx in questions_needing_estimation:
+    for i, q_idx in enumerate(questions_needing_estimation):
         difficulty = QUESTION_DIFFICULTY_MAP.get(q_idx, "easy")
         w = weights.get(difficulty, 1.0)
-        raw_secs = (allocatable * w) / total_weight if total_weight > 0 else 0
-        est_secs = round(raw_secs)
+        if i == len(questions_needing_estimation) - 1:
+            est_secs = allocatable - total_estimated
+        else:
+            raw_secs = (allocatable * w) / total_weight if total_weight > 0 else 0
+            est_secs = round(raw_secs)
+        
         total_estimated += est_secs
-        result_q[f"q{q_idx}"] = {"status": "SOLVED", "seconds": est_secs, "source": SOURCE_ESTIMATED_DIFFICULTY_WEIGHT, "method": "ENTRY_EXIT_DIFFICULTY_WEIGHT", "confidence": "MEDIUM", "display": _format_seconds(est_secs, approximate=True), "weight": w, "difficulty": difficulty}
+        result_q[f"q{q_idx}"] = {"status": "SOLVED", "seconds": est_secs, "source": SOURCE_ESTIMATED_DIFFICULTY_WEIGHT, "method": "DYNAMIC_DIFFICULTY_WEIGHT", "confidence": "MEDIUM", "display": _format_seconds(est_secs, approximate=True), "weight": w, "difficulty": difficulty}
 
     unallocated = presence_seconds - total_already_observed - total_estimated
     dominant_source = SOURCE_UNAVAILABLE

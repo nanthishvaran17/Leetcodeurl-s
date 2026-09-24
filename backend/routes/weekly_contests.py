@@ -64,7 +64,7 @@ def _build_q_timing(r: Any) -> Dict[str, Any]:
         elif est_sec and est_sec > 0 and source == SOURCE_ESTIMATED_DIFFICULTY_WEIGHT:
             h = est_sec // 3600; m = (est_sec % 3600) // 60; s = est_sec % 60
             display = f"~{h}h {m}m {s}s" if h > 0 else f"~{m}m {s}s"
-            result[f"q{q_idx}"] = {"status": status, "seconds": est_sec, "source": SOURCE_ESTIMATED_DIFFICULTY_WEIGHT, "method": "ENTRY_EXIT_DIFFICULTY_WEIGHT", "confidence": "MEDIUM", "display": display, "approximate": True}
+            result[f"q{q_idx}"] = {"status": status, "seconds": est_sec, "source": SOURCE_ESTIMATED_DIFFICULTY_WEIGHT, "method": "DYNAMIC_DIFFICULTY_WEIGHT", "confidence": "MEDIUM", "display": display, "approximate": True}
         elif q_bin == 1:
             result[f"q{q_idx}"] = {"status": "SOLVED", "seconds": None, "source": SOURCE_UNAVAILABLE, "method": "LEGACY_BINARY", "confidence": "NONE", "display": None, "approximate": False}
         else:

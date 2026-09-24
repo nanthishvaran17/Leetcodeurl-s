@@ -298,6 +298,13 @@ class WeeklyPublicResult(Base):
     evidence_json = Column(Text, nullable=True)
     record_hash = Column(String(128), nullable=True)
 
+    # EXACT ENTRY-TIME EVIDENCE MODEL
+    participant_entry_time = Column(DateTime(timezone=True), nullable=True)
+    participant_entry_time_source = Column(String(50), nullable=True) # EXACT_SERVER_START, VERIFIED_LIVE_ACTIVITY, FIRST_OBSERVED_ACTIVITY, LEETCODE_DERIVED, UNKNOWN
+    participant_entry_time_confidence = Column(String(20), nullable=True) # EXACT, HIGH, MEDIUM, LOW, UNKNOWN
+    participant_entry_time_method = Column(String(50), nullable=True)
+    participant_entry_time_observed_at = Column(DateTime(timezone=True), nullable=True)
+
     q1 = Column(Integer, default=0)
     q2 = Column(Integer, default=0)
     q3 = Column(Integer, default=0)
@@ -357,6 +364,13 @@ class WeeklyVirtualResult(Base):
     state = Column(String(30), default="VALIDATED", index=True)
     evidence_json = Column(Text, nullable=True)
     record_hash = Column(String(128), nullable=True)
+
+    # EXACT ENTRY-TIME EVIDENCE MODEL
+    participant_entry_time = Column(DateTime(timezone=True), nullable=True)
+    participant_entry_time_source = Column(String(50), nullable=True) # EXACT_SERVER_START, VERIFIED_LIVE_ACTIVITY, FIRST_OBSERVED_ACTIVITY, LEETCODE_DERIVED, UNKNOWN
+    participant_entry_time_confidence = Column(String(20), nullable=True) # EXACT, HIGH, MEDIUM, LOW, UNKNOWN
+    participant_entry_time_method = Column(String(50), nullable=True)
+    participant_entry_time_observed_at = Column(DateTime(timezone=True), nullable=True)
 
     q1 = Column(Integer, default=0)
     q2 = Column(Integer, default=0)

@@ -122,13 +122,31 @@ const formatContestTime = (r: ParticipationRecord) => {
       const estMins = r.problems_solved === 4 ? '1h 12m' : r.problems_solved === 3 ? '48m' : r.problems_solved === 2 ? '28m' : '14m';
       return estMins;
     }
-    return '1h 30m';
+    return '0 mins';
   }
 
   return '—';
 };
 
-const formatFinishClockTime = (r: ParticipationRecord): string => {
+const getStartTimeInfo = (contestTitle?: string) => {
+  const title = contestTitle?.toLowerCase() || '';
+  const isBiweekly = title.includes('biweekly');
+  const startHour = isBiweekly ? 20 : 8; // 8 PM for Biweekly, 8 AM for Weekly
+  const startMinute = 0;
+  
+  const displayHour = startHour > 12 ? startHour - 12 : startHour;
+  const ampm = startHour >= 12 ? 'PM' : 'AM';
+  const padHour = displayHour.toString().padStart(2, '0');
+  const padMinute = startMinute.toString().padStart(2, '0');
+  
+  return {
+    hour24: startHour,
+    minute: startMinute,
+    formatted: `${padHour}:${padMinute} ${ampm} IST`
+  };
+};
+
+const formatFinishClockTime = (r: ParticipationRecord, contestTitle?: string): string => {
   if (r.participation_type === 'NOT_PARTICIPATED') return '—';
 
   const durationStr = formatContestTime(r);
@@ -147,20 +165,24 @@ const formatFinishClockTime = (r: ParticipationRecord): string => {
     durationMins = Math.floor(parseInt(durationStr, 10) / 60);
   }
   if (durationMins === 0) {
+    if (r.problems_solved === 0) return '—';
     durationMins = r.problems_solved === 4 ? 72 : r.problems_solved === 3 ? 48 : r.problems_solved === 2 ? 28 : r.problems_solved === 1 ? 14 : 90;
   }
 
-  const startHour = 8;
-  const startMinute = 2;
-  const totalFinishMinutes = (startHour * 60 + startMinute) + durationMins;
+  const startInfo = getStartTimeInfo(contestTitle);
+  const totalFinishMinutes = (startInfo.hour24 * 60 + startInfo.minute) + durationMins;
 
   const finishHour24 = Math.floor(totalFinishMinutes / 60);
   const finishMinute = totalFinishMinutes % 60;
 
   const displayHour = finishHour24 > 12 ? finishHour24 - 12 : finishHour24;
-  const ampm = finishHour24 >= 12 ? 'PM' : 'AM';
+  const ampm = (finishHour24 % 24) >= 12 ? 'PM' : 'AM';
   const padMinute = finishMinute.toString().padStart(2, '0');
-  const padHour = displayHour.toString().padStart(2, '0');
+  
+  // Handle 12 AM / 12 PM display properly
+  let displayHourAdj = displayHour;
+  if (displayHourAdj === 0) displayHourAdj = 12;
+  const padHour = displayHourAdj.toString().padStart(2, '0');
 
   return `${padHour}:${padMinute} ${ampm} IST`;
 };
@@ -1528,6 +1550,62 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           return `${mins}m ${secs}s`;
         };
 
+        // --- DYNAMIC QUESTION TIMING ESTIMATOR ---
+        // Weights derived from typical LeetCode difficulty (Easy, Medium, Medium/Hard, Hard)
+        const baseWeights: Record<number, number> = { 1: 1, 2: 2, 3: 3, 4: 4 };
+        let totalAllocatableSeconds = 0;
+        let solvedQuestions: number[] = [];
+        let totalWeight = 0;
+
+        if (!isNotJoined) {
+          const durationStr = formatContestTime(selectedForensicRecord) || '';
+          let dMins = 0;
+          if (durationStr.includes('h')) {
+            const hMatch = durationStr.match(/(\d+)h/);
+            if (hMatch) dMins += parseInt(hMatch[1], 10) * 60;
+          }
+          if (durationStr.includes('m')) {
+            const mMatch = durationStr.match(/(\d+)m/);
+            if (mMatch) dMins += parseInt(mMatch[1], 10);
+          }
+          if (dMins === 0 && /^\d+$/.test(durationStr)) dMins = Math.floor(parseInt(durationStr, 10) / 60);
+          
+          totalAllocatableSeconds = dMins * 60;
+
+          // Find solved questions
+          for (let qIdx = 1; qIdx <= 4; qIdx++) {
+            const qKey = `q${qIdx}` as 'q1'|'q2'|'q3'|'q4';
+            const qBin = (selectedForensicRecord as any)[qKey];
+            if (qBin && qBin > 0) {
+              solvedQuestions.push(qIdx);
+              totalWeight += baseWeights[qIdx];
+            }
+          }
+        }
+
+        const dynamicEstimates: Record<number, number> = {};
+        if (solvedQuestions.length > 0 && totalAllocatableSeconds > 0) {
+          let currentIntervalSum = 0;
+          let cumulativeTime = 0;
+
+          for (let i = 0; i < solvedQuestions.length; i++) {
+            const qIdx = solvedQuestions[i];
+            let interval = 0;
+            
+            if (i === solvedQuestions.length - 1) {
+              // Conservation Rule: The final solved question takes the remaining allocatable duration
+              interval = totalAllocatableSeconds - currentIntervalSum;
+            } else {
+              interval = Math.floor(totalAllocatableSeconds * (baseWeights[qIdx] / totalWeight));
+              currentIntervalSum += interval;
+            }
+            
+            cumulativeTime += interval;
+            dynamicEstimates[qIdx] = cumulativeTime;
+          }
+        }
+        // --- END ESTIMATOR ---
+
         const forensicQuestions = isNotJoined ? [
           { id: 'Q1', title: `Q1: ${qTitles.q1}`, val: false, time: 'Unknown', timingSource: null, timeDisplay: null, attempts: 'Unattempted', status: 'SKIPPED' },
           { id: 'Q2', title: `Q2: ${qTitles.q2}`, val: false, time: 'Unknown', timingSource: null, timeDisplay: null, attempts: 'Unattempted', status: 'SKIPPED' },
@@ -1540,8 +1618,19 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           // Prefer structured q_timing from API, fallback to legacy binary
           const qt = (selectedForensicRecord as any).q_timing;
           const qTiming = qt ? qt[qKey] : null;
-          const timingSource: string|null = qTiming?.source || null;
-          const timeDisplay: string|null = qTiming?.display || null;
+          let timingSource: string|null = qTiming?.source || null;
+          let timeDisplay: string|null = qTiming?.display || null;
+          
+          // Apply dynamic estimation if backend did not provide observed timing
+          if (!qTiming && isSolvedQ && dynamicEstimates[qIdx]) {
+            const qSec = dynamicEstimates[qIdx];
+            const h = Math.floor(qSec / 3600);
+            const m = Math.floor((qSec % 3600) / 60);
+            const s = qSec % 60;
+            timeDisplay = h > 0 ? `~${h}h ${m}m ${s}s` : `~${m}m ${s}s`;
+            timingSource = 'ESTIMATED_DIFFICULTY_WEIGHT';
+          }
+          
           const qTitleMap: Record<number,string> = {1: qTitles.q1, 2: qTitles.q2, 3: qTitles.q3, 4: qTitles.q4};
           return {
             id: `Q${qIdx}`,
@@ -1582,7 +1671,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
                         {selectedForensicRecord.department_name || 'CSE'}
                       </span>
                       <span className="text-[11px] font-bold text-fuchsia-700 dark:text-fuchsia-300 bg-fuchsia-100 dark:bg-fuchsia-900/50 px-2 py-0.5 rounded-md border border-fuchsia-200 dark:border-fuchsia-700/50 shadow-sm truncate max-w-[160px] sm:max-w-none">
-                        {summary?.contest_title || 'Weekly Contest 520'}
+                        {selectedForensicRecord.contest_title || summary?.contest_title || 'Weekly Contest'}
                       </span>
                     </div>
                   </div>
@@ -1601,28 +1690,42 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
               <div className="p-5 overflow-y-auto space-y-4 custom-scrollbar bg-slate-50/80 dark:bg-navy-900/40">
                 
                 {/* Timing Summary Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
                   <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border-2 border-slate-200 dark:border-navy-700 shadow-xs">
                     <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 block mb-1">
-                      Entry / Start Time
+                      Official Contest Start
                     </span>
                     <span className="text-xs font-mono font-black text-slate-950 dark:text-white flex items-center gap-1.5">
                       <Clock className="w-4 h-4 text-brand-500 shrink-0" />
-                      {selectedForensicRecord.participation_type === 'NOT_PARTICIPATED' ? 'Did Not Join' : '08:02 AM IST'}
+                      {selectedForensicRecord.participation_type === 'NOT_PARTICIPATED' ? 'Did Not Join' : getStartTimeInfo(summary?.contest_title).formatted}
                     </span>
                   </div>
 
                   <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border-2 border-slate-200 dark:border-navy-700 shadow-xs">
                     <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 block mb-1">
-                      Finish / Exit Time
+                      Participant Entry
                     </span>
-                    <span className="text-xs font-mono font-black text-slate-950 dark:text-white flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                      {selectedForensicRecord.participation_type === 'NOT_PARTICIPATED' ? '—' : formatFinishClockTime(selectedForensicRecord)}
+                    <span className="text-xs font-mono font-black text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                      <AlertTriangle className="w-4 h-4 shrink-0" />
+                      UNKNOWN
+                    </span>
+                    <span className="text-[9px] text-slate-500 dark:text-slate-400 mt-1.5 block leading-tight">
+                      LeetCode does not expose the participant's exact join timestamp.
                     </span>
                   </div>
 
-                  <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border-2 border-slate-200 dark:border-navy-700 shadow-xs col-span-2 sm:col-span-1">
+                  <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border-2 border-slate-200 dark:border-navy-700 shadow-xs">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 block mb-1">
+                      Calculated Finish
+                    </span>
+                    <span className="text-xs font-mono font-black text-slate-950 dark:text-white flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                      {selectedForensicRecord.participation_type === 'NOT_PARTICIPATED' ? '—' : formatFinishClockTime(selectedForensicRecord, summary?.contest_title)}
+                    </span>
+                    <span className="text-[9px] text-slate-500 dark:text-slate-400 mt-1.5 block">Derived from duration.</span>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-white dark:bg-navy-900 border-2 border-slate-200 dark:border-navy-700 shadow-xs col-span-1 sm:col-span-2 lg:col-span-1">
                     <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200 block mb-1">
                       Duration Spent
                     </span>
