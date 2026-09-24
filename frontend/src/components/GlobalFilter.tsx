@@ -795,8 +795,16 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
 
               <div className="overflow-y-auto overscroll-contain space-y-1 py-1 flex-1 pr-1 custom-scrollbar">
                 {filteredOptions.length === 0 ? (
-                  <div className="py-6 text-center text-xs font-bold text-slate-400">
-                    No options match your search.
+                  <div className="py-8 flex flex-col items-center justify-center text-center space-y-3">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400">No options match your search.</span>
+                    <button 
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 underline underline-offset-4 decoration-indigo-300 dark:decoration-indigo-500/50 hover:decoration-indigo-600 dark:hover:decoration-indigo-400 transition-all cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Search className="w-3 h-3" />
+                      <span>Clear search & view all options</span>
+                    </button>
                   </div>
                 ) : (
                   filteredOptions.map((opt) => {
@@ -911,8 +919,16 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
                 className="overflow-y-auto overscroll-contain py-1 custom-scrollbar"
               >
                 {filteredOptions.length === 0 ? (
-                  <div className="py-6 text-center text-xs font-bold text-slate-400">
-                    No options match your search.
+                  <div className="py-10 flex flex-col items-center justify-center text-center space-y-3">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400">No options match your search.</span>
+                    <button 
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="text-[11px] font-black text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 underline underline-offset-4 decoration-brand-300 dark:decoration-brand-500/50 hover:decoration-brand-600 dark:hover:decoration-brand-400 transition-all cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Search className="w-3 h-3" />
+                      <span>Clear search & view all options</span>
+                    </button>
                   </div>
                 ) : (
                   filteredOptions.map((opt) => {

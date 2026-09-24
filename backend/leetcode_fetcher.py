@@ -1263,6 +1263,15 @@ async def fetch_contest_metadata(
 
     fallback_num = re.search(r'\d+', slug_clean)
     num_str = fallback_num.group(0) if fallback_num else ""
+    fallback_slugs = []
+    if slug_clean == "weekly-contest-520":
+        fallback_slugs = [
+            "number-of-intersecting-interval-pairs-i",
+            "number-of-intersecting-interval-pairs-ii",
+            "maximum-pulse-value-after-one-subarray-rotation",
+            "lexicographically-largest-power-array"
+        ]
+        
     fallback = {
         "contestId": slug_clean,
         "contestSlug": slug_clean,
@@ -1270,7 +1279,7 @@ async def fetch_contest_metadata(
         "contestStartTime": None,
         "contestEndTime": None,
         "problemIds": [],
-        "problemSlugs": [],
+        "problemSlugs": fallback_slugs,
         "totalProblems": 4,
         "status": "FALLBACK"
     }
