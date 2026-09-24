@@ -1383,7 +1383,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     let virtual2Solved = sessionMetrics?.virtual2Solved;
     let virtual1Solved = sessionMetrics?.virtual1Solved;
 
-    if (q4Solved === undefined || q4Solved === null || q3Solved === undefined || q3Solved === null || q2Solved === undefined || q2Solved === null || q1Solved === undefined || q1Solved === null) {
+    const forceRecalculate = isScopeActive || (q4Solved === undefined || q4Solved === null || q3Solved === undefined || q3Solved === null || q2Solved === undefined || q2Solved === null || q1Solved === undefined || q1Solved === null);
+
+    if (forceRecalculate) {
       if (matrixRows && matrixRows.length > 0) {
         let calcQ4 = 0, calcQ3 = 0, calcQ2 = 0, calcQ1 = 0;
         let calcV4 = 0, calcV3 = 0, calcV2 = 0, calcV1 = 0;

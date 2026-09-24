@@ -293,7 +293,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
     });
   };
 
-  const badges = getBadgesList();
+  const badges = React.useMemo(() => getBadgesList(), [rawBadges, totalSolved, contestRatingVal, activity.current_streak, activeDaysCount]);
 
   // Submissions calculation: fallback to student-unique dynamic problem list if DB submissions not yet synced
   const getSubmissionsList = () => {
@@ -366,7 +366,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
     return result;
   };
 
-  const submissions = getSubmissionsList();
+  const submissions = React.useMemo(() => getSubmissionsList(), [rawSubmissions, totalSolved, intelData?.primary_language, studentId]);
 
   const getLanguagesList = () => {
     if (rawLanguages && rawLanguages.length > 0) return rawLanguages;
@@ -383,7 +383,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
     return list;
   };
 
-  const languagesList = getLanguagesList();
+  const languagesList = React.useMemo(() => getLanguagesList(), [rawLanguages, totalSolved, intelData?.primary_language]);
 
   const getTopicsList = () => {
     if (rawTopics && rawTopics.length > 0) return rawTopics;
@@ -399,7 +399,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
     ].filter((t) => t.problems_solved > 0);
   };
 
-  const topicsList = getTopicsList();
+  const topicsList = React.useMemo(() => getTopicsList(), [rawTopics, totalSolved]);
 
   const getContestHistoryList = () => {
     if (contestHistory && contestHistory.length > 0) return contestHistory;
@@ -432,7 +432,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
     return list;
   };
 
-  const contestHistoryList = getContestHistoryList();
+  const contestHistoryList = React.useMemo(() => getContestHistoryList(), [contestHistory, contestRatingVal, contestsAttendedVal]);
 
   const getLanguageStyle = (langName: string) => {
     const l = (langName || '').toLowerCase();
@@ -677,7 +677,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
   return typeof document !== 'undefined'
     ? createPortal(
         <div
-          className="fixed inset-0 z-[999999] bg-slate-950/60 backdrop-blur-sm flex justify-end animate-fade-in text-slate-900 dark:text-slate-100 font-sans p-0 sm:p-3 sm:pr-4"
+          className="fixed inset-0 z-[999999] bg-slate-950/70 flex justify-end animate-fade-in text-slate-900 dark:text-slate-100 font-sans p-0 sm:p-3 sm:pr-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) onClose();
           }}
@@ -826,7 +826,11 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
+                    onClick={() => {
+                      React.startTransition(() => {
+                        setActiveTab(tab.id as any);
+                      });
+                    }}
                     className={`px-3.5 py-1.5 rounded-full text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
                       isActive
                         ? 'bg-brand-600 text-white shadow-md shadow-brand-600/40 border border-brand-400/40 scale-[1.03]'

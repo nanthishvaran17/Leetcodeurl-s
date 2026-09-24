@@ -136,18 +136,18 @@ export const FastStudentRow = memo(({
         </div>
 
         {/* Bottom Row: Stats Chips & Action Buttons */}
-        <div className="flex items-center justify-between w-full pt-3 border-t border-slate-100 dark:border-navy-800/80 gap-2">
+        <div className="flex items-center justify-between w-full pt-3 border-t border-slate-100 dark:border-navy-800/80 gap-2 flex-wrap">
           
           {/* Solved & Rating Metric Chips */}
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0">
-              <span className="text-[10px] font-black uppercase tracking-wider">SOLVED</span>
-              <span className="text-xs font-black font-mono text-emerald-700 dark:text-emerald-300">{totalSolved ?? '—'}</span>
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-[200px]">
+            <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 shrink-0">
+              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider">SOLVED</span>
+              <span className="text-[11px] sm:text-xs font-black font-mono text-emerald-700 dark:text-emerald-300">{totalSolved ?? '—'}</span>
             </div>
 
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">
-              <span className="text-[10px] font-black uppercase tracking-wider">RATING</span>
-              <span className="text-xs font-black font-mono text-amber-700 dark:text-amber-300">
+            <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">
+              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider">RATING</span>
+              <span className="text-[11px] sm:text-xs font-black font-mono text-amber-700 dark:text-amber-300">
                 {(() => {
                   const rawRating = student.stats?.contest_rating ?? (student as any).contest_rating;
                   if (rawRating == null || rawRating <= 0) return '—';
