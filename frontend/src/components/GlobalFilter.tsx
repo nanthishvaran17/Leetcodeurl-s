@@ -516,6 +516,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const lastCoordsRef = useRef<string | null>(null);
 
   const [coords, setCoords] = useState<{
     top: number;
@@ -612,21 +613,29 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
       left = Math.max(12, window.innerWidth - computedWidth - 12);
     }
 
-    setCoords({
+    const newCoords = {
       top,
       left,
       width: computedWidth,
       positionUp: shouldFlipUp,
       maxHeight
-    });
+    };
+
+    const newCoordsStr = JSON.stringify(newCoords);
+    if (lastCoordsRef.current !== newCoordsStr) {
+      lastCoordsRef.current = newCoordsStr;
+      setCoords(newCoords);
+    }
   }, [filteredOptions.length, options.length, align, dropdownWidth, showSearch]);
 
   useEffect(() => {
     if (!isOpen) return;
     updateCoords();
 
+    let rafId: number;
     const handleScrollOrResize = () => {
-      updateCoords();
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(updateCoords);
     };
 
     window.addEventListener('resize', handleScrollOrResize);
@@ -634,6 +643,7 @@ export const GlobalFilter: React.FC<GlobalFilterProps> = ({
     return () => {
       window.removeEventListener('resize', handleScrollOrResize);
       window.removeEventListener('scroll', handleScrollOrResize, true);
+      if (rafId) cancelAnimationFrame(rafId);
     };
   }, [isOpen, updateCoords]);
 

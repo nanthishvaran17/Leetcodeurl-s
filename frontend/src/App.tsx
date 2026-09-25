@@ -1,5 +1,5 @@
 // million-ignore
-import React, { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useCallback, useMemo, useRef, startTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Sparkles, LogOut } from 'lucide-react';
@@ -1119,11 +1119,15 @@ export const App: React.FC = () => {
       />
 
       {/* Touch-Friendly Mobile Filter Drawer */}
-      <MobileFilterDrawer
-        isOpen={showMobileFilterDrawer}
-        onClose={() => setShowMobileFilterDrawer(false)}
-      />
+      {showMobileFilterDrawer && (
+        <MobileFilterDrawer
+          isOpen={true}
+          onClose={() => setShowMobileFilterDrawer(false)}
+        />
+      )}
 
     </div>
   );
 };
+
+

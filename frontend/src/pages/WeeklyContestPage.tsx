@@ -1,5 +1,5 @@
 // WeeklyContestPage.tsx - LeetCode Intelligence Dashboard
-import React, { useState, useEffect, useMemo, useCallback, memo, useRef, useDeferredValue } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, memo, useRef, useDeferredValue, startTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
 import { useScrollLock } from '../hooks/useScrollLock';
@@ -2348,7 +2348,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       {/* PRIMARY VIEW TAB SWITCHER */}
       <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-slate-800">
         <button
-          onClick={() => setActiveTab('previous_week')}
+          onClick={() => startTransition(() => setActiveTab('previous_week'))}
           className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeTab === 'previous_week'
               ? 'bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 text-white shadow-lg shadow-indigo-500/20'
@@ -2360,7 +2360,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         </button>
 
         <button
-          onClick={() => setActiveTab('matrix')}
+          onClick={() => startTransition(() => setActiveTab('matrix'))}
           className={`flex-1 flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-xs font-black transition-all cursor-pointer ${
             activeTab === 'matrix'
               ? 'bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 text-white shadow-lg shadow-indigo-500/20'
@@ -4749,3 +4749,5 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     </div>
   );
 };
+
+

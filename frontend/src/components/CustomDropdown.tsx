@@ -49,6 +49,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   const [focusedIndex, setFocusedIndex] = useState<number>(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState<{ top: number; left: number; width: number; maxHeight?: number; transformOrigin?: string } | null>(null);
+  const lastCoordsRef = useRef<string | null>(null);
 
   // Find selected option
   const selectedOption = options.find((opt) => opt.value === value && !opt.label.toLowerCase().startsWith('select'));
@@ -92,13 +93,19 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
         transformOrigin = 'bottom';
       }
 
-      setCoords({
+      const newCoords = {
         top: Math.max(8, top),
         left: rect.left,
         width: rect.width,
         maxHeight: Math.min(maxHeight, 256),
         transformOrigin
-      });
+      };
+      
+      const newCoordsStr = JSON.stringify(newCoords);
+      if (lastCoordsRef.current !== newCoordsStr) {
+        lastCoordsRef.current = newCoordsStr;
+        setCoords(newCoords);
+      }
     }
   }, [selectableOptions.length]);
 
@@ -143,18 +150,25 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
       }
     };
 
+    let rafId: number;
+    const handleScrollOrResize = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(updateCoords);
+    };
+
     if (isOpen) {
       updateCoords();
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('keydown', handleKeyDown);
-      window.addEventListener('resize', updateCoords);
-      window.addEventListener('scroll', updateCoords, true);
+      window.addEventListener('resize', handleScrollOrResize);
+      window.addEventListener('scroll', handleScrollOrResize, true);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('resize', updateCoords);
-      window.removeEventListener('scroll', updateCoords, true);
+      window.removeEventListener('resize', handleScrollOrResize);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      if (rafId) cancelAnimationFrame(rafId);
     };
   }, [isOpen, updateCoords, id, label, focusedIndex, selectableOptions]);
 

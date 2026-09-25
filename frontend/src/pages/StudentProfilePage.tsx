@@ -1,5 +1,5 @@
 // million-ignore
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { ArrowLeft, ExternalLink, Trophy, Flame, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X, BarChart2, Activity, BookOpen, Medal, TrendingUp, Target, CheckCircle2 } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
@@ -39,6 +39,9 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
   const [liveFetchError, setLiveFetchError] = useState<string | null>(null);
   const [showEditOverlay, setShowEditOverlay] = useState(false);
   const [showAuditModal, setShowAuditModal] = useState(false);
+  const [isChartsReady, setIsChartsReady] = useState(false);
+
+  const [isPending, startTransition] = useTransition();
 
   const resolveTargetId = () => {
     return (
@@ -122,6 +125,10 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
     if (targetId) {
       fetchStudentDetail();
     }
+    
+    // Defer heavy chart rendering to prevent modal opening scroll lag
+    const timer = setTimeout(() => setIsChartsReady(true), 150);
+    return () => clearTimeout(timer);
   }, [student]);
 
   const fetchStudentDetail = async () => {
@@ -429,7 +436,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id as TabId)}
+                onClick={() => startTransition(() => setActiveTab(tab.id as TabId))}
                 className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-1 py-2.5 sm:px-3 sm:py-3.5 text-xs sm:text-sm transition-all outline-none text-center cursor-pointer min-w-0 border-b-2 ${
                   isActive
                     ? 'border-brand-600 text-slate-900 dark:text-white bg-white dark:bg-navy-950 font-black shadow-xs'
@@ -452,9 +459,7 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       {/* Scrollable Body Content */}
       <div className="p-5 sm:p-6 overflow-y-auto overscroll-contain flex-1 min-h-0 space-y-6 custom-scrollbar pt-2">
 
-      {activeTab === 'overview' && (
-        <>
-      {/* PREMIUM BENTO GRID FOR STATS */}
+      {/* PREMIUM BENTO GRID FOR STATS - PERSISTENT ACROSS TABS */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
         {/* Left Section: Rankings & Activity (7 columns) */}
@@ -545,9 +550,17 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         </div>
       </div>
 
+      {activeTab === 'overview' && (
+        <>
       {/* Skill Radar & Digital Student Pass */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <SkillRadarChart totalSolved={detail?.stats?.total_solved || 0} />
+        {isChartsReady ? (
+          <SkillRadarChart totalSolved={detail?.stats?.total_solved || 0} />
+        ) : (
+          <div className="h-[350px] bg-slate-100/50 dark:bg-navy-900/50 rounded-3xl animate-pulse flex items-center justify-center">
+            <span className="text-slate-400 font-bold text-xs">Loading Radar...</span>
+          </div>
+        )}
         <IDCardGenerator
           studentName={detail?.name || ''}
           regNo={detail?.reg_no || ''}
@@ -575,25 +588,31 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         <div className="glass-card p-6 rounded-3xl border space-y-4 shadow-xl">
           <h3 className="font-extrabold text-base text-slate-900 dark:text-white">Problem Difficulty Breakdown</h3>
           <div className="h-64 w-full min-w-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+            {isChartsReady ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full bg-slate-100/50 dark:bg-navy-900/50 rounded-full animate-pulse flex items-center justify-center scale-75">
+                <span className="text-slate-400 font-bold text-xs">Loading Breakdown...</span>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-3 gap-2 text-center text-xs">

@@ -111,11 +111,7 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
         <GlobalAnalyticsFilter period={period} setPeriod={setPeriod} />
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center h-64 bg-white dark:bg-navy-950 rounded-2xl border border-slate-200 dark:border-navy-700">
-          <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
-        </div>
-      ) : error || data?.error ? (
+      {error || data?.error ? (
         <div className="flex items-center justify-center h-64 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-2xl border border-red-200 dark:border-red-800">
           <p>{error || data?.error}</p>
         </div>
@@ -123,7 +119,12 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
         <div className="space-y-6 pb-6">
           
           {/* Week Comparison Summary Card */}
-          <div className="bg-gradient-to-r from-brand-600 to-indigo-600 p-5 sm:p-6 rounded-2xl text-white shadow-lg">
+          <div className="bg-gradient-to-r from-brand-600 to-indigo-600 p-5 sm:p-6 rounded-2xl text-white shadow-lg relative">
+            {loading && !data && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-brand-900/20 backdrop-blur-sm rounded-2xl">
+                <Loader2 className="w-8 h-8 animate-spin text-white" />
+              </div>
+            )}
             <h3 className="font-bold text-brand-100 mb-4 uppercase tracking-wider text-xs">This Week vs Last Week</h3>
             {weekComparison ? (
               <div className="flex flex-wrap items-center gap-8">
@@ -148,7 +149,12 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
             {/* 1. Rating Trend */}
-            <div className="bg-white dark:bg-navy-950 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col">
+            <div className="bg-white dark:bg-navy-950 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col relative">
+              {loading && !data && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-navy-950/50 backdrop-blur-sm rounded-2xl">
+                  <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
+                </div>
+              )}
               <h3 className="font-bold text-slate-800 dark:text-white mb-4">Rating Trend</h3>
               {trendData.length > 0 ? (
                 <div className="flex-1 min-h-[300px]">
@@ -166,7 +172,12 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
             </div>
 
             {/* 2. Problems Solved Trend */}
-            <div className="bg-white dark:bg-navy-950 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col">
+            <div className="bg-white dark:bg-navy-950 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col relative">
+              {loading && !data && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-navy-950/50 backdrop-blur-sm rounded-2xl">
+                  <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
+                </div>
+              )}
               <h3 className="font-bold text-slate-800 dark:text-white mb-4">Problems Solved Trend</h3>
               {trendData.length > 0 ? (
                 <div className="flex-1 min-h-[300px]">
@@ -190,7 +201,12 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
             </div>
 
             {/* 3. Submission Activity (Delta proxy) */}
-            <div className="bg-white dark:bg-navy-950 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col lg:col-span-2">
+            <div className="bg-white dark:bg-navy-950 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col lg:col-span-2 relative">
+              {loading && !data && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-navy-950/50 backdrop-blur-sm rounded-2xl">
+                  <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
+                </div>
+              )}
               <h3 className="font-bold text-slate-800 dark:text-white mb-4">Submission Activity (Solved per Day)</h3>
               {activityData.length > 1 ? (
                 <div className="flex-1 min-h-[300px]">
@@ -208,7 +224,12 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
             </div>
 
             {/* 4. Contest Performance */}
-            <div className="bg-white dark:bg-navy-950 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col lg:col-span-2">
+            <div className="bg-white dark:bg-navy-950 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col lg:col-span-2 relative">
+              {loading && !data && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-navy-950/50 backdrop-blur-sm rounded-2xl">
+                  <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
+                </div>
+              )}
               <h3 className="font-bold text-slate-800 dark:text-white mb-4">Contest Performance</h3>
               {contestData.length > 0 ? (
                 <div className="flex-1 min-h-[300px]">
@@ -229,7 +250,12 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
             </div>
 
             {/* 5. Difficulty Progression */}
-            <div className="bg-white dark:bg-navy-950 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col">
+            <div className="bg-white dark:bg-navy-950 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col relative">
+              {loading && !data && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-navy-950/50 backdrop-blur-sm rounded-2xl">
+                  <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
+                </div>
+              )}
               <h3 className="font-bold text-slate-800 dark:text-white mb-4">Difficulty Progression</h3>
               {trendData.length > 0 ? (
                 <div className="flex-1 min-h-[300px]">
@@ -250,7 +276,12 @@ export const IndividualAnalyticsDashboard: React.FC<{ studentId: number }> = ({ 
             </div>
 
             {/* 6. Acceptance Rate & Problem Distribution */}
-            <div className="bg-white dark:bg-navy-950 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col">
+            <div className="bg-white dark:bg-navy-950 p-5 rounded-2xl border border-slate-200 dark:border-navy-700 shadow-sm flex flex-col relative">
+              {loading && !data && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 dark:bg-navy-950/50 backdrop-blur-sm rounded-2xl">
+                  <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
+                </div>
+              )}
               <h3 className="font-bold text-slate-800 dark:text-white mb-4">Acceptance Rate & Overview</h3>
               {data?.current_stats?.total_submissions > 0 ? (
                 <div className="flex-1 flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-navy-900 rounded-xl space-y-3">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, startTransition } from 'react';
 import { FileSpreadsheet, Download, Mail, CheckCircle2, FileText, Sparkles, Send, ShieldCheck, Camera, History, LayoutTemplate, PlayCircle, Layers, Inbox, Trash2, Award, Clock, Building2, GraduationCap, ChevronDown, Check, Target, Loader2, Trophy } from 'lucide-react';
 import PremiumDepartmentSelect from '../components/ui/PremiumDepartmentSelect';
 import api, { getApiUrl } from '../services/api';
@@ -515,7 +515,7 @@ export const ReportsPage: React.FC = () => {
       {/* Main Tab Navigation */}
       <div className="flex items-center space-x-2 bg-slate-100 dark:bg-navy-950 p-1.5 rounded-2xl max-w-fit border border-slate-200 dark:border-slate-800 flex-wrap gap-1">
         <button
-          onClick={() => setActiveTab('reports')}
+          onClick={() => startTransition(() => setActiveTab('reports'))}
           className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${activeTab === 'reports'
               ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -526,7 +526,7 @@ export const ReportsPage: React.FC = () => {
         </button>
 
         <button
-          onClick={() => setActiveTab('email')}
+          onClick={() => startTransition(() => setActiveTab('email'))}
           className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer ${activeTab === 'email' || activeTab === 'manual_email' || activeTab === 'auto_email'
               ? 'bg-gradient-to-r from-indigo-600 to-brand-600 text-white shadow-md'
               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -821,3 +821,4 @@ export const ReportsPage: React.FC = () => {
     </div>
   );
 };
+

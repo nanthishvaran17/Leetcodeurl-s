@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useDeferredValue } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useDeferredValue, startTransition } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { createPortal } from 'react-dom';
 import { FixedSizeList as List } from 'react-window';
@@ -288,7 +288,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
       onSelectStudent(student);
     } else {
       setModalTopY(calculateTargetTopY(e));
-      setViewingStudent(student);
+      startTransition(() => setViewingStudent(student));
     }
   };
 
@@ -297,7 +297,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
       e.preventDefault();
       e.stopPropagation();
     }
-    setViewingStudent(null);
+    startTransition(() => setViewingStudent(null));
     setModalTopY(calculateTargetTopY(e));
     setEditingStudent(st);
     setEditName(st.name);
@@ -322,7 +322,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
       const onKey = (e: KeyboardEvent) => {
         if (e.key === 'Escape') {
           if (!isDeleting) {
-            setViewingStudent(null);
+            startTransition(() => setViewingStudent(null));
             setDeletingStudent(null);
           }
         }
@@ -472,7 +472,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   }, []);
 
   const handleViewStudentAction = useCallback((s: any) => {
-    setViewingStudent(s);
+    startTransition(() => setViewingStudent(s));
   }, []);
 
   const handleEditStudentAction = useCallback((s: any) => {
@@ -490,7 +490,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
     if (onSelectStudent) {
       onSelectStudent(s);
     } else {
-      setViewingStudent(s);
+      startTransition(() => setViewingStudent(s));
     }
   }, [onSelectStudent]);
   const memoizedHandleEdit = useCallback((s: any, e?: any) => {
@@ -498,7 +498,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
       e.preventDefault();
       e.stopPropagation();
     }
-    setViewingStudent(null);
+    startTransition(() => setViewingStudent(null));
     setEditingStudent(s);
     setEditName(s.name);
     setEditDeptId(s.department_id || 1);
@@ -784,7 +784,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
       {viewingStudent && typeof document !== 'undefined' && createPortal(
         <div
           className="modal-overlay-responsive animate-modal-backdrop"
-          onClick={(e) => { if (e.target === e.currentTarget) setViewingStudent(null); }}
+          onClick={(e) => { if (e.target === e.currentTarget) startTransition(() => setViewingStudent(null)); }}
         >
           {/* Modal panel — centered with safe margins from top & bottom */}
           <div
@@ -832,7 +832,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
               {/* Close button */}
               <button
                 type="button"
-                onClick={() => setViewingStudent(null)}
+                onClick={() => startTransition(() => setViewingStudent(null))}
                 aria-label="Close student profile"
                 className="shrink-0 z-10 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-rose-500 text-white transition-all font-black text-xs flex items-center gap-1.5 cursor-pointer shadow-sm"
               >
@@ -996,7 +996,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                     type="button"
                     onClick={() => {
                       const s = viewingStudent;
-                      setViewingStudent(null);
+                      startTransition(() => setViewingStudent(null));
                       onSelectStudent(s);
                     }}
                     className="px-4 sm:px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer"
@@ -1006,7 +1006,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
                 )}
                 <button
                   type="button"
-                  onClick={() => setViewingStudent(null)}
+                  onClick={() => startTransition(() => setViewingStudent(null))}
                   className="px-4 sm:px-5 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-black shadow-sm transition-all cursor-pointer"
                 >
                   Done
@@ -1027,3 +1027,5 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
 
 
 export const LeaderboardTable = React.memo(LeaderboardTableComponent);
+
+

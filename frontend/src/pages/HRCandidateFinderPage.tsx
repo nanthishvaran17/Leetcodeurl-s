@@ -123,7 +123,7 @@ const defaultFilters: AdvancedFilters = {
   profile_class: "all",
   improvement_priority: "all",
   trend: "all",
-  top_n: 10000,
+  top_n: 100,
   total_solved: defaultNumeric(0),
   easy_solved: defaultNumeric(0),
   medium_solved: defaultNumeric(0),
@@ -254,6 +254,7 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
   const ref = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState<{ top: number; left: number; width: number; maxHeight?: number; transformOrigin?: string } | null>(null);
+  const lastCoordsRef = useRef<string | null>(null);
 
   const updateCoords = useCallback(() => {
     if (ref.current) {
@@ -283,13 +284,19 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
         left = Math.max(12, viewportWidth - popoverWidth - 16);
       }
 
-      setCoords({
+      const newCoords = {
         top: Math.max(8, top),
         left,
         width: popoverWidth,
         maxHeight: Math.min(maxHeight, 280),
         transformOrigin
-      });
+      };
+
+      const newCoordsStr = JSON.stringify(newCoords);
+      if (lastCoordsRef.current !== newCoordsStr) {
+        lastCoordsRef.current = newCoordsStr;
+        setCoords(newCoords);
+      }
     }
   }, [options.length]);
 
@@ -303,18 +310,25 @@ const CustomSelectPopover: React.FC<CustomSelectProps> = ({
       if (e.key === 'Escape') setOpen(false);
     };
 
+    let rafId: number;
+    const handleScrollOrResize = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(updateCoords);
+    };
+
     if (open) {
       updateCoords();
       document.addEventListener("mousedown", handleClickOutside);
       document.addEventListener("keydown", handleKeyDown);
-      window.addEventListener("resize", updateCoords);
-      window.addEventListener("scroll", updateCoords, true);
+      window.addEventListener("resize", handleScrollOrResize);
+      window.addEventListener("scroll", handleScrollOrResize, true);
     }
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("resize", updateCoords);
-      window.removeEventListener("scroll", updateCoords, true);
+      window.removeEventListener("resize", handleScrollOrResize);
+      window.removeEventListener("scroll", handleScrollOrResize, true);
+      if (rafId) cancelAnimationFrame(rafId);
     };
   }, [open, updateCoords]);
 
@@ -725,7 +739,7 @@ export const HRCandidateFinderPage: React.FC = () => {
           placement_readiness: "all",
           risk_level: "all",
           profile_class: "all",
-          top_n: 10000
+          top_n: 100
         }
       });
 
@@ -2551,3 +2565,4 @@ export const HRCandidateFinderPage: React.FC = () => {
 }
 
 export default HRCandidateFinderPage;
+
