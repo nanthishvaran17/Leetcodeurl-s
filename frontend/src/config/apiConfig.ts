@@ -8,7 +8,8 @@ const RAW_ENV_URL = (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BA
 
 export const PRODUCTION_BACKEND_URL = RAW_ENV_URL 
   ? RAW_ENV_URL.replace(/\/api\/?$/, '').replace(/\/+$/, '')
-  : 'https://api.nandhaengg.org'; // Permanent Cloudflare Tunnel production backend
+  : 'https://leetcodeurljn-s.onrender.com'; // Primary Render production backend
+
 
 /**
  * Detects if the current runtime environment is a Capacitor Native App (Android / iOS)
