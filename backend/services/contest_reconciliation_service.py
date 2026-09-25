@@ -189,14 +189,19 @@ class AuthenticatedVirtualContestProvider:
         c_name = str(evidence_record.get("contest_name", "")).lower()
         target_c_id = target_contest_id.lower()
 
-        is_contest_516 = (
+        # Extract number if present in target_contest_id
+        import re
+        target_num_match = re.search(r"(\d{3,4})", target_c_id)
+        target_num = target_num_match.group(1) if target_num_match else None
+
+        is_target_contest = (
             c_id == target_c_id or
             f"weekly-contest-{c_id}" == target_c_id or
-            "516" in c_id or
-            "516" in c_name
+            (target_num and target_num in c_id) or
+            (target_num and target_num in c_name)
         )
 
-        if not is_contest_516:
+        if not is_target_contest:
             return {
                 "has_evidence": False,
                 "evidence_state": "CONTEST_MISMATCH",
@@ -701,21 +706,47 @@ class UniversalContestReconciliationEngine:
         if not session_obj:
             session_obj = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
 
-        session_id = session_obj.id if session_obj else 21
-        contest_name = (session_obj.contest_name if session_obj and session_obj.contest_name else None) or "Weekly Contest 516"
-        contest_date = (session_obj.session_date if session_obj and session_obj.session_date else None) or "23.08.2026"
-        contest_id = (session_obj.contest_id if session_obj and session_obj.contest_id else None) or "weekly-contest-516"
+        if not session_obj:
+            logger.error("[RECONCILIATION_ERROR] No WeeklySession found. Cannot reconcile without a session.")
+            return {
+                "success": False,
+                "error": "No WeeklySession found in database. Contest discovery required before reconciliation.",
+                "reconciliation_status": "DISCOVERY_FAILED",
+                "publication_allowed": False
+            }
+
+        session_id = session_obj.id
+        contest_name = session_obj.contest_name
+        contest_date = session_obj.session_date
+        contest_id = session_obj.contest_id
+
+        if not contest_name:
+            logger.warning(f"[RECONCILIATION] Session {session_id} has no contest_name. Marking as DISCOVERY_FAILED.")
+            return {
+                "success": False,
+                "error": f"Session {session_id} is missing contest_name. Cannot reconcile without contest identity.",
+                "reconciliation_status": "DISCOVERY_FAILED",
+                "publication_allowed": False
+            }
 
         # 1. Discover Official Problem Set
         problem_set = cls.discover_problem_set(session_obj or contest_name, db)
         if not problem_set.is_valid and session_id_or_num:
             problem_set = cls.discover_problem_set(session_id_or_num, db)
-        if not problem_set.is_valid:
-            # Fallback to standard 516 configuration if contest name is generic
-            problem_set = ContestProblemAccuracyEngine.resolve_official_problem_set(contest_number=516)
 
         if not contest_id or contest_id in ("None", ""):
-            contest_id = f"weekly-contest-{problem_set.contest_number or 516}"
+            # Derive from contest_name if available, but NEVER hardcode
+            import re
+            m = re.search(r"(\d{3,4})", str(contest_name))
+            contest_id = f"weekly-contest-{m.group(1)}" if m else None
+            if not contest_id:
+                logger.error(f"[RECONCILIATION_ERROR] Cannot derive contest_id from contest_name '{contest_name}'.")
+                return {
+                    "success": False,
+                    "error": f"Cannot determine contest_id from session {session_id}.",
+                    "reconciliation_status": "DISCOVERY_FAILED",
+                    "publication_allowed": False
+                }
 
         if not problem_set.is_valid:
             logger.error(f"[RECONCILIATION_ERROR] Problem set invalid: {problem_set.validation_error}")

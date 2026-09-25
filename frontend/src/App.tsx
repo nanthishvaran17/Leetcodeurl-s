@@ -324,7 +324,7 @@ export const App: React.FC = () => {
       const hash = window.location.hash;
       if (hash && hash.startsWith('#/')) {
         const tab = hash.replace('#/', '').trim();
-        if (tab) setActiveTab(tab);
+        if (tab && tab !== 'main-content') setActiveTab(tab);
       } else if (isAuthenticated) {
         setActiveTab('dashboard');
       }
@@ -334,7 +334,7 @@ export const App: React.FC = () => {
       const routeStr = e?.detail?.route || '';
       if (!routeStr) return;
       const cleanRoute = routeStr.replace('/api', '').replace('#/', '').replace('/', '').trim();
-      if (cleanRoute) {
+      if (cleanRoute && cleanRoute !== 'main-content') {
         setActiveTab(cleanRoute);
       }
     };
@@ -355,8 +355,8 @@ export const App: React.FC = () => {
   useEffect(() => {
     if (isAuthenticated) {
       if (showLoginModal) setShowLoginModal(false);
-      const cleanHash = (window.location.hash || '').replace('#/', '').trim();
-      if (!cleanHash || cleanHash === 'landing') {
+      const cleanHash = (window.location.hash || '').replace('#/', '').replace('#', '').trim();
+      if (!cleanHash || cleanHash === 'landing' || cleanHash === 'main-content') {
         setActiveTab('dashboard');
         try {
           if (window.history && window.history.replaceState) {
@@ -671,18 +671,18 @@ export const App: React.FC = () => {
   // CENTRALIZED ROLE PERMISSION MATRIX 
   // Single source of truth for all role-based tab access.
   // NEVER duplicate this logic across components.
-  const ALL_ACADEMIC_TABS = useMemo(() => ['dashboard','landing','public','profile','students','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'], []);
+  const ALL_ACADEMIC_TABS = useMemo(() => ['dashboard','landing','public','profile','students','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'], []);
   
   const ROLE_PERMISSIONS = useMemo<Record<string, string[]>>(() => ({
     // Super admin / admin: full system access
-    admin:            ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
-    administrator:    ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
-    super_admin:      ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
-    'super admin':    ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
+    admin:            ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
+    administrator:    ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
+    super_admin:      ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
+    'super admin':    ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','audit','settings','system-health','ai-control','staff-dashboard','student-dashboard','messages','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
     // HOD: command center + all academic tools
-    hod:              ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
-    'department hod': ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
-    department_hod:   ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','reports','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
+    hod:              ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
+    'department hod': ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
+    department_hod:   ['dashboard','landing','public','profile','students','hod-command-center','faculty-action-center','departments','compare','growth','quality','data-issues','weekly-contest','integrity-monitor','reports','hr-candidate-finder','candidate-requirements','placement-finder','hr-finder'],
     // FACULTY / STAFF MENTOR: full academic & contest tools
     faculty:          ALL_ACADEMIC_TABS,
     'faculty mentor': ALL_ACADEMIC_TABS,
@@ -798,7 +798,7 @@ export const App: React.FC = () => {
       <div className={`flex-1 w-full mx-auto relative ${
         activeTab === 'messages'
           ? 'pt-0 pb-0 px-0 max-w-full'
-          : 'pt-2.5 sm:pt-6 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 px-3 sm:px-5 lg:px-7 2xl:px-8 max-w-full'
+          : 'pt-1.5 sm:pt-3 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 px-3 sm:px-5 lg:px-7 2xl:px-8 max-w-full'
       }`}>
         
         {/* Slide-out Sidebar Drawer */}

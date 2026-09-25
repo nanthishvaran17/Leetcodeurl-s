@@ -1,18 +1,15 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { User as FirebaseUser } from 'firebase/auth';
 import api, { clearApiCache } from '../services/api';
-import { AuthState, AuthUser, AuthContextType } from '../services/auth/authTypes';
+import { clearContestCache } from '../services/contestCache';
+import { queryClient } from '../lib/react-query';
+import { AuthState, AuthUser } from '../services/auth/authTypes';
 import { isMobileBrowser } from '../services/googleAuth';
+import { AuthContext } from './authContextDef';
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// AuthContext and useAuth are defined in authContextDef.ts — import from there.
+// This file only exports AuthProvider to satisfy Vite Fast Refresh (components-only exports).
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(() => {
@@ -45,6 +42,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = useCallback((newToken: string | null, newUser: any) => {
     if (newToken) {
       setToken(newToken);
+      localStorage.setItem('token', newToken);
     }
     const formattedUser: AuthUser = {
       uid: newUser.uid || `user_${newUser.id || '1'}`,
@@ -71,6 +69,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     setUser(formattedUser);
     localStorage.setItem('user', JSON.stringify(formattedUser));
+    clearApiCache();
+    clearContestCache();
+    // Flush all React Query in-memory cache so role-scoped queries re-fetch fresh data
+    queryClient.clear();
     clearAuthError();
     setAuthState('AUTHORIZED');
   }, [clearAuthError]);
@@ -80,10 +82,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthState('AUTHENTICATING');
     setToken(null);
     setUser(null);
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('admin_user');
     sessionStorage.clear();
     clearApiCache();
+    clearContestCache();
+    // Flush all React Query in-memory cache to prevent stale data leaking to next session
+    queryClient.clear();
 
     try {
       await api.post('/auth/logout');
@@ -269,6 +275,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (isVerifyingRef.current) return;
 
                 const storedToken = localStorage.getItem('token');
+                
+                // FORCE RE-LOGIN if token is missing but we're supposedly logged in (fixes APK state)
+                if (!storedToken || storedToken.trim() === '') {
+                  console.warn('[AUTH] Missing token in localStorage, forcing re-authentication');
+                  localStorage.removeItem('user');
+                  if (isMounted) setAuthState('AUTH_UNAUTHENTICATED');
+                  return;
+                }
+
                 if (storedToken && storedToken.trim() !== '') {
                   try {
                     const res = await api.get('/auth/session');
@@ -298,11 +313,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   } catch (e) {}
                 }
 
-                const storedUser = localStorage.getItem('user');
-                if (storedUser && isMounted) {
-                  setAuthState('AUTHORIZED');
-                  return;
-                }
+                // Fallback catch - should not reach here due to the force logout above
+                if (isMounted) setAuthState('AUTH_UNAUTHENTICATED');
 
                 if (isMounted) setAuthState('AUTH_UNAUTHENTICATED');
               }

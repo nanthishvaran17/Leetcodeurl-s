@@ -1059,3 +1059,45 @@ def get_prometheus_metrics(db: Session = Depends(get_db)):
     return metrics_payload
 
 
+@router.get("/evidence-audit")
+def get_evidence_audit_summary(db: Session = Depends(get_db)):
+    """
+    Evidence-First System Audit Endpoint.
+    Returns counts of raw evidence records, reconciliation events, immutable snapshots,
+    and latest discovery details.
+    """
+    from backend.models import ContestRawEvidence, ContestReconciliationEvent, OfficialWeeklySnapshot, WeeklySession
+    from backend.services.contest_discovery import discover_contest_metadata
+
+    raw_evidence_count = db.query(ContestRawEvidence).count()
+    rec_event_count = db.query(ContestReconciliationEvent).count()
+    snapshot_count = db.query(OfficialWeeklySnapshot).count()
+    sessions = db.query(WeeklySession).order_by(WeeklySession.id.desc()).limit(5).all()
+
+    discovery = discover_contest_metadata()
+
+    return {
+        "status": "healthy",
+        "timestamp_utc": datetime.datetime.now(datetime.timezone.utc).isoformat() + "Z",
+        "evidence_first_principles": {
+            "no_evidence_no_result": True,
+            "zero_silent_fallbacks": True,
+            "strict_raw_immutability": True
+        },
+        "discovered_contest": discovery,
+        "raw_evidence_records": raw_evidence_count,
+        "reconciliation_events": rec_event_count,
+        "snapshots_published": snapshot_count,
+        "recent_sessions": [
+            {
+                "id": s.id,
+                "contest_name": s.contest_name,
+                "session_date": s.session_date,
+                "status": s.status,
+                "pipeline_state": s.pipeline_state
+            } for s in sessions
+        ]
+    }
+
+
+

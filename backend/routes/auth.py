@@ -337,7 +337,8 @@ def get_current_user_from_request(request: Request, db: Session) -> Optional[Use
                         "department_id": mock_user.department_id
                     }, ttl_seconds=300)
                     return mock_user
-        except Exception:
+        except Exception as e:
+            logger.warning(f"DEBUG AUTH FAIL: Exception {e}")
             pass
 
         # 2. Try Firebase ID Token / Google Auth Token

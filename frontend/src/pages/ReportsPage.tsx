@@ -499,7 +499,7 @@ export const ReportsPage: React.FC = () => {
             </div>
 
             <h1 className="text-3xl md:text-4xl font-black tracking-tight uppercase">
-              {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') ? (
+              {['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase()) ? (
                 <>
                   MY <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">EXPORT SUITE</span>
                 </>
@@ -511,7 +511,7 @@ export const ReportsPage: React.FC = () => {
             </h1>
 
             <p className="text-xs md:text-sm text-slate-300 font-bold tracking-wide">
-              {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '')
+              {['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase())
                 ? "Download individual formatted Excel workbooks and reports for your assigned students."
                 : "Download individual formatted Excel workbooks, executive PDF summaries, and dispatch automated Sunday email reports to management"}
             </p>
@@ -694,7 +694,7 @@ export const ReportsPage: React.FC = () => {
                         </button>
 
                         {rptTypeOpen && (
-                          <div className="absolute z-[200] top-full left-0 mt-2 bg-white/95 backdrop-blur-xl dark:bg-navy-950/95 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] overflow-hidden min-w-[340px] w-[680px] max-w-[90vw] grid grid-cols-1 md:grid-cols-2">
+                          <div className="absolute z-[200] top-full left-0 right-0 sm:right-auto mt-2 bg-white/95 backdrop-blur-xl dark:bg-navy-950/95 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] overflow-y-auto overscroll-contain max-h-[55vh] sm:max-h-[70vh] min-w-[280px] w-full sm:w-[450px] md:w-[680px] grid grid-cols-1 md:grid-cols-2">
                             {/* LEFT COLUMN: A. CONTEST REPORTS */}
                             <div className="p-4 sm:p-5 bg-slate-50/50 dark:bg-navy-900/20 border-r border-slate-100 dark:border-slate-800/50">
                               {renderCategory(reportCategories[0])}

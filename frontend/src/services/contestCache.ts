@@ -30,14 +30,27 @@ export function logContestTelemetry(telem: ContestTelemetry) {
   );
 }
 
+function getContestUserScope(): string {
+  try {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const u = JSON.parse(userStr);
+      return `${u.id || 'anon'}:${u.role || 'user'}`;
+    }
+  } catch (e) {}
+  return 'public';
+}
+
 export function getCachedContestData<T>(key: string, maxAgeMs: number = 30 * 60 * 1000): T | null {
-  const entry = MEMORY_CACHE.get(key);
+  const scopedKey = `${getContestUserScope()}:${key}`;
+  const entry = MEMORY_CACHE.get(scopedKey);
   if (!entry) return null;
   return entry.data;
 }
 
 export function setCachedContestData<T>(key: string, data: T) {
-  MEMORY_CACHE.set(key, { data, timestamp: Date.now() });
+  const scopedKey = `${getContestUserScope()}:${key}`;
+  MEMORY_CACHE.set(scopedKey, { data, timestamp: Date.now() });
 }
 
 export async function fetchWithCacheDedupe<T>(

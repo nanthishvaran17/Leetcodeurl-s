@@ -207,7 +207,7 @@ def _get_fast_contest_summary(session: WeeklySession, db: Session, current_user:
     
     sess_id = session.id
     user_key = f"{current_user.id}:{current_user.role}" if current_user else "public"
-    cache_key = f"contest_summary_{sess_id}_{user_key}"
+    cache_key = f"contest_summary_v5_{sess_id}_{user_key}"
     
     now_ts = datetime.datetime.now(datetime.timezone.utc).timestamp()
     if session.status == "FINALIZED" and cache_key in _CONTEST_RAM_CACHE:
@@ -967,9 +967,11 @@ def get_normalized_contest_data(
     All consumers (UI Table, Comparison, Filter Cards, Excel, PDF, CSV, Word, ZIP, Email, Preview)
     read strictly from build_canonical_contest_dataset to guarantee 100% mathematical consistency.
     """
+    close_on_exit = False
     if db is None:
         from backend.database import SessionLocal
         db = SessionLocal()
+        close_on_exit = True
 
     final_dept = dept or department or "ALL"
     final_year = year or academic_year or "ALL"
@@ -1088,6 +1090,11 @@ def get_normalized_contest_data(
         "statusCounts": canonical_data["statusCounts"],
         "dataQualityIssues": canonical_data["dataQualityIssues"]
     }
+    if close_on_exit and db is not None:
+        try:
+            db.close()
+        except Exception:
+            pass
     return resp
 
 @router.get("/sessions/{session_id}/matrix")
@@ -1814,11 +1821,15 @@ def _run_sync_in_background(session_id: int):
         else:
             logger.info(f"Starting background sync for Session {session_id}")
             sync_single_historical_session(db, session_id)
-            logger.info(f"Completed background sync for Session {session_id}")
+            _CONTEST_RAM_CACHE.clear()
+            from backend.cache import cache
+            cache.clear()
+            logger.info(f"Completed background sync and cleared caches for Session {session_id}")
     except Exception as e:
         from backend.logger import logger
         logger.error(f"Background single session sync failed for {session_id}: {e}")
     finally:
+        _CONTEST_RAM_CACHE.clear()
         db.close()
 
 @router.post("/sessions/{session_id}/sync")
@@ -2417,7 +2428,8 @@ def get_post_930_solvers(
 
     # Enforce Staff-level RBAC isolation
     assigned_student_ids = None
-    if user and user_role_clean in ["staff", "faculty"]:
+    from backend.services.authorization_service import _STAFF_ROLES
+    if user and user_role_clean in _STAFF_ROLES:
         assigned_ids_list = faculty_assignment_service.get_faculty_assigned_student_ids(db, user.id)
         assigned_student_ids = set(assigned_ids_list)
         if student_id and student_id not in assigned_student_ids:

@@ -17,6 +17,7 @@ from backend.models import User, Student, FacultyStudentAssignment
 from backend.security import require_role
 from backend.routes.auth import assert_not_protected_super_admin
 from backend.services.faculty_assignment_service import faculty_assignment_service, MAX_STUDENTS_PER_FACULTY
+from backend.services.authorization_service import _STAFF_ROLES
 from backend.logger import logger
 
 router = APIRouter(prefix="/faculty-assignments", tags=["Faculty Assignments"])
@@ -99,6 +100,7 @@ def get_my_assigned_students(
 
     student_list = []
     for s in students:
+        perf = calculate_student_performance_status(s)
         st_out = {
             "id": s.id,
             "reg_no": s.reg_no,
@@ -114,7 +116,13 @@ def get_my_assigned_students(
             "hard_solved": s.stats.hard_solved if s.stats else 0,
             "contest_rating": s.stats.contest_rating if s.stats else 0.0,
             "max_streak": s.stats.max_streak if s.stats else 0,
-            "sync_status": s.stats.sync_status if s.stats else "not_started"
+            "sync_status": s.stats.sync_status if s.stats else "not_started",
+            "status_code": perf["status_code"],
+            "status_label": perf["status_label"],
+            "badge_color": perf["badge_color"],
+            "days_inactive": perf["days_inactive"],
+            "trend": perf["trend"],
+            "trend_label": perf["trend_label"]
         }
         student_list.append(st_out)
 
@@ -448,6 +456,7 @@ def get_my_mentoring_summary(
     completed_count = 0
     pending_count = 0
     total_solved_sum = 0
+    total_capped_solved_sum = 0
 
     for s in students:
         perf = calculate_student_performance_status(s)
@@ -464,8 +473,10 @@ def get_my_mentoring_summary(
         if solved > 0:
             active_count += 1
         total_solved_sum += solved
+        total_capped_solved_sum += min(solved, 100)
 
     avg_solved = round(total_solved_sum / total_assigned, 1) if total_assigned > 0 else 0.0
+    target_progress_pct = round((total_capped_solved_sum / (total_assigned * 100)) * 100, 1) if total_assigned > 0 else 0.0
     pending_followups = db.query(StaffFollowUp).filter(
         StaffFollowUp.staff_id == int(current_user.id),  # type: ignore
         StaffFollowUp.status == "PENDING"
@@ -506,6 +517,8 @@ def get_my_mentoring_summary(
         "workload_capacity": 30,
         "workload_status": "WITHIN CAPACITY" if total_assigned < 30 else ("AT CAPACITY" if total_assigned == 30 else "OVER CAPACITY"),
         "weekly_progress_avg": avg_solved,
+        "target_progress_pct": target_progress_pct,
+        "target_benchmark": 100,
         "overall_performance": "High" if at_risk_count == 0 else ("Moderate" if at_risk_count <= 3 else "Needs Action")
     }
 
@@ -570,7 +583,7 @@ def get_student_notes(
     from backend.models import MentorNote
 
     user_role = (current_user.role or "").strip().lower()
-    if user_role in ["staff", "faculty"]:
+    if user_role in _STAFF_ROLES:
         assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))  # type: ignore
         if student_id not in assigned_ids:
             raise HTTPException(status_code=403, detail="Access Denied: Student is not assigned to your portfolio.")
@@ -600,7 +613,7 @@ def create_student_note(
     from backend.models import MentorNote
 
     user_role = (current_user.role or "").strip().lower()
-    if user_role in ["staff", "faculty"]:
+    if user_role in _STAFF_ROLES:
         assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))  # type: ignore
         if payload.student_id not in assigned_ids:
             raise HTTPException(status_code=403, detail="Access Denied: Student is not assigned to your portfolio.")
@@ -673,7 +686,7 @@ def create_staff_follow_up(
     from backend.models import StaffFollowUp
 
     user_role = (current_user.role or "").strip().lower()
-    if user_role in ["staff", "faculty"]:
+    if user_role in _STAFF_ROLES:
         assigned_ids = faculty_assignment_service.get_faculty_assigned_student_ids(db, int(current_user.id))  # type: ignore
         if payload.student_id not in assigned_ids:
             raise HTTPException(status_code=403, detail="Access Denied: Student is not assigned to your portfolio.")

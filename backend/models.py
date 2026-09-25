@@ -505,6 +505,56 @@ class OfficialWeeklySnapshot(Base):
     superseded_by_id = Column(Integer, nullable=True)
 
 
+class ContestRawEvidence(Base):
+    """
+    Immutable Raw Evidence Storage.
+    Stores un-normalized, exact raw API payload responses from LeetCode GraphQL/REST endpoints.
+    Every row includes a SHA-256 payload_hash for cryptographic tamper protection.
+    """
+    __tablename__ = "contest_raw_evidences"
+    __table_args__ = (
+        Index("ix_contest_raw_evidences_session_student", "session_id", "student_id"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("weekly_sessions.id"), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=True, index=True)
+    source_api = Column(String(100), nullable=False)  # USER_CONTEST_HISTORY_QUERY, RECENT_AC_SUBMISSIONS_QUERY, PUBLIC_LEADERBOARD
+    raw_payload = Column(JSON, nullable=False)
+    payload_hash = Column(String(64), nullable=False, index=True)  # SHA-256
+    fetched_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), nullable=False, index=True)
+    http_status_code = Column(Integer, default=200)
+    fetch_duration_ms = Column(Integer, nullable=True)
+
+    session = relationship("WeeklySession")
+    student = relationship("Student")
+
+
+class ContestReconciliationEvent(Base):
+    """
+    Immutable Audit Trail for Contest Reconciliation Events.
+    Logs every state transition, evidence classification update, anomaly flagging, and snapshot generation.
+    """
+    __tablename__ = "contest_reconciliation_events"
+    __table_args__ = (
+        Index("ix_contest_rec_events_session_type", "session_id", "event_type"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("weekly_sessions.id"), nullable=False, index=True)
+    student_id = Column(Integer, ForeignKey("students.id"), nullable=True, index=True)
+    event_type = Column(String(50), nullable=False)  # EVIDENCE_FETCHED, CLASSIFICATION_CHANGED, ANOMALY_FLAGGED, SNAPSHOT_GENERATED
+    old_state = Column(String(50), nullable=True)
+    new_state = Column(String(50), nullable=True)
+    evidence_source = Column(String(100), nullable=True)
+    details = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), nullable=False, index=True)
+
+    session = relationship("WeeklySession")
+    student = relationship("Student")
+
+
+
 class WeeklyStudentProgress(Base):
     __tablename__ = "weekly_student_progress"
     __table_args__ = (

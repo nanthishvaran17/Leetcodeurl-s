@@ -95,6 +95,9 @@ class FacultyAssignmentService:
             existing_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, faculty_id)
             new_ids = [sid for sid in unique_student_ids if sid not in existing_ids]
 
+            assigner = db.query(User).filter(User.id == assigned_by_id).first() if assigned_by_id else None
+            is_assigner_admin = bool(assigner and getattr(assigner, "role", "").lower() in ["admin", "super admin"])
+
             # DB-LEVEL ATOMIC CAPACITY CHECK
             # Capacity check: Admins & Super Admins can bypass or override the default capacity cap
             if not is_assigner_admin and (current_count + len(new_ids) > MAX_STUDENTS_PER_FACULTY):
@@ -112,13 +115,12 @@ class FacultyAssignmentService:
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Invalid student IDs provided: {list(missing)}"
                 )
-
-            assigner = db.query(User).filter(User.id == assigned_by_id).first() if assigned_by_id else None
-            is_assigner_admin = assigner and getattr(assigner, "role", "").lower() in ["admin", "super admin"]
             
+            fac_inst = getattr(faculty, "institution_id", None)
             for st in students:
                 # 1. Institution Isolation
-                if faculty.institution_id and st.institution_id and st.institution_id != faculty.institution_id:
+                st_inst = getattr(st, "institution_id", None)
+                if fac_inst and st_inst and st_inst != fac_inst:
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
                         detail=f"Cross-institution assignment forbidden. Student '{st.name}' belongs to a different institution."

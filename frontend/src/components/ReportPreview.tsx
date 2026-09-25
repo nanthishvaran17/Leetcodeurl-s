@@ -237,27 +237,27 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
   const getStatusBadge = (status: string) => {
     const s = (status || '').toUpperCase();
     if (s === 'PUBLIC_ATTENDED' || s === 'PUBLIC' || s === 'PUBLIC_LIVE' || s === 'ATTENDED') {
-      return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">PUBLIC ATTENDED</span>;
+      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 leading-none">PUBLIC ATTENDED</span>;
     }
     if (s === 'VIRTUAL_ATTENDED' || s === 'VIRTUAL' || s === 'VIRTUAL_PRACTICE') {
-      return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">VIRTUAL ATTENDED</span>;
+      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30 leading-none">VIRTUAL ATTENDED</span>;
     }
     if (s === 'NOT_ATTENDED' || s === 'PUBLIC_NOT_ATTENDED' || s === 'ABSENT') {
-      return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">NOT ATTENDED</span>;
+      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30 leading-none">NOT ATTENDED</span>;
     }
     if (s === 'PENDING_USERNAME' || s === 'PENDING') {
-      return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">PENDING USERNAME</span>;
+      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 leading-none">PENDING USERNAME</span>;
     }
     if (s === 'DATA_ERROR') {
-      return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">DATA ERROR</span>;
+      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-orange-500/15 text-orange-700 dark:text-orange-300 border border-orange-500/30 leading-none">DATA ERROR</span>;
     }
     if (s === 'FETCH_FAILED' || s === 'FETCH_ERROR') {
-      return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">FETCH FAILED</span>;
+      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30 leading-none">FETCH FAILED</span>;
     }
     if (s === 'INVALID_USERNAME' || s === 'USERNAME_NOT_FOUND') {
-      return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">INVALID USERNAME</span>;
+      return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-orange-500/15 text-orange-700 dark:text-orange-300 border border-orange-500/30 leading-none">INVALID USERNAME</span>;
     }
-    return <span className="px-2.5 py-1 text-[10px] font-black rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20">UNKNOWN</span>;
+    return <span className="inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-extrabold rounded-full bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/30 leading-none">UNKNOWN</span>;
   };
 
   return createPortal(
@@ -896,7 +896,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                               <td className="px-3.5 py-2.5 text-left font-bold text-indigo-600 dark:text-indigo-400">{s.dept}</td>
                               <td className="px-3.5 py-2.5 text-center font-medium text-slate-600 dark:text-slate-400">{s.year}</td>
                               <td className="px-3.5 py-2.5 text-left font-mono text-slate-700 dark:text-slate-300">{s.leetcode_handle || s.username || "—"}</td>
-                              <td className="px-4 py-2.5 text-center">
+                              <td className="px-4 py-2.5 text-center whitespace-nowrap align-middle">
                                 {getStatusBadge(s.status)}
                               </td>
                               <td className="px-3 py-2.5 text-center font-bold">
@@ -939,7 +939,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                               <td className="px-3.5 py-2.5 text-center text-slate-400 font-mono text-[11px] print:text-black">{idx + 1}</td>
                               <td className="px-3.5 py-2.5 font-bold text-slate-900 dark:text-white font-mono sticky left-0 bg-white dark:bg-navy-950 group-hover:bg-slate-50 dark:group-hover:bg-navy-800 print:bg-transparent print:text-black z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] print:shadow-none">{s.reg_no}</td>
                               <td className="px-3.5 py-2.5 font-semibold text-slate-800 dark:text-slate-200 print:text-black">{s.name || s.student_name}</td>
-                              <td className="px-4 py-2.5 text-center">
+                              <td className="px-4 py-2.5 text-center whitespace-nowrap align-middle">
                                 {getStatusBadge(s.status)}
                               </td>
                               <td className="px-3 py-2.5 text-center font-mono font-bold text-xs">
@@ -1001,7 +1001,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({ reportId, initialD
                             <td className="px-3.5 py-2.5 font-semibold text-slate-800 dark:text-slate-200 print:text-black">{s.name || s.student_name}</td>
                             <td className="px-3.5 py-2.5 text-center font-bold text-indigo-600 dark:text-indigo-400">{s.dept}</td>
                             <td className="px-3.5 py-2.5 text-center font-medium text-slate-600 dark:text-slate-400">{s.year}</td>
-                            <td className="px-4 py-2.5 text-center">
+                            <td className="px-4 py-2.5 text-center whitespace-nowrap align-middle">
                               {getStatusBadge(s.status)}
                             </td>
                             <td className="px-3 py-2.5 text-center font-bold">

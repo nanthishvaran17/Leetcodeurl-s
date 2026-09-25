@@ -198,6 +198,21 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   const [lcValidation, setLcValidation] = useState<LcValidationState>({ status: 'idle' });
 
   const initialRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showUnsavedPrompt) {
+          setShowUnsavedPrompt(false);
+        } else {
+          onClose();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose, showUnsavedPrompt]);
   const debounceTimerRef = useRef<any>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 

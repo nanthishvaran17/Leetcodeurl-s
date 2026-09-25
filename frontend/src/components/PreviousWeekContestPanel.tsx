@@ -26,6 +26,7 @@ import {
 import api from '../services/api';
 import { useContestWebSocket } from '../hooks/useContestWebSocket';
 import { fetchWithCacheDedupe, getCachedContestData } from '../services/contestCache';
+import { useAuth } from '../context/AuthContext';
 
 export interface PreviousWeekSummary {
   session_id: number;
@@ -188,6 +189,17 @@ const formatFinishClockTime = (r: ParticipationRecord, contestTitle?: string): s
 };
 
 export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> = ({ onStudentClick, sessionId }) => {
+  const { user } = useAuth();
+  const isFacultyRole = useMemo(() => {
+    const role = (user?.role || '').trim().toLowerCase();
+    return ['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(role);
+  }, [user?.role]);
+
+  const userScope = useMemo(() => {
+    if (isFacultyRole) return `faculty_${user?.id || 'staff'}`;
+    return 'public';
+  }, [isFacultyRole, user?.id]);
+
   const [summary, setSummary] = useState<PreviousWeekSummary | null>(null);
   const [records, setRecords] = useState<ParticipationRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -342,16 +354,27 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
 
       // 1. Instant Cache Hydration from memory/local storage (0ms load time!)
       try {
-        const localKey = `cache_prev_panel_${latestSessionId}`;
+        if (isFacultyRole) {
+          localStorage.removeItem(`cache_prev_panel_${latestSessionId}`);
+        }
+        const localKey = `cache_prev_panel_${userScope}_${latestSessionId}_v10`;
         const stored = localStorage.getItem(localKey);
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (parsed.v === 'v5' && parsed.summary) {
+          if (parsed.v === 'v10' && parsed.summary) {
             setSummary(parsed.summary);
             setLoading(false);
+          } else {
+            localStorage.removeItem(localKey);
           }
-          if (parsed.v === 'v5' && parsed.records && Array.isArray(parsed.records) && records.length === 0) {
-            setRecords(parsed.records);
+          if (parsed.v === 'v10' && parsed.records && Array.isArray(parsed.records) && records.length === 0) {
+            const safeRecords = isFacultyRole
+              ? parsed.records.filter((r: any) => {
+                  const d = (r.department_name || '').toUpperCase();
+                  return d.includes('(CS)') || d.includes('CYBER') || d === 'CSE(CS)';
+                })
+              : parsed.records;
+            setRecords(safeRecords);
           }
         }
       } catch (e) {
@@ -497,6 +520,14 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           const usernameStr = (row.username || '').toString().trim();
           const pStatusStr = (row.participation_status || row.status || '').toString().toUpperCase();
           const isMissingHandle = (!usernameStr || usernameStr === '' || usernameStr === 'USERNAME_NOT_FOUND' || usernameStr === 'UNLINKED' || usernameStr === 'NO_HANDLE' || pStatusStr === 'USERNAME_NOT_FOUND');
+          const q1Val = (Number(row.q1) === 1 || row.q1 === 1 || row.q1 === '1') ? 1 : 0;
+          const q2Val = (Number(row.q2) === 1 || row.q2 === 1 || row.q2 === '1') ? 1 : 0;
+          const q3Val = (Number(row.q3) === 1 || row.q3 === 1 || row.q3 === '1') ? 1 : 0;
+          const q4Val = (Number(row.q4) === 1 || row.q4 === 1 || row.q4 === '1') ? 1 : 0;
+          const binarySum = q1Val + q2Val + q3Val + q4Val;
+
+          const tcsNum = Number(row.total_contest_solved ?? row.total_solved ?? row.problems_solved);
+          const finalSolved = (!isNaN(tcsNum) && tcsNum > 0) ? tcsNum : binarySum;
 
           return {
             id: row.s_no,
@@ -510,52 +541,76 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
             department_name: row.dept,
             year_level: row.year,
             participation_type: isMissingHandle ? 'MISSING_LEETCODE_USERNAME'
+              : (finalSolved > 0) ? (pStatusStr.includes('VIRTUAL') ? 'VIRTUAL' : 'PUBLIC')
               : (pStatusStr === 'PUBLIC_ATTENDED' || pStatusStr === 'PUBLIC') ? 'PUBLIC' 
               : (pStatusStr === 'VIRTUAL_ATTENDED' || pStatusStr === 'VIRTUAL') ? 'VIRTUAL'
               : (pStatusStr === 'PENDING' || pStatusStr === 'NOT_VERIFIED') ? 'NOT_VERIFIED'
               : 'NOT_PARTICIPATED',
             official_rank: row.rank !== '' && row.rank !== null ? row.rank : null,
             official_score: row.score !== '' && row.score !== null ? row.score : null,
-            q1: Number(row.q1) || 0,
-            q2: Number(row.q2) || 0,
-            q3: Number(row.q3) || 0,
-            q4: Number(row.q4) || 0,
+            q1: q1Val,
+            q2: q2Val,
+            q3: q3Val,
+            q4: q4Val,
             q_timing: (row as any).q_timing || null,
-            problems_solved: (!row.total_contest_solved || row.total_contest_solved === '' || row.total_contest_solved === '—') ? 0 : Number(row.total_contest_solved),
+            problems_solved: finalSolved,
             finish_time: null,
             source: row.source_status || 'UNKNOWN',
             verification_status: pStatusStr === 'USERNAME_NOT_FOUND' ? 'USERNAME_NOT_FOUND' : (row.source_status || 'UNKNOWN'),
             _clean_reg: row.reg_no ? row.reg_no.toLowerCase().replace(/[^a-z0-9]/g, '') : ''
           };
         });
-        setRecords(mappedRecords);
+        const finalRecords = isFacultyRole
+          ? mappedRecords.filter((r) => {
+              const d = (r.department_name || '').toUpperCase();
+              return d.includes('(CS)') || d.includes('CYBER') || d === 'CSE(CS)';
+            })
+          : mappedRecords;
+        setRecords(finalRecords);
 
-        // Store in localStorage for 0ms instant reload on next visit with v2 version tag!
+        // Store in localStorage for 0ms instant reload on next visit with v10 version tag!
         try {
           if (summaryData) {
-            localStorage.setItem(`cache_prev_panel_${latestSessionId}`, JSON.stringify({
-              v: 'v5',
+            const pubCount = finalRecords.filter(r => r.participation_type === 'PUBLIC').length;
+            const notAttCount = finalRecords.filter(r => r.participation_type === 'NOT_PARTICIPATED').length;
+            const missingCount = finalRecords.filter(r => r.participation_type === 'MISSING_LEETCODE_USERNAME').length;
+            const virtCount = finalRecords.filter(r => r.participation_type === 'VIRTUAL').length;
+
+            const scopedSummary = isFacultyRole
+              ? {
+                  ...summaryData,
+                  totalStudents: finalRecords.length,
+                  publicParticipants: pubCount,
+                  participantCount: pubCount + virtCount,
+                  virtualParticipants: virtCount,
+                  notParticipated: notAttCount,
+                  missingUsername: missingCount,
+                }
+              : summaryData;
+
+            localStorage.setItem(`cache_prev_panel_${userScope}_${latestSessionId}_v10`, JSON.stringify({
+              v: 'v10',
               summary: {
-                session_id: summaryData.sessionId,
-                contest_slug: summaryData.contestId || `weekly-contest-${summaryData.contestNumber}`,
-                contest_title: summaryData.contestName,
-                target_date_ist: summaryData.sessionDate,
-                validation_status: summaryData.status,
-                publish_status: summaryData.status,
+                session_id: scopedSummary.sessionId,
+                contest_slug: scopedSummary.contestId || `weekly-contest-${scopedSummary.contestNumber}`,
+                contest_title: scopedSummary.contestName,
+                target_date_ist: scopedSummary.sessionDate,
+                validation_status: scopedSummary.status,
+                publish_status: scopedSummary.status,
                 cache_state: 'HIT',
                 dataset_version: 1,
                 sync_id: 'live',
                 sync_started_at: '',
                 metrics: {
-                  PUBLIC: summaryData.publicParticipants ?? summaryData.participantCount ?? 0,
-                  VIRTUAL: summaryData.virtualParticipants ?? 0,
-                  NOT_PARTICIPATED: summaryData.notParticipated ?? Math.max(0, (summaryData.totalStudents || 0) - (summaryData.participantCount || 0)),
-                  NOT_VERIFIED: summaryData.pendingVerification ?? 0,
-                  MISSING_LEETCODE_USERNAME: summaryData.missingUsername ?? 0,
-                  TOTAL_STUDENTS: summaryData.totalStudents || 0,
+                  PUBLIC: scopedSummary.publicParticipants ?? 0,
+                  VIRTUAL: scopedSummary.virtualParticipants ?? 0,
+                  NOT_PARTICIPATED: scopedSummary.notParticipated ?? 0,
+                  NOT_VERIFIED: scopedSummary.pendingVerification ?? 0,
+                  MISSING_LEETCODE_USERNAME: scopedSummary.missingUsername ?? 0,
+                  TOTAL_STUDENTS: scopedSummary.totalStudents || finalRecords.length,
                 }
               },
-              records: mappedRecords,
+              records: finalRecords,
               ts: Date.now()
             }));
           }
@@ -580,15 +635,26 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     // 1. Try instant hydration for the specific target sessionId if available
     try {
       if (sessionId) {
-        const stored = localStorage.getItem(`cache_prev_panel_${sessionId}`);
+        if (isFacultyRole) {
+          localStorage.removeItem(`cache_prev_panel_${sessionId}`);
+        }
+        const stored = localStorage.getItem(`cache_prev_panel_${userScope}_${sessionId}_v10`);
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (parsed.v === 'v4' && parsed.summary) {
+          if (parsed.v === 'v10' && parsed.summary) {
             setSummary(parsed.summary);
             setLoading(false);
+          } else {
+            localStorage.removeItem(`cache_prev_panel_${userScope}_${sessionId}_v10`);
           }
-          if (parsed.v === 'v5' && parsed.records && Array.isArray(parsed.records)) {
-            setRecords(parsed.records);
+          if (parsed.v === 'v10' && parsed.records && Array.isArray(parsed.records)) {
+            const safeRecords = isFacultyRole
+              ? parsed.records.filter((r: any) => {
+                  const d = (r.department_name || '').toUpperCase();
+                  return d.includes('(CS)') || d.includes('CYBER') || d === 'CSE(CS)';
+                })
+              : parsed.records;
+            setRecords(safeRecords);
           }
         }
       } else {
@@ -713,6 +779,22 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
   const deptOptions = useMemo(() => {
     const optsMap = new Map<string, { value: string; label: string; code: string; color: string }>();
 
+    if (isFacultyRole) {
+      optsMap.set('ALL', {
+        value: 'ALL',
+        label: 'My Allocated Mentees (20)',
+        code: 'MENTEES',
+        color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'
+      });
+      optsMap.set('CSE(CS)', {
+        value: 'CSE(CS)',
+        label: 'Computer Science & Engg (Cyber Security)',
+        code: 'CSE(CS)',
+        color: 'text-blue-700 bg-blue-50 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+      });
+      return Array.from(optsMap.values());
+    }
+
     // Always add 'ALL' option first
     optsMap.set('ALL', {
       value: 'ALL',
@@ -736,14 +818,14 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     });
 
     return Array.from(optsMap.values());
-  }, [records]);
+  }, [records, isFacultyRole]);
 
   const getParticipationCategory = (r: ParticipationRecord): 'PUBLIC' | 'VIRTUAL' | 'NOT_PARTICIPATED' | 'NOT_VERIFIED' | 'MISSING_LEETCODE_USERNAME' => {
     const isMissing = r.participation_type === 'MISSING_LEETCODE_USERNAME' || !r.leetcode_username || r.leetcode_username.trim() === '' || r.leetcode_username === 'USERNAME_NOT_FOUND' || r.leetcode_username === 'UNLINKED' || r.leetcode_username === 'NO_HANDLE';
     if (isMissing) return 'MISSING_LEETCODE_USERNAME';
 
     const pType = (r.participation_type as string) || '';
-    if (pType === 'PUBLIC' || pType === 'PUBLIC_ATTENDED') return 'PUBLIC';
+    if (pType === 'PUBLIC' || pType === 'PUBLIC_ATTENDED' || (r.problems_solved > 0 && !pType.includes('VIRTUAL'))) return 'PUBLIC';
     if (pType === 'VIRTUAL' || pType === 'VIRTUAL_ATTENDED') return 'VIRTUAL';
     if (pType === 'NOT_VERIFIED' || r.verification_status === 'NOT_VERIFIED' || r.verification_status === 'PENDING') return 'NOT_VERIFIED';
     return 'NOT_PARTICIPATED';
@@ -763,6 +845,13 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
     const hasSearch = query !== '';
 
     return records.filter((r) => {
+      // Guard: For faculty role, strictly filter to mentor's assigned department
+      if (isFacultyRole) {
+        const d = (r.department_name || '').toUpperCase();
+        const isCSECS = d.includes('(CS)') || d.includes('CYBER') || d === 'CSE(CS)';
+        if (!isCSECS) return false;
+      }
+
       if (!isTypeAll) {
         if (getParticipationCategory(r) !== selectedTypeFilter) return false;
       }
@@ -787,7 +876,7 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       }
       return true;
     });
-  }, [records, selectedTypeFilter, selectedDeptFilter, deferredSearchTerm]);
+  }, [records, selectedTypeFilter, selectedDeptFilter, deferredSearchTerm, isFacultyRole]);
 
   // Dynamically calculate metrics directly from real-time records state
   const dynamicMetrics = useMemo(() => {
@@ -804,10 +893,16 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
       counts[cat]++;
     });
     if (records.length === 0 && summary?.metrics) {
+      if (isFacultyRole) {
+        return {
+          ...summary.metrics,
+          TOTAL_STUDENTS: Math.min(20, summary.metrics.TOTAL_STUDENTS),
+        };
+      }
       return summary.metrics;
     }
     return counts;
-  }, [records, summary?.metrics]);
+  }, [records, summary?.metrics, isFacultyRole]);
 
   if (loading && !summary) {
     return (
@@ -1618,11 +1713,27 @@ export const PreviousWeekContestPanel: React.FC<PreviousWeekContestPanelProps> =
           // Prefer structured q_timing from API, fallback to legacy binary
           const qt = (selectedForensicRecord as any).q_timing;
           const qTiming = qt ? qt[qKey] : null;
+          
           let timingSource: string|null = qTiming?.source || null;
           let timeDisplay: string|null = qTiming?.display || null;
+
+          // Check if exact time was fetched directly in q1_time, q2_time, etc.
+          const qTimeDirect = (selectedForensicRecord as any)[`${qKey}_time`];
+          if (!timeDisplay && qTimeDirect) {
+            // e.g. "12", "12 min", "00:15:32"
+            const qStr = String(qTimeDirect).trim();
+            if (/^\d+$/.test(qStr)) {
+              timeDisplay = `${qStr} mins`;
+            } else if (qStr.includes(':')) {
+              timeDisplay = qStr;
+            } else {
+              timeDisplay = qStr.includes('min') ? qStr : `${qStr} mins`;
+            }
+            timingSource = 'OBSERVED_LIVE';
+          }
           
           // Apply dynamic estimation if backend did not provide observed timing
-          if (!qTiming && isSolvedQ && dynamicEstimates[qIdx]) {
+          if (!timeDisplay && isSolvedQ && dynamicEstimates[qIdx]) {
             const qSec = dynamicEstimates[qIdx];
             const h = Math.floor(qSec / 3600);
             const m = Math.floor((qSec % 3600) / 60);

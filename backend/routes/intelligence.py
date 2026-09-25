@@ -146,8 +146,9 @@ def get_faculty_kpis_endpoint(
     HOD/Admin: Full department or institution.
     """
     from backend.services.faculty_action_engine import get_faculty_kpis
-    role_clean = (current_user.role or "").strip().lower()
-    faculty_id = current_user.id if role_clean in ["faculty", "staff"] else None
+    from backend.services.authorization_service import _STAFF_ROLES, _HOD_ROLES, _normalize_role
+    role_clean = _normalize_role(current_user)
+    faculty_id = current_user.id if role_clean in _STAFF_ROLES else None
     
     clean_dept_id = dept_id if isinstance(dept_id, int) else None
     clean_year = year_level if isinstance(year_level, str) else None
@@ -155,7 +156,7 @@ def get_faculty_kpis_endpoint(
     eff_dept_id = clean_dept_id
 
     # HOD: enforce department scope — override any client-supplied dept_id
-    if role_clean == "hod":
+    if role_clean in _HOD_ROLES:
         if not current_user.department_id:
             return {"Critical": 0, "High": 0, "Monitoring": 0, "In Progress": 0, "Completed": 0, "Resolved": 0, "Overdue": 0, "Escalated": 0, "total": 0}
         eff_dept_id = int(current_user.department_id) if current_user.department_id is not None else None
@@ -191,8 +192,9 @@ def get_faculty_actions_endpoint(
     Admin sees all.
     """
     from backend.services.faculty_action_engine import get_faculty_actions_list, detect_and_sync_faculty_signals
-    role_clean = (current_user.role or "").strip().lower()
-    faculty_id = current_user.id if role_clean in ["faculty", "staff"] else None
+    from backend.services.authorization_service import _STAFF_ROLES, _HOD_ROLES, _normalize_role
+    role_clean = _normalize_role(current_user)
+    faculty_id = current_user.id if role_clean in _STAFF_ROLES else None
 
     # Sanitize Query default objects into standard python types
     clean_priority = priority if isinstance(priority, str) else None
@@ -205,7 +207,7 @@ def get_faculty_actions_endpoint(
     eff_dept_id = clean_dept_id
 
     # HOD: enforce department scope — ignore any client-supplied dept_id
-    if role_clean == "hod":
+    if role_clean in _HOD_ROLES:
         if not current_user.department_id:
             # Fail closed — HOD without department sees nothing
             return {"items": [], "total": 0, "page": page, "page_size": page_size, "kpi": {}}
@@ -231,7 +233,7 @@ def get_faculty_actions_endpoint(
         is_escalated=clean_escalated
     )
     if data["total"] == 0 and not clean_search and not clean_priority and not clean_status:
-        detect_and_sync_faculty_signals(db)
+        detect_and_sync_faculty_signals(db, faculty_id=faculty_id_val)
         data = get_faculty_actions_list(
             db,
             priority=clean_priority,

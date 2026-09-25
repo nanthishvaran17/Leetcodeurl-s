@@ -100,10 +100,10 @@ export const ReportsAnalyticsView: React.FC<ReportsAnalyticsProps> = ({
           </div>
           <div>
             <h4 className="font-extrabold text-slate-900 dark:text-white text-xl tracking-tight">{studentName || 'Unknown Student'}</h4>
-            <div className="flex items-center gap-3 text-sm text-slate-500 font-medium mt-1.5">
-              <span className="text-slate-700 dark:text-slate-300 bg-white dark:bg-navy-800 px-2.5 py-1 rounded-md font-bold font-mono border border-slate-200 dark:border-navy-600 shadow-sm">{regNo || studentId}</span>
-              <span className="text-slate-300 dark:text-slate-600 font-bold">•</span>
-              <span className="text-slate-600 dark:text-slate-400">{deptName || 'Department'}</span>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-sm text-slate-500 font-medium mt-1.5">
+              <span className="text-slate-700 dark:text-slate-300 bg-white dark:bg-navy-800 px-2.5 py-1 rounded-md font-bold font-mono border border-slate-200 dark:border-navy-600 shadow-sm whitespace-nowrap">{regNo || studentId}</span>
+              <span className="text-slate-300 dark:text-slate-600 font-bold hidden sm:inline">•</span>
+              <span className="text-slate-600 dark:text-slate-400 w-full sm:w-auto">{deptName || 'Department'}</span>
             </div>
           </div>
         </div>

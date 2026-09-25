@@ -504,17 +504,12 @@ export const StaffManagement: React.FC = () => {
                     return (
                       <div
                         key={staff.id}
-                        className="relative rounded-3xl p-5 bg-gradient-to-br from-white via-slate-50/90 to-indigo-50/40 dark:from-navy-900 dark:via-navy-900/95 dark:to-slate-900/90 border border-slate-200/90 dark:border-navy-750 shadow-lg hover:shadow-2xl transition-all duration-300 space-y-4 overflow-hidden backdrop-blur-xl group"
+                        className={`relative rounded-3xl p-5 bg-gradient-to-br from-white via-slate-50/90 to-indigo-50/40 dark:from-navy-900 dark:via-navy-900/95 dark:to-slate-900/90 border-y border-r border-slate-200/90 dark:border-navy-750 border-l-[6px] shadow-lg hover:shadow-2xl transition-all duration-300 space-y-4 overflow-hidden backdrop-blur-xl group ${
+                          staff.is_active ? 'border-l-emerald-500 dark:border-l-emerald-400' : 'border-l-rose-500 dark:border-l-rose-400'
+                        }`}
                       >
                         {/* Top Gradient Mesh Orb */}
                         <div className="absolute -top-10 -right-10 w-28 h-28 bg-brand-500/10 rounded-full blur-2xl pointer-events-none" />
-
-                        {/* Decorative Left Accent Bar */}
-                        <div className={`absolute top-0 bottom-0 left-0 w-1.5 rounded-l-3xl ${
-                          staff.is_active
-                            ? 'bg-gradient-to-b from-brand-500 via-indigo-500 to-emerald-500'
-                            : 'bg-gradient-to-b from-rose-500 to-amber-500'
-                        }`} />
 
                         {/* Top Header: Avatar, Name, Email, Status */}
                         <div className="flex items-start justify-between gap-3 pl-1">
@@ -603,7 +598,7 @@ export const StaffManagement: React.FC = () => {
 
                           {/* Workload Progress */}
                           <div className="p-3.5 rounded-2xl bg-white/90 dark:bg-navy-950/80 border border-slate-200 dark:border-navy-750 shadow-xs space-y-1.5">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                               <span className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider block">
                                 Workload
                               </span>

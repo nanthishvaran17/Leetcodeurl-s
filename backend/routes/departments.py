@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from backend.database import get_db
-from backend.models import Department, Section, User
+from backend.models import Department, Section, User, Student
 from backend.schemas import DepartmentOut, DepartmentCreate, SectionOut, SectionCreate
 from backend.security import require_security_access, get_current_user_optional
 
@@ -45,8 +45,9 @@ def get_departments(
         except Exception:
             current_user = None
 
-    # HOD: restrict to allocated departments only
+    # Scope restrictions by role (HOD & Staff/Faculty Mentors):
     if current_user:
+        from backend.services.authorization_service import _HOD_ROLES, _STAFF_ROLES
         role = (getattr(current_user, "override_role", None) or current_user.role or "").strip().lower()
         if role in _HOD_ROLES:
             from backend.services.authorization_service import get_hod_authorized_department_ids
@@ -55,6 +56,19 @@ def get_departments(
                 all_d = [d for d in all_d if d.id in authorized_ids]
             else:
                 # HOD with no allocations — return empty list (fail closed)
+                all_d = []
+        elif role in _STAFF_ROLES:
+            from backend.services.faculty_assignment_service import FacultyAssignmentService
+            assigned_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, current_user.id)
+            if assigned_ids:
+                dept_ids = [s[0] for s in db.query(Student.department_id).filter(Student.id.in_(assigned_ids)).distinct().all() if s[0]]
+                if dept_ids:
+                    all_d = [d for d in all_d if d.id in dept_ids]
+                elif current_user.department_id:
+                    all_d = [d for d in all_d if d.id == current_user.department_id]
+            elif current_user.department_id:
+                all_d = [d for d in all_d if d.id == current_user.department_id]
+            else:
                 all_d = []
 
     return all_d

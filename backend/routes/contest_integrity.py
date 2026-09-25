@@ -14,8 +14,10 @@ from backend.services.integrity_audit_service import IntegrityAuditService
 router = APIRouter(prefix="/admin/integrity", tags=["Contest Integrity"])
 
 class CaseReviewRequest(BaseModel):
-    status: str # CONFIRMED, DISMISSED, PENDING, IDENTITY_REVIEW_REQUIRED
+    status: Optional[str] = None
+    action: Optional[str] = None
     reviewed_by: Optional[str] = None
+    notes: Optional[str] = None
 
 class AdminCorrectionRequest(BaseModel):
     old_value: str
@@ -25,10 +27,18 @@ class AdminCorrectionRequest(BaseModel):
 
 def verify_staff_access(request: Request, db: Session = Depends(get_db)) -> Optional[User]:
     """Helper to verify staff/admin security access on backend routes."""
+    if not request:
+        return None
     user = get_current_user_optional(request, db)
     if user:
         role = (user.role or "").strip().lower()
-        if role not in ["admin", "administrator", "super admin", "super_admin", "hod", "faculty", "staff", "professor"]:
+        allowed_roles = [
+            "admin", "administrator", "super admin", "super_admin",
+            "hod", "department hod", "department_hod", "head of department", "head_of_department",
+            "faculty", "faculty mentor", "faculty_mentor",
+            "staff", "staff mentor", "staff_mentor", "professor"
+        ]
+        if role not in allowed_roles:
             raise HTTPException(status_code=403, detail="Access denied: Staff or Admin role required")
     return user
 
@@ -48,12 +58,40 @@ def evaluate_contest(contest_id: str, request: Request, db: Session = Depends(ge
     audit_service.log_event("EVALUATION_COMPLETED", contest_id=contest_id, details={"cases_count": len(cases)})
     return {"contest_id": contest_id, "cases_evaluated": len(cases), "cases": cases}
 
+@router.post("/scan")
+def trigger_integrity_scan(request: Request, db: Session = Depends(get_db)):
+    """
+    Triggers full Dual-ID integrity scan across all active contests.
+    """
+    verify_staff_access(request, db)
+    service = ContestIntegrityService(db)
+    cases = service.evaluate_all_contests()
+    return {"message": "Integrity scan completed", "cases_flagged": len(cases)}
+
 @router.get("/cases")
 def get_cases(request: Request, status: Optional[str] = None, db: Session = Depends(get_db)):
     """
     Returns all integrity cases for the Staff Dashboard.
+    Auto-evaluates active contests if 0 cases exist.
     """
-    verify_staff_access(request, db)
+    user = verify_staff_access(request, db)
+    if db.query(IntegrityCase).count() == 0:
+        service = ContestIntegrityService(db)
+        service.evaluate_all_contests()
+
+    from backend.services.authorization_service import _STAFF_ROLES, _HOD_ROLES, _normalize_role
+    role_clean = _normalize_role(user)
+    assigned_ids = None
+    authorized_dept_ids = None
+    if user and role_clean in _STAFF_ROLES:
+        from backend.services.faculty_assignment_service import FacultyAssignmentService
+        assigned_ids = set(FacultyAssignmentService.get_faculty_assigned_student_ids(db, user.id))
+    elif user and role_clean in _HOD_ROLES:
+        from backend.services.authorization_service import get_hod_authorized_department_ids
+        authorized_dept_ids = set(get_hod_authorized_department_ids(db, user))
+        if not authorized_dept_ids and user.department_id:
+            authorized_dept_ids = {user.department_id}
+
     query = db.query(IntegrityCase)
     if status and status != "ALL":
         query = query.filter(IntegrityCase.status == status)
@@ -62,14 +100,36 @@ def get_cases(request: Request, status: Optional[str] = None, db: Session = Depe
     
     results = []
     for c in cases:
-        student = db.query(Student).filter(Student.people_id == c.people_id).first()
+        pid = c.people_id or ""
+        clean_reg = pid.replace("UNKNOWN_REG_", "").replace("ID-REVIEW-REG-", "")
+        student = db.query(Student).filter(
+            (Student.people_id == c.people_id) | 
+            (Student.reg_no == c.people_id) | 
+            (Student.reg_no == clean_reg)
+        ).first()
+
+        # Strict Role-based Mentee Scope
+        if assigned_ids is not None:
+            if not student or student.id not in assigned_ids:
+                continue
+        elif authorized_dept_ids is not None:
+            if not student or student.department_id not in authorized_dept_ids:
+                continue
+        
+        student_name = student.name if student else (f"Student ({clean_reg})" if clean_reg else "Unknown")
+        dept_id = student.department_id if student else None
+        dept_name = student.department.name if student and student.department else None
+        display_pid = (student.people_id or student.reg_no) if student else c.people_id
+
         part_statuses = c.participation_statuses or {}
         results.append({
             "id": c.id,
             "case_id": c.case_id,
-            "people_id": c.people_id,
-            "student_name": student.name if student else "Unknown",
-            "department_id": student.department_id if student else None,
+            "people_id": display_pid,
+            "reg_no": student.reg_no if student else clean_reg,
+            "student_name": student_name,
+            "department_id": dept_id,
+            "department_name": dept_name,
             "contest_id": c.contest_id,
             "account_ids": c.account_ids,
             "participation_statuses": part_statuses,
@@ -86,38 +146,44 @@ def get_cases(request: Request, status: Optional[str] = None, db: Session = Depe
         
     return results
 
-@router.put("/cases/{case_id}/review")
+@router.api_route("/cases/{case_id}/review", methods=["PUT", "POST"])
 def review_case(case_id: str, req: CaseReviewRequest, request: Request, db: Session = Depends(get_db)):
     """
     Allows Staff/Admin to review and resolve an IntegrityCase.
+    Supports both PUT and POST methods, and status/action field names.
     """
     user = verify_staff_access(request, db)
     case = db.query(IntegrityCase).filter(IntegrityCase.case_id == case_id).first()
+    if not case and case_id.isdigit():
+        case = db.query(IntegrityCase).filter(IntegrityCase.id == int(case_id)).first()
+
     if not case:
-        raise HTTPException(status_code=404, detail="Integrity case not found")
+        raise HTTPException(status_code=404, detail=f"Integrity case '{case_id}' not found")
         
-    if req.status not in ["CONFIRMED", "DISMISSED", "PENDING", "IDENTITY_REVIEW_REQUIRED"]:
-        raise HTTPException(status_code=400, detail="Invalid status")
+    target_status = req.status or req.action
+    if not target_status or target_status not in ["CONFIRMED", "DISMISSED", "PENDING", "IDENTITY_REVIEW_REQUIRED"]:
+        raise HTTPException(status_code=400, detail="Invalid status. Must be CONFIRMED, DISMISSED, PENDING, or IDENTITY_REVIEW_REQUIRED")
         
-    reviewer_name = str(req.reviewed_by or (user.full_name if user else "Staff Admin"))
-    setattr(case, "status", req.status)
-    setattr(case, "reviewed_by", reviewer_name)
-    setattr(case, "reviewed_at", datetime.datetime.now(datetime.timezone.utc))
+    reviewer_name = str(req.reviewed_by or (user.full_name if user else "Staff Mentor"))
+    case.status = target_status
+    case.reviewed_by = reviewer_name
+    case.reviewed_at = datetime.datetime.now(datetime.timezone.utc)
 
     history = list(case.audit_history or [])
     history.append({
-        "event": f"STATUS_CHANGED_TO_{req.status}",
+        "event": f"STATUS_CHANGED_TO_{target_status}",
         "reviewed_by": reviewer_name,
+        "notes": req.notes or f"Action marked as {target_status} from Integrity Console",
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
     })
-    setattr(case, "audit_history", history)
+    case.audit_history = history
 
     audit_service = IntegrityAuditService(db)
     audit_service.log_event(
-        event_type=f"CASE_RESOLVED_{req.status}",
+        event_type=f"CASE_RESOLVED_{target_status}",
         contest_id=str(case.contest_id) if case.contest_id else None,
         people_id=str(case.people_id) if case.people_id else None,
-        details={"case_id": case.case_id, "status": req.status, "reviewer": reviewer_name},
+        details={"case_id": case.case_id, "status": target_status, "reviewer": reviewer_name, "notes": req.notes},
         created_by=reviewer_name
     )
     

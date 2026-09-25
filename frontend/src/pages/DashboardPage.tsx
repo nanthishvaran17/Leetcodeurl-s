@@ -489,12 +489,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               nameClassName="text-brand-400 break-words"
             />
 
-            {!(user?.role?.toLowerCase() === 'faculty' || user?.role?.toLowerCase() === 'staff') && (
+            {!(['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase())) && (
               <p className="text-slate-300 text-xs sm:text-sm font-semibold mt-1">Manage your institutional intelligence workspace.</p>
             )}
 
             <p className="text-xs sm:text-sm text-slate-300/90 font-medium tracking-wide leading-relaxed max-w-2xl">
-              {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') 
+              {['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase()) 
                 ? 'Your exclusive mentorship cohort — live sync, contest verification, and analytics.'
                 : loading
                   ? 'Loading institutional data...'
@@ -701,7 +701,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 <strong className="text-slate-700 dark:text-slate-300">
                   {loading ? '—' : totalStudents.toLocaleString()}
                 </strong>{' '}
-                {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') ? 'assigned students' : 'enrolled students'},{' '}
+                {['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase()) ? 'assigned students' : 'enrolled students'},{' '}
                 <strong className="text-emerald-600 dark:text-emerald-400">
                   {loading ? '—' : activeStudents.toLocaleString()}
                 </strong>{' '}
@@ -724,7 +724,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               </span>
             </div>
             <div className="col-span-2 flex flex-col p-3 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-100 dark:border-slate-800 text-center">
-              <span className="text-slate-500">{['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') ? 'Total Assigned' : 'Total Enrolled'}</span>
+              <span className="text-slate-500">{['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase()) ? 'Total Assigned' : 'Total Enrolled'}</span>
               <span className="text-base text-slate-900 dark:text-white">
                 {loading
                   ? <span className="inline-block w-10 h-4 bg-slate-200 dark:bg-navy-700 rounded animate-pulse" />

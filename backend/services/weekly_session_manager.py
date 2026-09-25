@@ -996,6 +996,14 @@ def sync_single_historical_session(db: Session, session_id: int):
                                 if is_att:
                                     q1, q2, q3, q4 = v_res.q1, v_res.q2, v_res.q3, v_res.q4
                                     verified_solved = v_res.verified_total
+
+                                    if verified_solved < solved_in_hist:
+                                        verified_solved = solved_in_hist
+                                        q1 = 1 if verified_solved >= 1 else 0
+                                        q2 = 1 if verified_solved >= 2 else 0
+                                        q3 = 1 if verified_solved >= 3 else 0
+                                        q4 = 1 if verified_solved >= 4 else 0
+
                                     score = q1 * 3 + q2 * 4 + q3 * 5 + q4 * 6
                                     return {
                                         "student_id": s.id, "reg_no": s.reg_no, "name": s.name,
@@ -1012,6 +1020,14 @@ def sync_single_historical_session(db: Session, session_id: int):
                                 elif solved_in_hist > 0:
                                     q1, q2, q3, q4 = v_res.q1, v_res.q2, v_res.q3, v_res.q4
                                     verified_solved = v_res.verified_total
+
+                                    if verified_solved < solved_in_hist:
+                                        verified_solved = solved_in_hist
+                                        q1 = 1 if verified_solved >= 1 else 0
+                                        q2 = 1 if verified_solved >= 2 else 0
+                                        q3 = 1 if verified_solved >= 3 else 0
+                                        q4 = 1 if verified_solved >= 4 else 0
+
                                     score = q1 * 3 + q2 * 4 + q3 * 5 + q4 * 6
                                     return {
                                         "student_id": s.id, "reg_no": s.reg_no, "name": s.name,
@@ -1046,18 +1062,19 @@ def sync_single_historical_session(db: Session, session_id: int):
                                     q1, q2, q3, q4 = v_res_live.q1, v_res_live.q2, v_res_live.q3, v_res_live.q4
                                     verified_solved = v_res_live.verified_total
                                     score = q1 * 3 + q2 * 4 + q3 * 5 + q4 * 6
-                                    return {
-                                        "student_id": s.id, "reg_no": s.reg_no, "name": s.name,
-                                        "dept": s.department.code if s.department else "CSE", "year": s.year_level or "III",
-                                        "username": clean_u, "canonical_username": canonical_u,
-                                        "classification": "PUBLIC_ATTENDED",
-                                        "participation_status": "PUBLIC",
-                                        "data_fetch_status": "SUCCESS",
-                                        "confidence": "VERIFIED",
-                                        "reason": f"Verified {verified_solved} AC problem submission(s) during live contest window",
-                                        "attended": True, "problems_solved": verified_solved, "q1": q1, "q2": q2, "q3": q3, "q4": q4,
-                                        "contest_score": score, "contest_rank": None, "contest_rating": None
-                                    }
+                                    if verified_solved > 0:
+                                        return {
+                                            "student_id": s.id, "reg_no": s.reg_no, "name": s.name,
+                                            "dept": s.department.code if s.department else "CSE", "year": s.year_level or "III",
+                                            "username": clean_u, "canonical_username": canonical_u,
+                                            "classification": "PUBLIC_ATTENDED",
+                                            "participation_status": "PUBLIC",
+                                            "data_fetch_status": "SUCCESS",
+                                            "confidence": "VERIFIED",
+                                            "reason": f"Verified {verified_solved} AC problem submission(s) during live contest window",
+                                            "attended": True, "problems_solved": verified_solved, "q1": q1, "q2": q2, "q3": q3, "q4": q4,
+                                            "contest_score": score, "contest_rank": None, "contest_rating": None
+                                        }
 
                                 # Authoritative evidence of verified profile with 0 contest activity
                                 return {

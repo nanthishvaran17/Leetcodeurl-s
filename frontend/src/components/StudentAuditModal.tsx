@@ -26,6 +26,17 @@ export const StudentAuditModal: React.FC<StudentAuditModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [auditData, setAuditData] = useState<any>(null);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   const fetchAuditData = useCallback(async () => {
     if (!studentId) return;
     setLoading(true);

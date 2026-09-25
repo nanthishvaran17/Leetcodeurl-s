@@ -3,9 +3,11 @@ import { API_BASE_URL, getApiBaseUrl, isCapacitorNative, getApiUrl as configGetA
 export const getApiUrl = configGetApiUrl;
 
 export const getAuthHeaders = async () => {
-  // Use HttpOnly cookie for auth, so no Bearer token needed for local backend
-  // We keep this function for Firebase fallback if needed.
   let jwtToken = null;
+  try {
+    jwtToken = localStorage.getItem('token');
+  } catch (e) {}
+  
   if (jwtToken) {
     return { Authorization: `Bearer ${jwtToken}` };
   }
@@ -140,6 +142,10 @@ api.interceptors.request.use(async (config) => {
     
     if (!isAuthRoute) {
       let jwtToken = null;
+      try {
+        jwtToken = localStorage.getItem('token');
+      } catch (e) {}
+      
       if (jwtToken && !config.headers.Authorization) {
         config.headers.Authorization = `Bearer ${jwtToken}`;
       } else if (!jwtToken && !config.headers.Authorization) {

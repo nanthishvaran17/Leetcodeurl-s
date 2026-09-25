@@ -190,7 +190,7 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
             transformOrigin: coords.transformOrigin || 'top',
             zIndex: 99999999
           }}
-          className="overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] p-1.5 space-y-1 focus:outline-none scrollbar-thin"
+          className="overflow-y-auto rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] p-2 space-y-1 focus:outline-none scrollbar-thin"
         >
           {selectableOptions.map((opt, idx) => {
             const isSelected = opt.value === value;
@@ -203,31 +203,39 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
                 type="button"
                 onClick={() => handleSelect(opt.value)}
                 onMouseEnter={() => setFocusedIndex(idx)}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left text-xs font-bold transition-all cursor-pointer group active:scale-[0.98] touch-manipulation ${
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left text-xs font-bold transition-all duration-200 cursor-pointer group active:scale-[0.98] touch-manipulation border ${
                   isSelected
-                    ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md shadow-brand-600/30'
+                    ? 'bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 text-white border-brand-400/40 shadow-lg shadow-brand-500/25 font-black'
                     : isFocused
-                    ? 'bg-brand-50/90 dark:bg-slate-800 text-brand-900 dark:text-brand-300 ring-2 ring-brand-500/40'
-                    : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    ? 'bg-brand-50/90 dark:bg-slate-800/90 text-brand-900 dark:text-brand-300 border-brand-500/30 scale-[1.01] shadow-xs'
+                    : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800/60 text-slate-800 dark:text-slate-200 hover:bg-brand-50/60 dark:hover:bg-slate-800/60 hover:border-brand-500/20'
                 }`}
               >
-                <div className="flex items-center space-x-2 min-w-0 pr-2 w-full">
+                <div className="flex items-center space-x-2.5 min-w-0 pr-2 w-full">
                   {OptIcon && (
-                    <OptIcon className={`w-3.5 h-3.5 shrink-0 ${
-                      isSelected ? 'text-white' : 'text-slate-400 group-hover:text-brand-500'
-                    }`} />
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border transition-all duration-200 ${
+                      isSelected
+                        ? 'bg-white/20 border-white/30 text-white'
+                        : 'bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 border-brand-500/20'
+                    }`}>
+                      <OptIcon className="w-3.5 h-3.5" />
+                    </div>
                   )}
+
                   {opt.badge && !opt.hidePill && (
-                    <span className={`shrink-0 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
+                    <span className={`shrink-0 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${
                       isSelected
                         ? 'bg-white/20 text-white border border-white/30'
-                        : opt.badgeColor || 'bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20'
+                        : opt.badgeColor || 'bg-brand-500/15 text-brand-700 dark:text-brand-300 border border-brand-500/30'
                     }`}>
                       {opt.badge}
                     </span>
                   )}
+
                   <div className="flex flex-col min-w-0 w-full">
-                    <span className="truncate text-xs font-bold text-left">{opt.label}</span>
+                    <span className={`truncate text-xs text-left ${isSelected ? 'font-black text-white' : 'font-extrabold text-slate-800 dark:text-slate-100 group-hover:text-brand-600'}`}>
+                      {opt.label}
+                    </span>
                     {opt.sublabel && (
                       <span className={`text-[10px] font-medium truncate text-left ${
                         isSelected ? 'text-indigo-100' : 'text-slate-400 dark:text-slate-500'
@@ -238,17 +246,21 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-1.5 shrink-0 ml-1">
+                <div className="flex items-center space-x-1.5 shrink-0 ml-1.5">
                   {opt.count !== undefined && (
-                    <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md ${
+                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
                       isSelected
-                        ? 'bg-white/20 text-white'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                        ? 'bg-white/20 text-white border border-white/30'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                     }`}>
                       {opt.count}
                     </span>
                   )}
-                  {isSelected && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
+                  {isSelected && (
+                    <div className="p-1 rounded-full bg-white/20 border border-white/40 shadow-xs shrink-0">
+                      <Check className="w-3.5 h-3.5 text-white stroke-[3.5]" />
+                    </div>
+                  )}
                 </div>
               </button>
             );

@@ -9,46 +9,66 @@ from backend.models import (
 from backend.logger import logger
 
 VALID_PARTICIPATION_STATUSES = {
-    "PUBLIC", "VIRTUAL", "NOT_ATTENDED", "PENDING", 
-    "SOURCE_UNAVAILABLE", "AUTH_REQUIRED", "USERNAME_NOT_FOUND", 
-    "FETCH_ERROR", "DATA_MISMATCH"
+    "PUBLIC", "VIRTUAL", "NOT_ATTENDED", "NOT_VERIFIED",
+    "SOURCE_UNAVAILABLE", "AUTH_REQUIRED", "USERNAME_NOT_FOUND",
+    "FETCH_FAILED", "FETCH_ERROR", "DATA_MISMATCH", "CONFLICT",
+    "PENDING"  # legacy compat
 }
 
 
 def normalize_participation_status(raw_status: Optional[str], fetch_status: Optional[str] = None) -> str:
     """
-    Normalizes any raw/legacy participation status to the canonical 9-state model.
-    Never fabricates attendance or silences errors.
+    Normalizes any raw/legacy participation status to the canonical state model.
+
+    EVIDENCE-FIRST PRINCIPLE:
+    - NO EVIDENCE = NO VERIFIED RESULT.
+    - UNKNOWN/PENDING states become NOT_VERIFIED, never NOT_ATTENDED.
+    - NOT_ATTENDED is ONLY returned when evidence explicitly confirms absence.
+    - Fetch failures become FETCH_FAILED, never NOT_ATTENDED.
     """
+    # 1. Fetch-level failures take priority — these are infrastructure issues, not evidence
     if fetch_status in ("USERNAME_NOT_FOUND", "INVALID_USERNAME"):
         return "USERNAME_NOT_FOUND"
     if fetch_status in ("AUTH_REQUIRED", "BLOCKED"):
         return "AUTH_REQUIRED"
     if fetch_status in ("SOURCE_UNAVAILABLE", "NETWORK_ERROR", "TIMEOUT"):
         return "SOURCE_UNAVAILABLE"
+    if fetch_status in ("FETCH_ERROR", "FETCH_FAILED", "SERVER_ERROR"):
+        return "FETCH_FAILED"
 
+    # 2. Normalize raw status string
     st = raw_status.strip().upper() if raw_status else ""
-    if st in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL"):
+
+    # 3. Confirmed attendance states (backed by evidence)
+    if st in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED", "OFFICIAL", "ACTUAL"):
         return "PUBLIC"
     if st in ("VIRTUAL", "VIRTUAL_ATTENDED"):
         return "VIRTUAL"
+
+    # 4. Confirmed absence (only when evidence explicitly proves no participation)
     if st in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT"):
         return "NOT_ATTENDED"
+
+    # 5. Identity issues
     if st in ("USERNAME_NOT_FOUND", "INVALID_USERNAME"):
         return "USERNAME_NOT_FOUND"
 
-    if st in ("UNKNOWN", "PENDING", "INITIALIZING", "DATA_PENDING", ""):
-        # Default placeholder status for students who did not attend the contest
-        return "NOT_ATTENDED"
-
-    if fetch_status in ("FETCH_ERROR", "FETCH_FAILED", "SERVER_ERROR"):
-        return "FETCH_ERROR"
+    # 6. Fetch/data failures — NEVER convert these to NOT_ATTENDED
     if st in ("FETCH_ERROR", "FETCH_FAILED", "DATA_ERROR"):
-        return "FETCH_ERROR"
+        return "FETCH_FAILED"
     if st in ("DATA_MISMATCH",):
         return "DATA_MISMATCH"
+    if st in ("CONFLICT",):
+        return "CONFLICT"
 
-    return "NOT_ATTENDED"
+    # 7. EVIDENCE-FIRST: Insufficient evidence states → NOT_VERIFIED
+    #    NEVER silently convert missing evidence into confirmed absence.
+    if st in ("UNKNOWN", "PENDING", "INITIALIZING", "DATA_PENDING",
+              "NOT_VERIFIED", "UNVERIFIED", ""):
+        return "NOT_VERIFIED"
+
+    # 8. Any unrecognized state → NOT_VERIFIED (safe default)
+    return "NOT_VERIFIED"
 
 
 def invalidate_canonical_cache(session_id: Optional[int] = None):
@@ -206,7 +226,7 @@ def _filter_canonical_dataset_in_memory(
         elif att_upper in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT", "NOT_PARTICIPATED", "UNATTENDED"):
             rows = [r for r in rows if r.get("status") in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT") and r.get("username") and r.get("username") not in ("USERNAME_NOT_FOUND", "UNLINKED", "NO_HANDLE", "")]
         elif att_upper in ("ERRORS", "DATA_ERRORS", "DATA_ERROR", "FAILED", "MISSING_LEETCODE_USERNAME", "MISSING_USERNAME", "USERNAME_NOT_FOUND"):
-            rows = [r for r in rows if r.get("status") in ("USERNAME_NOT_FOUND", "AUTH_REQUIRED", "SOURCE_UNAVAILABLE", "FETCH_ERROR", "DATA_MISMATCH") or not r.get("username") or r.get("username") in ("USERNAME_NOT_FOUND", "UNLINKED", "NO_HANDLE", "")]
+            rows = [r for r in rows if r.get("status") in ("USERNAME_NOT_FOUND", "AUTH_REQUIRED", "SOURCE_UNAVAILABLE", "FETCH_ERROR", "FETCH_FAILED", "DATA_MISMATCH", "CONFLICT") or not r.get("username") or r.get("username") in ("USERNAME_NOT_FOUND", "UNLINKED", "NO_HANDLE", "")]
         elif att_upper in ("NOT_VERIFIED", "PENDING", "UNVERIFIED"):
             rows = [r for r in rows if r.get("status") in ("PENDING", "NOT_VERIFIED", "UNVERIFIED")]
         elif att_upper in ("ALL_ATTENDED", "PARTICIPATED"):
@@ -222,7 +242,8 @@ def _filter_canonical_dataset_in_memory(
     pub = sum(1 for r in indexed_rows if r.get("status") in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"))
     virt = sum(1 for r in indexed_rows if r.get("status") in ("VIRTUAL", "VIRTUAL_ATTENDED"))
     not_att = sum(1 for r in indexed_rows if r.get("status") == "NOT_ATTENDED")
-    errors = sum(1 for r in indexed_rows if r.get("status") in ("USERNAME_NOT_FOUND", "AUTH_REQUIRED", "SOURCE_UNAVAILABLE", "FETCH_ERROR", "DATA_MISMATCH"))
+    not_verified = sum(1 for r in indexed_rows if r.get("status") in ("NOT_VERIFIED", "PENDING", "UNVERIFIED"))
+    errors = sum(1 for r in indexed_rows if r.get("status") in ("USERNAME_NOT_FOUND", "AUTH_REQUIRED", "SOURCE_UNAVAILABLE", "FETCH_ERROR", "FETCH_FAILED", "DATA_MISMATCH", "CONFLICT"))
     pending = sum(1 for r in indexed_rows if r.get("status") == "PENDING")
 
     def _get_solved(r):
@@ -244,6 +265,7 @@ def _filter_canonical_dataset_in_memory(
         "officialAttended": pub,
         "virtualAttended": virt,
         "notAttended": not_att,
+        "notVerified": not_verified,
         "pending": pending,
         "errors": errors,
         "participationPercentage": pct,
@@ -257,11 +279,13 @@ def _filter_canonical_dataset_in_memory(
         "PUBLIC": pub,
         "VIRTUAL": virt,
         "NOT_ATTENDED": not_att,
+        "NOT_VERIFIED": not_verified,
         "PENDING": pending,
         "SOURCE_UNAVAILABLE": sum(1 for r in indexed_rows if r.get("status") == "SOURCE_UNAVAILABLE"),
         "AUTH_REQUIRED": sum(1 for r in indexed_rows if r.get("status") == "AUTH_REQUIRED"),
         "USERNAME_NOT_FOUND": sum(1 for r in indexed_rows if r.get("status") == "USERNAME_NOT_FOUND"),
-        "FETCH_ERROR": sum(1 for r in indexed_rows if r.get("status") == "FETCH_ERROR"),
+        "FETCH_FAILED": sum(1 for r in indexed_rows if r.get("status") in ("FETCH_ERROR", "FETCH_FAILED")),
+        "CONFLICT": sum(1 for r in indexed_rows if r.get("status") == "CONFLICT"),
         "DATA_MISMATCH": sum(1 for r in indexed_rows if r.get("status") == "DATA_MISMATCH")
     }
 
@@ -304,6 +328,8 @@ def _build_canonical_contest_dataset_internal(
     ).filter(
         (Student.is_active == True) | (Student.is_active.is_(None))
     )
+    if current_user:
+        student_query = apply_role_based_student_filter(student_query, current_user, db)
     
     def _is_real_student_record(reg_no: Optional[str], name: Optional[str]) -> bool:
         reg = (reg_no or "").upper().strip()

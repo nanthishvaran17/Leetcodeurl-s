@@ -55,6 +55,20 @@ class ContestIntegrityService:
         )
         return explanation
 
+    def _get_student_leetcode_accounts(self, student: Student) -> List[str]:
+        accounts = self.db.query(LeetCodeAccount).filter(LeetCodeAccount.student_id == student.id).all()
+        account_usernames = [a.leetcode_username for a in accounts if a.leetcode_username]
+        
+        primary = student.primary_leetcode_id or student.username
+        if primary and primary not in account_usernames:
+            account_usernames.append(primary)
+        
+        secondary = student.secondary_leetcode_id
+        if secondary and secondary not in account_usernames:
+            account_usernames.append(secondary)
+            
+        return account_usernames
+
     def evaluate_contest_integrity(self, contest_id: str) -> List[Dict[str, Any]]:
         """
         Evaluates Dual-ID non-attendance compliance for all students for a specific contest.
@@ -65,19 +79,16 @@ class ContestIntegrityService:
         flagged_cases = []
 
         for student in students:
-            # 1. Identity Review Check: If People ID is missing
-            if not student.people_id:
-                accounts = self.db.query(LeetCodeAccount).filter(LeetCodeAccount.student_id == student.id).all()
-                if len(accounts) >= 2:
-                    self._create_identity_review_case(student, contest_id, accounts)
-                continue
-
-            # 2. Get linked contest accounts
-            accounts = self.db.query(LeetCodeAccount).filter(LeetCodeAccount.student_id == student.id).all()
-            if len(accounts) < 2:
+            account_usernames = self._get_student_leetcode_accounts(student)
+            if len(account_usernames) < 2:
                 continue # Single account or unlinked -> Case 7: NO ALERT
 
-            account_usernames = [acc.leetcode_username for acc in accounts]
+            effective_pid = student.people_id or student.reg_no
+
+            # 1. Identity Review Check: If both People ID and Reg No are completely missing
+            if not effective_pid:
+                self._create_identity_review_case(student, contest_id, account_usernames)
+                continue
 
             # Fetch participation records for this contest
             participations = self.db.query(StudentContestParticipation).filter(
@@ -86,8 +97,8 @@ class ContestIntegrityService:
             ).all()
 
             account_statuses = {}
-            for acc in accounts:
-                part = next((p for p in participations if p.source and acc.leetcode_username.lower() in p.source.lower()), None)
+            for acc_name in account_usernames:
+                part = next((p for p in participations if p.source and acc_name.lower() in p.source.lower()), None)
                 if not part and participations:
                     part = participations[0]
 
@@ -102,18 +113,18 @@ class ContestIntegrityService:
                     else:
                         status_bool = self.is_not_attended_status(part.score_display, part.questions_solved is not None and part.questions_solved > 0, part.questions_solved)
 
-                    account_statuses[acc.leetcode_username] = {
+                    account_statuses[acc_name] = {
                         "score_display": part.score_display,
                         "questions_solved": part.questions_solved,
                         "official_attendance_state": official_state or ("NOT_ATTENDED" if status_bool is True else "ATTENDED" if status_bool is False else "UNKNOWN"),
                         "status_bool": status_bool # True = Not Attended, False = Attended, None = Unknown
                     }
                 else:
-                    account_statuses[acc.leetcode_username] = {
-                        "score_display": "UNKNOWN",
-                        "questions_solved": None,
-                        "official_attendance_state": "UNKNOWN",
-                        "status_bool": None
+                    account_statuses[acc_name] = {
+                        "score_display": "NOT ATTENDED",
+                        "questions_solved": 0,
+                        "official_attendance_state": "NOT_ATTENDED",
+                        "status_bool": True
                     }
 
             # TRUTH TABLE EVALUATION:
@@ -130,21 +141,21 @@ class ContestIntegrityService:
 
             # If ALL accounts are True (Not Attended) -> TRIGGER CONSOLIDATED DUAL-ID ALERT
             if all(s is True for s in statuses):
-                idempotency_key = f"INT-{student.people_id}-{contest_id}"
+                idempotency_key = f"INT-{effective_pid}-{contest_id}"
                 
                 existing_case = self.db.query(IntegrityCase).filter(
                     IntegrityCase.idempotency_key == idempotency_key
                 ).first()
 
                 why_explanation = self.generate_why_this_alert_explanation(
-                    student.people_id, student.name, contest_id, account_usernames, account_statuses
+                    effective_pid, student.name, contest_id, account_usernames, account_statuses
                 )
 
                 if not existing_case:
                     new_case = IntegrityCase(
                         case_id=idempotency_key,
                         idempotency_key=idempotency_key,
-                        people_id=student.people_id,
+                        people_id=effective_pid,
                         contest_id=contest_id,
                         account_ids=account_usernames,
                         participation_statuses={
@@ -200,12 +211,24 @@ class ContestIntegrityService:
 
         return flagged_cases
 
-    def _create_identity_review_case(self, student: Student, contest_id: str, accounts: List[LeetCodeAccount]):
+    def evaluate_all_contests(self) -> List[Dict[str, Any]]:
+        """Evaluates Dual-ID compliance rules across all distinct contests in DB."""
+        distinct_contests = [r[0] for r in self.db.query(StudentContestParticipation.contest_id).distinct().all() if r[0]]
+        if not distinct_contests:
+            distinct_contests = ["weekly-contest-520"]
+
+        all_cases = []
+        for cid in distinct_contests:
+            cases = self.evaluate_contest_integrity(cid)
+            all_cases.extend(cases)
+
+        return all_cases
+
+    def _create_identity_review_case(self, student: Student, contest_id: str, account_usernames: List[str]):
         """Flags student for IDENTITY_REVIEW_REQUIRED when People ID mapping is missing."""
         idempotency_key = f"ID-REVIEW-REG-{student.reg_no}-{contest_id}"
         existing = self.db.query(IntegrityCase).filter(IntegrityCase.idempotency_key == idempotency_key).first()
         if not existing:
-            account_usernames = [a.leetcode_username for a in accounts]
             case = IntegrityCase(
                 case_id=idempotency_key,
                 idempotency_key=idempotency_key,
@@ -225,12 +248,14 @@ class ContestIntegrityService:
 
     def _queue_outbox_notifications(self, student: Student, case: IntegrityCase):
         """Queues 1 Student Email, 1 Staff Email, 1 Staff Push in NotificationEvent outbox table."""
+        effective_pid = student.people_id or student.reg_no or case.people_id or f"STUDENT_{student.id}"
+
         # 1. Student Email
         if student.email:
             NotificationOutboxWorker.queue_notification(
                 db=self.db,
                 case_id=case.case_id,
-                people_id=student.people_id,
+                people_id=effective_pid,
                 recipient_type="STUDENT",
                 channel="EMAIL",
                 recipient_target=student.email,
@@ -248,14 +273,14 @@ class ContestIntegrityService:
         NotificationOutboxWorker.queue_notification(
             db=self.db,
             case_id=case.case_id,
-            people_id=student.people_id,
+            people_id=effective_pid,
             recipient_type="STAFF_EMAIL",
             channel="EMAIL",
             recipient_target=staff_email,
             payload={
-                "subject": f"Dual-ID Review Required: {student.name} ({student.people_id})",
-                "html_body": f"<p>Staff Alert:</p><p>Student <strong>{student.name}</strong> ({student.people_id}) was flagged for Dual-ID Non-Attendance on contest {case.contest_id}.<br/>Case ID: {case.case_id}</p>",
-                "text_body": f"Staff Alert:\n\nStudent {student.name} ({student.people_id}) was flagged for Dual-ID Non-Attendance on contest {case.contest_id}.\nCase ID: {case.case_id}\n\nPlease review in the Staff Integrity Dashboard.",
+                "subject": f"Dual-ID Review Required: {student.name} ({effective_pid})",
+                "html_body": f"<p>Staff Alert:</p><p>Student <strong>{student.name}</strong> ({effective_pid}) was flagged for Dual-ID Non-Attendance on contest {case.contest_id}.<br/>Case ID: {case.case_id}</p>",
+                "text_body": f"Staff Alert:\n\nStudent {student.name} ({effective_pid}) was flagged for Dual-ID Non-Attendance on contest {case.contest_id}.\nCase ID: {case.case_id}\n\nPlease review in the Staff Integrity Dashboard.",
                 "contest_id": case.contest_id
             }
         )
@@ -265,13 +290,13 @@ class ContestIntegrityService:
         NotificationOutboxWorker.queue_notification(
             db=self.db,
             case_id=case.case_id,
-            people_id=student.people_id,
+            people_id=effective_pid,
             recipient_type="STAFF_PUSH",
             channel="FCM_PUSH",
             recipient_target="STAFF_TOPIC",
             payload={
                 "title": " Dual-ID Review Required",
-                "message": f"Student {student.name} ({student.people_id}) flagged for dual non-attendance on {case.contest_id}.",
+                "message": f"Student {student.name} ({effective_pid}) flagged for dual non-attendance on {case.contest_id}.",
                 "action_route": f"/integrity-monitor?case_id={case.case_id}",
                 "contest_id": case.contest_id
             }

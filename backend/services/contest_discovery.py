@@ -105,12 +105,56 @@ def calculate_contest_status(contest_date: datetime.date, current_dt: datetime.d
         return "FINALIZED"
 
 from functools import lru_cache
+import urllib.request
+import json
+from backend.logger import logger
 
-def discover_contest_metadata(target_date: datetime.date = None) -> Dict[str, Any]:
+LEETCODE_TOP_CONTESTS_QUERY = """
+query topTwoContests {
+  topTwoContests {
+    title
+    titleSlug
+    startTime
+    duration
+  }
+}
+"""
+
+def fetch_leetcode_live_contest_info(target_contest_num: int = None) -> Dict[str, Any]:
+    """
+    Attempts to fetch live contest metadata directly from LeetCode GraphQL API.
+    Returns metadata dict if successful, or empty dict on failure.
+    """
+    try:
+        req = urllib.request.Request(
+            "https://leetcode.com/graphql",
+            data=json.dumps({"query": LEETCODE_TOP_CONTESTS_QUERY}).encode('utf-8'),
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            },
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = json.loads(resp.read().decode('utf-8'))
+            contests = data.get("data", {}).get("topTwoContests", [])
+            for c in contests:
+                title = c.get("title", "")
+                if target_contest_num:
+                    if f"Weekly Contest {target_contest_num}" in title:
+                        return c
+                elif "Weekly Contest" in title:
+                    return c
+    except Exception as e:
+        logger.warning(f"[CONTEST_DISCOVERY] Live LeetCode GraphQL query failed: {e}. Falling back to date arithmetic.")
+    return {}
+
+def discover_contest_metadata(target_date: datetime.date = None, override_contest_num: int = None) -> Dict[str, Any]:
     """
     Dynamic LeetCode Weekly Contest Discovery Engine.
     Discovers contest ID, title, date, start time, end time, and dynamic problem list.
     Evaluates real-time contest status (SCHEDULED, LIVE, FINALIZED) dynamically based on Asia/Kolkata IST.
+    Supports audit tags: LEETCODE_API_DISCOVERED, CALCULATED_DATE_ARITHMETIC, EXPLICIT_OVERRIDE.
     """
     if target_date is None:
         target_date = get_most_recent_sunday_date()
@@ -122,8 +166,19 @@ def discover_contest_metadata(target_date: datetime.date = None) -> Dict[str, An
     start_dt = datetime.datetime.combine(target_date, datetime.time(8, 0, 0), tzinfo=IST_TZ)
     end_dt = datetime.datetime.combine(target_date, datetime.time(9, 30, 0), tzinfo=IST_TZ)
 
-    # Dynamic authoritative calculation
-    contest_num = calculate_contest_number(target_date)
+    discovery_source = "CALCULATED_DATE_ARITHMETIC"
+
+    if override_contest_num:
+        contest_num = override_contest_num
+        discovery_source = "EXPLICIT_OVERRIDE"
+    else:
+        contest_num = calculate_contest_number(target_date)
+        # Attempt live API discovery cross-check
+        live_info = fetch_leetcode_live_contest_info(contest_num)
+        if live_info:
+            discovery_source = "LEETCODE_API_DISCOVERED"
+            logger.info(f"[CONTEST_DISCOVERY] Successfully verified contest via LeetCode GraphQL API: {live_info.get('title')}")
+
     contest_id = f"weekly-contest-{contest_num}"
     contest_name = f"Weekly Contest {contest_num}"
     status = calculate_contest_status(target_date)
@@ -143,6 +198,7 @@ def discover_contest_metadata(target_date: datetime.date = None) -> Dict[str, An
         "session_date": formatted_date,
         "raw_date": date_str,
         "status": status,
+        "discovery_source": discovery_source,
         "start_time_ist": "08:00 AM IST",
         "end_time_ist": "09:30 AM IST",
         "start_iso": start_dt.isoformat(),

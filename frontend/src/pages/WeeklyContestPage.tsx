@@ -182,8 +182,9 @@ interface RowProps {
   onDelete: (r: any) => void;
   onSelect: (r: any) => void;
   onCheckbox: (regNo: string, checked: boolean) => void;
+  onQuickSync?: (regNo: string) => void;
 }
-const ContestMatrixRow = memo(({ r, actualIdx, isSelected, onEdit, onDelete, onSelect, onCheckbox }: RowProps) => {
+const ContestMatrixRow = memo(({ r, actualIdx, isSelected, onEdit, onDelete, onSelect, onCheckbox, onQuickSync }: RowProps) => {
   const isPublicAttended = r.participation_status === 'PUBLIC_ATTENDED' || r.participation_status === 'ATTENDED' || r.status === 'PUBLIC' || r.participation_status === 'PUBLIC';
   const isVirtualAttended = r.participation_status === 'VIRTUAL_ATTENDED' || r.participation_status === 'VIRTUAL' || r.status === 'VIRTUAL';
   const isAttended = isPublicAttended || isVirtualAttended;
@@ -286,6 +287,15 @@ const ContestMatrixRow = memo(({ r, actualIdx, isSelected, onEdit, onDelete, onS
           >
             <Edit3 className="w-3.5 h-3.5" />
           </button>
+          {onQuickSync && (
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onQuickSync(r.reg_no); }}
+              className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900 text-emerald-600 dark:text-emerald-400 transition-all hover:scale-105 cursor-pointer"
+              title={`Force Live Sync — ${r.name}`}
+            >
+              <Zap className="w-3.5 h-3.5" />
+            </button>
+          )}
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDelete(r); }}
             className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-400 transition-all hover:scale-105 cursor-pointer"
@@ -359,6 +369,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const [timeRemainingSec, setTimeRemainingSec] = useState<number>(0);
   const [nextUpdateTicker, setNextUpdateTicker] = useState<number>(20);
   const [showAdminMonitor, setShowAdminMonitor] = useState<boolean>(false);
+  const [quickSyncIdentifier, setQuickSyncIdentifier] = useState<string>('');
   const [adminActionMsg, setAdminActionMsg] = useState<string>('');
   const [isPerformingAdminAction, setIsPerformingAdminAction] = useState<boolean>(false);
   const [adminSubTab, setAdminSubTab] = useState<'sync_ops' | 'rate_limiter' | 'error_resolver' | 'snapshot_audit' | 'live_logs' | 'simulation_sandbox' | 'live_monitor'>('sync_ops');
@@ -376,6 +387,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const [showExportMenu, setShowExportMenu] = useState<boolean>(false);
   const exportMenuRef = useRef<HTMLDivElement>(null);
   const adminMonitorRef = useRef<HTMLDivElement>(null);
+  const detailedViewRef = useRef<HTMLDivElement>(null);
+
+  const handleOpenDetailedRoster = () => {
+    setShowDetailedView(true);
+    setSubTab('matrix');
+    setTimeout(() => {
+      detailedViewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -1321,10 +1341,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
   // Memoized Dynamic Statistics Calculation with Fast Tiered Fallback
   const stats = useMemo(() => {
-    const totalRows = matrixRows.length;
     const isScopeActive = selectedDeptFilter !== 'ALL' || selectedYearFilter !== 'ALL' || selectedAttendanceFilter !== 'ALL';
 
-    // Calculate real dynamic counts from matrixRows if available
+    // Calculate real dynamic counts from matrixRows if available (Fallback only if backend metrics fail)
     let calcAttended = 0;
     let calcVirtual = 0;
     let calcNotAttended = 0;
@@ -1345,25 +1364,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
       }
     }
 
-    const totalRowsVal = (matrixRows && matrixRows.length > 0)
-      ? totalRows
-      : (sessionMetrics?.totalStudents ?? sessionMetrics?.totalCount ?? (isScopeActive ? totalRows : (fastSummary?.totalStudents ?? totalRows ?? 0)));
+    const totalRowsVal = sessionMetrics?.totalStudents ?? sessionMetrics?.totalCount ?? totalRows ?? (fastSummary?.totalStudents ?? 0);
 
-    const attendedRows = (matrixRows && matrixRows.length > 0)
-      ? calcAttended
-      : (sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? (isScopeActive ? 0 : (fastSummary?.participantCount ?? 0)));
+    const attendedRows = sessionMetrics?.officialAttended ?? sessionMetrics?.officialParticipants ?? (isScopeActive ? calcAttended : (fastSummary?.participantCount ?? calcAttended));
 
-    const virtualRows = (matrixRows && matrixRows.length > 0)
-      ? calcVirtual
-      : (sessionMetrics?.virtualAttended ?? sessionMetrics?.virtualParticipants ?? 0);
+    const virtualRows = sessionMetrics?.virtualAttended ?? sessionMetrics?.virtualParticipants ?? calcVirtual;
 
-    const notAttendedRows = (matrixRows && matrixRows.length > 0)
-      ? calcNotAttended
-      : (sessionMetrics?.notAttended ?? sessionMetrics?.notParticipated ?? Math.max(0, totalRowsVal - attendedRows - virtualRows));
+    const notAttendedRows = sessionMetrics?.notAttended ?? sessionMetrics?.notParticipated ?? Math.max(0, totalRowsVal - attendedRows - virtualRows);
 
-    const errorRows = (matrixRows && matrixRows.length > 0)
-      ? calcDataError
-      : (sessionMetrics?.dataErrors ?? sessionMetrics?.totalErrors ?? sessionMetrics?.failedVerification ?? (errorLogs ? errorLogs.length : 0));
+    const errorRows = sessionMetrics?.dataErrors ?? sessionMetrics?.totalErrors ?? sessionMetrics?.failedVerification ?? (errorLogs ? errorLogs.length : calcDataError);
 
     const isVirtualAvailable = sessionMetrics?.virtualDataStatus === 'AVAILABLE' || virtualRows > 0;
 
@@ -1383,7 +1392,16 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
     let virtual2Solved = sessionMetrics?.virtual2Solved;
     let virtual1Solved = sessionMetrics?.virtual1Solved;
 
-    const forceRecalculate = isScopeActive || (q4Solved === undefined || q4Solved === null || q3Solved === undefined || q3Solved === null || q2Solved === undefined || q2Solved === null || q1Solved === undefined || q1Solved === null);
+    const hasMetricCounts = (metricQ4 !== undefined && metricQ4 !== null) &&
+                            (metricQ3 !== undefined && metricQ3 !== null) &&
+                            (metricQ2 !== undefined && metricQ2 !== null) &&
+                            (metricQ1 !== undefined && metricQ1 !== null);
+
+    const forceRecalculate = !hasMetricCounts;
+
+    console.log('[SOLVE_DEBUG] sessionMetrics:', sessionMetrics ? { q4Count: sessionMetrics.q4Count, q3Count: sessionMetrics.q3Count, q2Count: sessionMetrics.q2Count, q1Count: sessionMetrics.q1Count, '4 Q Solved': sessionMetrics['4 Q Solved'] } : 'NULL');
+    console.log('[SOLVE_DEBUG] metricQ4/Q3/Q2/Q1:', metricQ4, metricQ3, metricQ2, metricQ1);
+    console.log('[SOLVE_DEBUG] forceRecalculate:', forceRecalculate, 'isScopeActive:', isScopeActive, 'matrixRows.length:', matrixRows?.length);
 
     if (forceRecalculate) {
       if (matrixRows && matrixRows.length > 0) {
@@ -1393,17 +1411,28 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         for (const r of matrixRows) {
           const st = (r.participation_status || r.status || '').toString().toUpperCase();
           if (st === 'PUBLIC' || st === 'PUBLIC_ATTENDED' || st === 'ATTENDED' || st === 'VIRTUAL' || st === 'VIRTUAL_ATTENDED') {
-            const solved = r.total_solved ?? r.score_solved ?? ((r.q1 === 1 ? 1 : 0) + (r.q2 === 1 ? 1 : 0) + (r.q3 === 1 ? 1 : 0) + (r.q4 === 1 ? 1 : 0));
+            // Backend sends total_solved as number or "—" string for non-attended
+            // q1-q4 can be 1/0 numbers, or "—" string
+            let solved = 0;
+            const ts = r.problems_solved ?? r.total_solved ?? r.total_contest_solved ?? r.score_solved;
+            const tsNum = Number(ts);
+            if (!isNaN(tsNum) && tsNum > 0) {
+              solved = tsNum;
+            } else {
+              // Fallback: count q1-q4 individually
+              const qv1 = Number(r.q1); const qv2 = Number(r.q2); const qv3 = Number(r.q3); const qv4 = Number(r.q4);
+              solved = (!isNaN(qv1) && qv1 > 0 ? 1 : 0) + (!isNaN(qv2) && qv2 > 0 ? 1 : 0) + (!isNaN(qv3) && qv3 > 0 ? 1 : 0) + (!isNaN(qv4) && qv4 > 0 ? 1 : 0);
+            }
             if (solved >= 4) calcQ4++;
             else if (solved === 3) calcQ3++;
             else if (solved === 2) calcQ2++;
-            else if (solved === 1) calcQ1++;
+            else if (solved >= 1) calcQ1++;
 
             if (st === 'VIRTUAL' || st === 'VIRTUAL_ATTENDED') {
               if (solved >= 4) calcV4++;
               else if (solved === 3) calcV3++;
               else if (solved === 2) calcV2++;
-              else if (solved === 1) calcV1++;
+              else if (solved >= 1) calcV1++;
             }
           }
         }
@@ -1551,7 +1580,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
   const isFinalizing = activeSessionObj?.status === 'FINALIZING';
 
   return (
-    <div className="space-y-5 sm:space-y-6 pt-1 sm:pt-0 animate-fade-in pb-12">
+    <div className="space-y-6 sm:space-y-8 pt-1 sm:pt-0 animate-fade-in pb-12">
 
       {/* 1. SLEEK INSTITUTIONAL HERO HEADER */}
       <div className={`relative overflow-hidden rounded-3xl text-white p-5 sm:p-7 md:p-8 shadow-2xl border transition-all duration-500 ${isLive
@@ -1612,7 +1641,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             <div className="flex flex-col gap-1.5 md:gap-2">
               <div className="flex flex-wrap items-center gap-2.5">
                 <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-display tracking-tight text-white uppercase font-black">
-                  {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') ? (
+                  {['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase()) ? (
                     <>
                       MY <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300 font-extrabold">{activeSessionObj?.contestName || 'WEEKLY CONTEST'}</span>
                     </>
@@ -1640,7 +1669,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </div>
             </div>
 
-            <div className="flex items-center flex-wrap gap-2 text-xs text-slate-300 font-bold tracking-wide">
+            <div className="flex items-center flex-wrap gap-2 text-xs text-slate-300 font-bold tracking-wide mt-3 pt-3 border-t border-white/10">
               <span>NANDHA ENGINEERING COLLEGE (AUTONOMOUS)</span>
               <span className="text-slate-500">•</span>
               <span className="text-indigo-300">
@@ -1710,25 +1739,30 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               )}
             </div>
 
-            {/* Admin Live Monitor Toggle */}
-            <button
-              onClick={() => {
-                if (!showAdminMonitor) {
-                  setShowAdminMonitor(true);
-                  setAdminSubTab('live_monitor');
-                  setTimeout(() => {
-                    adminMonitorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }, 120);
-                } else {
-                  setShowAdminMonitor(false);
-                }
-              }}
-              className="flex items-center justify-center space-x-1.5 px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl border border-slate-600 transition-all cursor-pointer shrink-0"
-              title="Toggle Live Contest Monitor"
-            >
-              <Activity className="w-3.5 h-3.5 text-brand-400" />
-              <span>{showAdminMonitor ? 'Hide Monitor' : 'Live Monitor'}</span>
-            </button>
+            {/* Admin Live Monitor Toggle — admin-only */}
+            {(user?.role?.toLowerCase().includes('admin') || user?.role?.toLowerCase() === 'system admin') && (
+              <button
+                onClick={() => {
+                  if (!showAdminMonitor) {
+                    setShowAdminMonitor(true);
+                    setAdminSubTab('live_monitor');
+                    // Double-RAF: wait for React to flush the DOM, then scroll
+                    requestAnimationFrame(() => {
+                      requestAnimationFrame(() => {
+                        adminMonitorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      });
+                    });
+                  } else {
+                    setShowAdminMonitor(false);
+                  }
+                }}
+                className="flex items-center justify-center space-x-1.5 px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl border border-slate-600 transition-all cursor-pointer shrink-0"
+                title="Toggle Live Contest Monitor"
+              >
+                <Activity className="w-3.5 h-3.5 text-brand-400" />
+                <span>{showAdminMonitor ? 'Hide Monitor' : 'Live Monitor'}</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -1890,7 +1924,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
       {/* 1D. ADMIN LIVE CONTEST OPERATIONS & WORKER TELEMETRY SUITE */}
       {showAdminMonitor && (
-        <div ref={adminMonitorRef} className="p-5 sm:p-7 rounded-3xl bg-slate-900 text-white border border-slate-700/80 shadow-lg space-y-6 animate-fade-in scroll-mt-6">
+        <div ref={adminMonitorRef} className="p-5 sm:p-7 rounded-3xl bg-slate-900 text-white border border-slate-700/80 shadow-lg space-y-6 animate-fade-in scroll-mt-6 mt-4 sm:mt-6">
           {/* Header with Title, Worker Badge, and Action Status */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div className="flex items-center space-x-3">
@@ -1898,23 +1932,23 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <Shield className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-sm font-black uppercase tracking-wider text-brand-400 flex items-center gap-2">
+                <h4 className="text-sm font-black uppercase tracking-wider text-brand-300 flex items-center gap-2">
                   <span>Admin Live Contest Operations & Worker Telemetry</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono border border-emerald-500/30">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/25 text-emerald-200 font-mono border border-emerald-400/40 font-bold">
                      ACTIVE SUITE
                   </span>
                 </h4>
-                <p className="text-xs text-slate-400">Mission-control engine for real-time synchronization, worker gating, and invariant validation.</p>
+                <p className="text-xs text-slate-300 font-medium">Mission-control engine for real-time synchronization, worker gating, and invariant validation.</p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono px-3 py-1 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 flex items-center gap-1.5 shadow-inner">
+              <span className="text-[11px] font-mono px-3 py-1 rounded-xl bg-slate-950 border border-slate-700 text-slate-200 flex items-center gap-1.5 shadow-inner">
                 <Cpu className="w-3.5 h-3.5 text-brand-400" />
-                <span>Worker: <strong className="text-white">{liveTelemetry?.workerId || 'WORKER-LIVE-5'}</strong></span>
-                <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded ${liveTelemetry?.workerState === 'RUNNING' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' :
-                  liveTelemetry?.workerState === 'PAUSED' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
-                    'bg-slate-800 text-slate-300'
+                <span>Worker: <strong className="text-white font-black">{liveTelemetry?.workerId || 'WORKER-LIVE-5'}</strong></span>
+                <span className={`px-1.5 py-0.5 text-[9px] font-black rounded ${liveTelemetry?.workerState === 'RUNNING' ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-400/50' :
+                  liveTelemetry?.workerState === 'PAUSED' ? 'bg-amber-500/30 text-amber-300 border border-amber-400/50' :
+                    'bg-slate-800 text-slate-200 border border-slate-700'
                   }`}>
                   {liveTelemetry?.workerState || 'READY'}
                 </span>
@@ -1924,24 +1958,24 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
           {/* Admin Action Notification Banner */}
           {adminActionMsg && (
-            <div className="p-3.5 rounded-2xl bg-brand-500/20 border border-brand-500/40 text-brand-200 text-xs font-bold flex items-center justify-between shadow-lg animate-fade-in">
+            <div className="p-3.5 rounded-2xl bg-brand-500/25 border border-brand-400/50 text-white text-xs font-bold flex items-center justify-between shadow-lg animate-fade-in">
               <span className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 <span>{adminActionMsg}</span>
               </span>
-              <button onClick={() => setAdminActionMsg('')} className="text-slate-400 hover:text-white">
+              <button onClick={() => setAdminActionMsg('')} className="text-slate-300 hover:text-white">
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
 
           {/* Interactive Tab Switcher Navigation */}
-          <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-950/80 border border-slate-800 overflow-x-auto scrollbar-none">
+          <div className="flex items-center gap-2 p-2 rounded-2xl bg-slate-950 border border-slate-800 overflow-x-auto scrollbar-none">
             <button
               onClick={() => setAdminSubTab('sync_ops')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'sync_ops'
-                ? 'bg-brand-600 text-white shadow-lg'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'sync_ops'
+                ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/50 border border-brand-400/40'
+                : 'text-slate-200 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-700/60'
                 }`}
             >
               <Play className="w-3.5 h-3.5 fill-current" />
@@ -1950,9 +1984,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
             <button
               onClick={() => setAdminSubTab('rate_limiter')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'rate_limiter'
-                ? 'bg-brand-600 text-white shadow-lg'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'rate_limiter'
+                ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/50 border border-brand-400/40'
+                : 'text-slate-200 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-700/60'
                 }`}
             >
               <Gauge className="w-3.5 h-3.5" />
@@ -1961,20 +1995,20 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
             <button
               onClick={() => setAdminSubTab('error_resolver')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'error_resolver'
-                ? 'bg-brand-600 text-white shadow-lg'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'error_resolver'
+                ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/50 border border-brand-400/40'
+                : 'text-slate-200 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-700/60'
                 }`}
             >
-              <AlertTriangle className="w-3.5 h-3.5" />
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
               <span>Data Errors & Re-sync ({liveTelemetry?.failedCount || stats.errorRows})</span>
             </button>
 
             <button
               onClick={() => setAdminSubTab('snapshot_audit')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'snapshot_audit'
-                ? 'bg-brand-600 text-white shadow-lg'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'snapshot_audit'
+                ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/50 border border-brand-400/40'
+                : 'text-slate-200 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-700/60'
                 }`}
             >
               <Lock className="w-3.5 h-3.5" />
@@ -1983,20 +2017,20 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
             <button
               onClick={() => setAdminSubTab('live_logs')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'live_logs'
-                ? 'bg-brand-600 text-white shadow-lg'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'live_logs'
+                ? 'bg-brand-600 text-white shadow-lg shadow-brand-900/50 border border-brand-400/40'
+                : 'text-slate-200 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-700/60'
                 }`}
             >
-              <Terminal className="w-3.5 h-3.5" />
+              <Terminal className="w-3.5 h-3.5 text-emerald-400" />
               <span>Live Events Log Stream</span>
             </button>
 
             <button
               onClick={() => setAdminSubTab('simulation_sandbox')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'simulation_sandbox'
-                ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'simulation_sandbox'
+                ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg shadow-indigo-900/50 border border-brand-400/40'
+                : 'text-slate-200 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-700/60'
                 }`}
             >
               <FlaskConical className="w-3.5 h-3.5 text-amber-400" />
@@ -2005,9 +2039,9 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
 
             <button
               onClick={() => setAdminSubTab('live_monitor')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'live_monitor'
-                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/40'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${adminSubTab === 'live_monitor'
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/50 border border-emerald-400/40'
+                : 'text-slate-200 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-700/60'
                 }`}
             >
               <Search className="w-3.5 h-3.5 text-emerald-400" />
@@ -2020,12 +2054,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             <div className="space-y-5 animate-fade-in">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                  <span className="text-[10px] uppercase font-black text-slate-300 block">Worker State</span>
+                  <span className="text-[10px] uppercase font-black text-slate-200 block">Worker State</span>
                   <span className="text-base font-mono font-black text-white">{liveTelemetry?.workerState || 'READY'}</span>
-                  <span className="text-[10px] text-emerald-400 block font-semibold">Single-Worker DB Lock Active</span>
+                  <span className="text-[10px] text-emerald-400 block font-bold">Single-Worker DB Lock Active</span>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                  <span className="text-[10px] uppercase font-black text-slate-300 block">Students Processed</span>
+                  <span className="text-[10px] uppercase font-black text-slate-200 block">Students Processed</span>
                   <span className="text-base font-mono font-black text-emerald-400">
                     {loading ? <span className="animate-pulse">Loading...</span> : `${liveTelemetry?.processedCount ?? sessionMetrics?.totalStudents ?? 0} / ${sessionMetrics?.totalStudents ?? 0}`}
                   </span>
@@ -2034,25 +2068,25 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   </div>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                  <span className="text-[10px] uppercase font-black text-slate-300 block">Successful Syncs</span>
+                  <span className="text-[10px] uppercase font-black text-slate-200 block">Successful Syncs</span>
                   <span className="text-base font-mono font-black text-emerald-400">
                     {loading ? '...' : (liveTelemetry?.successfulCount ?? ((sessionMetrics?.totalStudents ?? 0) - (liveTelemetry?.failedCount ?? 0)))}
                   </span>
-                  <span className="text-[10px] text-slate-300 block font-semibold">99% Accuracy Rate</span>
+                  <span className="text-[10px] text-slate-200 block font-bold">99% Accuracy Rate</span>
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-                  <span className="text-[10px] uppercase font-black text-slate-300 block">Data Errors</span>
+                  <span className="text-[10px] uppercase font-black text-slate-200 block">Data Errors</span>
                   <span className="text-base font-mono font-black text-amber-400">{liveTelemetry?.failedCount || 20}</span>
-                  <span className="text-[10px] text-amber-300 block font-semibold">Auto-Retry Eligible</span>
+                  <span className="text-[10px] text-amber-300 block font-bold">Auto-Retry Eligible</span>
                 </div>
               </div>
 
               {/* Action Buttons Toolbar */}
-              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-center flex-wrap gap-2.5">
+              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center flex-wrap gap-2.5">
                 <button
                   onClick={() => handleAdminAction('start_live')}
                   disabled={isPerformingAdminAction}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-900/30 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                  className="flex items-center space-x-2 px-4.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-lg shadow-emerald-900/40 border border-emerald-400/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
                   <span>Start Live Sync</span>
@@ -2061,7 +2095,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <button
                   onClick={() => handleAdminAction(liveTelemetry?.isPaused ? 'resume' : 'pause')}
                   disabled={isPerformingAdminAction}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-lg shadow-amber-900/30 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                  className="flex items-center space-x-2 px-4.5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-black shadow-lg shadow-amber-900/40 border border-amber-400/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                 >
                   <Pause className="w-3.5 h-3.5 fill-current" />
                   <span>{liveTelemetry?.isPaused ? 'Resume Sync' : 'Pause Sync'}</span>
@@ -2070,7 +2104,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <button
                   onClick={() => handleAdminAction('sweep_verification')}
                   disabled={isPerformingAdminAction}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-900/30 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                  className="flex items-center space-x-2 px-4.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black shadow-lg shadow-indigo-900/40 border border-indigo-400/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>Run 3-Day Verification Sweep</span>
@@ -2079,7 +2113,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <button
                   onClick={() => handleAdminAction('reset_worker')}
                   disabled={isPerformingAdminAction}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold shadow transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                  className="flex items-center space-x-2 px-4.5 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-black shadow-md border border-slate-500/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>Reset Worker State</span>
@@ -2088,7 +2122,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <button
                   onClick={() => handleAdminAction('force_final_sync')}
                   disabled={isPerformingAdminAction}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg shadow-purple-900/30 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                  className="flex items-center space-x-2 px-4.5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black shadow-lg shadow-purple-900/40 border border-purple-400/40 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
                 >
                   <FastForward className="w-3.5 h-3.5" />
                   <span>Force Final Sync & Lock Snapshot</span>
@@ -2132,12 +2166,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between flex-wrap gap-3">
                 <div className="space-y-1">
                   <p className="text-xs font-bold text-white">Cache & Rate Limiting Controls</p>
-                  <p className="text-[11px] text-slate-400">Instantly flush memory cache keys or reset token state without dropping DB records.</p>
+                  <p className="text-[11px] text-slate-300 font-medium">Instantly flush memory cache keys or reset token state without dropping DB records.</p>
                 </div>
                 <button
                   onClick={() => handleAdminAction('flush_cache')}
                   disabled={isPerformingAdminAction}
-                  className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition-all cursor-pointer active:scale-95"
+                  className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 text-xs font-black border border-slate-600 transition-all cursor-pointer active:scale-95"
                 >
                   Flush Contest Cache Store
                 </button>
@@ -2150,10 +2184,10 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             <div className="space-y-4 animate-fade-in">
               <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between flex-wrap gap-4">
                 <div className="space-y-1">
-                  <h5 className="text-xs font-black uppercase tracking-wider text-amber-400">
+                  <h5 className="text-xs font-black uppercase tracking-wider text-amber-300">
                     Unresolved Student Profiles ({liveTelemetry?.failedCount || stats.errorRows} Errors)
                   </h5>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-300 font-medium">
                     Students without configured usernames or whose LeetCode profiles encountered transient timeouts.
                   </p>
                 </div>
@@ -2161,19 +2195,19 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <button
                   onClick={() => handleAdminAction('retry_failed')}
                   disabled={isPerformingAdminAction}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold shadow-lg shadow-brand-900/30 transition-all cursor-pointer active:scale-95"
+                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-black shadow-lg shadow-brand-900/40 border border-brand-400/40 transition-all cursor-pointer active:scale-95"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>Retry All Unresolved Records</span>
                 </button>
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 text-xs text-slate-300 space-y-2">
-                <p className="font-bold text-white">Transient Error Breakdown & Invariants:</p>
-                <ul className="list-disc list-inside space-y-1 text-[11px] text-slate-400">
-                  <li><strong>Missing Usernames:</strong> Students whose LeetCode handle is not set in Master Roster.</li>
-                  <li><strong>Upstream Timeouts (5xx / 429):</strong> Automatically retried with exponential backoff and jitter.</li>
-                  <li><strong>Data Error Contract:</strong> <code className="text-amber-300">Data Errors = CONFLICT + SOURCE_ERROR</code> strictly holds across all views.</li>
+              <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 text-xs text-slate-200 space-y-2">
+                <p className="font-black text-white">Transient Error Breakdown & Invariants:</p>
+                <ul className="list-disc list-inside space-y-1 text-[11px] text-slate-300 font-medium">
+                  <li><strong className="text-white">Missing Usernames:</strong> Students whose LeetCode handle is not set in Master Roster.</li>
+                  <li><strong className="text-white">Upstream Timeouts (5xx / 429):</strong> Automatically retried with exponential backoff and jitter.</li>
+                  <li><strong className="text-white">Data Error Contract:</strong> <code className="text-amber-300 font-bold bg-amber-950/50 px-1 py-0.5 rounded border border-amber-500/30">Data Errors = CONFLICT + SOURCE_ERROR</code> strictly holds across all views.</li>
                 </ul>
               </div>
             </div>
@@ -2185,31 +2219,31 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-white flex items-center gap-1.5">
+                    <span className="font-black text-white flex items-center gap-1.5">
                       <Lock className="w-3.5 h-3.5 text-emerald-400" />
                       <span>DB Immutability Trigger</span>
                     </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono border border-emerald-500/30">
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/25 text-emerald-300 font-mono border border-emerald-400/40 font-bold">
                       ACTIVE
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-400 font-mono">
+                  <p className="text-[11px] text-slate-300 font-mono">
                     trg_prevent_snapshot_mutation enforced on official_weekly_snapshots table.
                   </p>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-white flex items-center gap-1.5">
+                    <span className="font-black text-white flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5 text-indigo-400" />
                       <span>Bounded Verification Window</span>
                     </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono border border-indigo-500/30">
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-indigo-500/25 text-indigo-300 font-mono border border-indigo-400/40 font-bold">
                       3 DAYS
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-400">
-                    Transitions to <code className="text-indigo-300">NOT_VERIFIED_FINAL</code> automatically once window expires.
+                  <p className="text-[11px] text-slate-300 font-medium">
+                    Transitions to <code className="text-indigo-300 font-bold bg-indigo-950/50 px-1 py-0.5 rounded border border-indigo-500/30">NOT_VERIFIED_FINAL</code> automatically once window expires.
                   </p>
                 </div>
               </div>
@@ -2220,23 +2254,23 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           {adminSubTab === 'live_logs' && (
             <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3 font-mono text-xs animate-fade-in">
               <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <span className="text-slate-400 font-bold flex items-center gap-2">
+                <span className="text-slate-200 font-black flex items-center gap-2">
                   <Terminal className="w-3.5 h-3.5 text-emerald-400" />
                   <span>REAL-TIME AUDIT LOG STREAM</span>
                 </span>
-                <span className="text-[10px] text-emerald-400 animate-pulse"> LIVE STREAM</span>
+                <span className="text-[10px] text-emerald-400 font-black animate-pulse"> LIVE STREAM</span>
               </div>
 
               <div className="max-h-60 overflow-y-auto space-y-1.5 pr-2 scrollbar-thin">
                 {liveTelemetry?.liveEvents && liveTelemetry.liveEvents.length > 0 ? (
                   liveTelemetry.liveEvents.map((evt: any) => (
-                    <div key={evt.id || Math.random()} className="p-2 rounded-lg bg-slate-900/80 border border-slate-800 text-[11px] flex items-center justify-between">
+                    <div key={evt.id || Math.random()} className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-[11px] flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <span className="text-slate-500">{evt.timestamp}</span>
-                        <span className="px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-300 font-bold text-[9px]">{evt.type}</span>
+                        <span className="text-slate-400">{evt.timestamp}</span>
+                        <span className="px-1.5 py-0.5 rounded bg-brand-500/30 text-brand-300 font-bold text-[9px] border border-brand-400/30">{evt.type}</span>
                         <span className="text-white font-bold">{evt.studentName}</span>
-                        <span className="text-slate-400">({evt.regNo})</span>
-                        <span className="text-slate-300">{evt.detail}</span>
+                        <span className="text-slate-300">({evt.regNo})</span>
+                        <span className="text-slate-200">{evt.detail}</span>
                       </div>
                       {evt.rank && (
                         <span className="text-amber-400 font-bold">Rank #{evt.rank}</span>
@@ -2244,7 +2278,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     </div>
                   ))
                 ) : (
-                  <p className="text-slate-500 italic py-4 text-center">No live events recorded yet in current cycle. Click 'Start Live Sync' or use 'Sandbox' tab to simulate events.</p>
+                  <p className="text-slate-400 italic py-4 text-center font-medium">No live events recorded yet in current cycle. Click 'Start Live Sync' or use 'Sandbox' tab to simulate events.</p>
                 )}
               </div>
             </div>
@@ -2338,7 +2372,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           {adminSubTab === 'live_monitor' && (
             <div className="pt-2 animate-fade-in">
               <React.Suspense fallback={<div className="p-8 text-center text-xs font-bold text-slate-400 animate-pulse">Loading Live Monitor Chart Engine...</div>}>
-                <LiveStudentMonitor />
+                <LiveStudentMonitor initialIdentifier={quickSyncIdentifier} />
               </React.Suspense>
             </div>
           )}
@@ -2445,7 +2479,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.96 }}
                     transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute z-50 right-0 mt-3 w-80 sm:w-[360px] rounded-2xl bg-white/95 dark:bg-navy-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-navy-700/80 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_60px_-12px_rgba(0,0,0,0.6)] p-3 space-y-1 focus:outline-none overflow-hidden select-none"
+                    className="absolute z-50 left-0 sm:left-auto sm:right-0 mt-3 w-80 sm:w-[360px] rounded-2xl bg-white/95 dark:bg-navy-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-navy-700/80 shadow-[0_20px_60px_-12px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_60px_-12px_rgba(0,0,0,0.6)] p-3 space-y-1 focus:outline-none overflow-hidden select-none"
                   >
                     {/* SECTION 1: ACTIONS */}
                     <div className="pb-2 mb-2 border-b border-slate-100 dark:border-navy-800">
@@ -2707,15 +2741,23 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               return 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-extrabold';
             };
 
-            const DEPT_OPTIONS = [
-              { value: 'ALL', label: 'All Departments', code: 'ALL', color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-extrabold' },
-              ...departments.map((d) => ({
-                value: d.code,
-                label: d.name,
-                code: d.code,
-                color: getDeptColor(d.code)
-              }))
-            ];
+            const isStaffMentor = ['staff', 'faculty', 'staff mentor', 'faculty mentor'].includes((user?.role || '').toLowerCase());
+            const userDeptCode = (typeof user?.department === 'string' ? user.department : (user?.department as any)?.code) || (Array.isArray(user?.authorized_department_codes) && user.authorized_department_codes[0]) || 'CSE(CS)';
+
+            const DEPT_OPTIONS = isStaffMentor
+              ? [
+                  { value: 'ALL', label: 'My Allocated Mentees', code: 'MENTEES', color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-extrabold' },
+                  { value: userDeptCode, label: `${userDeptCode} (My Department)`, code: userDeptCode, color: getDeptColor(userDeptCode) }
+                ]
+              : [
+                  { value: 'ALL', label: 'All Departments', code: 'ALL', color: 'text-indigo-700 bg-indigo-50 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-extrabold' },
+                  ...departments.map((d) => ({
+                    value: d.code,
+                    label: d.name,
+                    code: d.code,
+                    color: getDeptColor(d.code)
+                  }))
+                ];
             const selectedDeptObj = DEPT_OPTIONS.find(o => o.value === selectedDeptFilter) || DEPT_OPTIONS[0];
             return (
               <div className="relative" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDeptOpen(false); }}>
@@ -3003,11 +3045,11 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
             <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
               {departments.map((dept, index) => {
                 const colors = [
-                  { bg: 'bg-indigo-50/50 dark:bg-indigo-950/20', border: 'border-indigo-100 dark:border-indigo-900/50', text: 'text-indigo-700 dark:text-indigo-400', stat: 'text-indigo-700 dark:text-indigo-300', label: 'text-indigo-500' },
-                  { bg: 'bg-cyan-50/50 dark:bg-cyan-950/20', border: 'border-cyan-100 dark:border-cyan-900/50', text: 'text-cyan-700 dark:text-cyan-400', stat: 'text-cyan-700 dark:text-cyan-300', label: 'text-cyan-500' },
-                  { bg: 'bg-blue-50/50 dark:bg-blue-950/20', border: 'border-blue-100 dark:border-blue-900/50', text: 'text-blue-700 dark:text-blue-400', stat: 'text-blue-700 dark:text-blue-300', label: 'text-blue-500' },
-                  { bg: 'bg-emerald-50/50 dark:bg-emerald-950/20', border: 'border-emerald-100 dark:border-emerald-900/50', text: 'text-emerald-700 dark:text-emerald-400', stat: 'text-emerald-700 dark:text-emerald-300', label: 'text-emerald-500' },
-                  { bg: 'bg-purple-50/50 dark:bg-purple-950/20', border: 'border-purple-100 dark:border-purple-900/50', text: 'text-purple-700 dark:text-purple-400', stat: 'text-purple-700 dark:text-purple-300', label: 'text-purple-500' }
+                  { bg: 'bg-indigo-50/50 dark:bg-indigo-950/20', border: 'border-indigo-100 dark:border-indigo-900/50', text: 'text-indigo-700 dark:text-indigo-400', stat: 'text-indigo-700 dark:text-indigo-300', label: 'text-indigo-500', bar: 'bg-indigo-500 dark:bg-indigo-400' },
+                  { bg: 'bg-cyan-50/50 dark:bg-cyan-950/20', border: 'border-cyan-100 dark:border-cyan-900/50', text: 'text-cyan-700 dark:text-cyan-400', stat: 'text-cyan-700 dark:text-cyan-300', label: 'text-cyan-500', bar: 'bg-cyan-500 dark:bg-cyan-400' },
+                  { bg: 'bg-blue-50/50 dark:bg-blue-950/20', border: 'border-blue-100 dark:border-blue-900/50', text: 'text-blue-700 dark:text-blue-400', stat: 'text-blue-700 dark:text-blue-300', label: 'text-blue-500', bar: 'bg-blue-500 dark:bg-blue-400' },
+                  { bg: 'bg-emerald-50/50 dark:bg-emerald-950/20', border: 'border-emerald-100 dark:border-emerald-900/50', text: 'text-emerald-700 dark:text-emerald-400', stat: 'text-emerald-700 dark:text-emerald-300', label: 'text-emerald-500', bar: 'bg-emerald-500 dark:bg-emerald-400' },
+                  { bg: 'bg-purple-50/50 dark:bg-purple-950/20', border: 'border-purple-100 dark:border-purple-900/50', text: 'text-purple-700 dark:text-purple-400', stat: 'text-purple-700 dark:text-purple-300', label: 'text-purple-500', bar: 'bg-purple-500 dark:bg-purple-400' }
                 ];
                 const color = colors[index % colors.length];
                 const deptNorm = normalizeDepartment(dept.code || dept.name);
@@ -3055,38 +3097,67 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                   return null;
                 }
 
+                const participationPct = total > 0 ? Math.min(100, Math.round((attended / total) * 100)) : 0;
+
                 return (
                   <div
                     key={dept.code}
-                    className={`p-4 rounded-2xl ${color.bg} border ${color.border} flex flex-col justify-between shadow-sm hover:shadow-md transition-all space-y-3 min-w-0`}
+                    className="relative group p-4 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-800 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between min-w-0 overflow-hidden"
                   >
-                    {/* Top Row: Icon + Code Badge (Left) & Participated Count (Right) */}
-                    <div className="flex items-start justify-between gap-2 border-b border-slate-200/50 dark:border-navy-800/50 pb-2">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <div className={`p-1 rounded-md ${color.bg} border ${color.border} shrink-0`}>
-                          <Building2 className={`w-3.5 h-3.5 ${color.text}`} />
+                    {/* Top gradient decorative line */}
+                    <div className={`absolute top-0 left-0 w-full h-1 ${color.bar}`} />
+                    
+                    <div className="relative z-10 space-y-4">
+                      {/* Top Row: Icon + Code Badge (Left) & Participated Count (Right) */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${color.bg} border ${color.border}`}>
+                            <Building2 className={`w-4 h-4 ${color.text}`} />
+                          </div>
+                          <div className="min-w-0">
+                            <span className={`text-[11px] font-black uppercase tracking-widest block truncate ${color.text}`}>
+                              {dept.code}
+                            </span>
+                          </div>
                         </div>
-                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider shrink-0 ${color.text} bg-white/80 dark:bg-navy-900/80 border ${color.border}`}>
-                          {dept.code}
+                        
+                        <div className="text-right shrink-0">
+                          <div className="flex flex-col items-end">
+                            <span className={`text-2xl font-black font-mono leading-none ${color.stat}`}>{attended}</span>
+                            <span className={`text-[9px] font-black uppercase tracking-wider ${color.label} mt-1`}>Participated</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Middle Row: Full Department Name */}
+                      <div className="min-w-0">
+                        <h4 className="text-[11px] font-bold text-slate-600 dark:text-slate-300 leading-snug line-clamp-2" title={dept.name}>
+                          {dept.name}
+                        </h4>
+                      </div>
+                    </div>
+
+                    {/* Bottom Row: Progress & Active Student Count */}
+                    <div className="relative z-10 pt-4 mt-4 border-t border-slate-100 dark:border-navy-800/80">
+                      <div className="flex justify-between items-end mb-2">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                          Active Students
                         </span>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-[10px] font-black text-emerald-500">{participationPct}%</span>
+                          <span className="text-xs font-black font-mono text-slate-800 dark:text-slate-200">{total}</span>
+                        </div>
                       </div>
-                      <div className="text-right shrink-0">
-                        <p className={`text-xl font-black font-mono leading-none ${color.stat}`}>{attended}</p>
-                        <p className={`text-[9px] font-black uppercase tracking-wider ${color.label} mt-0.5`}>Participated</p>
+                      
+                      {/* Participation Progress Bar */}
+                      <div className="w-full bg-slate-100 dark:bg-navy-900 h-1.5 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full ${color.bar} transition-all duration-700 ease-out relative`}
+                          style={{ width: `${participationPct}%` }}
+                        >
+                          <div className="absolute top-0 right-0 bottom-0 w-4 bg-white/20 animate-[shimmer_2s_infinite]" />
+                        </div>
                       </div>
-                    </div>
-
-                    {/* Middle Row: Full Department Name */}
-                    <div className="min-w-0 my-0.5">
-                      <h4 className={`text-[11px] font-black uppercase leading-snug tracking-tight ${color.text} line-clamp-2`} title={dept.name}>
-                        {dept.name}
-                      </h4>
-                    </div>
-
-                    {/* Bottom Row: Active Student Count */}
-                    <div className="pt-2 border-t border-slate-200/40 dark:border-navy-800/40 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 font-bold">
-                      <span>Active Students</span>
-                      <span className="font-mono font-black text-slate-800 dark:text-slate-200">{total}</span>
                     </div>
                   </div>
                 );
@@ -3447,7 +3518,12 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               { label: '2/4 Solved', count: stats.q2Solved, color: 'text-indigo-700 dark:text-indigo-300', bg: 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800' },
               { label: '1/4 Solved', count: stats.q1Solved, color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800' },
             ].map((item, idx) => (
-              <div key={idx} className={`px-4 py-2.5 rounded-2xl border text-center w-full sm:w-28 h-16 flex flex-col items-center justify-center shadow-sm transition-all hover:scale-105 ${item.bg}`}>
+              <div 
+                key={idx} 
+                onClick={handleOpenDetailedRoster}
+                title="Click to view full roster for this category"
+                className={`px-4 py-2.5 rounded-2xl border text-center w-full sm:w-28 h-16 flex flex-col items-center justify-center shadow-sm transition-all hover:scale-105 cursor-pointer ${item.bg}`}
+              >
                 <span className="text-[10px] font-extrabold uppercase tracking-wider block opacity-80 whitespace-nowrap">{item.label}</span>
                 <span className={`text-xl font-black font-mono leading-none mt-1 ${item.color}`}>{item.count}</span>
               </div>
@@ -3458,7 +3534,13 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
         {/* TOGGLE CTA BUTTON: QUICK VIEW ↔ DETAILED VIEW */}
         <div className="flex justify-center pt-2">
           <button
-            onClick={() => setShowDetailedView(!showDetailedView)}
+            onClick={() => {
+              if (!showDetailedView) {
+                handleOpenDetailedRoster();
+              } else {
+                setShowDetailedView(false);
+              }
+            }}
             className="flex items-center space-x-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-black shadow-lg shadow-indigo-500/25 transition-all cursor-pointer active:scale-95"
           >
             {showDetailedView ? (
@@ -3471,14 +3553,15 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <ChevronDown className="w-4 h-4" />
                 <span>View Full Breakdown & Student Roster ({matrixRows.length || totalRows || globalStudents.length || 0} Students)</span>
               </>
-            )}
+            )
+            }
           </button>
         </div>
       </div>
 
       {/* 4. DETAILED VIEW SECTION (LAZY-LOADED ON TOGGLE) */}
       {showDetailedView && (
-        <div className="space-y-6 pt-4 border-t border-slate-200 dark:border-slate-800 animate-fade-in">
+        <div ref={detailedViewRef} className="space-y-6 pt-4 border-t border-slate-200 dark:border-slate-800 animate-fade-in">
           {/* Detailed View Sub-Tab Switcher */}
           <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
             <div className="flex space-x-2 flex-wrap gap-y-1">
@@ -3760,6 +3843,16 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                             onDelete={setDeletingStudent}
                             onSelect={setViewingProfileStudent}
                             onCheckbox={handleRowCheckbox}
+                            onQuickSync={(user?.role?.toLowerCase().includes('admin') || user?.role?.toLowerCase() === 'system admin') ? (regNo) => {
+                              setQuickSyncIdentifier(regNo);
+                              setShowAdminMonitor(true);
+                              setAdminSubTab('live_monitor');
+                              requestAnimationFrame(() => {
+                                requestAnimationFrame(() => {
+                                  adminMonitorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                });
+                              });
+                            } : undefined}
                           />
                         );
                       })

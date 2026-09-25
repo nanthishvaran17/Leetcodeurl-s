@@ -22,6 +22,16 @@ export const RecipientSelector: React.FC<Props> = ({ onClose, onSelect }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  useEffect(() => {
     const fetchRecipients = async () => {
       try {
         const url = '/messaging/available-recipients';

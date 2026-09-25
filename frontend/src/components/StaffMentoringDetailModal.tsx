@@ -174,126 +174,160 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
     }
   };
 
-  // Robust Stat Value Resolution across nested stats & root student object
+  // Robust Stat Value Resolution across nested stats & root student object (No static placeholders)
   const totalSolved = currentStudent?.stats?.total_solved ?? currentStudent?.total_solved ?? student?.stats?.total_solved ?? student?.total_solved ?? 0;
   const easySolved = currentStudent?.stats?.easy_solved ?? currentStudent?.easy_solved ?? student?.stats?.easy_solved ?? student?.easy_solved ?? 0;
   const mediumSolved = currentStudent?.stats?.medium_solved ?? currentStudent?.medium_solved ?? student?.stats?.medium_solved ?? student?.medium_solved ?? 0;
   const hardSolved = currentStudent?.stats?.hard_solved ?? currentStudent?.hard_solved ?? student?.stats?.hard_solved ?? student?.hard_solved ?? 0;
-  const rating = currentStudent?.stats?.contest_rating ?? currentStudent?.contest_rating ?? student?.stats?.contest_rating ?? student?.contest_rating ?? 0;
-  const streak = currentStudent?.stats?.max_streak ?? currentStudent?.stats?.current_streak ?? currentStudent?.max_streak ?? student?.max_streak ?? 0;
-  const leetcodeHandle = currentStudent?.stats?.leetcode_username || currentStudent?.username || student?.username;
+  
+  const rawRating = currentStudent?.stats?.contest_rating ?? currentStudent?.contest_rating ?? student?.stats?.contest_rating ?? student?.contest_rating;
+  const numericRating = rawRating ? Number(rawRating) : 0;
+  // If rating is default 1500 placeholder or 0 or unrated, display null (Unrated)
+  const rating = (numericRating > 0 && numericRating !== 1500 && numericRating !== 1500.7 && numericRating !== 1500.0) ? numericRating : null;
 
-  const statusLabel = currentStudent?.status_label || student?.status_label || (totalSolved >= 100 ? 'Excellent' : totalSolved >= 30 ? 'Improving' : 'Needs Improvement');
+  const streak = currentStudent?.stats?.current_streak ?? currentStudent?.stats?.max_streak ?? currentStudent?.current_streak ?? currentStudent?.max_streak ?? student?.stats?.current_streak ?? student?.stats?.max_streak ?? student?.current_streak ?? student?.max_streak ?? 0;
+  const leetcodeHandle = currentStudent?.stats?.leetcode_username || currentStudent?.username || student?.username || student?.leetcode_username;
+
+  const statusLabel = currentStudent?.status_label || student?.status_label || (totalSolved >= 100 ? 'Excellent' : totalSolved >= 30 ? 'Improving' : 'At Risk');
   const statusColor = currentStudent?.badge_color || student?.badge_color || (statusLabel === 'Excellent' ? 'emerald' : statusLabel === 'At Risk' ? 'rose' : 'amber');
 
   const displayName = currentStudent?.name || student?.name || 'Student';
   const displayRegNo = currentStudent?.reg_no || student?.reg_no;
-  const displayDept = currentStudent?.department?.code || currentStudent?.department || student?.department?.code || student?.department || 'DEPT';
-  const displayYear = currentStudent?.year_level || student?.year_level || 'III';
+  const displayDept = currentStudent?.department?.code || currentStudent?.department_name || currentStudent?.department || student?.department?.code || student?.department_name || student?.department || 'DEPT';
+  const displayYearRaw = currentStudent?.year_level || student?.year_level || 'II';
+  const cleanDisplayYear = String(displayYearRaw || 'II').replace(/year/gi, '').trim() || 'II';
 
   useEffect(() => {
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showEditOverlay) {
+          setShowEditOverlay(false);
+        } else {
+          onClose();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
       document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [onClose, showEditOverlay]);
 
   return typeof document !== 'undefined' ? createPortal(
-    <div className="fixed inset-0 z-[100000] flex items-start justify-center p-4 pt-6 sm:pt-7 bg-black/85 backdrop-blur-sm overflow-y-auto animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="w-full h-full sm:h-auto max-w-3xl max-h-[100dvh] sm:max-h-[92vh] flex flex-col sm:rounded-3xl bg-white dark:bg-navy-950 border-0 sm:border border-slate-200 dark:border-navy-700 shadow-lg overflow-hidden text-slate-900 dark:text-slate-100" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[100000] flex items-center sm:items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="w-full h-[95dvh] sm:h-auto max-w-3xl max-h-[96dvh] sm:max-h-[92vh] flex flex-col rounded-3xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-2xl overflow-hidden text-slate-900 dark:text-slate-100" onClick={e => e.stopPropagation()}>
 
         {/* Modal Header */}
-        <div className="p-4 sm:p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex items-center justify-between border-b border-indigo-500/20 safe-area-pt">
-          <div className="flex items-center space-x-4">
-            <div className="w-14 h-14 rounded-2xl bg-indigo-600/30 border border-indigo-400/40 flex items-center justify-center font-black text-2xl text-indigo-300">
-              {displayName ? displayName.charAt(0) : 'S'}
-            </div>
-            <div>
-              <div className="flex items-center space-x-3">
-                <h2 className="text-xl font-black">{displayName}</h2>
-                <span className={`px-3 py-0.5 rounded-full text-xs font-black ${
-                  statusLabel === 'Excellent'
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                    : (statusLabel === 'At Risk'
-                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                        : 'bg-amber-500/20 text-amber-300 border border-amber-500/30')
-                }`}>
-                  {statusLabel}
-                </span>
+        <div className="p-4 sm:p-6 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white border-b border-indigo-500/20 safe-area-pt space-y-3 sm:space-y-0">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-indigo-600/30 border border-indigo-400/40 flex items-center justify-center font-black text-xl sm:text-2xl text-indigo-300 shrink-0">
+                {displayName ? displayName.charAt(0) : 'S'}
               </div>
-              <p className="text-xs text-slate-300 font-mono mt-0.5">
-                Reg: <span className="font-bold text-white">{displayRegNo}</span> • {displayDept} ({displayYear} Year)
-              </p>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                  <h2 className="text-lg sm:text-xl font-black truncate">{displayName}</h2>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black shrink-0 ${
+                    statusLabel === 'Excellent'
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                      : (statusLabel === 'At Risk'
+                          ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                          : 'bg-amber-500/20 text-amber-300 border border-amber-500/30')
+                  }`}>
+                    {statusLabel}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 font-mono mt-0.5 truncate">
+                  Reg: <span className="font-bold text-white">{displayRegNo}</span> • {displayDept} ({cleanDisplayYear} Year)
+                </p>
+              </div>
             </div>
+
+            {/* Close Button - Always visible at top right */}
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-2 sm:p-2.5 rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 text-slate-300 hover:text-white transition-all shrink-0 cursor-pointer shadow-sm"
+              title="Close window"
+              aria-label="Close window"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          <div className="flex items-center space-x-2">
+          {/* Curved Pill Action Buttons Row */}
+          <div className="flex items-center space-x-2 pt-1 sm:pt-0 sm:mt-3 flex-wrap gap-2 justify-start sm:justify-end">
             <button
               type="button"
               onClick={handleRefreshLive}
               disabled={refreshingLive}
-              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center space-x-1 transition-all cursor-pointer shadow disabled:opacity-50"
+              className="px-4 py-2 rounded-full bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 active:scale-95 text-white font-black text-xs flex items-center space-x-1.5 transition-all cursor-pointer shadow-md disabled:opacity-50"
             >
-              <Activity className={`w-3.5 h-3.5 ${refreshingLive ? 'animate-spin' : ''}`} />
+              <Activity className={`w-3.5 h-3.5 ${refreshingLive ? 'animate-spin text-amber-300' : ''}`} />
               <span>{refreshingLive ? 'Syncing...' : 'Refresh Live Data'}</span>
             </button>
 
             <button
               type="button"
               onClick={() => setShowEditOverlay(true)}
-              className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs flex items-center space-x-1 transition-all cursor-pointer shadow"
+              className="px-4 py-2 rounded-full bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-black text-xs flex items-center space-x-1.5 transition-all cursor-pointer shadow-md"
             >
               <Edit3 className="w-3.5 h-3.5" />
               <span>Edit Details</span>
             </button>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
           </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="flex items-center border-b border-slate-200 dark:border-navy-800 bg-slate-50 dark:bg-navy-950 px-6 space-x-4 text-xs font-bold">
+        {/* Navigation Tabs - Grid 3 cols (100% width fit on mobile, ZERO horizontal scroll) */}
+        <div className="grid grid-cols-3 border-b border-slate-200 dark:border-navy-800 bg-slate-50 dark:bg-navy-950 px-2 sm:px-6 text-xs font-bold w-full select-none">
           <button
+            type="button"
             onClick={() => setActiveTab('overview')}
-            className={`py-3 border-b-2 flex items-center space-x-2 transition-all ${
+            className={`py-3 border-b-2 flex items-center justify-center space-x-1 sm:space-x-2 transition-all cursor-pointer text-center ${
               activeTab === 'overview'
                 ? 'border-brand-500 text-brand-600 dark:text-brand-400 font-black'
                 : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <Activity className="w-4 h-4" />
-            <span>Coding Performance</span>
+            <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+            <span className="text-[11px] sm:text-xs truncate">
+              <span className="sm:hidden">Coding</span>
+              <span className="hidden sm:inline">Coding Performance</span>
+            </span>
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab('notes')}
-            className={`py-3 border-b-2 flex items-center space-x-2 transition-all ${
+            className={`py-3 border-b-2 flex items-center justify-center space-x-1 sm:space-x-2 transition-all cursor-pointer text-center ${
               activeTab === 'notes'
                 ? 'border-brand-500 text-brand-600 dark:text-brand-400 font-black'
                 : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <FileText className="w-4 h-4" />
-            <span>Private Notes ({notes.length})</span>
+            <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+            <span className="text-[11px] sm:text-xs truncate">
+              <span className="sm:hidden">Notes ({notes.length})</span>
+              <span className="hidden sm:inline">Private Notes ({notes.length})</span>
+            </span>
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab('followups')}
-            className={`py-3 border-b-2 flex items-center space-x-2 transition-all ${
+            className={`py-3 border-b-2 flex items-center justify-center space-x-1 sm:space-x-2 transition-all cursor-pointer text-center ${
               activeTab === 'followups'
                 ? 'border-brand-500 text-brand-600 dark:text-brand-400 font-black'
                 : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <CheckSquare className="w-4 h-4" />
-            <span>Follow-Ups ({followUps.length})</span>
+            <CheckSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+            <span className="text-[11px] sm:text-xs truncate">
+              Follow-Ups ({followUps.length})
+            </span>
           </button>
         </div>
 
@@ -582,8 +616,9 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
         {/* Modal Footer */}
         <div className="p-4 border-t border-slate-200 dark:border-navy-800 bg-slate-50 dark:bg-navy-950 flex justify-end safe-area-pb shrink-0">
           <button
+            type="button"
             onClick={onClose}
-            className="px-5 py-2.5 rounded-xl bg-slate-200 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all"
+            className="px-6 py-2.5 rounded-full bg-slate-200 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 active:scale-95 text-slate-800 dark:text-slate-200 text-xs font-black transition-all cursor-pointer shadow-sm"
           >
             Close Window
           </button>

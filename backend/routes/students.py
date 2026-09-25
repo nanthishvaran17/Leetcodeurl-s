@@ -40,7 +40,8 @@ async def get_leaderboard_fast(
     """
     current_user = get_current_user_optional(request, request_db) if request else None
     user_scope = f"{current_user.id}:{current_user.role}" if current_user else "public"
-    cache_key = f"leaderboard_fast:{user_scope}:{dept_id}:{year_level}:{limit}"
+    cache_key = f"leaderboard_fast_v4:{user_scope}:{dept_id}:{year_level}:{limit}"
+
     def _compute():
         from backend.database import SessionLocal
         with SessionLocal() as db:
@@ -599,7 +600,7 @@ async def get_students(
                     fetched_at=datetime.datetime.now(datetime.timezone.utc).isoformat()
                 )
             elif pub_res:
-                tot_solved = pub_res.total_contest_solved or (pub_res.q1 + pub_res.q2 + pub_res.q3 + pub_res.q4)
+                tot_solved = pub_res.total_contest_solved or ((pub_res.q1 or 0) + (pub_res.q2 or 0) + (pub_res.q3 or 0) + (pub_res.q4 or 0))
                 is_att = pub_res.participation_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED")
                 is_not_att = pub_res.participation_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED")
                 score_disp = f"{tot_solved} / 4" if is_att else ("Not Attended" if is_not_att else "Data Unavailable")

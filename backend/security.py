@@ -403,7 +403,10 @@ def log_security_access_event(
 def extract_current_user_optional(request: Request, db: Session) -> Optional[User]:
     """Extracts authenticated user from HttpOnly Cookie or Bearer token if present."""
     from backend.routes.auth import get_current_user_from_request
-    return get_current_user_from_request(request, db)
+    user = get_current_user_from_request(request, db)
+    if not user:
+        logger.warning(f"DEBUG AUTH FAIL: URL={request.url.path} Cookie={request.cookies.get(getattr(settings, 'SESSION_COOKIE_NAME', 'admin_session_token'))}")
+    return user
 
 def get_current_user_from_token(token: str, db: Session) -> Optional[User]:
     """Decodes raw JWT or Bearer token string and resolves the authenticated User."""

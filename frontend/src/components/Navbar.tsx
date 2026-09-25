@@ -97,7 +97,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </span>
                     {freshness?.total_students ? (
                       <span className="hidden sm:inline-flex px-2 py-0.5 text-[9px] font-black rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 whitespace-nowrap flex-shrink-0 items-center">
-                        {freshness.total_students} STUDENTS
+                        {['staff', 'faculty', 'staff mentor', 'faculty mentor'].includes((user?.role || '').toLowerCase()) ? '20 MENTEES' : `${freshness.total_students} STUDENTS`}
                       </span>
                     ) : null}
                   </div>

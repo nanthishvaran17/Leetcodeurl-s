@@ -7,13 +7,47 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak, HRFlowable
+    SimpleDocTemplate, BaseDocTemplate, PageTemplate, Frame, NextPageTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak, HRFlowable
 )
 from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
-
-
 import re
+
+def _create_student_doc(buffer: io.BytesIO, doc_title: str, subject: str) -> BaseDocTemplate:
+    p_width, p_height = A4
+    left_margin = 36.0
+    right_margin = 36.0
+    content_width = p_width - left_margin - right_margin
+    bottom_margin = 34.0
+    
+    top_margin_first = 22.0
+    top_margin_later = 46.0
+
+    frame_first = Frame(
+        left_margin, bottom_margin,
+        content_width, p_height - top_margin_first - bottom_margin,
+        id='first_frame',
+        leftPadding=0, rightPadding=0, topPadding=0, bottomPadding=0
+    )
+    frame_later = Frame(
+        left_margin, bottom_margin,
+        content_width, p_height - top_margin_later - bottom_margin,
+        id='later_frame',
+        leftPadding=0, rightPadding=0, topPadding=0, bottomPadding=0
+    )
+
+    template_first = PageTemplate(id='FirstPage', frames=frame_first)
+    template_later = PageTemplate(id='LaterPages', frames=frame_later)
+
+    return BaseDocTemplate(
+        buffer,
+        pagesize=A4,
+        pageTemplates=[template_first, template_later],
+        title=doc_title,
+        author="Nandha Engineering College (Autonomous)",
+        subject=subject,
+        creator="NEC LeetCode Platform"
+    )
 
 def derive_student_batch_and_year(reg_no: str = "", batch: str = None, year_level: str = None) -> tuple:  # type: ignore
     """
@@ -164,43 +198,44 @@ def _get_common_styles():
         'DocTitle',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=16,
-        leading=20,
+        fontSize=15,
+        leading=18,
         textColor=colors.HexColor('#1B365D'),
-        alignment=1
+        alignment=1,
+        spaceAfter=1
     )
     
     subtitle_style = ParagraphStyle(
         'DocSubTitle',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=11,
-        leading=14,
+        fontSize=10.5,
+        leading=13,
         textColor=colors.HexColor('#2E5B88'),
         alignment=1,
-        spaceAfter=3
+        spaceAfter=1
     )
 
     tag_style = ParagraphStyle(
         'DocTag',
         parent=styles['Normal'],
         fontName='Helvetica-Oblique',
-        fontSize=9,
-        leading=12,
+        fontSize=8.5,
+        leading=11,
         textColor=colors.HexColor('#0369A1'),
         alignment=1,
-        spaceAfter=6
+        spaceAfter=5
     )
 
     section_hdr_style = ParagraphStyle(
         'SectionHdr',
         parent=styles['Normal'],
         fontName='Helvetica-Bold',
-        fontSize=10.5,
+        fontSize=10,
         leading=13,
         textColor=colors.HexColor('#1B365D'),
-        spaceBefore=10,
-        spaceAfter=6,
+        spaceBefore=8,
+        spaceAfter=4,
         keepWithNext=True
     )
 
@@ -310,16 +345,17 @@ def _add_institutional_header(story: list, title_text: str, subtitle_text: str, 
 
     if os.path.exists(logo_path):
         try:
-            img_obj = Image(logo_path, width=1.3*inch, height=0.6*inch)
+            img_obj = Image(logo_path, width=1.3*inch, height=0.55*inch)
             img_obj.hAlign = 'CENTER'
             story.append(img_obj)
-            story.append(Spacer(1, 4))
+            story.append(Spacer(1, 2))
         except Exception:
             pass
 
     story.append(Paragraph(title_text, styles['title']))
     story.append(Spacer(1, 2))
     story.append(Paragraph(subtitle_text, styles['subtitle']))
+    story.append(Spacer(1, 1))
     story.append(Paragraph(tag_text, styles['tag']))
 
 
@@ -385,20 +421,13 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
     doc_title = f"Nandha Engineering College - Student Analytics Report - {st_name} ({st_reg})" if st_reg else f"Nandha Engineering College - Student Analytics Report - {st_name}"
 
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(
+    doc = _create_student_doc(
         buffer,
-        pagesize=A4,
-        leftMargin=36,
-        rightMargin=36,
-        topMargin=54,
-        bottomMargin=40,
-        title=doc_title,
-        author="Nandha Engineering College (Autonomous)",
-        subject="Individual Student Detailed Analytics Report",
-        creator="NEC LeetCode Platform"
+        doc_title=doc_title,
+        subject="Individual Student Detailed Analytics Report"
     )
     styles = _get_common_styles()
-    story = []
+    story = [NextPageTemplate('LaterPages')]
 
     # ----------------------------------------------------
     # PAGE 1: HEADER, STUDENT IDENTITY & EXECUTIVE KPI DASHBOARD
@@ -412,7 +441,7 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
     )
 
     story.append(_build_student_identity_table(s, styles))
-    story.append(Spacer(1, 10))
+    story.append(Spacer(1, 6))
 
     tot_solved = int(s.get("total_solved") or 0)
     easy_cnt = int(s.get("easy") or 0)
@@ -451,11 +480,11 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
         ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#F8FAFC')),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CBD5E1')),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
     ]))
     story.append(t_kpi)
-    story.append(Spacer(1, 10))
+    story.append(Spacer(1, 6))
 
     batch_str, year_str = derive_student_batch_and_year(
         s.get("reg_no") or s.get("register_number", ""),
@@ -474,12 +503,13 @@ def generate_student_detailed_pdf(dataset: dict) -> bytes:
     t_summary.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (0, 0), colors.HexColor('#F0F9FF')),
         ('BOX', (0, 0), (0, 0), 1, colors.HexColor('#1B365D')),
-        ('TOPPADDING', (0, 0), (0, 0), 8),
-        ('BOTTOMPADDING', (0, 0), (0, 0), 8),
-        ('LEFTPADDING', (0, 0), (0, 0), 10),
-        ('RIGHTPADDING', (0, 0), (0, 0), 10),
+        ('TOPPADDING', (0, 0), (0, 0), 6),
+        ('BOTTOMPADDING', (0, 0), (0, 0), 6),
+        ('LEFTPADDING', (0, 0), (0, 0), 8),
+        ('RIGHTPADDING', (0, 0), (0, 0), 8),
     ]))
     story.append(t_summary)
+    story.append(Spacer(1, 6))
     # story.append(PageBreak())  # Removed to fix unwanted empty space
 
     # ----------------------------------------------------
@@ -774,20 +804,13 @@ def generate_student_summary_pdf(dataset: dict) -> bytes:
     doc_title = f"Nandha Engineering College - Performance Summary - {st_name} ({st_reg})" if st_reg else f"Nandha Engineering College - Performance Summary - {st_name}"
 
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(
+    doc = _create_student_doc(
         buffer,
-        pagesize=A4,
-        leftMargin=36,
-        rightMargin=36,
-        topMargin=54,
-        bottomMargin=40,
-        title=doc_title,
-        author="Nandha Engineering College (Autonomous)",
-        subject="Individual Student Performance Summary",
-        creator="NEC LeetCode Platform"
+        doc_title=doc_title,
+        subject="Individual Student Performance Summary"
     )
     styles = _get_common_styles()
-    story = []
+    story = [NextPageTemplate('LaterPages')]
 
     _add_institutional_header(
         story,
@@ -911,20 +934,13 @@ def generate_student_contest_matrix_pdf(dataset: dict) -> bytes:
     doc_title = f"Nandha Engineering College - Contest Matrix - {st_name} ({st_reg})" if st_reg else f"Nandha Engineering College - Contest Matrix - {st_name}"
 
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(
+    doc = _create_student_doc(
         buffer,
-        pagesize=A4,
-        leftMargin=36,
-        rightMargin=36,
-        topMargin=54,
-        bottomMargin=40,
-        title=doc_title,
-        author="Nandha Engineering College (Autonomous)",
-        subject="Individual Student Contest Intelligence Matrix",
-        creator="NEC LeetCode Platform"
+        doc_title=doc_title,
+        subject="Individual Student Contest Intelligence Matrix"
     )
     styles = _get_common_styles()
-    story = []
+    story = [NextPageTemplate('LaterPages')]
 
     _add_institutional_header(
         story,

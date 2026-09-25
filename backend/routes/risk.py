@@ -1,5 +1,5 @@
 from sqlalchemy.orm import joinedload
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import Optional
@@ -10,6 +10,8 @@ from backend.database import get_db
 from backend.models import Student, MentorNote, AuditLog
 from backend.insights import calculate_student_risk_profile
 from backend.routes.auth import get_current_user
+from backend.security import get_current_user_optional
+from backend.services.authorization_service import apply_role_based_student_filter
 
 router = APIRouter(prefix="/api/risk", tags=["Risk & Intervention Intelligence"])
 
@@ -18,11 +20,18 @@ class MentorNoteCreate(BaseModel):
     escalation_level: str = "NORMAL" # NORMAL, WARNING, CRITICAL
 
 @router.get("/summary")
-def get_risk_summary(db: Session = Depends(get_db)):
+def get_risk_summary(
+    request: Request,
+    db: Session = Depends(get_db)
+):
     """
-    Returns college-wide risk breakdown counts across all active students.
+    Returns risk breakdown counts for the current user's authorized student scope.
     """
-    students = db.query(Student).filter(Student.is_active == True).all()
+    current_user = get_current_user_optional(request, db)
+    query = db.query(Student).filter(Student.is_active == True)
+    if current_user:
+        query = apply_role_based_student_filter(query, current_user, db)
+    students = query.all()
 
     counts = {
         "EXCELLENT": 0,
@@ -43,6 +52,7 @@ def get_risk_summary(db: Session = Depends(get_db)):
 
 @router.get("/students")
 def get_at_risk_students(
+    request: Request,
     risk_level: Optional[str] = Query(None, pattern="^(EXCELLENT|CONSISTENT|NEEDS_ATTENTION|AT_RISK|CRITICAL)$"),
     dept_id: Optional[int] = None,
     year_level: Optional[str] = None,
@@ -50,9 +60,13 @@ def get_at_risk_students(
     db: Session = Depends(get_db)
 ):
     """
-    Returns list of students filtered by risk level with recommended staff intervention actions.
+    Returns list of students filtered by risk level within the caller's authorized scope.
     """
+    current_user = get_current_user_optional(request, db)
     query = db.query(Student).options(joinedload(Student.department), joinedload(Student.stats)).filter(Student.is_active == True)
+
+    if current_user:
+        query = apply_role_based_student_filter(query, current_user, db)
 
     if dept_id:
         query = query.filter(Student.department_id == dept_id)
@@ -60,6 +74,7 @@ def get_at_risk_students(
         query = query.filter(func.upper(Student.year_level) == year_level.strip().upper())
 
     students = query.limit(limit).all()
+
     results = []
 
     # Optimize: Pre-fetch mentor notes to avoid N+1

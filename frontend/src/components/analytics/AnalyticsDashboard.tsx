@@ -70,7 +70,7 @@ export const AnalyticsDashboard: React.FC = () => {
                   <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
                 </div>
               )}
-              <DifficultyDistributionChart data={data?.difficulty_distribution || {}} />
+              <DifficultyDistributionChart data={data?.difficulty_distribution || []} />
             </div>
           </div>
 

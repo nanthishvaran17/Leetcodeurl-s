@@ -1237,7 +1237,7 @@ export const HODCommandCenter: React.FC = () => {
               </span>
             </div>
             <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white mt-1 uppercase">
-              {['faculty', 'staff'].includes(user?.role?.toLowerCase() || '') ? (
+              {['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase()) ? (
                 <>
                   MY FACULTY <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-400 via-teal-300 to-indigo-300">ACTION CENTER</span>
                 </>
@@ -2323,8 +2323,8 @@ export const HODCommandCenter: React.FC = () => {
           </button>
         </div>
 
-        <div className="overflow-x-auto table-responsive-container">
-          <table className="w-full text-left text-xs border-collapse mobile-card-table">
+        <div className="w-full">
+          <table className="w-full text-left text-xs border-collapse block md:table">
             <thead className="hidden md:table-header-group">
               <tr className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 bg-slate-100/90 dark:bg-navy-900 border-b border-slate-300 dark:border-navy-700">
                 <th className="py-2.5 px-3">Faculty Mentor</th>
@@ -2336,7 +2336,7 @@ export const HODCommandCenter: React.FC = () => {
                 <th className="py-2.5 px-3 text-center">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-navy-800 font-mono">
+            <tbody className="block md:table-row-group divide-y-0 md:divide-y divide-slate-100 dark:divide-navy-800 font-mono">
               {staffList.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-slate-500 font-bold dark:text-slate-400">No staff members found for the selected scope.</td>
@@ -2355,10 +2355,10 @@ export const HODCommandCenter: React.FC = () => {
                     <tr
                       key={s.id}
                       onClick={() => setSelectedStaffDetail(s)}
-                      className={`hover:bg-brand-50/70 dark:hover:bg-navy-800 cursor-pointer transition-colors ${isSelected ? 'bg-brand-50/90 dark:bg-navy-800 font-bold' : ''}`}
+                      className={`block md:table-row hover:bg-brand-50/70 dark:hover:bg-navy-800 cursor-pointer transition-colors bg-white dark:bg-navy-950 mb-4 md:mb-0 p-4 md:p-0 rounded-xl shadow-sm md:shadow-none border border-slate-200 dark:border-none ${isSelected ? 'md:bg-brand-50/90 dark:md:bg-navy-800 font-bold ring-2 md:ring-0 ring-brand-500' : ''}`}
                     >
                       {/* Faculty Mentor Info */}
-                      <td className="py-3 px-3 font-bold text-slate-900 dark:text-white font-sans">
+                      <td className="flex items-center gap-3 pb-3 md:pb-0 md:py-3 md:px-3 font-bold text-slate-900 dark:text-white font-sans border-b border-slate-100 dark:border-navy-800 md:border-none md:table-cell">
                         <div className="flex items-center gap-2.5">
                           <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 font-black flex items-center justify-center text-xs border border-brand-300 dark:border-brand-800 shadow-sm shrink-0">
                             {s.username ? s.username.charAt(0).toUpperCase() : 'S'}
@@ -2371,20 +2371,28 @@ export const HODCommandCenter: React.FC = () => {
                       </td>
 
                       {/* Department Badge */}
-                      <td className="py-3 px-3">
+                      <td className="flex items-center justify-between py-2.5 md:py-3 md:px-3 border-b border-slate-50 dark:border-navy-800/50 md:border-none md:table-cell">
+                        <span className="md:hidden text-[10px] font-bold text-slate-500 uppercase tracking-wider">Dept</span>
+                        <div className="text-right md:text-left">
                         <span className={`px-2.5 py-0.5 rounded font-mono text-[10px] font-extrabold inline-block border shadow-xs ${deptBadge}`}>
                           {deptCode}
                         </span>
+                        </div>
                       </td>
 
                       {/* Assigned Mentees */}
-                      <td className="py-3 px-3 text-right font-mono">
+                      <td className="flex items-center justify-between py-2.5 md:py-3 md:px-3 text-right font-mono border-b border-slate-50 dark:border-navy-800/50 md:border-none md:table-cell">
+                        <span className="md:hidden text-[10px] font-bold text-slate-500 uppercase tracking-wider">Assigned Mentees</span>
+                        <div>
                         <span className="font-black text-slate-900 dark:text-white text-xs">{assigned}</span>
                         <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold"> / {maxAllowed}</span>
+                        </div>
                       </td>
 
                       {/* Active Solvers */}
-                      <td className="py-3 px-3 text-right font-mono">
+                      <td className="flex items-center justify-between py-2.5 md:py-3 md:px-3 text-right font-mono border-b border-slate-50 dark:border-navy-800/50 md:border-none md:table-cell">
+                        <span className="md:hidden text-[10px] font-bold text-slate-500 uppercase tracking-wider">Active Solvers</span>
+                        <div>
                         {active > 0 ? (
                           <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-extrabold text-[11px] inline-flex items-center gap-1 border border-emerald-300 dark:border-emerald-800">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -2396,11 +2404,13 @@ export const HODCommandCenter: React.FC = () => {
                             0 active
                           </span>
                         )}
+                        </div>
                       </td>
 
                       {/* Completion Rate */}
-                      <td className="py-3 px-3 text-right font-mono">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="flex items-center justify-between py-2.5 md:py-3 md:px-3 text-right font-mono border-b border-slate-50 dark:border-navy-800/50 md:border-none md:table-cell">
+                        <span className="md:hidden text-[10px] font-bold text-slate-500 uppercase tracking-wider">Completion</span>
+                        <div className="flex items-center justify-end gap-2 w-1/2 md:w-auto">
                           <div className="w-20 h-2 rounded-full bg-slate-100 dark:bg-navy-800 overflow-hidden border border-slate-200 dark:border-navy-700 shadow-inner">
                             <div 
                               className={`h-full rounded-full transition-all duration-300 ${completionRate >= 80 ? 'bg-emerald-500' : completionRate >= 50 ? 'bg-amber-500' : completionRate > 0 ? 'bg-amber-400' : 'bg-slate-300'}`} 
@@ -2412,7 +2422,9 @@ export const HODCommandCenter: React.FC = () => {
                       </td>
 
                       {/* Workload Status */}
-                      <td className="py-3 px-3 text-center">
+                      <td className="flex items-center justify-between py-2.5 md:py-3 md:px-3 text-center md:table-cell border-b border-slate-50 dark:border-navy-800/50 md:border-none">
+                        <span className="md:hidden text-[10px] font-bold text-slate-500 uppercase tracking-wider">Workload</span>
+                        <div>
                         <span className={`px-2.5 py-1 rounded-md text-[10px] font-black border uppercase tracking-tight ${
                           assigned >= 30 
                             ? 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950 dark:text-purple-300' 
@@ -2424,11 +2436,13 @@ export const HODCommandCenter: React.FC = () => {
                         }`}>
                           {assigned >= 30 ? 'MAX CAPACITY (30)' : assigned >= 20 ? 'TARGET REACHED (20+)' : assigned > 0 ? 'WITHIN CAPACITY' : 'UNALLOCATED (0)'}
                         </span>
+                        </div>
                       </td>
 
                       {/* Action Buttons */}
-                      <td className="py-3 px-3 text-center" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center justify-center gap-1.5">
+                      <td className="flex items-center justify-between py-2.5 pt-3 md:py-3 md:px-3 text-center md:table-cell" onClick={e => e.stopPropagation()}>
+                        <span className="md:hidden text-[10px] font-bold text-slate-500 uppercase tracking-wider">Actions</span>
+                        <div className="flex items-center justify-end md:justify-center gap-1.5">
                           <button
                             onClick={(e) => { e.stopPropagation(); setSelectedStaffDetail(s); }}
                             className={`px-3 py-1 rounded-lg text-[10px] font-extrabold transition cursor-pointer shadow-xs ${

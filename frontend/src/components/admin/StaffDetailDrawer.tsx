@@ -62,26 +62,27 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
   const targetCompletedCount = mentees.filter(m => (m.total_solved || 0) >= 10).length;
 
   return (
-    <div className="fixed inset-0 z-[100050] flex justify-end bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-xl h-full bg-white dark:bg-navy-950 border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-y-auto flex flex-col rounded-l-3xl">
+    <div className="fixed inset-0 z-[100050] flex justify-end pt-12 md:pt-0 bg-slate-950/85 dark:bg-black/85 backdrop-blur-md animate-fade-in" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="w-full max-w-xl h-full bg-white dark:bg-navy-950 border-l border-slate-200 dark:border-navy-700 shadow-2xl p-0 overflow-hidden flex flex-col rounded-t-3xl md:rounded-tr-none md:rounded-bl-3xl">
         {/* Header Profile Section */}
-        <div className="bg-gradient-to-r from-brand-900 via-navy-900 to-slate-900 p-6 sm:p-7 text-white border-b border-brand-800/50 relative overflow-hidden rounded-tl-3xl">
+        <div className="bg-gradient-to-r from-brand-900 via-navy-900 to-slate-900 p-6 sm:p-7 text-white border-b border-brand-800/50 relative overflow-hidden rounded-t-3xl md:rounded-tr-none shrink-0">
           <div className="absolute right-0 top-0 w-64 h-64 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
           
-          <div className="flex justify-between items-start mb-4 relative z-10">
-            <div className="flex items-center gap-4">
+          <div className="flex justify-between items-start mb-4 relative z-10 gap-3">
+            <div className="flex items-center gap-4 min-w-0 flex-1">
               <div className="w-16 h-16 rounded-3xl bg-white/10 backdrop-blur-md text-brand-300 font-extrabold flex items-center justify-center text-2xl shadow-lg border border-white/20 shrink-0">
                 {staff.username ? staff.username.charAt(0).toUpperCase() : 'S'}
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <h3 className="font-display text-xl font-bold text-white tracking-tight flex items-center gap-2">
-                  <span>{staff.username}</span>
-                  <span className="px-3 py-1 rounded-full bg-brand-500/30 text-brand-200 text-[10px] font-extrabold border border-brand-400/30 uppercase">
+                  <span className="truncate" title={staff.username}>{staff.username}</span>
+                  <span className="shrink-0 px-3 py-1 rounded-full bg-brand-500/30 text-brand-200 text-[10px] font-extrabold border border-brand-400/30 uppercase hidden sm:inline-block">
                     {staff.department_code || 'FACULTY'}
                   </span>
                 </h3>
-                <p className="text-xs text-slate-300 font-medium flex items-center gap-1 mt-1">
-                  <Mail size={13} className="text-brand-400" /> {staff.email}
+                <p className="text-xs text-slate-300 font-medium flex items-center gap-1.5 mt-1" title={staff.email}>
+                  <Mail size={13} className="text-brand-400 shrink-0" /> 
+                  <span className="truncate">{staff.email}</span>
                 </p>
                 <div className="flex items-center gap-2 mt-2.5">
                   <span className="px-3 py-1 rounded-full bg-white/10 text-slate-200 text-[10px] font-bold border border-white/10">
@@ -277,7 +278,7 @@ export const StaffDetailDrawer: React.FC<StaffDetailDrawerProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-slate-200 dark:border-navy-700 bg-slate-100 dark:bg-navy-950 flex justify-between items-center">
+        <div className="p-4 border-t border-slate-200 dark:border-navy-700 bg-slate-100 dark:bg-navy-950 flex justify-between items-center shrink-0">
           <button 
             onClick={onClose}
             className="px-4 py-2 bg-slate-200 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-800 dark:text-slate-200 rounded-2xl text-xs font-bold transition cursor-pointer"

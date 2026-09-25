@@ -799,7 +799,7 @@ def get_report_preview(
     current_user = Depends(require_security_access(resource_name="View Report Preview", dept_scoped=True))
 ):
     """Fetches the full JSON dataset snapshot for a specific report ID or session ID."""
-    dataset, _ = _get_dataset_for_id(report_id, db, dept=dept, year=year, attendance=attendance)
+    dataset, _ = _get_dataset_for_id(report_id, db, dept=dept, year=year, attendance=attendance, current_user=current_user)
     return dataset
 
 
@@ -1083,9 +1083,9 @@ def _get_dataset_for_id(
         session_date = dataset.get("sessionDate") or dataset.get("session_date")
         r_filename = get_contest_filename_base(contest_name, session_date=session_date, dept=dept, year=year, attendance=effective_att)
         
+        rows = dataset.get("allStudents") or dataset.get("rows") or []
         if has_active_filters:
             from backend.services.contest_performance_service import matches_dept, matches_year
-            rows = dataset.get("allStudents") or dataset.get("rows") or []
             filtered_rows = []
             for r in rows:
                 if dept != "ALL" and not matches_dept(r.get("dept") or r.get("department") or "", "", dept, r.get("department_id") or r.get("dept_id")):
@@ -1093,8 +1093,46 @@ def _get_dataset_for_id(
                 if year != "ALL" and not matches_year(r.get("year") or r.get("year_level") or "", year, r.get("reg_no") or r.get("register_no") or ""):
                     continue
                 filtered_rows.append(r)
-            dataset["rows"] = filtered_rows
-            dataset["allStudents"] = filtered_rows
+            rows = filtered_rows
+
+        # RBAC: Scoping for ReportHistory
+        if current_user is not None:
+            from backend.services.authorization_service import _normalize_role, _STAFF_ROLES, _HOD_ROLES
+            from backend.services.faculty_assignment_service import FacultyAssignmentService
+            role_clean = _normalize_role(current_user)
+            if role_clean in _STAFF_ROLES:
+                assigned_ids = set(FacultyAssignmentService.get_faculty_assigned_student_ids(db, int(current_user.id)))
+                if assigned_ids:
+                    assigned_students = db.query(Student).filter(Student.id.in_(assigned_ids)).all()
+                    assigned_reg_nos = {str(s.reg_no).strip().upper() for s in assigned_students if s.reg_no and str(s.reg_no).strip()}
+                    assigned_usernames = {str(s.username).strip().lower() for s in assigned_students if s.username and str(s.username).strip()}
+                    assigned_ids_str = {str(i) for i in assigned_ids if i is not None}
+
+                    filtered_report_rows = []
+                    for r in rows:
+                        r_id = str(r.get("student_id") or r.get("id") or "").strip()
+                        r_reg = str(r.get("reg_no") or r.get("register_no") or "").strip().upper()
+                        r_uname = str(r.get("username") or r.get("leetcode_username") or "").strip().lower()
+                        if r_reg:
+                            if r_reg in assigned_reg_nos:
+                                filtered_report_rows.append(r)
+                        elif r_id:
+                            if r_id in assigned_ids_str:
+                                filtered_report_rows.append(r)
+                        elif r_uname:
+                            if r_uname in assigned_usernames:
+                                filtered_report_rows.append(r)
+                    rows = filtered_report_rows
+                else:
+                    rows = []
+            elif role_clean in _HOD_ROLES:
+                from backend.services.authorization_service import get_hod_authorized_department_ids
+                hod_dept_ids = get_hod_authorized_department_ids(db, current_user)
+                if hod_dept_ids:
+                    rows = [r for r in rows if (r.get("department_id") or r.get("dept_id")) in hod_dept_ids]
+
+        dataset["rows"] = rows
+        dataset["allStudents"] = rows
         return dataset, r_filename
     else:
         dataset = None
@@ -1146,6 +1184,49 @@ def _get_dataset_for_id(
             )
 
             all_raw_rows = canonical_data.get("rows", [])
+
+            # ── RBAC: Filter rows to only the current user's authorized students ──
+            # Staff/faculty mentors see only their assigned students.
+            # HOD sees only their department students. Admin sees all.
+            if current_user is not None:
+                from backend.services.authorization_service import _normalize_role, _STAFF_ROLES, _HOD_ROLES
+                from backend.services.faculty_assignment_service import FacultyAssignmentService
+                role_clean = _normalize_role(current_user)
+                if role_clean in _STAFF_ROLES:
+                    # Staff: filter by assigned student IDs
+                    assigned_ids = set(
+                        FacultyAssignmentService.get_faculty_assigned_student_ids(db, int(current_user.id))
+                    )
+                    if assigned_ids:
+                        assigned_students = db.query(Student).filter(Student.id.in_(assigned_ids)).all()
+                        assigned_reg_nos = {str(s.reg_no).strip().upper() for s in assigned_students if s.reg_no and str(s.reg_no).strip()}
+                        assigned_usernames = {str(s.username).strip().lower() for s in assigned_students if s.username and str(s.username).strip()}
+                        assigned_ids_str = {str(i) for i in assigned_ids if i is not None}
+
+                        filtered_raw_rows = []
+                        for r in all_raw_rows:
+                            r_id = str(r.get("student_id") or r.get("id") or "").strip()
+                            r_reg = str(r.get("reg_no") or r.get("register_no") or "").strip().upper()
+                            r_uname = str(r.get("username") or r.get("leetcode_username") or "").strip().lower()
+                            if r_reg:
+                                if r_reg in assigned_reg_nos:
+                                    filtered_raw_rows.append(r)
+                            elif r_id:
+                                if r_id in assigned_ids_str:
+                                    filtered_raw_rows.append(r)
+                            elif r_uname:
+                                if r_uname in assigned_usernames:
+                                    filtered_raw_rows.append(r)
+                        all_raw_rows = filtered_raw_rows
+                    else:
+                        all_raw_rows = []
+                elif role_clean in _HOD_ROLES:
+                    # HOD: filter by department
+                    from backend.services.authorization_service import get_hod_authorized_department_ids
+                    hod_dept_ids = get_hod_authorized_department_ids(db, current_user)
+                    if hod_dept_ids:
+                        hod_dept_ids_str = {str(d) for d in hod_dept_ids}
+                        all_raw_rows = [r for r in all_raw_rows if str(r.get("department_id") or "") in hod_dept_ids_str]
 
             # Apply caller's active filters
             def _resolve_canonical(dept_name: str) -> str:

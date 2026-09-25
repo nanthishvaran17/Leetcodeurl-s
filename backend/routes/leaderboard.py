@@ -182,20 +182,32 @@ async def get_leaderboard(
     return await cache.async_get_or_compute(cache_key, _compute, ttl_seconds=60, stale_ttl_seconds=300)
 
 @router.get("/top-performers")
-def get_top_performers(db: Session = Depends(get_db)):
-    cache_key = "top_performers_summary"
+def get_top_performers(
+    request: Request,
+    request_db: Session = Depends(get_db)
+):
+    current_user = get_current_user_optional(request, request_db)
+    user_scope = f"{current_user.id}:{current_user.role}" if current_user else "public"
+    cache_key = f"top_performers_summary:{user_scope}"
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
 
+    db = request_db
     # 1 query for active students with stats and joined loads
-    students = db.query(Student).options(
+    query = db.query(Student).options(
         joinedload(Student.department),
         joinedload(Student.section),
         joinedload(Student.stats)
     ).filter(
         (Student.is_active == True) | (Student.is_active.is_(None))
-    ).all()
+    )
+
+    # Apply role-based scoping: faculty see only assigned mentees, HODs see dept
+    if current_user:
+        query = apply_role_based_student_filter(query, current_user, db)
+
+    students = query.all()
 
     if not students:
         return {

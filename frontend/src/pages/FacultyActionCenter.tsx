@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ShieldAlert, AlertTriangle, CheckCircle2, Clock, Search, RefreshCw,
   ChevronDown, ChevronUp, X, Send, Activity, User, Check, Building2, GraduationCap,
@@ -22,15 +23,14 @@ const PRIORITY_CONFIG: Record<string, { tw: string; dot: string; icon: React.Rea
   Low:      { tw: 'bg-emerald-50/90 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80 shadow-xs font-bold', dot: 'bg-emerald-500 dark:bg-emerald-400', icon: <Activity size={12} strokeWidth={2.5} /> },
 };
 
-// Status Config (Pending=Slate, In Progress=Blue, Monitoring=Amber, Completed=Cyan, Resolved=Green, Overdue=Rose, Escalated=Purple)
 const STATUS_CONFIG: Record<string, string> = {
-  Pending:       'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 font-bold shadow-xs',
-  'In Progress': 'bg-blue-50/90 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/80 font-bold shadow-xs',
-  Monitoring:    'bg-amber-50/90 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/80 font-bold shadow-xs',
-  Completed:     'bg-cyan-50/90 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/80 font-bold shadow-xs',
-  Resolved:      'bg-emerald-50/90 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80 font-bold shadow-xs',
-  Overdue:       'bg-rose-50/90 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/80 font-bold shadow-xs',
-  Escalated:     'bg-purple-50/90 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/80 font-bold shadow-xs',
+  Pending:       'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 font-bold',
+  'In Progress': 'bg-blue-50/90 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 font-bold',
+  Monitoring:    'bg-amber-50/90 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 font-bold',
+  Completed:     'bg-cyan-50/90 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/60 font-bold',
+  Resolved:      'bg-emerald-50/90 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 font-bold',
+  Overdue:       'bg-rose-50/90 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-bold',
+  Escalated:     'bg-purple-50/90 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 font-bold',
 };
 
 const EVENT_COLOR: Record<string, string> = {
@@ -537,134 +537,293 @@ const UpdateModal: React.FC<{
     finally { setEscalating(false); }
   };
 
-  const inputCls = "w-full rounded-xl bg-slate-100 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 px-3 py-2 text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-brand-500 transition";
-  const labelCls = "block text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-navy-400 mb-1.5";
+  const inputCls = "w-full rounded-2xl bg-slate-50 dark:bg-navy-950/80 border border-slate-200 dark:border-navy-700/80 px-4 py-2.5 text-sm font-bold text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition shadow-xs placeholder:text-slate-400 placeholder:font-normal";
+  const labelCls = "block text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-navy-300 mb-1.5 flex items-center gap-1.5";
 
-  return (
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-[100000] flex items-center justify-center p-4 sm:p-6 pt-20 sm:pt-24 pb-6 bg-slate-950/80 backdrop-blur-md animate-fade-in"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-white dark:bg-navy-850 border border-slate-200 dark:border-navy-700 shadow-lg overflow-hidden">
+      <div className="w-full max-w-2xl max-h-[78vh] flex flex-col rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700/80 shadow-2xl shadow-indigo-950/30 overflow-hidden my-auto">
 
-        {/* Header */}
-        <div className={`p-5 border-b border-slate-200 dark:border-navy-700 flex items-start justify-between ${cfg.tw.split(' ').slice(0,1).join(' ')}/5`}>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <PriorityBadge priority={item.priority} score={item.priority_score} reason={item.priority_score_reason} />
-              {item.is_escalated && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/25 font-bold">ESCALATED</span>
-              )}
+        {/* Premium Executive Header */}
+        <div className="relative overflow-hidden p-6 bg-gradient-to-r from-slate-950 via-navy-950 to-indigo-950 text-white border-b border-slate-800/80 shrink-0">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="relative z-10 flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-500 via-indigo-600 to-purple-600 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-brand-500/30 border border-white/20 shrink-0">
+                {item.student_name.charAt(0)}
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <PriorityBadge priority={item.priority} score={item.priority_score} reason={item.priority_score_reason} />
+                  {item.is_escalated && (
+                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 font-black tracking-wide animate-pulse">
+                      ESCALATED
+                    </span>
+                  )}
+                </div>
+
+                <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-snug">
+                  {item.student_name}
+                </h3>
+
+                <p className="text-xs text-slate-300 font-mono flex items-center gap-1.5 flex-wrap">
+                  <span className="font-bold">{item.reg_no}</span>
+                  <span>·</span>
+                  <span>{item.department_code}</span>
+                  <span>·</span>
+                  <span className="px-2 py-0.5 rounded-md bg-white/10 text-white font-sans text-[11px] font-black">{item.year_level} Year</span>
+                  <span>·</span>
+                  <span className="text-brand-300 font-bold">@{item.leetcode_username}</span>
+                </p>
+
+                {/* Quick Metrics Bar */}
+                <div className="flex items-center gap-3 pt-1 text-[11px] text-slate-300 font-bold flex-wrap">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-800/80 border border-slate-700">
+                    <CheckCircle2 size={12} className="text-emerald-400" />
+                    {item.total_solved} Solved
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-800/80 border border-slate-700">
+                    <Award size={12} className="text-amber-400" />
+                    {item.current_rating} Rating
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-800/80 border border-slate-700">
+                    <Activity size={12} className="text-cyan-400" />
+                    {item.contests_attended} Contests
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-400">
+                    <Clock size={12} />
+                    {item.last_active_days_ago}d ago
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="text-lg font-bold mt-2 text-slate-800 dark:text-slate-100">{item.student_name}</div>
-            <div className="text-xs text-slate-500 dark:text-navy-400">
-              {item.reg_no} · {item.department_code} · {item.year_level} ·{' '}
-              <span className="text-brand-500">@{item.leetcode_username}</span>
-            </div>
-            <div className="flex gap-4 mt-1.5 text-xs text-slate-400 dark:text-navy-400">
-              <span>{item.total_solved} solved</span>
-              <span>{item.current_rating} rating</span>
-              <span>{item.contests_attended} contests</span>
-              <span>{item.last_active_days_ago}d ago</span>
-            </div>
+
+            <button
+              onClick={onClose}
+              className="p-2 rounded-2xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition cursor-pointer shrink-0 border border-white/10"
+              title="Close modal"
+            >
+              <X size={18} />
+            </button>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-1">
-            <X size={18} />
-          </button>
         </div>
 
-        {/* Signal pill */}
-        <div className="px-5 py-3 bg-slate-50 dark:bg-navy-950/50 border-b border-slate-200 dark:border-navy-700">
-          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Signal</div>
-          <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">{item.signal_type}</div>
-          <div className="text-xs text-brand-500 mt-1 italic">{item.recommended_action}</div>
+        {/* Signal & Recommendation Banner */}
+        <div className="px-6 py-3.5 bg-gradient-to-r from-indigo-500/10 via-brand-500/5 to-purple-500/10 dark:from-indigo-950/50 dark:via-navy-900/60 dark:to-purple-950/50 border-b border-indigo-100 dark:border-navy-700/80 flex items-start gap-3 shrink-0">
+          <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 mt-0.5 shrink-0">
+            <Sparkles size={16} />
+          </div>
+          <div className="space-y-0.5 flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                Triggered Intelligence Signal
+              </span>
+              <span className="px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-[10px] font-black font-mono">
+                {item.signal_type}
+              </span>
+            </div>
+            <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold italic leading-relaxed">
+              "{item.recommended_action}"
+            </p>
+          </div>
         </div>
 
-        {/* Form */}
-        <div className="overflow-y-auto flex-1 p-5 flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-3">
+        {/* Form Body */}
+        <div className="overflow-y-auto flex-1 p-6 space-y-5 custom-scrollbar">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>Status</label>
+              <label className={labelCls}>
+                <Activity size={13} className="text-indigo-500" />
+                Intervention Status
+              </label>
               <GlobalFilter
                 value={form.status}
                 onChange={val => setForm(f => ({ ...f, status: val }))}
                 dropdownWidth="w-full"
                 options={['Pending', 'In Progress', 'Monitoring', 'Completed', 'Resolved'].map(s => ({ value: s, label: s }))}
-                icon={<Activity className="w-4 h-4" />}
+                icon={<Activity className="w-4 h-4 text-indigo-500" />}
               />
             </div>
             <div>
-              <label className={labelCls}>Assigned Faculty</label>
-              <input value={form.assigned_faculty_name} onChange={e => setForm(f => ({ ...f, assigned_faculty_name: e.target.value }))} className={inputCls} placeholder="Dr. / Prof. Name" />
+              <label className={labelCls}>
+                <User size={13} className="text-indigo-500" />
+                Assigned Faculty / Mentor
+              </label>
+              <input
+                value={form.assigned_faculty_name}
+                onChange={e => setForm(f => ({ ...f, assigned_faculty_name: e.target.value }))}
+                className={inputCls}
+                placeholder="Dr. / Prof. Name"
+              />
             </div>
           </div>
 
           <div>
-            <label className={labelCls}>Action Taken</label>
-            <textarea value={form.action_taken} onChange={e => setForm(f => ({ ...f, action_taken: e.target.value }))} className={`${inputCls} h-16 resize-y`} placeholder="Describe the action taken..." />
+            <label className={labelCls}>
+              <FileText size={13} className="text-emerald-500" />
+              Action Taken (Intervention Details)
+            </label>
+            <textarea
+              value={form.action_taken}
+              onChange={e => setForm(f => ({ ...f, action_taken: e.target.value }))}
+              className={`${inputCls} h-20 resize-y leading-relaxed`}
+              placeholder="Describe the mentoring session or task assigned to the student..."
+            />
           </div>
 
           <div>
-            <label className={labelCls}>Faculty Notes (Private)</label>
-            <textarea value={form.faculty_notes} onChange={e => setForm(f => ({ ...f, faculty_notes: e.target.value }))} className={`${inputCls} h-16 resize-y`} placeholder="Private notes for reference..." />
+            <label className={labelCls}>
+              <ShieldAlert size={13} className="text-amber-500" />
+              Faculty Notes (Confidential)
+            </label>
+            <textarea
+              value={form.faculty_notes}
+              onChange={e => setForm(f => ({ ...f, faculty_notes: e.target.value }))}
+              className={`${inputCls} h-20 resize-y leading-relaxed`}
+              placeholder="Private faculty reference notes, observations, or student feedback..."
+            />
           </div>
 
           <div>
-            <label className={labelCls}>Evidence Remarks</label>
-            <input value={form.evidence_remarks} onChange={e => setForm(f => ({ ...f, evidence_remarks: e.target.value }))} className={inputCls} placeholder="e.g. Missed WC#516, no submission since Aug 10" />
+            <label className={labelCls}>
+              <Award size={13} className="text-purple-500" />
+              Evidence / Audit Remarks
+            </label>
+            <input
+              value={form.evidence_remarks}
+              onChange={e => setForm(f => ({ ...f, evidence_remarks: e.target.value }))}
+              className={inputCls}
+              placeholder="e.g. Missed WC#516, no LeetCode submission since Aug 10"
+            />
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className={labelCls}>Updated By</label>
-              <input value={form.updated_by_name} onChange={e => setForm(f => ({ ...f, updated_by_name: e.target.value }))} className={inputCls} placeholder="Your name" />
+              <input
+                value={form.updated_by_name}
+                onChange={e => setForm(f => ({ ...f, updated_by_name: e.target.value }))}
+                className={inputCls}
+                placeholder="Your name"
+              />
             </div>
             <div>
               <label className={labelCls}>Follow-up Date</label>
-              <input type="date" value={form.follow_up_date || ''} onChange={e => setForm(f => ({ ...f, follow_up_date: e.target.value }))} className={inputCls} />
+              <input
+                type="date"
+                value={form.follow_up_date || ''}
+                onChange={e => setForm(f => ({ ...f, follow_up_date: e.target.value }))}
+                className={inputCls}
+              />
             </div>
             <div>
               <label className={labelCls}>Next Review Date</label>
-              <input type="date" value={form.next_review_date || ''} onChange={e => setForm(f => ({ ...f, next_review_date: e.target.value }))} className={inputCls} />
+              <input
+                type="date"
+                value={form.next_review_date || ''}
+                onChange={e => setForm(f => ({ ...f, next_review_date: e.target.value }))}
+                className={inputCls}
+              />
             </div>
           </div>
 
-          {/* Escalation */}
-          <div className="border-t border-slate-200 dark:border-navy-700 pt-3">
-            <button onClick={() => setShowEscalate(!showEscalate)} className="text-orange-400 text-xs font-semibold flex items-center gap-1.5 hover:text-orange-300 transition">
-              <ArrowUpRight size={13} /> {showEscalate ? 'Hide' : 'Escalate to HOD'}
-            </button>
+          {/* Escalation Control Section */}
+          <div className="rounded-2xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/50 dark:bg-rose-950/20 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ArrowUpRight className="w-4 h-4 text-rose-500" />
+                <span className="text-xs font-black uppercase text-rose-700 dark:text-rose-300">
+                  Escalation Management
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowEscalate(!showEscalate)}
+                className="px-3 py-1 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold transition cursor-pointer"
+              >
+                {showEscalate ? 'Hide Escalation' : 'Escalate to HOD'}
+              </button>
+            </div>
+
             {showEscalate && (
-              <div className="mt-3 flex flex-col gap-3">
-                <div className="grid grid-cols-2 gap-3">
+              <div className="pt-2 flex flex-col gap-3 border-t border-rose-200/60 dark:border-rose-900/40">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className={labelCls}>Escalate To</label>
-                    <input value={escalateTo} onChange={e => setEscalateTo(e.target.value)} className={inputCls} />
+                    <label className={labelCls}>Escalate Target</label>
+                    <input
+                      value={escalateTo}
+                      onChange={e => setEscalateTo(e.target.value)}
+                      className={inputCls}
+                    />
                   </div>
                   <div>
-                    <label className={labelCls}>Reason</label>
-                    <input value={escalateReason} onChange={e => setEscalateReason(e.target.value)} className={inputCls} placeholder="No improvement after 2 interventions..." />
+                    <label className={labelCls}>Reason for Escalation</label>
+                    <input
+                      value={escalateReason}
+                      onChange={e => setEscalateReason(e.target.value)}
+                      className={inputCls}
+                      placeholder="No progress after multiple reminders..."
+                    />
                   </div>
                 </div>
-                <button onClick={handleEscalate} disabled={escalating} className="self-start px-4 py-2 rounded-xl bg-red-500/15 border border-red-500/30 text-red-400 text-sm font-semibold hover:bg-red-500/25 transition">
-                  {escalating ? 'Escalating...' : 'Confirm Escalation'}
+                <button
+                  type="button"
+                  onClick={handleEscalate}
+                  disabled={escalating}
+                  className="self-end px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-black shadow-md shadow-rose-600/30 transition cursor-pointer disabled:opacity-50"
+                >
+                  {escalating ? 'Escalating...' : 'Confirm Escalation to HOD'}
                 </button>
               </div>
             )}
           </div>
 
-          {msg && <div className={`text-sm font-semibold ${msg.startsWith('') ? 'text-emerald-400' : 'text-red-400'}`}>{msg}</div>}
+          {msg && (
+            <div className={`p-3 rounded-2xl text-xs font-black flex items-center gap-2 ${msg.includes('failed') ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'}`}>
+              <CheckCircle2 size={14} />
+              {msg}
+            </div>
+          )}
         </div>
 
-        {/* Footer */}
-        <div className="flex justify-end gap-3 px-5 py-4 border-t border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950/30">
-          <button onClick={onClose} className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 text-sm font-semibold hover:bg-slate-200 dark:hover:bg-navy-700 transition">Cancel</button>
-          <button onClick={handleSave} disabled={saving} className="px-5 py-2 rounded-xl bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition flex items-center gap-2 shadow-md">
-            {saving ? 'Saving...' : <><Send size={13} /> Save Changes</>}
+        {/* Modal Footer */}
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200 dark:border-navy-800 bg-slate-50/90 dark:bg-navy-950/90 backdrop-blur-md shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-5 py-2.5 rounded-2xl bg-slate-200/80 dark:bg-navy-800 hover:bg-slate-300 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-300 text-xs font-black transition cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white text-xs font-black shadow-lg shadow-brand-600/30 hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+          >
+            <Send size={14} />
+            <span>{saving ? 'Saving Action Details...' : 'Save Changes'}</span>
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
@@ -704,6 +863,20 @@ export const FacultyActionCenter: React.FC = () => {
     } catch {
       return dateStr;
     }
+  };
+
+  const formatYearLevel = (yr: string | undefined | null) => {
+    if (!yr) return '';
+    const clean = yr.replace(/year/gi, '').trim();
+    return clean ? `${clean} Year` : '';
+  };
+
+  const formatSignalLabel = (sig: string | undefined | null) => {
+    if (!sig) return '—';
+    return sig
+      .split('_')
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ');
   };
 
   // Sort
@@ -810,14 +983,14 @@ export const FacultyActionCenter: React.FC = () => {
   const totalPages = Math.ceil(filteredCount / pageSize);
   const hasFilters = !!(filterPriority || filterStatus || filterYear || search);
 
-  const thCls = "text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 text-left py-3 px-3 first:pl-4";
-  const tdCls = "py-3 px-3 text-sm first:pl-4";
+  const thCls = "text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-left py-3.5 px-3.5 first:pl-5";
+  const tdCls = "py-3.5 px-3.5 text-sm first:pl-5";
   const filterSelectCls = "rounded-xl bg-white dark:bg-navy-800 border border-slate-200 dark:border-navy-700 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 outline-none focus:border-brand-500 transition cursor-pointer";
 
   return (
-    <div className="space-y-5 pb-12 animate-fade-in font-sans">
+    <div className="space-y-6 md:space-y-7 pb-12 animate-fade-in font-sans">
       {/* Executive Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-lg border border-brand-500/30">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 shadow-lg border border-brand-500/30 mb-6">
 
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
           <div className="space-y-3 max-w-2xl">
@@ -857,7 +1030,7 @@ export const FacultyActionCenter: React.FC = () => {
 
       {/* KPI Cards */}
       {kpis && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4 mb-6">
           <KPICard label="Critical" value={kpis.critical_count} colorTheme="red"
             icon={<ShieldAlert size={14} strokeWidth={2.5} />} active={kpiFilter === 'Critical'} onClick={() => applyKPIFilter('Critical', 'priority')} subtitle="Immediate action" />
           <KPICard label="High" value={kpis.high_count} colorTheme="orange"
@@ -878,7 +1051,7 @@ export const FacultyActionCenter: React.FC = () => {
       )}
 
       {/* Filters */}
-      <div className="relative z-20 flex flex-wrap gap-3 items-center p-4 rounded-3xl bg-white/80 dark:bg-navy-850/80 border border-slate-200 dark:border-navy-700 backdrop-blur-md shadow-sm">
+      <div className="relative z-20 flex flex-wrap gap-3 items-center p-4 rounded-3xl bg-white/80 dark:bg-navy-850/80 border border-slate-200 dark:border-navy-700 backdrop-blur-md shadow-sm mb-6">
         <div className="relative group flex-1 min-w-[250px]">
           <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-brand-500 rounded-full blur opacity-15 group-focus-within:opacity-60 transition duration-500"></div>
           <div className="relative flex items-center gap-3 bg-white dark:bg-navy-950 rounded-full px-5 py-2.5 border border-slate-300 dark:border-navy-700 focus-within:border-indigo-500 shadow-xs">
@@ -952,9 +1125,9 @@ export const FacultyActionCenter: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-slate-600 dark:text-navy-300">
               {filteredCount === totalCount ? (
-                `Showing ${totalCount} students`
+                `Showing ${totalCount} action items`
               ) : (
-                `Showing ${filteredCount} of ${totalCount} students`
+                `Showing ${filteredCount} of ${totalCount} action items`
               )}
             </span>
             {(hasFilters || kpiFilter) && (
@@ -1110,42 +1283,42 @@ export const FacultyActionCenter: React.FC = () => {
                   {/* Top: Student Details + Priority & Status */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate">
+                      <h4 className="font-bold text-sm text-slate-800 dark:text-white truncate">
                         {item.student_name}
                       </h4>
-                      <div className="text-[11px] font-medium text-slate-500 dark:text-navy-300 truncate mt-0.5">
-                        {item.reg_no} · {item.department_code} · {item.year_level}
+                      <div className="text-[11.5px] font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                        <span className="font-mono text-slate-600 dark:text-slate-300">{item.reg_no}</span> · {item.department_code} · {formatYearLevel(item.year_level)}
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-1 shrink-0">
                       <PriorityBadge priority={item.priority} score={item.priority_score} reason={item.priority_score_reason} />
-                      <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full ${statusCls}`}>
+                      <span className={`text-[9.5px] font-bold px-2 py-0.5 rounded-full ${statusCls}`}>
                         {item.status}
                       </span>
                     </div>
                   </div>
 
                   {/* Stats & Signal Grid */}
-                  <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-navy-900/60 p-2 rounded-xl text-xs">
+                  <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-navy-900/60 p-2.5 rounded-xl text-xs border border-slate-100 dark:border-navy-800">
                     <div>
-                      <div className="text-[10px] uppercase font-black text-indigo-600 dark:text-indigo-400">Coding Stats</div>
-                      <div className="font-mono font-bold text-slate-800 dark:text-slate-200 mt-0.5 text-[11px]">
-                        Solved: {item.total_solved} <span className="text-slate-400 font-normal">| R: {item.current_rating}</span>
+                      <div className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Coding Stats</div>
+                      <div className="font-mono font-bold text-slate-700 dark:text-slate-200 mt-0.5 text-[11.5px]">
+                        Solved: {item.total_solved} <span className="text-slate-400 font-normal">| R: {item.current_rating || 0}</span>
                       </div>
                     </div>
                     <div>
-                      <div className="text-[10px] uppercase font-black text-purple-600 dark:text-purple-400">Signal Trigger</div>
-                      <div className="font-medium text-slate-700 dark:text-slate-300 truncate mt-0.5 text-[11px]" title={item.signal_type}>
-                        {item.signal_type}
+                      <div className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Signal Trigger</div>
+                      <div className="font-semibold text-slate-700 dark:text-slate-300 truncate mt-0.5 text-[11.5px]" title={item.signal_type}>
+                        {formatSignalLabel(item.signal_type)}
                       </div>
                     </div>
                   </div>
 
                   {/* Mentor & Due Date Row */}
-                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-navy-400">
+                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                     <div className="flex items-center gap-1.5 truncate max-w-[60%]">
                       <User size={12} className="text-slate-400 shrink-0" />
-                      <span className="truncate font-semibold text-indigo-600 dark:text-indigo-400 text-[11px]">
+                      <span className="truncate font-medium text-slate-700 dark:text-slate-300 text-[11.5px]">
                         {item.assigned_faculty_name || 'Unassigned'}
                       </span>
                     </div>
@@ -1159,7 +1332,7 @@ export const FacultyActionCenter: React.FC = () => {
                   <div className="flex items-center gap-2 pt-0.5">
                     <button
                       onClick={() => setUpdateItem(item)}
-                      className="flex-1 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition font-black text-xs shadow-md shadow-indigo-500/20 flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="flex-1 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white transition-all font-bold text-xs shadow-sm flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                     >
                       <Zap size={12} />
                       <span>Take Action</span>
@@ -1167,7 +1340,7 @@ export const FacultyActionCenter: React.FC = () => {
                     <button
                       onClick={() => setViewItem(item)}
                       title="View Student Coding Profile"
-                      className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-700 hover:bg-slate-200 dark:hover:bg-navy-600 text-slate-600 dark:text-slate-300 transition text-xs font-bold flex items-center gap-1 cursor-pointer"
+                      className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-700 hover:bg-slate-200 dark:hover:bg-navy-600 text-slate-600 dark:text-slate-300 transition text-xs font-semibold flex items-center gap-1 cursor-pointer"
                     >
                       <Eye size={13} />
                       <span>Profile</span>
@@ -1185,18 +1358,18 @@ export const FacultyActionCenter: React.FC = () => {
                   {isExpanded && (
                     <div className="pt-2 border-t border-slate-100 dark:border-navy-800 space-y-1.5 text-xs">
                       <div>
-                        <div className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300">Recommended Action</div>
-                        <div className="text-brand-600 dark:text-brand-400 font-bold mt-0.5">{item.recommended_action || '—'}</div>
+                        <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Recommended Action</div>
+                        <div className="text-brand-600 dark:text-brand-400 font-semibold mt-0.5">{item.recommended_action || '—'}</div>
                       </div>
                       {item.action_taken && (
                         <div>
-                          <div className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300">Action Taken</div>
+                          <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Action Taken</div>
                           <div className="text-slate-700 dark:text-slate-300 mt-0.5">{item.action_taken}</div>
                         </div>
                       )}
                       {item.faculty_notes && (
                         <div>
-                          <div className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-300">Faculty Notes</div>
+                          <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Faculty Notes</div>
                           <div className="text-slate-700 dark:text-slate-300 mt-0.5">{item.faculty_notes}</div>
                         </div>
                       )}
@@ -1213,17 +1386,17 @@ export const FacultyActionCenter: React.FC = () => {
               <colgroup>
                 <col style={{ width: '22%' }} />
                 <col style={{ width: '12%' }} />
-                <col style={{ width: '8%' }} />
+                <col style={{ width: '9%' }} />
                 <col style={{ width: '20%' }} />
                 <col style={{ width: '10%' }} />
-                <col style={{ width: '13%' }} />
+                <col style={{ width: '12%' }} />
                 <col style={{ width: '8%' }} />
                 <col style={{ width: '7%' }} />
               </colgroup>
-              <thead className="table-header-group border-b border-slate-200 dark:border-navy-700 bg-slate-100/90 dark:bg-navy-950">
+              <thead className="table-header-group border-b border-slate-200 dark:border-navy-700 bg-slate-50 dark:bg-navy-950">
                 <tr>
                   {[['Student', 'student_name'], ['Priority', 'priority_score'], ['Stats', ''], ['Signal', ''], ['Status', 'status'], ['Faculty', ''], ['Due', 'due_date'], ['Actions', '']].map(([label, col]) => (
-                    <th key={label} className={`${thCls} ${col ? 'cursor-pointer hover:text-slate-800 dark:hover:text-slate-100 select-none' : ''}`} onClick={() => col && toggleSort(col)}>
+                    <th key={label} className={`${thCls} ${col ? 'cursor-pointer hover:text-slate-700 dark:hover:text-slate-200 select-none' : ''}`} onClick={() => col && toggleSort(col)}>
                       <span className="inline-flex items-center gap-1">{label} {col && <SortIcon col={col} />}</span>
                     </th>
                   ))}
@@ -1237,12 +1410,14 @@ export const FacultyActionCenter: React.FC = () => {
                     <React.Fragment key={item.id}>
                       <tr
                         onClick={() => setExpandedRow(isExpanded ? null : item.id)}
-                        className={`cursor-pointer transition-colors ${isExpanded ? 'bg-indigo-50/40 dark:bg-navy-800/80' : 'hover:bg-slate-50/80 dark:hover:bg-navy-700/40'}`}
+                        className={`cursor-pointer transition-colors ${isExpanded ? 'bg-indigo-50/30 dark:bg-navy-800/80' : 'hover:bg-slate-50/70 dark:hover:bg-navy-700/40'}`}
                       >
                         {/* Student */}
                         <td className={tdCls}>
-                          <div className="font-bold text-slate-800 dark:text-slate-100 truncate">{item.student_name}</div>
-                          <div className="text-[10px] font-semibold text-slate-500 dark:text-navy-400 truncate">{item.reg_no} · {item.department_code} · {item.year_level}</div>
+                          <div className="font-bold text-sm text-slate-800 dark:text-white truncate">{item.student_name}</div>
+                          <div className="text-[11.5px] font-medium text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                            <span className="font-mono text-slate-600 dark:text-slate-300">{item.reg_no}</span> · {item.department_code} · {formatYearLevel(item.year_level)}
+                          </div>
                         </td>
 
                         {/* Priority */}
@@ -1252,36 +1427,46 @@ export const FacultyActionCenter: React.FC = () => {
 
                         {/* Stats */}
                         <td className={tdCls}>
-                          <div className="text-[11px] font-semibold text-slate-600 dark:text-navy-300 space-y-0.5">
-                            <div>Rating: {item.current_rating}</div>
-                            <div>Solved: {item.total_solved}</div>
+                          <div className="text-xs space-y-1">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Rating:</span>
+                              <span className="font-bold text-slate-700 dark:text-slate-200 font-mono text-[11.5px]">{item.current_rating || 0}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Solved:</span>
+                              <span className="font-bold text-slate-700 dark:text-slate-200 font-mono text-[11.5px]">{item.total_solved || 0}</span>
+                            </div>
                           </div>
                         </td>
 
                         {/* Signal */}
                         <td className={tdCls}>
-                          <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 leading-snug line-clamp-2">{item.signal_type}</div>
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100/90 dark:bg-navy-900 border border-slate-200/80 dark:border-navy-700 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                            <Activity size={12} className="text-brand-500 shrink-0" />
+                            <span className="truncate max-w-[160px]">{formatSignalLabel(item.signal_type)}</span>
+                          </div>
                           <div className="flex gap-1.5 flex-wrap mt-1">
-                            {item.is_escalated && <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-bold">ESC</span>}
-                            {item.is_overdue_followup && <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 font-bold">{item.days_overdue}d overdue</span>}
+                            {item.is_escalated && <span className="text-[9.5px] px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-bold">ESC</span>}
+                            {item.is_overdue_followup && <span className="text-[9.5px] px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 font-bold">{item.days_overdue}d overdue</span>}
                           </div>
                         </td>
 
                         {/* Status */}
                         <td className={tdCls}>
-                          <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full ${statusCls}`}>{item.status}</span>
+                          <span className={`text-[11px] font-bold px-3 py-1 rounded-full whitespace-nowrap ${statusCls}`}>{item.status}</span>
                         </td>
 
                         {/* Faculty */}
                         <td className={tdCls}>
-                          <div className={`text-xs font-bold truncate ${item.assigned_faculty_name ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-navy-500'}`}>
-                            {item.assigned_faculty_name || '— Unassigned'}
+                          <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 font-medium truncate">
+                            <User size={12} className="text-slate-400 shrink-0" />
+                            <span className="truncate">{item.assigned_faculty_name || 'Unassigned'}</span>
                           </div>
                         </td>
 
                         {/* Due Date */}
                         <td className={tdCls}>
-                          <div className="text-[11px] font-semibold text-slate-500 dark:text-navy-400">{formatDate(item.due_date)}</div>
+                          <div className={`text-xs font-mono ${item.due_date ? 'text-slate-600 dark:text-slate-300 font-medium' : 'text-slate-400'}`}>{formatDate(item.due_date)}</div>
                         </td>
 
                         {/* Actions */}
@@ -1290,7 +1475,7 @@ export const FacultyActionCenter: React.FC = () => {
                             <button
                               onClick={() => setUpdateItem(item)}
                               title="Take Action on Student"
-                              className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition cursor-pointer shadow-md shadow-indigo-500/20 flex items-center gap-1.5 text-xs font-black"
+                              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white transition-all cursor-pointer shadow-sm hover:shadow flex items-center gap-1.5 text-xs font-bold active:scale-95"
                             >
                               <Zap size={12} />
                               <span>Take Action</span>

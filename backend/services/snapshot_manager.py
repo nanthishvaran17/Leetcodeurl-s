@@ -73,13 +73,15 @@ class AuthoritativeSnapshotEngine:
         if res:
             return res
 
-        # Default authoritative fallback
+        # Dynamic authoritative fallback
+        from backend.services.contest_discovery import discover_contest_metadata
+        disc = discover_contest_metadata()
         return {
             "data_version": cls._in_memory_latest_version,
             "snapshot_id": f"SNAPSHOT-INIT-{cls._in_memory_latest_version}",
             "synced_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "status": "SUCCESS",
-            "contest_name": "Weekly Contest 516",
+            "contest_name": disc.get("contest_name", "Weekly Contest"),
             "student_count": 1450,
             "dataset_hash": "0b77f4480d586b392495a6da9d25f89e395d254bfbcc4590a5d9e560a6584108"
         }

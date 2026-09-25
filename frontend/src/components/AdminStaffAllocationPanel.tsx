@@ -831,49 +831,65 @@ export const AdminStaffAllocationPanel: React.FC = () => {
             </div>
 
             {/* Filters */}
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-800/60 border border-slate-200 dark:border-navy-700 flex flex-col md:flex-row items-center gap-3">
-              <div className="relative flex-1 min-w-[200px] flex items-center rounded-xl border border-slate-200 dark:border-navy-600 bg-white dark:bg-navy-950 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-500/20 transition-all group">
-                <Search className="w-4 h-4 text-slate-400 dark:text-navy-400 group-focus-within:text-sky-500 ml-3.5 transition-colors shrink-0" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search reg no, name, username..."
-                  className="w-full pl-2.5 pr-9 h-10 bg-transparent border-0 outline-none focus:outline-none focus:ring-0 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-navy-400"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all cursor-pointer"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-800/60 border border-slate-200 dark:border-navy-700 flex flex-col md:flex-row items-end gap-3">
+              <div className="w-full md:flex-1 min-w-[200px] space-y-1.5">
+                <label className="block text-[11px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider h-4 leading-4">
+                  Search Query
+                </label>
+                <div className="relative flex items-center rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/90 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-500/20 h-11 transition-all group">
+                  <Search className="w-4 h-4 text-slate-400 dark:text-navy-400 group-focus-within:text-sky-500 ml-3.5 transition-colors shrink-0" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search reg no, name, username..."
+                    className="w-full pl-2.5 pr-9 h-full bg-transparent border-0 outline-none focus:outline-none focus:ring-0 text-xs font-semibold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-navy-400"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-navy-800 transition-all cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
+
               <div className="w-full md:w-[200px]">
                 <CustomDropdown label="Department Filter" options={deptOptions} value={String(selectedDept)} onChange={setSelectedDept} icon={Building2} />
               </div>
-              <div className="w-full md:w-[180px]">
+
+              <div className="w-full md:w-[170px]">
                 <CustomDropdown label="Academic Year" options={yearOptions} value={selectedYear} onChange={setSelectedYear} icon={Filter} />
               </div>
+
               {isFilterActive && (
-                <button onClick={clearFilters} className="p-2.5 rounded-xl bg-slate-200 dark:bg-navy-700 hover:bg-slate-300 text-slate-600 dark:text-slate-300 transition-all cursor-pointer" title="Clear filters">
-                  <X className="w-4 h-4" />
-                </button>
+                <div className="space-y-1.5 shrink-0">
+                  <div className="h-4"></div>
+                  <button onClick={clearFilters} className="h-11 px-3 rounded-2xl bg-slate-200 dark:bg-navy-700 hover:bg-slate-300 text-slate-600 dark:text-slate-300 transition-all cursor-pointer flex items-center justify-center" title="Clear filters">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               )}
+
               {/* Assign controls */}
-              <div className="w-full md:w-[220px]">
-                <CustomDropdown label="Assign To Staff" options={staffOptions} value={targetStaffId ? String(targetStaffId) : ''} onChange={(val) => setTargetStaffId(val ? Number(val) : '')} icon={UserPlus} align="right" />
+              <div className="w-full md:w-[250px]">
+                <CustomDropdown label="Assign To Staff" options={staffOptions} value={targetStaffId ? String(targetStaffId) : ''} onChange={(val) => setTargetStaffId(val ? Number(val) : '')} icon={UserPlus} align="right" hideTriggerBadge={true} placeholder="[ Select Mentor ]" />
               </div>
-              <button
-                onClick={handleBulkAssign}
-                disabled={submitting || selectedStudents.length === 0 || !targetStaffId}
-                className="w-full md:w-auto px-5 h-10 rounded-xl bg-sky-600 hover:bg-sky-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-black flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer whitespace-nowrap"
-              >
-                <span>Assign ({selectedStudents.length})</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+
+              <div className="w-full md:w-auto space-y-1.5 shrink-0">
+                <div className="hidden md:block h-4"></div>
+                <button
+                  onClick={handleBulkAssign}
+                  disabled={submitting || selectedStudents.length === 0 || !targetStaffId}
+                  className="w-full md:w-auto px-6 h-11 rounded-2xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-black flex items-center justify-center gap-2 shadow-lg shadow-sky-600/25 border border-sky-400/30 transition-all cursor-pointer whitespace-nowrap active:scale-95"
+                >
+                  <span>Assign ({selectedStudents.length})</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* Table */}
@@ -916,8 +932,18 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                           <td className="p-1.5 md:p-3 font-bold text-slate-800 dark:text-slate-200 flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">Reg No:</span>{st.reg_no}</td>
                           <td className="p-1.5 md:p-3 font-extrabold text-slate-900 dark:text-white flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">Name:</span>{st.name}</td>
                           <td className="p-1.5 md:p-3 font-bold text-sky-700 dark:text-sky-400 flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">Dept:</span>{st.department || 'INSTITUTIONAL'}</td>
-                          <td className="p-1.5 md:p-3 text-slate-600 dark:text-navy-300 flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">Year:</span>{st.year_level || '—'}</td>
-                          <td className="p-1.5 md:p-3 text-slate-500 dark:text-navy-400 flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">LeetCode:</span><span className="truncate max-w-[150px] md:max-w-none text-right">{st.username || '—'}</span></td>
+                          <td className="p-1.5 md:p-3 font-bold text-slate-800 dark:text-slate-200 flex justify-between md:table-cell">
+                            <span className="md:hidden font-normal text-slate-500">Year:</span>
+                            <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-navy-700 font-mono font-bold text-xs">
+                              {st.year_level || '—'}
+                            </span>
+                          </td>
+                          <td className="p-1.5 md:p-3 font-bold text-slate-800 dark:text-slate-200 flex justify-between md:table-cell">
+                            <span className="md:hidden font-normal text-slate-500">LeetCode:</span>
+                            <span className="truncate max-w-[150px] md:max-w-none text-right font-mono font-extrabold text-indigo-600 dark:text-indigo-300">
+                              {st.username || '—'}
+                            </span>
+                          </td>
                           <td className="p-1.5 md:p-3 text-right font-bold text-slate-800 dark:text-slate-200 flex justify-between md:table-cell border-t md:border-0 border-slate-100 dark:border-navy-800 pt-3 md:pt-3 mt-2 md:mt-0"><span className="md:hidden font-normal text-slate-500">Problems Solved:</span>{st.total_solved || 0}</td>
                         </tr>
                       );
@@ -1028,8 +1054,18 @@ export const AdminStaffAllocationPanel: React.FC = () => {
                             </td>
                             <td className="p-1.5 md:p-3 font-bold text-slate-800 dark:text-slate-200 flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">Reg No:</span>{s.reg_no}</td>
                             <td className="p-1.5 md:p-3 font-extrabold text-slate-900 dark:text-white flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">Name:</span>{s.name}</td>
-                            <td className="p-1.5 md:p-3 text-slate-600 dark:text-navy-300 flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">Year:</span>{s.year_level || '—'}</td>
-                            <td className="p-1.5 md:p-3 text-sky-700 dark:text-sky-400 flex justify-between md:table-cell"><span className="md:hidden font-normal text-slate-500">LeetCode:</span><span className="truncate max-w-[150px] md:max-w-none text-right">{s.username || '—'}</span></td>
+                            <td className="p-1.5 md:p-3 font-bold text-slate-800 dark:text-slate-200 flex justify-between md:table-cell">
+                              <span className="md:hidden font-normal text-slate-500">Year:</span>
+                              <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-navy-700 font-mono font-bold text-xs">
+                                {s.year_level || '—'}
+                              </span>
+                            </td>
+                            <td className="p-1.5 md:p-3 font-bold text-slate-800 dark:text-slate-200 flex justify-between md:table-cell">
+                              <span className="md:hidden font-normal text-slate-500">LeetCode:</span>
+                              <span className="truncate max-w-[150px] md:max-w-none text-right font-mono font-extrabold text-indigo-600 dark:text-indigo-300">
+                                {s.username || '—'}
+                              </span>
+                            </td>
                             <td className="p-1.5 md:p-3 text-right flex justify-between md:table-cell items-center mt-2 md:mt-0">
                               <span className="md:hidden font-normal text-slate-500">Problems Solved:</span>
                               <span className={`px-2 py-1 rounded-lg font-black text-[11px] ${s.total_solved >= 100 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' :

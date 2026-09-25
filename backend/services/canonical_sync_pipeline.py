@@ -439,12 +439,19 @@ async def _sync_single_student_canonical_impl(
     
                 st.version = (st.version or 0) + 1
                 if not defer_commit:
-                    db_student.commit()
                     try:
-                        from backend.cache import cache
-                        cache.clear()
-                    except Exception:
-                        pass
+                        db_student.commit()
+                        try:
+                            from backend.cache import cache
+                            cache.clear()
+                        except Exception:
+                            pass
+                    except sqlalchemy.exc.IntegrityError as e:
+                        db_student.rollback()
+                        logger.error(f"[CANONICAL_PIPELINE] IntegrityError for student {st.id} ({st.name}): {e}")
+                        status_code = "error"
+                        error_msg = "Database integrity error (duplicate username?)"
+                        sync_status_str = "error"
     
                 # Record completion in LiveSyncTracker and broadcast progress event immediately
                 from backend.services.live_sync_service import broadcast_sync_event, sync_tracker

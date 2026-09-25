@@ -77,12 +77,13 @@ class FacultyActionEngine:
         query = db.query(FacultyActionQueueItem).join(Student, FacultyActionQueueItem.student_id == Student.id)
 
         if faculty_id:
-            assigned_student_ids = [a.student_id for a in db.query(FacultyStudentAssignment).filter(FacultyStudentAssignment.faculty_id == faculty_id).all()]
-            conds = [FacultyActionQueueItem.faculty_id == faculty_id, FacultyActionQueueItem.faculty_id.is_(None)]
+            from backend.services.faculty_assignment_service import FacultyAssignmentService
+            assigned_student_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, faculty_id)
             if assigned_student_ids:
-                conds.append(FacultyActionQueueItem.student_id.in_(assigned_student_ids))
-            query = query.filter(or_(*conds))
-            
+                query = query.filter(FacultyActionQueueItem.student_id.in_(assigned_student_ids))
+            else:
+                query = query.filter(FacultyActionQueueItem.student_id == -1)
+
         if department_id:
             query = query.filter(Student.department_id == department_id)
         if year_level and isinstance(year_level, str) and year_level.upper() not in ["ALL", ""]:
@@ -94,54 +95,85 @@ class FacultyActionEngine:
                 Student.reg_no.ilike(search_str),
                 Student.leetcode_username.ilike(search_str)
             ))
-            
+
         items = query.all()
-        
+
+        # Use per-student HIGHEST priority and latest status to avoid double-counting
+        # A student with 2 signals (e.g. LOW_SOLVE_COUNT + PERFORMANCE_DROP) should count as 1 student
+        from collections import defaultdict
+        student_priority: dict = {}   # student_id -> highest priority item
+        student_status: dict = {}     # student_id -> latest status item
+        student_overdue: dict = {}    # student_id -> True if any item overdue
+        student_escalated: dict = {}  # student_id -> True if any item escalated
+
+        PRIORITY_RANK = {"Critical": 4, "High": 3, "Medium": 2, "Low": 1}
+
+        for item in items:
+            sid = item.student_id
+            p_rank = PRIORITY_RANK.get(item.priority or "Low", 1)
+            existing_rank = PRIORITY_RANK.get((student_priority.get(sid, {}) or {}).get("priority", "Low"), 0)
+            if p_rank > existing_rank:
+                student_priority[sid] = {"priority": item.priority, "status": item.status}
+            # Track status from the most recent item (highest id = most recently upserted)
+            if sid not in student_status:
+                student_status[sid] = item.status
+            if getattr(item, "is_overdue_followup", False):
+                student_overdue[sid] = True
+            if getattr(item, "is_escalated", False):
+                student_escalated[sid] = True
+
         kpis = {
             "Critical": 0, "High": 0, "Medium": 0, "Low": 0,
             "Pending": 0, "In Progress": 0, "Monitoring": 0, "Completed": 0, "Resolved": 0,
             "Overdue": 0, "Escalated": 0, "total": 0,
             "critical_count": 0, "high_count": 0, "medium_count": 0, "low_count": 0,
             "pending_count": 0, "in_progress_count": 0, "monitoring_count": 0, "completed_count": 0, "resolved_count": 0,
-            "overdue_count": 0, "escalated_count": 0, "total_actions": 0, "immediate_attention_count": 0
+            "overdue_count": 0, "escalated_count": 0, "total_actions": len(items),
+            "immediate_attention_count": 0
         }
-        
-        for item in items:
-            kpis["total"] += 1
-            kpis["total_actions"] += 1
 
-            if item.priority in kpis:
-                kpis[item.priority] += 1
-            if item.priority == "Critical":
+        for sid, pdata in student_priority.items():
+            kpis["total"] += 1
+            priority = pdata.get("priority") or "Low"
+            status = student_status.get(sid) or "Pending"
+
+            if priority == "Critical":
+                kpis["Critical"] += 1
                 kpis["critical_count"] += 1
                 kpis["immediate_attention_count"] += 1
-            elif item.priority == "High":
+            elif priority == "High":
+                kpis["High"] += 1
                 kpis["high_count"] += 1
-            elif item.priority == "Medium":
+            elif priority == "Medium":
+                kpis["Medium"] += 1
                 kpis["medium_count"] += 1
-            elif item.priority == "Low":
+            elif priority == "Low":
+                kpis["Low"] += 1
                 kpis["low_count"] += 1
 
-            if item.status in kpis:
-                kpis[item.status] += 1
-            if item.status == "Pending":
+            if status == "Pending":
+                kpis["Pending"] += 1
                 kpis["pending_count"] += 1
-            elif item.status == "In Progress":
+            elif status == "In Progress":
+                kpis["In Progress"] += 1
                 kpis["in_progress_count"] += 1
-            elif item.status == "Monitoring":
+            elif status == "Monitoring":
+                kpis["Monitoring"] += 1
                 kpis["monitoring_count"] += 1
-            elif item.status == "Completed":
+            elif status == "Completed":
+                kpis["Completed"] += 1
                 kpis["completed_count"] += 1
-            elif item.status == "Resolved":
+            elif status == "Resolved":
+                kpis["Resolved"] += 1
                 kpis["resolved_count"] += 1
 
-            if getattr(item, "is_overdue_followup", False):
-                kpis["Overdue"] += 1
-                kpis["overdue_count"] += 1
-            if getattr(item, "is_escalated", False):
-                kpis["Escalated"] += 1
-                kpis["escalated_count"] += 1
-                
+        for sid in student_overdue:
+            kpis["Overdue"] += 1
+            kpis["overdue_count"] += 1
+        for sid in student_escalated:
+            kpis["Escalated"] += 1
+            kpis["escalated_count"] += 1
+
         return kpis
 
 # Module level alias export
@@ -245,11 +277,13 @@ def get_faculty_actions_list(
     ).join(Student, FacultyActionQueueItem.student_id == Student.id)
 
     if faculty_id:
-        assigned_student_ids = [a.student_id for a in db.query(FacultyStudentAssignment).filter(FacultyStudentAssignment.faculty_id == faculty_id).all()]
-        conds = [FacultyActionQueueItem.faculty_id == faculty_id, FacultyActionQueueItem.faculty_id.is_(None)]
+        from backend.services.faculty_assignment_service import FacultyAssignmentService
+        assigned_student_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, faculty_id)
         if assigned_student_ids:
-            conds.append(FacultyActionQueueItem.student_id.in_(assigned_student_ids))
-        query = query.filter(or_(*conds))
+            query = query.filter(FacultyActionQueueItem.student_id.in_(assigned_student_ids))
+        else:
+            query = query.filter(FacultyActionQueueItem.student_id == -1)
+
 
     # Base query for total_count
     total_count = query.count()
@@ -282,7 +316,7 @@ def get_faculty_actions_list(
     formatted_items = []
     for item in raw_items:
         s = item.student
-        stats = getattr(s, "leetcode_stats", None) if s else None
+        stats = getattr(s, "stats", None) if s else None
         dept = getattr(s, "department", None) if s else None
         
         # Calculate days overdue for follow-up
@@ -294,6 +328,15 @@ def get_faculty_actions_list(
             if f_date < today:
                 is_overdue_val = True
                 days_overdue_val = (today - f_date).days
+
+        assigned_fac = None
+        if s and getattr(s, "faculty_assignment", None) and getattr(s.faculty_assignment, "is_active", False):
+            f_user = getattr(s.faculty_assignment, "faculty", None)
+            if f_user:
+                assigned_fac = f_user.full_name or f_user.username
+
+        if not assigned_fac:
+            assigned_fac = item.assigned_faculty_name
 
         formatted_items.append({
             "id": item.id,
@@ -310,7 +353,7 @@ def get_faculty_actions_list(
             "priority_score_reason": item.reason or "",
             "status": item.status or "Pending",
             "recommended_action": item.recommended_action or "",
-            "assigned_faculty_name": item.assigned_faculty_name,
+            "assigned_faculty_name": assigned_fac,
             "due_date": item.due_date.isoformat() if item.due_date else None,
             "follow_up_date": item.follow_up_date.isoformat() if item.follow_up_date else None,
             "next_review_date": item.next_review_date.isoformat() if item.next_review_date else None,
@@ -324,7 +367,7 @@ def get_faculty_actions_list(
             "created_at": item.created_at.isoformat() if item.created_at else "",
             "updated_at": item.updated_at.isoformat() if item.updated_at else "",
             "total_solved": stats.total_solved if stats and stats.total_solved is not None else 0,
-            "current_rating": stats.current_rating if stats and stats.current_rating is not None else 0,
+            "current_rating": stats.contest_rating if stats and stats.contest_rating is not None else 0,
             "contests_attended": stats.attended_contests_count if stats and hasattr(stats, 'attended_contests_count') else 0,
             "last_active_days_ago": 0
         })
@@ -341,10 +384,25 @@ def get_faculty_actions_list(
         "page_size": limit
     }
 
-def detect_and_sync_faculty_signals(db: Session, force: bool = False) -> dict:
+def detect_and_sync_faculty_signals(db: Session, force: bool = False, faculty_id: Optional[int] = None) -> dict:
+    """Create/update FacultyActionQueueItem signals for students.
+    
+    When faculty_id is provided, only creates signals for that faculty's
+    assigned students — prevents inflation of KPI counts across the institution.
+    When called without faculty_id (e.g. admin Force Sync), processes all students.
+    """
     from backend.models import Student, FacultyActionQueueItem, LeetCodeProfileStats
 
-    students = db.query(Student).filter(Student.is_active == True).all()
+    student_query = db.query(Student).filter(Student.is_active == True)
+    if faculty_id:
+        from backend.services.faculty_assignment_service import FacultyAssignmentService
+        assigned_ids = FacultyAssignmentService.get_faculty_assigned_student_ids(db, faculty_id)
+        if assigned_ids:
+            student_query = student_query.filter(Student.id.in_(assigned_ids))
+        else:
+            return {"status": "success", "created": 0, "updated": 0, "note": "No assigned students found"}
+
+    students = student_query.all()
     created_count = 0
     updated_count = 0
 
@@ -382,6 +440,12 @@ def detect_and_sync_faculty_signals(db: Session, force: bool = False) -> dict:
             FacultyActionQueueItem.signal_type == sig_type
         ).first()
 
+        assigned_fac_name = None
+        if getattr(student, "faculty_assignment", None) and getattr(student.faculty_assignment, "is_active", False):
+            f_user = getattr(student.faculty_assignment, "faculty", None)
+            if f_user:
+                assigned_fac_name = f_user.full_name or f_user.username
+
         if not existing:
             item = FacultyActionQueueItem(
                 student_id=student.id,
@@ -390,6 +454,7 @@ def detect_and_sync_faculty_signals(db: Session, force: bool = False) -> dict:
                 signal_type=sig_type,
                 reason=reason,
                 recommended_action=rec_action,
+                assigned_faculty_name=assigned_fac_name,
                 status="Pending",
                 category="PERFORMANCE_DROP",
                 created_at=datetime.now(timezone.utc)
@@ -401,6 +466,8 @@ def detect_and_sync_faculty_signals(db: Session, force: bool = False) -> dict:
             setattr(existing, "priority_score", score)
             setattr(existing, "reason", reason)
             setattr(existing, "recommended_action", rec_action)
+            if assigned_fac_name and not getattr(existing, "assigned_faculty_name", None):
+                setattr(existing, "assigned_faculty_name", assigned_fac_name)
             setattr(existing, "updated_at", datetime.now(timezone.utc))
             updated_count += 1
 

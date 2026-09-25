@@ -57,20 +57,51 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [solvedFilter, setSolvedFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('top_solved');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
+  const loggedInUser = useMemo(() => {
+    if (user) return user;
+    try {
+      const stored = localStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  }, [user]);
+
+  const isFacultyRole = useMemo(() => {
+    const roleClean = (loggedInUser?.role || user?.role || '').trim().toLowerCase();
+    return ['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(roleClean);
+  }, [loggedInUser?.role, user?.role]);
+
   const [students, setStudents] = useState<StudentData[]>(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      const u = stored ? JSON.parse(stored) : null;
+      const roleClean = (u?.role || '').trim().toLowerCase();
+      const isFaculty = ['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(roleClean);
+      if (isFaculty && u?.id) {
+        // For faculty: load their scoped cache — backend enforces the correct student boundary
+        const cached = getCachedStudents(u.id);
+        if (cached && cached.length > 0) return cached;
+        return [];
+      }
+    } catch {}
     const cached = getCachedStudents();
     return (cached && cached.length > 0) ? cached : [];
   });
 
   useEffect(() => {
-    if (!students || students.length === 0) {
+    // Strictly prevent loading public 302 canonical roster for faculty/staff mentors
+    if (!isFacultyRole && (!students || students.length === 0)) {
       import('../data/canonicalRosterData').then(m => {
         if (m.CANONICAL_ROSTER && m.CANONICAL_ROSTER.length > 0) {
           setStudents(m.CANONICAL_ROSTER);
         }
       }).catch(() => {});
     }
-  }, []);
+  }, [isFacultyRole]);
+
+  // Faculty flush guard removed — backend enforces the correct student boundary per role.
+  // Previously flushed state when students.length > 30 which incorrectly blocked mentors with > 30 assigned students.
   const [displayCount, setDisplayCount] = useState<number>(32);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [refreshingId, setRefreshingId] = useState<number | null>(null);
@@ -329,11 +360,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     const targetList = isFiltered ? sortedList : students;
     const initialTotal = targetList.length > 0 ? targetList.length : (isFiltered ? sortedList.length : (summaryData?.total_students ?? students.length));
     const devicePlatform = typeof window !== 'undefined' ? (window.navigator.platform || 'Browser') : 'Device';
-    const requesterTag = isFiltered ? `Filtered (${targetList.length} Students)` : `Admin (${devicePlatform})`;
 
     const userStr = localStorage.getItem('user');
-    const user = userStr ? JSON.parse(userStr) : null;
-    const isFaculty = user?.role === 'faculty' || user?.role === 'staff mentor' || user?.role === 'staff' || user?.role === 'hod';
+    const uObj = userStr ? JSON.parse(userStr) : null;
+    const isFaculty = isFacultyRole || ['staff', 'faculty', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes(uObj?.role?.toLowerCase() || '');
+    const requesterTag = isFaculty
+      ? `Staff Mentor (${targetList.length} Students)`
+      : (isFiltered ? `Filtered (${targetList.length} Students)` : `Admin (${devicePlatform})`);
 
     setSyncProgress({
       total: initialTotal,
@@ -349,10 +382,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         .map(s => typeof s.id === 'number' ? s.id : parseInt(String(s.id), 10))
         .filter((id): id is number => !isNaN(id) && id > 0);
 
-      if (isFiltered && studentIds.length > 0) {
-        const tag = isFaculty ? `Faculty (${studentIds.length} Students)` : requesterTag;
+      if ((isFiltered || isFaculty) && studentIds.length > 0) {
+        const tag = isFaculty ? `Faculty Mentor (${studentIds.length} Students)` : requesterTag;
         await triggerTargetedSync(studentIds, tag);
-      } else {
+      } else if (!isFaculty) {
         await triggerFullSync(requesterTag);
       }
       startSyncPolling();
@@ -395,34 +428,74 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   async function fetchFilteredStudents() {
     try {
-      const res = await api.get('/students/leaderboard-fast');
-      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-        const filtered = res.data;
-        setStudents(filtered);
-        saveCachedStudents(filtered);
+      if (isFacultyRole) {
+        try {
+          const res = await api.get('/faculty-assignments/my-students?_t=' + Date.now());
+          if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+            const facultyStudents = res.data.map((st: any) => ({
+              ...st,
+              department: typeof st.department === 'string' ? st.department : (st.department?.code || st.department?.name || 'CSE(CS)'),
+              stats: st.stats || {
+                total_solved: st.total_solved || 0,
+                easy_solved: st.easy_solved || 0,
+                medium_solved: st.medium_solved || 0,
+                hard_solved: st.hard_solved || 0,
+                contest_rating: st.contest_rating || 0,
+                sync_status: st.sync_status || 'verified',
+                status: st.status || 'ACTIVE',
+                last_verified_at: st.last_synced || new Date().toISOString()
+              }
+            }));
+            setStudents(facultyStudents);
+            saveCachedStudents(facultyStudents, user?.id || loggedInUser?.id);
+            return;
+          }
+        } catch (_err) {
+          console.warn('Could not load from /faculty-assignments/my-students, falling back to leaderboard-fast');
+        }
+      }
+
+      // Backend /students/leaderboard-fast already enforces RBAC scoping server-side.
+      // For faculty mentors, backend returns ONLY assigned students — no frontend filter needed.
+      const res = await api.get('/students/leaderboard-fast?_t=' + Date.now());
+      if (res.data && Array.isArray(res.data)) {
+        setStudents(res.data);
+        saveCachedStudents(res.data, isFacultyRole ? (user?.id || loggedInUser?.id) : undefined);
         return;
       }
-      const res2 = await api.get('/students');
-      if (res2.data && Array.isArray(res2.data) && res2.data.length > 0) {
-        const filtered2 = res2.data;
-        setStudents(filtered2);
-        saveCachedStudents(filtered2);
+      // Fallback to /students if leaderboard-fast fails
+      const res2 = await api.get('/students?_t=' + Date.now());
+      if (res2.data && Array.isArray(res2.data)) {
+        setStudents(res2.data);
+        saveCachedStudents(res2.data, isFacultyRole ? (user?.id || loggedInUser?.id) : undefined);
         return;
       }
-      setStudents(prev => {
-        if (prev && prev.length > 0) return prev;
-        const cached = getCachedStudents();
-        return (cached && cached.length > 0) ? cached : [];
-      });
+      if (!isFacultyRole) {
+        setStudents(prev => {
+          if (prev && prev.length > 0) return prev;
+          const cached = getCachedStudents();
+          return (cached && cached.length > 0) ? cached : [];
+        });
+      } else {
+        setStudents([]);
+      }
     } catch (err) {
       console.warn("fetchFilteredStudents error, preserving cached students:", err);
-      setStudents(prev => {
-        if (prev && prev.length > 0) return prev;
-        const cached = getCachedStudents();
-        return (cached && cached.length > 0) ? cached : [];
-      });
+      if (!isFacultyRole) {
+        setStudents(prev => {
+          if (prev && prev.length > 0) return prev;
+          const cached = getCachedStudents();
+          return (cached && cached.length > 0) ? cached : [];
+        });
+      } else {
+        setStudents([]);
+      }
     }
   };
+
+  useEffect(() => {
+    fetchFilteredStudents();
+  }, [user?.id, user?.role, isFacultyRole]);
 
   // --- Combined Canonical Filter Pipeline: Dept + Academic Year + Name Search + Performance Range + Sort ---
   const { filteredAndSorted: sortedList, counts: performanceCounts } = useMemo(() => {
@@ -676,7 +749,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
             {(() => {
               const activeCohort = (selectedDept !== 'all' || isFiltered) ? sortedList : students;
-              const totalStudents = activeCohort.length > 0 ? activeCohort.length : (summaryData?.total_students ?? students.length);
+              const totalStudents = isFacultyRole ? activeCohort.length : (activeCohort.length > 0 ? activeCohort.length : (summaryData?.total_students ?? students.length));
               const processedCount = syncProgress?.processed ?? 0;
               const totalProgress = syncProgress?.total ?? totalStudents;
 
@@ -788,7 +861,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <AnimatedNumber value={totalStudents} />
                 </h4>
                 <p className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100">
-                  {selectedDept !== 'all' ? 'Department Enrolled Students' : 'Total Enrolled Students'}
+                  {isFacultyRole ? 'Allocated Mentees' : (selectedDept !== 'all' ? 'Department Enrolled Students' : 'Total Enrolled Students')}
                 </p>
               </motion.div>
 
@@ -842,7 +915,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   {activeCohort.length > 0 ? activeCohort[0].name : (summaryData?.top_college_ranker || 'Top Ranker')}
                 </h4>
                 <p className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-slate-100">
-                  {selectedDept !== 'all' ? 'Top Department Ranker (#1)' : 'Top College Ranker (#1)'}
+                  {isFacultyRole ? 'Top Mentee Ranker (#1)' : (selectedDept !== 'all' ? 'Top Department Ranker (#1)' : 'Top College Ranker (#1)')}
                 </p>
               </motion.div>
             </>
@@ -895,14 +968,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-4">
 
           {/* 1. Department Filter */}
-          <PremiumDepartmentSelect
-            selectedDept={selectedDept === 'all' ? 'ALL' : selectedDept}
-            onChange={(val) => {
-              setSelectedDept(val === 'ALL' ? 'all' : val);
-              setDisplayCount(32);
-            }}
-            useIdAsValue={false}
-          />
+          {isFacultyRole ? (
+            <CustomDropdown
+              id="faculty-department-filter"
+              label="Mentee Scope"
+              options={[
+                { value: 'all', label: 'My Allocated Mentees (20)' },
+                { value: 'CSE(CS)', label: 'CSE (Cyber Security)' }
+              ]}
+              value={selectedDept}
+              onChange={(val) => {
+                setSelectedDept(val);
+                setDisplayCount(32);
+              }}
+              icon={Building2}
+              align="left"
+            />
+          ) : (
+            <PremiumDepartmentSelect
+              selectedDept={selectedDept === 'all' ? 'ALL' : selectedDept}
+              onChange={(val) => {
+                setSelectedDept(val === 'ALL' ? 'all' : val);
+                setDisplayCount(32);
+              }}
+              useIdAsValue={false}
+            />
+          )}
 
           {/* 2. Academic Year Filter */}
           <CustomDropdown
@@ -1015,7 +1106,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     ? 'Refreshing...' 
                     : isFiltered 
                       ? `Refresh Filtered (${sortedList.length} Students)` 
-                      : 'Refresh Allocated Students'
+                      : (isFacultyRole ? `Refresh My Allocated Students (${sortedList.length})` : 'Refresh Allocated Students')
                 }
               </span>
             </button>
@@ -1100,10 +1191,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </div>
               <div className="space-y-1">
                 <h4 className="text-base font-black text-slate-900 dark:text-white">
-                  No Student Records in Database
+                  {isFacultyRole ? 'No Students Allocated to Your Mentorship Scope' : 'No Student Records in Database'}
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-                  All previous student records have been wiped cleanly. Ready for fresh new student dataset import.
+                  {isFacultyRole
+                    ? 'You do not have any students assigned to your mentoring portfolio at this time. Please contact your Department HOD or Administrator to allocate mentees to you.'
+                    : 'All previous student records have been wiped cleanly. Ready for fresh new student dataset import.'}
                 </p>
               </div>
               <button

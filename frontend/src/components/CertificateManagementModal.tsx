@@ -144,6 +144,17 @@ export const CertificateManagementModal: React.FC<{
   const [activeMainTab, setActiveMainTab] = useState<'studio' | 'signatures' | 'registry'>('studio');
   const [downloadState, setDownloadState] = useState<DownloadState | null>(null);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   // Student selection
   const [students, setStudents] = useState<StudentOption[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<StudentOption | null>(preselectedStudent || null);

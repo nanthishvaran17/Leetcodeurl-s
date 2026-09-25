@@ -1,7 +1,7 @@
 import React from 'react';
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -49,51 +49,84 @@ export const TrendLineChart: React.FC<TrendLineChartProps> = ({
   return (
     <div style={{ width: '100%', height }}>
       <ResponsiveContainer>
-        <LineChart data={data} margin={{ top: 15, right: 30, left: 10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
+        <AreaChart data={data} margin={{ top: 15, right: lines.length > 1 ? 10 : 30, left: 0, bottom: 5 }}>
+          <defs>
+            {lines.map((line, idx) => (
+              <linearGradient key={idx} id={`color-${line.key}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={line.color} stopOpacity={0.4}/>
+                <stop offset="95%" stopColor={line.color} stopOpacity={0}/>
+              </linearGradient>
+            ))}
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.15} />
           <XAxis 
             dataKey={xKey} 
             axisLine={false}
             tickLine={false}
-            tick={{ fill: '#64748b', fontSize: 11 }}
+            tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }}
             tickFormatter={formatDateTick}
             dy={10}
+            minTickGap={20}
           />
           <YAxis 
+            yAxisId="left"
             axisLine={false}
             tickLine={false}
-            tick={{ fill: '#64748b', fontSize: 11 }}
+            tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }}
             domain={['auto', 'auto']}
             width={45}
+            tickFormatter={(value) => value.toLocaleString()}
           />
+          {lines.length > 1 && (
+            <YAxis 
+              yAxisId="right"
+              orientation="right"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }}
+              domain={['auto', 'auto']}
+              width={45}
+              tickFormatter={(value) => value.toLocaleString()}
+            />
+          )}
           <Tooltip 
             contentStyle={{ 
               backgroundColor: '#1e293b', 
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: '12px',
               color: '#f8fafc',
-              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+              boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3)',
+              padding: '12px 16px',
+              fontWeight: 600
             }}
-            itemStyle={{ color: '#f8fafc' }}
+            itemStyle={{ color: '#f8fafc', padding: '4px 0', fontSize: '13px' }}
+            labelStyle={{ color: '#94a3b8', fontSize: '12px', marginBottom: '8px', borderBottom: '1px solid #334155', paddingBottom: '8px' }}
             labelFormatter={formatDateTick}
+            cursor={{ stroke: '#475569', strokeWidth: 1, strokeDasharray: '4 4' }}
           />
-          <Legend wrapperStyle={{ paddingTop: '15px' }} />
+          <Legend 
+            wrapperStyle={{ paddingTop: '20px' }} 
+            iconType="circle"
+            iconSize={8}
+          />
           {lines.map((line, idx) => (
-            <Line
+            <Area
               key={idx}
+              yAxisId={idx === 0 ? "left" : "right"}
               type="monotone"
               dataKey={line.key}
               name={line.name}
               stroke={line.color}
               strokeWidth={3}
-              dot={false}
-              activeDot={{ r: 6, strokeWidth: 0 }}
+              fill={`url(#color-${line.key})`}
+              dot={{ r: 0 }}
+              activeDot={{ r: 6, strokeWidth: 2, stroke: '#fff' }}
               connectNulls={true}
+              animationDuration={1500}
             />
           ))}
-        </LineChart>
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   );
 };
-

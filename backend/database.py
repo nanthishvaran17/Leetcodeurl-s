@@ -73,15 +73,16 @@ if "postgresql" in db_url or "postgres" in db_url:
     }
 
     engine_kwargs.update({
-        "pool_size": int(os.environ.get("DB_POOL_SIZE", 30)),
-        "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", 50)),
-        "pool_timeout": 30,          # wait up to 30s to checkout a connection under load
+        "pool_size": int(os.environ.get("DB_POOL_SIZE", 50)),
+        "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", 100)),
+        "pool_timeout": 60,          # wait up to 60s to checkout a connection under load
         "pool_pre_ping": True,       # verify liveness before returning from pool
         "pool_recycle": 120,         # recycle after 120s to prevent stale connection pool sockets
         "connect_args": pg_connect_args
     })
 else:
     engine_kwargs.update({
+        "poolclass": NullPool,
         "connect_args": {"check_same_thread": False, "timeout": 60}
     })
 
@@ -100,6 +101,7 @@ except Exception as _engine_exc:
         engine = create_engine(
             db_url,
             echo=False,
+            poolclass=NullPool,
             connect_args={"check_same_thread": False, "timeout": 60}
         )
     else:

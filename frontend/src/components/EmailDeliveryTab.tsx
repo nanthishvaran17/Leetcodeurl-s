@@ -124,7 +124,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
 }) => {
   const { user } = useAuth();
   const { departments } = useDepartments();
-  const isStaff = ['faculty', 'staff'].includes(user?.role?.toLowerCase() || '');
+  const isStaff = ['faculty', 'staff', 'professor', 'faculty mentor', 'staff mentor', 'faculty_mentor', 'staff_mentor'].includes((user?.role || '').trim().toLowerCase());
 
   // Navigation & Data States
   const [activeSection, setActiveSection] = useState<'manual' | 'automated' | 'recipients' | 'history'>(defaultSection);
@@ -1800,30 +1800,32 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
                         <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">
                           {log.recipient}
                         </td>
-                        <td className="py-3 px-4 text-slate-600 dark:text-slate-300 truncate max-w-[240px]" title={log.subject}>
+                        <td className="py-3.5 px-4 font-semibold text-slate-800 dark:text-slate-200 max-w-[420px] truncate" title={log.subject}>
                           {log.subject}
                         </td>
-                        <td className="py-3 px-4">
-                          <span className={`px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase ${
-                            log.dispatch_type === 'MANUAL' ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20' :
-                            log.dispatch_type === 'TEST' ? 'bg-purple-500/10 text-purple-600 border border-purple-500/20' :
-                            'bg-brand-500/10 text-brand-600 border border-brand-500/20'
+                        <td className="py-3.5 px-4">
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wide border ${
+                            log.dispatch_type === 'MANUAL' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30' :
+                            log.dispatch_type === 'TEST' ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30' :
+                            'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30'
                           }`}>
                             {log.dispatch_type || 'AUTOMATED'}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-slate-500 font-medium whitespace-nowrap">
+                        <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300 font-bold text-xs whitespace-nowrap">
                           {formatTimestampIST(log.sent_at || log.created_at)}
                         </td>
-                        <td className="py-3 px-4 text-slate-400 font-mono text-[11px]">
-                          Brevo v3
+                        <td className="py-3.5 px-4">
+                          <span className="font-mono text-xs font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-navy-800/90 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-navy-700 inline-block shadow-2xs">
+                            Brevo v3
+                          </span>
                         </td>
-                        <td className="py-3 px-4 text-right space-x-2">
+                        <td className="py-3.5 px-4 text-right space-x-2 whitespace-nowrap">
                           <button
                             onClick={() => setSelectedLogDetail(log)}
-                            className="px-2.5 py-1 bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 dark:hover:bg-navy-700 text-slate-700 dark:text-slate-200 rounded-xl text-[11px] font-bold cursor-pointer inline-flex items-center gap-1"
+                            className="px-3 py-1.5 bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-600 hover:text-white text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 rounded-xl text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-2xs"
                           >
-                            <Eye className="w-3 h-3" /> View
+                            <Eye className="w-3.5 h-3.5" /> <span>View</span>
                           </button>
 
                           {isFailed && (

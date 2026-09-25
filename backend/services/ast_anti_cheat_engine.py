@@ -98,16 +98,19 @@ class ASTAntiCheatEngine:
             method = "CONTROL_FLOW_TOKEN_STREAM"
 
         similarity_pct = round(ast_sim * 100, 2)
-        is_plagiarized = similarity_pct >= 85.0
+        similarity_threshold_exceeded = similarity_pct >= 85.0
         risk_level = "CRITICAL" if similarity_pct >= 90.0 else "HIGH" if similarity_pct >= 75.0 else "MEDIUM" if similarity_pct >= 50.0 else "LOW"
 
         return {
             "similarity_percentage": similarity_pct,
-            "is_plagiarized": is_plagiarized,
+            "similarity_threshold_exceeded": similarity_threshold_exceeded,
+            "is_plagiarized": similarity_threshold_exceeded,  # legacy compat
             "risk_level": risk_level,
             "method": method,
             "structural_nodes_analyzed": len(ast_a or tok_a if 'tok_a' in locals() else []),
-            "verdict": " CHEATING DETECTED (AST Structure Match)" if is_plagiarized else " GENUINE SUBMISSION"
+            "verdict": "SIMILARITY_DETECTED" if similarity_threshold_exceeded else "SIMILARITY_NOT_DETECTED",
+            "review_status": "REVIEW_REQUIRED" if similarity_threshold_exceeded else "NO_ACTION_REQUIRED",
+            "note": "Structural similarity alone does not prove misconduct. Human review is required." if similarity_threshold_exceeded else "No significant structural similarity detected."
         }
 
     @staticmethod
@@ -126,7 +129,9 @@ class ASTAntiCheatEngine:
             "paste_events": paste_events,
             "is_paste_burst": is_paste_burst,
             "keystroke_anomaly": is_paste_burst,
-            "flag": " COPY_PASTE_BURST_FLAGGED" if is_paste_burst else " NORMAL_TYPING_CADENCE"
+            "flag": "POTENTIAL_ANOMALY" if is_paste_burst else "NORMAL_TYPING_CADENCE",
+            "review_status": "REQUIRES_REVIEW" if is_paste_burst else "NO_ACTION_REQUIRED",
+            "note": "Unusual typing velocity detected. This is a potential anomaly, not proof of misconduct." if is_paste_burst else "Typing cadence within normal range."
         }
 
 
