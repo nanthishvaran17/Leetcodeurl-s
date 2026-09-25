@@ -1,7 +1,7 @@
 // Lightweight localStorage Cache Manager for Student & Summary Data
 // Eliminates ~300KB synchronous import of canonical static roster on initial bundle load
 
-const CACHE_VERSION = '2026.09.25.v2'; // bumped: RBAC scoping fix — purge old unscoped caches
+const CACHE_VERSION = '2026.09.25.v3'; // bumped: all-department support (CSE, AIDS, ECE, EEE, AGRI, IT, CYBER, IOT)
 
 export function checkCacheVersion(): void {
   if (typeof window === 'undefined') return;

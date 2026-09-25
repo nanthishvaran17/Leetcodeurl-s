@@ -21,12 +21,19 @@ interface DepartmentContextType {
 
 const DepartmentContext = createContext<DepartmentContextType | undefined>(undefined);
 
+const ALL_DEPARTMENTS_FALLBACK: Department[] = [
+  { id: 1, code: 'CSE', name: 'Computer Science and Engineering', pillText: 'CSE' },
+  { id: 2, code: 'CSE(CS)', name: 'Computer Science and Engineering (Cyber Security)', pillText: 'CSE(CS)' },
+  { id: 3, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)' },
+  { id: 4, code: 'AIDS', name: 'Artificial Intelligence and Data Science', pillText: 'AIDS' },
+  { id: 5, code: 'ECE', name: 'Electronics and Communication Engineering', pillText: 'ECE' },
+  { id: 6, code: 'EEE', name: 'Electrical and Electronics Engineering', pillText: 'EEE' },
+  { id: 7, code: 'IT', name: 'Information Technology', pillText: 'IT' },
+  { id: 8, code: 'AGRI', name: 'Agricultural Engineering', pillText: 'AGRI' }
+];
+
 export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [departments, setDepartments] = useState<Department[]>([
-    { id: 1, code: 'CSE(CS)', name: 'Computer Science and Engineering (Cyber Security)', pillText: 'CSE(CS)' },
-    { id: 2, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)' },
-    { id: 7, code: 'IT', name: 'Information Technology', pillText: 'IT' }
-  ]);
+  const [departments, setDepartments] = useState<Department[]>(ALL_DEPARTMENTS_FALLBACK);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isHodScope, setIsHodScope] = useState(false);
@@ -70,6 +77,21 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           } else if (upperCode === 'IT' || upperName.includes('INFORMATION TECHNOLOGY') || upperName.includes('INFO TECH')) {
             finalCode = 'IT';
             finalName = 'Information Technology';
+          } else if (upperCode === 'AIDS' || upperName.includes('DATA SCIENCE') || upperName.includes('ARTIFICIAL')) {
+            finalCode = 'AIDS';
+            finalName = 'Artificial Intelligence and Data Science';
+          } else if (upperCode === 'ECE' || upperName.includes('ELECTRONICS AND COMM')) {
+            finalCode = 'ECE';
+            finalName = 'Electronics and Communication Engineering';
+          } else if (upperCode === 'EEE' || upperName.includes('ELECTRICAL AND ELEC')) {
+            finalCode = 'EEE';
+            finalName = 'Electrical and Electronics Engineering';
+          } else if (upperCode === 'AGRI' || upperName.includes('AGRICULTUR')) {
+            finalCode = 'AGRI';
+            finalName = 'Agricultural Engineering';
+          } else if (upperCode === 'CSE' || upperName === 'COMPUTER SCIENCE AND ENGINEERING') {
+            finalCode = 'CSE';
+            finalName = 'Computer Science and Engineering';
           }
 
           if (!uniqueMap.has(finalCode)) {
@@ -84,17 +106,9 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
         const mappedDepts = Array.from(uniqueMap.values());
 
-        setDepartments(mappedDepts.length > 0 ? mappedDepts : [
-          { id: 1, code: 'CSE(CS)', name: 'Computer Science and Engineering (Cyber Security)', pillText: 'CSE(CS)' },
-          { id: 2, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)' },
-          { id: 7, code: 'IT', name: 'Information Technology', pillText: 'IT' }
-        ]);
+        setDepartments(mappedDepts.length > 0 ? mappedDepts : ALL_DEPARTMENTS_FALLBACK);
       } else {
-        setDepartments([
-          { id: 1, code: 'CSE(CS)', name: 'Computer Science and Engineering (Cyber Security)', pillText: 'CSE(CS)' },
-          { id: 2, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)' },
-          { id: 7, code: 'IT', name: 'Information Technology', pillText: 'IT' }
-        ]);
+        setDepartments(ALL_DEPARTMENTS_FALLBACK);
       }
 
       // Determine scope flags from user role
@@ -107,16 +121,13 @@ export const DepartmentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     } catch (err: any) {
       console.error('[DepartmentContext] Failed to fetch departments:', err);
       setError(err.message || 'Failed to fetch departments');
-      // On error, fallback to the 3 production departments
-      setDepartments([
-        { id: 1, code: 'CSE(CS)', name: 'Computer Science and Engineering (Cyber Security)', pillText: 'CSE(CS)' },
-        { id: 2, code: 'CSE(IOT)', name: 'Computer Science and Engineering (IoT)', pillText: 'CSE(IOT)' },
-        { id: 7, code: 'IT', name: 'Information Technology', pillText: 'IT' }
-      ]);
+      // On error, fallback to full institutional departments
+      setDepartments(ALL_DEPARTMENTS_FALLBACK);
     } finally {
       setIsLoading(false);
     }
   }, []);
+
 
   // Initial fetch
   useEffect(() => {
