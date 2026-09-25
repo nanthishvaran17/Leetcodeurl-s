@@ -174,7 +174,22 @@ async def _deferred_startup_tasks():
                                 ADD COLUMN IF NOT EXISTS participant_entry_time_source VARCHAR(50),
                                 ADD COLUMN IF NOT EXISTS participant_entry_time_confidence VARCHAR(20),
                                 ADD COLUMN IF NOT EXISTS participant_entry_time_method VARCHAR(50),
-                                ADD COLUMN IF NOT EXISTS participant_entry_time_observed_at TIMESTAMP WITH TIME ZONE;
+                                ADD COLUMN IF NOT EXISTS participant_entry_time_observed_at TIMESTAMP WITH TIME ZONE,
+                                ADD COLUMN IF NOT EXISTS q1_observed_seconds INTEGER,
+                                ADD COLUMN IF NOT EXISTS q2_observed_seconds INTEGER,
+                                ADD COLUMN IF NOT EXISTS q3_observed_seconds INTEGER,
+                                ADD COLUMN IF NOT EXISTS q4_observed_seconds INTEGER,
+                                ADD COLUMN IF NOT EXISTS q1_estimated_seconds INTEGER,
+                                ADD COLUMN IF NOT EXISTS q2_estimated_seconds INTEGER,
+                                ADD COLUMN IF NOT EXISTS q3_estimated_seconds INTEGER,
+                                ADD COLUMN IF NOT EXISTS q4_estimated_seconds INTEGER,
+                                ADD COLUMN IF NOT EXISTS q1_time_source VARCHAR(50),
+                                ADD COLUMN IF NOT EXISTS q2_time_source VARCHAR(50),
+                                ADD COLUMN IF NOT EXISTS q3_time_source VARCHAR(50),
+                                ADD COLUMN IF NOT EXISTS q4_time_source VARCHAR(50),
+                                ADD COLUMN IF NOT EXISTS timing_calculation_version VARCHAR(20),
+                                ADD COLUMN IF NOT EXISTS timing_calculated_at TIMESTAMP WITH TIME ZONE,
+                                ADD COLUMN IF NOT EXISTS timing_confidence VARCHAR(20);
                             """,
                             """
                             ALTER TABLE weekly_virtual_results
