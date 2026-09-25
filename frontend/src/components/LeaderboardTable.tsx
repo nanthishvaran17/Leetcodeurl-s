@@ -140,6 +140,7 @@ interface LeaderboardTableProps {
 
 import { useNotification } from '../context/NotificationContext';
 
+// million-ignore
 const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
   students,
   loading = false,

@@ -627,7 +627,7 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
         <div className="space-y-1">
           <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-[11px] font-black uppercase tracking-wider border border-emerald-300 dark:border-emerald-700/60 shadow-xs">
             <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>8K ULTRA-HD CRYSTAL CLEAR (7680 × 4320)</span>
+            <span>High-Quality Digital Pass</span>
           </div>
           <h3 className="font-black text-xl text-slate-900 dark:text-white tracking-tight flex items-center space-x-2">
             <span>Executive Digital Student Pass</span>
@@ -681,7 +681,7 @@ export const IDCardGenerator: React.FC<IDCardGeneratorProps> = ({
         </div>
         <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-navy-800 border border-slate-200 dark:border-navy-700 flex items-center space-x-2 text-slate-700 dark:text-slate-200 font-extrabold shadow-xs">
           <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-          <span>33.2 Megapixel (7680×4320) Lossless Quality</span>
+          <span>High-Quality Image Export</span>
         </div>
       </div>
     </div>

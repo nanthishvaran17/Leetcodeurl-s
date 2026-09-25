@@ -108,6 +108,8 @@ def fetch_normalized_students(
         batch_filter = kwargs.get("batch")
     if "section" in kwargs and (section_filter == "ALL" or not section_filter):
         section_filter = kwargs.get("section")
+    
+    session_id = kwargs.get("session_id")
 
     canon_dept = resolve_dept_canonical(dept_filter)
     canon_year = (year_filter or "ALL").upper().strip()
@@ -120,16 +122,18 @@ def fetch_normalized_students(
     data_ver = get_current_data_version(db)
     u_role = (getattr(current_user, "role", "") or "").lower()
     u_dept = str(getattr(current_user, "department_id", "") or "")
-    rows_key = f"st_rows:{data_ver}:{u_role}:{u_dept}:{canon_dept}:{canon_year}:{canon_sec}:{canon_batch}:{canon_status}:{canon_search}:{canon_range}"
+    rows_key = f"st_rows:{data_ver}:{u_role}:{u_dept}:{canon_dept}:{canon_year}:{canon_sec}:{canon_batch}:{canon_status}:{canon_search}:{canon_range}:{session_id}"
 
-    with _ROWS_CACHE_LOCK:
-        if rows_key in _STUDENT_ROWS_CACHE:
-            return _STUDENT_ROWS_CACHE[rows_key]
+    # Cache disabled to prevent DetachedInstanceError with ORM objects
+    # with _ROWS_CACHE_LOCK:
+    #     if rows_key in _STUDENT_ROWS_CACHE:
+    #         return _STUDENT_ROWS_CACHE[rows_key]
 
     cache_key = f"roster:{data_ver}:{u_role}:{u_dept}"
 
-    with _ROSTER_CACHE_LOCK:
-        raw_students = _ROSTER_CACHE.get(cache_key)
+    raw_students = None
+    # with _ROSTER_CACHE_LOCK:
+    #     raw_students = _ROSTER_CACHE.get(cache_key)
 
     if raw_students is None:
         from sqlalchemy.orm import joinedload, selectinload
@@ -143,8 +147,8 @@ def fetch_normalized_students(
             query = apply_role_based_student_filter(query, current_user, db)
 
         raw_students = query.all()
-        with _ROSTER_CACHE_LOCK:
-            _ROSTER_CACHE[cache_key] = raw_students
+        # with _ROSTER_CACHE_LOCK:
+        #     _ROSTER_CACHE[cache_key] = raw_students
     
     canon_dept = resolve_dept_canonical(dept_filter)
     canon_year = (year_filter or "ALL").upper().strip()
@@ -153,6 +157,17 @@ def fetch_normalized_students(
     canon_status = (status_filter or "ALL").upper().strip()
     canon_search = (search_query or "").strip().lower()
     canon_range = (performance_range or "ALL").lower().strip()
+
+    snapshot_map = {}
+    is_historical = False
+    if session_id:
+        from backend.models import WeeklySession, WeeklySessionSnapshot
+        target_session = db.query(WeeklySession).filter(WeeklySession.id == int(session_id)).first() if str(session_id).isdigit() else None
+        if target_session and (getattr(target_session, "finalized", False) or getattr(target_session, "status", None) == "FINALIZED"):
+            is_historical = True
+            snaps = db.query(WeeklySessionSnapshot).filter(WeeklySessionSnapshot.session_id == target_session.id).all()
+            for snp in snaps:
+                snapshot_map[snp.student_id] = snp
 
     filtered_students = []
     for s in raw_students:
@@ -198,7 +213,15 @@ def fetch_normalized_students(
         is_verified = bool(st and (st.sync_status in ("success", "OK", "verified", "stale") or st.status == "verified" or st.total_solved is not None))
         
         # Calculate solved
-        if st:
+        if is_historical:
+            snap = snapshot_map.get(s.id)
+            if snap:
+                total_solved = snap.end_solved_count or 0
+                easy = medium = hard = 0
+            else:
+                total_solved = 0
+                easy = medium = hard = 0
+        elif st:
             easy = st.easy_solved if st.easy_solved is not None else (0 if is_verified else None)
             medium = st.medium_solved if st.medium_solved is not None else (0 if is_verified else None)
             hard = st.hard_solved if st.hard_solved is not None else (0 if is_verified else None)

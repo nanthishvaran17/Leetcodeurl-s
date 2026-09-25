@@ -56,16 +56,38 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         if cache_key in _UNIVERSAL_DATASET_CACHE:
             return copy.deepcopy(_UNIVERSAL_DATASET_CACHE[cache_key])
 
+    WOW_INTEL_TYPES = (
+        "WEEK_ON_WEEK_INTELLIGENCE", "WEEK_ON_WEEK",
+        "WOW_INTEL", "WOW", "WOW_INTELLIGENCE", "WEEK_ON_WEEK_COMPARISON"
+    )
+    HIST_INTEL_TYPES = (
+        "HISTORICAL_CONTEST_INTELLIGENCE", "HISTORICAL_CONTEST_INTEL"
+    )
     CONTEST_REPORT_TYPES = (
         "FRIDAY_OFFICIAL_CONTEST", "FRIDAY_OFFICIAL", "FRIDAY_OFFICIAL_RESULT",
         "CONTEST_PERFORMANCE", "OFFICIAL_CONTEST", "WEEKLY_CONTEST",
         "SUNDAY_LIVE_CONTEST", "WEEKLY_CONTEST_INTELLIGENCE",
         "CONTEST_ATTENDANCE_PARTICIPATION", "CONTEST_PERFORMANCE_RANKING",
-        "SUNDAY_CONTEST", "WEEK_ON_WEEK_INTELLIGENCE", "WEEK_ON_WEEK",
-        "WOW_INTEL", "WOW", "WOW_INTELLIGENCE",
-        "HISTORICAL_CONTEST_INTELLIGENCE", "HISTORICAL_CONTEST_INTEL"
+        "SUNDAY_CONTEST",
     )
-    if config.report_type and config.report_type.upper() in CONTEST_REPORT_TYPES:
+
+    rtype_upper = (config.report_type or "").upper()
+
+    if rtype_upper in WOW_INTEL_TYPES:
+        from backend.services.wow_intel_service import build_wow_intel_report
+        res = build_wow_intel_report(db, config, current_user=current_user)
+        with _UNIVERSAL_CACHE_LOCK:
+            _UNIVERSAL_DATASET_CACHE[cache_key] = copy.deepcopy(res)
+        return res
+
+    if rtype_upper in HIST_INTEL_TYPES:
+        from backend.services.hist_intel_service import build_hist_intel_report
+        res = build_hist_intel_report(db, config, current_user=current_user)
+        with _UNIVERSAL_CACHE_LOCK:
+            _UNIVERSAL_DATASET_CACHE[cache_key] = copy.deepcopy(res)
+        return res
+
+    if config.report_type and rtype_upper in CONTEST_REPORT_TYPES:
         res = build_contest_performance_report(db, config, current_user=current_user)
         with _UNIVERSAL_CACHE_LOCK:
             _UNIVERSAL_DATASET_CACHE[cache_key] = copy.deepcopy(res)
@@ -88,7 +110,8 @@ def build_universal_report(db: Session, config: ReportConfig, current_user: Opti
         status_filter=cfg_filters.get("status") or cfg_filters.get("attendanceStatus") or "ALL",
         search_query=cfg_filters.get("search") or cfg_filters.get("searchQuery") or cfg_filters.get("query"),
         performance_range=cfg_filters.get("performanceRange") or cfg_filters.get("range") or "ALL",
-        current_user=current_user
+        current_user=current_user,
+        session_id=cfg_filters.get("session_id")
     )
     data_quality = validate_data_quality(students)
 

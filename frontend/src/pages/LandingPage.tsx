@@ -42,6 +42,7 @@ interface LandingPageProps {
   onSelectStudent?: (student: StudentData) => void;
 }
 
+// million-ignore
 export const LandingPage: React.FC<LandingPageProps> = ({
   summaryData,
   onViewDashboard,

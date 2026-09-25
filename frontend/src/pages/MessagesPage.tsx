@@ -604,9 +604,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
               <span className="hidden sm:inline">Back</span>
             </button>
           )}
-          <div className="w-11 h-11 sm:w-12 sm:h-12 bg-indigo-500/20 rounded-2xl flex items-center justify-center border border-indigo-400/30 shadow-inner shrink-0 ring-4 ring-indigo-500/10">
-            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400 animate-pulse" />
-          </div>
+
           <div>
             <h1 className="text-base sm:text-lg md:text-xl font-black tracking-wider leading-tight text-white uppercase">
               INSTITUTIONAL <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-300">INTELLIGENCE HUB</span>

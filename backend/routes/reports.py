@@ -27,6 +27,31 @@ from backend.models import User
 
 router = APIRouter(prefix="/api/reports", tags=["Reports"])
 
+@router.get("/available-sundays")
+def get_available_sundays(db: Session = Depends(get_db)):
+    """
+    Returns a list of completed Sunday snapshot dates for historical reporting.
+    Must only return sessions that are finalized.
+    """
+    from backend.models import WeeklySession
+    sessions = db.query(WeeklySession).filter(
+        (WeeklySession.finalized == True) | (WeeklySession.status == "FINALIZED")
+    ).order_by(WeeklySession.session_date.desc()).all()
+    
+    results = []
+    for s in sessions:
+        results.append({
+            "session_id": str(s.id),
+            "snapshot_id": s.final_snapshot_id or str(s.id),
+            "date": s.session_date,
+            "label": f"{s.session_date} - {s.contest_name}",
+        })
+    
+    if results:
+        results[0]["is_latest"] = True
+        
+    return {"sundays": results}
+
 @router.get("/download-info")
 def get_report_download_info(
     file_type: str = Query("pdf"),

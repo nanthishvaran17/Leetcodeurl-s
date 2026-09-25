@@ -152,7 +152,7 @@ def normalize_student_record(s_dict: Dict[str, Any]) -> Dict[str, Any]:
 
     solved = q1 + q2 + q3 + q4
     score_raw = s_dict.get("score")
-    score_display = str(score_raw) if score_raw is not None and score_raw != "" else "Not Available"
+    score_display = str(score_raw) if score_raw is not None and score_raw != "" else "—"
 
     staff_name = s_dict.get("staff_name") or s_dict.get("mentor_name") or "Staff allocation not available"
 
@@ -172,11 +172,11 @@ def normalize_student_record(s_dict: Dict[str, Any]) -> Dict[str, Any]:
         global_rank_val = None
 
     return {
-        "reg_no": str(s_dict.get("reg_no") or s_dict.get("register_no") or "Not Available"),
-        "name": str(s_dict.get("name") or s_dict.get("student_name") or "Not Available"),
+        "reg_no": str(s_dict.get("reg_no") or s_dict.get("register_no") or "—"),
+        "name": str(s_dict.get("name") or s_dict.get("student_name") or "—"),
         "dept": str(s_dict.get("dept") or s_dict.get("department") or "CSE").upper(),
         "year": str(s_dict.get("year") or s_dict.get("year_level") or "III").upper(),
-        "username": str(s_dict.get("username") or s_dict.get("leetcode_username") or "Not Available"),
+        "username": str(s_dict.get("username") or s_dict.get("leetcode_username") or "—"),
         "status": status_str,
         "attendance": "ATTENDED" if is_att else "NOT ATTENDED",
         "is_att": is_att,
@@ -512,6 +512,9 @@ def generate_master_10_sheet_workbook(
 
     public_map = {}
     virtual_map = {}
+    snapshot_map = {}
+    is_historical = False
+    
     if target_session:
         p_list = db.query(WeeklyPublicResult).filter(WeeklyPublicResult.session_id == target_session.id).all()
         for pr in p_list:
@@ -519,6 +522,13 @@ def generate_master_10_sheet_workbook(
         v_list = db.query(WeeklyVirtualResult).filter(WeeklyVirtualResult.session_id == target_session.id).all()
         for vr in v_list:
             virtual_map[vr.student_id] = vr
+            
+        if getattr(target_session, "finalized", False) or getattr(target_session, "status", None) == "FINALIZED":
+            is_historical = True
+            from backend.models import WeeklySessionSnapshot
+            s_list = db.query(WeeklySessionSnapshot).filter(WeeklySessionSnapshot.session_id == target_session.id).all()
+            for snp in s_list:
+                snapshot_map[snp.student_id] = snp
 
     participation_map = {}
     if contest_id is not None:
@@ -626,6 +636,19 @@ def generate_master_10_sheet_workbook(
         hard_s = st_stats.hard_solved if (st_stats and st_stats.hard_solved is not None) else 0
         tot_lifetime = st_stats.total_solved if (st_stats and st_stats.total_solved is not None) else (easy_s + med_s + hard_s)
 
+        # STRICT HISTORICAL INTEGRITY: NEVER MIX LIVE DATA IN HISTORICAL REPORTS
+        if is_historical:
+            snap = snapshot_map.get(s.id)
+            if snap:
+                tot_lifetime = snap.end_solved_count or 0
+                c_rating = snap.end_rating
+                # We don't have easy/medium/hard in snapshot, so 0 out to prevent fake data
+                easy_s = med_s = hard_s = 0 
+            else:
+                tot_lifetime = 0
+                c_rating = None
+                easy_s = med_s = hard_s = 0
+
         raw_students.append({
             "reg_no": s.reg_no,
             "name": s.name,
@@ -680,7 +703,7 @@ def generate_master_10_sheet_workbook(
         {"label": "Attendance Rate", "value": f"{att_pct:.2f}%"},
         {"label": "Total Solves", "value": f"{tot_solves:,}"},
         {"label": "Average Solves (Attended)", "value": f"{avg_solves}"},
-        {"label": "Average Score", "value": "Not Available"},
+        {"label": "Average Score", "value": "—"},
         {"label": "4/4 Perfect Solvers", "value": f"{len(p4):,}"},
         {"label": "3/4 & 2/4 Solvers", "value": f"{len(p3) + len(p2):,}"},
     ]

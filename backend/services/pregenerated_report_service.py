@@ -526,7 +526,8 @@ def generate_report_bytes(
         "WEEK_ON_WEEK_INTELLIGENCE", "WEEK_ON_WEEK", "HISTORICAL_CONTEST_INTELLIGENCE", "HISTORICAL_CONTEST_INTEL"
     ):
         from backend.services.master_institutional_report_service import generate_master_10_sheet_workbook
-        return generate_master_10_sheet_workbook(db, current_user=current_user, department=dept, year=year, report_type=rpt)
+        c_id = flt.get("session_id") or flt.get("contest_id")
+        return generate_master_10_sheet_workbook(db, current_user=current_user, contest_id=c_id, department=dept, year=year, report_type=rpt)
 
     # 4. Master 8-Sheet Tracker Fallback
     if rpt in ("MASTER_TRACKER", "8_SHEET_MASTER_TRACKER"):

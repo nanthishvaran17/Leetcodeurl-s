@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { ArrowLeft, ExternalLink, Trophy, Flame, Award, Lightbulb, RefreshCw, FileText, Edit3, Trash2, X, BarChart2, Activity, BookOpen, Medal, TrendingUp, Target, CheckCircle2 } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { SkillRadarChart } from '../components/SkillRadarChart';
 import { BadgeShelf } from '../components/BadgeShelf';
@@ -457,9 +458,19 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       </div>
 
       {/* Scrollable Body Content */}
-      <div className="p-5 sm:p-6 overflow-y-auto overscroll-contain flex-1 min-h-0 space-y-6 custom-scrollbar pt-2">
-
-      {/* PREMIUM BENTO GRID FOR STATS - PERSISTENT ACROSS TABS */}
+      <div className="p-5 sm:p-6 overflow-y-auto overflow-x-hidden overscroll-contain flex-1 min-h-0 space-y-6 custom-scrollbar pt-2">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="space-y-6 w-full"
+          >
+      {activeTab === 'overview' && (
+        <>
+      {/* PREMIUM BENTO GRID FOR STATS */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
         {/* Left Section: Rankings & Activity (7 columns) */}
@@ -550,8 +561,6 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
         </div>
       </div>
 
-      {activeTab === 'overview' && (
-        <>
       {/* Skill Radar & Digital Student Pass */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {isChartsReady ? (
@@ -689,6 +698,8 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           />
         )}
       </React.Suspense>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       <React.Suspense fallback={null}>

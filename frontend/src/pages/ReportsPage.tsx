@@ -31,6 +31,8 @@ export const ReportsPage: React.FC = () => {
   const [selectedDept, setSelectedDept] = useState<string>('ALL');
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
   const [selectedOutputScope, setSelectedOutputScope] = useState<string>('COLLEGE');
+  const [selectedSessionId, setSelectedSessionId] = useState<string>('latest');
+  const [availableSundays, setAvailableSundays] = useState<any[]>([]);
   // Track which download is currently in progress (filename → boolean)
   const [downloadingFiles, setDownloadingFiles] = useState<Record<string, boolean>>({});
   const [downloadState, setDownloadState] = useState<DownloadState | null>(null);
@@ -38,6 +40,7 @@ export const ReportsPage: React.FC = () => {
   const [rptYearOpen, setRptYearOpen] = useState<boolean>(false);
   const [rptScopeOpen, setRptScopeOpen] = useState<boolean>(false);
   const [rptTypeOpen, setRptTypeOpen] = useState<boolean>(false);
+  const [rptSessionOpen, setRptSessionOpen] = useState<boolean>(false);
 
   // Floating Center Delete Modal & Toast States
   const [deleteModalItem, setDeleteModalItem] = useState<DeleteItemInfo | null>(null);
@@ -56,12 +59,12 @@ export const ReportsPage: React.FC = () => {
           department: selectedDept,
           year: selectedYear,
           output_scope: selectedOutputScope,
-          filters: {}
+          filters: { session_id: selectedSessionId }
         }).catch(() => {});
       }
     }, 250);
     return () => clearTimeout(timer);
-  }, [selectedReportType, selectedDept, selectedYear, selectedOutputScope]);
+  }, [selectedReportType, selectedDept, selectedYear, selectedOutputScope, selectedSessionId]);
 
   useEffect(() => {
     if (deleteModalItem || showCertModal || activeUniversalPreviewId) {
@@ -81,7 +84,20 @@ export const ReportsPage: React.FC = () => {
   useEffect(() => {
     fetchEmailLogs();
     fetchHodSnapshots();
+    fetchAvailableSundays();
   }, []);
+
+  const fetchAvailableSundays = async () => {
+    try {
+      const res = await api.get('/reports/available-sundays');
+      setAvailableSundays(res.data.sundays || []);
+      if (res.data.sundays && res.data.sundays.length > 0) {
+        setSelectedSessionId(res.data.sundays[0].session_id);
+      }
+    } catch (err) {
+      console.error("Failed to fetch available Sundays", err);
+    }
+  };
 
   const fetchEmailLogs = async () => {
     try {
@@ -216,6 +232,7 @@ export const ReportsPage: React.FC = () => {
     if (selectedYear && selectedYear !== 'ALL') params.append('year', selectedYear);
     if (selectedOutputScope && selectedOutputScope !== 'ALL') params.append('output_scope', selectedOutputScope);
     if (selectedReportType) params.append('report_type', selectedReportType);
+    if (selectedSessionId) params.append('session_id', selectedSessionId);
     if (extraParams) {
       Object.entries(extraParams).forEach(([k, v]) => {
         if (v && v !== 'ALL') params.set(k, v);
@@ -562,10 +579,10 @@ export const ReportsPage: React.FC = () => {
             </div>
 
             {/* Unified Report Builder Form Controls */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 p-5 bg-white/70 dark:bg-navy-950/70 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-inner items-start">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 p-5 bg-white/70 dark:bg-navy-950/70 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-inner items-start">
 
               {/* 1. Report Type — Premium Dropdown with Custom Colored Badges */}
-              <div className="flex flex-col space-y-1.5 min-w-0 w-full relative z-[35]">
+              <div className={`flex flex-col space-y-1.5 min-w-0 w-full relative transition-all ${rptTypeOpen ? 'z-[100]' : 'z-[35]'}`}>
                 <span className="block text-xs font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider truncate">
                   Report Type
                 </span>
@@ -622,6 +639,41 @@ export const ReportsPage: React.FC = () => {
                       (selectedReportType === 'BATCH_PERFORMANCE' && o.value === 'FIVE_WEEK_PERFORMANCE_TREND')
                     ) || allOpts[0];
 
+                    const renderCategory = (cat: any) => (
+                      <div key={cat.title} className="space-y-1.5 flex flex-col">
+                        <div className="flex items-center gap-2 mb-1 px-1">
+                          <div className={`h-3 w-1 rounded-full bg-current ${cat.titleColor}`} />
+                          <div className={`text-[11px] font-black uppercase tracking-widest ${cat.titleColor}`}>
+                            {cat.title}
+                          </div>
+                        </div>
+                        {cat.options.map((opt: any) => {
+                          const isSelected = selectedReportType === opt.value || 
+                            (selectedReportType === 'STUDENT_PERFORMANCE' && opt.value === 'WEEKLY_STUDENT_PERFORMANCE') ||
+                            (selectedReportType === 'COLLEGE_EXECUTIVE' && opt.value === 'PRINCIPAL_EXECUTIVE') ||
+                            (selectedReportType === 'DEPARTMENT_PERFORMANCE' && opt.value === 'HOD_DEPARTMENT_INTELLIGENCE');
+
+                          return (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => { setSelectedReportType(opt.value); setRptTypeOpen(false); }}
+                              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all group ${isSelected ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20 ring-1 ring-brand-500/50' : 'hover:bg-slate-50 dark:hover:bg-navy-900 border border-transparent hover:border-slate-200 dark:hover:border-slate-800'}`}
+                            >
+                              <span className={`w-20 min-w-[5rem] text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md text-center shrink-0 border transition-colors ${isSelected ? 'bg-white/20 text-white border-white/30' : opt.pillColor}`}>
+                                {opt.pill}
+                              </span>
+                              <span className={`text-[11px] truncate flex-1 ${isSelected ? 'font-black text-white' : 'font-bold text-slate-700 dark:text-slate-300 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors'}`}>
+                                {opt.label}
+                              </span>
+                              {isSelected && <Check className="w-3.5 h-3.5 text-white shrink-0" strokeWidth={3} />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    );
+
                     return (
                       <>
                         <button
@@ -642,38 +694,17 @@ export const ReportsPage: React.FC = () => {
                         </button>
 
                         {rptTypeOpen && (
-                          <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 min-w-[340px]">
-                            {reportCategories.map(cat => (
-                              <div key={cat.title} className="p-2 space-y-1">
-                                <div className={`text-[10px] font-black uppercase px-2.5 py-1 tracking-wider ${cat.titleColor}`}>
-                                  {cat.title}
-                                </div>
-                                {cat.options.map(opt => {
-                                  const isSelected = selectedReportType === opt.value || 
-                                    (selectedReportType === 'STUDENT_PERFORMANCE' && opt.value === 'WEEKLY_STUDENT_PERFORMANCE') ||
-                                    (selectedReportType === 'COLLEGE_EXECUTIVE' && opt.value === 'PRINCIPAL_EXECUTIVE') ||
-                                    (selectedReportType === 'DEPARTMENT_PERFORMANCE' && opt.value === 'HOD_DEPARTMENT_INTELLIGENCE');
-
-                                  return (
-                                    <button
-                                      key={opt.value}
-                                      type="button"
-                                      onMouseDown={(e) => e.preventDefault()}
-                                      onClick={() => { setSelectedReportType(opt.value); setRptTypeOpen(false); }}
-                                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all ${isSelected ? 'bg-brand-600 text-white font-black shadow-md shadow-brand-500/20' : 'hover:bg-slate-100 dark:hover:bg-navy-800'}`}
-                                    >
-                                      <span className={`w-24 min-w-[6rem] text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border ${isSelected ? 'bg-white/20 text-white border-white/30' : opt.pillColor}`}>
-                                        {opt.pill}
-                                      </span>
-                                      <span className={`text-xs truncate flex-1 ${isSelected ? 'font-black text-white' : 'font-semibold text-slate-700 dark:text-slate-200'}`}>
-                                        {opt.label}
-                                      </span>
-                                      {isSelected && <Check className="w-4 h-4 text-white shrink-0" strokeWidth={3} />}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            ))}
+                          <div className="absolute z-[200] top-full left-0 mt-2 bg-white/95 backdrop-blur-xl dark:bg-navy-950/95 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] overflow-hidden min-w-[340px] w-[680px] max-w-[90vw] grid grid-cols-1 md:grid-cols-2">
+                            {/* LEFT COLUMN: A. CONTEST REPORTS */}
+                            <div className="p-4 sm:p-5 bg-slate-50/50 dark:bg-navy-900/20 border-r border-slate-100 dark:border-slate-800/50">
+                              {renderCategory(reportCategories[0])}
+                            </div>
+                            {/* RIGHT COLUMN: B, C, D REPORTS */}
+                            <div className="p-4 sm:p-5 flex flex-col gap-y-6">
+                              {renderCategory(reportCategories[1])}
+                              {renderCategory(reportCategories[2])}
+                              {renderCategory(reportCategories[3])}
+                            </div>
                           </div>
                         )}
                       </>
@@ -737,6 +768,64 @@ export const ReportsPage: React.FC = () => {
                           </button>
                         );
                       })}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 4. Report Date / Snapshot — Premium Dropdown */}
+              <div className="flex flex-col space-y-1.5 min-w-0 w-full relative z-[20]">
+                <span className="block text-xs font-black uppercase text-slate-600 dark:text-slate-400 tracking-wider truncate">Report Date</span>
+                <div className={`relative ${rptSessionOpen ? 'z-30' : 'z-10'}`}>
+                  <button
+                    type="button"
+                    onClick={() => { setRptSessionOpen(p => !p); setRptYearOpen(false); setRptTypeOpen(false); setRptScopeOpen(false); }}
+                    className={`w-full flex items-center gap-2.5 px-3.5 py-2 h-11 min-h-[44px] rounded-2xl bg-white dark:bg-navy-950 border text-left transition-all focus:outline-none cursor-pointer ${rptSessionOpen ? 'border-brand-400 ring-2 ring-brand-400/20' : 'border-slate-200 dark:border-slate-700 hover:border-brand-300'}`}
+                  >
+                    <Clock className="w-4 h-4 text-brand-500 shrink-0" />
+                    {(() => {
+                      const sel = availableSundays.find(s => s.session_id === selectedSessionId) || availableSundays[0];
+                      if (!sel) return <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">Latest Date</span>;
+                      return (
+                        <>
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-md shrink-0 border ${sel.is_latest ? 'text-brand-700 bg-brand-100 border-brand-300' : 'text-slate-700 bg-slate-100 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700'}`}>
+                            {sel.is_latest ? 'LATEST' : 'PAST'}
+                          </span>
+                          <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex-1">
+                            {sel.date}
+                          </span>
+                        </>
+                      );
+                    })()}
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform shrink-0 ${rptSessionOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {rptSessionOpen && (
+                    <div className="absolute z-[200] top-full left-0 right-0 mt-1 bg-white dark:bg-navy-950 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl max-h-64 overflow-y-auto p-1.5 space-y-1">
+                      {availableSundays.map(opt => {
+                        const isSelected = selectedSessionId === opt.session_id;
+                        return (
+                          <button key={opt.session_id} type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => { setSelectedSessionId(opt.session_id); setRptSessionOpen(false); }}
+                            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all ${isSelected ? 'bg-brand-600 text-white font-black shadow-md shadow-brand-500/20' : 'hover:bg-slate-100 dark:hover:bg-navy-800'}`}
+                          >
+                            <span className={`w-14 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md text-center shrink-0 border ${isSelected ? 'bg-white/20 text-white border-white/30' : (opt.is_latest ? 'bg-brand-100 text-brand-700 border-brand-300' : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700')}`}>
+                              {opt.is_latest ? 'LATEST' : 'PAST'}
+                            </span>
+                            <div className={`flex flex-col flex-1 min-w-0 ${isSelected ? 'text-white' : 'text-slate-700 dark:text-slate-200'}`}>
+                              <span className={`text-xs truncate ${isSelected ? 'font-black' : 'font-semibold'}`}>{opt.date}</span>
+                              <span className={`text-[10px] truncate ${isSelected ? 'text-white/80' : 'text-slate-500'}`}>{opt.label.split(' - ')[1]}</span>
+                            </div>
+                            {isSelected && <Check className="w-4 h-4 text-white shrink-0" strokeWidth={3} />}
+                          </button>
+                        );
+                      })}
+                      {availableSundays.length === 0 && (
+                        <div className="px-3 py-4 text-center text-xs text-slate-500 dark:text-slate-400">
+                          <Loader2 className="w-4 h-4 animate-spin mx-auto mb-2 text-brand-500" />
+                          Loading available dates...
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

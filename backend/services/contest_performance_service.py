@@ -116,15 +116,14 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
     Authoritatively builds the Contest Performance Report for the resolved latest Weekly Contest.
     Strictly filter-aware (Department, Year, Output Scope) and fully reconciled.
     """
-    # 1. Resolve the Latest Usable Contest Session dynamically
-    resolved_info = resolve_weekly_sessions(db)
-    session_obj: Optional[WeeklySession] = resolved_info.get("current_week_session")
+    # 1. Resolve the Target Contest Session dynamically
+    override_session_id = (config.filters or {}).get("session_id")
     
-    # Fallback if no finalized sessions found by resolver
-    if not session_obj:
-        override_session_id = (config.filters or {}).get("session_id")
-        if override_session_id:
-            session_obj = db.query(WeeklySession).filter(WeeklySession.id == int(override_session_id)).first()
+    if override_session_id:
+        session_obj = db.query(WeeklySession).filter(WeeklySession.id == int(override_session_id)).first()
+    else:
+        resolved_info = resolve_weekly_sessions(db)
+        session_obj = resolved_info.get("current_week_session")
         if not session_obj:
             session_obj = db.query(WeeklySession).order_by(WeeklySession.id.desc()).first()
 
@@ -390,7 +389,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
                 t_str = str(int(t_val)) if t_val.is_integer() else str(t_val)
                 tot_time_disp = f"{t_str} min"
             else:
-                tot_time_disp = "Not Available"
+                tot_time_disp = "—"
         else:
             tot_time_disp = "—"
 
@@ -402,7 +401,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             "dept": dept_norm,
             "year": yr_norm,
             "username": username,
-            "leetcode_handle": username if (username and len(username) >= 2) else "Not Available",
+            "leetcode_handle": username if (username and len(username) >= 2) else "—",
             "status": status,
             "participation_status": status,
             "contest_name": contest_name,
@@ -419,10 +418,10 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             "total_time_display": tot_time_disp,
             "contest_solved": solved_val,
             "total_solved": solved_val,
-            "score": (solved_val * 3) if (is_att and solved_val is not None) else "Not Available",
-            "rank": rank_val if (is_att and rank_val is not None) else "Not Available",
-            "global_rank": rank_val if (is_att and rank_val is not None) else "Not Available",
-            "rating": rating_val if (is_att and rating_val is not None) else "Not Available",
+            "score": (solved_val * 3) if (is_att and solved_val is not None) else "—",
+            "rank": rank_val if (is_att and rank_val is not None) else "—",
+            "global_rank": rank_val if (is_att and rank_val is not None) else "—",
+            "rating": rating_val if (is_att and rating_val is not None) else "—",
             "contest_rating": rating_val
         })
 
@@ -431,10 +430,10 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
 
     public_attended = sum(1 for r in student_rows if r["status"] in (ContestStatus.PUBLIC_LIVE.value, ContestStatus.PUBLIC_ATTENDED.value))
     virtual_attended = sum(1 for r in student_rows if r["status"] in (ContestStatus.VIRTUAL_PRACTICE.value, ContestStatus.VIRTUAL_ATTENDED.value))
-    not_attended = sum(1 for r in student_rows if r["status"] == ContestStatus.NOT_ATTENDED.value)
-    pending_username = sum(1 for r in student_rows if r["status"] == ContestStatus.PENDING_USERNAME.value)
-    fetch_failed = sum(1 for r in student_rows if r["status"] == ContestStatus.FETCH_FAILED.value)
-    invalid_username = sum(1 for r in student_rows if r["status"] == ContestStatus.INVALID_USERNAME.value)
+    not_attended = sum(1 for r in student_rows if r["status"] in (ContestStatus.NOT_ATTENDED.value, "PUBLIC_NOT_ATTENDED", "ABSENT"))
+    pending_username = sum(1 for r in student_rows if r["status"] in (ContestStatus.PENDING_USERNAME.value, "DATA_ERROR"))
+    fetch_failed = sum(1 for r in student_rows if r["status"] in (ContestStatus.FETCH_FAILED.value, "FETCH_ERROR"))
+    invalid_username = sum(1 for r in student_rows if r["status"] in (ContestStatus.INVALID_USERNAME.value, "USERNAME_NOT_FOUND"))
     unknown = sum(1 for r in student_rows if r["status"] == ContestStatus.UNKNOWN.value)
 
     total_participants = public_attended + virtual_attended
@@ -531,12 +530,12 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
             "reg_no": r["reg_no"],
             "dept": r["dept"],
             "year": r["year"],
-            "q1": r["q1"] if r["q1"] is not None else "Not Available",
-            "q2": r["q2"] if r["q2"] is not None else "Not Available",
-            "q3": r["q3"] if r["q3"] is not None else "Not Available",
-            "q4": r["q4"] if r["q4"] is not None else "Not Available",
-            "solved": r["contest_solved"] if r["contest_solved"] is not None else "Not Available",
-            "score": r.get("score") if r.get("score") is not None else (r["contest_solved"] * 3 if r["contest_solved"] is not None else "Not Available")
+            "q1": r["q1"] if r["q1"] is not None else "—",
+            "q2": r["q2"] if r["q2"] is not None else "—",
+            "q3": r["q3"] if r["q3"] is not None else "—",
+            "q4": r["q4"] if r["q4"] is not None else "—",
+            "solved": r["contest_solved"] if r["contest_solved"] is not None else "—",
+            "score": r.get("score") if r.get("score") is not None else (r["contest_solved"] * 3 if r["contest_solved"] is not None else "—")
         })
 
     top_performers = [
@@ -556,7 +555,7 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
     # 8d. Department-Wise Official Result
     dept_groups: Dict[str, List[Dict[str, Any]]] = {}
     for r in sorted_rows:
-        d = r["dept"] or "Not Available"
+        d = r["dept"] or "—"
         dept_groups.setdefault(d, []).append(r)
 
     department_results: List[Dict[str, Any]] = []

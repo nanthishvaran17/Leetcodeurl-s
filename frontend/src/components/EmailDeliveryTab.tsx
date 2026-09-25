@@ -118,6 +118,7 @@ const STATUS_BADGES: Record<string, { icon: React.ReactNode; bg: string; text: s
   },
 };
 
+// million-ignore
 export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated' | 'recipients' | 'history' }> = ({
   defaultSection = 'manual'
 }) => {
@@ -860,7 +861,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
       {/* 2. TOP KPI CARDS */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         {/* Delivered */}
-        <div className="glass-card p-4 rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-transparent text-left">
+        <button onClick={() => setActiveSection('history')} className="glass-card p-4 rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-transparent text-left hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all cursor-pointer">
           <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 mb-1">
             <span className="text-[10px] font-black uppercase tracking-wider">Delivered</span>
             <CheckCircle2 className="w-4 h-4" />
@@ -869,10 +870,10 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             {metrics.deliveredCount.toLocaleString()}
           </div>
           <p className="text-[10px] text-slate-400 font-bold mt-1">Confirmed Dispatches</p>
-        </div>
+        </button>
 
         {/* Pending / Queued */}
-        <div className="glass-card p-4 rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent text-left">
+        <button onClick={() => setActiveSection('history')} className="glass-card p-4 rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent text-left hover:bg-amber-500/10 hover:border-amber-500/50 transition-all cursor-pointer">
           <div className="flex items-center justify-between text-amber-600 dark:text-amber-400 mb-1">
             <span className="text-[10px] font-black uppercase tracking-wider">Pending / Queued</span>
             <Clock className="w-4 h-4" />
@@ -881,10 +882,10 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             {metrics.pendingCount.toLocaleString()}
           </div>
           <p className="text-[10px] text-slate-400 font-bold mt-1">Queued Jobs</p>
-        </div>
+        </button>
 
         {/* Failed Deliveries */}
-        <div className="glass-card p-4 rounded-2xl border border-red-500/30 bg-gradient-to-br from-red-500/5 to-transparent text-left">
+        <button onClick={() => setActiveSection('history')} className="glass-card p-4 rounded-2xl border border-red-500/30 bg-gradient-to-br from-red-500/5 to-transparent text-left hover:bg-red-500/10 hover:border-red-500/50 transition-all cursor-pointer">
           <div className="flex items-center justify-between text-red-600 dark:text-red-400 mb-1">
             <span className="text-[10px] font-black uppercase tracking-wider">Failed</span>
             <XCircle className="w-4 h-4" />
@@ -893,10 +894,10 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             {metrics.failedCount.toLocaleString()}
           </div>
           <p className="text-[10px] text-slate-400 font-bold mt-1">Failed Attempts</p>
-        </div>
+        </button>
 
         {/* Active Recipients */}
-        <div className="glass-card p-4 rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-500/5 to-transparent text-left">
+        <button onClick={() => setActiveSection('recipients')} className="glass-card p-4 rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-500/5 to-transparent text-left hover:bg-indigo-500/10 hover:border-indigo-500/50 transition-all cursor-pointer">
           <div className="flex items-center justify-between text-indigo-600 dark:text-indigo-400 mb-1">
             <span className="text-[10px] font-black uppercase tracking-wider">Active Recipients</span>
             <Users className="w-4 h-4" />
@@ -905,10 +906,10 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             {metrics.activeRecipientsCount}
           </div>
           <p className="text-[10px] text-slate-400 font-bold mt-1">Configured Emails</p>
-        </div>
+        </button>
 
         {/* Success Rate */}
-        <div className="glass-card p-4 rounded-2xl border border-teal-500/30 bg-gradient-to-br from-teal-500/5 to-transparent text-left">
+        <button onClick={() => setActiveSection('history')} className="glass-card p-4 rounded-2xl border border-teal-500/30 bg-gradient-to-br from-teal-500/5 to-transparent text-left hover:bg-teal-500/10 hover:border-teal-500/50 transition-all cursor-pointer">
           <div className="flex items-center justify-between text-teal-600 dark:text-teal-400 mb-1">
             <span className="text-[10px] font-black uppercase tracking-wider">Success Rate</span>
             <ShieldCheck className="w-4 h-4" />
@@ -917,10 +918,10 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             {metrics.successRate}%
           </div>
           <p className="text-[10px] text-slate-400 font-bold mt-1">Delivered / Attempts</p>
-        </div>
+        </button>
 
         {/* Automation Status */}
-        <div className="glass-card p-4 rounded-2xl border border-purple-500/30 bg-gradient-to-br from-purple-500/5 to-transparent text-left">
+        <button onClick={() => setActiveSection('automated')} className="glass-card p-4 rounded-2xl border border-purple-500/30 bg-gradient-to-br from-purple-500/5 to-transparent text-left hover:bg-purple-500/10 hover:border-purple-500/50 transition-all cursor-pointer">
           <div className="flex items-center justify-between text-purple-600 dark:text-purple-400 mb-1">
             <span className="text-[10px] font-black uppercase tracking-wider">Automation</span>
             <Sparkles className="w-4 h-4" />
@@ -937,7 +938,7 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
             )}
           </div>
           <p className="text-[10px] text-slate-400 font-bold mt-1.5">Sunday 09:45 AM IST</p>
-        </div>
+        </button>
       </div>
 
       {/* 3. SECTION TAB NAVIGATION */}
@@ -991,14 +992,19 @@ export const EmailDeliveryTab: React.FC<{ defaultSection?: 'manual' | 'automated
         </button>
 
         <button
-          onClick={() => setShowDiagnostics(!showDiagnostics)}
-          className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ml-auto ${
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setShowDiagnostics((prev) => !prev);
+          }}
+          className={`relative z-10 flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ml-auto ${
             showDiagnostics
-              ? 'bg-slate-800 text-white'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              ? 'bg-slate-800 text-white shadow-md'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/50'
           }`}
         >
-          <Settings className="w-4 h-4 text-indigo-400" />
+          <Settings className={`w-4 h-4 ${showDiagnostics ? 'text-indigo-400 animate-spin-slow' : 'text-indigo-500'}`} />
           <span>Diagnostics &amp; Test Tools</span>
         </button>
       </div>

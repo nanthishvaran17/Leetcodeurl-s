@@ -28,7 +28,12 @@ def build_five_week_trend_report(
     Builds authoritative 5-Week Performance Trend Report.
     Calculates per-student 5-contest solve breakdown, attendance consistency, and trajectory signals.
     """
-    all_sessions = db.query(WeeklySession).order_by(WeeklySession.id.desc()).all()
+    # Respect session_id to generate 5-week trend looking backward from the selected historical Sunday
+    override_session_id = (config.filters or {}).get("session_id")
+    query = db.query(WeeklySession)
+    if override_session_id:
+        query = query.filter(WeeklySession.id <= int(override_session_id))
+    all_sessions = query.order_by(WeeklySession.id.desc()).all()
 
     # Filter sessions that have valid attended public results (excluding test/mock)
     usable_sessions = []

@@ -55,6 +55,7 @@ function formatVerifiedAgo(lastVerifiedAt?: string): string {
   return `${Math.floor(diffHr / 24)}d ago`;
 }
 
+// million-ignore
 const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: initialStudent, onSelectStudent, onDeleteStudent }) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const liveStudent = (useStudentEntity(initialStudent.id) as any) || initialStudent;

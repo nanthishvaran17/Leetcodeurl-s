@@ -40,6 +40,7 @@ function getSyncState(syncStatus?: string, lastVerifiedAt?: string) {
   return 'failed';
 }
 
+// million-ignore
 export const FastStudentRow = memo(({ 
   studentId, 
   index, 
