@@ -127,6 +127,22 @@ export function saveCachedSummary(summary: any, userScope?: string | number): vo
   }
 }
 
+export function clearAllStudentCaches(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith('nec_cached_students') || key.startsWith('nec_cached_summary'))) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+  } catch (e) {
+    console.warn('Could not clear student caches:', e);
+  }
+}
+
 export async function getCanonicalRosterFallback(): Promise<any[]> {
   const { CANONICAL_ROSTER } = await import('../data/canonicalRoster');
   return CANONICAL_ROSTER;

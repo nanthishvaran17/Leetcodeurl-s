@@ -520,6 +520,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
 
       notify.success('Student Record Updated', `Changes for ${trimmedName} saved successfully.`, { category: 'STUDENT EDIT' });
 
+      import('../utils/rosterCache').then(m => m.clearAllStudentCaches()).catch(() => {});
       localStorage.removeItem('nec_leetcode_students_cache');
       window.dispatchEvent(new Event('refresh_dashboard_summary'));
 
