@@ -995,6 +995,104 @@ def run_migrations():
             except Exception as _e_rc:
                 print(f"[DB Migration] report_cache column migration note: {_e_rc}")
 
+            # certificate_records: ensure missing columns exist (PostgreSQL & SQLite safe)
+            try:
+                from sqlalchemy import inspect, text
+                inspector = inspect(conn)
+                if inspector.has_table("certificate_records"):
+                    existing_cols = {c["name"] for c in inspector.get_columns("certificate_records")}
+                    cert_cols = [
+                        ("contest_name", "VARCHAR(128)"),
+                        ("leetcode_username", "VARCHAR(128)"),
+                        ("participation_status", "VARCHAR(64)"),
+                        ("problems_solved", "VARCHAR(64)"),
+                        ("contest_score", "VARCHAR(32)"),
+                        ("contest_rank", "VARCHAR(32)"),
+                        ("contest_rating", "VARCHAR(32)"),
+                        ("q1_score", "INTEGER DEFAULT 0"),
+                        ("q2_score", "INTEGER DEFAULT 0"),
+                        ("q3_score", "INTEGER DEFAULT 0"),
+                        ("q4_score", "INTEGER DEFAULT 0"),
+                        ("retrieved_timestamp", "VARCHAR(64)"),
+                        ("sha_hash", "VARCHAR(128)"),
+                        ("certificate_code", "VARCHAR(64)"),
+                        ("document_type", "VARCHAR(64) DEFAULT 'CERTIFICATE_OF_EXCELLENCE'"),
+                        ("status", "VARCHAR(32) DEFAULT 'VALID'"),
+                        ("verification_url", "VARCHAR(512)"),
+                        ("pdf_path", "VARCHAR(512)"),
+                        ("qr_path", "VARCHAR(512)"),
+                        ("qr_code_path", "VARCHAR(512)")
+                    ]
+                    for col_name, col_type in cert_cols:
+                        if col_name not in existing_cols:
+                            try:
+                                conn.execute(text(f"ALTER TABLE certificate_records ADD COLUMN {col_name} {col_type}"))
+                                conn.commit()
+                                print(f"[DB Migration] Added missing column '{col_name}' to certificate_records table.")
+                            except Exception as _e_cert_col:
+                                conn.rollback()
+                                print(f"[DB Migration] Note: Could not add column '{col_name}' to certificate_records: {_e_cert_col}")
+            except Exception as _e_cert:
+                print(f"[DB Migration] certificate_records column migration note: {_e_cert}")
+
+            # admin_audit_logs: ensure missing columns exist (PostgreSQL & SQLite safe)
+            try:
+                from sqlalchemy import inspect, text
+                inspector = inspect(conn)
+                if inspector.has_table("admin_audit_logs"):
+                    existing_cols = {c["name"] for c in inspector.get_columns("admin_audit_logs")}
+                    date_tz_type = "TIMESTAMP WITH TIME ZONE" if "postgresql" in engine.dialect.name.lower() else "DATETIME"
+                    audit_cols = [
+                        ("audit_id", "VARCHAR(100)"),
+                        ("event_timestamp", date_tz_type),
+                        ("access_level", "VARCHAR(50) DEFAULT 'LEVEL_1'"),
+                        ("action_classification", "VARCHAR(50) DEFAULT 'SECURITY_ACCESS'"),
+                        ("severity", "VARCHAR(30) DEFAULT 'INFO'"),
+                        ("resource_name", "VARCHAR(150)"),
+                        ("route", "VARCHAR(255)"),
+                        ("http_method", "VARCHAR(10)"),
+                        ("client_ip", "VARCHAR(50)"),
+                        ("ip_version", "VARCHAR(10) DEFAULT 'IPv4'"),
+                        ("session_id", "VARCHAR(100)"),
+                        ("request_id", "VARCHAR(100)"),
+                        ("correlation_id", "VARCHAR(100)"),
+                        ("browser", "VARCHAR(100)"),
+                        ("browser_version", "VARCHAR(50)"),
+                        ("operating_system", "VARCHAR(100)"),
+                        ("device_type", "VARCHAR(50)"),
+                        ("user_agent_category", "VARCHAR(100)"),
+                        ("authentication_status", "VARCHAR(50) DEFAULT 'AUTHENTICATED'"),
+                        ("authorization_result", "VARCHAR(50) DEFAULT 'ALLOWED'"),
+                        ("permission_checked", "VARCHAR(100)"),
+                        ("risk_level", "VARCHAR(30) DEFAULT 'LOW'"),
+                        ("denial_reason", "TEXT"),
+                        ("request_timestamp", date_tz_type),
+                        ("response_timestamp", date_tz_type),
+                        ("response_status", "INTEGER DEFAULT 200"),
+                        ("response_time_ms", "FLOAT DEFAULT 15.0"),
+                        ("trace_id", "VARCHAR(100)"),
+                        ("event_hash", "VARCHAR(64)"),
+                        ("previous_event_hash", "VARCHAR(64)"),
+                        ("integrity_status", "VARCHAR(30) DEFAULT 'VERIFIED'"),
+                        ("institution_id", "VARCHAR(100) DEFAULT 'NEC_AUTONOMOUS_001'"),
+                        ("institution_branding_version", "VARCHAR(50) DEFAULT 'v2026.1'"),
+                        ("institution_logo_reference", "VARCHAR(255) DEFAULT 'assets/nec_logo.png'"),
+                        ("description", "TEXT"),
+                        ("metadata_json", "TEXT")
+                    ]
+                    for col_name, col_type in audit_cols:
+                        if col_name not in existing_cols:
+                            try:
+                                conn.execute(text(f"ALTER TABLE admin_audit_logs ADD COLUMN {col_name} {col_type}"))
+                                conn.commit()
+                                print(f"[DB Migration] Added missing column '{col_name}' to admin_audit_logs table.")
+                            except Exception as _e_audit_col:
+                                conn.rollback()
+                                print(f"[DB Migration] Note: Could not add column '{col_name}' to admin_audit_logs: {_e_audit_col}")
+            except Exception as _e_audit:
+                print(f"[DB Migration] admin_audit_logs column migration note: {_e_audit}")
+
+
             # Performance Indexes Creation (Universal for both SQLite and PostgreSQL)
             indexes = [
                 ("idx_students_dept_year", "CREATE INDEX IF NOT EXISTS idx_students_dept_year ON students(department_id, year_level)"),
