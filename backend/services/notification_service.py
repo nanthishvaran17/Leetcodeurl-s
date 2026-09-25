@@ -400,7 +400,7 @@ class NotificationService:
             if FIREBASE_ADMIN_AVAILABLE and messaging and firebase_admin and firebase_admin._apps:
                 is_high_priority = eff_priority in ("high", "critical")
                 raw_route = str(eff_route or "/dashboard")  # type: ignore
-                fcm_link = raw_route if raw_route.startswith("http") else f"https://leetcodeurl-s-3fzh.onrender.com{raw_route}"
+                fcm_link = raw_route if raw_route.startswith("http") else f"https://leetcodeurljn-s.onrender.com{raw_route}"
                 
                 target_uids = set(r["user_id"] for r in recipients if r.get("user_id"))
                 for r in recipients:

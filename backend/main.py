@@ -66,17 +66,9 @@ async def _deferred_startup_tasks():
                 is_pg = "postgresql" in db_url_str or "postgres" in db_url_str
 
                 if is_pg:
-                    has_col = False
-                    try:
-                        res = conn.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name='students' AND column_name='primary_leetcode_id';"))
-                        has_col = res.fetchone() is not None
-                    except Exception:
-                        pass
-
-                    if not has_col:
-                        # Execute each ALTER TABLE in an isolated atomic transaction to prevent multi-table deadlocks
-                        pg_statements = [
-                            """
+                    # Always execute since ADD COLUMN IF NOT EXISTS is idempotent
+                    pg_statements = [
+                        """
                             ALTER TABLE students
                                 ADD COLUMN IF NOT EXISTS primary_leetcode_id VARCHAR(100),
                                 ADD COLUMN IF NOT EXISTS secondary_leetcode_id VARCHAR(100),
@@ -175,14 +167,30 @@ async def _deferred_startup_tasks():
                                 ADD COLUMN IF NOT EXISTS finalized BOOLEAN DEFAULT FALSE,
                                 ADD COLUMN IF NOT EXISTS report_generation_status VARCHAR(30) DEFAULT 'PENDING',
                                 ADD COLUMN IF NOT EXISTS email_dispatch_status VARCHAR(30) DEFAULT 'PENDING';
+                            """,
                             """
-                        ]
-                        for stmt in pg_statements:
-                            try:
-                                with engine.begin() as atomic_conn:
-                                    atomic_conn.execute(text(stmt))
-                            except Exception as _st_err:
-                                logger.warning(f"[STARTUP] Atomic migration stmt note: {_st_err}")
+                            ALTER TABLE weekly_public_results
+                                ADD COLUMN IF NOT EXISTS participant_entry_time TIMESTAMP WITH TIME ZONE,
+                                ADD COLUMN IF NOT EXISTS participant_entry_time_source VARCHAR(50),
+                                ADD COLUMN IF NOT EXISTS participant_entry_time_confidence VARCHAR(20),
+                                ADD COLUMN IF NOT EXISTS participant_entry_time_method VARCHAR(50),
+                                ADD COLUMN IF NOT EXISTS participant_entry_time_observed_at TIMESTAMP WITH TIME ZONE;
+                            """,
+                            """
+                            ALTER TABLE weekly_virtual_results
+                                ADD COLUMN IF NOT EXISTS participant_entry_time TIMESTAMP WITH TIME ZONE,
+                                ADD COLUMN IF NOT EXISTS participant_entry_time_source VARCHAR(50),
+                                ADD COLUMN IF NOT EXISTS participant_entry_time_confidence VARCHAR(20),
+                                ADD COLUMN IF NOT EXISTS participant_entry_time_method VARCHAR(50),
+                                ADD COLUMN IF NOT EXISTS participant_entry_time_observed_at TIMESTAMP WITH TIME ZONE;
+                            """
+                    ]
+                    for stmt in pg_statements:
+                        try:
+                            with engine.begin() as atomic_conn:
+                                atomic_conn.execute(text(stmt))
+                        except Exception as _st_err:
+                            logger.warning(f"[STARTUP] Atomic migration stmt note: {_st_err}")
                 else:
                     # SQLite dialect fallback column additions
                     try:

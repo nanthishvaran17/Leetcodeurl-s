@@ -9,7 +9,7 @@ Nandha LeetCode Intelligence is an institutional platform designed to track, ben
 - [Main Landing Page](https://leetcodeurl-s-roan.vercel.app/): Overview of institutional coding metrics, 25 years of engineering excellence, and student achievement showcases.
 - [Public Leaderboard](https://leetcodeurl-s-roan.vercel.app/public-leaderboard): Live public ranking of top student coders filtered by department, batch, and contest performance.
 - [Institutional Login Portal](https://leetcodeurl-s-roan.vercel.app/login): Authenticated portal access for Students, Faculty Mentors, HODs, and Administrators.
-- [API Documentation](https://leetcodeurl-s-3fzh.onrender.com/docs): Interactive OpenAPI / Swagger documentation for backend endpoints.
+- [API Documentation](https://leetcodeurljn-s.onrender.com/docs): Interactive OpenAPI / Swagger documentation for backend endpoints.
 
 ## Technology Stack
 - Frontend: React 18, TypeScript, Tailwind CSS, Vite, TanStack Query
