@@ -917,6 +917,47 @@ def run_migrations():
             except Exception as _e_fsa:
                 pass
 
+            # weekly_public_results: ensure missing columns exist (PostgreSQL & SQLite safe)
+            try:
+                from sqlalchemy import inspect, text
+                inspector = inspect(conn)
+                if inspector.has_table("weekly_public_results"):
+                    existing_cols = {c["name"] for c in inspector.get_columns("weekly_public_results")}
+                    date_tz_type = "TIMESTAMP WITH TIME ZONE" if "postgresql" in engine.dialect.name.lower() else "DATETIME"
+                    wpr_cols = [
+                        ("participant_entry_time", date_tz_type),
+                        ("participant_entry_time_source", "VARCHAR(50)"),
+                        ("participant_entry_time_confidence", "VARCHAR(20)"),
+                        ("participant_entry_time_method", "VARCHAR(50)"),
+                        ("participant_entry_time_observed_at", date_tz_type),
+                        ("q1_observed_seconds", "INTEGER"),
+                        ("q2_observed_seconds", "INTEGER"),
+                        ("q3_observed_seconds", "INTEGER"),
+                        ("q4_observed_seconds", "INTEGER"),
+                        ("q1_estimated_seconds", "INTEGER"),
+                        ("q2_estimated_seconds", "INTEGER"),
+                        ("q3_estimated_seconds", "INTEGER"),
+                        ("q4_estimated_seconds", "INTEGER"),
+                        ("q1_time_source", "VARCHAR(50)"),
+                        ("q2_time_source", "VARCHAR(50)"),
+                        ("q3_time_source", "VARCHAR(50)"),
+                        ("q4_time_source", "VARCHAR(50)"),
+                        ("timing_calculation_version", "VARCHAR(20)"),
+                        ("timing_calculated_at", date_tz_type),
+                        ("timing_confidence", "VARCHAR(20)")
+                    ]
+                    for col_name, col_type in wpr_cols:
+                        if col_name not in existing_cols:
+                            try:
+                                conn.execute(text(f"ALTER TABLE weekly_public_results ADD COLUMN {col_name} {col_type}"))
+                                conn.commit()
+                                print(f"[DB Migration] Added missing column '{col_name}' to weekly_public_results table.")
+                            except Exception as _e_wpr_col:
+                                conn.rollback()
+                                print(f"[DB Migration] Note: Could not add column '{col_name}' to weekly_public_results: {_e_wpr_col}")
+            except Exception as _e_wpr:
+                print(f"[DB Migration] weekly_public_results column migration note: {_e_wpr}")
+
             # report_cache: ensure missing columns exist (PostgreSQL & SQLite safe) 
             try:
                 from sqlalchemy import inspect, text
