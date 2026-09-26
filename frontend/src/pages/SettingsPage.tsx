@@ -6,7 +6,7 @@ import {
   Shield, Server, FileText, CheckCircle, FileSpreadsheet, Archive,
   Send, Fingerprint, Search, Filter, Download, Upload, Eye, 
   Check, HardDrive, Terminal, Sparkles, SlidersHorizontal, UserCheck,
-  Camera, Play, ShieldAlert, ChevronRight, Info, X, Copy, Code, Zap, FileCode
+  Camera, Play, ShieldAlert, ChevronRight, Info, X, Copy, Code, Zap, FileCode, Bell
 } from 'lucide-react';
 import api from '../services/api';
 import { SecurityActivitySection } from '../components/SecurityActivitySection';
@@ -15,6 +15,7 @@ import { useAuth } from '../context/AuthContext';
 import { StaffManagement } from '../components/admin/StaffManagement';
 import { AdminStaffAllocationPanel } from '../components/AdminStaffAllocationPanel';
 import { StaffVerificationSection } from '../components/StaffVerificationSection';
+import { NotificationPreferencesSection } from '../components/NotificationPreferencesSection';
 import { triggerDownload } from '../utils/mobileDownload';
 import { downloadManager } from '../services/download/downloadManager';
 import { GlobalFilter, GlobalFilterOption } from '../components/GlobalFilter';
@@ -837,7 +838,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
         </div>
 
         {/* Responsive Section Buttons - Grid Layout for Uniform Box Alignment */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
           {[
             { id: 'staff', label: 'Staff Management', icon: Shield },
             { id: 'staff_verification', label: 'Staff Verification', icon: UserCheck },
@@ -845,6 +846,7 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
             { id: 'automation', label: 'Weekly Automation', icon: Clock },
             { id: 'contest', label: 'Contest Engine', icon: RefreshCw },
             { id: 'integrity', label: 'Data Integrity Guard', icon: ShieldCheck },
+            { id: 'notifications', label: 'Notifications', icon: Bell },
             { id: 'smtp', label: 'Email & SMTP', icon: Mail },
             { id: 'snapshots', label: 'Database Snapshots', icon: Database },
             { id: 'maintenance', label: 'Maintenance', icon: Server },
@@ -882,6 +884,11 @@ Engine: SQLite WAL Mode / PostgreSQL Deterministic Engine`;
       )}
 
       <div className="space-y-6">
+
+        {/* SECTION: NOTIFICATIONS */}
+        {activeSectionFilter === 'notifications' && (
+          <NotificationPreferencesSection />
+        )}
 
         {/* SECTION: STAFF VERIFICATION */}
         {activeSectionFilter === 'staff_verification' && (

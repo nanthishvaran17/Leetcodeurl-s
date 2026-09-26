@@ -59,7 +59,7 @@ export async function blobToBase64(blob: Blob): Promise<string> {
     const reader = new FileReader();
     reader.onerror = () => reject(new Error('Failed to read file binary.'));
     reader.onload = () => {
-      const result = reader.result as string;
+      const result = (reader.result as string) || '';
       const base64 = result.includes(',') ? result.split(',')[1] : result;
       resolve(base64);
     };
@@ -190,7 +190,10 @@ export async function validateFileBlob(blob: Blob, mimeType?: string): Promise<{
   }
 
   // Inspect small blobs (<50KB) that might be disguised JSON error payloads or HTML error pages
-  if (blob.size < 50000 || blob.type.includes('application/json') || mimeType?.includes('json') || blob.type.includes('text/html')) {
+  const blobType = (blob && blob.type) ? String(blob.type) : '';
+  const effectiveMime = mimeType ? String(mimeType) : '';
+
+  if (blob.size < 50000 || blobType.includes('application/json') || effectiveMime.includes('json') || blobType.includes('text/html')) {
     try {
       const text = await blob.text();
       const trimmed = text.trim();

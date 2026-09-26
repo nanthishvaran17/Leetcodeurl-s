@@ -677,13 +677,13 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
   return typeof document !== 'undefined'
     ? createPortal(
         <div
-          className="fixed inset-0 z-[999999] bg-slate-950/70 flex justify-end animate-fade-in text-slate-900 dark:text-slate-100 font-sans p-0 sm:p-3 sm:pr-4"
+          className="fixed inset-0 z-[999999] bg-slate-950/80 backdrop-blur-md flex items-center justify-center animate-fade-in text-slate-900 dark:text-slate-100 font-sans p-2 sm:p-4 md:p-6"
           onClick={(e) => {
             if (e.target === e.currentTarget) onClose();
           }}
         >
           <div
-            className="w-full sm:w-[680px] md:w-[780px] lg:w-[880px] xl:w-[60vw] max-w-full h-full sm:h-[calc(100vh-24px)] my-auto bg-white dark:bg-navy-950 shadow-2xl border border-slate-200 dark:border-navy-800/80 rounded-none sm:rounded-[32px] flex flex-col overflow-hidden animate-in slide-in-from-right duration-300"
+            className="w-full max-w-4xl lg:max-w-5xl h-[94vh] sm:h-[90vh] my-auto bg-white dark:bg-navy-950 shadow-2xl border border-slate-200 dark:border-navy-800/80 rounded-2xl sm:rounded-[32px] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 1. TOP HERO HEADER & IDENTITY */}

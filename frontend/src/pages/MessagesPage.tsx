@@ -814,7 +814,7 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
 
         {/* ZONE 3: Institutional Profile Panel */}
         {showInfoPanel && activeConv && !isSystemActive && (
-          <div className="hidden lg:block w-[340px] shrink-0 border-l border-slate-200 bg-white">
+          <div className="w-full lg:w-[340px] shrink-0 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B1120] absolute lg:relative inset-0 lg:inset-auto z-40 lg:z-auto">
             <ConversationInfoPanel 
               userId={activeConv.otherUser.id} 
               onClose={() => setShowInfoPanel(false)}

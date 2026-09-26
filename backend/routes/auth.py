@@ -227,8 +227,8 @@ def validate_csrf_origin(request: Request):
     if any(clean_origin.startswith(scheme) for scheme in ("capacitor://", "ionic://", "app://", "file://")):
         return
 
-    # 4. Standard hosted deployments (*.vercel.app, *.netlify.app, *.web.app, *.firebaseapp.com, *.pages.dev, *.loca.lt)
-    deployment_pattern = r"^https://[a-zA-Z0-9-]+\.(vercel\.app|netlify\.app|web\.app|firebaseapp\.com|pages\.dev|loca\.lt)$"
+    # 4. Standard hosted deployments (*.vercel.app, *.netlify.app, *.web.app, *.firebaseapp.com, *.pages.dev, *.loca.lt, *.onrender.com, *.github.io)
+    deployment_pattern = r"^https://[a-zA-Z0-9-]+\.(vercel\.app|netlify\.app|web\.app|firebaseapp\.com|pages\.dev|loca\.lt|onrender\.com|github\.io|ngrok-free\.app)$"
     if re.match(deployment_pattern, clean_origin):
         return
 

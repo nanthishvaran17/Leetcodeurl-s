@@ -42,61 +42,60 @@ _init_firebase_admin()
 
 
 EVENT_CATEGORY_MAP = {
-    "PROFILE_CREATED": "account", "PROFILE_UPDATED": "account", "PROFILE_APPROVED": "account",
-    "PROFILE_REJECTED": "account", "ROLE_CHANGED": "account", "DEPARTMENT_CHANGED": "account",
-    "PASSWORD_CHANGED": "account", "PASSWORD_RESET": "account", "EMAIL_CHANGED": "account",
-    "PHONE_CHANGED": "account", "ACCOUNT_ACTIVATED": "account", "ACCOUNT_DEACTIVATED": "account",
+    "PROFILE_CREATED": "announcements", "PROFILE_UPDATED": "announcements", "PROFILE_APPROVED": "announcements",
+    "PROFILE_REJECTED": "announcements", "ROLE_CHANGED": "announcements", "DEPARTMENT_CHANGED": "announcements",
+    "PASSWORD_CHANGED": "announcements", "PASSWORD_RESET": "announcements", "EMAIL_CHANGED": "announcements",
+    "PHONE_CHANGED": "announcements", "ACCOUNT_ACTIVATED": "announcements", "ACCOUNT_DEACTIVATED": "announcements",
     
     "ASSIGNMENT_CREATED": "assignments", "ASSIGNMENT_UPDATED": "assignments",
     "ASSIGNMENT_REASSIGNED": "assignments", "ASSIGNMENT_CANCELLED": "assignments",
     "ASSIGNMENT_COMPLETED": "assignments", "ASSIGNMENT_DUE_SOON": "assignments", "ASSIGNMENT_OVERDUE": "assignments",
+    "TASK_ASSIGNED": "assignments", "ASSIGNMENT_SUMMARY": "assignments",
     
     "ATTENDANCE_ASSIGNED": "attendance", "ATTENDANCE_PENDING": "attendance", "ATTENDANCE_SUBMITTED": "attendance",
     "ATTENDANCE_UPDATED": "attendance", "ATTENDANCE_CORRECTION_REQUIRED": "attendance",
-    "ATTENDANCE_DEADLINE": "attendance", "LOW_ATTENDANCE_ALERT": "attendance",
+    "ATTENDANCE_DEADLINE": "attendance", "LOW_ATTENDANCE_ALERT": "attendance", "ATTENDANCE_SUMMARY": "attendance",
     
-    "TIMETABLE_CREATED": "timetable", "TIMETABLE_UPDATED": "timetable", "TIMETABLE_CLASS_CHANGED": "timetable",
-    "TIMETABLE_ROOM_CHANGED": "timetable", "TIMETABLE_FACULTY_CHANGED": "timetable",
-    "TIMETABLE_CANCELLED": "timetable", "TIMETABLE_REMINDER": "timetable",
+    "TIMETABLE_CREATED": "announcements", "TIMETABLE_UPDATED": "announcements", "TIMETABLE_CLASS_CHANGED": "announcements",
+    "TIMETABLE_ROOM_CHANGED": "announcements", "TIMETABLE_FACULTY_CHANGED": "announcements",
+    "TIMETABLE_CANCELLED": "announcements", "TIMETABLE_REMINDER": "announcements",
     
     "EXAM_SCHEDULED": "exams", "EXAM_UPDATED": "exams", "EXAM_CANCELLED": "exams", "EXAM_REMINDER": "exams",
     "CAT1_SCHEDULED": "exams", "CAT2_SCHEDULED": "exams", "MODEL_EXAM_SCHEDULED": "exams", "INTERNAL_ASSESSMENT_UPDATED": "exams",
+    "MARKS_PUBLISHED": "exams", "MARKS_UPDATED": "exams", "RESULT_PUBLISHED": "exams",
+    "CAT1_RESULT_PUBLISHED": "exams", "CAT2_RESULT_PUBLISHED": "exams",
+    "SEMESTER_RESULT_PUBLISHED": "exams", "MARKS_CORRECTION_REQUIRED": "exams", "EXAM_SUMMARY": "exams",
     
-    "MARKS_PUBLISHED": "marks", "MARKS_UPDATED": "marks", "RESULT_PUBLISHED": "marks",
-    "CAT1_RESULT_PUBLISHED": "marks", "CAT2_RESULT_PUBLISHED": "marks",
-    "SEMESTER_RESULT_PUBLISHED": "marks", "MARKS_CORRECTION_REQUIRED": "marks",
+    "LEAVE_APPLIED": "announcements", "LEAVE_APPROVED": "announcements", "LEAVE_REJECTED": "announcements",
+    "LEAVE_CANCELLED": "announcements", "LEAVE_MODIFIED": "announcements", "LEAVE_REMINDER": "announcements",
+    "OD_APPLIED": "announcements", "OD_APPROVED": "announcements", "OD_REJECTED": "announcements",
+    "SL_APPLIED": "announcements", "SL_APPROVED": "announcements", "SL_REJECTED": "announcements",
     
-    "LEAVE_APPLIED": "leave", "LEAVE_APPROVED": "leave", "LEAVE_REJECTED": "leave",
-    "LEAVE_CANCELLED": "leave", "LEAVE_MODIFIED": "leave", "LEAVE_REMINDER": "leave",
+    "MEETING_CREATED": "announcements", "MEETING_UPDATED": "announcements", "MEETING_CANCELLED": "announcements",
+    "MEETING_REMINDER": "announcements", "MEETING_STARTED": "announcements", "MEETING_RESCHEDULED": "announcements",
     
-    "OD_APPLIED": "leave", "OD_APPROVED": "leave", "OD_REJECTED": "leave",
-    "SL_APPLIED": "leave", "SL_APPROVED": "leave", "SL_REJECTED": "leave",
+    "EVENT_CREATED": "announcements", "EVENT_UPDATED": "announcements", "EVENT_CANCELLED": "announcements",
+    "EVENT_REMINDER": "announcements", "EVENT_STARTED": "announcements", "EVENT_RESCHEDULED": "announcements",
     
-    "MEETING_CREATED": "meetings", "MEETING_UPDATED": "meetings", "MEETING_CANCELLED": "meetings",
-    "MEETING_REMINDER": "meetings", "MEETING_STARTED": "meetings", "MEETING_RESCHEDULED": "meetings",
-    
-    "EVENT_CREATED": "events", "EVENT_UPDATED": "events", "EVENT_CANCELLED": "events",
-    "EVENT_REMINDER": "events", "EVENT_STARTED": "events", "EVENT_RESCHEDULED": "events",
-    
-    "DOCUMENT_UPLOADED": "files", "STUDY_MATERIAL_UPLOADED": "files",
-    "FILE_UPLOADED": "files", "FILE_UPDATED": "files", "REPORT_GENERATED": "reports",
+    "DOCUMENT_UPLOADED": "reports", "STUDY_MATERIAL_UPLOADED": "reports",
+    "FILE_UPLOADED": "reports", "FILE_UPDATED": "reports", "REPORT_GENERATED": "reports",
     "REPORT_PUBLISHED": "reports", "REPORT_UPDATED": "reports", "REPORT_AVAILABLE": "reports",
+    "DAILY_FACULTY_SUMMARY": "reports", "DAILY_HOD_SUMMARY": "reports", "DAILY_PRINCIPAL_SUMMARY": "reports",
     
-    "ACHIEVEMENT_CREATED": "achievements", "ACHIEVEMENT_APPROVED": "achievements",
-    "ACHIEVEMENT_PUBLISHED": "achievements", "CERTIFICATE_AVAILABLE": "achievements",
-    
+    "ACHIEVEMENT_CREATED": "contests", "ACHIEVEMENT_APPROVED": "contests",
+    "ACHIEVEMENT_PUBLISHED": "contests", "CERTIFICATE_AVAILABLE": "contests",
     "CONTEST_CREATED": "contests", "CONTEST_UPDATED": "contests", "CONTEST_STARTED": "contests",
     "CONTEST_REMINDER": "contests", "CONTEST_ENDING": "contests", "CONTEST_RESULT": "contests",
     "RANK_UPDATED": "contests", "ACHIEVEMENT_UNLOCKED": "contests",
+    "STUDENT_MILESTONE": "contests", "SUNDAY_CONTEST_SUMMARY": "contests", "CONTEST_FINALIZED": "contests",
     
-    "PLACEMENT_DRIVE_CREATED": "placement", "PLACEMENT_DRIVE_UPDATED": "placement",
-    "INTERVIEW_SCHEDULED": "placement", "SELECTION_RESULT": "placement",
+    "PLACEMENT_DRIVE_CREATED": "announcements", "PLACEMENT_DRIVE_UPDATED": "announcements",
+    "INTERVIEW_SCHEDULED": "announcements", "SELECTION_RESULT": "announcements",
     
     "ANNOUNCEMENT_CREATED": "announcements", "ANNOUNCEMENT_UPDATED": "announcements",
     "URGENT_ANNOUNCEMENT": "announcements", "DEPARTMENT_ANNOUNCEMENT": "announcements",
-    
-    "APP_UPDATE_AVAILABLE": "app_updates", "APP_UPDATE_REQUIRED": "app_updates",
-    "MAINTENANCE_SCHEDULED": "system", "SYSTEM_ANNOUNCEMENT": "system", "SECURITY_ALERT": "system"
+    "APP_UPDATE_AVAILABLE": "announcements", "APP_UPDATE_REQUIRED": "announcements",
+    "MAINTENANCE_SCHEDULED": "announcements", "SYSTEM_ANNOUNCEMENT": "announcements", "SECURITY_ALERT": "announcements"
 }
 
 EVENT_DESTINATION_MAP = {
@@ -115,7 +114,26 @@ class NotificationService:
     @staticmethod
     def resolve_category(event_type: str) -> str:
         """Maps event types to user-friendly notification categories."""
-        return EVENT_CATEGORY_MAP.get(str(event_type).upper(), "announcements")  # type: ignore
+        if not event_type:
+            return "announcements"
+        
+        evt = str(event_type).upper().strip()
+        if evt in EVENT_CATEGORY_MAP:
+            return EVENT_CATEGORY_MAP[evt]
+        
+        evt_lower = evt.lower()
+        if "assignment" in evt_lower:
+            return "assignments"
+        elif "attendance" in evt_lower:
+            return "attendance"
+        elif any(k in evt_lower for k in ["exam", "mark", "result", "cat1", "cat2", "score"]):
+            return "exams"
+        elif any(k in evt_lower for k in ["report", "file", "doc", "pdf", "sheet", "export"]):
+            return "reports"
+        elif any(k in evt_lower for k in ["contest", "rank", "milestone", "achieve", "badge", "leetcode"]):
+            return "contests"
+        
+        return "announcements"
 
     @staticmethod
     def resolve_recipients(

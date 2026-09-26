@@ -100,6 +100,41 @@ def unregister_device_token_endpoint(
     return NotificationService.unregister_device_token(db, user_id=user_id, device_token=req.device_token)
 
 
+def get_user_id_variants(current_user: Any) -> set:
+    user_id_variants = set()
+    if hasattr(current_user, "email") and current_user.email:
+        user_id_variants.add(current_user.email.lower().strip())
+        user_id_variants.add(current_user.email.strip())
+    if hasattr(current_user, "reg_no") and current_user.reg_no:
+        user_id_variants.add(current_user.reg_no.strip())
+        user_id_variants.add(current_user.reg_no.upper().strip())
+    if hasattr(current_user, "username") and current_user.username:
+        user_id_variants.add(current_user.username.strip())
+        user_id_variants.add(current_user.username.lower().strip())
+    if hasattr(current_user, "id"):
+        user_id_variants.add(str(current_user.id))
+        user_id_variants.add(f"STAFF_{current_user.id}")
+
+    user_id_variants.add("ALL")
+    user_id_variants.add("SYSTEM")
+    
+    role_str = str(getattr(current_user, "role", "")).upper()
+    if "ADMIN" in role_str:
+        user_id_variants.add("ADMIN")
+        user_id_variants.add("STAFF")
+        user_id_variants.add("FACULTY")
+        user_id_variants.add("HOD")
+        user_id_variants.add("STUDENT")
+    elif any(r in role_str for r in ["HOD", "FACULTY", "STAFF", "MENTOR", "INSTRUCTOR"]):
+        user_id_variants.add("STAFF")
+        user_id_variants.add("FACULTY")
+        user_id_variants.add("HOD")
+    else:
+        user_id_variants.add("STUDENT")
+    
+    return user_id_variants
+
+
 # 2. IN-APP NOTIFICATION CENTER 
 
 @router.get("")
@@ -112,35 +147,31 @@ def get_user_notifications_endpoint(
     current_user: Any = Depends(get_current_active_user)
 ):
     """Returns paginated in-app notifications for the authenticated user."""
-    user_id_variants = set()
-    if hasattr(current_user, "email") and current_user.email:
-        user_id_variants.add(current_user.email.lower().strip())
-        user_id_variants.add(current_user.email.strip())
-    if hasattr(current_user, "reg_no") and current_user.reg_no:
-        user_id_variants.add(current_user.reg_no.strip())
-    if hasattr(current_user, "username") and current_user.username:
-        user_id_variants.add(current_user.username.strip())
-    if hasattr(current_user, "id"):
-        user_id_variants.add(str(current_user.id))
-        user_id_variants.add(f"STAFF_{current_user.id}")
-
-    user_id_variants.add("ALL")
-    
-    role_str = str(getattr(current_user, "role", "")).upper()
-    if "ADMIN" in role_str:
-        user_id_variants.add("ADMIN")
-        user_id_variants.add("STAFF")
-    elif role_str in ("HOD", "FACULTY", "STAFF"):
-        user_id_variants.add("STAFF")
-    else:
-        user_id_variants.add("STUDENT")
+    user_id_variants = get_user_id_variants(current_user)
 
     query = db.query(NotificationRecord).filter(
         NotificationRecord.recipient_user_id.in_(list(user_id_variants))
     )
 
     if category and category.lower() != "all":
-        query = query.filter(NotificationRecord.category == category.lower())
+        cat_lower = category.lower().strip()
+        if cat_lower == "exams":
+            query = query.filter(NotificationRecord.category.in_(["exams", "exam", "marks", "result"]))
+        elif cat_lower == "reports":
+            query = query.filter(NotificationRecord.category.in_(["reports", "report", "files", "file"]))
+        elif cat_lower == "contests":
+            query = query.filter(NotificationRecord.category.in_(["contests", "contest", "achievements", "achievement"]))
+        elif cat_lower == "assignments":
+            query = query.filter(NotificationRecord.category.in_(["assignments", "assignment"]))
+        elif cat_lower == "attendance":
+            query = query.filter(NotificationRecord.category.in_(["attendance"]))
+        elif cat_lower == "announcements":
+            query = query.filter(or_(
+                NotificationRecord.category.in_(["announcements", "announcement", "system", "account", "timetable", "leave", "meetings", "events", "placement", "app_updates"]),
+                NotificationRecord.category.is_(None)
+            ))
+        else:
+            query = query.filter(NotificationRecord.category == cat_lower)
     if is_read is not None:
         query = query.filter(NotificationRecord.is_read == is_read)
 
@@ -188,15 +219,7 @@ def get_unread_notification_count_endpoint(
     current_user: Any = Depends(get_current_active_user)
 ):
     """Returns exact unread notification count for bell badge."""
-    user_id_variants = set()
-    if hasattr(current_user, "email") and current_user.email:
-        user_id_variants.add(current_user.email.lower().strip())
-    if hasattr(current_user, "reg_no") and current_user.reg_no:
-        user_id_variants.add(current_user.reg_no.strip())
-    if hasattr(current_user, "id"):
-        user_id_variants.add(str(current_user.id))
-        user_id_variants.add(f"STAFF_{current_user.id}")
-    user_id_variants.add("ALL")
+    user_id_variants = get_user_id_variants(current_user)
 
     count = db.query(NotificationRecord).filter(
         and_(NotificationRecord.recipient_user_id.in_(list(user_id_variants)), NotificationRecord.is_read == False)

@@ -53,10 +53,10 @@ export const StaffDashboardView: React.FC = () => {
         : (Array.isArray(studRes.data) ? studRes.data : []);
 
       const studentList = rawList.map((s: any) => {
-        const solved = s.total_solved || 0;
-        const streak = s.max_streak || 0;
-        const rating = s.contest_rating || 0;
-        const days = s.days_inactive ?? 0;
+        const solved = Number(s.stats?.total_solved ?? s.total_solved ?? s.totalSolved ?? 0);
+        const streak = Number(s.stats?.max_streak ?? s.max_streak ?? s.streak_count ?? 0);
+        const rating = Number(s.stats?.contest_rating ?? s.contest_rating ?? s.rating ?? 0);
+        const days = Number(s.days_inactive ?? s.daysInactive ?? 0);
         
         let statusCode = s.status_code;
         let statusLabel = s.status_label;
@@ -84,6 +84,9 @@ export const StaffDashboardView: React.FC = () => {
 
         return {
           ...s,
+          total_solved: solved,
+          max_streak: streak,
+          contest_rating: rating,
           status_code: statusCode,
           status_label: statusLabel || (statusCode === 'AT_RISK' ? 'At Risk' : statusCode === 'EXCELLENT' ? 'Excellent' : 'Improving'),
           badge_color: badgeColor || (statusCode === 'AT_RISK' ? 'red' : statusCode === 'EXCELLENT' ? 'emerald' : 'yellow'),
@@ -139,32 +142,30 @@ export const StaffDashboardView: React.FC = () => {
 
   // Strict helper predicates for classification to guarantee 100% exact match between KPI card counts and filtered list
   const isCompletedStudent = useCallback((s: any) => {
-    const solved = s.total_solved || 0;
+    const solved = Number(s.stats?.total_solved ?? s.total_solved ?? s.totalSolved ?? 0);
     const sc = (s.status_code || '').toUpperCase();
     const sl = (s.status_label || '').toUpperCase();
     return solved >= 100 || sc === 'EXCELLENT' || sc === 'COMPLETED' || sl.includes('EXCELLENT') || sl.includes('COMPLETED');
   }, []);
 
-  const isAttentionStudent = useCallback((s: any) => {
-    if (isCompletedStudent(s)) return false;
-    const solved = s.total_solved || 0;
-    const days = s.days_inactive ?? 0;
-    const sc = (s.status_code || '').toUpperCase();
-    const sl = (s.status_label || '').toUpperCase();
-    return sc === 'NEEDS_IMPROVEMENT' || sc === 'ATTENTION' || sc === 'NEEDS_ATTENTION' || sl.includes('ATTENTION') || sl.includes('NEEDS IMPROVEMENT') || (solved >= 30 && solved < 100) || (days >= 4 && days < 8);
-  }, [isCompletedStudent]);
-
   const isAtRiskStudent = useCallback((s: any) => {
     if (isCompletedStudent(s)) return false;
-    const solved = s.total_solved || 0;
-    const days = s.days_inactive ?? 0;
+    const solved = Number(s.stats?.total_solved ?? s.total_solved ?? s.totalSolved ?? 0);
+    const days = Number(s.days_inactive ?? s.daysInactive ?? 0);
     const sc = (s.status_code || '').toUpperCase();
     const sl = (s.status_label || '').toUpperCase();
-    return sc === 'AT_RISK' || sc === 'RISK' || sl.includes('AT RISK') || sl.includes('RISK') || days >= 8 || solved === 0 || !s.username;
+    return sc === 'AT_RISK' || sc === 'RISK' || sc === 'PENDING_USERNAME' || sl.includes('AT RISK') || sl.includes('RISK') || days >= 8 || solved === 0 || !s.username;
   }, [isCompletedStudent]);
 
+  const isAttentionStudent = useCallback((s: any) => {
+    if (isCompletedStudent(s)) return false;
+    if (isAtRiskStudent(s)) return false;
+    return true;
+  }, [isCompletedStudent, isAtRiskStudent]);
+
   const isActiveStudent = useCallback((s: any) => {
-    return (s.total_solved || 0) > 0;
+    const solved = Number(s.stats?.total_solved ?? s.total_solved ?? s.totalSolved ?? 0);
+    return solved > 0;
   }, []);
 
   // Exact KPI calculations strictly matching assigned portfolio
@@ -175,9 +176,9 @@ export const StaffDashboardView: React.FC = () => {
   const atRiskCount = myStudents.filter(isAtRiskStudent).length;
   
   // Progress calculations based on 100 Target
-  const totalSolvedSum = myStudents.reduce((acc: number, s: any) => acc + (s.total_solved || 0), 0);
+  const totalSolvedSum = myStudents.reduce((acc: number, s: any) => acc + Number(s.stats?.total_solved ?? s.total_solved ?? 0), 0);
   const avgSolvedProblems = summary?.weekly_progress_avg ?? (myStudents.length > 0 ? (totalSolvedSum / myStudents.length).toFixed(1) : 0);
-  const totalCappedSolvedSum = myStudents.reduce((acc: number, s: any) => acc + Math.min(s.total_solved || 0, 100), 0);
+  const totalCappedSolvedSum = myStudents.reduce((acc: number, s: any) => acc + Math.min(Number(s.stats?.total_solved ?? s.total_solved ?? 0), 100), 0);
   const targetProgressPct = summary?.target_progress_pct ?? (myStudents.length > 0 ? (totalCappedSolvedSum / myStudents.length).toFixed(1) : '0');
   const avgSolvedProgress = targetProgressPct;
 
@@ -265,20 +266,19 @@ export const StaffDashboardView: React.FC = () => {
   }, [filteredStudents, sortField, sortOrder]);
 
   const handleCardFilterClick = (status: 'ALL' | 'ACTIVE' | 'COMPLETED' | 'IN_PROGRESS' | 'ATTENTION' | 'AT_RISK') => {
+    setFilterStatus(status);
+    setSelectedStudentFilter('ALL');
+    setSearch('');
+
     if (status === 'IN_PROGRESS') {
-      const isCurrentlySelected = filterStatus === 'IN_PROGRESS';
-      setFilterStatus(isCurrentlySelected ? 'ALL' : 'IN_PROGRESS');
       setSortField('progress');
-      setSortOrder('asc'); // Sort ascending so students with lowest progress towards target appear first
+      setSortOrder('asc');
     } else {
-      setFilterStatus(prev => prev === status ? 'ALL' : status);
       setSortField('total_solved');
       setSortOrder('desc');
     }
-    setSelectedStudentFilter('ALL');
-    setSearch('');
-    
-    // Smooth scroll down to table
+
+    // Smooth scroll down to table section
     setTimeout(() => {
       const tableEl = document.getElementById('assigned-students-table-section');
       if (tableEl) {
@@ -829,6 +829,7 @@ export const StaffDashboardView: React.FC = () => {
                                 onMouseDown={(e) => e.preventDefault()}
                                 onClick={() => {
                                   setSelectedStudentFilter(String(st.id));
+                                  setFilterStatus('ALL');
                                   setIsStudentSelectOpen(false);
                                   setStudentSelectSearch('');
                                 }}
@@ -938,7 +939,10 @@ export const StaffDashboardView: React.FC = () => {
               <input
                 type="text"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  if (selectedStudentFilter !== 'ALL') setSelectedStudentFilter('ALL');
+                }}
                 placeholder="Search assigned students..."
                 className="w-full h-10 pl-10 pr-8 rounded-2xl border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-950 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition shadow-xs placeholder:font-medium"
               />

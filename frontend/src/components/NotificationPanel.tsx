@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { resolveNotificationDestination } from '../utils/notificationNavigation';
 import { Bell, Check, Trash2, CheckCircle2, AlertTriangle, AlertCircle, Calendar, FileText, Download, Eye, X, Settings, ChevronRight, ArrowLeft, Send, Smartphone, Loader2, Sparkles } from 'lucide-react';
-import { useGlobalNotifications, type Notification } from '../context/GlobalNotificationContext';
+import { useGlobalNotifications, normalizeCategory, type Notification } from '../context/GlobalNotificationContext';
 import { useAuth } from '../context/AuthContext';
 import { requestPushPermissionAndGetToken } from '../services/firebasePush';
 import { Capacitor } from '@capacitor/core';
@@ -59,6 +59,7 @@ const CATEGORIES = [
 export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, onClose, onNavigateTab }) => {
   const {
     notifications,
+    allNotifications = [],
     unreadCount,
     isLoading,
     error,
@@ -419,20 +420,42 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
 
             {/* Category Filter Pills */}
             <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-navy-800 overflow-x-auto overflow-y-hidden whitespace-nowrap shrink-0 bg-white dark:bg-navy-950 touch-pan-x snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`text-[11px] font-extrabold min-h-[44px] px-3.5 rounded-xl transition-all shrink-0 cursor-pointer whitespace-nowrap snap-start flex items-center justify-center ${
-                    selectedCategory === cat.id
-                      ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-navy-800 dark:text-slate-300 dark:hover:bg-navy-700'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
+              {CATEGORIES.map((cat) => {
+                const categoryCount = cat.id === 'all'
+                  ? allNotifications.length
+                  : allNotifications.filter(n => normalizeCategory(n.category || n.type) === cat.id).length;
+                const categoryUnread = cat.id === 'all'
+                  ? unreadCount
+                  : allNotifications.filter(n => !n.isRead && normalizeCategory(n.category || n.type) === cat.id).length;
+
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className={`text-[11px] font-extrabold min-h-[44px] px-3.5 rounded-xl transition-all shrink-0 cursor-pointer whitespace-nowrap snap-start flex items-center justify-center gap-1.5 ${
+                      selectedCategory === cat.id
+                        ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-navy-800 dark:text-slate-300 dark:hover:bg-navy-700'
+                    }`}
+                  >
+                    <span>{cat.label}</span>
+                    {categoryUnread > 0 ? (
+                      <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
+                        selectedCategory === cat.id
+                          ? 'bg-white/30 text-white'
+                          : 'bg-brand-500/15 text-brand-600 dark:text-brand-400'
+                      }`}>
+                        {categoryUnread}
+                      </span>
+                    ) : categoryCount > 0 && (
+                      <span className="text-[10px] font-semibold opacity-70">
+                        ({categoryCount})
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Body List */}

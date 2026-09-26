@@ -31,8 +31,20 @@ export interface NotificationPreferences {
   categories: Record<string, boolean>;
 }
 
+export const normalizeCategory = (catOrType?: string): string => {
+  if (!catOrType) return 'announcements';
+  const c = catOrType.toLowerCase().trim();
+  if (c === 'assignments' || c === 'assignment' || c.includes('assignment')) return 'assignments';
+  if (c === 'attendance' || c.includes('attendance')) return 'attendance';
+  if (c === 'exams' || c === 'exam' || c === 'marks' || c === 'mark' || c.includes('exam') || c.includes('mark') || c.includes('result') || c.includes('cat1') || c.includes('cat2')) return 'exams';
+  if (c === 'reports' || c === 'report' || c === 'files' || c === 'file' || c.includes('report') || c.includes('file') || c.includes('document')) return 'reports';
+  if (c === 'contests' || c === 'contest' || c === 'achievements' || c === 'achievement' || c.includes('contest') || c.includes('rank') || c.includes('achieve') || c.includes('milestone')) return 'contests';
+  return 'announcements';
+};
+
 interface GlobalNotificationContextType {
   notifications: Notification[];
+  allNotifications: Notification[];
   unreadCount: number;
   isLoading: boolean;
   error: string | null;
@@ -152,7 +164,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
           ...it,
           message: it.message || it.body,
           body: it.body || it.message,
-          category: it.category || 'announcements',
+          category: normalizeCategory(it.category || it.type || it.event_type),
           priority: it.priority || 'normal',
           recipientUserId: user?.email || 'user'
         }));
@@ -188,7 +200,8 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
 
     const title = notif.title || 'New Notification';
     const message = notif.message || notif.body || '';
-    const category = notif.category || notif.event_type || 'announcements';
+    const rawCat = notif.category || notif.event_type || notif.type || 'announcements';
+    const category = normalizeCategory(rawCat);
     const priority = notif.priority || 'normal';
     const actionRoute = notif.action_url || notif.action_route || notif.actionRoute || '/dashboard';
 
@@ -383,13 +396,14 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
   const notifications = React.useMemo(() =>
     selectedCategory === 'all'
       ? allNotifications
-      : allNotifications.filter(n => (n.category || n.type || '').toLowerCase() === selectedCategory.toLowerCase()),
+      : allNotifications.filter(n => normalizeCategory(n.category || n.type) === selectedCategory.toLowerCase()),
     [allNotifications, selectedCategory]
   );
 
   // Memoize the context value so stable-reference consumers don't re-render
   const ctxValue = React.useMemo(() => ({
     notifications,
+    allNotifications,
     unreadCount,
     isLoading,
     error,
@@ -403,7 +417,7 @@ export const GlobalNotificationProvider: React.FC<{ children: ReactNode }> = ({ 
     registerFCMDeviceToken,
     refreshNotifications: fetchFromBackendAPI
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [notifications, unreadCount, isLoading, error, selectedCategory, preferences, markAsRead, markAllAsRead, deleteNotification, registerFCMDeviceToken, fetchFromBackendAPI]);
+  }), [notifications, allNotifications, unreadCount, isLoading, error, selectedCategory, preferences, markAsRead, markAllAsRead, deleteNotification, registerFCMDeviceToken, fetchFromBackendAPI]);
 
   return (
     <GlobalNotificationContext.Provider value={ctxValue}>

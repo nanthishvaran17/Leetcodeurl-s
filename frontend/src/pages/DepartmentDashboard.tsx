@@ -59,110 +59,21 @@ export const DepartmentDashboard: React.FC<DepartmentDashboardProps> = ({ onSele
   // 10-minute in-memory cache). Filtering client-side is instant vs. 30s+ per API call.
   const { data: allStudents = [], isLoading, refetch } = useStudentsQuery();
 
-  const finalStudentList = useMemo(() => {
-    let list = [...allStudents] as any[];
-
-    // Department filter
-    if (selectedDept !== 'all' && selectedDept !== 'ALL') {
-      const deptIdNum = Number(selectedDept);
-      if (!isNaN(deptIdNum) && deptIdNum > 0) {
-        list = list.filter((s: any) => s.department_id === deptIdNum || s.department?.id === deptIdNum);
-      }
-    }
-
-    // Year level filter
-    if (yearLevel !== 'all' && yearLevel !== 'ALL') {
-      const yrClean = String(yearLevel).trim().toUpperCase().replace('YEAR', '').trim();
-      list = list.filter((s: any) => {
-        const yr = String(s.year_level ?? '').trim().toUpperCase().replace('YEAR', '').trim();
-        return yr === yrClean;
-      });
-    }
-
-    // Name search filter
-    if (deferredNameSearch.trim()) {
-      const q = deferredNameSearch.trim().toLowerCase();
-      list = list.filter((s: any) => {
-        if (s.name?.toLowerCase().includes(q)) return true;
-        if (s.reg_no?.toLowerCase().includes(q)) return true;
-        if (s.username?.toLowerCase().includes(q)) return true;
-        return false;
-      });
-    }
-
-    // Performance / solved range filter
-    const { min_solved, max_solved } = solvedParams;
-    if (min_solved !== undefined || max_solved !== undefined) {
-      list = list.filter((s: any) => {
-        const solved = Number(s.stats?.total_solved ?? s.total_solved ?? 0);
-        if (max_solved === 0 && min_solved === 0) return solved <= 0;
-        if (min_solved !== undefined && solved < min_solved) return false;
-        if (max_solved !== undefined && max_solved > 0 && solved > max_solved) return false;
-        return true;
-      });
-    }
-
-    // Sorting
-    list.sort((a: any, b: any) => {
-      const solvedA = Number(a.stats?.total_solved ?? a.total_solved ?? 0);
-      const solvedB = Number(b.stats?.total_solved ?? b.total_solved ?? 0);
-      const ratingA = Number(a.stats?.contest_rating ?? 0);
-      const ratingB = Number(b.stats?.contest_rating ?? 0);
-      const streakA = Number(a.streak_count ?? a.stats?.max_streak ?? 0);
-      const streakB = Number(b.streak_count ?? b.stats?.max_streak ?? 0);
-
-      switch (sortBy) {
-        case 'top_solved': return solvedB - solvedA || a.name?.localeCompare(b.name);
-        case 'low_solved': return solvedA - solvedB || a.name?.localeCompare(b.name);
-        case 'name_asc':   return (a.name ?? '').localeCompare(b.name ?? '');
-        case 'name_desc':  return (b.name ?? '').localeCompare(a.name ?? '');
-        case 'streak':     return streakB - streakA || solvedB - solvedA;
-        case 'rating':     return ratingB - ratingA || solvedB - solvedA;
-        default:           return solvedB - solvedA;
-      }
+  const { filteredAndSorted, counts } = useMemo(() => {
+    return filterAndSortStudents(allStudents as StudentData[], {
+      department: selectedDept,
+      academicYear: yearLevel,
+      nameSearch: deferredNameSearch,
+      performanceRange: solvedFilter,
+      sortBy: sortBy,
     });
+  }, [allStudents, selectedDept, yearLevel, deferredNameSearch, solvedFilter, sortBy]);
 
-    // Apply displayCount limit
-    return list.slice(0, displayCount);
-  }, [allStudents, selectedDept, yearLevel, deferredNameSearch, solvedParams, sortBy, displayCount]);
+  const totalStudents = counts.total;
 
-  const totalStudents = useMemo(() => {
-    // Total BEFORE displayCount slice (for the header count)
-    let list = [...allStudents] as any[];
-    if (selectedDept !== 'all' && selectedDept !== 'ALL') {
-      const deptIdNum = Number(selectedDept);
-      if (!isNaN(deptIdNum) && deptIdNum > 0) {
-        list = list.filter((s: any) => s.department_id === deptIdNum || s.department?.id === deptIdNum);
-      }
-    }
-    if (yearLevel !== 'all' && yearLevel !== 'ALL') {
-      const yrClean = String(yearLevel).trim().toUpperCase().replace('YEAR', '').trim();
-      list = list.filter((s: any) => {
-        const yr = String(s.year_level ?? '').trim().toUpperCase().replace('YEAR', '').trim();
-        return yr === yrClean;
-      });
-    }
-    if (deferredNameSearch.trim()) {
-      const q = deferredNameSearch.trim().toLowerCase();
-      list = list.filter((s: any) => {
-        if (s.name?.toLowerCase().includes(q)) return true;
-        if (s.reg_no?.toLowerCase().includes(q)) return true;
-        if (s.username?.toLowerCase().includes(q)) return true;
-        return false;
-      });
-    }
-    const { min_solved, max_solved } = solvedParams;
-    if (min_solved !== undefined || max_solved !== undefined) {
-      list = list.filter((s: any) => {
-        const solved = Number(s.stats?.total_solved ?? s.total_solved ?? 0);
-        if (max_solved === 0 && min_solved === 0) return solved <= 0;
-        if (min_solved !== undefined && solved < min_solved) return false;
-        if (max_solved !== undefined && max_solved > 0 && solved > max_solved) return false;
-        return true;
-      });
-    }
-    return list.length;
-  }, [allStudents, selectedDept, yearLevel, deferredNameSearch, solvedParams]);
+  const finalStudentList = useMemo(() => {
+    return filteredAndSorted.slice(0, displayCount);
+  }, [filteredAndSorted, displayCount]);
 
   const handleRefreshAllStats = async () => {
     setIsRefreshing(true);

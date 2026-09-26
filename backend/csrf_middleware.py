@@ -23,6 +23,11 @@ async def global_csrf_middleware(request: Request, call_next):
             if "pytest" in sys.modules or os.environ.get("PYTEST_CURRENT_TEST"):
                 return await call_next(request)
 
+            # Bearer Token authenticated API requests are inherently immune to browser CSRF
+            auth_header = request.headers.get("Authorization") or ""
+            if auth_header.startswith("Bearer "):
+                return await call_next(request)
+
             raw_origin = request.headers.get("Origin") or request.headers.get("Referer") or request.headers.get("X-App-Origin")
             if not raw_origin:
                 # To fail closed for cookie-based CSRF, we must require Origin/Referer/X-App-Origin
@@ -65,7 +70,7 @@ async def global_csrf_middleware(request: Request, call_next):
                 is_valid = True
             elif any(clean_origin.startswith(s) for s in ("capacitor://", "ionic://", "app://", "file://")):
                 is_valid = True
-            elif re.match(r"^https://[a-zA-Z0-9-]+\.(vercel\.app|netlify\.app|web\.app|firebaseapp\.com|pages\.dev|loca\.lt)$", clean_origin):
+            elif re.match(r"^https://[a-zA-Z0-9-]+\.(vercel\.app|netlify\.app|web\.app|firebaseapp\.com|pages\.dev|loca\.lt|onrender\.com|github\.io|ngrok-free\.app)$", clean_origin):
                 is_valid = True
                 
             if not is_valid:

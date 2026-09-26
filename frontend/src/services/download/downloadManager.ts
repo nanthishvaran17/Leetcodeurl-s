@@ -477,7 +477,11 @@ class DownloadManager {
         lower.includes('exception') ||
         lower.includes('traceback') ||
         lower.includes('none_type') ||
-        lower.includes('attributeerror')
+        lower.includes('attributeerror') ||
+        lower.includes('cannot read') ||
+        lower.includes('undefined') ||
+        lower.includes('typeerror') ||
+        lower.includes('is not a function')
       );
     };
 

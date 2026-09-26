@@ -458,7 +458,7 @@ export const ChatWindow: React.FC<Props> = ({
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-3 sm:px-6 md:px-8 py-3 sm:py-4 flex flex-col custom-scrollbar relative z-10"
+        className="flex-1 overflow-y-auto px-3 sm:px-6 md:px-8 py-3 sm:py-4 flex flex-col custom-scrollbar relative z-10 max-w-5xl mx-auto w-full"
       >
         {isLoading ? (
           <div className="flex justify-center items-center h-full">

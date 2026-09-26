@@ -127,14 +127,15 @@ export function normalizeAcademicYear(yr: any): NormalizedAcademicYear {
     return 'all';
   }
 
-  const clean = String(yr).trim().toUpperCase();
+  const raw = String(yr).trim().toUpperCase();
+  const clean = raw.replace(/\b(YEAR|YR|BATCH|ST|ND|RD|TH)\b/gi, '').replace(/[\s\-\_]+/g, '').trim();
 
-  if (clean === 'I' || clean === '1' || clean === '1ST' || clean === '1ST YEAR' || clean === 'I YEAR' || clean === '2030') return '1';
-  if (clean === 'II' || clean === '2' || clean === '2ND' || clean === '2ND YEAR' || clean === 'II YEAR' || clean === '2029') return '2';
-  if (clean === 'III' || clean === '3' || clean === '3RD' || clean === '3RD YEAR' || clean === 'III YEAR' || clean === '2028') return '3';
-  if (clean === 'IV' || clean === '4' || clean === '4TH' || clean === '4TH YEAR' || clean === 'IV YEAR' || clean === '2027' || clean === '2026') return '4';
+  if (['I', '1', '1ST', '2030'].includes(raw) || ['I', '1'].includes(clean)) return '1';
+  if (['II', '2', '2ND', '2029'].includes(raw) || ['II', '2'].includes(clean)) return '2';
+  if (['III', '3', '3RD', '2028'].includes(raw) || ['III', '3'].includes(clean)) return '3';
+  if (['IV', '4', '4TH', '2027', '2026'].includes(raw) || ['IV', '4'].includes(clean)) return '4';
 
-  return clean;
+  return clean || raw;
 }
 
 /**
