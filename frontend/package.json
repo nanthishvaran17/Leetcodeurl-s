@@ -1,8 +1,9 @@
 {
   "name": "college-leetcode-tracker-frontend",
   "private": true,
-  "version": "2.5.3",
+  "version": "2.6.0",
   "type": "module",
+
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
