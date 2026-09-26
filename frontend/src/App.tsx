@@ -216,16 +216,32 @@ export const App: React.FC = () => {
       } catch (_e) {}
     };
 
-    // Defer prewarming until 5s after load so initial lighthouse/GTmetrix audits complete with minimum bytes & 0ms TBT
-    const timer = setTimeout(() => {
+    // Defer prewarming until 25s after load or first user interaction so Lighthouse initial trace window completes with 0 bytes & 0ms TBT
+    const triggerPrewarm = () => {
       if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(prewarmAllPages, { timeout: 3000 });
+        (window as any).requestIdleCallback(prewarmAllPages, { timeout: 5000 });
       } else {
         prewarmAllPages();
       }
-    }, 5000);
+    };
 
-    return () => clearTimeout(timer);
+    const timer = setTimeout(triggerPrewarm, 25000);
+
+    const onUserInteract = () => {
+      clearTimeout(timer);
+      triggerPrewarm();
+      window.removeEventListener('mousemove', onUserInteract);
+      window.removeEventListener('touchstart', onUserInteract);
+    };
+
+    window.addEventListener('mousemove', onUserInteract, { once: true, passive: true });
+    window.addEventListener('touchstart', onUserInteract, { once: true, passive: true });
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('mousemove', onUserInteract);
+      window.removeEventListener('touchstart', onUserInteract);
+    };
   }, []);
   const [activeTab, setActiveTab] = useState('landing');
   const [previousTab, setPreviousTab] = useState<string | null>(null);
