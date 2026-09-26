@@ -205,7 +205,7 @@ export const ChatWindow: React.FC<Props> = ({
     if (!scrollContainerRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
     const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-    setShowScrollBottom(!isNearBottom);
+    setShowScrollBottom(prev => (prev !== !isNearBottom ? !isNearBottom : prev));
     if (isNearBottom) setNewMessagesCount(0);
   };
 
@@ -516,14 +516,14 @@ export const ChatWindow: React.FC<Props> = ({
                 <div
                   id={`msg-${msg.messageId}`}
                   className={clsx(
-                    "flex flex-col w-full max-w-[85%] sm:max-w-[75%] md:max-w-[65%] group relative transition-all duration-150",
+                    "flex flex-col w-full max-w-[85%] sm:max-w-[75%] md:max-w-[65%] group relative",
                     isMe ? "ml-auto items-end" : "mr-auto items-start",
                     marginTopClass
                   )}
                 >
                   {/* Message Bubble Container */}
                   <div className={clsx(
-                    "px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-[1.2rem] text-[14px] sm:text-[14.5px] break-words relative shadow-xs leading-relaxed transition-all",
+                    "px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-[1.2rem] text-[14px] sm:text-[14.5px] break-words relative shadow-xs leading-relaxed",
                     isMe
                       ? (activeWallpaper.bubbleMeClass || "bg-brand-600 text-white") + " rounded-br-xs"
                       : (activeWallpaper.bubbleOtherClass || "bg-white dark:bg-[#151b23] text-slate-900 dark:text-slate-100 border border-slate-200/80 dark:border-slate-800") + " rounded-bl-xs"
