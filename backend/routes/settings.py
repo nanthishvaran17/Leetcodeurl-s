@@ -231,11 +231,21 @@ def get_system_health(db: Session = Depends(get_db)):
     """
     # 1. Database Health
     db_health = "HEALTHY"
-    try:
-        db.execute(text("SELECT 1"))
-    except Exception as e:
-        logger.error(f"[SYSTEM_HEALTH] Database check failed: {e}")
-        db_health = "FAILED"
+    for attempt in range(2):
+        try:
+            db.execute(text("SELECT 1"))
+            db_health = "HEALTHY"
+            break
+        except Exception as e:
+            try:
+                db.rollback()
+                db.invalidate()
+            except Exception:
+                pass
+            if attempt == 0:
+                continue
+            logger.warning(f"[SYSTEM_HEALTH] Database check failed: {e}")
+            db_health = "FAILED"
 
     # 2. Contest Engine
     contest_health = "HEALTHY"
