@@ -360,8 +360,12 @@ async def get_contest_metadata_endpoint(
     
     from backend.leetcode_fetcher import fetch_contest_metadata
     
+    contest_id = session.contest_id
+    if not contest_id and session.contest_name:
+        contest_id = session.contest_name.strip().lower().replace(" ", "-")
+    
     try:
-        meta = await fetch_contest_metadata(session.contest_id)
+        meta = await fetch_contest_metadata(contest_id or f"weekly-contest-{session.id}")
         
         # DYNAMIC FALLBACK: If LeetCode Cloudflare blocks the GraphQL API, we extract the questions dynamically 
         # from our own telemetry (LiveEvent) where students have already submitted them!

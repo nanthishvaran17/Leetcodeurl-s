@@ -373,9 +373,16 @@ def _build_canonical_contest_dataset_internal(
 
     # Department and Year aggregators for active production departments
     dept_stats_map: Dict[str, Dict[str, Any]] = {
+        "CSE": {"name": "Computer Science and Engineering", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
         "CSE(CS)": {"name": "Computer Science and Engineering (Cyber Security)", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
         "CSE(IOT)": {"name": "Computer Science and Engineering (Internet of Things)", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
         "IT": {"name": "Information Technology", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
+        "AIDS": {"name": "Artificial Intelligence and Data Science", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
+        "ECE": {"name": "Electronics and Communication Engineering", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
+        "EEE": {"name": "Electrical and Electronics Engineering", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
+        "AGRI": {"name": "Agricultural Engineering", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
+        "MECH": {"name": "Mechanical Engineering", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
+        "CIVIL": {"name": "Civil Engineering", "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0},
     }
 
     year_stats_map: Dict[str, Dict[str, Any]] = {
@@ -409,8 +416,22 @@ def _build_canonical_contest_dataset_internal(
             dept_code = "CSE(CS)"
         elif dept_code in ("IT", "INFORMATION TECHNOLOGY", "INFO TECH"):
             dept_code = "IT"
-        else:
-            dept_code = None
+        elif dept_code in ("CSE", "COMPUTER SCIENCE", "COMPUTER SCIENCE AND ENGINEERING"):
+            dept_code = "CSE"
+        elif dept_code in ("AIDS", "AI&DS", "AI AND DS", "ARTIFICIAL INTELLIGENCE"):
+            dept_code = "AIDS"
+        elif dept_code in ("ECE", "ELECTRONICS AND COMMUNICATION"):
+            dept_code = "ECE"
+        elif dept_code in ("EEE", "ELECTRICAL AND ELECTRONICS"):
+            dept_code = "EEE"
+        elif dept_code in ("AGRI", "AGRICULTURE", "AGRICULTURAL"):
+            dept_code = "AGRI"
+        elif dept_code in ("MECH", "MECHANICAL"):
+            dept_code = "MECH"
+        elif dept_code in ("CIVIL"):
+            dept_code = "CIVIL"
+        elif not dept_code or dept_code in ("NONE", "UNKNOWN", "NULL"):
+            dept_code = "OTHER"
 
         year_level = student.year_level or (p_res.year if p_res else None) or "III"
         if reg_upper.startswith("732225") or "25CC" in reg_upper or "25CI" in reg_upper:
@@ -524,23 +545,25 @@ def _build_canonical_contest_dataset_internal(
         status_counts[canon_status] = status_counts.get(canon_status, 0) + 1
 
         # Department aggregator
-        dept_norm = str(dept_code) if dept_code else ""
-        if dept_norm in dept_stats_map:
-            dept_stats_map[dept_norm]["total"] += 1
-            if canon_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
-                dept_stats_map[dept_norm]["public"] += 1
-            elif canon_status in ("VIRTUAL", "VIRTUAL_ATTENDED"):
-                dept_stats_map[dept_norm]["virtual"] += 1
-            elif canon_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT", "PENDING", "NOT_VERIFIED", "UNVERIFIED", "USERNAME_NOT_FOUND"):
-                dept_stats_map[dept_norm]["not_attended"] += 1
-            else:
-                dept_stats_map[dept_norm]["errors"] += 1
+        dept_norm = str(dept_code) if dept_code else "OTHER"
+        if dept_norm not in dept_stats_map:
+            dept_stats_map[dept_norm] = {"name": dept_norm, "total": 0, "public": 0, "virtual": 0, "not_attended": 0, "pending": 0, "errors": 0, "q4": 0, "q3": 0, "q2": 0, "q1": 0}
 
-            if is_participant and solved_val:
-                if solved_val >= 4: dept_stats_map[dept_norm]["q4"] += 1
-                elif solved_val == 3: dept_stats_map[dept_norm]["q3"] += 1
-                elif solved_val == 2: dept_stats_map[dept_norm]["q2"] += 1
-                elif solved_val == 1: dept_stats_map[dept_norm]["q1"] += 1
+        dept_stats_map[dept_norm]["total"] += 1
+        if canon_status in ("PUBLIC", "PUBLIC_ATTENDED", "ATTENDED"):
+            dept_stats_map[dept_norm]["public"] += 1
+        elif canon_status in ("VIRTUAL", "VIRTUAL_ATTENDED"):
+            dept_stats_map[dept_norm]["virtual"] += 1
+        elif canon_status in ("NOT_ATTENDED", "PUBLIC_NOT_ATTENDED", "ABSENT", "PENDING", "NOT_VERIFIED", "UNVERIFIED", "USERNAME_NOT_FOUND"):
+            dept_stats_map[dept_norm]["not_attended"] += 1
+        else:
+            dept_stats_map[dept_norm]["errors"] += 1
+
+        if is_participant and solved_val:
+            if solved_val >= 4: dept_stats_map[dept_norm]["q4"] += 1
+            elif solved_val == 3: dept_stats_map[dept_norm]["q3"] += 1
+            elif solved_val == 2: dept_stats_map[dept_norm]["q2"] += 1
+            elif solved_val == 1: dept_stats_map[dept_norm]["q1"] += 1
 
         # Year aggregator
         y_str = str(year_level).strip().upper()
