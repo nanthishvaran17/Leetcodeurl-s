@@ -221,6 +221,109 @@ def get_analytics_dashboard(
         "total_submissions": total_submissions,
         "total_solved": total_solved
     }
+@router.get("/compare-students")
+def get_analytics_compare_students(
+    ids: str = Query(..., description="Comma-separated student IDs, reg_no, or usernames"),
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    """
+    Compares one or more students by ID, register number, or LeetCode username.
+    Returns statistical metrics and personalized AI focus insights for each student.
+    """
+    if not ids or not ids.strip():
+        return []
+
+    raw_ids = [s.strip() for s in ids.split(",") if s.strip()]
+    if not raw_ids:
+        return []
+
+    from sqlalchemy.orm import joinedload
+
+    results = []
+    for raw_id in raw_ids:
+        query = db.query(Student).options(
+            joinedload(Student.stats),
+            joinedload(Student.department)
+        )
+        if raw_id.isdigit():
+            st = query.filter(
+                or_(
+                    Student.id == int(raw_id),
+                    Student.reg_no == raw_id,
+                    Student.username.ilike(raw_id)
+                )
+            ).first()
+        else:
+            st = query.filter(
+                or_(
+                    Student.reg_no.ilike(raw_id),
+                    Student.username.ilike(raw_id),
+                    Student.primary_leetcode_id.ilike(raw_id)
+                )
+            ).first()
+
+        if not st:
+            continue
+
+        if current_user and isinstance(current_user, User):
+            authorized_query = apply_role_based_student_filter(db.query(Student.id).filter(Student.id == st.id), current_user, db)
+            if not authorized_query.first():
+                continue
+
+        stats = st.stats
+        total_solved = stats.total_solved if stats and stats.total_solved is not None else 0
+        easy_solved = stats.easy_solved if stats and stats.easy_solved is not None else 0
+        medium_solved = stats.medium_solved if stats and stats.medium_solved is not None else 0
+        hard_solved = stats.hard_solved if stats and stats.hard_solved is not None else 0
+        contest_rating = stats.contest_rating if stats else None
+
+        if total_solved >= 300 or (contest_rating and contest_rating >= 1600):
+            trajectory = "High Performance Growth"
+        elif total_solved >= 150 or (contest_rating and contest_rating >= 1450):
+            trajectory = "Steady Upward Progress"
+        elif total_solved >= 50:
+            trajectory = "Consistent Momentum"
+        else:
+            trajectory = "Foundational Phase"
+
+        if medium_solved < 40:
+            focus_areas = ["Arrays & Strings", "Two Pointers", "Hashing", "Sliding Window"]
+        elif hard_solved < 10:
+            focus_areas = ["Dynamic Programming", "Graph Theory", "Tree Traversals", "Binary Search"]
+        else:
+            focus_areas = ["Advanced Graphs", "System Design Patterns", "Trie & Segment Trees", "Optimization"]
+
+        recommendation = (
+            f"Focus on medium difficulty {focus_areas[0]} and {focus_areas[1]} problems. "
+            f"Target solving 3-5 problems weekly and participating in weekend contests to boost problem-solving speed and accuracy."
+        )
+
+        results.append({
+            "student_id": st.id,
+            "id": st.id,
+            "name": st.name,
+            "reg_no": st.reg_no,
+            "username": st.username or st.primary_leetcode_id,
+            "department": st.department.name if st.department else None,
+            "year_level": st.year_level,
+            "stats": {
+                "total_solved": total_solved,
+                "easy_solved": easy_solved,
+                "medium_solved": medium_solved,
+                "hard_solved": hard_solved,
+                "contest_rating": contest_rating,
+                "global_rank": (getattr(stats, "contest_global_ranking", None) or getattr(stats, "public_profile_ranking", None)) if stats else None
+            },
+            "insights": {
+                "trajectory": trajectory,
+                "focus_areas": focus_areas,
+                "recommendation": recommendation
+            }
+        })
+
+    return results
+
 @router.get("/compare-period")
 def get_analytics_compare_period(
     period: str = Query("this_week"),

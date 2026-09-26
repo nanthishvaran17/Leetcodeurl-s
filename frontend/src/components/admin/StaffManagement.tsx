@@ -22,21 +22,26 @@ export const StaffManagement: React.FC = () => {
   const [creationSuccess, setCreationSuccess] = useState<any>(null);
   const [deletingStaff, setDeletingStaff] = useState<any | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null);
+  const [selectedStaffId, setSelectedStaffId] = useState<number | string | null>(null);
+  const [selectedStaffObj, setSelectedStaffObj] = useState<any | null>(null);
 
-  // Single Source of Truth: Derive selected staff directly from staffList
+  // Single Source of Truth: Derive selected staff directly from staffList or selected object fallback
   const editingStaff = useMemo(() => {
-    if (!selectedStaffId) return null;
-    return staffList.find(s => s.id === selectedStaffId) || null;
-  }, [staffList, selectedStaffId]);
+    if (selectedStaffId === null && !selectedStaffObj) return null;
+    const targetId = selectedStaffId ?? selectedStaffObj?.id ?? selectedStaffObj?.user_id;
+    if (targetId === null || targetId === undefined) return selectedStaffObj || null;
+    const found = staffList.find(s => String(s.id) === String(targetId) || String(s.user_id || s.id) === String(targetId));
+    return found || selectedStaffObj || null;
+  }, [staffList, selectedStaffId, selectedStaffObj]);
 
   const { notify } = useNotification();
   const { user: currentUser } = useAuth();
   const isSuperAdmin = currentUser?.role?.toLowerCase() === 'super admin';
 
   const handleOpenEditModal = (staff: any) => {
-    if (staff && staff.id) {
-      setSelectedStaffId(staff.id);
+    if (staff) {
+      setSelectedStaffObj(staff);
+      setSelectedStaffId(staff.id ?? staff.user_id ?? null);
     }
   };
 
@@ -490,7 +495,7 @@ export const StaffManagement: React.FC = () => {
             ) : (
               <>
                 {/* MOBILE CARD VIEW (< 768px) - High Tech Institutional Card */}
-                <div className="block md:hidden p-3 space-y-3.5 bg-slate-100/50 dark:bg-navy-950/40">
+                <div className="block md:hidden p-3 space-y-3 bg-slate-100/50 dark:bg-navy-950/40">
                   {filteredStaff.map((staff) => {
                     const workloadPct = Math.min(100, Math.round(((staff.assigned_count || 0) / (staff.max_capacity || 30)) * 100));
                     const initials = (staff.full_name || staff.username || 'S')
@@ -504,51 +509,48 @@ export const StaffManagement: React.FC = () => {
                     return (
                       <div
                         key={staff.id}
-                        className={`relative rounded-3xl p-5 bg-gradient-to-br from-white via-slate-50/90 to-indigo-50/40 dark:from-navy-900 dark:via-navy-900/95 dark:to-slate-900/90 border-y border-r border-slate-200/90 dark:border-navy-750 border-l-[6px] shadow-lg hover:shadow-2xl transition-all duration-300 space-y-4 overflow-hidden backdrop-blur-xl group ${
-                          staff.is_active ? 'border-l-emerald-500 dark:border-l-emerald-400' : 'border-l-rose-500 dark:border-l-rose-400'
+                        className={`relative rounded-2xl p-4 bg-white dark:bg-navy-900 border-y border-r border-slate-200 dark:border-navy-700 border-l-4 shadow-sm hover:shadow-md transition-all duration-200 space-y-3.5 overflow-hidden ${
+                          staff.is_active ? 'border-l-emerald-500' : 'border-l-rose-500'
                         }`}
                       >
-                        {/* Top Gradient Mesh Orb */}
-                        <div className="absolute -top-10 -right-10 w-28 h-28 bg-brand-500/10 rounded-full blur-2xl pointer-events-none" />
-
                         {/* Top Header: Avatar, Name, Email, Status */}
-                        <div className="flex items-start justify-between gap-3 pl-1">
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <div className="relative shrink-0">
-                              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-sm flex items-center justify-center shadow-md shadow-brand-500/25 ring-2 ring-white dark:ring-navy-800 uppercase tracking-widest">
+                        <div className="flex items-start justify-between gap-2.5">
+                          <div className="flex items-start gap-3 min-w-0 flex-1">
+                            <div className="relative shrink-0 mt-0.5">
+                              <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 text-white font-black text-xs flex items-center justify-center shadow-sm uppercase tracking-wider">
                                 {initials}
                               </div>
-                              <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-navy-800 ${
-                                staff.is_active ? 'bg-emerald-500 shadow-sm animate-pulse' : 'bg-rose-500'
+                              <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-navy-900 ${
+                                staff.is_active ? 'bg-emerald-500 shadow-xs' : 'bg-rose-500'
                               }`} />
                             </div>
 
-                            <div className="min-w-0 flex-1 space-y-0.5">
+                            <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <h4 className="font-black text-base text-slate-900 dark:text-white tracking-tight truncate">
+                                <h4 className="font-bold text-sm text-slate-900 dark:text-white leading-snug break-words">
                                   {staff.full_name || staff.username}
                                 </h4>
                                 {staff.role === 'Super Admin' && (
-                                  <span className="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+                                  <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
                                     ROOT
                                   </span>
                                 )}
                               </div>
-                              <p className="text-xs text-slate-500 dark:text-slate-400 break-all font-semibold flex items-center gap-1">
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium break-all flex items-center gap-1 mt-0.5">
                                 <Mail className="w-3 h-3 text-brand-500 shrink-0" />
-                                <span className="truncate">{staff.email || `@${staff.username}`}</span>
+                                <span>{staff.email || `@${staff.username}`}</span>
                               </p>
                             </div>
                           </div>
 
-                          <div className="shrink-0">
+                          <div className="shrink-0 pt-0.5">
                             {staff.is_active ? (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 shadow-xs">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                 Active
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 shadow-xs">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20">
                                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                                 Suspended
                               </span>
@@ -556,60 +558,95 @@ export const StaffManagement: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Modern High-Contrast Metric Grid */}
-                        <div className="grid grid-cols-2 gap-3 pl-1">
-                          {/* Institutional ID */}
-                          <div className="p-3.5 rounded-2xl bg-white/90 dark:bg-navy-950/80 border border-slate-200 dark:border-navy-750 shadow-xs space-y-1.5">
-                            <span className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider block">
-                              Institutional ID
+                        {/* Modern High-Contrast Vibrant Metric Grid (2x2) */}
+                        <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+                          {/* 1. Institutional ID */}
+                          <div className="p-2.5 rounded-2xl bg-gradient-to-br from-indigo-50 via-indigo-50/50 to-purple-50/60 dark:from-indigo-950/80 dark:via-indigo-950/50 dark:to-purple-950/60 border border-indigo-200/80 dark:border-indigo-800/80 flex flex-col justify-between min-w-0 shadow-2xs">
+                            <span className="text-[10px] font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-wider block mb-1 truncate flex items-center gap-1">
+                              <KeyRound className="w-3 h-3 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                              <span className="truncate">Institutional ID</span>
                             </span>
-                            <span className="font-mono font-black text-xs sm:text-sm text-indigo-700 dark:text-indigo-300 break-all bg-indigo-50 dark:bg-indigo-950/60 px-2.5 py-1 rounded-lg border border-indigo-200/80 dark:border-indigo-800/60 inline-block">
-                              {staff.institutional_id || `NEC-STAFF-${staff.id}`}
-                            </span>
-                          </div>
-
-                          {/* Department / Scope */}
-                          <div className="p-3.5 rounded-2xl bg-white/90 dark:bg-navy-950/80 border border-slate-200 dark:border-navy-750 shadow-xs space-y-1.5">
-                            <span className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider block">
-                              Department / Scope
-                            </span>
-                            <span className="inline-block px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-slate-100 text-slate-900 dark:bg-navy-800 dark:text-slate-100 border border-slate-300 dark:border-navy-700 max-w-full truncate">
-                              {staff.department || 'INSTITUTIONAL'}
-                            </span>
-                          </div>
-
-                          {/* Role */}
-                          <div className="p-3.5 rounded-2xl bg-white/90 dark:bg-navy-950/80 border border-slate-200 dark:border-navy-750 shadow-xs space-y-1.5">
-                            <span className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider block">
-                              Role
-                            </span>
-                            <span className={`inline-block px-3 py-1 rounded-lg text-xs font-black border ${
-                              staff.role === 'Faculty'
-                                ? 'bg-indigo-600 text-white border-indigo-500'
-                                : (staff.role === 'HOD'
-                                  ? 'bg-purple-600 text-white border-purple-500'
-                                  : (staff.role?.includes('Admin')
-                                    ? 'bg-amber-500 text-slate-950 border-amber-400 font-extrabold'
-                                    : 'bg-brand-600 text-white border-brand-500'))
-                            }`}>
-                              {staff.role || 'Staff'}
-                            </span>
-                          </div>
-
-                          {/* Workload Progress */}
-                          <div className="p-3.5 rounded-2xl bg-white/90 dark:bg-navy-950/80 border border-slate-200 dark:border-navy-750 shadow-xs space-y-1.5">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                              <span className="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider block">
-                                Workload
+                            <div className="min-w-0 w-full">
+                              <span 
+                                className="font-mono font-black text-[10.5px] xs:text-[11.5px] text-indigo-950 dark:text-white bg-white dark:bg-indigo-900/90 px-2 py-1 rounded-xl border border-indigo-300/80 dark:border-indigo-700 block w-full truncate text-center shadow-xs"
+                                title={staff.institutional_id || `NEC-STAFF-${staff.id}`}
+                              >
+                                {staff.institutional_id || `NEC-STAFF-${staff.id}`}
                               </span>
-                              <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
+                            </div>
+                          </div>
+
+                          {/* 2. Department / Scope */}
+                          <div className="p-2.5 rounded-2xl bg-gradient-to-br from-emerald-50 via-emerald-50/50 to-teal-50/60 dark:from-emerald-950/80 dark:via-emerald-950/50 dark:to-teal-950/60 border border-emerald-200/80 dark:border-emerald-800/80 flex flex-col justify-between min-w-0 shadow-2xs">
+                            <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-wider block mb-1 truncate flex items-center gap-1">
+                              <Building2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                              <span className="truncate">Dept / Scope</span>
+                            </span>
+                            <div className="min-w-0 w-full">
+                              <span 
+                                className="text-[10px] xs:text-[11px] font-black uppercase tracking-wider text-emerald-950 dark:text-white bg-white dark:bg-emerald-900/90 px-2 py-1 rounded-xl border border-emerald-300/80 dark:border-emerald-700 block w-full truncate text-center shadow-xs"
+                                title={staff.department || 'INSTITUTIONAL'}
+                              >
+                                {staff.department || 'INSTITUTIONAL'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* 3. Role */}
+                          <div className={`p-2.5 rounded-2xl flex flex-col justify-between min-w-0 shadow-2xs border ${
+                            staff.role === 'Faculty'
+                              ? 'bg-gradient-to-br from-indigo-50 via-indigo-50/40 to-blue-50/50 dark:from-indigo-950/80 dark:to-blue-950/60 border-indigo-200/80 dark:border-indigo-800/80'
+                              : (staff.role === 'HOD'
+                                ? 'bg-gradient-to-br from-purple-50 via-purple-50/40 to-pink-50/50 dark:from-purple-950/80 dark:to-pink-950/60 border-purple-200/80 dark:border-purple-800/80'
+                                : (staff.role?.includes('Admin')
+                                  ? 'bg-gradient-to-br from-amber-50 via-amber-50/40 to-orange-50/50 dark:from-amber-950/80 dark:to-orange-950/60 border-amber-200/80 dark:border-amber-800/80'
+                                  : 'bg-gradient-to-br from-brand-50 via-brand-50/40 to-cyan-50/50 dark:from-brand-950/80 dark:to-cyan-950/60 border-brand-200/80 dark:border-brand-800/80'))
+                          }`}>
+                            <span className={`text-[10px] font-black uppercase tracking-wider block mb-1 truncate flex items-center gap-1 ${
+                              staff.role === 'Faculty'
+                                ? 'text-indigo-700 dark:text-indigo-300'
+                                : (staff.role === 'HOD'
+                                  ? 'text-purple-700 dark:text-purple-300'
+                                  : (staff.role?.includes('Admin')
+                                    ? 'text-amber-800 dark:text-amber-300'
+                                    : 'text-brand-700 dark:text-brand-300'))
+                            }`}>
+                              <Shield className="w-3 h-3 shrink-0" />
+                              <span className="truncate">Role</span>
+                            </span>
+                            <div className="min-w-0 w-full">
+                              <span 
+                                className={`text-[10.5px] xs:text-[11.5px] font-black tracking-wide px-2 py-1 rounded-xl border block w-full truncate text-center shadow-xs ${
+                                  staff.role === 'Faculty'
+                                    ? 'bg-indigo-600 text-white border-indigo-700 dark:bg-indigo-700 dark:text-white'
+                                    : (staff.role === 'HOD'
+                                      ? 'bg-purple-600 text-white border-purple-700 dark:bg-purple-700 dark:text-white'
+                                      : (staff.role?.includes('Admin')
+                                        ? 'bg-amber-600 text-white border-amber-700 dark:bg-amber-700 dark:text-white'
+                                        : 'bg-brand-600 text-white border-brand-700 dark:bg-brand-600 dark:text-white'))
+                                }`}
+                                title={staff.role || 'Staff'}
+                              >
+                                {staff.role || 'Staff'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* 4. Workload Progress */}
+                          <div className="p-2.5 rounded-2xl bg-gradient-to-br from-blue-50 via-blue-50/50 to-indigo-50/60 dark:from-blue-950/80 dark:via-blue-950/50 dark:to-indigo-950/60 border border-blue-200/80 dark:border-blue-800/80 flex flex-col justify-between min-w-0 shadow-2xs">
+                            <div className="flex items-center justify-between gap-1 mb-1">
+                              <span className="text-[10px] font-black text-blue-700 dark:text-blue-300 uppercase tracking-wider truncate flex items-center gap-1">
+                                <Activity className="w-3 h-3 text-blue-600 dark:text-blue-400 shrink-0" />
+                                <span className="truncate">Workload</span>
+                              </span>
+                              <span className="text-[11px] font-black text-blue-950 dark:text-white font-mono bg-white dark:bg-blue-900/90 px-1.5 py-0.2 rounded-md border border-blue-300/80 dark:border-blue-700">
                                 {staff.assigned_count || 0}/{staff.max_capacity || 30}
                               </span>
                             </div>
-                            <div className="w-full h-2.5 bg-slate-200 dark:bg-navy-900 rounded-full overflow-hidden border border-slate-300/60 dark:border-navy-800">
+                            <div className="w-full h-2.5 bg-blue-100 dark:bg-navy-900 rounded-full overflow-hidden p-0.5 border border-blue-200 dark:border-blue-800">
                               <div
                                 className={`h-full rounded-full transition-all duration-300 ${
-                                  workloadPct > 85 ? 'bg-rose-500' : workloadPct > 50 ? 'bg-amber-500' : 'bg-emerald-500'
+                                  workloadPct > 85 ? 'bg-gradient-to-r from-rose-500 to-red-600' : workloadPct > 50 ? 'bg-gradient-to-r from-amber-500 to-orange-500' : 'bg-gradient-to-r from-emerald-500 to-teal-400'
                                 }`}
                                 style={{ width: `${workloadPct}%` }}
                               />
@@ -618,11 +655,11 @@ export const StaffManagement: React.FC = () => {
                         </div>
 
                         {/* Interactive Action Buttons */}
-                        <div className="pt-1 flex items-center justify-end gap-2.5 pl-1">
+                        <div className="grid grid-cols-3 gap-2 pt-1">
                           <button
                             type="button"
                             onClick={() => handleOpenEditModal(staff)}
-                            className="flex-1 py-2.5 px-3 rounded-xl font-black text-xs bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white shadow-md shadow-brand-500/20 active:scale-95 transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
+                            className="py-2 px-2 rounded-xl font-bold text-xs bg-brand-50 text-brand-700 hover:bg-brand-600 hover:text-white dark:bg-brand-500/10 dark:text-brand-400 dark:hover:bg-brand-500 dark:hover:text-white border border-brand-200/60 dark:border-brand-500/20 active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                             <span>Edit</span>
@@ -630,10 +667,10 @@ export const StaffManagement: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleToggleStatus(staff.id, staff.is_active)}
-                            className={`flex-1 py-2.5 px-3 rounded-xl font-black text-xs border shadow-sm active:scale-95 transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer ${
+                            className={`py-2 px-2 rounded-xl font-bold text-xs border active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer ${
                               staff.is_active
-                                ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 hover:bg-amber-500 hover:text-white'
-                                : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500 hover:text-white'
+                                ? 'bg-amber-50 text-amber-700 hover:bg-amber-500 hover:text-white dark:bg-amber-500/10 dark:text-amber-400 dark:hover:bg-amber-500 dark:hover:text-white border-amber-200/60 dark:border-amber-500/20'
+                                : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-500 hover:text-white dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500 dark:hover:text-white border-emerald-200/60 dark:border-emerald-500/20'
                             }`}
                           >
                             {staff.is_active ? <UserX className="w-3.5 h-3.5" /> : <RefreshCcw className="w-3.5 h-3.5" />}
@@ -642,7 +679,7 @@ export const StaffManagement: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => setDeletingStaff(staff)}
-                            className="py-2.5 px-3.5 rounded-xl font-black text-xs bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30 hover:bg-rose-600 hover:text-white shadow-sm active:scale-95 transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer"
+                            className="py-2 px-2 rounded-xl font-bold text-xs bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white dark:bg-rose-500/10 dark:text-rose-400 dark:hover:bg-rose-600 dark:hover:text-white border border-rose-200/60 dark:border-rose-500/20 active:scale-95 transition-all flex items-center justify-center gap-1 cursor-pointer"
                             title="Delete Staff Account"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -779,12 +816,17 @@ export const StaffManagement: React.FC = () => {
       {editingStaff && (
         <EditStaffModal
           staff={editingStaff}
-          onClose={() => setSelectedStaffId(null)}
+          onClose={() => {
+            setSelectedStaffId(null);
+            setSelectedStaffObj(null);
+          }}
           onSuccess={async (updatedStaff?: any) => {
-            if (updatedStaff && updatedStaff.id) {
-              setStaffList(prev => prev.map(s => s.id === updatedStaff.id ? { ...s, ...updatedStaff } : s));
+            if (updatedStaff && (updatedStaff.id || updatedStaff.user_id)) {
+              const uId = updatedStaff.id || updatedStaff.user_id;
+              setStaffList(prev => prev.map(s => String(s.id) === String(uId) ? { ...s, ...updatedStaff } : s));
             }
             setSelectedStaffId(null);
+            setSelectedStaffObj(null);
             await fetchStaff();
             window.dispatchEvent(new CustomEvent('nec_staff_updated'));
           }}

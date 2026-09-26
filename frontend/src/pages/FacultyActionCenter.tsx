@@ -94,10 +94,10 @@ const CustomSelect: React.FC<{
   }, [open]);
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div className="relative w-full sm:w-auto" ref={containerRef}>
       <button
         onClick={() => setOpen(!open)}
-        className={`flex items-center justify-between gap-3 min-w-[200px] px-4 py-2.5 rounded-xl border transition-all cursor-pointer font-bold text-sm shadow-xs ${
+        className={`flex items-center justify-between gap-2 w-full sm:w-auto sm:min-w-[150px] px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border transition-all cursor-pointer font-bold text-xs sm:text-sm shadow-xs ${
           open 
             ? 'border-indigo-500 bg-white dark:bg-navy-950 ring-4 ring-indigo-500/10' 
             : value 
@@ -105,22 +105,22 @@ const CustomSelect: React.FC<{
               : 'border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-950 text-slate-800 dark:text-slate-200 hover:border-slate-400'
         }`}
       >
-        <div className="flex items-center gap-2">
-          <span className={value ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}>{icon || selected?.icon}</span>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          <span className={value ? 'text-indigo-600 dark:text-indigo-400 shrink-0' : 'text-slate-400 shrink-0'}>{icon || selected?.icon}</span>
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
             {selected?.badge && (
-              <span className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase ${selected.badgeColor || 'bg-slate-100 text-slate-600'}`}>
+              <span className={`px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-black uppercase shrink-0 ${selected.badgeColor || 'bg-slate-100 text-slate-600'}`}>
                 {selected.badge}
               </span>
             )}
-            <span>{selected ? selected.label : placeholder}</span>
+            <span className="truncate text-left text-xs sm:text-sm">{selected ? selected.label : placeholder}</span>
           </div>
         </div>
-        <ChevronDown size={14} className={`transition-transform duration-300 ${open ? 'rotate-180 text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
+        <ChevronDown size={14} className={`transition-transform duration-300 shrink-0 ${open ? 'rotate-180 text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
       </button>
 
       {open && (
-        <div className="absolute z-50 top-[110%] left-0 w-full min-w-[280px] p-1.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up">
+        <div className="absolute z-50 top-[110%] left-0 w-full min-w-[220px] sm:min-w-[280px] p-1.5 rounded-2xl bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 shadow-xl animate-fade-in-up">
           <button
             onClick={() => { onChange(''); setOpen(false); }}
             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
@@ -1058,15 +1058,16 @@ export const FacultyActionCenter: React.FC = () => {
       )}
 
       {/* Filters */}
-      <div className="relative z-20 flex flex-wrap gap-3 items-center p-4 rounded-3xl bg-white/80 dark:bg-navy-850/80 border border-slate-200 dark:border-navy-700 backdrop-blur-md shadow-sm mb-6">
-        <div className="relative group flex-1 min-w-[250px]">
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-brand-500 rounded-full blur opacity-15 group-focus-within:opacity-60 transition duration-500"></div>
-          <div className="relative flex items-center gap-3 bg-white dark:bg-navy-950 rounded-full px-5 py-2.5 border border-slate-300 dark:border-navy-700 focus-within:border-indigo-500 shadow-xs">
-            <Search size={18} className="text-slate-400 group-focus-within:text-indigo-600 transition-colors flex-shrink-0" />
+      <div className="relative z-20 flex flex-col md:flex-row flex-wrap gap-2.5 sm:gap-3 items-stretch md:items-center p-3.5 sm:p-4 rounded-3xl bg-white/80 dark:bg-navy-850/80 border border-slate-200 dark:border-navy-700 backdrop-blur-md shadow-sm mb-6">
+        {/* Search Bar Input */}
+        <div className="relative group flex-1 min-w-0 w-full md:w-auto">
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-brand-500 rounded-2xl md:rounded-full blur opacity-15 group-focus-within:opacity-60 transition duration-500"></div>
+          <div className="relative flex items-center gap-2.5 bg-white dark:bg-navy-950 rounded-2xl md:rounded-full px-4 py-2 sm:py-2.5 border border-slate-300 dark:border-navy-700 focus-within:border-indigo-500 shadow-xs">
+            <Search size={16} className="text-slate-400 group-focus-within:text-indigo-600 transition-colors shrink-0" />
             <input
               value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
               placeholder="Search by name, reg no, username..."
-              className="flex-1 bg-transparent border-none focus:ring-0 focus:border-transparent focus:outline-none !outline-none !ring-0 !border-none text-sm font-bold text-slate-800 dark:text-slate-200 placeholder:text-slate-400 placeholder:font-medium p-0 m-0"
+              className="flex-1 bg-transparent border-none focus:ring-0 focus:border-transparent focus:outline-none !outline-none !ring-0 !border-none text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 placeholder:text-slate-400 placeholder:font-medium p-0 m-0"
             />
             {search && (
               <button onClick={() => { setSearch(''); setPage(1); }} className="text-slate-400 hover:text-rose-500 transition-colors p-1 rounded-full hover:bg-slate-100 dark:hover:bg-navy-800">
@@ -1075,62 +1076,68 @@ export const FacultyActionCenter: React.FC = () => {
             )}
           </div>
         </div>
-        <CustomSelect
-          value={filterPriority}
-          onChange={v => { 
-            setFilterPriority(v); 
-            setFilterStatus('');
-            setFilterOverdue(false);
-            setFilterEscalated(false);
-            setKpiFilter(v); 
-            setPage(1); 
-          }}
-          placeholder="All Priorities"
-          icon={<Building2 size={16} />}
-          options={[
-            { label: 'Critical', value: 'Critical', icon: <ShieldAlert size={14} />, badge: 'P1', badgeColor: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' },
-            { label: 'High', value: 'High', icon: <AlertTriangle size={14} />, badge: 'P2', badgeColor: 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300' },
-            { label: 'Medium', value: 'Medium', icon: <Clock size={14} />, badge: 'P3', badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' },
-            { label: 'Low', value: 'Low', icon: <Activity size={14} />, badge: 'P4', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' }
-          ]}
-        />
-        
-        <CustomSelect
-          value={filterStatus}
-          onChange={v => { 
-            setFilterStatus(v); 
-            setFilterPriority('');
-            setFilterOverdue(false);
-            setFilterEscalated(false);
-            setKpiFilter(v);
-            setPage(1); 
-          }}
-          placeholder="All Statuses"
-          icon={<Activity size={16} />}
-          options={[
-            { label: 'Pending', value: 'Pending', icon: <Clock size={14} />, badge: 'PEN', badgeColor: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' },
-            { label: 'In Progress', value: 'In Progress', icon: <Zap size={14} />, badge: 'INP', badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' },
-            { label: 'Monitoring', value: 'Monitoring', icon: <Activity size={14} />, badge: 'MON', badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' },
-            { label: 'Completed', value: 'Completed', icon: <CheckCircle2 size={14} />, badge: 'COM', badgeColor: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/50 dark:text-cyan-300' },
-            { label: 'Resolved', value: 'Resolved', icon: <CheckCircle2 size={14} />, badge: 'RES', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' }
-          ]}
-        />
 
-        <CustomSelect
-          value={filterYear}
-          onChange={v => { setFilterYear(v); setPage(1); }}
-          placeholder="All Years"
-          icon={<GraduationCap size={16} />}
-          options={[
-            { label: 'I Year', value: 'I Year', icon: <User size={14} />, badge: 'Y1', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' },
-            { label: 'II Year', value: 'II Year', icon: <User size={14} />, badge: 'Y2', badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' },
-            { label: 'III Year', value: 'III Year', icon: <User size={14} />, badge: 'Y3', badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300' },
-            { label: 'IV Year', value: 'IV Year', icon: <User size={14} />, badge: 'Y4', badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300' }
-          ]}
-        />
-        <div className="w-full flex items-center justify-between xl:w-auto xl:ml-auto gap-4 mt-2 xl:mt-0">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-600 dark:text-navy-300">
+        {/* Dropdown Filters (3-Column Grid on Mobile for Equal Fitting) */}
+        <div className="grid grid-cols-3 gap-2 w-full md:w-auto md:flex md:items-center md:gap-2.5">
+          <CustomSelect
+            value={filterPriority}
+            onChange={v => { 
+              setFilterPriority(v); 
+              setFilterStatus('');
+              setFilterOverdue(false);
+              setFilterEscalated(false);
+              setKpiFilter(v); 
+              setPage(1); 
+            }}
+            placeholder="All Priorities"
+            icon={<Building2 size={15} />}
+            options={[
+              { label: 'Critical', value: 'Critical', icon: <ShieldAlert size={14} />, badge: 'P1', badgeColor: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' },
+              { label: 'High', value: 'High', icon: <AlertTriangle size={14} />, badge: 'P2', badgeColor: 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300' },
+              { label: 'Medium', value: 'Medium', icon: <Clock size={14} />, badge: 'P3', badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' },
+              { label: 'Low', value: 'Low', icon: <Activity size={14} />, badge: 'P4', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' }
+            ]}
+          />
+          
+          <CustomSelect
+            value={filterStatus}
+            onChange={v => { 
+              setFilterStatus(v); 
+              setFilterPriority('');
+              setFilterOverdue(false);
+              setFilterEscalated(false);
+              setKpiFilter(v);
+              setPage(1); 
+            }}
+            placeholder="All Statuses"
+            icon={<Activity size={15} />}
+            options={[
+              { label: 'Pending', value: 'Pending', icon: <Clock size={14} />, badge: 'PEN', badgeColor: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' },
+              { label: 'In Progress', value: 'In Progress', icon: <Zap size={14} />, badge: 'INP', badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' },
+              { label: 'Monitoring', value: 'Monitoring', icon: <Activity size={14} />, badge: 'MON', badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' },
+              { label: 'Completed', value: 'Completed', icon: <CheckCircle2 size={14} />, badge: 'COM', badgeColor: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/50 dark:text-cyan-300' },
+              { label: 'Resolved', value: 'Resolved', icon: <CheckCircle2 size={14} />, badge: 'RES', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' }
+            ]}
+          />
+
+          <CustomSelect
+            value={filterYear}
+            onChange={v => { setFilterYear(v); setPage(1); }}
+            placeholder="All Years"
+            icon={<GraduationCap size={15} />}
+            options={[
+              { label: 'I Year', value: 'I Year', icon: <User size={14} />, badge: 'Y1', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' },
+              { label: 'II Year', value: 'II Year', icon: <User size={14} />, badge: 'Y2', badgeColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' },
+              { label: 'III Year', value: 'III Year', icon: <User size={14} />, badge: 'Y3', badgeColor: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300' },
+              { label: 'IV Year', value: 'IV Year', icon: <User size={14} />, badge: 'Y4', badgeColor: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300' }
+            ]}
+          />
+        </div>
+
+        {/* Count & Page Size Toggle */}
+        <div className="w-full flex items-center justify-between xl:w-auto xl:ml-auto gap-3 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-navy-800">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-xs font-bold text-slate-600 dark:text-navy-300 truncate">
               {filteredCount === totalCount ? (
                 `Showing ${totalCount} action items`
               ) : (
@@ -1139,12 +1146,12 @@ export const FacultyActionCenter: React.FC = () => {
             </span>
             {(hasFilters || kpiFilter) && (
                <button onClick={() => { setFilterPriority(''); setFilterStatus(''); setFilterYear(''); setSearch(''); setFilterOverdue(false); setFilterEscalated(false); setKpiFilter(''); setPage(1); }}
-                 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 transition flex items-center gap-0.5 ml-2">
+                 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 transition flex items-center gap-0.5 ml-1 shrink-0">
                  <X size={14} /> Clear
                </button>
             )}
           </div>
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-800 p-1 rounded-xl border border-slate-200 dark:border-navy-700">
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-800 p-1 rounded-xl border border-slate-200 dark:border-navy-700 shrink-0">
             <span className="text-[10px] font-bold text-slate-500 dark:text-navy-400 px-1 font-mono">Show:</span>
             {(isMobile ? [10, 25, 50] : [20, 50, 100, 200]).map((sz) => (
               <button
@@ -1165,22 +1172,22 @@ export const FacultyActionCenter: React.FC = () => {
 
       {/* Table Loading State */}
       {loading ? (
-        <div className="bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 rounded-3xl p-6 space-y-4 shadow-sm animate-pulse">
+        <div className="bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 rounded-3xl p-4 sm:p-6 space-y-4 shadow-sm animate-pulse">
           {/* Top Status & Shimmer Header */}
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-navy-800">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 pb-4 border-b border-slate-100 dark:border-navy-800">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/20">
-                <Sparkles className="w-4 h-4 animate-bounce-slow" />
+              <div className="w-9 h-9 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/20 shrink-0">
+                <Sparkles className="w-4 h-4 animate-bounce-slow text-brand-500" />
               </div>
               <div>
-                <div className="h-4 w-48 bg-slate-200 dark:bg-navy-700 rounded-lg"></div>
-                <div className="h-3 w-32 bg-slate-100 dark:bg-navy-800 rounded mt-1.5"></div>
+                <div className="h-4 w-40 sm:w-48 bg-slate-200 dark:bg-navy-700 rounded-lg"></div>
+                <div className="h-3 w-28 sm:w-32 bg-slate-100 dark:bg-navy-800 rounded mt-1.5"></div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800/50">
-                <RefreshCw className="w-3.5 h-3.5 animate-spin mr-1.5 text-brand-500" />
-                Aggregating Intervention Queue...
+            <div className="flex items-center gap-2 max-w-full">
+              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-bold bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800/50 max-w-full truncate">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin mr-1.5 text-brand-500 shrink-0" />
+                <span className="truncate">Aggregating Intervention Queue...</span>
               </span>
             </div>
           </div>

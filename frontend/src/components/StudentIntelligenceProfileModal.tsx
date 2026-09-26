@@ -14,8 +14,10 @@ import {
   Sparkles,
   Flame,
   ArrowLeft,
-  Activity
+  Activity,
+  Edit3
 } from 'lucide-react';
+import { StudentEditOverlay } from './StudentEditOverlay';
 import {
   ResponsiveContainer,
   PieChart,
@@ -54,6 +56,7 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
   const [probSearch, setProbSearch] = useState('');
   const [fetchLatency, setFetchLatency] = useState<number | null>(null);
   const [lastFetchTime, setLastFetchTime] = useState<string>('');
+  const [showEditOverlay, setShowEditOverlay] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<
     'overview' | 'dsa' | 'contests' | 'activity' | 'submissions' | 'badges' | 'languages' | 'topics'
   >('overview');
@@ -816,6 +819,20 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
                         );
                       });
                     })()}
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        setShowEditOverlay(true);
+                      }}
+                      className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white text-xs font-black shadow-md shadow-amber-500/30 transition-all cursor-pointer active:scale-95 sm:hover:scale-[1.04] touch-manipulation select-none"
+                      title="Edit Student Record"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Edit</span>
+                    </button>
 
                     <button
                       onClick={handleRefreshStudent}
@@ -1597,6 +1614,19 @@ export const StudentIntelligenceProfileModal: React.FC<StudentIntelligenceProfil
               </button>
             </div>
           </div>
+
+          {showEditOverlay && (
+            <StudentEditOverlay
+              isOpen={showEditOverlay}
+              student={st || initialStudent}
+              onClose={() => setShowEditOverlay(false)}
+              onSaveSuccess={(updated) => {
+                setIntelData((prev: any) => ({ ...prev, student: updated }));
+                fetchProfile(true);
+                if (onRefreshList) onRefreshList();
+              }}
+            />
+          )}
         </div>,
         document.body
       )

@@ -12,7 +12,7 @@ import { ExportStatus } from '../components/ExportStatus';
 import { deriveYearLevelFromRegNo } from '../utils/filterUtils';
 
 import { IDCardGenerator } from '../components/IDCardGenerator';
-const StudentEditOverlay = React.lazy(() => import('../components/StudentEditOverlay').then(m => ({ default: m.StudentEditOverlay })));
+import { StudentEditOverlay } from '../components/StudentEditOverlay';
 const StudentAuditModal = React.lazy(() => import('../components/StudentAuditModal').then(m => ({ default: m.StudentAuditModal })));
 const IndividualAnalyticsDashboard = React.lazy(() => import('../components/analytics/IndividualAnalyticsDashboard').then(m => ({ default: m.IndividualAnalyticsDashboard })));
 const ContestAnalyticsView = React.lazy(() => import('../components/analytics/ContestAnalyticsView').then(m => ({ default: m.ContestAnalyticsView })));
@@ -369,23 +369,17 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
           </button>
         </div>
 
-        <div className="grid grid-cols-5 gap-1.5 sm:flex sm:items-center sm:gap-2.5 w-full md:w-auto shrink-0">
-            {/* 1. EDIT */}
+        <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-2.5 w-full md:w-auto shrink-0">
+            {/* 1. SYNC */}
             <button
               type="button"
-              onClick={handleOpenEditModal}
-              className="min-h-[38px] px-2 sm:px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs flex items-center justify-center space-x-1 sm:space-x-1.5 shadow-md shadow-amber-500/30 transition-all hover:scale-105 min-w-0 cursor-pointer"
-            >
-              <Edit3 className="w-3.5 h-3.5 text-white shrink-0" />
-              <span className="truncate">Edit</span>
-            </button>
-
-            {/* 2. SYNC */}
-            <button
-              type="button"
-              onClick={handleLiveFetch}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleLiveFetch();
+              }}
               disabled={isLiveFetching}
-              className={`min-h-[38px] px-2 sm:px-3 py-2 rounded-xl font-bold text-xs flex items-center justify-center space-x-1 sm:space-x-1.5 shadow-md transition-all hover:scale-105 min-w-0 disabled:opacity-50 cursor-pointer ${
+              className={`min-h-[40px] px-2 sm:px-3 py-2 rounded-xl font-bold text-xs flex items-center justify-center space-x-1 sm:space-x-1.5 shadow-md transition-all active:scale-95 sm:hover:scale-105 min-w-0 disabled:opacity-50 cursor-pointer touch-manipulation select-none ${
                 syncSuccess
                   ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/30'
                   : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-600/30'
@@ -404,37 +398,33 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
               )}
             </button>
 
-            {/* 3. CERTIFICATE */}
+            {/* 2. CERTIFICATE */}
             <button
               type="button"
-              onClick={handleGenerateCert}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleGenerateCert();
+              }}
               disabled={downloadingCert}
-              className="min-h-[38px] px-2 sm:px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center space-x-1 sm:space-x-1.5 shadow-md shadow-amber-600/30 transition-all hover:scale-105 disabled:opacity-50 min-w-0 cursor-pointer"
+              className="min-h-[40px] px-2 sm:px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center space-x-1 sm:space-x-1.5 shadow-md shadow-amber-600/30 transition-all active:scale-95 sm:hover:scale-105 disabled:opacity-50 min-w-0 cursor-pointer touch-manipulation select-none"
             >
               <Award className="w-3.5 h-3.5 text-white shrink-0" />
               <span className="truncate">{downloadingCert ? '...' : <><span className="sm:hidden">Cert</span><span className="hidden sm:inline">Certificate</span></>}</span>
             </button>
 
-            {/* 4. AUDIT */}
+            {/* 3. AUDIT */}
             <button
               type="button"
-              onClick={() => setShowAuditModal(true)}
-              className="min-h-[38px] px-2 sm:px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center space-x-1 sm:space-x-1.5 shadow-md shadow-emerald-600/30 transition-all hover:scale-105 min-w-0 cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setShowAuditModal(true);
+              }}
+              className="min-h-[40px] px-2 sm:px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center space-x-1 sm:space-x-1.5 shadow-md shadow-emerald-600/30 transition-all active:scale-95 sm:hover:scale-105 min-w-0 cursor-pointer touch-manipulation select-none"
             >
               <FileText className="w-3.5 h-3.5 text-white shrink-0" />
               <span className="truncate">Audit</span>
-            </button>
-
-            {/* 5. DELETE / DEACTIVATE */}
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="min-h-[38px] px-2 sm:px-3 py-2 rounded-xl bg-rose-600/90 hover:bg-rose-600 text-white font-bold text-xs flex items-center justify-center space-x-1 sm:space-x-1.5 shadow-md shadow-rose-600/30 transition-all hover:scale-105 min-w-0 disabled:opacity-50 cursor-pointer"
-              title="Deactivate Student"
-            >
-              <Trash2 className="w-3.5 h-3.5 text-white shrink-0" />
-              <span className="truncate">{isDeleting ? '...' : <><span className="sm:hidden">Deact</span><span className="hidden sm:inline">Deactivate</span></>}</span>
             </button>
         </div>
       </div>

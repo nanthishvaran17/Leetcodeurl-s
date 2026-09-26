@@ -1037,6 +1037,7 @@ export const App: React.FC = () => {
       {selectedStudent && activeTab !== 'profile' && typeof document !== 'undefined' && (
         <div
           className="fixed inset-0 z-[999999] flex items-start justify-center p-2 sm:p-4 pt-16 sm:pt-20 pb-16 sm:pb-6 overflow-y-auto bg-slate-950/85 backdrop-blur-md animate-fade-in"
+          style={{ zIndex: 999999 }}
           onClick={(e) => { if (e.target === e.currentTarget) setSelectedStudent(null); }}
         >
           <div

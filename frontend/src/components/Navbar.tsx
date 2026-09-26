@@ -65,7 +65,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white dark:bg-navy-950 border-b border-slate-200 dark:border-navy-800 transition-colors shadow-xs pt-[env(safe-area-inset-top,0px)]">
+      <header 
+        className="sticky top-0 z-40 bg-white dark:bg-navy-950 border-b border-slate-200 dark:border-navy-800 transition-colors shadow-xs pt-safe-top"
+        style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 0px)' }}
+      >
         <div className="w-full max-w-full mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-[56px] sm:h-[68px] gap-1 sm:gap-4">
             

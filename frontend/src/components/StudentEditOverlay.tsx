@@ -574,7 +574,11 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
     return createPortal(
       <div
         className="fixed inset-0 z-[9999999] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md modal-overlay-responsive"
-        onClick={onClose}
+        style={{ zIndex: 99999999 }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
       >
         <div className="bg-white dark:bg-navy-950 rounded-3xl p-6 shadow-2xl max-w-sm text-center border border-slate-200 dark:border-navy-700 animate-modal-content">
           <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto mb-3" />
@@ -582,7 +586,10 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Student information is currently being fetched. Please try again in a moment.</p>
           <button
             type="button"
-            onClick={onClose}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
             className="px-4 py-2 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-slate-700 transition-all cursor-pointer"
           >
             Close
@@ -596,7 +603,11 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
   return createPortal(
     <div
       className="fixed inset-0 z-[9999999] flex items-start justify-center p-4 pt-6 sm:pt-7 overflow-y-auto bg-slate-950/85 backdrop-blur-md modal-overlay-responsive"
-      onClick={(e) => { if (e.target === e.currentTarget && !isSaving) handleAttemptClose(); }}
+      style={{ zIndex: 99999999 }}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (e.target === e.currentTarget && !isSaving) handleAttemptClose();
+      }}
     >
       <div
         role="dialog"

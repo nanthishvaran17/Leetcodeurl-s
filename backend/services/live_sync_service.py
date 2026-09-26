@@ -359,6 +359,12 @@ def _release_global_lock(db: Session = None, job_id: str = None):  # type: ignor
     """Release the global sync lock using an isolated short-lived session."""
     lock_db = SessionLocal()
     try:
+        lock = lock_db.query(GlobalSyncLock).filter(GlobalSyncLock.id == 1).first()
+        if not lock or not lock.is_locked:
+            return
+        if job_id and lock.locked_by_job_id and lock.locked_by_job_id != job_id:
+            return
+
         stmt = (
             update(GlobalSyncLock)
             .where(GlobalSyncLock.id == 1)

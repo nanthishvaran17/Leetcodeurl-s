@@ -117,18 +117,21 @@ def get_current_sync_status(db: Session = Depends(get_db)):
             is_ghost_zombie = not sync_tracker.is_running and (last_activity_age > 15 or last_activity_age < -5)
             if is_ghost_zombie:
                 logger.warning(f"Reconciling ghost zombie lock for dead job {running_job.job_id} (inactive {last_activity_age:.1f}s)")
-                db.query(SyncJob).filter(SyncJob.job_id == running_job.job_id).update({
-                    "status": "INTERRUPTED",
-                    "completed_at": now_utc
-                }, synchronize_session=False)
+                try:
+                    db.query(SyncJob).filter(SyncJob.job_id == running_job.job_id).update({
+                        "status": "INTERRUPTED",
+                        "completed_at": now_utc
+                    }, synchronize_session=False)
+                    db.commit()
+                except Exception as ex_zombie:
+                    db.rollback()
+                    logger.warning(f"[SYNC_STATUS] Zombie job status update deferred: {ex_zombie}")
                 from backend.services.live_sync_service import _release_global_lock
                 _release_global_lock(db, running_job.job_id)
-                db.commit()
                 running_job = None
         elif not sync_tracker.is_running:
             from backend.services.live_sync_service import _release_global_lock
             _release_global_lock(db)
-            db.commit()
 
         # Fetch last 3 relevant jobs in one query (completed, failed, any)
         recent_jobs = db.query(SyncJob).order_by(SyncJob.id.desc()).limit(10).all()

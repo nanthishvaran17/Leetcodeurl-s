@@ -97,11 +97,11 @@ export const StaffVerificationSection: React.FC = () => {
     }
   };
 
-  const fetchAdminVerifications = async () => {
-    setAdminLoading(true);
+  const fetchAdminVerifications = async (silent = false) => {
+    if (!silent) setAdminLoading(true);
     try {
       const res = await api.get('/staff-verification/all', {
-        params: { status_filter: adminStatusFilter }
+        params: { status_filter: 'ALL' }
       });
       setAdminVerifications(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
@@ -111,11 +111,28 @@ export const StaffVerificationSection: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (isReviewerRole) {
-      fetchAdminVerifications();
-    }
-  }, [adminStatusFilter]);
+  const filteredAdminVerifications = React.useMemo(() => {
+    if (adminStatusFilter === 'ALL') return adminVerifications;
+    return adminVerifications.filter(row => (row.verification_status || '').toUpperCase() === adminStatusFilter);
+  }, [adminVerifications, adminStatusFilter]);
+
+  const statusCounts = React.useMemo(() => {
+    const counts: Record<string, number> = {
+      ALL: adminVerifications.length,
+      PENDING: 0,
+      UNDER_REVIEW: 0,
+      VERIFIED: 0,
+      REJECTED: 0,
+    };
+    adminVerifications.forEach((row) => {
+      const st = (row.verification_status || '').toUpperCase();
+      if (counts[st] !== undefined) {
+        counts[st]++;
+      }
+    });
+    return counts;
+  }, [adminVerifications]);
+
 
   const validateFile = (file: File): boolean => {
     setFileError(null);
@@ -291,16 +308,16 @@ export const StaffVerificationSection: React.FC = () => {
     <div className="space-y-8 animate-fade-in font-sans">
       
       {/* Container Card */}
-      <div className="glass-card p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-6 bg-white dark:bg-navy-950">
+      <div className="glass-card p-4 sm:p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl space-y-6 bg-white dark:bg-navy-950">
         
         {/* Card Header */}
-        <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-100 dark:border-slate-800 pb-5">
-          <div className="flex items-center space-x-3.5">
-            <div className="p-3.5 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-              <ShieldCheck className="w-6 h-6" />
+        <div className="flex items-center justify-between flex-wrap gap-3 border-b border-slate-100 dark:border-slate-800 pb-5">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 shrink-0">
+              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Staff Verification</h2>
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight truncate">Staff Verification</h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
                 Verify your institutional staff identity and reporting role.
               </p>
@@ -308,7 +325,7 @@ export const StaffVerificationSection: React.FC = () => {
           </div>
 
           {/* Status Badge */}
-          <div>
+          <div className="shrink-0">
             {currentStatus === 'PENDING' && (
               <span className="px-3.5 py-1.5 rounded-full text-xs font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center space-x-1.5 animate-pulse">
                 <Clock className="w-3.5 h-3.5" />
@@ -500,7 +517,7 @@ export const StaffVerificationSection: React.FC = () => {
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 text-white text-xs font-black shadow-lg shadow-indigo-500/25 transition-all flex items-center space-x-2 cursor-pointer disabled:opacity-50"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-brand-600 hover:from-indigo-700 hover:to-brand-700 text-white text-xs font-black shadow-lg shadow-indigo-500/25 transition-all flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
             >
               {submitting ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
               <span>{verificationState ? 'Update Verification Details' : 'Submit Staff Verification'}</span>
@@ -511,68 +528,73 @@ export const StaffVerificationSection: React.FC = () => {
 
       {/* Reviewer / Administrator View (Only visible for Authorized Reviewers) */}
       {isReviewerRole && (
-        <div className="glass-card p-6 md:p-8 rounded-3xl border border-indigo-500/30 dark:border-indigo-500/20 shadow-xl space-y-5 bg-white dark:bg-navy-950">
-          <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+        <div className="glass-card p-4 sm:p-6 md:p-8 rounded-3xl border border-indigo-500/30 dark:border-indigo-500/20 shadow-xl space-y-5 bg-white dark:bg-navy-950">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div className="flex items-center space-x-3">
-              <div className="p-3 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
-                <UserCheck className="w-6 h-6" />
+              <div className="p-2.5 sm:p-3 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 shrink-0">
+                <UserCheck className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <div>
-                <h3 className="text-lg font-black text-slate-900 dark:text-white">Staff Verifications Review Board</h3>
+              <div className="min-w-0">
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">Staff Verifications Review Board</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">
                   Authorized Admin/HOD portal to review, approve, or reject institutional staff identity submissions.
                 </p>
               </div>
             </div>
 
-            {/* Filter Pills */}
-            <div className="flex items-center space-x-1.5 bg-slate-100 dark:bg-navy-900 p-1 rounded-xl text-xs font-bold">
-              {['ALL', 'PENDING', 'UNDER_REVIEW', 'VERIFIED', 'REJECTED'].map((st) => (
-                <button
-                  key={st}
-                  type="button"
-                  onClick={() => setAdminStatusFilter(st)}
-                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                    adminStatusFilter === st
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  {st.replace('_', ' ')}
-                </button>
-              ))}
+            {/* Filter Pills with Count Badges - Auto-Responsive Scroll Bar for All Mobiles */}
+            <div className="w-full sm:w-auto overflow-x-auto no-scrollbar max-w-full py-1">
+              <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-navy-900 p-1 rounded-xl text-xs font-bold w-max min-w-full sm:min-w-0">
+                {[
+                  { key: 'ALL', label: 'ALL' },
+                  { key: 'PENDING', label: 'PENDING' },
+                  { key: 'UNDER_REVIEW', label: 'UNDER REVIEW' },
+                  { key: 'VERIFIED', label: 'VERIFIED' },
+                  { key: 'REJECTED', label: 'REJECTED' },
+                ].map((tab) => {
+                  const count = statusCounts[tab.key] || 0;
+                  const isActive = adminStatusFilter === tab.key;
+                  return (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      onClick={() => setAdminStatusFilter(tab.key)}
+                      className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap text-xs font-bold shrink-0 flex items-center space-x-1.5 ${
+                        isActive
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-navy-800'
+                      }`}
+                    >
+                      <span>{tab.label}</span>
+                      <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+                        isActive
+                          ? 'bg-white/20 text-white'
+                          : 'bg-slate-200 dark:bg-navy-800 text-slate-700 dark:text-slate-300'
+                      }`}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
-          {adminLoading ? (
-            <div className="p-8 text-center text-xs font-bold text-slate-400">Loading reviewer records...</div>
-          ) : adminVerifications.length > 0 ? (
-            <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-navy-950 text-white font-black uppercase text-[10px] tracking-wider">
-                  <tr>
-                    <th className="px-4 py-3">Staff Name</th>
-                    <th className="px-4 py-3">Employee ID</th>
-                    <th className="px-4 py-3">Email</th>
-                    <th className="px-4 py-3">Department</th>
-                    <th className="px-4 py-3">Designation</th>
-                    <th className="px-4 py-3">Reports To</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3 text-center">ID Proof</th>
-                    <th className="px-4 py-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {adminVerifications.map((row: any) => (
-                    <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-navy-900/50 transition-colors">
-                      <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{row.staff_name}</td>
-                      <td className="px-4 py-3 font-mono font-bold text-indigo-600 dark:text-indigo-400">{row.employee_id}</td>
-                      <td className="px-4 py-3 font-medium text-slate-600 dark:text-slate-300">{row.official_email}</td>
-                      <td className="px-4 py-3 font-bold text-slate-700 dark:text-slate-200">{row.department_code || row.department_name}</td>
-                      <td className="px-4 py-3 font-semibold text-slate-600 dark:text-slate-400">{row.designation}</td>
-                      <td className="px-4 py-3 text-slate-500 font-medium">{row.reporting_to_name || '—'}</td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+          <div className="min-h-[220px]">
+            {adminLoading ? (
+              <div className="p-8 text-center text-xs font-bold text-slate-400">Loading reviewer records...</div>
+            ) : filteredAdminVerifications.length > 0 ? (
+              <>
+                {/* MOBILE VIEW (< 768px): Card View */}
+                <div className="block md:hidden space-y-3">
+                  {filteredAdminVerifications.map((row: any) => (
+                    <div key={row.id} className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-navy-900/60 space-y-3 shadow-xs">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h4 className="font-bold text-sm text-slate-900 dark:text-white">{row.staff_name}</h4>
+                          <p className="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400 mt-0.5">{row.employee_id}</p>
+                        </div>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold shrink-0 ${
                           row.verification_status === 'VERIFIED'
                             ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/30'
                             : row.verification_status === 'PENDING'
@@ -583,13 +605,25 @@ export const StaffVerificationSection: React.FC = () => {
                         }`}>
                           {row.verification_status}
                         </span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-200/60 dark:border-slate-800">
+                        <div>
+                          <span className="text-[10px] text-slate-400 font-bold block uppercase">Dept / Role</span>
+                          <span className="font-semibold text-slate-700 dark:text-slate-300">{row.department_code || row.department_name} • {row.designation}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-400 font-bold block uppercase">Email</span>
+                          <span className="font-medium text-slate-600 dark:text-slate-400 break-all text-[11px]">{row.official_email}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-200/60 dark:border-slate-800">
                         {row.has_document ? (
                           <button
                             type="button"
                             onClick={() => openDocument(row.id)}
-                            className="px-2 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-bold hover:bg-indigo-100 flex items-center space-x-1 mx-auto text-[10px]"
+                            className="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-bold hover:bg-indigo-100 flex items-center space-x-1 text-[11px]"
                           >
                             <Eye className="w-3.5 h-3.5" />
                             <span>View Proof</span>
@@ -597,14 +631,13 @@ export const StaffVerificationSection: React.FC = () => {
                         ) : (
                           <span className="text-slate-400 text-[10px] italic">No document</span>
                         )}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex items-center justify-end space-x-1.5">
+
+                        <div className="flex items-center space-x-1.5">
                           {row.verification_status !== 'UNDER_REVIEW' && row.verification_status !== 'VERIFIED' && (
                             <button
                               type="button"
                               onClick={() => handleAdminAction(row.id, 'review')}
-                              className="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300 font-bold text-[10px] hover:bg-indigo-200"
+                              className="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300 font-bold text-[11px]"
                             >
                               Review
                             </button>
@@ -613,7 +646,7 @@ export const StaffVerificationSection: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => handleAdminAction(row.id, 'verify')}
-                              className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold text-[10px] hover:bg-emerald-700 shadow-sm"
+                              className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold text-[11px]"
                             >
                               Verify
                             </button>
@@ -622,23 +655,112 @@ export const StaffVerificationSection: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => { setRejectingId(row.id); setRejectionReason(''); }}
-                              className="px-2.5 py-1 rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 font-bold text-[10px] hover:bg-rose-200"
+                              className="px-2.5 py-1 rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 font-bold text-[11px]"
                             >
                               Reject
                             </button>
                           )}
                         </div>
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="p-8 text-center text-xs font-semibold text-slate-400 border border-slate-200 dark:border-slate-800 rounded-2xl">
-              No staff verification records found for selected filter.
-            </div>
-          )}
+                </div>
+
+                {/* DESKTOP VIEW (>= 768px): Table View */}
+                <div className="hidden md:block border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-navy-950 text-white font-black uppercase text-[10px] tracking-wider">
+                      <tr>
+                        <th className="px-4 py-3">Staff Name</th>
+                        <th className="px-4 py-3">Employee ID</th>
+                        <th className="px-4 py-3">Email</th>
+                        <th className="px-4 py-3">Department</th>
+                        <th className="px-4 py-3">Designation</th>
+                        <th className="px-4 py-3">Reports To</th>
+                        <th className="px-4 py-3">Status</th>
+                        <th className="px-4 py-3 text-center">ID Proof</th>
+                        <th className="px-4 py-3 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {filteredAdminVerifications.map((row: any) => (
+                        <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-navy-900/50 transition-colors">
+                          <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{row.staff_name}</td>
+                          <td className="px-4 py-3 font-mono font-bold text-indigo-600 dark:text-indigo-400">{row.employee_id}</td>
+                          <td className="px-4 py-3 font-medium text-slate-600 dark:text-slate-300">{row.official_email}</td>
+                          <td className="px-4 py-3 font-bold text-slate-700 dark:text-slate-200">{row.department_code || row.department_name}</td>
+                          <td className="px-4 py-3 font-semibold text-slate-600 dark:text-slate-400">{row.designation}</td>
+                          <td className="px-4 py-3 text-slate-500 font-medium">{row.reporting_to_name || '—'}</td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                              row.verification_status === 'VERIFIED'
+                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/30'
+                                : row.verification_status === 'PENDING'
+                                ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-500/30'
+                                : row.verification_status === 'UNDER_REVIEW'
+                                ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-500/30'
+                                : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-500/30'
+                            }`}>
+                              {row.verification_status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            {row.has_document ? (
+                              <button
+                                type="button"
+                                onClick={() => openDocument(row.id)}
+                                className="px-2 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-bold hover:bg-indigo-100 flex items-center space-x-1 mx-auto text-[10px]"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>View Proof</span>
+                              </button>
+                            ) : (
+                              <span className="text-slate-400 text-[10px] italic">No document</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex items-center justify-end space-x-1.5">
+                              {row.verification_status !== 'UNDER_REVIEW' && row.verification_status !== 'VERIFIED' && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleAdminAction(row.id, 'review')}
+                                  className="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300 font-bold text-[10px] hover:bg-indigo-200"
+                                >
+                                  Review
+                                </button>
+                              )}
+                              {row.verification_status !== 'VERIFIED' && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleAdminAction(row.id, 'verify')}
+                                  className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold text-[10px] hover:bg-emerald-700 shadow-sm"
+                                >
+                                  Verify
+                                </button>
+                              )}
+                              {row.verification_status !== 'REJECTED' && (
+                                <button
+                                  type="button"
+                                  onClick={() => { setRejectingId(row.id); setRejectionReason(''); }}
+                                  className="px-2.5 py-1 rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 font-bold text-[10px] hover:bg-rose-200"
+                                >
+                                  Reject
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            ) : (
+              <div className="p-8 text-center text-xs font-semibold text-slate-400 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                No staff verification records found for selected filter.
+              </div>
+            )}
+          </div>
         </div>
       )}
 
