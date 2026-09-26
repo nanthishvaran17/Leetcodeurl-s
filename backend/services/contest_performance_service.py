@@ -361,22 +361,28 @@ def build_contest_performance_report(db: Session, config: ReportConfig, current_
 
         is_att = status in valid_attended_statuses
 
-        q1_time = getattr(p_res, "q1_time", None) if p_res else None
-        q2_time = getattr(p_res, "q2_time", None) if p_res else None
-        q3_time = getattr(p_res, "q3_time", None) if p_res else None
-        q4_time = getattr(p_res, "q4_time", None) if p_res else None
-        tot_time = (getattr(p_res, "total_time_min", None) or getattr(p_res, "total_time", None) or getattr(p_res, "finish_time", None)) if p_res else None
+        q1_time = (getattr(p_res, "q1_time", None) if p_res else None) or (getattr(v_res, "q1_time", None) if v_res else None) or (getattr(part_res, "q1_time", None) if part_res else None)
+        q2_time = (getattr(p_res, "q2_time", None) if p_res else None) or (getattr(v_res, "q2_time", None) if v_res else None) or (getattr(part_res, "q2_time", None) if part_res else None)
+        q3_time = (getattr(p_res, "q3_time", None) if p_res else None) or (getattr(v_res, "q3_time", None) if v_res else None) or (getattr(part_res, "q3_time", None) if part_res else None)
+        q4_time = (getattr(p_res, "q4_time", None) if p_res else None) or (getattr(v_res, "q4_time", None) if v_res else None) or (getattr(part_res, "q4_time", None) if part_res else None)
+        tot_time = (
+            (getattr(p_res, "total_time_min", None) or getattr(p_res, "total_time", None) or getattr(p_res, "finish_time", None)) if p_res else None
+        ) or (
+            (getattr(v_res, "total_time_min", None) or getattr(v_res, "total_time", None) or getattr(v_res, "finish_time", None)) if v_res else None
+        ) or (
+            (getattr(part_res, "total_time_min", None) or getattr(part_res, "total_time", None) or getattr(part_res, "finish_time", None)) if part_res else None
+        )
 
         def format_q_cell(q_val: Optional[int], q_t: Any, attended: bool) -> str:
             if not attended or q_val is None:
                 return "—"
-            if q_val == 1:
-                if q_t is not None and float(q_t) > 0:
+            if int(q_val or 0) >= 1:
+                if q_t is not None and float(q_t or 0) > 0:
                     t_val = float(q_t)
                     t_str = str(int(t_val)) if t_val.is_integer() else str(t_val)
                     return f"1 ({t_str} min)"
-                return "1 (Not Available)"
-            return "0 (—)"
+                return "1"
+            return "0"
 
         q1_disp = format_q_cell(q1_val, q1_time, is_att)
         q2_disp = format_q_cell(q2_val, q2_time, is_att)
