@@ -33,21 +33,75 @@ export function isNativeMobile(): boolean {
   }
 }
 
-/** Convert a Blob to a raw base64 string */
-export async function blobToBase64(blob: Blob): Promise<string> {
-  if (blob && typeof blob.arrayBuffer === 'function') {
-    const buffer = await blob.arrayBuffer();
-    if (typeof (globalThis as any).Buffer !== 'undefined') {
-      return (globalThis as any).Buffer.from(buffer).toString('base64');
+/** Ensures any payload (Blob, ArrayBuffer, Uint8Array, Object, or String) is converted to a valid Blob instance */
+export function normalizeBlob(raw: any, defaultMime?: string): Blob {
+  if (!raw) {
+    return new Blob([], { type: defaultMime || 'application/octet-stream' });
+  }
+  if (raw instanceof Blob) {
+    return raw;
+  }
+  if (raw instanceof ArrayBuffer) {
+    return new Blob([raw], { type: defaultMime || 'application/octet-stream' });
+  }
+  if (ArrayBuffer.isView(raw)) {
+    return new Blob([raw.buffer], { type: defaultMime || 'application/octet-stream' });
+  }
+  if (typeof raw === 'string') {
+    return new Blob([raw], { type: defaultMime || 'text/plain' });
+  }
+  if (typeof raw === 'object' && raw.data) {
+    if (raw.data instanceof Blob) {
+      return raw.data;
     }
-    const bytes = new Uint8Array(buffer);
-    let binary = '';
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i]);
+    if (raw.data instanceof ArrayBuffer) {
+      return new Blob([raw.data], { type: defaultMime || 'application/octet-stream' });
     }
-    if (typeof btoa === 'function') {
-      return btoa(binary);
+    if (ArrayBuffer.isView(raw.data)) {
+      return new Blob([raw.data.buffer], { type: defaultMime || 'application/octet-stream' });
+    }
+  }
+  return new Blob([raw], { type: defaultMime || 'application/octet-stream' });
+}
+
+/** Convert a Blob or any raw binary payload to a base64 string */
+export async function blobToBase64(rawBlob: any): Promise<string> {
+  if (!rawBlob) {
+    throw new Error('File payload is undefined or null');
+  }
+
+  if (typeof rawBlob === 'string') {
+    if (rawBlob.startsWith('data:')) {
+      return rawBlob.split(',')[1] || rawBlob;
+    }
+    try {
+      if (typeof btoa === 'function') {
+        return btoa(rawBlob);
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const blob = normalizeBlob(rawBlob);
+
+  if (typeof blob.arrayBuffer === 'function') {
+    try {
+      const buffer = await blob.arrayBuffer();
+      if (typeof (globalThis as any).Buffer !== 'undefined') {
+        return (globalThis as any).Buffer.from(buffer).toString('base64');
+      }
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      const len = bytes.byteLength;
+      for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      if (typeof btoa === 'function') {
+        return btoa(binary);
+      }
+    } catch (e) {
+      console.warn('[DownloadUtils] arrayBuffer to base64 fallback:', e);
     }
   }
 
@@ -184,8 +238,14 @@ export function isIOS(): boolean {
 /**
  * Validates a response Blob to ensure it is non-empty and not a JSON error.
  */
-export async function validateFileBlob(blob: Blob, mimeType?: string): Promise<{ valid: boolean; error?: string }> {
-  if (!blob || blob.size === 0) {
+export async function validateFileBlob(rawBlob: any, mimeType?: string): Promise<{ valid: boolean; error?: string }> {
+  if (!rawBlob) {
+    return { valid: false, error: 'Downloaded file payload is empty or undefined.' };
+  }
+
+  const blob = normalizeBlob(rawBlob, mimeType);
+
+  if (blob.size === 0) {
     return { valid: false, error: 'Downloaded file is 0 bytes.' };
   }
 

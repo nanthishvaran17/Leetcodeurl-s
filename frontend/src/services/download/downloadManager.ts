@@ -13,6 +13,7 @@ import {
   isNativeMobile,
   blobToBase64,
   shareOrOpenFile,
+  normalizeBlob,
 } from './downloadUtils';
 
 class DownloadManager {
@@ -82,7 +83,7 @@ class DownloadManager {
       });
 
       // 4. VALIDATE REPORT PAYLOAD
-      const blob = response.data;
+      const blob = normalizeBlob(response.data, mimeType);
       const validation = await validateFileBlob(blob, mimeType);
       if (!validation.valid) {
         throw new Error(validation.error || 'Generated report payload is invalid or empty.');
@@ -265,7 +266,7 @@ class DownloadManager {
         headers: { ...authHeaders }
       });
 
-      const blob = response.data;
+      const blob = normalizeBlob(response.data, mimeType);
       const validation = await validateFileBlob(blob, mimeType);
       if (!validation.valid) {
         throw new Error(validation.error || 'Generated report payload is invalid or empty.');
