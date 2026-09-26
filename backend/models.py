@@ -171,6 +171,11 @@ class ContestParticipation(Base):
     contest_rating_after = Column(Float, nullable=True)
     submission_times = Column(JSON, nullable=True)
     
+    classification_signal = Column(String(100), nullable=True) # in_window_submission, post_window_only, no_submissions, submission_evidence_unavailable
+    solve_timeline = Column(JSON, nullable=True)
+    live_solves_count = Column(Integer, default=0)
+    post_contest_solves_count = Column(Integer, default=0)
+
     verified_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
     source = Column(String(100), default="leetcode_api")
     # Audit trail: which LeetCode username was used to fetch this record.
@@ -337,6 +342,8 @@ class WeeklyPublicResult(Base):
     verification_evidence = Column(Text, nullable=True) # JSON evidence payload
     retry_count = Column(Integer, default=0)
     last_fetched_at = Column(DateTime, nullable=True)
+    classification_signal = Column(String(100), nullable=True) # in_window_submission, post_window_only, no_submissions, no_participation
+    solve_timeline = Column(JSON, nullable=True) # Per-question timestamp array raw data
 
     session = relationship("WeeklySession", back_populates="public_results")
     student = relationship("Student")
@@ -378,6 +385,8 @@ class WeeklyVirtualResult(Base):
     q4 = Column(Integer, default=0)
     total_contest_solved = Column(Integer, default=0)
     contest_score = Column(Integer, default=0)
+    classification_signal = Column(String(100), nullable=True)
+    solve_timeline = Column(JSON, nullable=True)
     completed_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     session = relationship("WeeklySession", back_populates="virtual_results")
@@ -541,17 +550,59 @@ class ContestReconciliationEvent(Base):
     )
 
     id = Column(Integer, primary_key=True, index=True)
-    session_id = Column(Integer, ForeignKey("weekly_sessions.id"), nullable=False, index=True)
+    session_id = Column(Integer, ForeignKey("weekly_sessions.id"), nullable=True, index=True)
     student_id = Column(Integer, ForeignKey("students.id"), nullable=True, index=True)
-    event_type = Column(String(50), nullable=False)  # EVIDENCE_FETCHED, CLASSIFICATION_CHANGED, ANOMALY_FLAGGED, SNAPSHOT_GENERATED
+    contest_id = Column(String(100), nullable=True, index=True)
+    event_type = Column(String(50), nullable=False)  # EVIDENCE_FETCHED, CLASSIFICATION_CHANGED, RECONCILIATION_CORRECTION, ANOMALY_FLAGGED, SNAPSHOT_GENERATED
     old_state = Column(String(50), nullable=True)
     new_state = Column(String(50), nullable=True)
+    old_solved_count = Column(Integer, nullable=True)
+    new_solved_count = Column(Integer, nullable=True)
+    reconciliation_stage = Column(String(50), nullable=True) # PROVISIONAL, T_PLUS_3_RECONCILIATION, T_PLUS_12_FINAL
     evidence_source = Column(String(100), nullable=True)
+    classification_signal = Column(String(100), nullable=True)
+    reason = Column(Text, nullable=True)
     details = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), nullable=False, index=True)
 
     session = relationship("WeeklySession")
     student = relationship("Student")
+
+
+class ContestReportVersion(Base):
+    """
+    Immutable Version Preservation for Contest Reports.
+    Stores distinct snapshot versions:
+    - PROVISIONAL (T+0 ~09:35 AM IST)
+    - T_PLUS_3_RECONCILIATION (T+3 Hours ~12:30 PM IST)
+    - T_PLUS_12_FINAL (T+12 Hours ~09:30 PM IST -> OFFICIAL_RECONCILED)
+    """
+    __tablename__ = "contest_report_versions"
+    __table_args__ = (
+        UniqueConstraint("contest_id", "reconciliation_stage", name="uq_contest_report_version_stage"),
+        Index("ix_contest_report_versions_contest_stage", "contest_id", "reconciliation_stage"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("weekly_sessions.id"), nullable=True, index=True)
+    contest_id = Column(String(100), nullable=False, index=True)
+    contest_name = Column(String(150), nullable=False)
+    reconciliation_stage = Column(String(50), nullable=False, index=True) # PROVISIONAL, T_PLUS_3_RECONCILIATION, T_PLUS_12_FINAL
+    status = Column(String(50), nullable=False, index=True) # PROVISIONAL, RECONCILED, OFFICIAL_RECONCILED, RECONCILIATION_FAILED, PENDING_RECONCILIATION
+    generated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), nullable=False)
+    reconciliation_timestamp = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc), nullable=False)
+    
+    total_students = Column(Integer, default=0)
+    live_count = Column(Integer, default=0)
+    virtual_count = Column(Integer, default=0)
+    attended_zero_count = Column(Integer, default=0)
+    not_attended_count = Column(Integer, default=0)
+    failed_count = Column(Integer, default=0)
+
+    dataset = Column(JSON, nullable=False) # List of student result dicts
+    dataset_hash = Column(String(128), nullable=False)
+    evidence_metadata = Column(JSON, nullable=True)
+    reconciliation_summary = Column(JSON, nullable=True)
 
 
 
@@ -1051,6 +1102,9 @@ class StudentContestParticipation(Base):
     is_frozen = Column(Boolean, default=False, index=True)
     frozen_at = Column(DateTime(timezone=True), nullable=True)
     post_contest_solves_count = Column(Integer, default=0)
+    live_solves_count = Column(Integer, default=0)
+    classification_signal = Column(String(100), nullable=True)
+    solve_timeline = Column(JSON, nullable=True)
 
 
     started_at = Column(DateTime, nullable=True)

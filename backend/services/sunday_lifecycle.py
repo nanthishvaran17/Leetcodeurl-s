@@ -463,7 +463,7 @@ class SundayLifecycle:
             db.close()
 
     def schedule_verifications(self, contest: Contest):
-        """Schedules finite verification jobs without infinite loops."""
+        """Schedules finite verification jobs for T+3 and T+12 reconciliations adhering to Asia/Kolkata timezone."""
         if not self.scheduler:
             return
 
@@ -479,18 +479,34 @@ class SundayLifecycle:
             replace_existing=True,
         )
 
-        # 6 Hour Verification
+        # T+3 Hour Delayed Reconciliation (~12:30 PM IST)
+        from backend.services.delayed_reconciliation_service import DelayedReconciliationEngine
+        engine_inst = DelayedReconciliationEngine()
+        
+        t3_run_date = contest.end_time + timedelta(hours=3) if hasattr(contest, "end_time") and contest.end_time else now + timedelta(hours=3)
         self.scheduler.add_job(
-            self.collect_and_classify_participants,
+            engine_inst.reconcile_stage,
             "date",
-            run_date=now + timedelta(hours=6),
-            args=[contest],
-            id=f"verify_{contest.id}_6h",
+            run_date=t3_run_date,
+            args=[contest.contest_slug if hasattr(contest, "contest_slug") else str(contest), DelayedReconciliationEngine.STAGE_T_PLUS_3, self.db_session_factory()],
+            id=f"delayed_rec_{contest.id}_t3",
             timezone=IST,
             replace_existing=True,
         )
 
-        logger.info(f"[LIFECYCLE] Scheduled 1h and 6h background verifications for {contest.contest_slug}")
+        # T+12 Hour Final Delayed Reconciliation (~09:30 PM IST -> OFFICIAL_RECONCILED)
+        t12_run_date = contest.end_time + timedelta(hours=12) if hasattr(contest, "end_time") and contest.end_time else now + timedelta(hours=12)
+        self.scheduler.add_job(
+            engine_inst.reconcile_stage,
+            "date",
+            run_date=t12_run_date,
+            args=[contest.contest_slug if hasattr(contest, "contest_slug") else str(contest), DelayedReconciliationEngine.STAGE_T_PLUS_12, self.db_session_factory()],
+            id=f"delayed_rec_{contest.id}_t12",
+            timezone=IST,
+            replace_existing=True,
+        )
+
+        logger.info(f"[LIFECYCLE] Scheduled T+3 (~12:30 PM IST) and T+12 (~09:30 PM IST) reconciliations for {contest.contest_slug}")
 
     def _update_contest_status(self, contest_id: int, status: str):
         db = self.db_session_factory()

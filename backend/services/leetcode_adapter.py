@@ -263,23 +263,53 @@ class ProductionLeetCodeAdapter(LeetCodeAdapter):
         if operation_name:
             payload["operationName"] = operation_name
 
+        from backend.services.token_bucket_limiter import global_token_bucket_limiter
+
         data = {}
         http_status = None
         graphql_errors = None
 
-        try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
-                resp = await client.post(GRAPHQL_URL, json=payload, headers=self.HEADERS)
-                http_status = resp.status_code
-                if resp.status_code == 200:
-                    res_json = resp.json()
-                    graphql_errors = res_json.get("errors")
-                    data = res_json.get("data", {})
-                else:
-                    logger.warning(f"GraphQL request returned HTTP {resp.status_code} for {operation_name}")
-        except Exception as e:
-            logger.error(f"GraphQL request error for {operation_name} ({username}): {e}")
-            graphql_errors = [{"message": str(e)}]
+        for attempt in range(1, 4):
+            if attempt > 1:
+                global_token_bucket_limiter.retry_count += 1
+            await global_token_bucket_limiter.acquire_token()
+            global_token_bucket_limiter.total_requests += 1
+
+            try:
+                async with httpx.AsyncClient(timeout=self.timeout) as client:
+                    resp = await client.post(GRAPHQL_URL, json=payload, headers=self.HEADERS)
+                    http_status = resp.status_code
+
+                    if resp.status_code == 429:
+                        global_token_bucket_limiter.http_429_count += 1
+                        retry_after = resp.headers.get("Retry-After")
+                        wait = float(retry_after) if retry_after and str(retry_after).isdigit() else (1.5 ** attempt)
+                        if attempt < 3:
+                            await asyncio.sleep(wait)
+                            continue
+                        global_token_bucket_limiter.rate_limited_failures += 1
+                        logger.error(f"[ADAPTER_RATE_LIMIT] 429 exhausted for {operation_name} ({username})")
+                        break
+
+                    if resp.status_code == 200:
+                        res_json = resp.json()
+                        graphql_errors = res_json.get("errors")
+                        data = res_json.get("data", {})
+                        global_token_bucket_limiter.successful_requests += 1
+                        break
+                    else:
+                        logger.warning(f"GraphQL request returned HTTP {resp.status_code} for {operation_name}")
+                        if attempt < 3 and resp.status_code >= 500:
+                            await asyncio.sleep(1.5 ** attempt)
+                            continue
+                        break
+            except Exception as e:
+                logger.error(f"GraphQL request error for {operation_name} ({username}): {e}")
+                graphql_errors = [{"message": str(e)}]
+                if attempt < 3:
+                    await asyncio.sleep(1.5 ** attempt)
+                    continue
+                break
 
         # Audit logging into raw_data table if session factory is available
         if self.db_session_factory and (contest_id or username):
@@ -398,6 +428,8 @@ class ProductionLeetCodeAdapter(LeetCodeAdapter):
         Fetch authoritative contest metadata & Q1-Q4 problem set directly from official LeetCode endpoints.
         Enforces OFFICIAL_METADATA_WINS rule.
         """
+        from backend.services.token_bucket_limiter import global_token_bucket_limiter
+
         urls = [
             f"https://leetcode.com/contest/api/info/{slug}/",
             f"https://leetcode.com/contest/api/ranking/{slug}/?pagination=1&region=global"
@@ -405,8 +437,11 @@ class ProductionLeetCodeAdapter(LeetCodeAdapter):
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             for url in urls:
                 try:
+                    await global_token_bucket_limiter.acquire_token()
+                    global_token_bucket_limiter.total_requests += 1
                     resp = await client.get(url, headers=self.HEADERS)
                     if resp.status_code == 200:
+                        global_token_bucket_limiter.successful_requests += 1
                         data = resp.json()
                         if isinstance(data, dict) and ("questions" in data or "contest" in data):
                             return data
@@ -470,11 +505,16 @@ class ProductionLeetCodeAdapter(LeetCodeAdapter):
         self, slug: str, page: int, page_size: int = 50
     ) -> Optional[RankingPage]:
         """Fetch paginated live contest ranking endpoint."""
+        from backend.services.token_bucket_limiter import global_token_bucket_limiter
+
         url = f"https://leetcode.com/contest/api/ranking/{slug}/?pagination={page}&region=global"
         try:
+            await global_token_bucket_limiter.acquire_token()
+            global_token_bucket_limiter.total_requests += 1
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 resp = await client.get(url, headers=self.HEADERS)
                 if resp.status_code == 200:
+                    global_token_bucket_limiter.successful_requests += 1
                     data = resp.json()
                     total_users = data.get("user_num", 0)
                     total_pages = max(1, (total_users + page_size - 1) // page_size) if total_users else 1

@@ -66,18 +66,18 @@ if "postgresql" in db_url or "postgres" in db_url:
     pg_connect_args = {
         "connect_timeout": 30,   # 30s connect timeout for Neon serverless wake-up & AWS multi-IP failover
         "keepalives": 1,
-        "keepalives_idle": 15,   # Probe after 15s idle
-        "keepalives_interval": 5,
+        "keepalives_idle": 10,   # Probe after 10s idle to keep cloud proxies active
+        "keepalives_interval": 3, # Send probes every 3 seconds
         "keepalives_count": 3,
         "sslmode": "require",
     }
 
     engine_kwargs.update({
-        "pool_size": int(os.environ.get("DB_POOL_SIZE", 50)),
-        "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", 100)),
+        "pool_size": int(os.environ.get("DB_POOL_SIZE", 30)),
+        "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", 50)),
         "pool_timeout": 60,          # wait up to 60s to checkout a connection under load
         "pool_pre_ping": True,       # verify liveness before returning from pool
-        "pool_recycle": 120,         # recycle after 120s to prevent stale connection pool sockets
+        "pool_recycle": int(os.environ.get("DB_POOL_RECYCLE", 30)), # recycle after 30s to stay ahead of serverless/Render 30-60s idle drops
         "connect_args": pg_connect_args
     })
 else:
@@ -166,7 +166,10 @@ if "postgresql" in db_url or "postgres" in db_url:
             exception_context.is_disconnect = True
             if conn is not None:
                 try:
-                    _logger.warning(
+                    # Log at INFO level if caught via pool pre_ping or disconnect handling to avoid warning spam
+                    is_pre_ping = getattr(exception_context, 'is_pre_ping', False)
+                    log_fn = _logger.info if is_pre_ping else _logger.warning
+                    log_fn(
                         "[DB_POOL] Invalidating broken PostgreSQL connection: "
                         f"{str(orig or sa_exc)[:140]}"
                     )

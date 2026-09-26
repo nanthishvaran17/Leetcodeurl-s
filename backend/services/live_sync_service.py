@@ -345,14 +345,24 @@ def _acquire_global_lock(db: Session = None, job_id: str = "", timeout_minutes: 
             lock_db.commit()
             return result.rowcount > 0  # type: ignore
         except Exception as e:
-            lock_db.rollback()
+            try:
+                lock_db.rollback()
+            except Exception:
+                pass
+            try:
+                lock_db.invalidate()
+            except Exception:
+                pass
             if attempt < 2 and ('SSL' in str(e) or 'OperationalError' in str(e) or 'connection' in str(e).lower()):
                 import time; time.sleep(0.3 * (attempt + 1))
                 continue
             logger.error(f"[SYNC_LOCK] Error acquiring global lock: {e}")
             return False
         finally:
-            lock_db.close()
+            try:
+                lock_db.close()
+            except Exception:
+                pass
     return False
 
 def _release_global_lock(db: Session = None, job_id: str = None):  # type: ignore
@@ -375,10 +385,20 @@ def _release_global_lock(db: Session = None, job_id: str = None):  # type: ignor
         lock_db.execute(stmt)
         lock_db.commit()
     except Exception as e:
-        lock_db.rollback()
+        try:
+            lock_db.rollback()
+        except Exception:
+            pass
+        try:
+            lock_db.invalidate()
+        except Exception:
+            pass
         logger.warning(f"[SYNC_LOCK] Lock release note: {e}")
     finally:
-        lock_db.close()
+        try:
+            lock_db.close()
+        except Exception:
+            pass
 
 def start_full_sync_job(db: Session, triggered_by: str = "admin") -> Dict[str, Any]:
     """
