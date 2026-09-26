@@ -45,7 +45,7 @@ export function normalizeBlob(raw: any, defaultMime?: string): Blob {
     return new Blob([raw], { type: defaultMime || 'application/octet-stream' });
   }
   if (ArrayBuffer.isView(raw)) {
-    return new Blob([raw.buffer], { type: defaultMime || 'application/octet-stream' });
+    return new Blob([new Uint8Array(raw.buffer as ArrayBuffer, raw.byteOffset, raw.byteLength)], { type: defaultMime || 'application/octet-stream' });
   }
   if (typeof raw === 'string') {
     return new Blob([raw], { type: defaultMime || 'text/plain' });
@@ -58,7 +58,7 @@ export function normalizeBlob(raw: any, defaultMime?: string): Blob {
       return new Blob([raw.data], { type: defaultMime || 'application/octet-stream' });
     }
     if (ArrayBuffer.isView(raw.data)) {
-      return new Blob([raw.data.buffer], { type: defaultMime || 'application/octet-stream' });
+      return new Blob([new Uint8Array(raw.data.buffer as ArrayBuffer, raw.data.byteOffset, raw.data.byteLength)], { type: defaultMime || 'application/octet-stream' });
     }
   }
   return new Blob([raw], { type: defaultMime || 'application/octet-stream' });
