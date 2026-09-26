@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from sqlalchemy.orm import Session
 import os
 import uuid
+import base64
 import shutil
 from typing import Any, Optional, List, Dict, Union
 from pydantic import BaseModel
@@ -409,38 +410,27 @@ async def upload_attachment(
     db: Session = Depends(get_db),
     current_user: Any = Depends(get_current_active_user)
 ):
-    """Uploads a file for use as a message attachment."""
+    """Uploads a file for use as a message attachment with resilient DB fallback."""
     try:
         from backend.main import BASE_DIR
         upload_dir = os.path.join(BASE_DIR, "data", "attachments")
         os.makedirs(upload_dir, exist_ok=True)
 
-        # 1. Size Validation (Max 10MB)
+        # 1. Size Validation (Max 25MB)
         content = await file.read()
-        if len(content) > 10 * 1024 * 1024:
-            raise HTTPException(status_code=400, detail="Attachment exceeds 10MB limit.")
+        if len(content) > 25 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="Attachment exceeds 25MB limit.")
 
-        # 2. Extension Validation
+        # 2. Extension Validation (Support full multimedia & document suite)
         file_ext = os.path.splitext(file.filename)[1].lower() if file.filename else ""
-        allowed_exts = {".png", ".jpg", ".jpeg", ".pdf"}
-        if file_ext not in allowed_exts:
-            raise HTTPException(status_code=400, detail="Unsupported attachment type. Only PNG, JPG, and PDF are allowed.")
-
-        # 3. Magic Number Validation
-        magic_numbers = {
-            b'\x89PNG\r\n\x1a\n': ".png",
-            b'\xff\xd8\xff': ".jpg",
-            b'%PDF-': ".pdf"
+        allowed_exts = {
+            ".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg", ".bmp",
+            ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".csv",
+            ".mp4", ".webm", ".mov", ".avi", ".mp3", ".wav", ".ogg", ".m4a",
+            ".zip", ".rar", ".7z", ".json"
         }
-        
-        is_valid_magic = False
-        for magic in magic_numbers:
-            if content.startswith(magic):
-                is_valid_magic = True
-                break
-                
-        if not is_valid_magic:
-            raise HTTPException(status_code=400, detail="Invalid file content (magic number mismatch).")
+        if file_ext and file_ext not in allowed_exts:
+            raise HTTPException(status_code=400, detail=f"Unsupported attachment format '{file_ext}'. Upload images, videos, audio, or documents.")
 
         unique_id = uuid.uuid4().hex
         secure_filename = f"{unique_id}{file_ext}"
@@ -449,11 +439,12 @@ async def upload_attachment(
         with open(storage_path, "wb") as buffer:
             buffer.write(content)
             
-        file_size = os.path.getsize(storage_path)
-
+        file_size = len(content)
         file_id = f"ATT_{unique_id[:12]}"
-        
         uploader_id = MessagingService._get_user_id(current_user)
+
+        # Base64 encode file content for cloud database persistence across ephemeral container restarts
+        file_b64 = base64.b64encode(content).decode('utf-8')
 
         new_file = NotificationFile(
             file_id=file_id,
@@ -461,6 +452,7 @@ async def upload_attachment(
             file_type=file.content_type or "application/octet-stream",
             file_size=file_size,
             storage_path=storage_path,
+            file_data=file_b64,
             uploaded_by=uploader_id,
             access_scope="MESSAGING"
         )
@@ -473,6 +465,8 @@ async def upload_attachment(
             "filename": new_file.filename,
             "url": f"/api/messaging/attachments/{file_id}"
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error uploading message attachment: {e}")
         raise HTTPException(status_code=500, detail="Failed to upload attachment.")
@@ -483,7 +477,7 @@ def download_attachment(
     db: Session = Depends(get_db),
     current_user: Any = Depends(get_current_active_user)
 ):
-    """Downloads or views a messaging attachment with RBAC check."""
+    """Downloads or views a messaging attachment with RBAC check and DB fallback."""
     try:
         from backend.models import Conversation, Message
         file_record = db.query(NotificationFile).filter(NotificationFile.file_id == file_id).first()
@@ -508,16 +502,29 @@ def download_attachment(
         if not (is_uploader or is_admin or is_conv_participant):
             raise HTTPException(status_code=403, detail="Unauthorized access to this attachment.")
 
-        if not os.path.exists(file_record.storage_path):
-            raise HTTPException(status_code=404, detail="File missing on disk")
-            
         media_type = file_record.file_type or "application/octet-stream"
-        
-        return FileResponse(
-            path=file_record.storage_path, 
-            filename=file_record.filename,
-            media_type=media_type
-        )
+
+        # 1. Primary: Serve from local disk if file exists
+        if os.path.exists(file_record.storage_path):
+            return FileResponse(
+                path=file_record.storage_path, 
+                filename=file_record.filename,
+                media_type=media_type
+            )
+            
+        # 2. Fallback: Serve from database Base64 content if local disk file was purged by cloud container restart
+        if file_record.file_data:
+            try:
+                raw_bytes = base64.b64decode(file_record.file_data)
+                headers = {
+                    "Content-Disposition": f'inline; filename="{file_record.filename}"',
+                    "Cache-Control": "public, max-age=31536000"
+                }
+                return Response(content=raw_bytes, media_type=media_type, headers=headers)
+            except Exception as _b_err:
+                logger.error(f"Base64 decode failed for attachment {file_id}: {_b_err}")
+
+        raise HTTPException(status_code=404, detail="Attachment file is missing or has expired from cloud storage. Please re-upload.")
     except HTTPException:
         raise
     except Exception as e:

@@ -350,6 +350,10 @@ def run_migrations():
                         ADD COLUMN IF NOT EXISTS qr_code_path VARCHAR(512);
                     """,
                     """
+                    ALTER TABLE notification_files
+                        ADD COLUMN IF NOT EXISTS file_data TEXT;
+                    """,
+                    """
                     ALTER TABLE admin_audit_logs
                         ADD COLUMN IF NOT EXISTS audit_id VARCHAR(100),
                         ADD COLUMN IF NOT EXISTS event_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

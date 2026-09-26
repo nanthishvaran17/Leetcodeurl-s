@@ -2851,6 +2851,7 @@ class NotificationFile(Base):
     file_type = Column(String(50), nullable=False) # pdf, xlsx, docx, png, jpg, etc.
     file_size = Column(Integer, nullable=True) # size in bytes
     storage_path = Column(String(500), nullable=False)
+    file_data = Column(Text, nullable=True) # Base64 encoded file content for container restart resilience
     uploaded_by = Column(String(150), nullable=False)
     
     entity_type = Column(String(60), nullable=True)
