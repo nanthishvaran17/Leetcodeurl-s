@@ -1005,9 +1005,16 @@ async def websocket_leaderboard_endpoint(websocket: WebSocket, token: Optional[s
         return
     try:
         while True:
-            data = await websocket.receive_text()
+            try:
+                data = await websocket.receive_text()
+            except (WebSocketDisconnect, RuntimeError, Exception):
+                break
+
             if data == "ping":
-                await websocket.send_text("pong")
+                try:
+                    await websocket.send_text("pong")
+                except Exception:
+                    break
             else:
                 # Handle SUBSCRIBE / UNSUBSCRIBE for contest-scoped events
                 try:
@@ -1029,7 +1036,11 @@ async def websocket_leaderboard_endpoint(websocket: WebSocket, token: Optional[s
                         
                 except (json.JSONDecodeError, ValueError):
                     pass  # Non-JSON messages (e.g. plain strings) — ignore
-    except WebSocketDisconnect:
+                except Exception:
+                    break
+    except Exception:
+        pass
+    finally:
         manager.disconnect(websocket)
 
 @app.websocket("/ws/contest/{contest_id}")
