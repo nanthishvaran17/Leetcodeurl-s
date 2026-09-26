@@ -11,7 +11,7 @@ sys.path.insert(0, ROOT_DIR)
 from backend.models import Base
 
 SQLITE_PATH = os.path.join(ROOT_DIR, "data", "leetcode_tracker.db")
-PG_URL = "postgresql://neondb_owner:npg_5oAmt0ICFKMT@ep-falling-pine-ae9dk8zu.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require"
+PG_URL = os.getenv("DATABASE_URL", "postgresql://neondb_owner:npg_W0ihJ1PKujEx@ep-fragrant-boat-b5bjd6aw-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require")
 
 TABLE_MIGRATION_ORDER = [
     "departments",

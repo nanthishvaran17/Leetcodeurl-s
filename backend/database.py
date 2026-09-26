@@ -1028,6 +1028,7 @@ def run_migrations():
                 if inspector.has_table("certificate_records"):
                     existing_cols = {c["name"] for c in inspector.get_columns("certificate_records")}
                     cert_cols = [
+                        ("contest_id", "VARCHAR(64)"),
                         ("contest_name", "VARCHAR(128)"),
                         ("leetcode_username", "VARCHAR(128)"),
                         ("participation_status", "VARCHAR(64)"),
@@ -1044,6 +1045,8 @@ def run_migrations():
                         ("certificate_code", "VARCHAR(64)"),
                         ("document_type", "VARCHAR(64) DEFAULT 'CERTIFICATE_OF_EXCELLENCE'"),
                         ("status", "VARCHAR(32) DEFAULT 'VALID'"),
+                        ("principal_signature_version", "VARCHAR(32) DEFAULT 'v1'"),
+                        ("hod_signature_version", "VARCHAR(32) DEFAULT 'v1'"),
                         ("verification_url", "VARCHAR(512)"),
                         ("pdf_path", "VARCHAR(512)"),
                         ("qr_path", "VARCHAR(512)"),
