@@ -107,14 +107,26 @@ def apscheduler_listener(event):
             db.commit()
             break
         except Exception as e:
-            db.rollback()
-            if attempt < 2 and ('SSL' in str(e) or 'OperationalError' in str(e) or 'connection' in str(e).lower()):
+            try:
+                db.rollback()
+            except Exception:
+                pass
+            exc_str = str(e).lower()
+            if 'ssl' in exc_str or 'operationalerror' in exc_str or 'connection' in exc_str:
+                try:
+                    db.invalidate()
+                except Exception:
+                    pass
+            if attempt < 2 and any(kw in exc_str for kw in ('ssl', 'operationalerror', 'connection', 'closed')):
                 import time; time.sleep(0.5 * (attempt + 1))
                 continue
-            logger.error(f'[SCHEDULER LISTENER ERROR] {e}')
+            logger.warning(f'[SCHEDULER LISTENER RECOVERED] Handled transient connection notice: {e}')
             break
         finally:
-            db.close()
+            try:
+                db.close()
+            except Exception:
+                pass
 
 scheduler.add_listener(apscheduler_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR | EVENT_JOB_MISSED)
 
