@@ -1892,7 +1892,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
           </div>
 
           {/* Live Verified Activity Feed */}
-          {liveTelemetry?.liveEvents && liveTelemetry.liveEvents.length > 0 && (
+          {Array.isArray(liveTelemetry?.liveEvents) && liveTelemetry.liveEvents.length > 0 && (
             <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-navy-950 to-indigo-950 text-white border border-slate-700 shadow-md space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black uppercase text-brand-300 flex items-center gap-1.5">
@@ -1902,7 +1902,7 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
                 <span className="text-[10px] text-slate-400">Real-time solve stream</span>
               </div>
               <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1 no-scrollbar">
-                {liveTelemetry.liveEvents.map((evt: any) => (
+                {(Array.isArray(liveTelemetry?.liveEvents) ? liveTelemetry.liveEvents : []).map((evt: any) => (
                   <div key={evt.id} className="flex items-center justify-between text-xs py-1 px-2.5 rounded-lg bg-white/5 border border-white/5">
                     <div className="flex items-center space-x-2">
                       <span className="font-mono text-[10px] text-slate-400">{evt.timestamp}</span>
@@ -2262,8 +2262,8 @@ export const WeeklyContestPage: React.FC<WeeklyContestPageProps> = ({ onSelectSt
               </div>
 
               <div className="max-h-60 overflow-y-auto space-y-1.5 pr-2 scrollbar-thin">
-                {liveTelemetry?.liveEvents && liveTelemetry.liveEvents.length > 0 ? (
-                  liveTelemetry.liveEvents.map((evt: any) => (
+                {Array.isArray(liveTelemetry?.liveEvents) && liveTelemetry.liveEvents.length > 0 ? (
+                  (Array.isArray(liveTelemetry?.liveEvents) ? liveTelemetry.liveEvents : []).map((evt: any) => (
                     <div key={evt.id || Math.random()} className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-[11px] flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <span className="text-slate-400">{evt.timestamp}</span>

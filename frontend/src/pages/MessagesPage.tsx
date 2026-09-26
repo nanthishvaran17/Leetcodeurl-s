@@ -253,6 +253,13 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ onNavigateTab }) => 
     }
   }, [typingStatus, currentUserStr]);
 
+  useEffect(() => {
+    if (statusUpdate) {
+      const { messageId, status, deliveredAt, readAt } = statusUpdate;
+      setMessages(prev => prev.map(m => m.messageId === messageId ? { ...m, status, deliveredAt, readAt } : m));
+    }
+  }, [statusUpdate]);
+
   const handleSelectConversation = async (id: string) => {
     setActiveConversationId(id);
     setIsMessagesLoading(true);

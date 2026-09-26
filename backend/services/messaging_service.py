@@ -175,6 +175,17 @@ class MessagingService:
                     "attachmentFileId": parent_msg.attachment_file_id
                 }
 
+        # File attachment metadata if present
+        file_mime_type = None
+        filename = None
+        file_size = None
+        if m.attachment_file_id and not m.is_deleted_everyone:
+            f_rec = db.query(NotificationFile).filter_by(file_id=m.attachment_file_id).first()
+            if f_rec:
+                file_mime_type = f_rec.file_type
+                filename = f_rec.filename
+                file_size = f_rec.file_size
+
         return {
             "messageId": m.message_id,
             "conversationId": m.conversation_id,
@@ -193,6 +204,9 @@ class MessagingService:
             "clientMessageId": m.client_message_id,
             "reactions": reactions_dict,
             "attachmentFileId": m.attachment_file_id if not m.is_deleted_everyone else None,
+            "filename": filename,
+            "fileMimeType": file_mime_type,
+            "fileSize": file_size,
             "createdAt": MessagingService._format_utc_iso(m.created_at)
         }
 

@@ -232,83 +232,104 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
     fetchDepts();
   }, []);
 
+  const populateFromStudentData = useCallback((stData: any) => {
+    if (!stData) return;
+    const initName = stData.name || stData.student_name || '';
+    const initRegNo = stData.reg_no || stData.register_number || '';
+    const rawDeptId = stData.department_id || stData.department?.id;
+    const initDeptId = resolveDepartmentFromRegNo(initRegNo, departments, rawDeptId);
+    const initYear = resolveYearLevelFromRegNo(initRegNo, stData.year_level || stData.year);
+    const initSec = stData.section?.name || stData.section || 'A';
+    const initUser = stData.username || stData.primary_leetcode_id || stData.canonical_username || '';
+    const initUrl = stData.leetcode_url || stData.profile_url || (initUser ? `https://leetcode.com/u/${initUser}/` : '');
+    const initEmail = stData.email || '';
+    const initInstEmail = stData.institutional_email || (initRegNo ? generateEmailFromRegNo(initRegNo) : '');
+    const initEmailStatus = stData.email_status || 'pending';
+    const initAlloc = stData.allocation || 'none';
+    const initAccomm = stData.accommodation || stData.accommodation_type || 'Day Scholar';
+    const initCutoff = stData.twelfth_cutoff ?? stData.twelfthCutoff ?? stData.cutoff ?? '';
+    const formattedCutoff = (initCutoff !== '' && initCutoff !== null && initCutoff !== undefined) ? String(initCutoff) : '';
+
+    const rawAccounts = Array.isArray(stData.secondary_accounts) && stData.secondary_accounts.length > 0
+      ? stData.secondary_accounts
+      : Array.isArray(stData.leetcode_accounts) && stData.leetcode_accounts.length > 0
+      ? stData.leetcode_accounts
+      : [];
+    let initSecAccounts: SecondaryAccountItem[] = rawAccounts
+      .map((acc: any) => ({
+        id: acc?.id,
+        username: acc?.leetcode_username || acc?.username || '',
+        url: acc?.profile_url || (acc?.leetcode_username || acc?.username ? `https://leetcode.com/u/${acc?.leetcode_username || acc?.username}/` : '')
+      }))
+      .filter((acc: any) => acc.username || acc.url);
+
+    const secHandle = stData.secondary_leetcode_id || stData.secondary_id || stData.secondary_leetcode_url;
+    if (secHandle && String(secHandle).trim() !== '') {
+      const cleanSec = String(secHandle).replace('https://leetcode.com/u/', '').replace('leetcode.com/u/', '').trim().replace(/\/$/, '');
+      if (cleanSec && !initSecAccounts.some(a => a.username?.toLowerCase() === cleanSec.toLowerCase())) {
+        initSecAccounts.unshift({
+          username: cleanSec,
+          url: `https://leetcode.com/u/${cleanSec}/`
+        });
+      }
+    }
+
+    setName(initName);
+    setRegNo(initRegNo);
+    setDeptId(initDeptId);
+    setYearLevel(initYear);
+    setSection(initSec);
+    setUsername(initUser);
+    setLeetcodeUrl(initUrl);
+    setEmail(initEmail);
+    setInstitutionalEmail(initInstEmail);
+    setEmailStatus(initEmailStatus);
+    setAllocation(initAlloc);
+    setAccommodation(initAccomm);
+    setTwelfthCutoff(formattedCutoff);
+    setSecondaryAccounts(initSecAccounts);
+
+    initialRef.current = {
+      name: initName,
+      regNo: initRegNo,
+      deptId: initDeptId,
+      yearLevel: initYear,
+      section: initSec,
+      username: initUser,
+      leetcodeUrl: initUrl,
+      email: initEmail,
+      institutionalEmail: initInstEmail,
+      allocation: initAlloc,
+      accommodation: initAccomm,
+      twelfthCutoff: formattedCutoff,
+      secondaryAccounts: JSON.stringify(initSecAccounts)
+    };
+  }, [departments]);
+
   useEffect(() => {
     if (isOpen && student) {
-      const initName = student.name || student.student_name || '';
-      const initRegNo = student.reg_no || student.register_number || '';
-      const rawDeptId = student.department_id || student.department?.id;
-      const initDeptId = resolveDepartmentFromRegNo(initRegNo, departments, rawDeptId);
-      const initYear = resolveYearLevelFromRegNo(initRegNo, student.year_level || student.year);
-      const initSec = student.section?.name || student.section || 'A';
-      const initUser = student.username || student.canonical_username || '';
-      const initUrl = student.leetcode_url || student.profile_url || '';
-      const initEmail = student.email || '';
-      const initInstEmail = student.institutional_email || (initRegNo ? generateEmailFromRegNo(initRegNo) : '');
-      const initEmailStatus = student.email_status || 'pending';
-      const initAlloc = student.allocation || 'none';
-      const initAccomm = student.accommodation || student.accommodation_type || 'Day Scholar';
-      const initCutoff = student.twelfth_cutoff ?? student.twelfthCutoff ?? student.cutoff ?? '';
-      const formattedCutoff = (initCutoff !== '' && initCutoff !== null && initCutoff !== undefined) ? String(initCutoff) : '';
-
-      const rawAccounts = Array.isArray(student.leetcode_accounts) && student.leetcode_accounts.length > 0
-        ? student.leetcode_accounts
-        : Array.isArray(student.secondary_accounts) && student.secondary_accounts.length > 0
-        ? student.secondary_accounts
-        : [];
-      let initSecAccounts: SecondaryAccountItem[] = rawAccounts
-        .map((acc: any) => ({
-          id: acc?.id,
-          username: acc?.leetcode_username || acc?.username || '',
-          url: acc?.profile_url || (acc?.leetcode_username || acc?.username ? `https://leetcode.com/u/${acc?.leetcode_username || acc?.username}/` : '')
-        }))
-        .filter((acc: any) => acc.username || acc.url);
-
-      const secHandle = student.secondary_leetcode_id || student.secondary_id || student.secondary_leetcode_url;
-      if (secHandle && String(secHandle).trim() !== '') {
-        const cleanSec = String(secHandle).replace('https://leetcode.com/u/', '').replace('leetcode.com/u/', '').trim().replace(/\/$/, '');
-        if (cleanSec && !initSecAccounts.some(a => a.username?.toLowerCase() === cleanSec.toLowerCase())) {
-          initSecAccounts.unshift({
-            username: cleanSec,
-            url: `https://leetcode.com/u/${cleanSec}/`
-          });
-        }
-      }
-
-      setName(initName);
-      setRegNo(initRegNo);
-      setDeptId(initDeptId);
-      setYearLevel(initYear);
-      setSection(initSec);
-      setUsername(initUser);
-      setLeetcodeUrl(initUrl);
-      setEmail(initEmail);
-      setInstitutionalEmail(initInstEmail);
-      setEmailStatus(initEmailStatus);
-      setAllocation(initAlloc);
-      setAccommodation(initAccomm);
-      setTwelfthCutoff(formattedCutoff);
-      setSecondaryAccounts(initSecAccounts);
-
-      initialRef.current = {
-        name: initName,
-        regNo: initRegNo,
-        deptId: initDeptId,
-        yearLevel: initYear,
-        section: initSec,
-        username: initUser,
-        leetcodeUrl: initUrl,
-        email: initEmail,
-        institutionalEmail: initInstEmail,
-        allocation: initAlloc,
-        accommodation: initAccomm,
-        twelfthCutoff: formattedCutoff,
-        secondaryAccounts: JSON.stringify(initSecAccounts)
-      };
+      populateFromStudentData(student);
       setErrorMessage(null);
       setShowUnsavedPrompt(false);
       setLcValidation({ status: 'idle' });
+
+      // Automatically refetch fresh student details from backend API to guarantee no empty or stale data
+      const targetId = student?.id || student?.student_id || student?.reg_no || student?.register_number || student?.register_no;
+      if (targetId) {
+        let isMounted = true;
+        api.get(`/students/${encodeURIComponent(targetId)}`)
+          .then(res => {
+            if (isMounted && res.data) {
+              populateFromStudentData(res.data);
+            }
+          })
+          .catch(err => {
+            console.warn('Failed to refetch student record in edit overlay:', err);
+          });
+        return () => { isMounted = false; };
+      }
     }
-  }, [isOpen, student]);
+  }, [isOpen, student, populateFromStudentData]);
 
   const hasUnsavedChanges = useCallback(() => {
     if (!initialRef.current) return false;
@@ -523,6 +544,7 @@ export const StudentEditOverlay: React.FC<StudentEditOverlayProps> = ({
       import('../utils/rosterCache').then(m => m.clearAllStudentCaches()).catch(() => {});
       localStorage.removeItem('nec_leetcode_students_cache');
       window.dispatchEvent(new Event('refresh_dashboard_summary'));
+      window.dispatchEvent(new CustomEvent('student_updated', { detail: updated }));
 
       if (onSaveSuccess) onSaveSuccess(updated);
       onClose();

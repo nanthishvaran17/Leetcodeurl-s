@@ -66,6 +66,15 @@ export const StaffMentoringDetailModal: React.FC<StudentMentoringDetailProps> = 
       fetchNotes();
       fetchFollowUps();
     }
+
+    const handleStudentUpdated = (e: any) => {
+      const updated = e.detail;
+      if (updated && (String(updated.id) === String(targetId) || String(updated.reg_no).toUpperCase() === String(student?.reg_no).toUpperCase())) {
+        fetchStudentDetails();
+      }
+    };
+    window.addEventListener('student_updated', handleStudentUpdated);
+    return () => window.removeEventListener('student_updated', handleStudentUpdated);
   }, [student?.id, student?.student_id]);
 
   const fetchNotes = async () => {

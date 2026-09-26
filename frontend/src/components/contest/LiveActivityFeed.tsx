@@ -44,7 +44,16 @@ const eventIcons: Record<string, React.ReactNode> = {
   default: <Activity className="w-3.5 h-3.5 text-slate-400 shrink-0" />,
 };
 
-export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({ events, maxHeight = '380px' }) => {
+export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({ events: rawEvents, maxHeight = '380px' }) => {
+  // Always normalize to array regardless of what the parent passes
+  const events: LiveEvent[] = Array.isArray(rawEvents)
+    ? rawEvents
+    : Array.isArray((rawEvents as any)?.events)
+    ? (rawEvents as any).events
+    : Array.isArray((rawEvents as any)?.data)
+    ? (rawEvents as any).data
+    : [];
+
   const listRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to top when new events arrive
@@ -54,7 +63,7 @@ export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({ events, maxH
     }
   }, [events.length]);
 
-  if (!events || events.length === 0) {
+  if (events.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center text-slate-500 space-y-2">
         <Activity className="w-8 h-8 text-slate-600 animate-pulse" />

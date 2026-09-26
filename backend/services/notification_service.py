@@ -748,17 +748,43 @@ class NotificationService:
         created_by: str = 'System',
         send_email_notification: bool = True
     ) -> Dict[str, Any]:
-        """Direct notification caller for specific recipient list."""
+        """Direct notification caller for specific recipient list with strict deduplication per target user."""
         created_count = 0
-        for uid in set(recipient_user_ids):
-            if not uid: continue
+        db = SessionLocal()
+        resolved_targets = []
+        seen_keys = set()
+        try:
+            for uid in recipient_user_ids:
+                if not uid:
+                    continue
+                clean_uid = str(uid).strip()
+                if not clean_uid:
+                    continue
+                recs = NotificationService.resolve_recipients(db, "INDIVIDUAL", clean_uid)
+                if recs:
+                    for r in recs:
+                        key = (r.get("email") or r.get("user_id") or "").lower()
+                        if key and key not in seen_keys:
+                            seen_keys.add(key)
+                            resolved_targets.append(r.get("user_id") or clean_uid)
+                else:
+                    if clean_uid.lower() not in seen_keys:
+                        seen_keys.add(clean_uid.lower())
+                        resolved_targets.append(clean_uid)
+        except Exception as e:
+            logger.warning(f"[NOTIF_ENGINE] Recipient deduplication note: {e}")
+            resolved_targets = list(set(recipient_user_ids))
+        finally:
+            db.close()
+
+        for target in resolved_targets:
             res = NotificationService.emit_event(
                 event_type=notification_type.upper(),
                 title=title,
                 body=message,
                 actor_user_id=created_by,
                 recipient_scope="INDIVIDUAL",
-                recipient_target=uid,
+                recipient_target=target,
                 route=action_route,
                 priority=priority,
                 send_email_notification=send_email_notification

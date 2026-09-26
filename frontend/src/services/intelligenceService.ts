@@ -348,7 +348,12 @@ export const escalateAction = async (
 
 export const getActionTimeline = async (actionId: number): Promise<ActionTimelineEvent[]> => {
   const response = await api.get(`/intelligence/faculty/actions/${actionId}/timeline`);
-  return response.data;
+  const data = response.data;
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data.events)) return data.events;
+  if (data && Array.isArray(data.data)) return data.data;
+  if (data && Array.isArray(data.timeline)) return data.timeline;
+  return [];
 };
 
 export const triggerSignalDetection = async (): Promise<{

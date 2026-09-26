@@ -421,16 +421,17 @@ async def upload_attachment(
         if len(content) > 25 * 1024 * 1024:
             raise HTTPException(status_code=400, detail="Attachment exceeds 25MB limit.")
 
-        # 2. Extension Validation (Support full multimedia & document suite)
+        # 2. Extension Validation (Support full multimedia, document & app binary suite including .apk)
         file_ext = os.path.splitext(file.filename)[1].lower() if file.filename else ""
         allowed_exts = {
             ".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg", ".bmp",
             ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".csv",
             ".mp4", ".webm", ".mov", ".avi", ".mp3", ".wav", ".ogg", ".m4a",
-            ".zip", ".rar", ".7z", ".json"
+            ".zip", ".rar", ".7z", ".json",
+            ".apk", ".aab", ".ipa", ".jar", ".tar", ".gz", ".bin"
         }
         if file_ext and file_ext not in allowed_exts:
-            raise HTTPException(status_code=400, detail=f"Unsupported attachment format '{file_ext}'. Upload images, videos, audio, or documents.")
+            raise HTTPException(status_code=400, detail=f"Unsupported attachment format '{file_ext}'. Upload images, videos, audio, documents, or APK packages.")
 
         unique_id = uuid.uuid4().hex
         secure_filename = f"{unique_id}{file_ext}"
@@ -443,13 +444,18 @@ async def upload_attachment(
         file_id = f"ATT_{unique_id[:12]}"
         uploader_id = MessagingService._get_user_id(current_user)
 
+        # Content Type Override for APK files
+        mime_type = file.content_type or "application/octet-stream"
+        if file_ext == ".apk":
+            mime_type = "application/vnd.android.package-archive"
+
         # Base64 encode file content for cloud database persistence across ephemeral container restarts
         file_b64 = base64.b64encode(content).decode('utf-8')
 
         new_file = NotificationFile(
             file_id=file_id,
             filename=file.filename or secure_filename,
-            file_type=file.content_type or "application/octet-stream",
+            file_type=mime_type,
             file_size=file_size,
             storage_path=storage_path,
             file_data=file_b64,
@@ -503,23 +509,25 @@ def download_attachment(
             raise HTTPException(status_code=403, detail="Unauthorized access to this attachment.")
 
         media_type = file_record.file_type or "application/octet-stream"
+        disposition_header = f'attachment; filename="{file_record.filename}"'
+        headers = {
+            "Content-Disposition": disposition_header,
+            "Cache-Control": "public, max-age=31536000"
+        }
 
         # 1. Primary: Serve from local disk if file exists
         if os.path.exists(file_record.storage_path):
             return FileResponse(
                 path=file_record.storage_path, 
                 filename=file_record.filename,
-                media_type=media_type
+                media_type=media_type,
+                headers=headers
             )
             
         # 2. Fallback: Serve from database Base64 content if local disk file was purged by cloud container restart
         if file_record.file_data:
             try:
                 raw_bytes = base64.b64decode(file_record.file_data)
-                headers = {
-                    "Content-Disposition": f'inline; filename="{file_record.filename}"',
-                    "Cache-Control": "public, max-age=31536000"
-                }
                 return Response(content=raw_bytes, media_type=media_type, headers=headers)
             except Exception as _b_err:
                 logger.error(f"Base64 decode failed for attachment {file_id}: {_b_err}")

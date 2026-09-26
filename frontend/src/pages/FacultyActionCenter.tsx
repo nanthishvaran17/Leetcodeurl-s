@@ -329,8 +329,15 @@ const StudentViewModal: React.FC<{
 
   useEffect(() => {
     getActionTimeline(item.id)
-      .then(e => { setEvents(e); setTimelineLoading(false); })
-      .catch(() => setTimelineLoading(false));
+      .then(e => {
+        const safeEvents = Array.isArray(e) ? e : (Array.isArray((e as any)?.events) ? (e as any).events : (Array.isArray((e as any)?.data) ? (e as any).data : []));
+        setEvents(safeEvents);
+        setTimelineLoading(false);
+      })
+      .catch(() => {
+        setEvents([]);
+        setTimelineLoading(false);
+      });
   }, [item.id]);
 
   return (
@@ -413,7 +420,7 @@ const StudentViewModal: React.FC<{
             }`}
           >
             <Clock size={13} />
-            <span>Intervention Timeline ({events.length})</span>
+            <span>Intervention Timeline ({(Array.isArray(events) ? events.length : 0)})</span>
           </button>
         </div>
 
@@ -452,12 +459,12 @@ const StudentViewModal: React.FC<{
                   <RefreshCw size={20} className="animate-spin mx-auto mb-2 opacity-50" />
                   <span className="text-xs">Loading intervention timeline...</span>
                 </div>
-              ) : events.length === 0 ? (
+              ) : (!Array.isArray(events) || events.length === 0) ? (
                 <div className="py-12 text-center text-slate-400 text-xs">No intervention audit logs recorded yet.</div>
               ) : (
                 <div className="relative pl-4 space-y-4">
                   <div className="absolute left-7 top-3 bottom-3 w-px bg-slate-800" />
-                  {events.map((ev, i) => {
+                  {(Array.isArray(events) ? events : []).map((ev, i) => {
                     const colorCls = EVENT_COLOR[ev.event_type] || 'text-slate-400';
                     return (
                       <div key={ev.id} className="flex gap-4 items-start relative z-10">

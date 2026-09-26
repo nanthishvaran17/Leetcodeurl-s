@@ -8,7 +8,7 @@ import { LeaderboardTable, StudentData } from '../components/LeaderboardTable';
 import { useLiveLeaderboard } from '../hooks/useLiveLeaderboard';
 import { studentLiveStore, useStudentListIds } from '../stores/studentLiveStore';
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
-import { sortStudents, normalizeAcademicYear } from '../utils/filterUtils';
+import { sortStudents, normalizeAcademicYear, deriveYearLevelFromRegNo } from '../utils/filterUtils';
 import { useFilters, useFilteredStudents } from '../context/FilterContext';
 import { useGlobalData } from '../context/GlobalDataContext';
 import { useDepartments } from '../contexts/DepartmentContext';
@@ -199,11 +199,11 @@ export const PublicLeaderboardPage: React.FC<PublicLeaderboardPageProps> = ({ on
                     <div className="text-[9px] sm:text-[10px] text-slate-700 dark:text-slate-300 font-mono font-bold truncate">{s.reg_no}</div>
                     <div className="pt-0.5">
                       {(() => {
-                        const cleanYear = s.year_level ? String(s.year_level).replace(/\s*Yr\s*/gi, '').replace(/\s*Year\s*/gi, '').trim() : '';
+                        const derivedYear = deriveYearLevelFromRegNo(s.reg_no, s.year_level);
                         const deptCode = s.department?.code || s.department?.name || 'DEPT';
                         return (
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-black border ${getDeptBadgeStyle(deptCode)}`}>
-                            {deptCode}{cleanYear ? ` • ${cleanYear} Year` : ''}
+                            {deptCode} • {derivedYear} Year
                           </span>
                         );
                       })()}

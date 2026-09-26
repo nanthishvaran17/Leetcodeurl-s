@@ -95,8 +95,15 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
   const email = healthData?.email || {};
   const reports = healthData?.reports || {};
   const backup = healthData?.backup || {};
-  const incidents = healthData?.active_incidents || [];
-  const events = healthData?.recent_events || [];
+  const incidents = Array.isArray(healthData?.active_incidents) ? healthData.active_incidents : [];
+  const rawEvents = healthData?.recent_events;
+  const events = Array.isArray(rawEvents)
+    ? rawEvents
+    : Array.isArray(rawEvents?.events)
+    ? rawEvents.events
+    : Array.isArray(rawEvents?.data)
+    ? rawEvents.data
+    : [];
 
   const overallStatus = healthData?.overall_status || 'OPERATIONAL';
   const timestampIst = healthData?.timestamp_ist || 'Loading IST...';
@@ -435,14 +442,14 @@ export const AIControlCenterPage: React.FC<{ onNavigateTab?: (tab: string) => vo
             <FileText className="w-4 h-4 text-indigo-500" />
             <span>Recent System Event Log Timeline</span>
           </h3>
-          <span className="text-xs text-slate-400 font-medium">{events.length} Recent Audit Logs</span>
+          <span className="text-xs text-slate-400 font-medium">{(Array.isArray(events) ? events.length : 0)} Recent Audit Logs</span>
         </div>
 
         <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
-          {events.length === 0 ? (
+          {(!Array.isArray(events) || events.length === 0) ? (
             <p className="text-xs text-slate-400 font-bold text-center py-4">No recent system events logged.</p>
           ) : (
-            events.map((ev: any, idx: number) => (
+            (Array.isArray(events) ? events : []).map((ev: any, idx: number) => (
               <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200/60 dark:border-navy-800 text-xs gap-3">
                 <div className="flex items-center space-x-3 min-w-0">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />

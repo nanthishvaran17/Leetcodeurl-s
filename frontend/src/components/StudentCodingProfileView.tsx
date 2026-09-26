@@ -4,6 +4,7 @@ import {
   BookOpen, Target, Calendar, Flame, Activity, ChevronRight, Sparkles, RefreshCw, BarChart2
 } from 'lucide-react';
 import { getStudentDigitalProfile, DigitalCodingProfile } from '../services/intelligenceService';
+import { deriveYearLevelFromRegNo } from '../utils/filterUtils';
 
 interface StudentCodingProfileViewProps {
   studentId: number;
@@ -88,7 +89,7 @@ export const StudentCodingProfileView: React.FC<StudentCodingProfileViewProps> =
                 {profile.reg_no}
               </p>
               <p className="text-xs font-semibold text-slate-400 mt-0.5">
-                {profile.department} • {profile.year_level} Year
+                {profile.department} • {deriveYearLevelFromRegNo(profile.reg_no, profile.year_level)} Year
               </p>
             </div>
           </div>

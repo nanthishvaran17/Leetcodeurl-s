@@ -1614,17 +1614,23 @@ def admin_reset_staff_password(req: AdminResetStaffPasswordRequest, background_t
 
     if staff_user.email:
         from backend.services.email_notifications import notify_password_changed
-        background_tasks.add_task(notify_password_changed, staff_email=staff_user.email, staff_name=staff_user.full_name or staff_user.username)
+        background_tasks.add_task(
+            notify_password_changed,
+            staff_email=staff_user.email,
+            staff_name=staff_user.full_name or staff_user.username,
+            new_password=temp_pass
+        )
         try:
             from backend.services.notification_service import NotificationService
             NotificationService.create_direct_notification(
                 title="Security Alert: Temporary Password Issued",
-                message=f"Your staff account password was reset by an administrator. Please use 'Forgot Password' to set a new one securely.",
-                recipient_user_ids=[staff_user.email, str(staff_user.id), staff_user.username],
+                message=f"Your staff account password was reset by an administrator. Please use 'Forgot Password' or settings to update your password securely.",
+                recipient_user_ids=[staff_user.email],
                 notification_type="security",
                 priority="high",
                 action_route="/settings",
-                created_by="Administrator"
+                created_by="Administrator",
+                send_email_notification=False
             )
         except Exception as _notif_err:
             pass
@@ -1695,7 +1701,7 @@ def admin_terminate_staff_sessions(
         NotificationService.create_direct_notification(
             title="Emergency Security Notice: Sessions Terminated",
             message="An administrator has remotely terminated all active login sessions on your account due to a security action.",
-            recipient_user_ids=[staff_user.email, str(staff_user.id), staff_user.username],
+            recipient_user_ids=[staff_user.email],
             notification_type="security",
             priority="urgent",
             action_route="/login",

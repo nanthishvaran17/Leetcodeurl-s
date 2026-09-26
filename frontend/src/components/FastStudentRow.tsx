@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 import { useStudentEntity } from '../stores/studentLiveStore';
 import { Clock, AlertCircle, Trophy, Flame, Award, TrendingUp, RefreshCw, Trash2, Edit3, Eye, ExternalLink } from 'lucide-react';
+import { formatStudentYearBadge } from '../utils/filterUtils';
 
 function getRankBadge(rank?: number) {
   if (!rank || rank <= 0) return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-navy-700">Unranked</span>;
@@ -110,7 +111,7 @@ export const FastStudentRow = memo(({
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100/90 dark:bg-navy-800/90 border border-slate-200/80 dark:border-navy-700/80 text-[11px] font-black tracking-tight text-slate-700 dark:text-slate-200 shadow-2xs">
             <span>{student.department?.code || student.department?.name || '—'}</span>
             <span className="text-slate-400 font-normal">•</span>
-            <span>{String(student.year_level || '').replace(/\s*Yr\s*/gi, '').replace(/\s*Year\s*/gi, '').trim()} Yr</span>
+            <span>{formatStudentYearBadge(student)}</span>
           </div>
         </div>
 
@@ -230,7 +231,7 @@ export const FastStudentRow = memo(({
       <div className="hidden md:flex flex-none w-36 px-3 text-[11px] font-bold items-center justify-start gap-0.5 self-center my-auto overflow-hidden min-h-[44px]">
         <span className="text-slate-900 dark:text-white truncate font-extrabold">{student.department?.code || student.department?.name || '—'}</span>
         <span className="text-slate-600 dark:text-slate-300 shrink-0 font-extrabold px-0.5">/</span>
-        <span className="text-slate-800 dark:text-slate-200 shrink-0 font-extrabold">{String(student.year_level || '').replace(/\s*Yr\s*/gi, '').replace(/\s*Year\s*/gi, '').trim()} Yr</span>
+        <span className="text-slate-800 dark:text-slate-200 shrink-0 font-extrabold">{formatStudentYearBadge(student)}</span>
       </div>
 
       <div className="hidden md:flex flex-1 min-w-[160px] px-3 flex-col justify-center self-center my-auto overflow-hidden min-h-[44px]">

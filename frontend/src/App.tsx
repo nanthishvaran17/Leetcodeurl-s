@@ -1036,14 +1036,14 @@ export const App: React.FC = () => {
       {/* Viewport-Centered Student Profile Modal */}
       {selectedStudent && activeTab !== 'profile' && typeof document !== 'undefined' && (
         <div
-          className="fixed inset-0 z-[100000] flex items-start justify-center p-3 sm:p-4 pt-6 sm:pt-7 overflow-y-auto bg-slate-950/80 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-[999999] flex items-start justify-center p-2 sm:p-4 pt-16 sm:pt-20 pb-16 sm:pb-6 overflow-y-auto bg-slate-950/85 backdrop-blur-md animate-fade-in"
           onClick={(e) => { if (e.target === e.currentTarget) setSelectedStudent(null); }}
         >
           <div
             role="dialog"
             aria-modal="true"
             aria-label={`Student profile for ${selectedStudent.name}`}
-            className="w-full max-w-5xl bg-white dark:bg-navy-950 rounded-3xl shadow-2xl border border-slate-200 dark:border-navy-800 flex flex-col overflow-hidden my-auto max-h-[calc(100vh-3.5rem)] text-slate-900 dark:text-slate-100 animate-modal-content"
+            className="w-full max-w-5xl bg-white dark:bg-navy-950 rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-navy-800 flex flex-col overflow-hidden my-0 sm:my-auto max-h-[calc(100vh-5rem)] text-slate-900 dark:text-slate-100 animate-modal-content"
           >
             <Suspense fallback={<StudentProfileSkeleton studentName={selectedStudent.name} />}>
               <StudentProfilePage

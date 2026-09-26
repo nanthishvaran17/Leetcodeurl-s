@@ -108,17 +108,22 @@ def parse_and_import(raw_tsv_path: str):
             db.refresh(dept)
             dept_objs[dept_code] = dept
 
-        # Compute Year Level from Batch
-        # Batch 2029 = I Year, Batch 2028 = II Year, Batch 2027 = III Year, Batch 2026 = IV Year
-        year_level = "II"
-        if "2029" in batch_str or "25" in batch_str:
-            year_level = "I"
-        elif "2028" in batch_str or "24" in batch_str:
-            year_level = "II"
-        elif "2027" in batch_str or "23" in batch_str:
-            year_level = "III"
-        elif "2026" in batch_str or "22" in batch_str:
+        # Compute Year Level from Register Number & Batch
+        # 23 (e.g. 732223..., 23CC...) -> IV Year (Final Year)
+        # 24 (e.g. 732224..., 24CC...) -> III Year (3rd Year)
+        # 25 (e.g. 732225..., 25CC...) -> II Year (2nd Year)
+        # 26 (e.g. 732226..., 26CC...) -> I Year (1st Year)
+        reg_upper = reg_no.upper()
+        if "732223" in reg_upper or "23CC" in reg_upper or "23CI" in reg_upper or "23CS" in reg_upper or "23IT" in reg_upper or "23AI" in reg_upper or "23EC" in reg_upper or "23EE" in reg_upper or "23ME" in reg_upper or "23AG" in reg_upper or "2027" in batch_str:
             year_level = "IV"
+        elif "732224" in reg_upper or "24CC" in reg_upper or "24CI" in reg_upper or "24CS" in reg_upper or "24IT" in reg_upper or "24AI" in reg_upper or "24EC" in reg_upper or "24EE" in reg_upper or "24ME" in reg_upper or "24AG" in reg_upper or "2028" in batch_str:
+            year_level = "III"
+        elif "732225" in reg_upper or "73225" in reg_upper or "25CC" in reg_upper or "25CI" in reg_upper or "25CS" in reg_upper or "25IT" in reg_upper or "25AI" in reg_upper or "25EC" in reg_upper or "25EE" in reg_upper or "25ME" in reg_upper or "25AG" in reg_upper or "2029" in batch_str:
+            year_level = "II"
+        elif "732226" in reg_upper or "26CC" in reg_upper or "26CI" in reg_upper or "26CS" in reg_upper or "26IT" in reg_upper or "26AI" in reg_upper or "26EC" in reg_upper or "26EE" in reg_upper or "26ME" in reg_upper or "26AG" in reg_upper or "2030" in batch_str:
+            year_level = "I"
+        else:
+            year_level = "III"
 
         st = Student(
             reg_no=reg_no,

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   Send, ArrowLeft, Loader2, Info, Paperclip, Smile, Check, CheckCheck,
   MoreVertical, Reply, Edit2, Trash2, Copy, Share2, X, FileText, Download,
-  CornerDownRight, ChevronDown, Sparkles, Palette
+  CornerDownRight, ChevronDown, Sparkles, Palette, Package, FileArchive
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Conversation } from './ConversationList';
@@ -97,6 +97,8 @@ export interface Message {
   localMediaUrl?: string;
   isUploading?: boolean;
   fileMimeType?: string;
+  filename?: string;
+  fileSize?: number;
 }
 
 interface Props {
@@ -285,6 +287,134 @@ export const ChatWindow: React.FC<Props> = ({
       setIsSending(false);
       setTimeout(() => textInputRef.current?.focus(), 30);
     }
+  };
+
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes || bytes <= 0) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const handleDownloadFileAttachment = async (fileId?: string, fallbackFilename?: string) => {
+    if (!fileId) return;
+    try {
+      const token = localStorage.getItem('token');
+      const url = `${getApiUrl(`/messaging/attachments/${fileId}`)}?token=${token}`;
+      
+      notify.info('Downloading File', 'Preparing file download...', { category: 'MESSAGING' });
+
+      const res = await fetch(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      
+      if (!res.ok) {
+        throw new Error(`Download HTTP error ${res.status}`);
+      }
+
+      let filename = fallbackFilename || 'attachment';
+      const disposition = res.headers.get('Content-Disposition');
+      if (disposition && disposition.includes('filename=')) {
+        const match = disposition.match(/filename="?([^";]+)"?/);
+        if (match && match[1]) {
+          filename = match[1];
+        }
+      }
+
+      const blob = await res.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setTimeout(() => {
+        window.URL.revokeObjectURL(blobUrl);
+      }, 10000);
+      notify.success('Download Complete', `${filename} saved successfully.`, { category: 'MESSAGING' });
+    } catch (err) {
+      console.error('Blob download failed, fallback to direct link:', err);
+      const token = localStorage.getItem('token');
+      const directUrl = `${getApiUrl(`/messaging/attachments/${fileId}`)}?token=${token}`;
+      window.location.href = directUrl;
+    }
+  };
+
+  const renderFileAttachmentCard = (msg: Message, isMe: boolean) => {
+    const fname = msg.filename || (msg.attachmentFileId ? `File_${msg.attachmentFileId.substring(4, 10)}` : 'Attachment');
+    const ext = fname.split('.').pop()?.toLowerCase() || '';
+    const isApk = ext === 'apk' || msg.fileMimeType?.includes('vnd.android.package-archive');
+    const isPdf = ext === 'pdf' || msg.fileMimeType?.includes('pdf');
+    const isZip = ['zip', 'rar', '7z', 'tar', 'gz'].includes(ext);
+
+    let IconComp = FileText;
+    let iconBg = isMe ? "bg-white/20 text-white" : "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400";
+    let typeLabel = ext ? ext.toUpperCase() : 'FILE';
+
+    if (isApk) {
+      IconComp = Package;
+      iconBg = isMe ? "bg-emerald-400/30 text-emerald-100" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300";
+      typeLabel = 'APK Package';
+    } else if (isPdf) {
+      iconBg = isMe ? "bg-rose-400/30 text-rose-100" : "bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300";
+      typeLabel = 'PDF Document';
+    } else if (isZip) {
+      IconComp = FileArchive;
+      iconBg = isMe ? "bg-amber-400/30 text-amber-100" : "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300";
+      typeLabel = 'Archive Zip';
+    }
+
+    const sizeFormatted = formatFileSize(msg.fileSize);
+
+    return (
+      <div
+        onClick={() => !msg.isUploading && handleDownloadFileAttachment(msg.attachmentFileId, fname)}
+        className={clsx(
+          "flex items-center gap-3 p-2.5 rounded-xl transition-all border group/file select-none",
+          msg.isUploading ? "cursor-wait opacity-80" : "cursor-pointer hover:shadow-md active:scale-[0.99]",
+          isMe
+            ? "bg-black/10 hover:bg-black/20 border-white/20 text-white shadow-sm"
+            : "bg-slate-50 dark:bg-[#1f2c34] hover:bg-slate-100 dark:hover:bg-[#253239] border-slate-200/80 dark:border-slate-800 text-slate-900 dark:text-slate-100 shadow-sm"
+        )}
+      >
+        <div className={clsx("p-2.5 rounded-xl shrink-0 transition-transform group-hover/file:scale-105", iconBg)}>
+          {msg.isUploading ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <IconComp className="w-5 h-5 drop-shadow-sm" />
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0 pr-1">
+          <div className="text-[13px] font-bold truncate leading-snug tracking-tight">
+            {msg.isUploading ? "Uploading file..." : fname}
+          </div>
+          <div className={clsx("text-[11px] font-medium flex items-center gap-1.5 mt-0.5 opacity-80", isMe ? "text-white/80" : "text-slate-500 dark:text-slate-400")}>
+            <span className="uppercase font-bold tracking-wider px-1.5 py-0.5 rounded text-[9px] bg-black/10 dark:bg-white/10">
+              {typeLabel}
+            </span>
+            {sizeFormatted && <span>• {sizeFormatted}</span>}
+          </div>
+        </div>
+
+        {!msg.isUploading && (
+          <div
+            className={clsx(
+              "p-2 rounded-full shrink-0 transition-all border shadow-sm group-hover/file:scale-110",
+              isMe
+                ? "bg-white/20 hover:bg-white/30 border-white/30 text-white"
+                : "bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-400"
+            )}
+            title="Download File"
+          >
+            <Download className="w-4 h-4 stroke-[2.5]" />
+          </div>
+        )}
+      </div>
+    );
   };
 
   const handleStartEdit = (msg: Message) => {
@@ -572,36 +702,7 @@ export const ChatWindow: React.FC<Props> = ({
                             )}
                           </div>
                         ) : (
-                          <a
-                            href={msg.isUploading ? "#" : `${getApiUrl(`/messaging/attachments/${msg.attachmentFileId}`)}?token=${localStorage.getItem('token')}`}
-                            target={msg.isUploading ? "_self" : "_blank"}
-                            rel="noopener noreferrer"
-                            className={clsx(
-                              "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all border",
-                              msg.isUploading ? "cursor-wait opacity-80" : "cursor-pointer",
-                              isMe
-                                ? "bg-white/15 hover:bg-white/25 border-white/20 text-white shadow-sm"
-                                : "bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-800 shadow-sm"
-                            )}
-                          >
-                            <div className={clsx("p-2 rounded-lg shrink-0", isMe ? "bg-white/20" : "bg-white shadow-sm border border-slate-200/60")}>
-                              {msg.isUploading ? (
-                                <Loader2 className={clsx("w-4 h-4 animate-spin", isMe ? "text-white" : "text-brand-500")} />
-                              ) : (
-                                <FileText className={clsx("w-4 h-4", isMe ? "text-white" : "text-indigo-500")} />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0 pr-2">
-                              <div className="text-[13px] font-bold truncate leading-snug">
-                                {msg.isUploading ? "Uploading File..." : "Attachment File"}
-                              </div>
-                            </div>
-                            {!msg.isUploading && (
-                              <div className={clsx("p-2 rounded-lg shrink-0 transition-colors border", isMe ? "border-white/20 hover:bg-white/20" : "border-slate-200 bg-white hover:bg-slate-50")}>
-                                <Download className="w-4 h-4 opacity-80" />
-                              </div>
-                            )}
-                          </a>
+                          renderFileAttachmentCard(msg, isMe)
                         )}
                       </div>
                     )}
@@ -739,9 +840,9 @@ export const ChatWindow: React.FC<Props> = ({
                     </div>
                   )}
 
-                  {/* Timestamp & Delivery Ticks */}
+                  {/* Timestamp & Delivery Ticks (WhatsApp Style) */}
                   <div className="flex items-center gap-1.5 mt-1 px-1">
-                    <span className="text-[10.5px] font-bold text-slate-400">
+                    <span className="text-[10.5px] font-bold text-slate-400 dark:text-slate-400">
                       {formatTime(msg.createdAt)}
                     </span>
 
@@ -752,15 +853,15 @@ export const ChatWindow: React.FC<Props> = ({
                     )}
 
                     {isMe && (
-                      <span className="flex items-center ml-0.5">
+                      <span className="flex items-center ml-0.5 shrink-0">
                         {msg.status === 'SENDING' ? (
                           <Loader2 className="w-3 h-3 text-slate-400 animate-spin" />
                         ) : msg.status === 'SENT' ? (
-                          <span title="Sent "><Check className="w-3.5 h-3.5 text-slate-400" /></span>
+                          <span title="Sent (Single Tick)"><Check className="w-3.5 h-3.5 text-slate-400 dark:text-slate-400" /></span>
                         ) : msg.status === 'DELIVERED' ? (
-                          <span title="Delivered "><CheckCheck className="w-3.5 h-3.5 text-slate-400" /></span>
+                          <span title="Delivered (Double Tick)"><CheckCheck className="w-3.5 h-3.5 text-slate-400 dark:text-slate-400" /></span>
                         ) : (
-                          <span title="Read "><CheckCheck className="w-3.5 h-3.5 text-brand-500 dark:text-cyan-400 font-extrabold" /></span>
+                          <span title="Read (Blue Ticks)"><CheckCheck className="w-3.5 h-3.5 text-[#53bdeb] dark:text-[#53bdeb] stroke-[2.5]" /></span>
                         )}
                       </span>
                     )}
@@ -774,7 +875,6 @@ export const ChatWindow: React.FC<Props> = ({
       </div>
 
       {/* Floating Scroll Bottom Button */}
-      {/* Floating Scroll Bottom Button */}
       {showScrollBottom && (
         <button
           onClick={() => {
@@ -782,35 +882,35 @@ export const ChatWindow: React.FC<Props> = ({
             setShowScrollBottom(false);
             setNewMessagesCount(0);
           }}
-          className="absolute bottom-16 right-5 z-30 p-2 sm:p-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1 font-bold text-xs"
+          className="absolute bottom-20 right-6 z-30 p-2.5 bg-[#00a884] hover:bg-[#008f70] text-white rounded-full shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1.5 font-bold text-xs"
         >
           <ChevronDown className="w-4 h-4" />
           {newMessagesCount > 0 && <span>{newMessagesCount} new</span>}
         </button>
       )}
 
-      {/* Input Composer Zone */}
-      <div className="p-2.5 sm:p-3 md:p-3.5 border-t border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#0B1120]/95 backdrop-blur-md shrink-0 relative z-20">
+      {/* WhatsApp Style Input Composer Zone */}
+      <div className="p-2 sm:p-3 pb-[max(0.625rem,env(safe-area-inset-bottom))] border-t border-slate-200/80 dark:border-slate-800/80 bg-[#f0f2f5] dark:bg-[#111b21] backdrop-blur-md shrink-0 relative z-20">
 
         {/* Replying Preview Banner */}
         {replyingToMessage && (
-          <div className="mb-2.5 p-2.5 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 rounded-xl flex items-center justify-between text-xs animate-in fade-in shadow-xs">
+          <div className="mb-2.5 p-2.5 bg-white dark:bg-[#202c33] border-l-4 border-[#00a884] rounded-xl flex items-center justify-between text-xs animate-in fade-in shadow-sm max-w-5xl mx-auto">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="p-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 rounded-lg shrink-0">
+              <div className="p-1.5 bg-[#00a884]/10 dark:bg-[#00a884]/20 text-[#00a884] rounded-lg shrink-0">
                 <Reply className="w-3.5 h-3.5" />
               </div>
               <div className="min-w-0">
-                <span className="font-extrabold text-indigo-900 dark:text-indigo-200">
+                <span className="font-extrabold text-[#00a884]">
                   Replying to {replyingToMessage.senderId === currentUserId ? 'yourself' : conversation.otherUser.name}
                 </span>
-                <p className="truncate text-slate-600 dark:text-slate-400 font-medium text-[11px] mt-0.5">
+                <p className="truncate text-slate-600 dark:text-slate-300 font-medium text-[11px] mt-0.5">
                   {replyingToMessage.content}
                 </p>
               </div>
             </div>
             <button
               onClick={() => setReplyingToMessage(null)}
-              className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-indigo-100 dark:hover:bg-indigo-900 rounded-lg cursor-pointer transition-colors"
+              className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg cursor-pointer transition-colors"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -819,12 +919,12 @@ export const ChatWindow: React.FC<Props> = ({
 
         {/* Editing Mode Banner */}
         {editingMessage && (
-          <div className="mb-2.5 p-2.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-900/50 rounded-xl flex items-center justify-between text-xs animate-in fade-in shadow-xs">
+          <div className="mb-2.5 p-2.5 bg-white dark:bg-[#202c33] border-l-4 border-amber-500 rounded-xl flex items-center justify-between text-xs animate-in fade-in shadow-sm max-w-5xl mx-auto">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="p-1 bg-amber-100 dark:bg-amber-900 text-amber-600 dark:text-amber-300 rounded-lg shrink-0">
+              <div className="p-1.5 bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-300 rounded-lg shrink-0">
                 <Edit2 className="w-3.5 h-3.5" />
               </div>
-              <span className="font-extrabold text-amber-900 dark:text-amber-200">
+              <span className="font-extrabold text-amber-600 dark:text-amber-400">
                 Editing message...
               </span>
             </div>
@@ -839,10 +939,10 @@ export const ChatWindow: React.FC<Props> = ({
 
         {/* Selected File Preview Banner */}
         {selectedFile && (
-          <div className="mb-2.5 p-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center justify-between text-xs shadow-xs">
+          <div className="mb-2.5 p-2.5 bg-white dark:bg-[#202c33] border border-slate-200 dark:border-slate-700 rounded-2xl flex items-center justify-between text-xs shadow-sm max-w-5xl mx-auto">
             <div className="flex items-center gap-2.5 min-w-0">
               {localPreviewUrl ? (
-                <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700 bg-white">
+                <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700 bg-black/5">
                   {selectedFile.type.startsWith('video/') ? (
                     <video src={localPreviewUrl} className="w-full h-full object-cover" />
                   ) : (
@@ -850,26 +950,31 @@ export const ChatWindow: React.FC<Props> = ({
                   )}
                 </div>
               ) : (
-                <div className="p-1.5 bg-white dark:bg-slate-700 shadow-xs rounded-lg border border-slate-200 dark:border-slate-600 shrink-0">
-                  <Paperclip className="w-3.5 h-3.5 text-emerald-500" />
+                <div className="p-2 bg-[#00a884]/10 dark:bg-[#00a884]/20 rounded-xl border border-[#00a884]/30 shrink-0">
+                  <Paperclip className="w-4 h-4 text-[#00a884]" />
                 </div>
               )}
-              <span className="truncate font-bold text-slate-700 dark:text-slate-200">
-                {selectedFile.name} <span className="text-slate-400 font-medium ml-1">({(selectedFile.size / 1024).toFixed(1)} KB)</span>
-              </span>
+              <div className="min-w-0">
+                <span className="truncate font-black text-slate-800 dark:text-slate-100 block">
+                  {selectedFile.name}
+                </span>
+                <span className="text-slate-400 text-[11px] font-semibold">
+                  {(selectedFile.size / 1024).toFixed(1)} KB
+                </span>
+              </div>
             </div>
             <button
               onClick={() => setSelectedFile(null)}
-              className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg cursor-pointer transition-colors"
+              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl cursor-pointer transition-colors"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         )}
 
         {/* Emoji Picker Popup (Lazy Loaded) */}
         {showEmojiPicker && (
-          <div className="absolute bottom-full right-4 mb-3 z-50 shadow-2xl rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
+          <div className="absolute bottom-full left-4 mb-3 z-50 shadow-2xl rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
             <React.Suspense fallback={<div className="p-4 text-xs font-bold text-slate-400 bg-white dark:bg-slate-900 animate-pulse">Loading Emojis...</div>}>
               <LazyEmojiPicker
                 onEmojiClick={(data) => setInputText(prev => prev + data.emoji)}
@@ -878,8 +983,8 @@ export const ChatWindow: React.FC<Props> = ({
           </div>
         )}
 
-        {/* Form Inputs */}
-        <form onSubmit={handleSendSubmit} className="flex items-center gap-1.5 sm:gap-2 bg-slate-50 dark:bg-navy-900/90 border border-slate-200/90 dark:border-navy-700/90 rounded-2xl p-1 sm:p-1.5 shadow-xs focus-within:shadow-md focus-within:ring-2 focus-within:ring-brand-500/20 focus-within:border-brand-500 transition-all">
+        {/* WhatsApp Style Form: Unified Input Pill with Send Button Inside */}
+        <form onSubmit={handleSendSubmit} className="flex items-center gap-2 max-w-5xl mx-auto w-full flex-nowrap">
           <input
             type="file"
             ref={fileInputRef}
@@ -887,45 +992,54 @@ export const ChatWindow: React.FC<Props> = ({
             className="hidden"
           />
 
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="p-2 text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 rounded-xl transition-all shrink-0 cursor-pointer"
-            title="Attach File"
-          >
-            <Paperclip className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-          </button>
+          {/* Unified Input Pill with emoji + attach + text + send all inside */}
+          <div className="flex-1 flex items-center gap-1 sm:gap-2 bg-white dark:bg-[#202c33] border border-slate-200/80 dark:border-slate-700/70 rounded-full px-3 py-1.5 sm:py-2 shadow-sm focus-within:shadow-md focus-within:ring-2 focus-within:ring-[#00a884]/30 focus-within:border-[#00a884] transition-all min-w-0">
+            <button
+              type="button"
+              onClick={() => setShowEmojiPicker(prev => !prev)}
+              className="p-1.5 text-slate-500 hover:text-amber-500 dark:text-slate-400 dark:hover:text-amber-400 rounded-full transition-all shrink-0 cursor-pointer"
+              title="Emoji Picker"
+            >
+              <Smile className="w-5 h-5" />
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setShowEmojiPicker(prev => !prev)}
-            className="p-2 text-slate-500 hover:text-amber-500 dark:text-slate-400 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-xl transition-all shrink-0 cursor-pointer hidden sm:block"
-            title="Emoji Picker"
-          >
-            <Smile className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-          </button>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="p-1.5 text-slate-500 hover:text-[#00a884] dark:text-slate-400 dark:hover:text-[#00a884] rounded-full transition-all shrink-0 cursor-pointer"
+              title="Attach File"
+            >
+              <Paperclip className="w-5 h-5 transform -rotate-45" />
+            </button>
 
-          <input
-            ref={textInputRef}
-            type="text"
-            placeholder={editingMessage ? "Update message..." : "Type your message..."}
-            value={inputText}
-            onChange={handleInputChange}
-            className="flex-1 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-transparent text-sm sm:text-base text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none font-medium min-w-0"
-          />
+            <input
+              ref={textInputRef}
+              type="text"
+              placeholder={editingMessage ? "Update message..." : "Type a message..."}
+              value={inputText}
+              onChange={handleInputChange}
+              className="flex-1 px-2 bg-transparent text-sm sm:text-base text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none font-medium min-w-0"
+            />
 
-          <button
-            type="submit"
-            disabled={(!inputText.trim() && !selectedFile) || isSending}
-            className="p-2.5 bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 disabled:from-slate-200 disabled:to-slate-200 dark:disabled:from-navy-800 dark:disabled:to-navy-800 disabled:text-slate-400 dark:disabled:text-slate-600 text-white rounded-xl shadow-xs transition-all shrink-0 cursor-pointer active:scale-95 flex items-center justify-center min-w-[36px] min-h-[36px] sm:min-w-[40px] sm:min-h-[40px]"
-            title="Send Message"
-          >
-            {isSending ? (
-              <Loader2 className="w-4 h-4 sm:w-4.5 sm:h-4.5 animate-spin" />
-            ) : (
-              <Send className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-            )}
-          </button>
+            {/* Send Button — inside the pill on the right */}
+            <button
+              type="submit"
+              disabled={(!inputText.trim() && !selectedFile) || isSending}
+              className={clsx(
+                "w-9 h-9 rounded-full flex items-center justify-center shrink-0 cursor-pointer transition-all duration-200 active:scale-90",
+                (inputText.trim() || selectedFile) && !isSending
+                  ? "bg-[#00a884] hover:bg-[#008f70] text-white shadow-md shadow-[#00a884]/30 scale-100 hover:scale-105"
+                  : "bg-[#00a884]/70 text-white cursor-default"
+              )}
+              title="Send Message"
+            >
+              {isSending ? (
+                <Loader2 className="w-4 h-4 animate-spin text-white" />
+              ) : (
+                <Send className="w-4 h-4 text-white transform translate-x-0.5" />
+              )}
+            </button>
+          </div>
         </form>
       </div>
     </div>

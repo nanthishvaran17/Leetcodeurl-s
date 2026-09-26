@@ -367,6 +367,10 @@ export const StudentDataIssuesPage: React.FC = () => {
         admin_name: "Admin Officer"
       });
       notify.success('Profile Repaired', `Updated ${repairStudent.name} (${repairStudent.reg_no}) with @${verifyResult.username}.`, { category: 'REPAIR ENGINE' });
+      
+      window.dispatchEvent(new Event('refresh_dashboard_summary'));
+      window.dispatchEvent(new CustomEvent('student_updated', { detail: { id: repairStudent.id, reg_no: repairStudent.reg_no, username: verifyResult.username } }));
+
       setRepairStudent(null);
       await fetchStudentsData();
       await fetchSummaryData();

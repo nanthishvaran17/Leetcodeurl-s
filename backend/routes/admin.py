@@ -1178,8 +1178,9 @@ def update_staff_user(
         NotificationService.create_direct_notification(
             title="Profile Details Updated",
             message=f"Your institutional staff profile was updated. Assigned Role: {staff_user.role}, DOB: {display_dob}",
-            recipient_user_ids=[str(staff_user.id), staff_user.email, staff_user.username],
-            notification_type="ACCOUNT_UPDATE"
+            recipient_user_ids=[staff_user.email],
+            notification_type="ACCOUNT_UPDATE",
+            send_email_notification=False
         )
 
     return {

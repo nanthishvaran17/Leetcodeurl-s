@@ -712,8 +712,7 @@ const LeaderboardTableComponent: React.FC<LeaderboardTableProps> = ({
         student={editingStudent}
         onClose={() => setEditingStudent(null)}
         onSaveSuccess={(updated) => {
-          // Instead of forcing a full LeetCode profile sync (onRefreshStudent) which takes 2-3s,
-          // the backend automatically queues a background sync. We just update the local cache immediately.
+          queryClient.invalidateQueries({ queryKey: ['students'] });
           queryClient.setQueriesData({ queryKey: ['students'] }, (oldData: any) => {
             if (!oldData || !oldData.items) return oldData;
             return {

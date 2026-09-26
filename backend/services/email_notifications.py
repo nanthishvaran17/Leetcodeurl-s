@@ -78,22 +78,38 @@ def notify_staff_updated(staff_email: str, staff_name: str, changes: dict):
 def notify_password_changed(staff_email: str, staff_name: str, new_password: Optional[str] = None):
     import datetime
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    title = "Password Changed Successfully"
+    title = "Temporary Password Issued" if new_password else "Password Changed Successfully"
+
+    if new_password:
+        pwd_box = f"""
+        <p>An administrator has reset your password and issued a new temporary password for your account:</p>
+        <div style="text-align: center; margin: 24px 0;">
+            <div style="font-size: 22px; font-weight: bold; letter-spacing: 2px; color: #2563eb; background: #eff6ff; padding: 14px 24px; border: 1px dashed #3b82f6; border-radius: 8px; display: inline-block; max-width: 100%; box-sizing: border-box; word-break: break-all;">
+                {new_password}
+            </div>
+        </div>
+        <p style="color: #dc2626; font-weight: 500;">Please log in using this temporary password and change it immediately for your security.</p>
+        """
+    else:
+        pwd_box = """
+        <div class="security-notice">
+            For your security, your password is never displayed or sent by email.
+        </div>
+        """
 
     content = f"""
     <p style="margin-top: 0;">Dear {staff_name},</p>
-    <p>Your LeetCode Intelligence System password was successfully changed.</p>
+    <p>Your LeetCode Intelligence System password was updated.</p>
     <br/>
     <p><strong>Account:</strong> {staff_email}</p>
     <p><strong>Date & Time:</strong> {timestamp}</p>
     
-    <div class="security-notice">
-        For your security, your password is never displayed or sent by email.
-    </div>
+    {pwd_box}
     <p>If you did not perform this action, please contact the system administrator immediately.</p>
     """
     html_body = generate_professional_template(title, content)
-    send_email(staff_email, "Security Alert: Password Changed", html_body=html_body)
+    subject = "Security Alert: Temporary Password Issued" if new_password else "Security Alert: Password Changed"
+    send_email(staff_email, subject, html_body=html_body)
 
 
 def notify_forgot_password_otp(staff_email: str, otp: str):

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ExternalLink, Trophy, CheckCircle2, User, Trash2, ShieldCheck, Clock, AlertCircle, Loader, Crown, Award } from 'lucide-react';
 import { StudentData } from './LeaderboardTable';
 import { useStudentEntity } from '../stores/studentLiveStore';
+import { formatStudentYearBadge } from '../utils/filterUtils';
 
 interface StudentFlipCardProps {
   student: StudentData;
@@ -213,7 +214,7 @@ const StudentFlipCardComponent: React.FC<StudentFlipCardProps> = ({ student: ini
                 </p>
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-navy-500"></span>
                 <p className="text-[11px] text-slate-700 dark:text-slate-200 font-extrabold truncate">
-                  {(student.year_level || student.year || '').toString().replace(/\s*year/i, '')} Yr • {student.section?.name || student.section || ''}
+                  {formatStudentYearBadge(student)}{student.section ? ` • ${student.section?.name || student.section}` : ''}
                 </p>
               </div>
             </div>

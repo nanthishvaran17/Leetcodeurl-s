@@ -9,6 +9,7 @@ import { SkillRadarChart } from '../components/SkillRadarChart';
 import { BadgeShelf } from '../components/BadgeShelf';
 import { DownloadState } from '../services/download/downloadTypes';
 import { ExportStatus } from '../components/ExportStatus';
+import { deriveYearLevelFromRegNo } from '../utils/filterUtils';
 
 import { IDCardGenerator } from '../components/IDCardGenerator';
 const StudentEditOverlay = React.lazy(() => import('../components/StudentEditOverlay').then(m => ({ default: m.StudentEditOverlay })));
@@ -127,9 +128,22 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
       fetchStudentDetail();
     }
     
+    const handleStudentUpdated = (e: any) => {
+      const updated = e.detail;
+      const tId = resolveTargetId();
+      if (updated && (String(updated.id) === String(tId) || String(updated.reg_no).toUpperCase() === String(tId).toUpperCase())) {
+        setDetail(updated);
+        fetchStudentDetail();
+      }
+    };
+    window.addEventListener('student_updated', handleStudentUpdated);
+
     // Defer heavy chart rendering to prevent modal opening scroll lag
     const timer = setTimeout(() => setIsChartsReady(true), 150);
-    return () => clearTimeout(timer);
+    return () => {
+      window.removeEventListener('student_updated', handleStudentUpdated);
+      clearTimeout(timer);
+    };
   }, [student]);
 
   const fetchStudentDetail = async () => {
@@ -326,23 +340,33 @@ export const StudentProfilePage: React.FC<StudentProfilePageProps> = ({ student,
     <div className="h-full flex flex-col overflow-hidden bg-white dark:bg-navy-950 rounded-3xl">
       
       {/* Header Bar with Close Button & Actions — restored from reference commit structure */}
-      <div className="p-4 sm:p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex flex-col md:flex-row items-center justify-between gap-4 border-b border-slate-800 shrink-0 relative z-50 shadow-xl">
-        <div className="flex items-center space-x-3 sm:space-x-4 w-full md:w-auto">
+      <div className="p-3 sm:p-5 bg-gradient-to-r from-navy-950 via-slate-900 to-indigo-950 text-white flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4 border-b border-slate-800 shrink-0 relative z-50 shadow-xl">
+        <div className="flex items-center space-x-3 sm:space-x-4 w-full md:w-auto justify-between md:justify-start">
+          <div className="flex items-center space-x-2.5 sm:space-x-4 min-w-0">
+            <button
+              type="button"
+              onClick={() => onBack()}
+              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-white border border-slate-700/80 transition-all cursor-pointer flex items-center space-x-1.5 text-xs font-bold shadow-md hover:scale-105 shrink-0"
+              title="Back"
+            >
+              <ArrowLeft className="w-4 h-4 text-white shrink-0" />
+              <span className="font-bold text-white">Back</span>
+            </button>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-base sm:text-xl font-black text-white truncate">{detail?.name || student?.name}</h2>
+              <p className="text-[10px] sm:text-xs text-brand-300 font-mono font-bold mt-0.5 truncate max-w-sm">
+                {detail?.reg_no || student?.reg_no} • {detail?.department?.name || detail?.department?.code || student?.department?.code} • {deriveYearLevelFromRegNo(detail?.reg_no || student?.reg_no, detail?.year_level || student?.year_level)} Year
+              </p>
+            </div>
+          </div>
           <button
             type="button"
             onClick={() => onBack()}
-            className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-white border border-slate-700/80 transition-all cursor-pointer flex items-center space-x-1.5 text-xs font-bold shadow-md hover:scale-105 shrink-0"
-            title="Back"
+            className="md:hidden p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 shrink-0 cursor-pointer"
+            title="Close modal"
           >
-            <ArrowLeft className="w-4 h-4 text-white shrink-0" />
-            <span className="font-bold text-white">Back</span>
+            <X className="w-4.5 h-4.5" />
           </button>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-lg sm:text-xl font-black text-white truncate">{detail?.name || student?.name}</h2>
-            <p className="text-[10px] sm:text-xs text-brand-300 font-mono font-bold mt-0.5 truncate max-w-sm">
-              {detail?.reg_no || student?.reg_no} • {detail?.department?.name || detail?.department?.code || student?.department?.code} {detail?.year_level ? `• ${String(detail.year_level).replace(/\s*Yr\s*/gi, '').replace(/\s*Year\s*/gi, '').trim()} Year` : ''}
-            </p>
-          </div>
         </div>
 
         <div className="grid grid-cols-5 gap-1.5 sm:flex sm:items-center sm:gap-2.5 w-full md:w-auto shrink-0">
