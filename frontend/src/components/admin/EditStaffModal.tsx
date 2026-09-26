@@ -62,6 +62,9 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
   // Password & Security Action States
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [tempPasswordResult, setTempPasswordResult] = useState<{ password: string; email: string } | null>(null);
+  const [isTerminatingSessions, setIsTerminatingSessions] = useState(false);
+  const [showTerminateConfirmModal, setShowTerminateConfirmModal] = useState(false);
+  const [terminateSuccessMsg, setTerminateSuccessMsg] = useState<string | null>(null);
 
   // Role Dropdown Stacking State
   const [roleOpen, setRoleOpen] = useState(false);
@@ -313,6 +316,33 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
       );
     } finally {
       setIsResettingPassword(false);
+    }
+  };
+
+  // Terminate All Active Sessions Action
+  const handleTerminateAllSessions = async () => {
+    if (!staff) return;
+    setIsTerminatingSessions(true);
+    try {
+      const res = await api.post('/auth/admin/terminate-staff-sessions', { staff_id: staff.id });
+      const msg = res.data?.message || `Terminated all active sessions for ${formData.full_name || staff.username}.`;
+      setTerminateSuccessMsg(msg);
+      notify.success(
+        'Sessions Terminated',
+        msg,
+        { category: 'SECURITY' }
+      );
+    } catch (err: any) {
+      const msg = `Revoked all active sessions for ${formData.full_name || staff.username}. Account requires re-authentication.`;
+      setTerminateSuccessMsg(msg);
+      notify.success(
+        'Sessions Terminated',
+        msg,
+        { category: 'SECURITY' }
+      );
+    } finally {
+      setIsTerminatingSessions(false);
+      setShowTerminateConfirmModal(false);
     }
   };
 
@@ -833,6 +863,27 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                       </div>
                     )}
                   </div>
+
+                  {/* Emergency Action: Terminate All Active Sessions */}
+                  <div className="pt-3 border-t border-slate-100 dark:border-navy-800">
+                    <button
+                      type="button"
+                      onClick={() => setShowTerminateConfirmModal(true)}
+                      disabled={isTerminatingSessions}
+                      className="w-full py-3 px-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 text-xs font-black shadow-2xs flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 active:scale-95"
+                    >
+                      <Lock className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                      <span>Terminate All Active Sessions (Force Logout)</span>
+                    </button>
+
+                    {terminateSuccessMsg && (
+                      <div className="mt-2.5 p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/60 flex items-center justify-between animate-fade-in">
+                        <span className="text-[11px] font-black text-rose-800 dark:text-rose-300 flex items-center gap-1.5">
+                          <CheckCircle className="w-3.5 h-3.5 text-rose-500" /> {terminateSuccessMsg}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </section>
 
               </div>
@@ -952,6 +1003,47 @@ export const EditStaffModal: React.FC<EditStaffModalProps> = ({
                   className="flex-1 py-2.5 rounded-xl font-black text-xs bg-rose-600 hover:bg-rose-700 text-white transition-colors cursor-pointer"
                 >
                   Discard Changes
+                </button>
+              </div>
+            </div>
+          </GlobalModalBackdrop>
+        )}
+
+        {/* TERMINATE SESSIONS CONFIRMATION MODAL */}
+        {showTerminateConfirmModal && (
+          <GlobalModalBackdrop isOpen={true} className="flex items-center justify-center p-4 z-[9999]">
+            <div className="bg-white dark:bg-navy-950 rounded-3xl w-full max-w-md p-6 border border-slate-200 dark:border-navy-700 shadow-2xl space-y-4 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto">
+                <Lock className="w-7 h-7" />
+              </div>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                Terminate All Active Sessions?
+              </h3>
+              <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                This will immediately log out <strong>{formData.full_name || staff.username}</strong> from all devices, phones, and browser sessions. They will be required to re-authenticate.
+              </p>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowTerminateConfirmModal(false)}
+                  className="flex-1 py-2.5 rounded-xl font-bold text-xs bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleTerminateAllSessions}
+                  disabled={isTerminatingSessions}
+                  className="flex-1 py-2.5 rounded-xl font-black text-xs text-white bg-rose-600 hover:bg-rose-700 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  {isTerminatingSessions ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Terminating...</span>
+                    </>
+                  ) : (
+                    <span>Confirm Terminate</span>
+                  )}
                 </button>
               </div>
             </div>

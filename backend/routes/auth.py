@@ -1638,3 +1638,77 @@ def admin_reset_staff_password(req: AdminResetStaffPasswordRequest, background_t
     }
 
 
+class TerminateStaffSessionsRequest(BaseModel):
+    staff_id: int
+
+
+@router.post("/admin/terminate-staff-sessions")
+def admin_terminate_staff_sessions(
+    req: TerminateStaffSessionsRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    POST /api/auth/admin/terminate-staff-sessions
+    Instantly revokes all active DB sessions and active login tokens for a staff account.
+    Emergency response action for lost device or security breach.
+    """
+    if current_user.role.lower() not in ["admin", "administrator", "super admin", "superadmin", "super_admin"]:
+        raise HTTPException(status_code=403, detail="Only Admins can terminate active staff sessions.")
+
+    staff_user = db.query(User).filter(User.id == req.staff_id).first()
+    if not staff_user:
+        raise HTTPException(status_code=404, detail="Staff account not found.")
+
+    # Revoke all active sessions in AdminSession table
+    now = datetime.datetime.now(datetime.timezone.utc)
+    revoked_count = db.query(AdminSession).filter(
+        AdminSession.user_id == staff_user.id,
+        AdminSession.revoked_at.is_(None)
+    ).update({"revoked_at": now}, synchronize_session=False)
+
+    # Force re-authentication flag
+    staff_user.require_password_change = True
+    
+    # Flush auth resolution cache
+    try:
+        from backend.cache import cache
+        cache.clear()
+    except Exception:
+        pass
+
+    db.commit()
+
+    # Log audit event
+    try:
+        from backend.services.audit_service import log_admin_action
+        log_admin_action(
+            db, action="TERMINATE_STAFF_SESSIONS", action_type="SECURITY",
+            description=f"Admin forcefully terminated all active sessions for staff user {staff_user.username}",
+            current_user=current_user, target_type="User", target_id=str(staff_user.id)
+        )
+    except Exception:
+        pass
+
+    try:
+        from backend.services.notification_service import NotificationService
+        NotificationService.create_direct_notification(
+            title="Emergency Security Notice: Sessions Terminated",
+            message="An administrator has remotely terminated all active login sessions on your account due to a security action.",
+            recipient_user_ids=[staff_user.email, str(staff_user.id), staff_user.username],
+            notification_type="security",
+            priority="urgent",
+            action_route="/login",
+            created_by="Administrator Security Protocol"
+        )
+    except Exception:
+        pass
+
+    return {
+        "status": "success",
+        "message": f"All active sessions for '{staff_user.full_name or staff_user.username}' have been terminated. Account forced to re-authenticate.",
+        "revoked_sessions_count": revoked_count
+    }
+
+
+
