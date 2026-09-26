@@ -184,14 +184,20 @@ export const ReportsAnalyticsView: React.FC<ReportsAnalyticsProps> = ({
             <button
               onClick={handleGenerateReport}
               disabled={loading}
-              className="w-full flex items-center justify-center p-4.5 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white rounded-xl font-black text-[15px] tracking-wide shadow-lg shadow-brand-500/30 hover:shadow-brand-500/40 transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-70 disabled:shadow-none disabled:transform-none disabled:cursor-not-allowed group overflow-hidden relative"
+              className="w-full min-h-[54px] py-3.5 px-6 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 active:scale-[0.99] text-white rounded-xl font-black text-sm sm:text-[15px] tracking-wide shadow-lg shadow-brand-500/30 hover:shadow-brand-500/40 transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-85 disabled:shadow-none disabled:transform-none disabled:cursor-not-allowed group overflow-hidden relative"
             >
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
-              <div className="relative flex items-center">
+              <div className="relative flex items-center justify-center gap-3 sm:gap-3.5 w-full">
                 {loading ? (
-                  <><Loader2 className="w-5 h-5 mr-3 animate-spin" /> GENERATING PDF REPORT...</>
+                  <>
+                    <Loader2 className="w-5 h-5 shrink-0 animate-spin text-white" />
+                    <span className="whitespace-nowrap truncate font-black">GENERATING PDF REPORT...</span>
+                  </>
                 ) : (
-                  <><Download className="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" /> GENERATE & DOWNLOAD</>
+                  <>
+                    <Download className="w-5 h-5 shrink-0 group-hover:scale-110 transition-transform text-white" />
+                    <span className="whitespace-nowrap truncate font-black">GENERATE & DOWNLOAD</span>
+                  </>
                 )}
               </div>
             </button>
