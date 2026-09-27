@@ -6,7 +6,7 @@ import string
 from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, Request, Response, Depends, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse, ORJSONResponse  # type: ignore
+from fastapi.responses import JSONResponse, ORJSONResponse, HTMLResponse  # type: ignore
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -1186,6 +1186,158 @@ def download_android_apk_endpoint():
         media_type="application/vnd.android.package-archive",
         filename="Nandha_LeetCode_Intelligence_v2_latest.apk"
     )
+
+
+@app.get("/", response_class=HTMLResponse)
+def root_landing_page():
+    """Serves an elegant live status landing page for browser visitors on Render root."""
+    return HTMLResponse(content="""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nandha Engineering College — LeetCode Intelligence Engine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #090d16;
+            --card-bg: rgba(17, 24, 39, 0.85);
+            --border: rgba(255, 255, 255, 0.1);
+            --accent-glow: rgba(56, 189, 248, 0.25);
+            --emerald: #10b981;
+            --text-main: #f3f4f6;
+            --text-sub: #9ca3af;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, var(--bg) 70%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .container {
+            max-width: 620px;
+            width: 100%;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px var(--accent-glow);
+            text-align: center;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--emerald);
+            padding: 6px 16px;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--emerald);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--emerald);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.85); }
+        }
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.85rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.75rem;
+        }
+        p {
+            color: var(--text-sub);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        .actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.6);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+        .footer {
+            margin-top: 2rem;
+            font-size: 0.8rem;
+            color: #6b7280;
+            border-top: 1px solid var(--border);
+            padding-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="badge">
+            <div class="dot"></div>
+            Backend Engine Online & Live
+        </div>
+        <h1>Nandha LeetCode Intelligence Engine</h1>
+        <p>Authoritative Backend API Service for student tracking, weekly contest reconciliation, automated reports, and institutional analytics.</p>
+        <div class="actions">
+            <a href="https://leetcodeurl-s-roan.vercel.app" class="btn btn-primary" target="_blank">
+                🌐 Launch Web Dashboard
+            </a>
+            <a href="/docs" class="btn btn-secondary">
+                📘 API Swagger Docs
+            </a>
+        </div>
+        <div class="footer">
+            Nandha Engineering College • Erode, Tamil Nadu | System Version 2.2.0
+        </div>
+    </div>
+</body>
+</html>""")
 
 
 # Production Static Build Mount (Serves Frontend SPA bundle on single port)
