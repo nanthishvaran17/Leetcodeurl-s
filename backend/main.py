@@ -301,21 +301,26 @@ async def _deferred_startup_tasks():
                         CREATE INDEX IF NOT EXISTS ix_students_secondary_leetcode_id
                         ON students (secondary_leetcode_id)
                     """))
-                    conn.execute(text("""
-                        CREATE TABLE IF NOT EXISTS weekly_verification_records (
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            student_id INTEGER NOT NULL REFERENCES students(id),
-                            verification_week INTEGER NOT NULL,
-                            notification_type VARCHAR(50) NOT NULL,
-                            primary_solved INTEGER,
-                            secondary_solved INTEGER,
-                            status VARCHAR(30),
-                            email_dispatched BOOLEAN,
-                            timestamp TIMESTAMP,
-                            CONSTRAINT uq_weekly_verification_record
-                                UNIQUE (student_id, verification_week, notification_type)
-                        )
-                    """))
+                    is_pg_driver = "postgresql" in str(engine.url) or "postgres" in str(engine.url)
+                    id_col_type = "SERIAL PRIMARY KEY" if is_pg_driver else "INTEGER PRIMARY KEY AUTOINCREMENT"
+                    try:
+                        conn.execute(text(f"""
+                            CREATE TABLE IF NOT EXISTS weekly_verification_records (
+                                id {id_col_type},
+                                student_id INTEGER NOT NULL REFERENCES students(id),
+                                verification_week INTEGER NOT NULL,
+                                notification_type VARCHAR(50) NOT NULL,
+                                primary_solved INTEGER,
+                                secondary_solved INTEGER,
+                                status VARCHAR(30),
+                                email_dispatched BOOLEAN,
+                                timestamp TIMESTAMP,
+                                CONSTRAINT uq_weekly_verification_record
+                                    UNIQUE (student_id, verification_week, notification_type)
+                            )
+                        """))
+                    except Exception as _wvr_err:
+                        logger.warning(f"[STARTUP] weekly_verification_records table creation note: {_wvr_err}")
             logger.info("[STARTUP] Safety schema migration: all required columns verified/added OK.")
         except Exception as _schema_err:
             logger.error(f"[STARTUP] Safety schema migration failed: {_schema_err}")
